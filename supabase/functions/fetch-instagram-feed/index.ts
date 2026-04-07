@@ -215,7 +215,16 @@ Deno.serve(async (req) => {
         })
         .eq("id", account_id);
 
-      return new Response(JSON.stringify({ success: true, posts_count: postRows.length }), {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        posts_count: postRows.length,
+        debug: {
+          responseKeys: Object.keys(postsData),
+          parsedPostsCount: posts.length,
+          samplePostKeys: posts.length > 0 ? Object.keys(posts[0]) : [],
+          profileImg,
+        }
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (fetchError) {
