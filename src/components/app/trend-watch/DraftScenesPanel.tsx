@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSceneRecipes, usePromptOutputs } from '@/hooks/useSceneRecipes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { toast } from 'sonner';
 
 export function DraftScenesPanel() {
   const { recipes, isLoading, updateRecipe, generatePrompts } = useSceneRecipes();
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
   const drafts = recipes.filter((r: any) => r.status === 'draft');
 
   if (isLoading) {
