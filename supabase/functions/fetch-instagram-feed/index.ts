@@ -1,23 +1,52 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
-const isVideo = (p: any) => p.is_video || p.video_versions?.length > 0 || p.__typename === 'GraphVideo';
+const TARGET_POSTS = 12;
+const MAX_PAGES = 4;
+
+const isVideo = (p: any) =>
+  p.is_video === true ||
+  p.video_versions?.length > 0 ||
+  p.__typename === "GraphVideo" ||
+  p.media_type === 2 ||
+  p.product_type === "clips";
 
 function extractPosts(postsData: any): any[] {
   if (postsData?.result?.edges) return postsData.result.edges.map((e: any) => e.node || e);
-  if (Array.isArray(postsData)) return postsData;
+  if (postsData?.result?.items) return postsData.result.items;
   if (postsData?.data?.edges) return postsData.data.edges.map((e: any) => e.node || e);
   if (postsData?.data?.items) return postsData.data.items;
   if (postsData?.items) return postsData.items;
-  if (postsData?.data && Array.isArray(postsData.data)) return postsData.data;
+  if (Array.isArray(postsData?.data)) return postsData.data;
+  if (Array.isArray(postsData)) return postsData;
   return [];
 }
 
 function extractCursor(postsData: any): string {
-  return postsData?.result?.page_info?.end_cursor
-    || postsData?.data?.page_info?.end_cursor
-    || postsData?.paging?.cursors?.after
-    || "";
+  return (
+    postsData?.result?.page_info?.end_cursor ||
+    postsData?.result?.end_cursor ||
+    postsData?.data?.page_info?.end_cursor ||
+    postsData?.paging?.cursors?.after ||
+    postsData?.next_max_id ||
+    ""
+  );
+}
+
+function getImageUrl(p: any): string | null {
+  return (
+    p.image_versions2?.candidates?.[0]?.url ||
+    p.display_url ||
+    p.thumbnail_src ||
+    p.url ||
+    p.imageUrl ||
+    p.media_url ||
+    null
+  );
+}
+
+function getPostId(p: any): string {
+  return p.id || p.pk || p.code || p.shortcode || p.shortCode || "";
 }
 
 Deno.serve(async (req) => {
@@ -39,10 +68,10 @@ Deno.serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_ANON_KEY")!
-    ).auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -81,18 +110,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    await supabaseAdmin
-      .from("watch_accounts")
-      .update({ sync_status: "pending" })
-      .eq("id", account_id);
+    await supabaseAdmin.from("watch_accounts").update({ sync_status: "pending" }).eq("id", account_id);
 
     try {
-      // Paginate up to 3 pages to collect 12 image posts after filtering videos
-      let allPosts: any[] = [];
+      const seenIds = new Set<string>();
+      const imagePosts: any[] = [];
+      let videosSkipped = 0;
+      let pagesFetched = 0;
+      let exhaustedFeed = false;
       let maxId = "";
-      const MAX_PAGES = 3;
+      let prevCursor = "";
 
       for (let page = 0; page < MAX_PAGES; page++) {
+        pagesFetched++;
         const postsResponse = await fetch(
           "https://instagram120.p.rapidapi.com/api/instagram/posts",
           {
@@ -102,7 +132,7 @@ Deno.serve(async (req) => {
               "x-rapidapi-host": "instagram120.p.rapidapi.com",
               "x-rapidapi-key": rapidApiKey,
             },
-            body: JSON.stringify({ username, maxId }),
+            body: JSON.stringify(maxId ? { username, maxId } : { username }),
           }
         );
 
@@ -113,48 +143,65 @@ Deno.serve(async (req) => {
         const postsData = await postsResponse.json();
         const pagePosts = extractPosts(postsData);
 
-        if (pagePosts.length === 0) break;
+        if (pagePosts.length === 0) {
+          exhaustedFeed = true;
+          break;
+        }
 
-        allPosts.push(...pagePosts);
+        for (const p of pagePosts) {
+          const pid = getPostId(p);
+          if (pid && seenIds.has(pid)) continue;
+          if (pid) seenIds.add(pid);
 
-        // Check if we have enough image posts
-        const imageOnly = allPosts.filter((p: any) => !isVideo(p));
-        if (imageOnly.length >= 12) break;
+          if (isVideo(p)) {
+            videosSkipped++;
+            continue;
+          }
 
-        // Get cursor for next page
-        maxId = extractCursor(postsData);
-        if (!maxId) break;
+          const imageUrl = getImageUrl(p);
+          if (!imageUrl) continue;
+
+          imagePosts.push(p);
+          if (imagePosts.length >= TARGET_POSTS) break;
+        }
+
+        if (imagePosts.length >= TARGET_POSTS) break;
+
+        const cursor = extractCursor(postsData);
+        if (!cursor || cursor === prevCursor) {
+          exhaustedFeed = true;
+          break;
+        }
+        prevCursor = cursor;
+        maxId = cursor;
       }
 
-      // Filter out videos and take 12
-      let posts = allPosts.filter((p: any) => !isVideo(p));
-
       // Delete old posts for this account
-      await supabaseAdmin
-        .from("watch_posts")
-        .delete()
-        .eq("watch_account_id", account_id);
+      await supabaseAdmin.from("watch_posts").delete().eq("watch_account_id", account_id);
 
-      // Map and insert new posts (max 12)
-      const postRows = posts.slice(0, 12).map((p: any) => {
+      // Map and insert
+      const postRows = imagePosts.slice(0, TARGET_POSTS).map((p: any) => {
         const shortcode = p.code || p.shortcode || p.shortCode || "";
-        const imageUrl = p.image_versions2?.candidates?.[0]?.url 
-          || p.display_url || p.thumbnail_src || p.url || p.imageUrl || p.media_url || null;
-        const caption = p.caption?.text 
-          || p.edge_media_to_caption?.edges?.[0]?.node?.text || p.caption || "";
-        const permalink = p.permalink || (shortcode ? `https://www.instagram.com/p/${shortcode}/` : null);
+        const imageUrl = getImageUrl(p);
+        const caption =
+          p.caption?.text || p.edge_media_to_caption?.edges?.[0]?.node?.text || p.caption || "";
+        const permalink =
+          p.permalink || (shortcode ? `https://www.instagram.com/p/${shortcode}/` : null);
         const timestamp = p.taken_at || p.taken_at_timestamp || p.timestamp;
         const postedAt = timestamp
-          ? new Date(typeof timestamp === "number" && timestamp < 1e12 ? timestamp * 1000 : timestamp).toISOString()
+          ? new Date(
+              typeof timestamp === "number" && timestamp < 1e12 ? timestamp * 1000 : timestamp
+            ).toISOString()
           : null;
-        const likes = p.like_count ?? p.edge_media_preview_like?.count ?? p.likesCount ?? p.likes ?? 0;
-        const comments = p.comment_count ?? p.edge_media_to_comment?.count ?? p.commentsCount ?? p.comments ?? 0;
-        const mediaType = "image";
+        const likes =
+          p.like_count ?? p.edge_media_preview_like?.count ?? p.likesCount ?? p.likes ?? 0;
+        const comments =
+          p.comment_count ?? p.edge_media_to_comment?.count ?? p.commentsCount ?? p.comments ?? 0;
 
         return {
           watch_account_id: account_id,
-          instagram_post_id: p.id || shortcode || null,
-          media_type: mediaType,
+          instagram_post_id: p.id || p.pk || shortcode || null,
+          media_type: "image",
           media_url: imageUrl,
           thumbnail_url: p.thumbnail_src || imageUrl,
           caption: (typeof caption === "string" ? caption : "").slice(0, 2000),
@@ -172,10 +219,10 @@ Deno.serve(async (req) => {
 
       // Try to get profile image
       let profileImg: string | null = null;
-      if (allPosts[0]?.owner?.profile_pic_url) {
-        profileImg = allPosts[0].owner.profile_pic_url;
-      } else if (allPosts[0]?.user?.profile_pic_url) {
-        profileImg = allPosts[0].user.profile_pic_url;
+      if (imagePosts[0]?.owner?.profile_pic_url) {
+        profileImg = imagePosts[0].owner.profile_pic_url;
+      } else if (imagePosts[0]?.user?.profile_pic_url) {
+        profileImg = imagePosts[0].user.profile_pic_url;
       }
 
       if (!profileImg) {
@@ -194,11 +241,12 @@ Deno.serve(async (req) => {
           );
           if (profileResponse.ok) {
             const profileData = await profileResponse.json();
-            profileImg = profileData?.result?.profile_pic_url_hd
-              || profileData?.result?.profile_pic_url
-              || profileData?.data?.profile_pic_url_hd
-              || profileData?.data?.profile_pic_url
-              || null;
+            profileImg =
+              profileData?.result?.profile_pic_url_hd ||
+              profileData?.result?.profile_pic_url ||
+              profileData?.data?.profile_pic_url_hd ||
+              profileData?.data?.profile_pic_url ||
+              null;
           }
         } catch {
           // Profile fetch is optional
@@ -215,15 +263,21 @@ Deno.serve(async (req) => {
         })
         .eq("id", account_id);
 
-      return new Response(JSON.stringify({ success: true, posts_count: postRows.length }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          posts_count: postRows.length,
+          pages_fetched: pagesFetched,
+          videos_skipped: videosSkipped,
+          exhausted_feed: exhaustedFeed,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     } catch (fetchError) {
       await supabaseAdmin
         .from("watch_accounts")
         .update({ sync_status: "failed" })
         .eq("id", account_id);
-
       throw fetchError;
     }
   } catch (error) {

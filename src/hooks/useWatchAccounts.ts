@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -61,13 +62,39 @@ export function useWatchAccounts() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['watch-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['watch-posts-all'] });
       queryClient.invalidateQueries({ queryKey: ['watch-posts'] });
-      toast.success('Account synced');
+      const count = data?.posts_count ?? 0;
+      const exhausted = data?.exhausted_feed;
+      const skipped = data?.videos_skipped ?? 0;
+      if (exhausted && count < 12) {
+        toast.success(`Synced ${count} image posts — ${skipped} videos skipped, no more available`);
+      } else {
+        toast.success(`Synced ${count} image posts`);
+      }
     },
     onError: (e: any) => toast.error(`Sync failed: ${e.message}`),
   });
+
+  // Realtime subscriptions for live updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('watch-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'watch_accounts' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['watch-accounts'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'watch_posts' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['watch-posts-all'] });
+        queryClient.invalidateQueries({ queryKey: ['watch-posts'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return { accounts, isLoading, addAccount, updateAccount, syncAccount };
 }
@@ -91,8 +118,9 @@ export function useWatchPosts(accountId?: string) {
 }
 
 export function useAllWatchPosts(accountIds: string[]) {
+  const sortedKey = useMemo(() => [...accountIds].sort().join(','), [accountIds]);
   return useQuery({
-    queryKey: ['watch-posts-all', accountIds.sort().join(',')],
+    queryKey: ['watch-posts-all', sortedKey],
     queryFn: async () => {
       if (!accountIds.length) return {};
       const { data, error } = await supabase
