@@ -12,10 +12,12 @@ const PRESET_SWATCHES = [
 ];
 
 const GRADIENT_PRESETS = [
-  { name: 'Soft grey', from: '#FFFFFF', to: '#E8E8E8' },
+  { name: 'Studio white', from: '#FFFFFF', to: '#E8E8E8' },
   { name: 'Brand navy', from: '#FFFFFF', to: '#2B3A4E' },
-  { name: 'Warm cream', from: '#FFF8F0', to: '#F5E6D3' },
-  { name: 'Cool blue', from: '#F0F4FF', to: '#D4E4FA' },
+  { name: 'Sunset peach', from: '#FFF0E6', to: '#FFB088' },
+  { name: 'Ocean', from: '#E0F2FE', to: '#7DD3FC' },
+  { name: 'Lavender', from: '#F3E8FF', to: '#C084FC' },
+  { name: 'Mint', from: '#ECFDF5', to: '#6EE7B7' },
 ];
 
 function isValidHex(v: string) {
@@ -66,6 +68,45 @@ function hexToHsl(hex: string): [number, number, number] {
   return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
 }
 
+const THUMB_STYLE = [
+  '[&::-webkit-slider-thumb]:appearance-none',
+  '[&::-webkit-slider-thumb]:w-5',
+  '[&::-webkit-slider-thumb]:h-5',
+  '[&::-webkit-slider-thumb]:rounded-full',
+  '[&::-webkit-slider-thumb]:bg-white',
+  '[&::-webkit-slider-thumb]:border',
+  '[&::-webkit-slider-thumb]:border-black/10',
+  '[&::-webkit-slider-thumb]:shadow-[0_1px_4px_rgba(0,0,0,0.3)]',
+  '[&::-webkit-slider-thumb]:cursor-pointer',
+  '[&::-moz-range-thumb]:w-5',
+  '[&::-moz-range-thumb]:h-5',
+  '[&::-moz-range-thumb]:rounded-full',
+  '[&::-moz-range-thumb]:bg-white',
+  '[&::-moz-range-thumb]:border',
+  '[&::-moz-range-thumb]:border-black/10',
+  '[&::-moz-range-thumb]:shadow-[0_1px_4px_rgba(0,0,0,0.3)]',
+  '[&::-moz-range-thumb]:cursor-pointer',
+].join(' ');
+
+interface SliderProps {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+  background: string;
+}
+
+function ColorSlider({ value, min, max, onChange, background }: SliderProps) {
+  return (
+    <input
+      type="range" min={min} max={max} value={value}
+      onChange={e => onChange(Number(e.target.value))}
+      className={`w-full h-3 rounded-full appearance-none cursor-pointer ${THUMB_STYLE}`}
+      style={{ background }}
+    />
+  );
+}
+
 interface ColorPickerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -80,50 +121,10 @@ interface ColorPickerDialogProps {
   onSaveGradient: (from: string, to: string) => void;
 }
 
-function HueSlider({ hue, onChange }: { hue: number; onChange: (v: number) => void }) {
-  return (
-    <div className="space-y-1">
-      <span className="text-[11px] font-medium text-muted-foreground">Hue</span>
-      <input
-        type="range" min={0} max={360} value={hue}
-        onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-3 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:bg-current [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-md"
-        style={{
-          background: 'linear-gradient(to right, hsl(0,70%,50%), hsl(60,70%,50%), hsl(120,70%,50%), hsl(180,70%,50%), hsl(240,70%,50%), hsl(300,70%,50%), hsl(360,70%,50%))',
-        }}
-      />
-    </div>
-  );
-}
-
-function LightnessSlider({ hue, lightness, onChange }: { hue: number; lightness: number; onChange: (v: number) => void }) {
-  return (
-    <div className="space-y-1">
-      <span className="text-[11px] font-medium text-muted-foreground">Lightness</span>
-      <input
-        type="range" min={5} max={95} value={lightness}
-        onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-3 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-md"
-        style={{
-          background: `linear-gradient(to right, hsl(${hue},70%,5%), hsl(${hue},70%,50%), hsl(${hue},70%,95%))`,
-        }}
-      />
-    </div>
-  );
-}
-
 export function ColorPickerDialog({
-  open,
-  onOpenChange,
-  mode: initialMode,
-  initialHex,
-  initialGradientFrom,
-  initialGradientTo,
-  canSave,
-  onApplySolid,
-  onApplyGradient,
-  onSaveColor,
-  onSaveGradient,
+  open, onOpenChange, mode: initialMode,
+  initialHex, initialGradientFrom, initialGradientTo,
+  canSave, onApplySolid, onApplyGradient, onSaveColor, onSaveGradient,
 }: ColorPickerDialogProps) {
   const [tab, setTab] = useState<string>(initialMode);
   const [hex, setHex] = useState(initialHex || '#FFFFFF');
@@ -154,7 +155,6 @@ export function ColorPickerDialog({
       setTab(initialMode);
       setHex(h); setHexInput(h);
       syncHslFromHex(h);
-
       const gf = initialGradientFrom || '#F8F8F8';
       const gt = initialGradientTo || '#EEEEEE';
       setGradFrom(gf); setGradTo(gt);
@@ -213,18 +213,20 @@ export function ColorPickerDialog({
     const v = hslToHex(h, 70, l); setGradTo(v); setGradToInput(v);
   };
 
+  const hueGradient = 'linear-gradient(to right, hsl(0,70%,50%), hsl(60,70%,50%), hsl(120,70%,50%), hsl(180,70%,50%), hsl(240,70%,50%), hsl(300,70%,50%), hsl(360,70%,50%))';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden rounded-2xl">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-base font-semibold">Custom Color</DialogTitle>
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <div className="px-5">
-            <TabsList className="w-full grid grid-cols-2 h-9">
-              <TabsTrigger value="solid" className="text-xs">Solid</TabsTrigger>
-              <TabsTrigger value="gradient" className="text-xs">Gradient</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-2 h-9 rounded-xl">
+              <TabsTrigger value="solid" className="text-xs rounded-lg">Solid</TabsTrigger>
+              <TabsTrigger value="gradient" className="text-xs rounded-lg">Gradient</TabsTrigger>
             </TabsList>
           </div>
 
@@ -239,7 +241,7 @@ export function ColorPickerDialog({
                   return (
                     <button
                       key={c} type="button" onClick={() => pickSwatch(c)}
-                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selected ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-border hover:scale-105'}`}
+                      className={`w-8 h-8 rounded-full border-2 transition-all duration-150 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selected ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-border hover:scale-105'}`}
                       style={{ background: c }} title={c}
                     >
                       {selected && <Check className={`w-3.5 h-3.5 ${isDark(c) ? 'text-white' : 'text-foreground'}`} />}
@@ -250,29 +252,30 @@ export function ColorPickerDialog({
             </div>
 
             {/* Custom sliders */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <span className="text-[11px] font-medium text-muted-foreground">Custom</span>
-              <HueSlider hue={hue} onChange={handleHueChange} />
-              <LightnessSlider hue={hue} lightness={lightness} onChange={handleLightnessChange} />
+              <ColorSlider value={hue} min={0} max={360} onChange={handleHueChange} background={hueGradient} />
+              <ColorSlider value={lightness} min={5} max={95} onChange={handleLightnessChange} background={`linear-gradient(to right, hsl(${hue},70%,5%), hsl(${hue},70%,50%), hsl(${hue},70%,95%))`} />
             </div>
 
             {/* Color preview + Hex input + Eyedropper */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg border-2 border-border shadow-sm shrink-0" style={{ background: hex }} />
-              <div className="flex-1 space-y-1">
-                <label className="text-[11px] font-medium text-muted-foreground">HEX</label>
-                <Input
-                  value={hexInput}
-                  onChange={e => setHexInput(e.target.value)}
-                  onBlur={handleHexInputBlur}
-                  onKeyDown={e => { if (e.key === 'Enter') handleHexInputBlur(); }}
-                  className="h-8 text-xs font-mono" placeholder="#FF5522" maxLength={7}
-                />
-              </div>
+              <div
+                className="w-9 h-9 rounded-full border border-border shadow-sm shrink-0 ring-1 ring-black/5"
+                style={{ background: hex }}
+              />
+              <Input
+                value={hexInput}
+                onChange={e => setHexInput(e.target.value)}
+                onBlur={handleHexInputBlur}
+                onKeyDown={e => { if (e.key === 'Enter') handleHexInputBlur(); }}
+                className="h-9 text-[13px] font-medium tracking-wide text-foreground rounded-xl"
+                placeholder="#FF5522" maxLength={7}
+              />
               <button
                 type="button"
                 onClick={() => colorInputRef.current?.click()}
-                className="shrink-0 w-9 h-9 rounded-lg border border-border bg-muted/50 flex items-center justify-center hover:bg-accent transition-colors"
+                className="shrink-0 w-9 h-9 rounded-full border border-border bg-muted/50 flex items-center justify-center hover:bg-accent hover:shadow-sm transition-all duration-150"
                 title="Eyedropper"
               >
                 <Pipette className="w-4 h-4 text-muted-foreground" />
@@ -286,30 +289,42 @@ export function ColorPickerDialog({
             </div>
 
             {canSave && isValidHex(hex) && (
-              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5" onClick={() => onSaveColor(hex)}>
+              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 rounded-xl" onClick={() => onSaveColor(hex)}>
                 <Save className="w-3 h-3" /> Save to palette
               </Button>
             )}
 
             <div className="flex gap-2 pt-1">
-              <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button size="sm" className="flex-1 text-xs" onClick={handleApply}>Apply</Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={handleApply}>Apply</Button>
             </div>
           </TabsContent>
 
           {/* ─── Gradient Tab ─── */}
           <TabsContent value="gradient" className="px-5 pb-5 pt-4 space-y-4 mt-0">
+            {/* Live gradient preview */}
+            <div
+              className="h-12 rounded-xl border border-border shadow-sm"
+              style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }}
+            />
+
+            {/* Quick gradients */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted-foreground">Quick gradients</span>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {GRADIENT_PRESETS.map(p => {
-                  const selected = gradFrom.toUpperCase() === p.from && gradTo.toUpperCase() === p.to;
+                  const selected = gradFrom.toUpperCase() === p.from.toUpperCase() && gradTo.toUpperCase() === p.to.toUpperCase();
                   return (
                     <button
                       key={p.name} type="button" onClick={() => pickGradientPreset(p.from, p.to)}
-                      className={`h-10 rounded-lg border-2 transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}`}
-                      style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }} title={p.name}
-                    />
+                      className={`flex flex-col items-center gap-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+                    >
+                      <div
+                        className={`w-full h-14 rounded-xl border-2 transition-all duration-150 ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}`}
+                        style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
+                      />
+                      <span className="text-[10px] text-muted-foreground font-medium">{p.name}</span>
+                    </button>
                   );
                 })}
               </div>
@@ -317,29 +332,35 @@ export function ColorPickerDialog({
 
             {/* Start color */}
             <div className="space-y-2">
-              <span className="text-[11px] font-medium text-muted-foreground">Start color</span>
-              <HueSlider hue={gradFromHue} onChange={h => updateGradFrom(h, gradFromLight)} />
-              <LightnessSlider hue={gradFromHue} lightness={gradFromLight} onChange={l => updateGradFrom(gradFromHue, l)} />
-              <Input value={gradFromInput} onChange={e => setGradFromInput(e.target.value)} onBlur={handleGradFromBlur} onKeyDown={e => { if (e.key === 'Enter') handleGradFromBlur(); }} className="h-7 text-[11px] font-mono" maxLength={7} />
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full border border-border shadow-sm" style={{ background: gradFrom }} />
+                <span className="text-[11px] font-medium text-muted-foreground">Start color</span>
+              </div>
+              <ColorSlider value={gradFromHue} min={0} max={360} onChange={h => updateGradFrom(h, gradFromLight)} background={hueGradient} />
+              <ColorSlider value={gradFromLight} min={5} max={95} onChange={l => updateGradFrom(gradFromHue, l)} background={`linear-gradient(to right, hsl(${gradFromHue},70%,5%), hsl(${gradFromHue},70%,50%), hsl(${gradFromHue},70%,95%))`} />
+              <Input value={gradFromInput} onChange={e => setGradFromInput(e.target.value)} onBlur={handleGradFromBlur} onKeyDown={e => { if (e.key === 'Enter') handleGradFromBlur(); }} className="h-8 text-[13px] font-medium tracking-wide text-foreground rounded-xl" maxLength={7} />
             </div>
 
             {/* End color */}
             <div className="space-y-2">
-              <span className="text-[11px] font-medium text-muted-foreground">End color</span>
-              <HueSlider hue={gradToHue} onChange={h => updateGradTo(h, gradToLight)} />
-              <LightnessSlider hue={gradToHue} lightness={gradToLight} onChange={l => updateGradTo(gradToHue, l)} />
-              <Input value={gradToInput} onChange={e => setGradToInput(e.target.value)} onBlur={handleGradToBlur} onKeyDown={e => { if (e.key === 'Enter') handleGradToBlur(); }} className="h-7 text-[11px] font-mono" maxLength={7} />
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full border border-border shadow-sm" style={{ background: gradTo }} />
+                <span className="text-[11px] font-medium text-muted-foreground">End color</span>
+              </div>
+              <ColorSlider value={gradToHue} min={0} max={360} onChange={h => updateGradTo(h, gradToLight)} background={hueGradient} />
+              <ColorSlider value={gradToLight} min={5} max={95} onChange={l => updateGradTo(gradToHue, l)} background={`linear-gradient(to right, hsl(${gradToHue},70%,5%), hsl(${gradToHue},70%,50%), hsl(${gradToHue},70%,95%))`} />
+              <Input value={gradToInput} onChange={e => setGradToInput(e.target.value)} onBlur={handleGradToBlur} onKeyDown={e => { if (e.key === 'Enter') handleGradToBlur(); }} className="h-8 text-[13px] font-medium tracking-wide text-foreground rounded-xl" maxLength={7} />
             </div>
 
             {canSave && (
-              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5" onClick={() => onSaveGradient(gradFrom, gradTo)}>
+              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 rounded-xl" onClick={() => onSaveGradient(gradFrom, gradTo)}>
                 <Save className="w-3 h-3" /> Save to palette
               </Button>
             )}
 
             <div className="flex gap-2 pt-1">
-              <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button size="sm" className="flex-1 text-xs" onClick={handleApply}>Apply</Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={handleApply}>Apply</Button>
             </div>
           </TabsContent>
         </Tabs>
