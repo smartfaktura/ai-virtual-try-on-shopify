@@ -1617,7 +1617,7 @@ export function ProductImagesStep3Refine({
 
           {/* ── STYLE & OUTFIT (unified) — right after model ── */}
           {hasPersonBlock && (
-            <Card className="border-none shadow-sm">
+            <Card>
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
