@@ -1075,10 +1075,10 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
           const active = isPresetActive(preset.config);
           const PRESET_DESCRIPTIONS: Record<string, string> = {
             'Studio Standard': 'Clean, neutral styling for commercial product focus',
-            'Editorial': 'Dark tones, tailored fits for magazine-ready shots',
-            'Minimal': 'Stripped-back whites and creams, relaxed silhouettes',
-            'Streetwear': 'Oversized fits, dark palette, urban energy',
-            'Luxury Soft': 'Silk and cashmere in warm neutrals, elevated elegance',
+            'Editorial': 'Sharper, more fashion-led styling with elevated polish',
+            'Minimal': 'Quiet neutrals, soft tones, relaxed premium simplicity',
+            'Streetwear': 'Relaxed silhouettes, darker tones, urban attitude',
+            'Luxury Soft': 'Warm neutrals, refined textures, elegant softness',
           };
           const description = PRESET_DESCRIPTIONS[preset.name] || '';
           return (
