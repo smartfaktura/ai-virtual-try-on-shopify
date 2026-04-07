@@ -883,7 +883,7 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
 
 function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
   let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
-  if (!base) return [];
+  if (!base) base = CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
   if (!base.bottom) base = { ...base, bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' } };
   if (!base.shoes) base = { ...base, shoes: { garment: 'sneakers', color: 'white', material: 'leather' } };
   if (isMale && MALE_OUTFIT_OVERRIDES[category]) {
