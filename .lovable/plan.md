@@ -1,38 +1,43 @@
 
 
-# Fix: Background Color Selection Not Applied to Generation Prompt
+# Add Global "Back Reference Image" Upload via `backView` Trigger Block
 
-## Problem
-When you select a background like "Sage" in Step 3, it's stored as `backgroundTone = 'sage'`. But the prompt builder treats `backgroundTone` as a **color world** (mapped via `COLOR_WORLD_MAP`), which only knows values like `warm-neutral`, `cool-neutral`, `monochrome` — not the actual swatch values like `sage`, `blush`, `taupe`, `off-white`, etc.
+## What this does
+Adds a new `backView` trigger block option in the admin panel and a global "Back Reference Image" upload card in Step 3 (like the existing Packaging Reference). When any selected scene has the `backView` trigger, users see a prompt to upload a photo of the product's back/rear view. This image is sent as `extra_reference_image_url` to the generation pipeline for all `backView` scenes.
 
-Result: the selected background color is silently dropped from the prompt, and the AI defaults to a generic gray/white.
+## Changes
 
-## Root Cause
-The `BackgroundSwatchSelector` UI writes swatch values (`sage`, `blush`, `taupe`, `white`, `off-white`, `light-gray`, etc.) into `details.backgroundTone`. But the prompt builder's `background` token resolution only checks:
-1. `details.negativeSpace` → `BG_MAP` (has `taupe`, `off-white`, but NOT `sage` or `blush`)
-2. `details.backgroundTone` → `COLOR_WORLD_MAP` (only has `warm-neutral`, `cool-neutral`, etc.)
+### 1. Add `backView` to admin trigger blocks list
+**File: `src/pages/AdminProductImageScenes.tsx`**
+- Add `'backView'` to the `TRIGGER_BLOCKS` array so admins can assign it to scenes (e.g., "Back View" scene)
 
-So swatch values like `sage` and `blush` have **no mapping** in either map and produce an empty string.
+### 2. Add `backReferenceUrl` to `DetailSettings` type
+**File: `src/components/app/product-images/types.ts`**
+- Add `backReferenceUrl?: string` to `DetailSettings` (alongside existing `packagingReferenceUrl`)
 
-## Fix
+### 3. Add global "Back Reference Image" card in Step 3
+**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
+- Detect `hasBackViewScenes` — any selected scene with `backView` trigger
+- Add upload state/refs (same pattern as packaging reference)
+- Render a card right after the packaging reference section:
+  - Icon: `RotateCcw` (already imported)
+  - Title: "Back view reference"
+  - Description: "Some of your selected scenes show the back of your product. Upload a photo of the back for accurate results — otherwise, the AI will interpret the back design on its own."
+  - Upload button / thumbnail preview with remove (identical UX to packaging card)
+- Upload to `product-uploads` bucket under `back-refs/` path
+- Call `update({ backReferenceUrl: url })`
 
-### 1. Add missing swatch values to `BG_MAP` in `productImagePromptBuilder.ts`
-Add entries for all UI swatch values that are missing:
-- `'sage'` → `'soft sage green (#E8EDE6)'`
-- `'blush'` → `'soft blush pink (#F8ECE8)'`
-- `'white'` → `'pure seamless white (#FFFFFF)'`
-- `'warm-neutral'` → `'warm beige (#F5F0EB)'`
-- `'cool-neutral'` → `'cool gray (#EDF0F4)'`
-
-### 2. Update the `background` token resolution logic
-Change the prompt builder so that `backgroundTone` swatch values are checked against `BG_MAP` first (as the primary background descriptor), falling back to `COLOR_WORLD_MAP` only for color-world values. This ensures selected swatches like "Sage" produce a concrete background instruction like `"soft sage green (#E8EDE6) background"`.
-
-### 3. Also add gradient preset mappings
-The gradient preset values (`gradient-warm`, `gradient-cool`, `gradient-sunset`) are already in `COLOR_WORLD_MAP` but should also work when set via `backgroundTone`.
+### 4. Wire `backReferenceUrl` into the generation payload
+**File: `src/pages/ProductImages.tsx`**
+- In the generation loop (line ~404), for scenes with `backView` trigger, inject `extra_reference_image_url: details.backReferenceUrl` (only when the scene has `backView` trigger and no per-scene extra ref already set)
+- This uses the existing `extra_reference_image_url` field already handled by the edge function as `[PRODUCT EXTRA ANGLE]`
 
 ## Files to modify
-- **`src/lib/productImagePromptBuilder.ts`** — add missing swatch entries to `BG_MAP` and update the `background` token to resolve `backgroundTone` against `BG_MAP` first, then `COLOR_WORLD_MAP`
+- `src/pages/AdminProductImageScenes.tsx` — add `'backView'` to `TRIGGER_BLOCKS`
+- `src/components/app/product-images/types.ts` — add `backReferenceUrl` to `DetailSettings`
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — detection + upload card UI
+- `src/pages/ProductImages.tsx` — inject `backReferenceUrl` as `extra_reference_image_url` for `backView` scenes
 
-## No other changes needed
-The UI, state management, and edge function are all fine — only the prompt builder's mapping is incomplete.
+## No edge function changes needed
+The existing `extra_reference_image_url` → `[PRODUCT EXTRA ANGLE]` pipeline already handles this correctly.
 
