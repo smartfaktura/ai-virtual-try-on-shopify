@@ -44,7 +44,7 @@ import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
 const STEP_DEFS = [
   { number: 1, label: 'Products', icon: Package },
   { number: 2, label: 'Scenes', icon: Layers },
-  { number: 3, label: 'Refine', icon: Paintbrush },
+  { number: 3, label: 'Setup', icon: Paintbrush },
   { number: 4, label: 'Review', icon: ClipboardCheck },
   { number: 5, label: 'Generate', icon: Sparkles },
   { number: 6, label: 'Results', icon: CheckCircle },
