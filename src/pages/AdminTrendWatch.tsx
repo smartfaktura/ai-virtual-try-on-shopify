@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useWatchAccounts, useAllWatchPosts } from '@/hooks/useWatchAccounts';
@@ -8,14 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Plus, Library, Search, RefreshCw } from 'lucide-react';
+import { ChevronDown, Plus, Library, Search, RefreshCw, ImagePlus } from 'lucide-react';
 import { TREND_CATEGORIES } from '@/components/app/trend-watch/constants';
 import { WatchAccountCard } from '@/components/app/trend-watch/WatchAccountCard';
 import { AddAccountModal } from '@/components/app/trend-watch/AddAccountModal';
+import { AddImageDraftModal } from '@/components/app/trend-watch/AddImageDraftModal';
 import { PostDetailDrawer } from '@/components/app/trend-watch/PostDetailDrawer';
 import { DraftScenesPanel } from '@/components/app/trend-watch/DraftScenesPanel';
 import { ReadyScenesPanel } from '@/components/app/trend-watch/ReadyScenesPanel';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 export default function AdminTrendWatch() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
@@ -26,12 +28,36 @@ export default function AdminTrendWatch() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [pastedFile, setPastedFile] = useState<File | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [refreshingAll, setRefreshingAll] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
   const [activeTab, setActiveTab] = useState('feed');
+
+  // Global paste handler for images
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            setPastedFile(file);
+            setImageModalOpen(true);
+            toast.info('Image pasted — ready to analyze');
+            return;
+          }
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
 
   const activeAccounts = useMemo(() => {
     return (accounts || []).filter((a: any) => {
@@ -165,6 +191,9 @@ export default function AdminTrendWatch() {
             <Button size="sm" onClick={() => setAddModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1" /> Add Account
             </Button>
+            <Button size="sm" variant="secondary" onClick={() => { setPastedFile(null); setImageModalOpen(true); }}>
+              <ImagePlus className="w-4 h-4 mr-1" /> Add Image
+            </Button>
             <Button size="sm" variant="outline" onClick={handleRefreshAll} disabled={refreshingAll}>
               <RefreshCw className={`w-4 h-4 mr-1 ${refreshingAll ? 'animate-spin' : ''}`} /> Refresh All
             </Button>
@@ -218,6 +247,11 @@ export default function AdminTrendWatch() {
         </TabsContent>
 
         <TabsContent value="drafts">
+          <div className="flex justify-end mb-4">
+            <Button size="sm" variant="secondary" onClick={() => { setPastedFile(null); setImageModalOpen(true); }}>
+              <ImagePlus className="w-4 h-4 mr-1" /> Add Image
+            </Button>
+          </div>
           <DraftScenesPanel />
         </TabsContent>
 
@@ -238,6 +272,13 @@ export default function AdminTrendWatch() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         onCreateScene={handleCreateScene}
+      />
+
+      <AddImageDraftModal
+        open={imageModalOpen}
+        onOpenChange={setImageModalOpen}
+        initialFile={pastedFile}
+        onDraftCreated={() => setActiveTab('drafts')}
       />
     </div>
   );
