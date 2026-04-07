@@ -102,8 +102,8 @@ export function useAllWatchPosts(accountIds: string[]) {
         .order('posted_at', { ascending: false });
       if (error) throw error;
       const grouped: Record<string, any[]> = {};
-      for (const post of (data || [])) {
-        const key = post.watch_account_id;
+      for (const post of (data || []) as any[]) {
+        const key = (post as any).watch_account_id;
         if (!grouped[key]) grouped[key] = [];
         if (grouped[key].length < 9) grouped[key].push(post);
       }
