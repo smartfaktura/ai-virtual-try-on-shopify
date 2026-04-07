@@ -2082,8 +2082,9 @@ export type Database = {
           media_url: string | null
           permalink: string | null
           posted_at: string | null
+          source: string
           thumbnail_url: string | null
-          watch_account_id: string
+          watch_account_id: string | null
         }
         Insert: {
           caption?: string | null
@@ -2099,8 +2100,9 @@ export type Database = {
           media_url?: string | null
           permalink?: string | null
           posted_at?: string | null
+          source?: string
           thumbnail_url?: string | null
-          watch_account_id: string
+          watch_account_id?: string | null
         }
         Update: {
           caption?: string | null
@@ -2116,8 +2118,9 @@ export type Database = {
           media_url?: string | null
           permalink?: string | null
           posted_at?: string | null
+          source?: string
           thumbnail_url?: string | null
-          watch_account_id?: string
+          watch_account_id?: string | null
         }
         Relationships: [
           {
