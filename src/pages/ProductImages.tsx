@@ -847,7 +847,7 @@ export default function ProductImages() {
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
                               {up.product_type && <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>}
                             </div>
-                          </button>
+                          </div>
                         );
                       })}
                       <button type="button" onClick={() => setAddProductOpen(true)} className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground">
