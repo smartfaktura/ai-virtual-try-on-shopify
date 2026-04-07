@@ -1194,14 +1194,14 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
       <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
-          const accent = PRESET_ACCENT[preset.name] || 'bg-muted-foreground/15';
+          const gradient = PRESET_GRADIENT[preset.name] || 'bg-muted/40';
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
                 className={cn('w-[130px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
-                  active ? 'bg-primary/10 border-primary ring-2 ring-primary/30 shadow-sm' : 'bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/60')}>
-                <div className={cn('h-[3px] w-full', accent)} />
-                <div className="px-3 py-2.5">
+                  gradient,
+                  active ? 'border-primary ring-2 ring-primary/30 shadow-sm' : 'border-border/60 hover:border-primary/40')}>
+                <div className="px-3 py-3">
                   <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
                 </div>
               </button>
