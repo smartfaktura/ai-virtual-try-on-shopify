@@ -141,32 +141,37 @@ export default function AdminTrendWatch() {
     updateAccount.mutate({ id, is_active: !account?.is_active });
   };
 
-  const handleCreateScene = (analysis: any, post: any) => {
-    createRecipe.mutate({
-      name: analysis.recommended_scene_name || 'New Scene',
-      category: analysis.category || '',
-      subcategory: analysis.subcategory || '',
-      aesthetic_family: analysis.recommended_aesthetic_family || '',
-      scene_type: analysis.scene_type || '',
-      palette: analysis.palette || [],
-      lighting: analysis.lighting_type || '',
-      background: analysis.background_type || '',
-      composition: analysis.composition_logic || '',
-      crop: analysis.crop_type || '',
-      camera_feel: analysis.camera_angle || '',
-      props: analysis.props || [],
-      mood: analysis.mood || '',
-      styling_tone: analysis.styling_tone || '',
-      premium_cues: analysis.premium_cues || [],
-      avoid_terms: analysis.avoid_terms || [],
-      source_type: 'instagram',
-      source_reference_analysis_id: analysis.id,
-      source_watch_post_id: post.id,
-      preview_image_url: post.media_url || post.thumbnail_url,
-      short_description: analysis.short_summary || '',
-    });
-    setDrawerOpen(false);
-    setActiveTab('drafts');
+  const handleCreateScene = async (analysis: any, post: any) => {
+    try {
+      await createRecipe.mutateAsync({
+        name: analysis.recommended_scene_name || 'New Scene',
+        category: analysis.category || '',
+        subcategory: analysis.subcategory || '',
+        aesthetic_family: analysis.recommended_aesthetic_family || '',
+        scene_type: analysis.scene_type || '',
+        palette: analysis.palette || [],
+        lighting: analysis.lighting_type || '',
+        background: analysis.background_type || '',
+        composition: analysis.composition_logic || '',
+        crop: analysis.crop_type || '',
+        camera_feel: analysis.camera_angle || '',
+        props: analysis.props || [],
+        mood: analysis.mood || '',
+        styling_tone: analysis.styling_tone || '',
+        premium_cues: analysis.premium_cues || [],
+        avoid_terms: analysis.avoid_terms || [],
+        source_type: 'instagram',
+        source_reference_analysis_id: analysis.id,
+        source_watch_post_id: post.id,
+        preview_image_url: post.media_url || post.thumbnail_url,
+        short_description: analysis.short_summary || '',
+      });
+      toast.success('Draft scene created');
+      setDrawerOpen(false);
+      setActiveTab('drafts');
+    } catch (err: any) {
+      toast.error(`Failed to create draft: ${err.message}`);
+    }
   };
 
   const toggleCategory = (cat: string) => {
