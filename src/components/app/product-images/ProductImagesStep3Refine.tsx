@@ -1610,13 +1610,6 @@ export function ProductImagesStep3Refine({
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <div className="flex -space-x-1.5">
-                        <div className="w-5 h-5 rounded-full bg-primary/20 border-2 border-card flex items-center justify-center">
-                          <Users className="w-2.5 h-2.5 text-primary" />
-                        </div>
-                        <div className="w-5 h-5 rounded-full bg-primary/15 border-2 border-card" />
-                        <div className="w-5 h-5 rounded-full bg-primary/10 border-2 border-card" />
-                      </div>
                       <span className="text-sm font-semibold">Choose model</span>
                       {details.selectedModelId && (
                         <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
