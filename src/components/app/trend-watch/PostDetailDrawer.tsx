@@ -62,11 +62,13 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
         <div className="space-y-4 mt-4">
           {/* Image */}
           {(post.media_url || post.thumbnail_url) && (
-            <img
-              src={post.media_url || post.thumbnail_url}
-              alt=""
-              className="w-full rounded-lg object-cover max-h-80"
-            />
+            <div className="w-full rounded-lg overflow-hidden bg-muted aspect-square flex items-center justify-center">
+              <img
+                src={post.media_url || post.thumbnail_url}
+                alt=""
+                className="w-full h-full object-contain"
+              />
+            </div>
           )}
 
           {/* Meta */}

@@ -80,7 +80,7 @@ export function useWatchPosts(accountId?: string) {
         .from('watch_posts' as any)
         .select('*')
         .order('posted_at', { ascending: false })
-        .limit(9);
+        .limit(12);
       if (accountId) query.eq('watch_account_id', accountId);
       const { data, error } = await query;
       if (error) throw error;
@@ -105,7 +105,7 @@ export function useAllWatchPosts(accountIds: string[]) {
       for (const post of (data || []) as any[]) {
         const key = (post as any).watch_account_id;
         if (!grouped[key]) grouped[key] = [];
-        if (grouped[key].length < 9) grouped[key].push(post);
+        if (grouped[key].length < 12) grouped[key].push(post);
       }
       return grouped;
     },

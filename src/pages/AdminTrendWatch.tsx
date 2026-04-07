@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Plus, Library, Search } from 'lucide-react';
+import { ChevronDown, Plus, Library, Search, RefreshCw } from 'lucide-react';
 import { TREND_CATEGORIES } from '@/components/app/trend-watch/constants';
 import { WatchAccountCard } from '@/components/app/trend-watch/WatchAccountCard';
 import { AddAccountModal } from '@/components/app/trend-watch/AddAccountModal';
@@ -26,6 +26,7 @@ export default function AdminTrendWatch() {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [refreshingAll, setRefreshingAll] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
 
   const activeAccounts = useMemo(() => {
@@ -59,6 +60,18 @@ export default function AdminTrendWatch() {
     } finally {
       setSyncingId(null);
     }
+  };
+
+  const handleRefreshAll = async () => {
+    const active = (accounts || []).filter((a: any) => a.is_active);
+    if (active.length === 0) return;
+    setRefreshingAll(true);
+    for (const a of active) {
+      setSyncingId(a.id);
+      try { await syncAccount.mutateAsync({ id: a.id, username: a.username }); } catch {}
+    }
+    setSyncingId(null);
+    setRefreshingAll(false);
   };
 
   const handleDeactivate = (id: string) => {
@@ -137,6 +150,9 @@ export default function AdminTrendWatch() {
         </Select>
         <Button size="sm" onClick={() => setAddModalOpen(true)}>
           <Plus className="w-4 h-4 mr-1" /> Add Account
+        </Button>
+        <Button size="sm" variant="outline" onClick={handleRefreshAll} disabled={refreshingAll}>
+          <RefreshCw className={`w-4 h-4 mr-1 ${refreshingAll ? 'animate-spin' : ''}`} /> Refresh All
         </Button>
         <Button size="sm" variant="outline" onClick={() => navigate('/app/admin/scene-library')}>
           <Library className="w-4 h-4 mr-1" /> Scene Library
