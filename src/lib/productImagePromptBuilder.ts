@@ -734,6 +734,131 @@ function resolveToken(token: string, ctx: TokenContext): string {
       return SCENE_MOOD_MAP[details.sceneIntensity!] || `${details.sceneIntensity!.replace(/-/g, ' ')} scene mood.`;
     }
     case 'cameraDirective': return resolveCameraDirective(scene);
+
+    // ── Global Visual tokens (from analysis) ──
+    case 'productCategory': return analysis?.category || '';
+    case 'productSubcategory': return analysis?.productSubcategory || '';
+    case 'productForm': return analysis?.productForm || '';
+    case 'productSilhouette': return analysis?.productSilhouette || '';
+    case 'productMainHex': return analysis?.productMainHex || '';
+    case 'productSecondaryHex': return analysis?.productSecondaryHex || '';
+    case 'productAccentHex': return analysis?.productAccentHex || analysis?.accentColor || '';
+    case 'backgroundBaseHex': return analysis?.backgroundBaseHex || '';
+    case 'backgroundSecondaryHex': return analysis?.backgroundSecondaryHex || '';
+    case 'shadowToneHex': return analysis?.shadowToneHex || '';
+    case 'productFinishType': return analysis?.productFinishType || analysis?.finish || '';
+    case 'materialPrimary': return analysis?.materialPrimary || analysis?.materialFamily || '';
+    case 'materialSecondary': return analysis?.materialSecondary || '';
+    case 'textureType': return analysis?.textureType || '';
+    case 'transparencyType': return analysis?.transparencyType || '';
+    case 'metalTone': return analysis?.metalTone || '';
+    case 'heroFeature': return analysis?.heroFeature || '';
+    case 'detailFocusAreas': return analysis?.detailFocusAreas || '';
+    case 'scaleType': return analysis?.scaleType || '';
+    case 'wearabilityMode': return analysis?.wearabilityMode || '';
+    case 'bodyPlacementSuggested': return analysis?.bodyPlacementSuggested || '';
+
+    // ── Global Semantic tokens ──
+    case 'ingredientFamilyPrimary': return analysis?.ingredientFamilyPrimary || '';
+    case 'ingredientFamilySecondary': return analysis?.ingredientFamilySecondary || '';
+    case 'fruitsRelated': return analysis?.fruitsRelated || '';
+    case 'flowersRelated': return analysis?.flowersRelated || '';
+    case 'botanicalsRelated': return analysis?.botanicalsRelated || '';
+    case 'woodsRelated': return analysis?.woodsRelated || '';
+    case 'spicesRelated': return analysis?.spicesRelated || '';
+    case 'greensRelated': return analysis?.greensRelated || '';
+    case 'materialsRelated': return analysis?.materialsRelated || '';
+    case 'regionRelated': return analysis?.regionRelated || '';
+    case 'landscapeRelated': return analysis?.landscapeRelated || '';
+
+    // ── Fashion & Apparel ──
+    case 'garmentType': return analysis?.garmentType || '';
+    case 'fitType': return analysis?.fitType || '';
+    case 'fabricType': return analysis?.fabricType || '';
+    case 'fabricWeight': return analysis?.fabricWeight || '';
+    case 'drapeBehavior': return analysis?.drapeBehavior || '';
+
+    // ── Beauty & Skincare ──
+    case 'packagingType': return analysis?.packagingType || '';
+    case 'formulaType': return analysis?.formulaType || '';
+    case 'formulaTexture': return analysis?.formulaTexture || '';
+    case 'applicationMode': return analysis?.applicationMode || '';
+    case 'skinAreaSuggested': return analysis?.skinAreaSuggested || '';
+
+    // ── Fragrances ──
+    case 'fragranceFamily': return analysis?.fragranceFamily || '';
+    case 'bottleType': return analysis?.bottleType || '';
+    case 'capStyle': return analysis?.capStyle || '';
+    case 'liquidColorHex': return analysis?.liquidColorHex || '';
+    case 'glassTintType': return analysis?.glassTintType || '';
+    case 'noteObjectsPrimary': return analysis?.noteObjectsPrimary || '';
+    case 'noteObjectsSecondary': return analysis?.noteObjectsSecondary || '';
+    case 'scentWorld': return analysis?.scentWorld || '';
+
+    // ── Jewelry ──
+    case 'jewelryType': return analysis?.jewelryType || '';
+    case 'gemType': return analysis?.gemType || '';
+    case 'gemColorHex': return analysis?.gemColorHex || '';
+    case 'metalPrimary': return analysis?.metalPrimary || '';
+    case 'metalFinish': return analysis?.metalFinish || '';
+    case 'wearPlacement': return analysis?.wearPlacement || '';
+    case 'sparkleLevel': return analysis?.sparkleLevel || '';
+
+    // ── Accessories ──
+    case 'accessoryType': return analysis?.accessoryType || '';
+    case 'carryMode': return analysis?.carryMode || '';
+    case 'strapType': return analysis?.strapType || '';
+    case 'hardwareType': return analysis?.hardwareType || '';
+    case 'hardwareFinish': return analysis?.hardwareFinish || '';
+    case 'structureType': return analysis?.structureType || '';
+    case 'signatureDetail': return analysis?.signatureDetail || '';
+
+    // ── Home & Decor ──
+    case 'decorType': return analysis?.decorType || '';
+    case 'placementType': return analysis?.placementType || '';
+    case 'objectScale': return analysis?.objectScale || '';
+    case 'baseMaterial': return analysis?.baseMaterial || '';
+    case 'surfaceFinish': return analysis?.surfaceFinish || '';
+    case 'roomContextSuggested': return analysis?.roomContextSuggested || '';
+    case 'stylingCompanions': return analysis?.stylingCompanions || '';
+
+    // ── Food & Beverage ──
+    case 'foodType': return analysis?.foodType || '';
+    case 'servingMode': return analysis?.servingMode || '';
+    case 'ingredientObjectsPrimary': return analysis?.ingredientObjectsPrimary || '';
+    case 'ingredientObjectsSecondary': return analysis?.ingredientObjectsSecondary || '';
+    case 'textureCue': return analysis?.textureCue || '';
+    case 'temperatureCue': return analysis?.temperatureCue || '';
+    case 'consumptionContext': return analysis?.consumptionContext || '';
+
+    // ── Electronics ──
+    case 'deviceType': return analysis?.deviceType || '';
+    case 'interfaceType': return analysis?.interfaceType || '';
+    case 'screenPresence': return analysis?.screenPresence || '';
+    case 'screenStateSuggested': return analysis?.screenStateSuggested || '';
+    case 'finishMaterialPrimary': return analysis?.finishMaterialPrimary || '';
+    case 'industrialStyle': return analysis?.industrialStyle || '';
+    case 'portDetail': return analysis?.portDetail || '';
+    case 'buttonDetail': return analysis?.buttonDetail || '';
+
+    // ── Sports & Fitness ──
+    case 'sportType': return analysis?.sportType || '';
+    case 'gearType': return analysis?.gearType || '';
+    case 'performanceMaterial': return analysis?.performanceMaterial || '';
+    case 'gripTexture': return analysis?.gripTexture || '';
+    case 'motionCue': return analysis?.motionCue || '';
+    case 'usageContext': return analysis?.usageContext || '';
+    case 'surfaceContext': return analysis?.surfaceContext || '';
+
+    // ── Health & Supplements ──
+    case 'supplementType': return analysis?.supplementType || '';
+    case 'dosageForm': return analysis?.dosageForm || '';
+    case 'mixingMode': return analysis?.mixingMode || '';
+    case 'wellnessIngredientObjects': return analysis?.wellnessIngredientObjects || '';
+    case 'containerType': return analysis?.containerType || '';
+    case 'clinicalCleanlinessLevel': return analysis?.clinicalCleanlinessLevel || '';
+    case 'routineContext': return analysis?.routineContext || '';
+
     default: return '';
   }
 }
