@@ -126,10 +126,14 @@ export function ProductImagesStep5Generating({
   const currentMsg = BRANDED_MESSAGES[msgIndex];
   const member = TEAM_MEMBERS.find(m => m.name === currentMsg.member);
 
-  // Dynamic bottom copy
-  const bottomCopy = effectiveTotal > 1
-    ? 'About 2 minutes for your batch. Safe to leave — results appear in your library.'
-    : 'Usually under a minute. Safe to leave — results appear in your library.';
+  // Dynamic bottom copy — scale estimate with batch size
+  const lowMin = Math.max(1, Math.ceil((effectiveTotal * 10) / 60));
+  const highMin = Math.max(lowMin, Math.ceil((effectiveTotal * 15) / 60));
+  const bottomCopy = effectiveTotal <= 1
+    ? 'Usually under a minute. Safe to leave — results appear in your library.'
+    : lowMin === highMin
+      ? `About ${lowMin} minute${lowMin !== 1 ? 's' : ''} for your batch. Safe to leave — results appear in your library.`
+      : `About ${lowMin}–${highMin} minutes for your batch. Safe to leave — results appear in your library.`;
 
   return (
     <div className="flex flex-col items-center justify-center py-20 space-y-8">
