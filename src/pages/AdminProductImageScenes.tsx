@@ -447,13 +447,35 @@ export default function AdminProductImageScenes() {
       {/* Token reference */}
       {showTokenRef && (
         <Card>
-          <CardContent className="py-3">
-            <p className="text-xs font-medium mb-2">Available prompt tokens:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {PROMPT_TOKENS.map(t => (
-                <Badge key={t} variant="outline" className="text-[10px] font-mono">{t}</Badge>
-              ))}
-            </div>
+          <CardContent className="py-3 space-y-3 max-h-[60vh] overflow-y-auto">
+            <p className="text-xs font-medium">Available prompt tokens — click to copy:</p>
+            {TOKEN_GROUPS.map(group => (
+              <Collapsible key={group.label}>
+                <CollapsibleTrigger className="w-full flex items-center gap-2 text-xs font-semibold py-1 hover:text-primary transition-colors">
+                  <ChevronRight className="w-3 h-3" />
+                  {group.label}
+                  <Badge variant="secondary" className="text-[9px] ml-auto">{group.tokens.length}</Badge>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="flex flex-wrap gap-1.5 pl-5 pt-1 pb-2">
+                    {group.tokens.map(t => (
+                      <button
+                        key={t.name}
+                        type="button"
+                        title={t.desc}
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-border text-[10px] font-mono hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`{{${t.name}}}`);
+                          toast.success(`Copied {{${t.name}}}`);
+                        }}
+                      >
+                        {`{{${t.name}}}`}
+                      </button>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
           </CardContent>
         </Card>
       )}
