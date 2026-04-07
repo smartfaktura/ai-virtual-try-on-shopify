@@ -23,7 +23,10 @@ export default function AdminTrendWatch() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
   const { accounts, isLoading, addAccount, updateAccount, syncAccount, loadMorePosts } = useWatchAccounts();
-  const { createRecipe } = useSceneRecipes();
+  const { recipes, createRecipe } = useSceneRecipes();
+
+  const draftCount = useMemo(() => recipes.filter((r: any) => r.status === 'draft').length, [recipes]);
+  const readyCount = useMemo(() => recipes.filter((r: any) => r.status === 'ready').length, [recipes]);
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -190,8 +193,8 @@ export default function AdminTrendWatch() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="feed">Accounts Feed</TabsTrigger>
-          <TabsTrigger value="drafts">Draft Scenes</TabsTrigger>
-          <TabsTrigger value="ready">Ready Scenes</TabsTrigger>
+          <TabsTrigger value="drafts">Draft Scenes{draftCount > 0 ? ` (${draftCount})` : ''}</TabsTrigger>
+          <TabsTrigger value="ready">Ready Scenes{readyCount > 0 ? ` (${readyCount})` : ''}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="feed">

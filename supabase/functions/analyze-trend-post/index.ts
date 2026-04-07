@@ -7,41 +7,51 @@ const corsHeaders = {
 
 const ANALYSIS_SCHEMA = {
   name: "extract_visual_direction",
-  description: "Extract high-level visual direction from a product/lifestyle image. Do NOT replicate the exact image. Extract only reusable aesthetic signals.",
+  description: "Extract high-level visual direction from a product/lifestyle image for AI image generation. Do NOT replicate the exact image. Extract only reusable aesthetic signals with maximum precision for prompt engineering.",
   parameters: {
     type: "object",
     properties: {
-      category: { type: "string" },
-      subcategory: { type: "string" },
-      scene_type: { type: "string" },
-      palette: { type: "array", items: { type: "string" } },
-      dominant_colors: { type: "array", items: { type: "string" } },
-      lighting_type: { type: "string" },
-      light_direction: { type: "string" },
-      shadow_softness: { type: "string" },
-      background_type: { type: "string" },
-      environment_type: { type: "string" },
-      crop_type: { type: "string" },
-      camera_angle: { type: "string" },
-      framing_style: { type: "string" },
-      composition_logic: { type: "string" },
-      props: { type: "array", items: { type: "string" } },
-      material_cues: { type: "array", items: { type: "string" } },
-      surface_cues: { type: "array", items: { type: "string" } },
-      styling_tone: { type: "string" },
-      mood: { type: "string" },
-      premium_cues: { type: "array", items: { type: "string" } },
-      realism_level: { type: "string" },
+      category: { type: "string", description: "Product category (e.g. skincare, jewelry, fashion, food, home decor)" },
+      subcategory: { type: "string", description: "More specific subcategory (e.g. serum, ring, sneaker)" },
+      scene_type: { type: "string", description: "Scene archetype: studio, lifestyle, editorial, flatlay, environmental, abstract" },
+      palette: { type: "array", items: { type: "string" }, description: "Dominant color palette as descriptive names (e.g. 'warm sand', 'deep navy', 'blush pink')" },
+      dominant_colors: { type: "array", items: { type: "string" }, description: "Hex codes or precise color names of the 3-5 most prominent colors" },
+      lighting_type: { type: "string", description: "Primary lighting setup: soft diffused, harsh directional, golden hour, rim-lit, backlit, overhead flat, dramatic side-light, window light, studio strobe" },
+      light_direction: { type: "string", description: "Where light comes from: top-left, top-right, frontal, side, back, overhead, 45-degree key" },
+      shadow_softness: { type: "string", description: "Shadow quality: razor-sharp, crisp, medium-soft, very soft/diffused, barely visible" },
+      depth_of_field: { type: "string", description: "Focus behavior: ultra-shallow (f/1.4 bokeh), shallow (f/2.8), medium (f/5.6), deep (f/11+), tilt-shift selective" },
+      background_type: { type: "string", description: "Background family: seamless paper, fabric drape, gradient, solid color, environmental, bokeh blur, abstract" },
+      background_detail: { type: "string", description: "Specific background description: e.g. 'crumpled linen in warm cream', 'smooth concrete with subtle grain', 'out-of-focus greenery with warm bokeh circles'" },
+      environment_type: { type: "string", description: "Setting: bathroom counter, kitchen marble, outdoor terrace, studio infinity cove, bedroom vanity, café table" },
+      crop_type: { type: "string", description: "Framing: tight product close-up, medium with breathing room, wide environmental, macro detail" },
+      camera_angle: { type: "string", description: "Viewpoint: eye-level, slightly above (15°), overhead (45°), top-down flat, low angle hero, three-quarter" },
+      framing_style: { type: "string", description: "Composition approach: centered hero, rule-of-thirds, asymmetric, diagonal, floating, layered depth" },
+      composition_logic: { type: "string", description: "Layout strategy: single hero product centered, grouped arrangement, scattered organic, stacked/nested, in-use context" },
+      product_placement: { type: "string", description: "How product sits in frame: dead-center, left-third, right-third, foreground with context behind, floating/suspended" },
+      negative_space: { type: "string", description: "Amount of empty space: minimal (product fills frame), moderate (30-40% breathing room), generous (60%+ clean space)" },
+      props: { type: "array", items: { type: "string" }, description: "Supporting objects: fresh flowers, water droplets, fabric swatch, citrus slices, greenery, stones" },
+      material_cues: { type: "array", items: { type: "string" }, description: "Materials visible: glass, ceramic, brushed metal, velvet, marble, wood grain, concrete" },
+      surface_cues: { type: "array", items: { type: "string" }, description: "Surface the product rests on: polished marble slab, raw linen, wet stone, frosted glass, reflective acrylic" },
+      texture_detail: { type: "string", description: "Dominant texture quality: ultra-glossy/reflective, satin/semi-matte, matte/powdery, rough/organic, mixed textures" },
+      reflections: { type: "string", description: "Reflection behavior: none, subtle surface reflection, prominent mirror-like reflection, caustics/light patterns, wet-look reflections" },
+      color_grading: { type: "string", description: "Post-processing color treatment: warm golden tones, cool blue-silver, neutral/true-to-life, desaturated editorial, high-contrast cinematic, pastel-lifted shadows" },
+      contrast_level: { type: "string", description: "Tonal contrast: low/flat (airy), medium (balanced), high (punchy), extreme (dramatic darks)" },
+      saturation_level: { type: "string", description: "Color intensity: desaturated/muted, natural, slightly boosted, vibrant/rich, hyper-saturated" },
+      styling_tone: { type: "string", description: "Overall styling direction: clinical-clean, luxe-editorial, organic-natural, minimalist-zen, maximalist, playful-pop, heritage-classic" },
+      mood: { type: "string", description: "Emotional atmosphere: serene, energetic, luxurious, intimate, fresh, mysterious, celebratory, raw/authentic" },
+      premium_cues: { type: "array", items: { type: "string" }, description: "Signals of quality/luxury: gold accents, selective focus, high-key lighting, monochromatic palette, negative space, material richness" },
+      realism_level: { type: "string", description: "How photographic: hyper-real photograph, slightly stylized, heavily edited/retouched, illustration-like" },
+      key_visual_elements: { type: "array", items: { type: "string" }, description: "Most striking visual details that make this image stand out: e.g. 'water droplets catching light on glass bottle', 'dramatic shadow lines from window blinds', 'steam rising from product'" },
       has_model: { type: "boolean" },
       has_hands: { type: "boolean" },
       has_packaging: { type: "boolean" },
       image_mode: { type: "string", description: "product-only or lifestyle" },
-      avoid_terms: { type: "array", items: { type: "string" } },
-      short_summary: { type: "string" },
-      recommended_scene_name: { type: "string" },
-      recommended_aesthetic_family: { type: "string" },
+      avoid_terms: { type: "array", items: { type: "string" }, description: "Things to NOT include in generation: brand logos, specific celebrity features, copyrighted designs" },
+      short_summary: { type: "string", description: "2-3 sentence description of the visual direction suitable for prompting an image generation AI. Focus on actionable visual details." },
+      recommended_scene_name: { type: "string", description: "A short evocative name for this scene style (e.g. 'Golden Hour Marble', 'Wet Stone Minimalist')" },
+      recommended_aesthetic_family: { type: "string", description: "Broader aesthetic grouping: clean-minimal, warm-organic, dark-luxe, bright-editorial, moody-cinematic" },
     },
-    required: ["category", "scene_type", "lighting_type", "mood", "short_summary"],
+    required: ["category", "scene_type", "lighting_type", "mood", "short_summary", "depth_of_field", "color_grading", "texture_detail"],
   },
 };
 
@@ -89,7 +99,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch the post
     const { data: post, error: postError } = await supabaseAdmin
       .from("watch_posts").select("*").eq("id", watch_post_id).single();
 
@@ -106,7 +115,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Call Lovable AI (Gemini) for analysis
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not set" }), {
@@ -125,16 +133,26 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a visual direction analyst for a product photography AI platform called VOVV.
-Analyze the provided image and extract high-level visual direction signals.
-IMPORTANT: Do NOT aim to recreate the exact image. Extract only reusable aesthetic signals.
-Do NOT include brand names, logos, celebrity likenesses, or exact copyrighted elements.
-Focus on: palette, lighting, background family, crop style, composition logic, prop language, premium cues, mood, styling tone.`,
+            content: `You are an expert visual direction analyst for VOVV, an AI product photography platform.
+Your job: extract PRECISE, ACTIONABLE visual signals from reference images so they can be used to generate new product photos via AI image generation.
+
+CRITICAL RULES:
+- Be extremely specific about lighting setup (not just "soft" — describe the direction, quality, falloff)
+- Describe depth of field precisely (f-stop equivalent, bokeh character)
+- Note exact surface interactions: how light hits materials, reflections, caustics
+- Describe color grading in post-production terms (lifted shadows, crushed blacks, split toning)
+- Capture texture at a granular level: is glass surface frosted or polished? Is the fabric woven or knit?
+- Note every compositional detail: where exactly in the frame is the product, what's the ratio of product to negative space
+- Describe the background with enough detail to recreate it (not just "blurred" — what's behind and how blurred)
+- Extract mood through concrete visual attributes, not vague feelings
+
+DO NOT: Include brand names, logos, celebrity likenesses, or exact copyrighted elements.
+Focus on: palette, lighting setup, surface interactions, depth of field, color grading, texture, composition, prop language, premium cues, mood.`,
           },
           {
             role: "user",
             content: [
-              { type: "text", text: `Analyze this image and extract structured visual direction. Caption context: ${post.caption?.slice(0, 500) || "none"}` },
+              { type: "text", text: `Analyze this image and extract detailed structured visual direction for AI image generation. Be as specific and granular as possible — every detail matters for prompt engineering. Caption context: ${post.caption?.slice(0, 500) || "none"}` },
               { type: "image_url", image_url: { url: imageUrl } },
             ],
           },
@@ -162,7 +180,6 @@ Focus on: palette, lighting, background family, crop style, composition logic, p
         : toolCall.function.arguments;
     }
 
-    // Store analysis
     const { data: savedAnalysis, error: saveError } = await supabaseAdmin
       .from("reference_analyses")
       .insert({
@@ -196,6 +213,16 @@ Focus on: palette, lighting, background family, crop style, composition logic, p
         short_summary: analysis.short_summary || "",
         recommended_scene_name: analysis.recommended_scene_name || "",
         recommended_aesthetic_family: analysis.recommended_aesthetic_family || "",
+        depth_of_field: analysis.depth_of_field || "",
+        color_grading: analysis.color_grading || "",
+        texture_detail: analysis.texture_detail || "",
+        reflections: analysis.reflections || "",
+        contrast_level: analysis.contrast_level || "",
+        saturation_level: analysis.saturation_level || "",
+        key_visual_elements: analysis.key_visual_elements || [],
+        negative_space: analysis.negative_space || "",
+        product_placement: analysis.product_placement || "",
+        background_detail: analysis.background_detail || "",
         raw_analysis_json: analysis,
       })
       .select()

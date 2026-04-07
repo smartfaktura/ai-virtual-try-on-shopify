@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, Sparkles, Heart, Star, Loader2, PlusCircle } from 'lucide-react';
+import { ExternalLink, Sparkles, Heart, Star, Loader2 } from 'lucide-react';
 import { usePostNotes } from '@/hooks/usePostNotes';
 import { useReferenceAnalysis } from '@/hooks/useReferenceAnalysis';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +39,17 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
     setNoteValues({});
   };
 
+  const handleAnalyzeAndDraft = async () => {
+    try {
+      const result = await analyzePost.mutateAsync(post.id);
+      if (result) {
+        onCreateScene(result, post);
+      }
+    } catch {
+      // error already toasted by the hook
+    }
+  };
+
   const toggleFlag = async (field: 'is_favorite' | 'is_worth_aesthetic') => {
     const { error } = await supabase
       .from('watch_posts' as any)
@@ -50,6 +61,16 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
   };
 
   if (!post) return null;
+
+  const ANALYSIS_FIELDS = [
+    'category', 'subcategory', 'scene_type', 'lighting_type', 'light_direction',
+    'shadow_softness', 'depth_of_field', 'background_type', 'background_detail',
+    'environment_type', 'crop_type', 'camera_angle', 'framing_style',
+    'composition_logic', 'product_placement', 'negative_space',
+    'texture_detail', 'reflections', 'color_grading', 'contrast_level',
+    'saturation_level', 'styling_tone', 'mood', 'realism_level', 'image_mode',
+    'recommended_scene_name', 'recommended_aesthetic_family',
+  ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -90,11 +111,11 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
-              onClick={() => analyzePost.mutate(post.id)}
+              onClick={handleAnalyzeAndDraft}
               disabled={analyzePost.isPending}
             >
               {analyzePost.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
-              Analyze Post
+              Analyze & Create Draft
             </Button>
             <Button size="sm" variant={post.is_favorite ? 'default' : 'outline'} onClick={() => toggleFlag('is_favorite')}>
               <Heart className={`w-3.5 h-3.5 mr-1 ${post.is_favorite ? 'fill-current' : ''}`} /> Favorite
@@ -131,12 +152,7 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
               <div className="space-y-3">
                 <h4 className="font-medium text-sm">Visual Analysis</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  {['category', 'subcategory', 'scene_type', 'lighting_type', 'light_direction',
-                    'shadow_softness', 'background_type', 'environment_type', 'crop_type',
-                    'camera_angle', 'framing_style', 'composition_logic', 'styling_tone',
-                    'mood', 'realism_level', 'image_mode',
-                    'recommended_scene_name', 'recommended_aesthetic_family',
-                  ].map(field => (
+                  {ANALYSIS_FIELDS.map(field => (
                     <div key={field}>
                       <span className="text-muted-foreground capitalize">{field.replace(/_/g, ' ')}</span>
                       <p className="font-medium">{analysis[field] || '—'}</p>
@@ -145,6 +161,16 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
                 </div>
                 {analysis.short_summary && (
                   <p className="text-xs text-muted-foreground bg-muted p-2 rounded">{analysis.short_summary}</p>
+                )}
+                {analysis.key_visual_elements?.length > 0 && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Key Visual Elements</span>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {analysis.key_visual_elements.map((c: string, i: number) => (
+                        <Badge key={i} variant="outline" className="text-[10px]">{c}</Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 {analysis.palette?.length > 0 && (
                   <div>
@@ -156,13 +182,6 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
                     </div>
                   </div>
                 )}
-                <Button
-                  size="sm"
-                  onClick={() => onCreateScene(analysis, post)}
-                >
-                  <PlusCircle className="w-3.5 h-3.5 mr-1" />
-                  Create Draft Scene
-                </Button>
               </div>
             </>
           )}
