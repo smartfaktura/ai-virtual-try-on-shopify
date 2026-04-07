@@ -1181,20 +1181,12 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
     setSavedPresets(updated); savePresetsToStorage(updated);
   };
 
-  const PRESET_DESCRIPTIONS: Record<string, string> = {
-    'Studio Standard': 'Clean, neutral styling for commercial product focus',
-    'Editorial': 'Sharper, more fashion-led styling with elevated polish',
-    'Minimal': 'Quiet neutrals, soft tones, relaxed premium simplicity',
-    'Streetwear': 'Relaxed silhouettes, darker tones, urban attitude',
-    'Luxury Soft': 'Warm neutrals, refined textures, elegant softness',
-  };
-
-  const PRESET_ACCENT: Record<string, string> = {
-    'Studio Standard': 'bg-muted-foreground/20',
-    'Editorial': 'bg-foreground/80',
-    'Minimal': 'bg-muted-foreground/10',
-    'Streetwear': 'bg-foreground/60',
-    'Luxury Soft': 'bg-primary/30',
+  const PRESET_GRADIENT: Record<string, string> = {
+    'Studio Standard': 'bg-gradient-to-b from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900',
+    'Editorial': 'bg-gradient-to-b from-zinc-200 to-zinc-100 dark:from-zinc-700 dark:to-zinc-800',
+    'Minimal': 'bg-gradient-to-b from-stone-50 to-white dark:from-stone-800 dark:to-stone-900',
+    'Streetwear': 'bg-gradient-to-b from-neutral-200 to-neutral-100 dark:from-neutral-700 dark:to-neutral-800',
+    'Luxury Soft': 'bg-gradient-to-b from-amber-50 to-orange-50/30 dark:from-amber-900/40 dark:to-orange-900/20',
   };
 
   return (
@@ -1202,14 +1194,14 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
       <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
-          const accent = PRESET_ACCENT[preset.name] || 'bg-muted-foreground/15';
+          const gradient = PRESET_GRADIENT[preset.name] || 'bg-muted/40';
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
                 className={cn('w-[130px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
-                  active ? 'bg-primary/10 border-primary ring-2 ring-primary/30 shadow-sm' : 'bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/60')}>
-                <div className={cn('h-[3px] w-full', accent)} />
-                <div className="px-3 py-2.5">
+                  gradient,
+                  active ? 'border-primary ring-2 ring-primary/30 shadow-sm' : 'border-border/60 hover:border-primary/40')}>
+                <div className="px-3 py-3">
                   <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
                 </div>
               </button>
@@ -1288,45 +1280,60 @@ function InlinePersonDetails({ details, update, outfitAccessories, onAccessories
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-3">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
-            { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
-            { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={skinToneOptions} />
-          <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
-            { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
-          ]} />
-        </div>
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
+          { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
+          { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={skinToneOptions} />
+        <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
+          { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
+        ]} />
       </div>
-
-      <div className="space-y-3">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Accessories & Styling</span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
-            { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
-            { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+        <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
+          { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
+          { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
+          { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
+          { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        {onAccessoriesChange && (
+          <ChipSelector label="Accessories" value={outfitAccessories || ''} onChange={v => onAccessoriesChange(v)} options={[
+            { value: 'none', label: 'None' }, { value: 'minimal', label: 'Minimal' }, { value: 'statement', label: 'Statement' },
           ]} />
-          <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
-            { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
-            { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          {onAccessoriesChange && (
-            <ChipSelector label="Accessories" value={outfitAccessories || ''} onChange={v => onAccessoriesChange(v)} options={[
-              { value: 'none', label: 'None' }, { value: 'minimal', label: 'Minimal' }, { value: 'statement', label: 'Statement' },
-            ]} />
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
+}
+
+/* ══════════════════════════════════════════════
+   Summary helpers for collapsible triggers
+   ══════════════════════════════════════════════ */
+
+function getOutfitSummary(config?: OutfitConfig): string {
+  if (!config) return '';
+  const parts: string[] = [];
+  if (config.top) parts.push(`${config.top.color || ''} ${config.top.garment || ''}`.trim());
+  if (config.bottom) parts.push(`${config.bottom.color || ''} ${config.bottom.garment || ''}`.trim());
+  if (config.shoes) parts.push(config.shoes.garment || '');
+  return parts.filter(Boolean).join(' · ') || '';
+}
+
+function getAppearanceSummary(d: DetailSettings): string {
+  const parts: string[] = [];
+  if (d.presentation && d.presentation !== 'auto') parts.push(d.presentation.charAt(0).toUpperCase() + d.presentation.slice(1));
+  if (d.ageRange && d.ageRange !== 'auto') parts.push(d.ageRange);
+  if (d.skinTone && d.skinTone !== 'auto') parts.push(d.skinTone.charAt(0).toUpperCase() + d.skinTone.slice(1));
+  if (d.expression && d.expression !== 'auto') parts.push(d.expression.replace('-', ' '));
+  return parts.join(' · ') || 'Auto';
 }
 
 /* ══════════════════════════════════════════════
@@ -1656,44 +1663,35 @@ export function ProductImagesStep3Refine({
           <CardContent className="p-5 space-y-4">
             <div>
               <h3 className="text-sm font-semibold">Style & Outfit</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Set the look — presets apply to outfit and appearance automatically.</p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Lock className="w-3 h-3 text-primary" />
-              <span className="text-[11px] text-muted-foreground">Locked across all on-model scenes.</span>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
             </div>
 
             <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
 
             <Separator className="opacity-40" />
 
-            <div className="flex gap-2">
-              <Collapsible className="flex-1">
-                <CollapsibleTrigger className="w-full flex items-center justify-between py-2 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/customize">
-                  <div className="flex items-center gap-2">
-                    <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit details</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
+            <div className="space-y-1">
+              <Collapsible>
+                <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/customize">
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90 flex-shrink-0" />
+                  <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit</span>
+                  <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getOutfitSummary(details.outfitConfig)}</span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="space-y-2 pt-3 pb-1">
+                  <div className="space-y-2 pt-2 pb-1 pl-6">
                     <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
                   </div>
                 </CollapsibleContent>
               </Collapsible>
 
-              <Collapsible className="flex-1">
-                <CollapsibleTrigger className="w-full flex items-center justify-between py-2 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/appear">
-                  <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
+              <Collapsible>
+                <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
+                  <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
+                  <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="pt-3 pb-1">
+                  <div className="pt-2 pb-1 pl-6">
                     <InlinePersonDetails
                       details={details}
                       update={update}
