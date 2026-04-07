@@ -1417,11 +1417,6 @@ export function ProductImagesStep3Refine({
     }
   };
 
-    // Only expand if scene has action controls
-    if (sceneHasActionControls(scene)) {
-      setExpandedSceneId(prev => prev === id ? null : id);
-    }
-  };
 
   // All models + resolve selected model gender
   const allModels = [...userModels, ...globalModels];
