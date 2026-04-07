@@ -90,8 +90,11 @@ Deno.serve(async (req) => {
 
       const postsData = await postsResponse.json();
 
+      // Debug: log the raw response structure
+      console.log("[INSTAGRAM-FEED] Raw response keys:", JSON.stringify(Object.keys(postsData)));
+      console.log("[INSTAGRAM-FEED] Raw response preview:", JSON.stringify(postsData).slice(0, 2000));
+
       // RapidAPI response structure: extract posts from the response
-      // The API may return data in different shapes, handle common patterns
       let posts: any[] = [];
       if (Array.isArray(postsData)) {
         posts = postsData;
@@ -103,6 +106,21 @@ Deno.serve(async (req) => {
         posts = postsData.items;
       } else if (postsData?.data && Array.isArray(postsData.data)) {
         posts = postsData.data;
+      } else if (postsData?.data?.user?.edge_owner_to_timeline_media?.edges) {
+        posts = postsData.data.user.edge_owner_to_timeline_media.edges.map((e: any) => e.node || e);
+      } else if (postsData?.edge_owner_to_timeline_media?.edges) {
+        posts = postsData.edge_owner_to_timeline_media.edges.map((e: any) => e.node || e);
+      } else if (postsData?.graphql?.user?.edge_owner_to_timeline_media?.edges) {
+        posts = postsData.graphql.user.edge_owner_to_timeline_media.edges.map((e: any) => e.node || e);
+      } else if (postsData?.user?.media?.nodes) {
+        posts = postsData.user.media.nodes;
+      } else if (postsData?.medias) {
+        posts = postsData.medias;
+      }
+
+      console.log("[INSTAGRAM-FEED] Parsed posts count:", posts.length);
+      if (posts.length > 0) {
+        console.log("[INSTAGRAM-FEED] Sample post keys:", JSON.stringify(Object.keys(posts[0])));
       }
 
       // Delete old posts for this account
