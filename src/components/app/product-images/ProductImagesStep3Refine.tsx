@@ -1577,12 +1577,16 @@ export function ProductImagesStep3Refine({
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <div className="flex -space-x-1.5">
-                        <div className="w-5 h-5 rounded-full bg-primary/20 border-2 border-card flex items-center justify-center">
-                          <Users className="w-2.5 h-2.5 text-primary" />
-                        </div>
-                        <div className="w-5 h-5 rounded-full bg-primary/15 border-2 border-card" />
-                        <div className="w-5 h-5 rounded-full bg-primary/10 border-2 border-card" />
+                      <div className="flex -space-x-2">
+                        {(globalModels.slice(0, 3).length > 0 ? globalModels.slice(0, 3) : [null, null, null]).map((m, i) => (
+                          <div key={i} className="w-6 h-6 rounded-full border-2 border-card overflow-hidden bg-muted flex-shrink-0">
+                            {m?.previewUrl ? (
+                              <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={cn('w-full h-full', i === 0 ? 'bg-primary/20' : i === 1 ? 'bg-primary/15' : 'bg-primary/10')} />
+                            )}
+                          </div>
+                        ))}
                       </div>
                       <span className="text-sm font-semibold">Choose model</span>
                       {details.selectedModelId && (
@@ -1599,6 +1603,7 @@ export function ProductImagesStep3Refine({
                   globalModels={globalModels}
                   selectedModelId={details.selectedModelId}
                   onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
+                  previewImages={globalModels.slice(0, 3).map(m => m.previewUrl).filter(Boolean)}
                 />
               </CardContent>
             </Card>
