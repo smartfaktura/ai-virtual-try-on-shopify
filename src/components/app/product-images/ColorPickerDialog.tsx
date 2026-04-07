@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,37 @@ function isDark(hex: string) {
   return lum < 140;
 }
 
+function hslToHex(h: number, s: number, l: number): string {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+}
+
+function hexToHsl(hex: string): [number, number, number] {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return [0, 0, 50];
+  let r = parseInt(m[1], 16) / 255;
+  let g = parseInt(m[2], 16) / 255;
+  let b = parseInt(m[3], 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) * 60; break;
+      case g: h = ((b - r) / d + 2) * 60; break;
+      case b: h = ((r - g) / d + 4) * 60; break;
+    }
+  }
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+}
+
 interface ColorPickerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,6 +78,38 @@ interface ColorPickerDialogProps {
   onApplyGradient: (from: string, to: string) => void;
   onSaveColor: (hex: string) => void;
   onSaveGradient: (from: string, to: string) => void;
+}
+
+function HueSlider({ hue, onChange }: { hue: number; onChange: (v: number) => void }) {
+  return (
+    <div className="space-y-1">
+      <span className="text-[11px] font-medium text-muted-foreground">Hue</span>
+      <input
+        type="range" min={0} max={360} value={hue}
+        onChange={e => onChange(Number(e.target.value))}
+        className="w-full h-3 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:bg-current [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-md"
+        style={{
+          background: 'linear-gradient(to right, hsl(0,70%,50%), hsl(60,70%,50%), hsl(120,70%,50%), hsl(180,70%,50%), hsl(240,70%,50%), hsl(300,70%,50%), hsl(360,70%,50%))',
+        }}
+      />
+    </div>
+  );
+}
+
+function LightnessSlider({ hue, lightness, onChange }: { hue: number; lightness: number; onChange: (v: number) => void }) {
+  return (
+    <div className="space-y-1">
+      <span className="text-[11px] font-medium text-muted-foreground">Lightness</span>
+      <input
+        type="range" min={5} max={95} value={lightness}
+        onChange={e => onChange(Number(e.target.value))}
+        className="w-full h-3 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-md"
+        style={{
+          background: `linear-gradient(to right, hsl(${hue},70%,5%), hsl(${hue},70%,50%), hsl(${hue},70%,95%))`,
+        }}
+      />
+    </div>
+  );
 }
 
 export function ColorPickerDialog({
@@ -65,36 +128,65 @@ export function ColorPickerDialog({
   const [tab, setTab] = useState<string>(initialMode);
   const [hex, setHex] = useState(initialHex || '#FFFFFF');
   const [hexInput, setHexInput] = useState(initialHex || '#FFFFFF');
+  const [hue, setHue] = useState(0);
+  const [lightness, setLightness] = useState(50);
+  const [saturation, setSaturation] = useState(70);
+
   const [gradFrom, setGradFrom] = useState(initialGradientFrom || '#F8F8F8');
   const [gradTo, setGradTo] = useState(initialGradientTo || '#EEEEEE');
   const [gradFromInput, setGradFromInput] = useState(initialGradientFrom || '#F8F8F8');
   const [gradToInput, setGradToInput] = useState(initialGradientTo || '#EEEEEE');
+  const [gradFromHue, setGradFromHue] = useState(0);
+  const [gradFromLight, setGradFromLight] = useState(50);
+  const [gradToHue, setGradToHue] = useState(0);
+  const [gradToLight, setGradToLight] = useState(50);
+
+  const colorInputRef = useRef<HTMLInputElement>(null);
+
+  const syncHslFromHex = useCallback((h: string) => {
+    const [hu, sa, li] = hexToHsl(h);
+    setHue(hu); setSaturation(sa); setLightness(li);
+  }, []);
 
   useEffect(() => {
     if (open) {
+      const h = initialHex || '#FFFFFF';
       setTab(initialMode);
-      setHex(initialHex || '#FFFFFF');
-      setHexInput(initialHex || '#FFFFFF');
-      setGradFrom(initialGradientFrom || '#F8F8F8');
-      setGradTo(initialGradientTo || '#EEEEEE');
-      setGradFromInput(initialGradientFrom || '#F8F8F8');
-      setGradToInput(initialGradientTo || '#EEEEEE');
+      setHex(h); setHexInput(h);
+      syncHslFromHex(h);
+
+      const gf = initialGradientFrom || '#F8F8F8';
+      const gt = initialGradientTo || '#EEEEEE';
+      setGradFrom(gf); setGradTo(gt);
+      setGradFromInput(gf); setGradToInput(gt);
+      const [fh,,fl] = hexToHsl(gf);
+      const [th,,tl] = hexToHsl(gt);
+      setGradFromHue(fh); setGradFromLight(fl);
+      setGradToHue(th); setGradToLight(tl);
     }
-  }, [open, initialMode, initialHex, initialGradientFrom, initialGradientTo]);
+  }, [open, initialMode, initialHex, initialGradientFrom, initialGradientTo, syncHslFromHex]);
+
+  const updateFromSliders = (h: number, s: number, l: number) => {
+    const newHex = hslToHex(h, s, l);
+    setHex(newHex); setHexInput(newHex);
+  };
+
+  const handleHueChange = (v: number) => { setHue(v); updateFromSliders(v, saturation, lightness); };
+  const handleLightnessChange = (v: number) => { setLightness(v); updateFromSliders(hue, saturation, v); };
 
   const handleHexInputBlur = () => {
     const n = normalizeHex(hexInput);
-    if (isValidHex(n)) { setHex(n); setHexInput(n); } else { setHexInput(hex); }
+    if (isValidHex(n)) { setHex(n); setHexInput(n); syncHslFromHex(n); } else { setHexInput(hex); }
   };
 
   const handleGradFromBlur = () => {
     const n = normalizeHex(gradFromInput);
-    if (isValidHex(n)) { setGradFrom(n); setGradFromInput(n); } else { setGradFromInput(gradFrom); }
+    if (isValidHex(n)) { setGradFrom(n); setGradFromInput(n); const [h,,l] = hexToHsl(n); setGradFromHue(h); setGradFromLight(l); } else { setGradFromInput(gradFrom); }
   };
 
   const handleGradToBlur = () => {
     const n = normalizeHex(gradToInput);
-    if (isValidHex(n)) { setGradTo(n); setGradToInput(n); } else { setGradToInput(gradTo); }
+    if (isValidHex(n)) { setGradTo(n); setGradToInput(n); const [h,,l] = hexToHsl(n); setGradToHue(h); setGradToLight(l); } else { setGradToInput(gradTo); }
   };
 
   const handleApply = () => {
@@ -102,11 +194,23 @@ export function ColorPickerDialog({
     onOpenChange(false);
   };
 
-  const pickSwatch = (c: string) => { setHex(c); setHexInput(c); };
+  const pickSwatch = (c: string) => { setHex(c); setHexInput(c); syncHslFromHex(c); };
 
   const pickGradientPreset = (from: string, to: string) => {
     setGradFrom(from); setGradFromInput(from);
     setGradTo(to); setGradToInput(to);
+    const [fh,,fl] = hexToHsl(from); setGradFromHue(fh); setGradFromLight(fl);
+    const [th,,tl] = hexToHsl(to); setGradToHue(th); setGradToLight(tl);
+  };
+
+  const updateGradFrom = (h: number, l: number) => {
+    setGradFromHue(h); setGradFromLight(l);
+    const v = hslToHex(h, 70, l); setGradFrom(v); setGradFromInput(v);
+  };
+
+  const updateGradTo = (h: number, l: number) => {
+    setGradToHue(h); setGradToLight(l);
+    const v = hslToHex(h, 70, l); setGradTo(v); setGradToInput(v);
   };
 
   return (
@@ -126,7 +230,6 @@ export function ColorPickerDialog({
 
           {/* ─── Solid Tab ─── */}
           <TabsContent value="solid" className="px-5 pb-5 pt-4 space-y-4 mt-0">
-
             {/* Quick-pick swatches */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted-foreground">Quick pick</span>
@@ -135,41 +238,27 @@ export function ColorPickerDialog({
                   const selected = hex.toUpperCase() === c;
                   return (
                     <button
-                      key={c}
-                      type="button"
-                      onClick={() => pickSwatch(c)}
-                      className={`
-                        w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center
-                        focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                        ${selected ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-border hover:scale-105'}
-                      `}
-                      style={{ background: c }}
-                      title={c}
+                      key={c} type="button" onClick={() => pickSwatch(c)}
+                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selected ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-border hover:scale-105'}`}
+                      style={{ background: c }} title={c}
                     >
-                      {selected && (
-                        <Check className={`w-3.5 h-3.5 ${isDark(c) ? 'text-white' : 'text-foreground'}`} />
-                      )}
+                      {selected && <Check className={`w-3.5 h-3.5 ${isDark(c) ? 'text-white' : 'text-foreground'}`} />}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Picker + Hex */}
+            {/* Custom sliders */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-medium text-muted-foreground">Custom</span>
+              <HueSlider hue={hue} onChange={handleHueChange} />
+              <LightnessSlider hue={hue} lightness={lightness} onChange={handleLightnessChange} />
+            </div>
+
+            {/* Color preview + Hex input + Eyedropper */}
             <div className="flex items-center gap-3">
-              <label className="relative shrink-0 cursor-pointer group">
-                <div
-                  className="w-10 h-10 rounded-lg border-2 border-border shadow-sm group-hover:ring-2 group-hover:ring-primary/40 transition-all"
-                  style={{ background: hex }}
-                />
-                <Pipette className="absolute bottom-0.5 right-0.5 w-3 h-3 text-white drop-shadow-md" />
-                <input
-                  type="color"
-                  value={isValidHex(hex) ? hex : '#FFFFFF'}
-                  onChange={e => { const v = e.target.value.toUpperCase(); setHex(v); setHexInput(v); }}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-              </label>
+              <div className="w-10 h-10 rounded-lg border-2 border-border shadow-sm shrink-0" style={{ background: hex }} />
               <div className="flex-1 space-y-1">
                 <label className="text-[11px] font-medium text-muted-foreground">HEX</label>
                 <Input
@@ -177,21 +266,31 @@ export function ColorPickerDialog({
                   onChange={e => setHexInput(e.target.value)}
                   onBlur={handleHexInputBlur}
                   onKeyDown={e => { if (e.key === 'Enter') handleHexInputBlur(); }}
-                  className="h-8 text-xs font-mono"
-                  placeholder="#FF5522"
-                  maxLength={7}
+                  className="h-8 text-xs font-mono" placeholder="#FF5522" maxLength={7}
                 />
               </div>
+              <button
+                type="button"
+                onClick={() => colorInputRef.current?.click()}
+                className="shrink-0 w-9 h-9 rounded-lg border border-border bg-muted/50 flex items-center justify-center hover:bg-accent transition-colors"
+                title="Eyedropper"
+              >
+                <Pipette className="w-4 h-4 text-muted-foreground" />
+                <input
+                  ref={colorInputRef} type="color"
+                  value={isValidHex(hex) ? hex : '#FFFFFF'}
+                  onChange={e => { const v = e.target.value.toUpperCase(); setHex(v); setHexInput(v); syncHslFromHex(v); }}
+                  className="sr-only"
+                />
+              </button>
             </div>
 
-            {/* Save */}
             {canSave && isValidHex(hex) && (
               <Button variant="outline" size="sm" className="w-full text-xs gap-1.5" onClick={() => onSaveColor(hex)}>
                 <Save className="w-3 h-3" /> Save to palette
               </Button>
             )}
 
-            {/* Actions */}
             <div className="flex gap-2 pt-1">
               <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button size="sm" className="flex-1 text-xs" onClick={handleApply}>Apply</Button>
@@ -200,7 +299,6 @@ export function ColorPickerDialog({
 
           {/* ─── Gradient Tab ─── */}
           <TabsContent value="gradient" className="px-5 pb-5 pt-4 space-y-4 mt-0">
-            {/* Quick gradient presets */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted-foreground">Quick gradients</span>
               <div className="grid grid-cols-4 gap-2">
@@ -208,85 +306,37 @@ export function ColorPickerDialog({
                   const selected = gradFrom.toUpperCase() === p.from && gradTo.toUpperCase() === p.to;
                   return (
                     <button
-                      key={p.name}
-                      type="button"
-                      onClick={() => pickGradientPreset(p.from, p.to)}
-                      className={`
-                        h-10 rounded-lg border-2 transition-all
-                        focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                        ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}
-                      `}
-                      style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
-                      title={p.name}
+                      key={p.name} type="button" onClick={() => pickGradientPreset(p.from, p.to)}
+                      className={`h-10 rounded-lg border-2 transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}`}
+                      style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }} title={p.name}
                     />
                   );
                 })}
               </div>
             </div>
 
-
-            {/* Two color wells */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Start */}
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-medium text-muted-foreground">Start</span>
-                <label className="relative block cursor-pointer group">
-                  <div
-                    className="w-full h-10 rounded-lg border-2 border-border shadow-sm group-hover:ring-2 group-hover:ring-primary/40 transition-all"
-                    style={{ background: gradFrom }}
-                  />
-                  <Pipette className="absolute bottom-1 right-1 w-3 h-3 text-white drop-shadow-md" />
-                  <input
-                    type="color"
-                    value={isValidHex(gradFrom) ? gradFrom : '#F8F8F8'}
-                    onChange={e => { const v = e.target.value.toUpperCase(); setGradFrom(v); setGradFromInput(v); }}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
-                <Input
-                  value={gradFromInput}
-                  onChange={e => setGradFromInput(e.target.value)}
-                  onBlur={handleGradFromBlur}
-                  onKeyDown={e => { if (e.key === 'Enter') handleGradFromBlur(); }}
-                  className="h-7 text-[11px] font-mono"
-                  maxLength={7}
-                />
-              </div>
-              {/* End */}
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-medium text-muted-foreground">End</span>
-                <label className="relative block cursor-pointer group">
-                  <div
-                    className="w-full h-10 rounded-lg border-2 border-border shadow-sm group-hover:ring-2 group-hover:ring-primary/40 transition-all"
-                    style={{ background: gradTo }}
-                  />
-                  <Pipette className="absolute bottom-1 right-1 w-3 h-3 text-white drop-shadow-md" />
-                  <input
-                    type="color"
-                    value={isValidHex(gradTo) ? gradTo : '#EEEEEE'}
-                    onChange={e => { const v = e.target.value.toUpperCase(); setGradTo(v); setGradToInput(v); }}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
-                <Input
-                  value={gradToInput}
-                  onChange={e => setGradToInput(e.target.value)}
-                  onBlur={handleGradToBlur}
-                  onKeyDown={e => { if (e.key === 'Enter') handleGradToBlur(); }}
-                  className="h-7 text-[11px] font-mono"
-                  maxLength={7}
-                />
-              </div>
+            {/* Start color */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-medium text-muted-foreground">Start color</span>
+              <HueSlider hue={gradFromHue} onChange={h => updateGradFrom(h, gradFromLight)} />
+              <LightnessSlider hue={gradFromHue} lightness={gradFromLight} onChange={l => updateGradFrom(gradFromHue, l)} />
+              <Input value={gradFromInput} onChange={e => setGradFromInput(e.target.value)} onBlur={handleGradFromBlur} onKeyDown={e => { if (e.key === 'Enter') handleGradFromBlur(); }} className="h-7 text-[11px] font-mono" maxLength={7} />
             </div>
 
-            {/* Save */}
+            {/* End color */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-medium text-muted-foreground">End color</span>
+              <HueSlider hue={gradToHue} onChange={h => updateGradTo(h, gradToLight)} />
+              <LightnessSlider hue={gradToHue} lightness={gradToLight} onChange={l => updateGradTo(gradToHue, l)} />
+              <Input value={gradToInput} onChange={e => setGradToInput(e.target.value)} onBlur={handleGradToBlur} onKeyDown={e => { if (e.key === 'Enter') handleGradToBlur(); }} className="h-7 text-[11px] font-mono" maxLength={7} />
+            </div>
+
             {canSave && (
               <Button variant="outline" size="sm" className="w-full text-xs gap-1.5" onClick={() => onSaveGradient(gradFrom, gradTo)}>
                 <Save className="w-3 h-3" /> Save to palette
               </Button>
             )}
 
-            {/* Actions */}
             <div className="flex gap-2 pt-1">
               <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button size="sm" className="flex-1 text-xs" onClick={handleApply}>Apply</Button>
