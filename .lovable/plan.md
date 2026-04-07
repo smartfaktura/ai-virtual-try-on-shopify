@@ -1,70 +1,48 @@
 
 
-# Expanded Token System for Product Image Scenes
+# Prompt Tokens Reference Page + UX Fix
 
-## The Category Chicken-and-Egg Problem
+## Problem
+The current token reference is a collapsible panel inside the scenes admin page — requires multiple clicks to open groups, tokens are tiny, no usage examples, and it blocks the scene list. Slow and unfriendly for prompt engineering work.
 
-**No extra call needed.** The current single AI vision call already detects the category. We expand that same call to also extract all relevant tokens in one pass. The AI model sees the image, determines "this is a fragrance," and simultaneously extracts `fragranceFamily`, `bottleType`, `liquidColorHex`, etc. One call, one result, cached forever in `analysis_json`.
-
-The `analysis_json` column on `user_products` is a JSONB blob with no schema constraint — we simply store a richer object. Existing cached analyses keep working (they just have fewer fields); new analyses get the full token set.
-
-## Architecture
-
-```text
-┌─────────────────────────────────────┐
-│  analyze-product-category (edge fn) │
-│  Single AI call extracts:           │
-│  1. Global visual tokens (always)   │
-│  2. Global semantic tokens (always) │
-│  3. Category-specific tokens        │
-│     (AI picks the right set based   │
-│      on detected category)          │
-└──────────────┬──────────────────────┘
-               │ stored in analysis_json
-               ▼
-┌─────────────────────────────────────┐
-│  resolveToken() in prompt builder   │
-│  Maps {{tokenName}} → value from    │
-│  analysis_json, with safe fallbacks │
-└─────────────────────────────────────┘
-```
+## Solution
+Create a dedicated **Prompt Tokens Reference** page at `/app/admin/prompt-tokens` with a flat, searchable, always-visible layout. Keep a slim link button on the scenes page pointing to it.
 
 ## Changes
 
-### 1. Update `ProductAnalysis` type (`src/components/app/product-images/types.ts`)
-Expand the interface with all new global + category-specific fields as optional strings/booleans. Keep existing fields for backward compatibility.
+### 1. New page: `src/pages/AdminPromptTokens.tsx`
+- Full-page token reference with **search bar** at top (filters across all groups)
+- All groups **expanded by default** — no clicking to open
+- Each token rendered as a card/row showing:
+  - `{{tokenName}}` (click to copy)
+  - Description
+  - **Example value** (e.g. `{{flowersRelated}}` → `"white rose, jasmine, peony"`)
+  - **Example usage in prompt** (e.g. `"Surround the bottle with fresh {{flowersRelated}}, scattered naturally on the surface"`)
+- Sticky category sidebar/tabs for quick jumping between groups
+- Color-coded group headers (System = blue, Visual = purple, Semantic = green, Category = amber)
 
-### 2. Rewrite edge function AI prompt (`supabase/functions/analyze-product-category/index.ts`)
-- Expand the system prompt to request all global tokens plus category-conditional tokens
-- Use a single `classify_product` tool call with the full schema (all fields optional except globals)
-- The AI naturally returns only relevant category fields (e.g., `fragranceFamily` only for fragrances)
-- Switch model from `gemini-2.5-flash-lite` to `gemini-2.5-flash` for better structured extraction accuracy with the larger schema
+### 2. Add route in `src/App.tsx`
+- Lazy import + route at `/admin/prompt-tokens`
 
-### 3. Expand `resolveToken()` in prompt builder (`src/lib/productImagePromptBuilder.ts`)
-- Add cases for every new `{{token}}` that reads from `analysis` object
-- Each token returns the value directly from analysis or an empty string if absent
-- No behavior change for existing tokens
+### 3. Simplify token UI in `src/pages/AdminProductImageScenes.tsx`
+- Replace the bulky collapsible token panel with a single link button: **"Open Token Reference →"** that navigates to `/app/admin/prompt-tokens` (opens in new tab)
+- Keep the prompt template textarea as-is
 
-### 4. Update admin token reference bar (`src/pages/AdminProductImageScenes.tsx`)
-- Replace the flat `PROMPT_TOKENS` array with a structured object organized by group:
-  - **Global Visual** (productCategory, productMainHex, etc.)
-  - **Global Semantic** (ingredientFamilyPrimary, flowersRelated, etc.)
-  - **Category-Specific** sections (Fashion, Beauty, Fragrance, Jewelry, etc.)
-  - **System** (existing tokens like background, lightingDirective, etc.)
-- Render as collapsible groups with descriptions in the token info bar
-- Clicking a token inserts `{{tokenName}}` into the prompt template textarea
+### Token Data Structure
+Each token entry will include:
+```typescript
+{
+  name: string;        // e.g. "flowersRelated"
+  desc: string;        // e.g. "Related flowers for styling"
+  example: string;     // e.g. "white rose, jasmine, peony"
+  usage: string;       // e.g. "Surround the product with fresh {{flowersRelated}} on a marble surface"
+}
+```
 
-### 5. Invalidate stale analyses
-- In `useProductAnalysis`, check for a version marker (e.g., `analysis.version !== 2`) to re-trigger analysis for products that only have the old slim schema
-- This ensures existing products get the rich token data on next use
+All 100+ tokens will have example values and usage prompts covering System, Global Visual, Global Semantic, and all 10 category groups.
 
-## Files Modified
-- `src/components/app/product-images/types.ts` — expand `ProductAnalysis`
-- `supabase/functions/analyze-product-category/index.ts` — richer AI extraction
-- `src/lib/productImagePromptBuilder.ts` — new token resolution cases
-- `src/pages/AdminProductImageScenes.tsx` — structured token reference UI
-- `src/hooks/useProductAnalysis.ts` — version check for re-analysis
-
-## No Database Migration Needed
-`analysis_json` is already a JSONB column — richer objects store without schema changes.
+### Files
+- **New**: `src/pages/AdminPromptTokens.tsx`
+- **Edit**: `src/App.tsx` — add route
+- **Edit**: `src/pages/AdminProductImageScenes.tsx` — replace collapsible token panel with link button
 
