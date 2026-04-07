@@ -43,7 +43,6 @@ const TRIGGER_BLOCKS = [
 
 const CAT_LABEL_MAP: Record<string, string> = {};
 CATEGORIES.forEach(c => { CAT_LABEL_MAP[c.value] = c.label; });
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
 
 
