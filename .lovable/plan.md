@@ -1,106 +1,61 @@
 
 
-# Improve Color Picker: Modern Dialog-Based Custom Color & Gradient Editor
+# Premium Setup Step Redesign
 
 ## Problem
-
-Currently, clicking "Custom" or "Gradient" triggers a hidden native `<input type="color">` which opens the OS-level color picker — a clunky, inconsistent experience with no hex input field and no gradient preview. The gradient card also doesn't show a real gradient preview when inactive.
-
-## Solution
-
-Replace the hidden native color inputs with a modern **Dialog-based color picker** (Figma/Canva style) that opens when clicking the Custom or Gradient swatch cards. Two modes inside the dialog: **Solid Color** and **Gradient**.
+The current Setup step feels overcrowded and lacks premium spacing. Specific issues:
+- "Choose model" section has redundant text ("Select a model or skip..."), dated All/Women/Men pill tabs, and a single `User` icon instead of a visual model indicator
+- "Outfit details" and "Model styling" feel disconnected — users don't understand they're related styling controls
+- Style direction cards are plain white boxes with no visual personality
+- "Needs model" uses amber/yellow which isn't on-brand for VOVV.AI
+- Sticky bar still says "Refine" instead of "Setup"
 
 ## Changes
 
-### File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+### 1. Rename "Refine" → "Setup" in sticky bar
+**File: `ProductImagesStickyBar.tsx`**
+- Change `STEP_LABELS[3]` from `'Refine'` to `'Setup'`
+- Change CTA label case 2 from `'Refine'` to `'Setup'`
 
-#### 1. Add a `ColorPickerDialog` component (~120 lines)
+### 2. Redesign "Choose model" card
+**File: `ProductImagesStep3Refine.tsx` — `ModelPickerSections`**
+- Remove the redundant subtitle "Select a model or skip to customize manually below."
+- Replace `User` icon in header with 3 small overlapping avatar circles (CSS `flex -space-x-2` with 3 `w-5 h-5` rounded-full divs using `Users` icon or gradient placeholders)
+- Replace the `Tabs` (All/Women/Men) with inline text-style filter links: `All · Women · Men` using simple underline-active styling (no pill background)
+- Move filter into the header row (right-aligned) to save vertical space
+- Add more padding (`p-5`) and `space-y-5` for premium breathing room
 
-A `<Dialog>` with two tabs: **Solid** and **Gradient**.
+### 3. Replace amber "Needs model" with branded color
+**File: `ProductImagesStep3Refine.tsx`**
+- Replace all `amber-100/amber-700/amber-400/amber-900` references with `primary/10`, `primary`, `primary/80` (the dark navy brand color)
+- Shot card "Needs model" badge: `bg-primary/10 text-primary border border-primary/20`
+- Summary stat chip for "N need a model": same primary-tinted style
+- Background "select a background" hint: use `primary/5` bg with `primary/60` text instead of amber
 
-**Solid tab:**
-- Large color preview square (the selected color)
-- Native `<input type="color">` displayed inline as a visible picker canvas (not hidden)
-- Hex input field with `#` prefix, validated on blur
-- RGB display (read-only, derived from hex)
-- "Save to palette" button (if `canSave`)
-- "Apply" and "Cancel" buttons
+### 4. Add visual flair to Style direction cards
+**File: `ProductImagesStep3Refine.tsx` — `OutfitPresetsOnly`**
+- Add a subtle colored accent bar (3px) at the top of each card using preset-specific tones:
+  - Studio Standard: `bg-slate-300`
+  - Editorial: `bg-zinc-800`
+  - Minimal: `bg-stone-200`
+  - Streetwear: `bg-neutral-700`
+  - Luxury Soft: `bg-amber-200`
+- Increase card width from `w-[160px]` to `w-[170px]`, add `overflow-hidden` for the accent bar
+- Increase internal padding slightly for premium feel
 
-**Gradient tab:**
-- Large gradient preview bar showing `linear-gradient(135deg, from, to)`
-- Two color wells side by side labeled "Start" and "End"
-- Each well: clickable swatch + hex input field
-- Clicking a well opens an inline native color picker for that stop
-- Gradient angle selector (optional, default 135deg)
-- "Save to palette" button
-- "Apply" and "Cancel" buttons
+### 5. Merge "Outfit details" + "Model styling" under unified section
+**File: `ProductImagesStep3Refine.tsx` — Optional section**
+- Replace the separate "Optional" label + two independent collapsibles with a single `Card` wrapper titled **"Outfit & Model styling"** with subtitle "Fine-tune outfit pieces, appearance, and accessories."
+- Inside: two collapsible sub-sections (Outfit details, Appearance) — same content, but now visually grouped as one related unit
+- Remove the generic "Optional" uppercase label
 
-#### 2. Update `BackgroundSwatchSelector`
+### 6. Add premium spacing throughout
+**File: `ProductImagesStep3Refine.tsx`**
+- Increase outer `space-y-6` to `space-y-8`
+- Add `space-y-5` inside section cards instead of `space-y-3`
+- Add subtle section dividers with more margin (`my-6` on Separators)
 
-- Remove the 3 hidden `<input type="color">` refs (`colorInputRef`, `gradFromInputRef`, `gradToInputRef`)
-- Add state: `pickerOpen: boolean`, `pickerMode: 'solid' | 'gradient'`
-- **Custom card click** → `setPickerMode('solid'); setPickerOpen(true); toggleSwatch('custom')`
-- **Gradient card click** → `setPickerMode('gradient'); setPickerOpen(true); toggleSwatch('gradient-custom')`
-- **Edit button click** → same as above but doesn't re-toggle
-- Render `<ColorPickerDialog>` at the bottom of the component
-
-#### 3. Fix gradient preview on the Gradient swatch card
-
-Currently the "Gradient" card in the grid only shows a gradient when `hasGradientCustom` is true. Update the inactive state to show a subtle default gradient preview (`linear-gradient(135deg, #F0F0F0, #D8D8D8)`) instead of a blank `+` icon, so users understand it's a gradient option.
-
-#### 4. Dialog design details
-
-```
-┌─────────────────────────────────┐
-│  Custom Color              [X]  │
-├─────────────────────────────────┤
-│  [ Solid ]  [ Gradient ]        │  ← Tabs
-│                                 │
-│  ┌─────────────────────────┐    │
-│  │                         │    │  ← Large preview
-│  │     Color Preview       │    │
-│  │                         │    │
-│  └─────────────────────────┘    │
-│                                 │
-│  ┌──────┐  Hex: [#FF5522  ]    │  ← Native picker + hex input
-│  │picker│                       │
-│  └──────┘  RGB: 255, 85, 34    │
-│                                 │
-│  [Save to palette]              │
-│                                 │
-│  ────────────────────────────── │
-│         [Cancel]  [Apply]       │
-└─────────────────────────────────┘
-```
-
-For gradient mode:
-```
-┌─────────────────────────────────┐
-│  Custom Color              [X]  │
-├─────────────────────────────────┤
-│  [ Solid ]  [ Gradient ]        │
-│                                 │
-│  ┌─────────────────────────┐    │
-│  │  ← gradient preview →   │    │  ← Full gradient bar
-│  └─────────────────────────┘    │
-│                                 │
-│  Start           End            │
-│  ┌──────┐        ┌──────┐      │
-│  │picker│        │picker│      │
-│  └──────┘        └──────┘      │
-│  [#F8F8F8]       [#EEEEEE]     │  ← Hex inputs
-│                                 │
-│  [Save to palette]              │
-│         [Cancel]  [Apply]       │
-└─────────────────────────────────┘
-```
-
-### Imports needed
-
-- Already have: `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `Tabs`, `TabsList`, `TabsTrigger`, `Input`, `Button`, `Badge`, `Save`
-- No new dependencies needed — using native `<input type="color">` displayed visually (not hidden) as the color canvas
-
-## Result
-
-Clicking Custom or Gradient opens a polished dialog with proper hex input, visual color picker, live preview, and save-to-palette — matching modern design tool UX. The native OS picker popup is eliminated.
+### Files modified
+1. `src/components/app/product-images/ProductImagesStickyBar.tsx` — "Refine" → "Setup"
+2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — all UI changes above
 
