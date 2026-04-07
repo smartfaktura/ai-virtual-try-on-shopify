@@ -1625,6 +1625,20 @@ export function ProductImagesStep3Refine({
 
   return (
     <div className="space-y-8 pb-20">
+      {/* Hidden file input for extra reference uploads */}
+      <input
+        ref={extraRefInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0];
+          const sid = pendingSceneIdRef.current;
+          if (f && sid) handleExtraRefUpload(sid, f);
+          e.target.value = '';
+          pendingSceneIdRef.current = null;
+        }}
+      />
       {/* ── HEADER ── */}
       <div className="space-y-3">
         <div>

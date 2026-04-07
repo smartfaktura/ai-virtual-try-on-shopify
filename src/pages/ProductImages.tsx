@@ -903,6 +903,8 @@ export default function ProductImages() {
                   selectedProductIds={selectedProductIds}
                   hasMultipleCategories={hasMultipleCategories}
                   primaryCategory={primaryCategory}
+                  sceneExtraRefs={sceneExtraRefs}
+                  onSceneExtraRefsChange={setSceneExtraRefs}
                 />
               </div>
             )}
