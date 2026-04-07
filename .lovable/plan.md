@@ -1,66 +1,36 @@
 
 
-# Extra Reference Image Upload in Step 3 (Setup)
+# Add Packaging Reference Upload to Step 3 for `packagingDetails` Scenes
 
-## What this does
-When an admin marks a scene as "requires extra reference image" (e.g. Back View, Side Profile), users selecting that scene will see a small upload area in Step 3 (Setup) to provide an additional product photo for that angle. This image gets sent to the AI alongside the main product image during generation.
+## Problem
+The packaging reference upload exists in an **orphaned component** (`ProductImagesStep3Details.tsx`) that is no longer rendered. When a scene has the `packagingDetails` trigger block, there is no way for users to upload a packaging reference image in the current Step 3 (Refine). The generation payload supports `packaging_reference_url` and the edge function injects it — but the UI path is broken.
 
-## Changes
+## What to build
 
-### 1. Database: add column to `product_image_scenes`
-```sql
-ALTER TABLE product_image_scenes 
-  ADD COLUMN requires_extra_reference boolean NOT NULL DEFAULT false;
-```
+### 1. Detect packaging scenes in Step 3
+In `ProductImagesStep3Refine.tsx`, check if any selected scene has `packagingDetails` in its `triggerBlocks`. If yes:
 
-### 2. Admin UI — checkbox in scene form
-**File: `src/pages/AdminProductImageScenes.tsx`**
-- Add a `Checkbox` row after the trigger blocks section labeled **"Requires extra reference image"** with helper text
-- Wire to `draft.requires_extra_reference` / `set('requires_extra_reference', v)`
-- Show a small `Camera` badge on scene rows where flag is true
+- Show an **info banner** in the "Selected shots" section: *"Some of your selected scenes include packaging. Upload a photo of your packaging for more accurate results — otherwise, the AI will interpret packaging design on its own."*
+- Show a **single packaging upload area** (not per-scene — packaging is global across all packaging scenes) with the same compact design as the existing extra reference upload.
 
-### 3. Hook + types — expose new field
-**File: `src/hooks/useProductImageScenes.ts`**
-- Add `requires_extra_reference` to `DbScene` interface
-- Map it in `dbToFrontend` → `requiresExtraReference`
+### 2. Wire packaging reference state
+In `ProductImages.tsx`:
+- The `details` state already has `packagingReferenceUrl` in `DetailSettings` type — just need to make sure Step3Refine can set it.
+- Pass `details.packagingReferenceUrl` and an `onPackagingRefChange` callback to Step3Refine.
+- The generation payload already sends `packaging_reference_url` from `details.packagingReferenceUrl` (line 403) — no change needed there.
 
-**File: `src/components/app/product-images/types.ts`**
-- Add `requiresExtraReference?: boolean` to `ProductImageScene`
+### 3. Upload to storage (not base64)
+The old orphaned component used base64 `FileReader`. Match the pattern used by the existing `requiresExtraReference` upload — upload to `product-uploads` bucket under `{userId}/packaging-refs/{timestamp}.{ext}` and store the public URL.
 
-### 4. Step 3 (Setup/Refine) — upload UI for flagged scenes
-**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
-- In the "Selected shots" section where scenes are listed, for each scene with `requiresExtraReference === true`:
-  - Show a small inline upload area with label like *"Upload back/side photo for better accuracy"*
-  - Upload button + drag area (compact, matching existing design patterns)
-  - After upload, show a thumbnail preview with remove button
-- Upload uses `product-uploads` bucket under `{userId}/scene-refs/{timestamp}.{ext}`
-- Store URLs in a new state map passed via props: `sceneExtraRefs: Record<string, string>`
-
-### 5. Thread state through ProductImages.tsx
-**File: `src/pages/ProductImages.tsx`**
-- Add `sceneExtraRefs` state: `useState<Record<string, string>>({})`
-- Pass `sceneExtraRefs` + `onSceneExtraRefsChange` to Step 3 Refine component
-- In the generation loop (around line 383), if current scene has an extra ref URL, add it to payload as `extra_reference_image_url`
-
-### 6. Edge function — inject extra reference into AI prompt
-**File: `supabase/functions/generate-workflow/index.ts`**
-- After the packaging reference check (line ~1211), add:
-  ```typescript
-  if ((body as any).extra_reference_image_url) {
-    referenceImages.push({ 
-      url: (body as any).extra_reference_image_url, 
-      label: "product_extra_angle" 
-    });
-  }
-  ```
-- This injects the extra angle photo as an additional reference image the AI uses for accurate rendering
+### 4. Edge function — already working
+`generate-workflow/index.ts` already handles `packaging_reference_url` (line 1209-1211) and injects it as a `[PACKAGING REFERENCE]` labeled image. No changes needed.
 
 ## Files to modify
-- **Migration**: add `requires_extra_reference` column
-- `src/hooks/useProductImageScenes.ts` — expose field
-- `src/components/app/product-images/types.ts` — add to interface
-- `src/pages/AdminProductImageScenes.tsx` — admin checkbox
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — upload UI in setup step
-- `src/pages/ProductImages.tsx` — state + payload threading
-- `supabase/functions/generate-workflow/index.ts` — use extra reference
+- **`src/components/app/product-images/ProductImagesStep3Refine.tsx`** — add packaging banner + upload area when any selected scene has `packagingDetails` trigger
+- **`src/pages/ProductImages.tsx`** — pass packaging ref props to Step3Refine (minor wiring, `details` already has the field)
+
+## No changes needed
+- Types — `packagingReferenceUrl` already exists in `DetailSettings`
+- Edge function — already handles `packaging_reference_url`
+- Database — no schema changes
 
