@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useWatchAccounts, useAllWatchPosts } from '@/hooks/useWatchAccounts';
@@ -8,14 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Plus, Library, Search, RefreshCw } from 'lucide-react';
+import { ChevronDown, Plus, Library, Search, RefreshCw, ImagePlus } from 'lucide-react';
 import { TREND_CATEGORIES } from '@/components/app/trend-watch/constants';
 import { WatchAccountCard } from '@/components/app/trend-watch/WatchAccountCard';
 import { AddAccountModal } from '@/components/app/trend-watch/AddAccountModal';
+import { AddImageDraftModal } from '@/components/app/trend-watch/AddImageDraftModal';
 import { PostDetailDrawer } from '@/components/app/trend-watch/PostDetailDrawer';
 import { DraftScenesPanel } from '@/components/app/trend-watch/DraftScenesPanel';
 import { ReadyScenesPanel } from '@/components/app/trend-watch/ReadyScenesPanel';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 export default function AdminTrendWatch() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
