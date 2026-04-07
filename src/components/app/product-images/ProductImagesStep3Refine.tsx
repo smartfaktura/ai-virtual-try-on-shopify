@@ -1181,27 +1181,26 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
     setSavedPresets(updated); savePresetsToStorage(updated);
   };
 
-  const PRESET_GRADIENT: Record<string, string> = {
-    'Studio Standard': 'bg-gradient-to-b from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900',
-    'Editorial': 'bg-gradient-to-b from-zinc-200 to-zinc-100 dark:from-zinc-700 dark:to-zinc-800',
-    'Minimal': 'bg-gradient-to-b from-stone-50 to-white dark:from-stone-800 dark:to-stone-900',
-    'Streetwear': 'bg-gradient-to-b from-neutral-200 to-neutral-100 dark:from-neutral-700 dark:to-neutral-800',
-    'Luxury Soft': 'bg-gradient-to-b from-amber-50 to-orange-50/30 dark:from-amber-900/40 dark:to-orange-900/20',
-  };
+  // Auto-select Studio Standard on mount if nothing set
+  useEffect(() => {
+    if (!details.outfitConfig && builtInPresets.length > 0) {
+      update({ outfitConfig: { ...builtInPresets[0].config } });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
-          const gradient = PRESET_GRADIENT[preset.name] || 'bg-muted/40';
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
-                className={cn('w-[130px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
-                  gradient,
-                  active ? 'border-primary ring-2 ring-primary/30 shadow-sm' : 'border-border/60 hover:border-primary/40')}>
-                <div className="px-3 py-3">
+                className={cn('w-[130px] text-left rounded-lg border transition-colors duration-150 cursor-pointer',
+                  active
+                    ? 'border-primary/30 bg-primary/8 ring-1 ring-primary/40'
+                    : 'border-border/40 bg-muted/30 hover:bg-muted/50 hover:border-border/60')}>
+                <div className="px-3 py-2.5">
                   <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
                 </div>
               </button>
