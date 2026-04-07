@@ -151,6 +151,9 @@ export default function AdminTrendWatch() {
         <Button size="sm" onClick={() => setAddModalOpen(true)}>
           <Plus className="w-4 h-4 mr-1" /> Add Account
         </Button>
+        <Button size="sm" variant="outline" onClick={handleRefreshAll} disabled={refreshingAll}>
+          <RefreshCw className={`w-4 h-4 mr-1 ${refreshingAll ? 'animate-spin' : ''}`} /> Refresh All
+        </Button>
         <Button size="sm" variant="outline" onClick={() => navigate('/app/admin/scene-library')}>
           <Library className="w-4 h-4 mr-1" /> Scene Library
         </Button>

@@ -37,16 +37,6 @@ export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate,
   return (
     <div className="rounded-xl border bg-card p-4 space-y-3">
       <div className="flex items-center gap-3">
-        {/* Avatar */}
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-          {account.profile_image_url ? (
-            <img src={account.profile_image_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-sm font-semibold text-muted-foreground">
-              {account.display_name?.charAt(0)?.toUpperCase()}
-            </span>
-          )}
-        </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">

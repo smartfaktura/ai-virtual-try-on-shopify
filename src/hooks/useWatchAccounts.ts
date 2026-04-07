@@ -105,7 +105,7 @@ export function useAllWatchPosts(accountIds: string[]) {
       for (const post of (data || []) as any[]) {
         const key = (post as any).watch_account_id;
         if (!grouped[key]) grouped[key] = [];
-        if (grouped[key].length < 9) grouped[key].push(post);
+        if (grouped[key].length < 12) grouped[key].push(post);
       }
       return grouped;
     },

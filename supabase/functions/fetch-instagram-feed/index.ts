@@ -106,14 +106,17 @@ Deno.serve(async (req) => {
         posts = postsData.data;
       }
 
+      // Filter out videos
+      posts = posts.filter((p: any) => !p.is_video && !p.video_versions?.length && p.__typename !== 'GraphVideo');
+
       // Delete old posts for this account
       await supabaseAdmin
         .from("watch_posts")
         .delete()
         .eq("watch_account_id", account_id);
 
-      // Map and insert new posts (max 9)
-      const postRows = posts.slice(0, 9).map((p: any) => {
+      // Map and insert new posts (max 12)
+      const postRows = posts.slice(0, 12).map((p: any) => {
         // Handle various RapidAPI response field names
         const shortcode = p.code || p.shortcode || p.shortCode || "";
         const imageUrl = p.image_versions2?.candidates?.[0]?.url 
