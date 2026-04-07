@@ -55,9 +55,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const apifyKey = Deno.env.get("APIFY_API_KEY");
-    if (!apifyKey) {
-      return new Response(JSON.stringify({ error: "APIFY_API_KEY not configured" }), {
+    const rapidApiKey = Deno.env.get("RAPIDAPI_KEY");
+    if (!rapidApiKey) {
+      return new Response(JSON.stringify({ error: "RAPIDAPI_KEY not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -70,24 +70,40 @@ Deno.serve(async (req) => {
       .eq("id", account_id);
 
     try {
-      // Call Apify Instagram scraper
-      const apifyResponse = await fetch(
-        `https://api.apify.com/v2/acts/apify~instagram-post-scraper/run-sync-get-dataset-items?token=${apifyKey}`,
+      // Call RapidAPI Instagram scraper for posts
+      const postsResponse = await fetch(
+        "https://instagram120.p.rapidapi.com/api/instagram/posts",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: [username],
-            resultsLimit: 9,
-          }),
+          headers: {
+            "Content-Type": "application/json",
+            "x-rapidapi-host": "instagram120.p.rapidapi.com",
+            "x-rapidapi-key": rapidApiKey,
+          },
+          body: JSON.stringify({ username, maxId: "" }),
         }
       );
 
-      if (!apifyResponse.ok) {
-        throw new Error(`Apify returned ${apifyResponse.status}`);
+      if (!postsResponse.ok) {
+        throw new Error(`RapidAPI returned ${postsResponse.status}`);
       }
 
-      const posts = await apifyResponse.json();
+      const postsData = await postsResponse.json();
+
+      // RapidAPI response structure: extract posts from the response
+      // The API may return data in different shapes, handle common patterns
+      let posts: any[] = [];
+      if (Array.isArray(postsData)) {
+        posts = postsData;
+      } else if (postsData?.data?.edges) {
+        posts = postsData.data.edges.map((e: any) => e.node || e);
+      } else if (postsData?.data?.items) {
+        posts = postsData.data.items;
+      } else if (postsData?.items) {
+        posts = postsData.items;
+      } else if (postsData?.data && Array.isArray(postsData.data)) {
+        posts = postsData.data;
+      }
 
       // Delete old posts for this account
       await supabaseAdmin
@@ -95,27 +111,79 @@ Deno.serve(async (req) => {
         .delete()
         .eq("watch_account_id", account_id);
 
-      // Insert new posts
-      const postRows = (posts || []).slice(0, 9).map((p: any) => ({
-        watch_account_id: account_id,
-        instagram_post_id: p.id || p.shortCode || null,
-        media_type: p.type || "image",
-        media_url: p.displayUrl || p.url || p.imageUrl || null,
-        thumbnail_url: p.displayUrl || p.url || p.imageUrl || null,
-        caption: (p.caption || "").slice(0, 2000),
-        permalink: p.url || (p.shortCode ? `https://www.instagram.com/p/${p.shortCode}/` : null),
-        posted_at: p.timestamp ? new Date(p.timestamp).toISOString() : null,
-        like_count: p.likesCount || p.likes || 0,
-        comment_count: p.commentsCount || p.comments || 0,
-        fetched_at: new Date().toISOString(),
-      }));
+      // Map and insert new posts (max 9)
+      const postRows = posts.slice(0, 9).map((p: any) => {
+        // Handle various RapidAPI response field names
+        const shortcode = p.shortcode || p.code || p.shortCode || "";
+        const imageUrl = p.display_url || p.thumbnail_src || p.image_versions2?.candidates?.[0]?.url
+          || p.displayUrl || p.url || p.imageUrl || p.media_url || null;
+        const caption = p.edge_media_to_caption?.edges?.[0]?.node?.text
+          || p.caption?.text || p.caption || "";
+        const permalink = p.permalink || (shortcode ? `https://www.instagram.com/p/${shortcode}/` : null);
+        const timestamp = p.taken_at_timestamp || p.taken_at || p.timestamp;
+        const postedAt = timestamp
+          ? new Date(typeof timestamp === "number" && timestamp < 1e12 ? timestamp * 1000 : timestamp).toISOString()
+          : null;
+        const likes = p.edge_media_preview_like?.count ?? p.like_count ?? p.likesCount ?? p.likes ?? 0;
+        const comments = p.edge_media_to_comment?.count ?? p.comment_count ?? p.commentsCount ?? p.comments ?? 0;
+        const mediaType = p.is_video ? "video" : (p.media_type || p.type || "image");
+
+        return {
+          watch_account_id: account_id,
+          instagram_post_id: p.id || shortcode || null,
+          media_type: typeof mediaType === "string" ? mediaType.toLowerCase() : "image",
+          media_url: imageUrl,
+          thumbnail_url: p.thumbnail_src || imageUrl,
+          caption: (typeof caption === "string" ? caption : "").slice(0, 2000),
+          permalink,
+          posted_at: postedAt,
+          like_count: typeof likes === "number" ? likes : 0,
+          comment_count: typeof comments === "number" ? comments : 0,
+          fetched_at: new Date().toISOString(),
+        };
+      });
 
       if (postRows.length > 0) {
         await supabaseAdmin.from("watch_posts").insert(postRows);
       }
 
+      // Try to get profile image from the posts owner data or a separate call
+      let profileImg: string | null = null;
+      if (posts[0]?.owner?.profile_pic_url) {
+        profileImg = posts[0].owner.profile_pic_url;
+      } else if (posts[0]?.user?.profile_pic_url) {
+        profileImg = posts[0].user.profile_pic_url;
+      }
+
+      // If no profile image from posts, try the profile endpoint
+      if (!profileImg) {
+        try {
+          const profileResponse = await fetch(
+            "https://instagram120.p.rapidapi.com/api/instagram/profile",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-rapidapi-host": "instagram120.p.rapidapi.com",
+                "x-rapidapi-key": rapidApiKey,
+              },
+              body: JSON.stringify({ username }),
+            }
+          );
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            profileImg = profileData?.data?.profile_pic_url_hd
+              || profileData?.data?.profile_pic_url
+              || profileData?.profile_pic_url_hd
+              || profileData?.profile_pic_url
+              || null;
+          }
+        } catch {
+          // Profile fetch is optional, continue without it
+        }
+      }
+
       // Update account
-      const profileImg = posts?.[0]?.ownerProfilePicUrl || null;
       await supabaseAdmin
         .from("watch_accounts")
         .update({
