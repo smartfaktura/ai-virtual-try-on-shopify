@@ -1447,333 +1447,298 @@ export function ProductImagesStep3Refine({
     return model?.gender;
   }, [details.selectedModelId, allModels]);
 
+  // Scene categorization
+  const bgScenes = useMemo(() => selectedScenes.filter(s => s.triggerBlocks?.includes('background')), [selectedScenes]);
+  const productShots = useMemo(() => selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
+  const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
+
+  // Shot card collapse
+  const SHOTS_LIMIT = 8;
+  const [showAllShots, setShowAllShots] = useState(false);
+  const visibleScenes = showAllShots ? selectedScenes : selectedScenes.slice(0, SHOTS_LIMIT);
+  const hasMoreShots = selectedScenes.length > SHOTS_LIMIT;
+
+  const renderShotCard = (scene: ProductImageScene) => {
+    const sceneNeedsModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
+    const hasBg = (scene.triggerBlocks || []).includes('background');
+    const hasAction = sceneHasActionControls(scene);
+    const isExpanded = expandedSceneId === scene.id;
+
+    return (
+      <div key={scene.id} className="space-y-1">
+        <button
+          type="button"
+          onClick={() => hasAction ? toggleSceneExpand(scene.id) : undefined}
+          className={cn(
+            'w-full rounded-lg overflow-hidden border transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary',
+            isExpanded
+              ? 'border-primary shadow-sm'
+              : sceneNeedsModel && needsModel
+                ? 'border-amber-400/40 hover:border-amber-400/60'
+                : 'border-border hover:border-primary/30',
+            hasAction ? 'cursor-pointer' : 'cursor-default',
+          )}
+        >
+          <div className="aspect-[3/4] bg-muted overflow-hidden">
+            {scene.previewUrl ? (
+              <ShimmerImage src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Camera className="w-6 h-6 text-muted-foreground/30" />
+              </div>
+            )}
+          </div>
+        </button>
+        <div className="px-0.5 space-y-0.5">
+          <p className="text-[11px] font-medium truncate leading-snug">{scene.title}</p>
+          <div className="flex flex-wrap gap-1">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">AI</span>
+            {hasBg && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">BG</span>}
+            {sceneNeedsModel && !needsModel && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Model</span>}
+            {sceneNeedsModel && needsModel && (
+              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">Needs model</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-5 pb-20">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Refine your shoot</h2>
-        <p className="text-sm text-muted-foreground mt-1">Smart defaults applied automatically. Select a background, configure models, or jump straight to Review.</p>
+    <div className="space-y-6 pb-20">
+      {/* ── HEADER ── */}
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Setup your shots</h2>
+          <p className="text-sm text-muted-foreground mt-1">AI recommended settings are already applied for realistic, high-quality results.</p>
+        </div>
+
+        {/* Summary stats */}
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-muted text-xs font-medium text-foreground">
+            {selectedScenes.length} shots selected
+          </span>
+          {bgScenes.length > 0 && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-muted text-xs font-medium text-foreground">
+              {bgScenes.length} use custom background
+            </span>
+          )}
+          {scenesNeedingModel.length > 0 && (
+            <span className={cn(
+              'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
+              needsModel ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-muted text-foreground',
+            )}>
+              {scenesNeedingModel.length} need a model
+            </span>
+          )}
+        </div>
+
+        <Separator />
       </div>
 
-      {/* ── MODEL-NEEDED BANNER ── */}
-      {scenesNeedingModel.length > 0 && needsModel && (
-        <div className="rounded-xl border border-border bg-card p-5 flex items-center gap-4">
-          <div className="flex -space-x-2 flex-shrink-0">
-            {globalModels.slice(0, 3).map((m, i) => (
-              <div key={m.modelId} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden bg-muted" style={{ zIndex: 3 - i }}>
-                <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover" />
-              </div>
-            ))}
+      {/* ── SELECTED SHOTS ── */}
+      {selectedScenes.length > 0 && (
+        <div className="space-y-3">
+          <div>
+            <span className="text-sm font-semibold">Selected shots</span>
+            <p className="text-xs text-muted-foreground mt-0.5">A quick overview of the shots you chose.</p>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-foreground">
-              {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''} need a model
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Select a model to unlock on-model scenes and outfit styling.</p>
+
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+            {visibleScenes.map(scene => renderShotCard(scene))}
           </div>
-          <Button
-            size="sm"
-            className="gap-1.5 flex-shrink-0"
-            onClick={scrollToOutfit}
-          >
-            <User className="w-3.5 h-3.5" />Select Model
-          </Button>
-        </div>
-      )}
-      {scenesNeedingModel.length > 0 && !needsModel && (
-        <div className="rounded-xl border border-emerald-200/40 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/10 px-4 py-3 flex items-center gap-3">
-          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-          <span className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Model applied</span>{' '}
-            to {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}
-          </span>
-          <div className="hidden sm:flex gap-1 ml-1">
-            {scenesNeedingModel.slice(0, 4).map(s => (
-              <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
-                {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* ── SECTION 1: YOUR SCENES (simplified grid — no expandable settings except action) ── */}
-      {selectedScenes.length > 0 && (() => {
-        const bgScenes = selectedScenes.filter(s => s.triggerBlocks?.includes('background'));
-        const showBgStrip = bgScenes.length >= 1;
-
-        // Group scenes: product shots vs on-model shots
-        const productShots = selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
-        const modelShots = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
-
-        const renderSceneCard = (scene: ProductImageScene) => {
-          const sceneNeedsModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
-          const hasAction = sceneHasActionControls(scene);
-          const isExpanded = expandedSceneId === scene.id;
-          const isClickable = hasAction || (sceneNeedsModel && needsModel);
-
-          return (
-            <button
-              key={scene.id}
-              type="button"
-              onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
-              className={cn(
-                'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card min-h-[72px]',
-                isExpanded
-                  ? 'border-primary bg-primary/[0.03] shadow-sm'
-                  : sceneNeedsModel && needsModel
-                    ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
-                    : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
-                isClickable ? 'cursor-pointer' : 'cursor-default',
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                  {scene.previewUrl ? (
-                    <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
-                  {sceneNeedsModel && needsModel ? (
-                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
-                    </span>
-                  ) : hasAction ? (
-                    <span className="text-[10px] text-muted-foreground mt-0.5 block">Tap to set action</span>
-                  ) : null}
-                </div>
-                {hasAction && (
-                  <Settings2 className={cn(
-                    'w-3.5 h-3.5 flex-shrink-0 transition-all',
-                    isExpanded
-                      ? 'text-primary'
-                      : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
-                  )} />
-                )}
-              </div>
-            </button>
-          );
-        };
-
-        const renderExpandedActionPanel = (scene: ProductImageScene) => {
-          if (!sceneHasActionControls(scene)) return null;
-          return (
-            <div className="col-span-full rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in fade-in duration-200">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                  {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
-                </div>
-                <span className="text-sm font-semibold flex-1">{scene.title}</span>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setExpandedSceneId(null)}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              <BlockFields blockKey="actionDetails" details={details} update={update} sceneIds={allSceneIds} />
-            </div>
-          );
-        };
-
-        const chunkArray = <T,>(arr: T[], size: number): T[][] => {
-          const chunks: T[][] = [];
-          for (let i = 0; i < arr.length; i += size) {
-            chunks.push(arr.slice(i, i + size));
-          }
-          return chunks;
-        };
-
-        const renderSceneGrid = (scenes: ProductImageScene[]) => {
-          const cols = isMobile ? 2 : 4;
-          const rows = chunkArray(scenes, cols);
-
-          return rows.map((row, rowIdx) => {
-            const activeInRow = expandedSceneId && row.some(s => s.id === expandedSceneId);
-            const activeScene = activeInRow ? row.find(s => s.id === expandedSceneId) : null;
-
+          {/* Expanded action panel (if any) */}
+          {expandedSceneId && (() => {
+            const activeScene = selectedScenes.find(s => s.id === expandedSceneId);
+            if (!activeScene || !sceneHasActionControls(activeScene)) return null;
             return (
-              <React.Fragment key={rowIdx}>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {row.map(scene => (
-                    <div key={scene.id} className="relative">
-                      {renderSceneCard(scene)}
-                    </div>
-                  ))}
+              <div className="rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in fade-in duration-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                    {activeScene.previewUrl ? <img src={activeScene.previewUrl} alt={activeScene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
+                  </div>
+                  <span className="text-sm font-semibold flex-1">{activeScene.title}</span>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setExpandedSceneId(null)}>
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
-                {activeScene && renderExpandedActionPanel(activeScene)}
-              </React.Fragment>
+                <BlockFields blockKey="actionDetails" details={details} update={update} sceneIds={allSceneIds} />
+              </div>
             );
-          });
-        };
+          })()}
 
-        return (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Camera className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold">Your scenes</span>
-            <span className="text-[10px] text-muted-foreground">{selectedScenes.length} selected</span>
+          {hasMoreShots && (
+            <button
+              type="button"
+              onClick={() => setShowAllShots(!showAllShots)}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+            >
+              {showAllShots ? <><EyeOff className="w-3.5 h-3.5" />Collapse</> : <><Eye className="w-3.5 h-3.5" />View all {selectedScenes.length} shots</>}
+            </button>
+          )}
+
+          <Separator />
+        </div>
+      )}
+
+      {/* ── COMPLETE SETUP ── */}
+      {(scenesNeedingModel.length > 0 || bgScenes.length > 0) && (
+        <div className="space-y-3">
+          <div>
+            <span className="text-sm font-semibold">Complete setup</span>
+            <p className="text-xs text-muted-foreground mt-0.5">Only a few choices are needed for selected shots.</p>
           </div>
 
-          {/* Product shots group — shown first */}
-          {productShots.length > 0 && (
-            <div className="space-y-2">
-              {modelShots.length > 0 && (
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
-              )}
-              {renderSceneGrid(productShots)}
-            </div>
-          )}
-
-          {/* Quick Background strip — applies to ALL scenes */}
-          {showBgStrip && (
-            <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <Paintbrush className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-semibold">Background</span>
-                <Badge variant="outline" className="text-[9px] h-4 px-1.5">{bgScenes.length === selectedScenes.length ? `All ${bgScenes.length} scenes` : `${bgScenes.length} of ${selectedScenes.length} scenes`}</Badge>
-                {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 1 && (
-                  <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
-                    ×{details.backgroundTone.split(',').filter(Boolean).length} variations
-                  </Badge>
-                )}
-              </div>
-              {/* Attention message */}
-              {!details.backgroundTone && (
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/15 border border-amber-200/30 dark:border-amber-800/20">
-                  <Paintbrush className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                  <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Select a background color for your selected scenes</span>
+          {/* Choose model card */}
+          {scenesNeedingModel.length > 0 && (
+            <Card>
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-semibold">Choose model</span>
+                      {details.selectedModelId && (
+                        <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+                          <Check className="w-2.5 h-2.5 mr-0.5" />selected
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">Needed for {scenesNeedingModel.length} selected shot{scenesNeedingModel.length !== 1 ? 's' : ''}.</p>
+                  </div>
                 </div>
-              )}
-              <BackgroundSwatchSelector
-                value={details.backgroundTone || ''}
-                onChange={v => update({ backgroundTone: v })}
-                details={details}
-                update={update}
-                savedColors={savedColors}
-                canSave={canSave}
-                onSaveColor={(hex) => saveColor({ hex })}
-                onSaveGradient={(from, to) => saveGradient({ from, to })}
-                onDeleteSavedColor={deleteColor}
-              />
-            </div>
+                <ModelPickerSections
+                  userModels={userModels}
+                  globalModels={globalModels}
+                  selectedModelId={details.selectedModelId}
+                  onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
+                />
+              </CardContent>
+            </Card>
           )}
 
-          {/* On-model shots group */}
-          {modelShots.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 px-1">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">On-model shots</span>
-                {needsModel && (
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    select a model below
-                  </span>
+          {/* Background style card */}
+          {bgScenes.length > 0 && (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Paintbrush className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold">Background style</span>
+                    {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 0 && (
+                      <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
+                        ×{details.backgroundTone.split(',').filter(Boolean).length} selected
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Applies to {bgScenes.length} selected shot{bgScenes.length !== 1 ? 's' : ''}.</p>
+                </div>
+                {!details.backgroundTone && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/15 border border-amber-200/30 dark:border-amber-800/20">
+                    <Paintbrush className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                    <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Select a background color for your selected scenes</span>
+                  </div>
                 )}
-              </div>
-              {renderSceneGrid(modelShots)}
-            </div>
+                <BackgroundSwatchSelector
+                  value={details.backgroundTone || ''}
+                  onChange={v => update({ backgroundTone: v })}
+                  details={details}
+                  update={update}
+                  savedColors={savedColors}
+                  canSave={canSave}
+                  onSaveColor={(hex) => saveColor({ hex })}
+                  onSaveGradient={(from, to) => saveGradient({ from, to })}
+                  onDeleteSavedColor={deleteColor}
+                />
+              </CardContent>
+            </Card>
           )}
+
+          <Separator />
         </div>
-        );
-      })()}
+      )}
 
-      {/* ── SECTION 2: Outfit & Model (if person scenes) ── */}
+      {/* ── STYLE DIRECTION ── */}
       {hasPersonBlock && (
-        <div ref={outfitRef}>
-          <Collapsible open={outfitOpen} onOpenChange={setOutfitOpen}>
-            <CollapsibleTrigger className="w-full">
-              <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <Shirt className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold">Outfit & Model</span>
-                  {details.selectedModelId && (
-                    <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
-                      <Check className="w-2.5 h-2.5 mr-0.5" />selected
-                    </Badge>
-                  )}
-                </div>
-                {outfitOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+        <div className="space-y-3">
+          <div>
+            <span className="text-sm font-semibold">Style direction</span>
+            <p className="text-xs text-muted-foreground mt-0.5">Choose the overall look for applicable shots.</p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Lock className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs text-muted-foreground">Locked across all on-model scenes.</span>
+            </div>
+            <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+          </div>
+
+          <Separator />
+        </div>
+      )}
+
+      {/* ── OPTIONAL SECTION ── */}
+      <div className="space-y-3">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Optional</span>
+
+        {/* Outfit details */}
+        {hasPersonBlock && (
+          <Collapsible>
+            <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/customize">
+              <div className="flex items-center gap-2">
+                <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit details</span>
               </div>
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <Card className="mt-2">
-                <CardContent className="p-4 space-y-5">
-                  {/* Model picker */}
-                  <ModelPickerSections
-                    userModels={userModels}
-                    globalModels={globalModels}
-                    selectedModelId={details.selectedModelId}
-                    onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
-                  />
-
-                  {/* Outfit presets — always visible */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Lock className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-xs text-muted-foreground">Locked across all on-model scenes.</span>
-                    </div>
-                    <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-                  </div>
-
-                  {/* Customize Outfit — collapsible */}
-                  <Collapsible>
-                    <CollapsibleTrigger className="w-full flex items-center justify-between py-2 border-t border-border/40 cursor-pointer group/customize">
-                      <div className="flex items-center gap-2">
-                        <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Customize Outfit</span>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="space-y-2 pt-2 pb-1">
-                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  {/* Appearance & Styling — collapsible */}
-                  <Collapsible>
-                    <CollapsibleTrigger className="w-full flex items-center justify-between py-2 border-t border-border/40 cursor-pointer group/appear">
-                      <div className="flex items-center gap-2">
-                        <User className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance & Styling</span>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="pt-2 pb-1">
-                        <InlinePersonDetails
-                          details={details}
-                          update={update}
-                          outfitAccessories={details.outfitConfig?.accessories}
-                          onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                        />
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </CardContent>
-              </Card>
+              <div className="space-y-2 pt-3 pb-1">
+                <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+              </div>
             </CollapsibleContent>
           </Collapsible>
-        </div>
-      )}
+        )}
 
-      {/* ── SECTION 3: Custom Note ── */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          <span className="text-sm font-semibold">Custom note</span>
-          <p className="text-xs text-muted-foreground">Anything important to keep in mind?</p>
-          <Textarea
-            placeholder="Special instructions, unusual product details, styling preferences..."
-            value={details.customNote || ''}
-            onChange={e => update({ customNote: e.target.value })}
-            rows={3}
-            className="text-sm"
-          />
-        </CardContent>
-      </Card>
+        {/* Model styling */}
+        {hasPersonBlock && (
+          <Collapsible>
+            <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/appear">
+              <div className="flex items-center gap-2">
+                <User className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Model styling</span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="pt-3 pb-1">
+                <InlinePersonDetails
+                  details={details}
+                  update={update}
+                  outfitAccessories={details.outfitConfig?.accessories}
+                  onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
+        {/* Additional note */}
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <span className="text-sm font-semibold">Additional note</span>
+            <p className="text-xs text-muted-foreground">Anything important to keep in mind?</p>
+            <Textarea
+              placeholder="Special instructions, unusual product details, styling preferences..."
+              value={details.customNote || ''}
+              onChange={e => update({ customNote: e.target.value })}
+              rows={3}
+              className="text-sm"
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
