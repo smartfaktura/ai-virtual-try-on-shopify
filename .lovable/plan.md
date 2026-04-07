@@ -1,49 +1,50 @@
 
 
-# "Load More" Older Posts for Watch Accounts
+# Auto-Analyze + Auto-Draft + Better Analysis + Tab Counts
 
 ## Problem
-Currently the sync function deletes all posts and re-fetches the latest 12. There's no way to go deeper into an account's history. The API uses cursor-based pagination, so we can reuse the last cursor to fetch the next page without re-fetching posts we already have.
-
-## Approach
-Store the pagination cursor from the last sync on `watch_accounts`, then add a "Load More" mode to the edge function that appends older posts instead of replacing.
+1. "Analyze Post" shows analysis results but requires a second "Create Draft Scene" click — should do both in one step
+2. The AI analyzer prompt is too generic for image generation — needs much more detail (depth of field, texture, reflections, color grading, etc.)
+3. Draft Scenes tab has no count badge showing how many drafts exist
 
 ## Changes
 
-### 1. Migration: add `last_sync_cursor` column to `watch_accounts`
-- `ALTER TABLE watch_accounts ADD COLUMN last_sync_cursor text DEFAULT '';`
+### 1. Auto-create draft scene after analysis — `PostDetailDrawer.tsx`
+- When "Analyze Post" is clicked, after analysis completes, automatically call `onCreateScene(analysis, post)` 
+- Remove the separate "Create Draft Scene" button (or keep it for re-creating from existing analysis)
+- Change button label to "Analyze & Create Draft"
+- The drawer closes and switches to Draft Scenes tab automatically (already handled by `handleCreateScene`)
 
-### 2. Update `fetch-instagram-feed/index.ts`
-- Accept optional `load_more: true` in the request body
-- When `load_more` is true:
-  - Read the `last_sync_cursor` from the account row
-  - If empty, return `{ error: "No cursor available — sync first" }`
-  - Start pagination from that cursor instead of the beginning
-  - **Do NOT delete** existing posts — only insert new ones (use `ON CONFLICT` on `instagram_post_id` to skip duplicates, or filter in code)
-  - Skip the profile image fetch (saves 1 API call)
-- In both modes, save the final cursor to `watch_accounts.last_sync_cursor` after fetching
-- Return `{ posts_count, has_more }` so the UI knows whether to show the button
+### 2. Enhance the analyzer prompt — `analyze-trend-post/index.ts`
+Add more fields to the analysis schema critical for image generation:
+- `depth_of_field` (shallow/medium/deep)
+- `color_grading` (warm tones, cool desaturated, etc.)
+- `texture_detail` (glossy, matte, rough, etc.)
+- `reflections` (none, subtle, prominent)
+- `contrast_level` (low/medium/high)
+- `saturation_level` (desaturated/natural/vibrant)
+- `key_visual_elements` (array — specific notable elements)
+- `negative_space` (minimal/moderate/generous)
+- `product_placement` (centered, rule-of-thirds, etc.)
+- `background_detail` (textured fabric, bokeh, gradient, solid, etc.)
 
-### 3. Add unique constraint on `watch_posts(watch_account_id, instagram_post_id)`
-- To safely upsert: `ALTER TABLE watch_posts ADD CONSTRAINT watch_posts_account_post_unique UNIQUE (watch_account_id, instagram_post_id);`
-- Use `.upsert(..., { onConflict: 'watch_account_id,instagram_post_id', ignoreDuplicates: true })` in the edge function
+Also improve the system prompt to be more specific about extracting image-generation-relevant signals: exact lighting setup, surface interactions, color grading nuances, depth of field behavior.
 
-### 4. Update `useWatchAccounts.ts` — add `loadMorePosts` mutation
-- New mutation calling `fetch-instagram-feed` with `{ username, account_id, load_more: true }`
-- Returns post count and `has_more` flag
+### 3. Add migration for new analysis columns — SQL migration
+Add the new columns to `reference_analyses` table to persist the enhanced data.
 
-### 5. Update `WatchAccountCard.tsx` — "Load More" button
-- Show a "Load More" button when account has exactly 12 posts (the initial batch)
-- Button calls `loadMorePosts` mutation
-- While loading, show spinner on the button
-- After success, toast shows count of new posts added
+### 4. Show draft count on tab — `AdminTrendWatch.tsx`
+- Use `useSceneRecipes` data (already loaded) to count drafts: `recipes.filter(r => r.status === 'draft').length`
+- Display as badge: `Draft Scenes (3)`
+- Same for Ready: `Ready Scenes (5)`
 
-### 6. Update `useAllWatchPosts` — raise the limit
-- Currently caps at 12 posts per account in the grouped query; raise to 50 so loaded-more posts actually appear
+### 5. Wire auto-create in `useReferenceAnalysis.ts`
+- Return the analysis data from `onSuccess` so the caller can chain the draft creation
 
-## Files to modify/create
-- **Migration**: add `last_sync_cursor` column + unique constraint
-- `supabase/functions/fetch-instagram-feed/index.ts` — load_more mode
-- `src/hooks/useWatchAccounts.ts` — `loadMorePosts` mutation, raise post limit
-- `src/components/app/trend-watch/WatchAccountCard.tsx` — "Load More" button
+## Files to modify
+- `supabase/functions/analyze-trend-post/index.ts` — enhanced schema + better prompt
+- `src/components/app/trend-watch/PostDetailDrawer.tsx` — auto-create draft after analyze
+- `src/pages/AdminTrendWatch.tsx` — tab count badges, pass auto-create handler
+- `src/hooks/useReferenceAnalysis.ts` — return analysis from mutation
+- **Migration** — new columns on `reference_analyses`
 
