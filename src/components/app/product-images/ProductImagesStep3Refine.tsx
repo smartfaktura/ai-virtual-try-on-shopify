@@ -16,7 +16,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
-  Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
+  Paintbrush, User, Users, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
   Save, Trash2, History, Check, Info,
 } from 'lucide-react';
