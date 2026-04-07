@@ -90,10 +90,6 @@ Deno.serve(async (req) => {
 
       const postsData = await postsResponse.json();
 
-      // Debug: log the raw response structure
-      console.log("[INSTAGRAM-FEED] Raw response keys:", JSON.stringify(Object.keys(postsData)));
-      console.log("[INSTAGRAM-FEED] Raw response preview:", JSON.stringify(postsData).slice(0, 2000));
-
       // RapidAPI response structure: { result: { edges: [{ node: {...} }] } }
       let posts: any[] = [];
       if (postsData?.result?.edges) {
@@ -108,11 +104,6 @@ Deno.serve(async (req) => {
         posts = postsData.items;
       } else if (postsData?.data && Array.isArray(postsData.data)) {
         posts = postsData.data;
-      }
-
-      console.log("[INSTAGRAM-FEED] Parsed posts count:", posts.length);
-      if (posts.length > 0) {
-        console.log("[INSTAGRAM-FEED] Sample post keys:", JSON.stringify(Object.keys(posts[0])));
       }
 
       // Delete old posts for this account
