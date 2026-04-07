@@ -1499,6 +1499,37 @@ export function ProductImagesStep3Refine({
     }
   }, [update]);
 
+  // Back view scenes detection
+  const hasBackViewScenes = useMemo(() =>
+    selectedScenes.some(s => (s.triggerBlocks || []).includes('backView')),
+    [selectedScenes]
+  );
+  const [uploadingBackRef, setUploadingBackRef] = useState(false);
+  const backRefInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBackRefUpload = useCallback(async (file: File) => {
+    setUploadingBackRef(true);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `back-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(data.path);
+      update({ backReferenceUrl: urlData.publicUrl });
+    } catch (e: any) {
+      const { toast } = await import('@/lib/brandedToast');
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingBackRef(false);
+    }
+  }, [update]);
+
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
 
