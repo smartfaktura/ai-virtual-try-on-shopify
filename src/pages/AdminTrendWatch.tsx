@@ -94,15 +94,33 @@ export default function AdminTrendWatch() {
   };
 
   const handleRefreshAll = async () => {
+    const STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
+    const now = Date.now();
     const active = (accounts || []).filter((a: any) => a.is_active);
     if (active.length === 0) return;
+
+    const stale = active.filter((a: any) => {
+      if (!a.last_synced_at || a.sync_status === 'failed') return true;
+      return now - new Date(a.last_synced_at).getTime() > STALE_MS;
+    });
+
+    if (stale.length === 0) {
+      toast.info(`All ${active.length} accounts were synced in the last 6 hours — skipping`);
+      return;
+    }
+
     setRefreshingAll(true);
-    for (const a of active) {
+    for (const a of stale) {
       setSyncingId(a.id);
       try { await syncAccount.mutateAsync({ id: a.id, username: a.username }); } catch {}
     }
     setSyncingId(null);
     setRefreshingAll(false);
+
+    const skipped = active.length - stale.length;
+    if (skipped > 0) {
+      toast.success(`Refreshed ${stale.length} accounts, skipped ${skipped} (recently synced)`);
+    }
   };
 
   const handleDeactivate = (id: string) => {
