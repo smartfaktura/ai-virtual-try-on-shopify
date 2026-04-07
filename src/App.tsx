@@ -52,6 +52,7 @@ const AdminProductImageScenes = lazy(() => import('@/pages/AdminProductImageScen
 const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const AdminTrendWatch = lazy(() => import('@/pages/AdminTrendWatch'));
 const AdminSceneLibrary = lazy(() => import('@/pages/AdminSceneLibrary'));
+const AdminPromptTokens = lazy(() => import('@/pages/AdminPromptTokens'));
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
