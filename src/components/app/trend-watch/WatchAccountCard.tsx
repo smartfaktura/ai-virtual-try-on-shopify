@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, MoreHorizontal, Plus, ExternalLink } from 'lucide-react';
+import { RefreshCw, MoreHorizontal, Plus, ExternalLink, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SYNC_STATUS_MAP, SOURCE_MODE_MAP } from './constants';
 import { PostThumbnailRow } from './PostThumbnailRow';
@@ -19,9 +19,11 @@ interface WatchAccountCardProps {
   onDeactivate: (id: string) => void;
   onPostClick: (post: any) => void;
   isSyncing?: boolean;
+  onLoadMore?: (id: string, username: string) => void;
+  isLoadingMore?: boolean;
 }
 
-export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate, onPostClick, isSyncing }: WatchAccountCardProps) {
+export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate, onPostClick, isSyncing, onLoadMore, isLoadingMore }: WatchAccountCardProps) {
   const [addPostOpen, setAddPostOpen] = useState(false);
   const queryClient = useQueryClient();
   const syncInfo = SYNC_STATUS_MAP[account.sync_status] || SYNC_STATUS_MAP.manual;
@@ -90,7 +92,25 @@ export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate,
 
       {/* Posts Row */}
       {posts.length > 0 ? (
-        <PostThumbnailRow posts={posts} onPostClick={onPostClick} />
+        <div className="space-y-2">
+          <PostThumbnailRow posts={posts} onPostClick={onPostClick} />
+          {posts.length >= 12 && onLoadMore && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full text-xs text-muted-foreground h-7"
+              onClick={() => onLoadMore(account.id, account.username)}
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? (
+                <RefreshCw className="w-3 h-3 mr-1.5 animate-spin" />
+              ) : (
+                <ChevronDown className="w-3 h-3 mr-1.5" />
+              )}
+              Load older posts
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="flex items-center justify-center h-20 rounded-lg border border-dashed text-xs text-muted-foreground">
           No posts yet — sync or add manually

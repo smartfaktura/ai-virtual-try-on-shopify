@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 export default function AdminTrendWatch() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
-  const { accounts, isLoading, addAccount, updateAccount, syncAccount } = useWatchAccounts();
+  const { accounts, isLoading, addAccount, updateAccount, syncAccount, loadMorePosts } = useWatchAccounts();
   const { createRecipe } = useSceneRecipes();
 
   const [search, setSearch] = useState('');
@@ -33,6 +33,7 @@ export default function AdminTrendWatch() {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [loadingMoreId, setLoadingMoreId] = useState<string | null>(null);
   const [refreshingAll, setRefreshingAll] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
@@ -90,6 +91,15 @@ export default function AdminTrendWatch() {
       await syncAccount.mutateAsync({ id, username });
     } finally {
       setSyncingId(null);
+    }
+  };
+
+  const handleLoadMore = async (id: string, username: string) => {
+    setLoadingMoreId(id);
+    try {
+      await loadMorePosts.mutateAsync({ id, username });
+    } finally {
+      setLoadingMoreId(null);
     }
   };
 
@@ -253,6 +263,8 @@ export default function AdminTrendWatch() {
                               onDeactivate={handleDeactivate}
                               onPostClick={(post) => { setSelectedPost(post); setDrawerOpen(true); }}
                               isSyncing={syncingId === account.id}
+                              onLoadMore={handleLoadMore}
+                              isLoadingMore={loadingMoreId === account.id}
                             />
                           ))}
                         </div>
