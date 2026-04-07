@@ -234,6 +234,8 @@ const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted label
 // ── Reference isolation instruction ──
 const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] is a reference for the product ONLY. Completely IGNORE its background, lighting, and environment. Generate the product in the new scene/background described above.';
 
+const PRODUCT_FIDELITY = 'PRODUCT FIDELITY (NON-NEGOTIABLE): Reproduce the product from [PRODUCT IMAGE] with 100% accuracy — exact shape, exact colors, exact labels, exact textures, exact branding, exact proportions. Do NOT invent, alter, or simplify any detail. If the product has text, logos, or patterns, they must be pixel-accurate. Any deviation from the reference product is a generation failure.';
+
 // ── Body framing map by category + scene type ──
 function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
   const isOnModel = sceneType === 'portrait' || sceneType === 'editorial' || sceneType === 'lifestyle';
@@ -974,7 +976,7 @@ export function buildDynamicPrompt(
   // (e.g. forcing full-body framing onto a close-up hand scene).
 
   // Prepend reference isolation instruction BEFORE cleanup so it appears early
-  prompt = REFERENCE_ISOLATION + ' ' + prompt;
+  prompt = PRODUCT_FIDELITY + ' ' + REFERENCE_ISOLATION + ' ' + prompt;
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
