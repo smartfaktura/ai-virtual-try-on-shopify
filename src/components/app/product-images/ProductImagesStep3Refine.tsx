@@ -1423,14 +1423,6 @@ export function ProductImagesStep3Refine({
     }
   };
 
-  // Format calculations
-  const globalRatio = details.aspectRatio || '1:1';
-  const imgCount = parseInt(details.imageCount || '1', 10);
-  const costPerImage = 6;
-  const sceneCount = selectedScenes.length;
-  const totalImages = productCount * sceneCount * imgCount;
-  const totalCredits = totalImages * costPerImage;
-
   // All models + resolve selected model gender
   const allModels = [...userModels, ...globalModels];
   const selectedModelGender = useMemo(() => {
