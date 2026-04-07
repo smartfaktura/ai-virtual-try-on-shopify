@@ -250,6 +250,7 @@ export default function ProductImages() {
     const key = Array.from(selectedProductIds).sort().join(',');
     if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
       setSelectedSceneIds(new Set());
+      setSceneExtraRefs({});
       setDetails(INITIAL_DETAILS);
       if (step > 1) setStep(1);
     }
