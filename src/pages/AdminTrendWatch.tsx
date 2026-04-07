@@ -6,12 +6,15 @@ import { useSceneRecipes } from '@/hooks/useSceneRecipes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Plus, Library, Search, RefreshCw } from 'lucide-react';
 import { TREND_CATEGORIES } from '@/components/app/trend-watch/constants';
 import { WatchAccountCard } from '@/components/app/trend-watch/WatchAccountCard';
 import { AddAccountModal } from '@/components/app/trend-watch/AddAccountModal';
 import { PostDetailDrawer } from '@/components/app/trend-watch/PostDetailDrawer';
+import { DraftScenesPanel } from '@/components/app/trend-watch/DraftScenesPanel';
+import { ReadyScenesPanel } from '@/components/app/trend-watch/ReadyScenesPanel';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminTrendWatch() {
@@ -28,6 +31,7 @@ export default function AdminTrendWatch() {
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [refreshingAll, setRefreshingAll] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
+  const [activeTab, setActiveTab] = useState('feed');
 
   const activeAccounts = useMemo(() => {
     return (accounts || []).filter((a: any) => {
@@ -104,6 +108,7 @@ export default function AdminTrendWatch() {
       short_description: analysis.short_summary || '',
     });
     setDrawerOpen(false);
+    setActiveTab('drafts');
   };
 
   const toggleCategory = (cat: string) => {
@@ -126,81 +131,100 @@ export default function AdminTrendWatch() {
         <p className="text-sm text-muted-foreground">Track visual direction and turn reference posts into reusable scene recipes</p>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search accounts…"
-            className="pl-9 h-9"
-          />
-        </div>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px] h-9">
-            <SelectValue placeholder="All categories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {TREND_CATEGORIES.map(c => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button size="sm" onClick={() => setAddModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-1" /> Add Account
-        </Button>
-        <Button size="sm" variant="outline" onClick={handleRefreshAll} disabled={refreshingAll}>
-          <RefreshCw className={`w-4 h-4 mr-1 ${refreshingAll ? 'animate-spin' : ''}`} /> Refresh All
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => navigate('/app/admin/scene-library')}>
-          <Library className="w-4 h-4 mr-1" /> Scene Library
-        </Button>
-      </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="feed">Accounts Feed</TabsTrigger>
+          <TabsTrigger value="drafts">Draft Scenes</TabsTrigger>
+          <TabsTrigger value="ready">Ready Scenes</TabsTrigger>
+        </TabsList>
 
-      {/* Category Sections */}
-      {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {TREND_CATEGORIES.filter(cat => categoryFilter === 'all' || cat === categoryFilter).map(cat => {
-            const catAccounts = categorized[cat] || [];
-            if (catAccounts.length === 0 && categoryFilter === 'all') return null;
-            return (
-              <Collapsible key={cat} open={openCategories.has(cat)} onOpenChange={() => toggleCategory(cat)}>
-                <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2 px-1 hover:bg-muted/50 rounded-lg transition-colors">
-                  <ChevronDown className={`w-4 h-4 transition-transform ${openCategories.has(cat) ? '' : '-rotate-90'}`} />
-                  <span className="font-medium text-sm">{cat}</span>
-                  <span className="text-xs text-muted-foreground ml-1">({catAccounts.length})</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  {catAccounts.length === 0 ? (
-                    <div className="ml-6 py-4 text-xs text-muted-foreground">No accounts in this category yet</div>
-                  ) : (
-                    <div className="ml-2 space-y-2 mt-1">
-                      {catAccounts.map((account: any) => (
-                        <WatchAccountCard
-                          key={account.id}
-                          account={account}
-                          posts={(postsGrouped as Record<string, any[]>)[account.id] || []}
-                          onSync={handleSync}
-                          onEdit={() => {}}
-                          onDeactivate={handleDeactivate}
-                          onPostClick={(post) => { setSelectedPost(post); setDrawerOpen(true); }}
-                          isSyncing={syncingId === account.id}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })}
-        </div>
-      )}
+        <TabsContent value="feed">
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search accounts…"
+                className="pl-9 h-9"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {TREND_CATEGORIES.map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => setAddModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" /> Add Account
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleRefreshAll} disabled={refreshingAll}>
+              <RefreshCw className={`w-4 h-4 mr-1 ${refreshingAll ? 'animate-spin' : ''}`} /> Refresh All
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/app/admin/scene-library')}>
+              <Library className="w-4 h-4 mr-1" /> Scene Library
+            </Button>
+          </div>
+
+          {/* Category Sections */}
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {TREND_CATEGORIES.filter(cat => categoryFilter === 'all' || cat === categoryFilter).map(cat => {
+                const catAccounts = categorized[cat] || [];
+                if (catAccounts.length === 0 && categoryFilter === 'all') return null;
+                return (
+                  <Collapsible key={cat} open={openCategories.has(cat)} onOpenChange={() => toggleCategory(cat)}>
+                    <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2 px-1 hover:bg-muted/50 rounded-lg transition-colors">
+                      <ChevronDown className={`w-4 h-4 transition-transform ${openCategories.has(cat) ? '' : '-rotate-90'}`} />
+                      <span className="font-medium text-sm">{cat}</span>
+                      <span className="text-xs text-muted-foreground ml-1">({catAccounts.length})</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      {catAccounts.length === 0 ? (
+                        <div className="ml-6 py-4 text-xs text-muted-foreground">No accounts in this category yet</div>
+                      ) : (
+                        <div className="ml-2 space-y-2 mt-1">
+                          {catAccounts.map((account: any) => (
+                            <WatchAccountCard
+                              key={account.id}
+                              account={account}
+                              posts={(postsGrouped as Record<string, any[]>)[account.id] || []}
+                              onSync={handleSync}
+                              onEdit={() => {}}
+                              onDeactivate={handleDeactivate}
+                              onPostClick={(post) => { setSelectedPost(post); setDrawerOpen(true); }}
+                              isSyncing={syncingId === account.id}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="drafts">
+          <DraftScenesPanel />
+        </TabsContent>
+
+        <TabsContent value="ready">
+          <ReadyScenesPanel />
+        </TabsContent>
+      </Tabs>
 
       <AddAccountModal
         open={addModalOpen}

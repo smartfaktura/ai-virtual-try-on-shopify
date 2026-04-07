@@ -3,10 +3,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, Sparkles, Heart, Star, Loader2 } from 'lucide-react';
+import { ExternalLink, Sparkles, Heart, Star, Loader2, PlusCircle } from 'lucide-react';
 import { usePostNotes } from '@/hooks/usePostNotes';
 import { useReferenceAnalysis } from '@/hooks/useReferenceAnalysis';
 import { supabase } from '@/integrations/supabase/client';
@@ -161,7 +160,8 @@ export function PostDetailDrawer({ post, open, onOpenChange, onCreateScene }: Po
                   size="sm"
                   onClick={() => onCreateScene(analysis, post)}
                 >
-                  Create Scene Recipe
+                  <PlusCircle className="w-3.5 h-3.5 mr-1" />
+                  Create Draft Scene
                 </Button>
               </div>
             </>
