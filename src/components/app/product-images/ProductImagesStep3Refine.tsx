@@ -1468,6 +1468,37 @@ export function ProductImagesStep3Refine({
   );
   const needsModel = scenesNeedingModel.length > 0 && !details.selectedModelId;
 
+  // Packaging scenes detection
+  const hasPackagingScenes = useMemo(() =>
+    selectedScenes.some(s => (s.triggerBlocks || []).includes('packagingDetails')),
+    [selectedScenes]
+  );
+  const [uploadingPackagingRef, setUploadingPackagingRef] = useState(false);
+  const packagingRefInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePackagingRefUpload = useCallback(async (file: File) => {
+    setUploadingPackagingRef(true);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `packaging-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(data.path);
+      update({ packagingReferenceUrl: urlData.publicUrl });
+    } catch (e: any) {
+      const { toast } = await import('@/lib/brandedToast');
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingPackagingRef(false);
+    }
+  }, [update]);
+
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
 
@@ -1639,6 +1670,18 @@ export function ProductImagesStep3Refine({
           pendingSceneIdRef.current = null;
         }}
       />
+      {/* Hidden file input for packaging reference uploads */}
+      <input
+        ref={packagingRefInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0];
+          if (f) handlePackagingRefUpload(f);
+          e.target.value = '';
+        }}
+      />
       {/* ── HEADER ── */}
       <div className="space-y-3">
         <div>
@@ -1712,6 +1755,56 @@ export function ProductImagesStep3Refine({
           )}
 
           <Separator />
+        </div>
+      )}
+
+      {/* ── PACKAGING REFERENCE ── */}
+      {hasPackagingScenes && (
+        <div className="space-y-3">
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <PackagePlus className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold">Packaging reference</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Some of your selected scenes include packaging. Upload a photo of your packaging for more accurate results — otherwise, the AI will interpret packaging design on its own.
+                  </p>
+                </div>
+              </div>
+
+              {details.packagingReferenceUrl ? (
+                <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
+                  <img src={details.packagingReferenceUrl} alt="Packaging reference" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => update({ packagingReferenceUrl: undefined })}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => packagingRefInputRef.current?.click()}
+                  disabled={uploadingPackagingRef}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
+                >
+                  {uploadingPackagingRef ? (
+                    <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 text-primary/60" />
+                      <span className="text-xs text-primary/80 font-medium">Upload packaging photo</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 
