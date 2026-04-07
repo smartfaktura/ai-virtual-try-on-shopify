@@ -1068,7 +1068,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
       </div>
 
       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-primary" />Presets
+        <Sparkles className="w-3.5 h-3.5 text-primary" />Style direction
       </span>
       <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
