@@ -293,7 +293,7 @@ export default function AdminProductImageScenes() {
   const [editDraft, setEditDraft] = useState<Partial<DbScene>>({});
   const [addingNew, setAddingNew] = useState(false);
   const [newDraft, setNewDraft] = useState(emptyScene());
-  const [showTokenRef, setShowTokenRef] = useState(false);
+  // showTokenRef state removed — tokens now on dedicated page
 
   const filtered = useMemo(() => {
     let scenes = rawScenes;
