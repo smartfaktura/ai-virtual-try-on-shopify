@@ -1,45 +1,33 @@
 
 
-# Fix Missing Style/Outfit Presets for All Categories
+# Fix: Setup step scrolls to wrong position
 
 ## Problem
-The `getBuiltInPresets()` function in `ProductImagesStep3Refine.tsx` returns an empty array when a category is not found in `CATEGORY_OUTFIT_CONFIG_DEFAULTS`. Currently only 7 of 12 categories have defaults defined. Missing: `home-decor`, `tech-devices`, `food-beverage`, `supplements-wellness`, `other`.
-
-This means users whose products fall into those categories see zero style direction cards (Studio Standard, Editorial, Minimal, Streetwear, Luxury Soft).
+When navigating to the Setup step (step 3), the page scrolls to `wizardContentRef` which is placed **below** the page header and stepper. This scrolls the header and stepper out of view, making it feel like the user lands in the middle of the page instead of at the top.
 
 ## Fix
 
-### File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+### File: `src/pages/ProductImages.tsx`
 
-**1. Add missing category defaults to `CATEGORY_OUTFIT_CONFIG_DEFAULTS`**
+**Change the scroll behavior to scroll to the top of the page instead of to the wizard content div:**
 
-Add entries for the 5 missing categories. These are product-only categories (no model wearing the product), so the outfit config represents the person holding/presenting the product:
-
-- `home-decor` — casual neutral (sweater + trousers)
-- `tech-devices` — clean modern (t-shirt + jeans)
-- `food-beverage` — warm casual (blouse/shirt + trousers)
-- `supplements-wellness` — activewear/clean (tank top + joggers)
-- `other` — fallback neutral (same as garments)
-
-**2. Add a fallback in `getBuiltInPresets`**
-
-Change line 831 from:
+Replace the scroll effect (lines 225-231):
 ```typescript
-if (!base) return [];
-```
-to:
-```typescript
-if (!base) base = CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
+useEffect(() => {
+  if (wizardContentRef.current) {
+    wizardContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}, [step]);
 ```
 
-This ensures that even if a completely unknown category appears in the future, users still see the 5 built-in style presets using the garments defaults as a safe fallback.
+With simply:
+```typescript
+useEffect(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}, [step]);
+```
 
-**3. Add male overrides for the new categories**
-
-Add entries in `MALE_OUTFIT_OVERRIDES` for the same 5 categories so male-model selections also get appropriate defaults.
-
-## Impact
-- All 12 product categories will show the 5 built-in style direction cards
-- No database changes needed
-- Single file change
+This ensures on every step change the user sees the full page from the top — header, stepper, product context strip, and then the step content — instead of jumping to the middle.
 
