@@ -6,6 +6,33 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/** Title-based category fallback when AI returns "other" */
+const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
+  [/perfume|fragrance|eau de|cologne|parfum|body mist/i, "fragrance"],
+  [/lipstick|mascara|foundation|concealer|blush|eyeshadow|eyeliner|lip gloss|bronzer|primer|highlighter/i, "makeup-lipsticks"],
+  [/serum|moisturizer|cream|cleanser|toner|sunscreen|lotion|face wash|body wash|shampoo|conditioner/i, "beauty-skincare"],
+  [/\bbag\b|handbag|clutch|wallet|belt|scarf|purse|tote|backpack|satchel/i, "bags-accessories"],
+  [/\bhat\b|\bcap\b|beanie|headband|beret|fedora/i, "hats-small"],
+  [/\bshoe\b|\bshoes\b|sneaker|boot|sandal|heel|loafer|slipper|mule/i, "shoes"],
+  [/\bshirt\b|dress|jacket|pants|skirt|coat|hoodie|sweater|blazer|jeans|trouser|blouse|cardigan|vest/i, "garments"],
+  [/candle|vase|pillow|lamp|decor|cushion|throw|planter|frame/i, "home-decor"],
+  [/phone|laptop|tablet|headphone|speaker|camera|earbuds|charger|keyboard|mouse/i, "tech-devices"],
+  [/protein|vitamin|supplement|probiotic|collagen|creatine|pre-?workout/i, "supplements-wellness"],
+  [/coffee|tea|chocolate|wine|beer|juice|snack|cookie|sauce|jam|honey|olive oil/i, "food-beverage"],
+];
+
+function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
+  if (analysis.category && analysis.category !== "other") return;
+  const combined = (title || "").toLowerCase();
+  for (const [pattern, category] of TITLE_CATEGORY_PATTERNS) {
+    if (pattern.test(combined)) {
+      console.log(`Category fallback: "${analysis.category}" → "${category}" (matched title: "${title}")`);
+      analysis.category = category;
+      return;
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -29,53 +56,31 @@ serve(async (req) => {
 
     const systemPrompt = `You are a product analysis AI for a premium ecommerce photography platform. Analyze the product image and metadata to extract rich visual, semantic, and category-specific attributes.
 
-Return ALL applicable fields. For category-specific fields, ONLY return the ones relevant to the detected category (e.g. fragranceFamily only for fragrances, garmentType only for fashion).
+Return a JSON object with ALL applicable fields. For category-specific fields, ONLY return the ones relevant to the detected category.
+
+IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
+
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, hats-small, shoes, garments, home-decor, tech-devices, food-beverage, supplements-wellness, other
 
 GLOBAL VISUAL (always return):
-- category: product category
-- sizeClass: physical size
-- productSubcategory: more specific type within category
-- productForm: physical form (bottle, tube, jar, box, garment, device, etc.)
-- productSilhouette: outline shape description
-- productMainHex: dominant color as hex
-- productSecondaryHex: secondary color as hex
-- productAccentHex: accent/highlight color as hex
-- backgroundBaseHex: suggested ideal background color as hex
-- backgroundSecondaryHex: suggested secondary background as hex
-- shadowToneHex: ideal shadow tone as hex
-- productFinishType: surface finish (matte, glossy, satin, metallic, textured, frosted)
-- materialPrimary: main material
-- materialSecondary: secondary material if visible
-- textureType: surface texture description
-- transparencyType: none, translucent, transparent, frosted
-- metalTone: if metallic elements exist (gold, silver, rose-gold, bronze, gunmetal, chrome)
-- heroFeature: the single most photogenic/marketable feature
-- detailFocusAreas: comma-separated areas worth macro shots
-- scaleType: tiny, palm-sized, handheld, carried, worn, furniture-scale
-- wearabilityMode: how product is used (held, worn-neck, worn-wrist, carried, placed, applied, consumed)
-- bodyPlacementSuggested: where on body/in space the product naturally goes
-- colorFamily: primary color description
-- materialFamily: primary material family
-- finish: surface finish
-- packagingRelevant: boolean
-- personCompatible: boolean
-- accentColor: dominant accent hex
+- category: one of the valid categories above
+- sizeClass: very-small | small | medium | large | extra-large
+- productSubcategory, productForm, productSilhouette
+- productMainHex, productSecondaryHex, productAccentHex (valid #RRGGBB)
+- backgroundBaseHex, backgroundSecondaryHex, shadowToneHex
+- productFinishType: matte | glossy | satin | metallic | textured | frosted
+- materialPrimary, materialSecondary, textureType
+- transparencyType: none | translucent | transparent | frosted
+- metalTone (if metallic: gold, silver, rose-gold, bronze, gunmetal, chrome)
+- heroFeature, detailFocusAreas, scaleType, wearabilityMode, bodyPlacementSuggested
+- colorFamily, materialFamily, finish, packagingRelevant (boolean), personCompatible (boolean), accentColor
 
-GLOBAL SEMANTIC (return when applicable — leave empty string if truly not relevant):
-- ingredientFamilyPrimary: primary ingredient/material family (e.g. "citrus", "floral", "botanical", "grain")
-- ingredientFamilySecondary: secondary ingredient family
-- fruitsRelated: visually related fruits for styling (e.g. "blood orange, bergamot")
-- flowersRelated: visually related flowers for styling (e.g. "white rose, jasmine, peony")
-- botanicalsRelated: related botanicals/herbs
-- woodsRelated: related wood types for styling props
-- spicesRelated: related spices
-- greensRelated: related greenery/leaves
-- materialsRelated: related styling materials (silk, linen, stone)
-- regionRelated: geographic/cultural association
-- landscapeRelated: landscape association for lifestyle shots
+GLOBAL SEMANTIC (return when applicable — use empty string if not relevant):
+- ingredientFamilyPrimary, ingredientFamilySecondary
+- fruitsRelated, flowersRelated, botanicalsRelated, woodsRelated, spicesRelated, greensRelated
+- materialsRelated, regionRelated, landscapeRelated
 
 CATEGORY-SPECIFIC — only return fields for the detected category:
-
 Fashion: garmentType, fitType, fabricType, fabricWeight, drapeBehavior
 Beauty: packagingType, formulaType, formulaTexture, applicationMode, skinAreaSuggested
 Fragrance: fragranceFamily, bottleType, capStyle, liquidColorHex, glassTintType, noteObjectsPrimary, noteObjectsSecondary, scentWorld
@@ -87,82 +92,20 @@ Electronics: deviceType, interfaceType, screenPresence, screenStateSuggested, fi
 Sports: sportType, gearType, performanceMaterial, gripTexture, motionCue, usageContext, surfaceContext
 Health: supplementType, dosageForm, mixingMode, wellnessIngredientObjects, containerType, clinicalCleanlinessLevel, routineContext
 
-Use the IMAGE as primary signal. Be vivid and specific. All hex colors must be valid (#RRGGBB).`;
+Use the IMAGE as primary signal. Be vivid and specific. All hex colors must be valid (#RRGGBB).
+
+Return ONLY the JSON object, no markdown fences, no explanation.`;
 
     const userContent: Array<Record<string, unknown>> = [
       {
         type: "text",
-        text: `Analyze this product:\nTitle: ${title || "Unknown"}\nDescription: ${description || "N/A"}\nType: ${productType || "N/A"}`,
+        text: `Analyze this product:\nTitle: ${title || "Unknown"}\nDescription: ${description || "N/A"}\nType: ${productType || "N/A"}\n\nReturn a JSON object with all applicable fields.`,
       },
       {
         type: "image_url",
         image_url: { url: imageUrl },
       },
     ];
-
-    const allProps: Record<string, any> = {
-      // Global required
-      category: {
-        type: "string",
-        enum: [
-          "fragrance", "beauty-skincare", "makeup-lipsticks",
-          "bags-accessories", "hats-small", "shoes",
-          "garments", "home-decor", "tech-devices",
-          "food-beverage", "supplements-wellness", "other",
-        ],
-      },
-      sizeClass: { type: "string", enum: ["very-small", "small", "medium", "large", "extra-large"] },
-      colorFamily: { type: "string" },
-      materialFamily: { type: "string" },
-      finish: { type: "string" },
-      packagingRelevant: { type: "boolean" },
-      personCompatible: { type: "boolean" },
-      accentColor: { type: "string" },
-      // Global visual
-      productSubcategory: { type: "string" },
-      productForm: { type: "string" },
-      productSilhouette: { type: "string" },
-      productMainHex: { type: "string" },
-      productSecondaryHex: { type: "string" },
-      productAccentHex: { type: "string" },
-      backgroundBaseHex: { type: "string" },
-      backgroundSecondaryHex: { type: "string" },
-      shadowToneHex: { type: "string" },
-      productFinishType: { type: "string" },
-      materialPrimary: { type: "string" },
-      materialSecondary: { type: "string" },
-      textureType: { type: "string" },
-      transparencyType: { type: "string", enum: ["none", "translucent", "transparent", "frosted"] },
-      metalTone: { type: "string" },
-      heroFeature: { type: "string" },
-      detailFocusAreas: { type: "string" },
-      scaleType: { type: "string" },
-      wearabilityMode: { type: "string" },
-      bodyPlacementSuggested: { type: "string" },
-      // Global semantic
-      ingredientFamilyPrimary: { type: "string" },
-      ingredientFamilySecondary: { type: "string" },
-      fruitsRelated: { type: "string" },
-      flowersRelated: { type: "string" },
-      botanicalsRelated: { type: "string" },
-      woodsRelated: { type: "string" },
-      spicesRelated: { type: "string" },
-      greensRelated: { type: "string" },
-      materialsRelated: { type: "string" },
-      regionRelated: { type: "string" },
-      landscapeRelated: { type: "string" },
-      // Category-specific (all optional)
-      garmentType: { type: "string" }, fitType: { type: "string" }, fabricType: { type: "string" }, fabricWeight: { type: "string" }, drapeBehavior: { type: "string" },
-      packagingType: { type: "string" }, formulaType: { type: "string" }, formulaTexture: { type: "string" }, applicationMode: { type: "string" }, skinAreaSuggested: { type: "string" },
-      fragranceFamily: { type: "string" }, bottleType: { type: "string" }, capStyle: { type: "string" }, liquidColorHex: { type: "string" }, glassTintType: { type: "string" }, noteObjectsPrimary: { type: "string" }, noteObjectsSecondary: { type: "string" }, scentWorld: { type: "string" },
-      jewelryType: { type: "string" }, gemType: { type: "string" }, gemColorHex: { type: "string" }, metalPrimary: { type: "string" }, metalFinish: { type: "string" }, wearPlacement: { type: "string" }, sparkleLevel: { type: "string" },
-      accessoryType: { type: "string" }, carryMode: { type: "string" }, strapType: { type: "string" }, hardwareType: { type: "string" }, hardwareFinish: { type: "string" }, structureType: { type: "string" }, signatureDetail: { type: "string" },
-      decorType: { type: "string" }, placementType: { type: "string" }, objectScale: { type: "string" }, baseMaterial: { type: "string" }, surfaceFinish: { type: "string" }, roomContextSuggested: { type: "string" }, stylingCompanions: { type: "string" },
-      foodType: { type: "string" }, servingMode: { type: "string" }, ingredientObjectsPrimary: { type: "string" }, ingredientObjectsSecondary: { type: "string" }, textureCue: { type: "string" }, temperatureCue: { type: "string" }, consumptionContext: { type: "string" },
-      deviceType: { type: "string" }, interfaceType: { type: "string" }, screenPresence: { type: "string" }, screenStateSuggested: { type: "string" }, finishMaterialPrimary: { type: "string" }, industrialStyle: { type: "string" }, portDetail: { type: "string" }, buttonDetail: { type: "string" },
-      sportType: { type: "string" }, gearType: { type: "string" }, performanceMaterial: { type: "string" }, gripTexture: { type: "string" }, motionCue: { type: "string" }, usageContext: { type: "string" }, surfaceContext: { type: "string" },
-      supplementType: { type: "string" }, dosageForm: { type: "string" }, mixingMode: { type: "string" }, wellnessIngredientObjects: { type: "string" }, containerType: { type: "string" }, clinicalCleanlinessLevel: { type: "string" }, routineContext: { type: "string" },
-    };
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -176,21 +119,6 @@ Use the IMAGE as primary signal. Be vivid and specific. All hex colors must be v
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "classify_product",
-              description: "Classify a product and extract all visual, semantic, and category-specific tokens",
-              parameters: {
-                type: "object",
-                properties: allProps,
-                required: ["category", "sizeClass", "colorFamily", "materialFamily", "finish", "packagingRelevant", "personCompatible", "accentColor", "productMainHex", "materialPrimary", "heroFeature"],
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "classify_product" } },
       }),
     });
 
@@ -218,16 +146,50 @@ Use the IMAGE as primary signal. Be vivid and specific. All hex colors must be v
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
-    if (!toolCall?.function?.arguments) {
+    // Parse response — plain JSON (no tool calling)
+    let analysis: Record<string, unknown> | null = null;
+
+    // Try tool_calls first (backward compat if model returns them)
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
+      try {
+        analysis = JSON.parse(toolCall.function.arguments);
+      } catch {}
+    }
+
+    // Try plain content
+    if (!analysis) {
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        try {
+          // Strip markdown fences if present
+          const cleaned = content.replace(/```(?:json)?\s*/g, "").replace(/```\s*/g, "").trim();
+          analysis = JSON.parse(cleaned);
+        } catch (e) {
+          console.error("Failed to parse JSON from content:", e, content?.substring(0, 200));
+        }
+      }
+    }
+
+    if (!analysis) {
       return new Response(JSON.stringify({ error: "No analysis result" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const analysis = JSON.parse(toolCall.function.arguments);
+    // Post-processing: title-based category fallback
+    applyCategoryFallback(analysis, title || "");
+
+    // Normalize booleans
+    if (typeof analysis.packagingRelevant === "string") {
+      analysis.packagingRelevant = analysis.packagingRelevant === "true";
+    }
+    if (typeof analysis.personCompatible === "string") {
+      analysis.personCompatible = analysis.personCompatible === "true";
+    }
+
     // Stamp version so client can invalidate stale caches
     analysis.version = 2;
 

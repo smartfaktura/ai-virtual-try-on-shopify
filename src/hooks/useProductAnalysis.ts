@@ -134,6 +134,69 @@ export function useProductAnalysis() {
     return newAnalyses;
   }, []);
 
+  /** Re-analyze a single product (force fresh analysis regardless of version) */
+  const reAnalyzeProduct = useCallback(async (product: UserProduct) => {
+    // Mark as pending
+    setState(prev => {
+      const nextPending = new Set(prev.pending);
+      nextPending.add(product.id);
+      return { ...prev, pending: nextPending, isAnalyzing: true };
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-product-category', {
+        body: {
+          imageUrl: product.image_url,
+          title: product.title,
+          description: product.description,
+          productType: product.product_type,
+        },
+      });
+
+      const freshAnalysis: ProductAnalysis = (error || !data?.analysis)
+        ? {
+            category: 'other',
+            sizeClass: 'medium',
+            colorFamily: 'neutral',
+            materialFamily: 'mixed',
+            finish: 'matte',
+            packagingRelevant: false,
+            personCompatible: true,
+          }
+        : data.analysis;
+
+      // Persist to DB
+      supabase
+        .from('user_products')
+        .update({ analysis_json: freshAnalysis as any })
+        .eq('id', product.id)
+        .then(({ error: updateErr }) => {
+          if (updateErr) console.warn('Failed to cache re-analysis:', updateErr);
+        });
+
+      // Update state
+      setState(prev => {
+        const nextPending = new Set(prev.pending);
+        nextPending.delete(product.id);
+        return {
+          analyses: { ...prev.analyses, [product.id]: freshAnalysis },
+          pending: nextPending,
+          isAnalyzing: nextPending.size > 0,
+        };
+      });
+
+      return freshAnalysis;
+    } catch (err) {
+      console.error(`Re-analysis error for ${product.id}:`, err);
+      setState(prev => {
+        const nextPending = new Set(prev.pending);
+        nextPending.delete(product.id);
+        return { ...prev, pending: nextPending, isAnalyzing: nextPending.size > 0 };
+      });
+      return null;
+    }
+  }, []);
+
   /** Manually override a product's category */
   const overrideCategory = useCallback((productId: string, category: ProductAnalysis['category']) => {
     setState(prev => {
@@ -158,6 +221,7 @@ export function useProductAnalysis() {
     isAnalyzing: state.isAnalyzing,
     pendingIds: state.pending,
     analyzeProducts,
+    reAnalyzeProduct,
     overrideCategory,
   };
 }
