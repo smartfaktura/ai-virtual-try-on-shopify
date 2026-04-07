@@ -176,6 +176,7 @@ Deno.serve(async (req) => {
       // If no profile image from posts, try the profile endpoint
       if (!profileImg) {
         try {
+          console.log("[INSTAGRAM-FEED] Fetching profile for:", username);
           const profileResponse = await fetch(
             "https://instagram120.p.rapidapi.com/api/instagram/profile",
             {
