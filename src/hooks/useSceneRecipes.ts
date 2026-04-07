@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export function useSceneRecipes() {
@@ -29,7 +30,7 @@ export function useSceneRecipes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scene-recipes'] });
-      toast.success('Scene recipe created');
+      toast.success('Draft scene created');
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -80,7 +81,8 @@ export function useSceneRecipes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prompt-outputs'] });
-      toast.success('Prompts generated');
+      queryClient.invalidateQueries({ queryKey: ['scene-recipes'] });
+      toast.success('Prompts generated — scene moved to Ready');
     },
     onError: (e: any) => toast.error(`Prompt generation failed: ${e.message}`),
   });
@@ -102,4 +104,72 @@ export function usePromptOutputs(sceneRecipeId?: string) {
     },
     enabled: !!sceneRecipeId,
   });
+}
+
+export function usePublishScene() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const publishToProductImages = useMutation({
+    mutationFn: async ({ recipe, promptOutput }: { recipe: any; promptOutput: any }) => {
+      const sceneId = `trend-${recipe.id.slice(0, 8)}`;
+      const { error } = await supabase
+        .from('product_image_scenes')
+        .insert({
+          scene_id: sceneId,
+          title: recipe.name,
+          description: recipe.short_description || '',
+          prompt_template: promptOutput?.master_scene_prompt || '',
+          scene_type: recipe.scene_type || 'lifestyle',
+          preview_image_url: recipe.preview_image_url,
+          is_active: true,
+          sort_order: 999,
+        });
+      if (error) throw error;
+
+      // Mark recipe as published
+      await supabase
+        .from('scene_recipes' as any)
+        .update({ status: 'published' })
+        .eq('id', recipe.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scene-recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['product-image-scenes'] });
+      toast.success('Added to Product Images scenes');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const publishToFreestyle = useMutation({
+    mutationFn: async ({ recipe, promptOutput }: { recipe: any; promptOutput: any }) => {
+      if (!user) throw new Error('Not authenticated');
+      const { error } = await supabase
+        .from('custom_scenes' as any)
+        .insert({
+          name: recipe.name,
+          description: recipe.short_description || '',
+          category: recipe.category || 'lifestyle',
+          image_url: recipe.preview_image_url || '',
+          prompt_hint: promptOutput?.master_scene_prompt || '',
+          prompt_only: true,
+          created_by: user.id,
+        });
+      if (error) throw error;
+
+      // Mark recipe as published
+      await supabase
+        .from('scene_recipes' as any)
+        .update({ status: 'published' })
+        .eq('id', recipe.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scene-recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['custom-scenes'] });
+      toast.success('Added to Freestyle scenes');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return { publishToProductImages, publishToFreestyle };
 }
