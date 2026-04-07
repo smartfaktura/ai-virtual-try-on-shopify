@@ -1706,55 +1706,6 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── STYLE & OUTFIT (unified) ── */}
-      {hasPersonBlock && (
-        <Card className="border-none shadow-sm bg-secondary/5">
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold">Style & Outfit</h3>
-              <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
-            </div>
-
-            <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-
-            <Separator className="opacity-40" />
-
-            <div className="space-y-1">
-              <Collapsible>
-                <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/customize">
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90 flex-shrink-0" />
-                  <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit</span>
-                  <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getOutfitSummary(details.outfitConfig)}</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="space-y-2 pt-2 pb-1 pl-6">
-                    <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              <Collapsible>
-                <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
-                  <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
-                  <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="pt-2 pb-1 pl-6">
-                    <InlinePersonDetails
-                      details={details}
-                      update={update}
-                      outfitAccessories={details.outfitConfig?.accessories}
-                      onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* ── ADDITIONAL NOTE ── */}
       <div className="space-y-3">
 
