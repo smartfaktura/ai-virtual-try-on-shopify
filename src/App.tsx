@@ -52,6 +52,7 @@ const AdminProductImageScenes = lazy(() => import('@/pages/AdminProductImageScen
 const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const AdminTrendWatch = lazy(() => import('@/pages/AdminTrendWatch'));
 const AdminSceneLibrary = lazy(() => import('@/pages/AdminSceneLibrary'));
+const AdminPromptTokens = lazy(() => import('@/pages/AdminPromptTokens'));
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
@@ -203,6 +204,7 @@ const App = () => {
                         <Route path="/admin/product-image-scenes" element={<AdminProductImageScenes />} />
                         <Route path="/admin/trend-watch" element={<AdminTrendWatch />} />
                         <Route path="/admin/scene-library" element={<AdminSceneLibrary />} />
+                        <Route path="/admin/prompt-tokens" element={<AdminPromptTokens />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>

@@ -16,8 +16,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
 const CATEGORIES = [
@@ -43,202 +44,7 @@ const TRIGGER_BLOCKS = [
 const CAT_LABEL_MAP: Record<string, string> = {};
 CATEGORIES.forEach(c => { CAT_LABEL_MAP[c.value] = c.label; });
 
-const TOKEN_GROUPS: { label: string; tokens: { name: string; desc: string }[] }[] = [
-  {
-    label: '🎨 System (Directives)',
-    tokens: [
-      { name: 'productName', desc: 'Product title' },
-      { name: 'productType', desc: 'Product type / category slug' },
-      { name: 'materialTexture', desc: 'Resolved material + finish description' },
-      { name: 'background', desc: 'Full background directive' },
-      { name: 'lightingDirective', desc: 'Lighting sentence' },
-      { name: 'shadowDirective', desc: 'Shadow sentence' },
-      { name: 'moodDirective', desc: 'Styling direction' },
-      { name: 'surfaceDirective', desc: 'Surface type sentence' },
-      { name: 'environmentDirective', desc: 'Environment sentence' },
-      { name: 'consistencyDirective', desc: 'Cross-shot consistency' },
-      { name: 'cameraDirective', desc: 'Camera/lens specification' },
-      { name: 'personDirective', desc: 'Full person description' },
-      { name: 'outfitDirective', desc: 'Outfit lock directive' },
-      { name: 'handStyle', desc: 'Hand description' },
-      { name: 'nailDirective', desc: 'Nail style' },
-      { name: 'actionDirective', desc: 'Action type + intensity' },
-      { name: 'focusArea', desc: 'What to focus on' },
-      { name: 'cropDirective', desc: 'Crop intensity' },
-      { name: 'brandingDirective', desc: 'Branding visibility' },
-      { name: 'packagingDirective', desc: 'Packaging details' },
-      { name: 'accentDirective', desc: 'Accent color directive' },
-      { name: 'stylingDirective', desc: 'Styling direction' },
-      { name: 'productProminenceDirective', desc: 'Product prominence' },
-      { name: 'sceneIntensityDirective', desc: 'Scene mood/intensity' },
-      { name: 'compositionDirective', desc: 'Composition framing' },
-      { name: 'negativeSpaceDirective', desc: 'Negative space' },
-      { name: 'categoryPackshotDirective', desc: 'Category-specific packshot' },
-      { name: 'bodyFramingDirective', desc: 'Body framing for on-model' },
-      { name: 'modelDirective', desc: 'Model reference directive' },
-    ],
-  },
-  {
-    label: '🔍 Global Visual',
-    tokens: [
-      { name: 'productCategory', desc: 'Detected category (e.g. fragrance)' },
-      { name: 'productSubcategory', desc: 'Sub-category (e.g. eau de parfum)' },
-      { name: 'productForm', desc: 'Physical form (bottle, tube, garment)' },
-      { name: 'productSilhouette', desc: 'Outline shape description' },
-      { name: 'productMainHex', desc: 'Dominant color hex (#RRGGBB)' },
-      { name: 'productSecondaryHex', desc: 'Secondary color hex' },
-      { name: 'productAccentHex', desc: 'Accent/highlight color hex' },
-      { name: 'backgroundBaseHex', desc: 'Suggested background color hex' },
-      { name: 'backgroundSecondaryHex', desc: 'Suggested secondary bg hex' },
-      { name: 'shadowToneHex', desc: 'Ideal shadow tone hex' },
-      { name: 'productFinishType', desc: 'Surface finish (matte, glossy, satin)' },
-      { name: 'materialPrimary', desc: 'Main material (leather, glass)' },
-      { name: 'materialSecondary', desc: 'Secondary material' },
-      { name: 'textureType', desc: 'Surface texture description' },
-      { name: 'transparencyType', desc: 'none / translucent / transparent / frosted' },
-      { name: 'metalTone', desc: 'Metal tone (gold, silver, rose-gold)' },
-      { name: 'heroFeature', desc: 'Most photogenic feature' },
-      { name: 'detailFocusAreas', desc: 'Areas worth macro shots' },
-      { name: 'scaleType', desc: 'Size scale (palm-sized, handheld, etc.)' },
-      { name: 'wearabilityMode', desc: 'How product is used (held, worn, etc.)' },
-      { name: 'bodyPlacementSuggested', desc: 'Where on body product goes' },
-    ],
-  },
-  {
-    label: '🌿 Global Semantic',
-    tokens: [
-      { name: 'ingredientFamilyPrimary', desc: 'Primary ingredient family' },
-      { name: 'ingredientFamilySecondary', desc: 'Secondary ingredient family' },
-      { name: 'fruitsRelated', desc: 'Related fruits for styling props' },
-      { name: 'flowersRelated', desc: 'Related flowers for styling' },
-      { name: 'botanicalsRelated', desc: 'Related botanicals/herbs' },
-      { name: 'woodsRelated', desc: 'Related wood types' },
-      { name: 'spicesRelated', desc: 'Related spices' },
-      { name: 'greensRelated', desc: 'Related greenery/leaves' },
-      { name: 'materialsRelated', desc: 'Related styling materials' },
-      { name: 'regionRelated', desc: 'Geographic/cultural association' },
-      { name: 'landscapeRelated', desc: 'Landscape association' },
-    ],
-  },
-  {
-    label: '👗 Fashion & Apparel',
-    tokens: [
-      { name: 'garmentType', desc: 'Type of garment' },
-      { name: 'fitType', desc: 'Fit (slim, relaxed, oversized)' },
-      { name: 'fabricType', desc: 'Fabric type' },
-      { name: 'fabricWeight', desc: 'Fabric weight' },
-      { name: 'drapeBehavior', desc: 'How fabric drapes' },
-    ],
-  },
-  {
-    label: '✨ Beauty & Skincare',
-    tokens: [
-      { name: 'packagingType', desc: 'Packaging type (pump, jar, tube)' },
-      { name: 'formulaType', desc: 'Formula type (serum, cream)' },
-      { name: 'formulaTexture', desc: 'Texture (gel, milky, oil)' },
-      { name: 'applicationMode', desc: 'How applied (fingers, dropper)' },
-      { name: 'skinAreaSuggested', desc: 'Target skin area' },
-    ],
-  },
-  {
-    label: '🌸 Fragrances',
-    tokens: [
-      { name: 'fragranceFamily', desc: 'Scent family (floral, woody, oriental)' },
-      { name: 'bottleType', desc: 'Bottle shape/type' },
-      { name: 'capStyle', desc: 'Cap/topper style' },
-      { name: 'liquidColorHex', desc: 'Liquid color hex' },
-      { name: 'glassTintType', desc: 'Glass tint (clear, smoked, amber)' },
-      { name: 'noteObjectsPrimary', desc: 'Primary note objects (rose, oud)' },
-      { name: 'noteObjectsSecondary', desc: 'Secondary note objects' },
-      { name: 'scentWorld', desc: 'Scent atmosphere description' },
-    ],
-  },
-  {
-    label: '💎 Jewelry',
-    tokens: [
-      { name: 'jewelryType', desc: 'Type (ring, necklace, bracelet)' },
-      { name: 'gemType', desc: 'Gemstone type' },
-      { name: 'gemColorHex', desc: 'Gem color hex' },
-      { name: 'metalPrimary', desc: 'Primary metal' },
-      { name: 'metalFinish', desc: 'Metal finish (polished, brushed)' },
-      { name: 'wearPlacement', desc: 'Where worn' },
-      { name: 'sparkleLevel', desc: 'Sparkle intensity' },
-    ],
-  },
-  {
-    label: '👜 Accessories',
-    tokens: [
-      { name: 'accessoryType', desc: 'Type (bag, wallet, belt)' },
-      { name: 'carryMode', desc: 'How carried (shoulder, hand, crossbody)' },
-      { name: 'strapType', desc: 'Strap type' },
-      { name: 'hardwareType', desc: 'Hardware type (zipper, clasp)' },
-      { name: 'hardwareFinish', desc: 'Hardware finish' },
-      { name: 'structureType', desc: 'Structure (structured, soft)' },
-      { name: 'signatureDetail', desc: 'Signature design detail' },
-    ],
-  },
-  {
-    label: '🏠 Home & Decor',
-    tokens: [
-      { name: 'decorType', desc: 'Type (candle, vase, frame)' },
-      { name: 'placementType', desc: 'Placement (table, shelf, wall)' },
-      { name: 'objectScale', desc: 'Scale (miniature, tabletop)' },
-      { name: 'baseMaterial', desc: 'Base material' },
-      { name: 'surfaceFinish', desc: 'Surface finish' },
-      { name: 'roomContextSuggested', desc: 'Suggested room context' },
-      { name: 'stylingCompanions', desc: 'Companion objects for styling' },
-    ],
-  },
-  {
-    label: '🍽️ Food & Beverage',
-    tokens: [
-      { name: 'foodType', desc: 'Type of food/beverage' },
-      { name: 'servingMode', desc: 'Serving mode (plated, bottled)' },
-      { name: 'ingredientObjectsPrimary', desc: 'Primary ingredient props' },
-      { name: 'ingredientObjectsSecondary', desc: 'Secondary ingredient props' },
-      { name: 'textureCue', desc: 'Visual texture cue' },
-      { name: 'temperatureCue', desc: 'Hot, cold, room temp' },
-      { name: 'consumptionContext', desc: 'Consumption setting' },
-    ],
-  },
-  {
-    label: '📱 Electronics',
-    tokens: [
-      { name: 'deviceType', desc: 'Device type' },
-      { name: 'interfaceType', desc: 'Interface type' },
-      { name: 'screenPresence', desc: 'Screen visibility' },
-      { name: 'screenStateSuggested', desc: 'Suggested screen state' },
-      { name: 'finishMaterialPrimary', desc: 'Primary finish material' },
-      { name: 'industrialStyle', desc: 'Industrial design style' },
-      { name: 'portDetail', desc: 'Port details' },
-      { name: 'buttonDetail', desc: 'Button details' },
-    ],
-  },
-  {
-    label: '⚽ Sports & Fitness',
-    tokens: [
-      { name: 'sportType', desc: 'Sport type' },
-      { name: 'gearType', desc: 'Gear type' },
-      { name: 'performanceMaterial', desc: 'Performance material' },
-      { name: 'gripTexture', desc: 'Grip texture' },
-      { name: 'motionCue', desc: 'Motion cue for dynamic shots' },
-      { name: 'usageContext', desc: 'Usage context' },
-      { name: 'surfaceContext', desc: 'Surface context' },
-    ],
-  },
-  {
-    label: '💊 Health & Supplements',
-    tokens: [
-      { name: 'supplementType', desc: 'Supplement type' },
-      { name: 'dosageForm', desc: 'Dosage form (capsule, powder)' },
-      { name: 'mixingMode', desc: 'Mixing mode' },
-      { name: 'wellnessIngredientObjects', desc: 'Wellness ingredient props' },
-      { name: 'containerType', desc: 'Container type' },
-      { name: 'clinicalCleanlinessLevel', desc: 'Clinical cleanliness level' },
-      { name: 'routineContext', desc: 'Routine context' },
-    ],
-  },
-];
+
 
 function emptyScene(): Partial<DbScene> & { scene_id: string } {
   return {
@@ -292,7 +98,7 @@ export default function AdminProductImageScenes() {
   const [editDraft, setEditDraft] = useState<Partial<DbScene>>({});
   const [addingNew, setAddingNew] = useState(false);
   const [newDraft, setNewDraft] = useState(emptyScene());
-  const [showTokenRef, setShowTokenRef] = useState(false);
+  // showTokenRef state removed — tokens now on dedicated page
 
   const filtered = useMemo(() => {
     let scenes = rawScenes;
@@ -438,47 +244,14 @@ export default function AdminProductImageScenes() {
           <Switch checked={showHidden} onCheckedChange={setShowHidden} id="show-hidden" />
           <Label htmlFor="show-hidden" className="text-xs">Show hidden</Label>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setShowTokenRef(!showTokenRef)} className="gap-1.5 text-xs">
-          <Info className="w-3.5 h-3.5" /> Prompt tokens
-        </Button>
+        <Link to="/app/admin/prompt-tokens" target="_blank" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+          <Info className="w-3.5 h-3.5" /> Token Reference <ExternalLink className="w-3 h-3" />
+        </Link>
         <Badge variant="secondary" className="text-xs">{filtered.length} scenes</Badge>
       </div>
 
-      {/* Token reference */}
-      {showTokenRef && (
-        <Card>
-          <CardContent className="py-3 space-y-3 max-h-[60vh] overflow-y-auto">
-            <p className="text-xs font-medium">Available prompt tokens — click to copy:</p>
-            {TOKEN_GROUPS.map(group => (
-              <Collapsible key={group.label}>
-                <CollapsibleTrigger className="w-full flex items-center gap-2 text-xs font-semibold py-1 hover:text-primary transition-colors">
-                  <ChevronRight className="w-3 h-3" />
-                  {group.label}
-                  <Badge variant="secondary" className="text-[9px] ml-auto">{group.tokens.length}</Badge>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="flex flex-wrap gap-1.5 pl-5 pt-1 pb-2">
-                    {group.tokens.map(t => (
-                      <button
-                        key={t.name}
-                        type="button"
-                        title={t.desc}
-                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-border text-[10px] font-mono hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
-                        onClick={() => {
-                          navigator.clipboard.writeText(`{{${t.name}}}`);
-                          toast.success(`Copied {{${t.name}}}`);
-                        }}
-                      >
-                        {`{{${t.name}}}`}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+
+
 
       {/* Add new form */}
       {addingNew && (
