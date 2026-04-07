@@ -60,9 +60,7 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  const MAX_RUNTIME_MS = 25_000; // 25 seconds — dispatcher is lightweight now
-
-  const MAX_CONCURRENT_JOBS = 20;
+  const MAX_RUNTIME_MS = 55_000; // 55 seconds — fire-and-forget dispatch, 1s stagger
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -91,17 +89,6 @@ serve(async (req) => {
 
     // Step 2: Loop — claim and dispatch jobs until time runs out
     while (Date.now() - startTime < MAX_RUNTIME_MS) {
-      // Check global concurrency cap before dispatching more
-      const { count: activeJobs } = await supabase
-        .from("generation_queue")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "processing");
-
-      if ((activeJobs || 0) >= MAX_CONCURRENT_JOBS) {
-        console.log(`[process-queue] Concurrency cap reached (${activeJobs}/${MAX_CONCURRENT_JOBS}), pausing dispatch.`);
-        break;
-      }
-
       // Claim next job
       const { data: claimResult, error: claimError } = await supabase.rpc("claim_next_job");
 
@@ -158,9 +145,6 @@ serve(async (req) => {
       console.log(`[process-queue] ⚡ Dispatched job ${jobId}, type=${jobType}, user=${userId}`);
     }
 
-    // Release the singleton lock so next invocation can dispatch
-    await supabase.rpc("release_dispatch_lock");
-
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     console.log(`[process-queue] Done. Dispatched ${dispatchedCount} jobs in ${elapsed}s`);
 
@@ -174,5 +158,16 @@ serve(async (req) => {
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+  } finally {
+    // Always release the singleton lock so next invocation can dispatch
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabase = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false },
+      });
+      await supabase.rpc("release_dispatch_lock");
+    } catch (lockErr) {
+      console.error("[process-queue] Failed to release lock:", lockErr);
+    }
   }
 });
