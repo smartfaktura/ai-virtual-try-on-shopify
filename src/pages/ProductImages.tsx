@@ -793,7 +793,7 @@ export default function ProductImages() {
                               )}>
                                 {isSelected && <Check className="w-3 h-3" />}
                               </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
