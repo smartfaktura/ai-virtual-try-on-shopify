@@ -1713,6 +1713,18 @@ export function ProductImagesStep3Refine({
           e.target.value = '';
         }}
       />
+      {/* Hidden file input for back reference uploads */}
+      <input
+        ref={backRefInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0];
+          if (f) handleBackRefUpload(f);
+          e.target.value = '';
+        }}
+      />
       {/* ── HEADER ── */}
       <div className="space-y-3">
         <div>
