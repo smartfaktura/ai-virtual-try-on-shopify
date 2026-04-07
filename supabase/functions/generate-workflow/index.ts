@@ -1209,6 +1209,11 @@ serve(async (req) => {
             referenceImages.push({ url: (body as Record<string, unknown>).packaging_reference_url as string, label: "packaging_reference" });
             console.log(`[generate-workflow] Adding packaging reference image`);
           }
+          // Add extra angle reference image (e.g. back/side view) when provided
+          if ((body as Record<string, unknown>).extra_reference_image_url) {
+            referenceImages.push({ url: (body as Record<string, unknown>).extra_reference_image_url as string, label: "product_extra_angle" });
+            console.log(`[generate-workflow] Adding extra angle reference image for "${variation.label}"`);
+          }
 
           let imageUrl = await generateImage(
             prompt,
