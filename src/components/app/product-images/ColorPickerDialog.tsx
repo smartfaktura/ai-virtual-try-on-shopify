@@ -217,7 +217,7 @@ export function ColorPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden rounded-2xl max-h-[85vh]">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-base font-semibold">Custom Color</DialogTitle>
         </DialogHeader>
@@ -231,7 +231,7 @@ export function ColorPickerDialog({
           </div>
 
           {/* ─── Solid Tab ─── */}
-          <TabsContent value="solid" className="px-5 pb-5 pt-4 space-y-4 mt-0">
+          <TabsContent value="solid" className="px-4 pb-4 pt-3 space-y-3 mt-0 overflow-y-auto max-h-[70vh]">
             {/* Quick-pick swatches */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted-foreground">Quick pick</span>
@@ -301,29 +301,29 @@ export function ColorPickerDialog({
           </TabsContent>
 
           {/* ─── Gradient Tab ─── */}
-          <TabsContent value="gradient" className="px-5 pb-5 pt-4 space-y-4 mt-0">
+          <TabsContent value="gradient" className="px-4 pb-4 pt-3 space-y-3 mt-0 overflow-y-auto max-h-[70vh]">
             {/* Live gradient preview */}
             <div
-              className="h-12 rounded-xl border border-border shadow-sm"
+              className="h-16 rounded-xl border border-border shadow-sm"
               style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }}
             />
 
             {/* Quick gradients */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted-foreground">Quick gradients</span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 {GRADIENT_PRESETS.map(p => {
                   const selected = gradFrom.toUpperCase() === p.from.toUpperCase() && gradTo.toUpperCase() === p.to.toUpperCase();
                   return (
                     <button
                       key={p.name} type="button" onClick={() => pickGradientPreset(p.from, p.to)}
-                      className={`flex flex-col items-center gap-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+                      title={p.name}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <div
-                        className={`w-full h-14 rounded-xl border-2 transition-all duration-150 ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}`}
+                        className={`w-full h-8 rounded-lg border-2 transition-all duration-150 ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}`}
                         style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
                       />
-                      <span className="text-[10px] text-muted-foreground font-medium">{p.name}</span>
                     </button>
                   );
                 })}
