@@ -179,6 +179,36 @@ export default function AdminProductImageScenes() {
     }
   };
 
+  const handleDuplicate = async (scene: DbScene) => {
+    const existingIds = new Set(rawScenes.map(s => s.scene_id));
+    let newId = `${scene.scene_id}-copy`;
+    let counter = 2;
+    while (existingIds.has(newId)) {
+      newId = `${scene.scene_id}-copy-${counter}`;
+      counter++;
+    }
+    try {
+      await upsertScene.mutateAsync({
+        scene_id: newId,
+        title: `${scene.title} (copy)`,
+        description: scene.description,
+        prompt_template: scene.prompt_template,
+        trigger_blocks: scene.trigger_blocks,
+        category_collection: scene.category_collection,
+        scene_type: scene.scene_type,
+        preview_image_url: scene.preview_image_url,
+        is_active: scene.is_active,
+        sort_order: scene.sort_order + 1,
+        sub_category: scene.sub_category,
+        category_sort_order: scene.category_sort_order,
+        requires_extra_reference: scene.requires_extra_reference,
+      });
+      toast.success(`Duplicated as ${newId}`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   const handleToggleActive = async (scene: DbScene) => {
     try {
       await updateScene.mutateAsync({ id: scene.id, updates: { is_active: !scene.is_active } });
