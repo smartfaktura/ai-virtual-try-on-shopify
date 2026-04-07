@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { ColorPickerDialog } from '@/components/app/product-images/ColorPickerDialog';
 import { useUserSavedColors } from '@/hooks/useUserSavedColors';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -442,9 +443,8 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
   const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
   const [customHex, setCustomHex] = useState(details.backgroundCustomHex || '#FFFFFF');
 
-  const colorInputRef = useRef<HTMLInputElement>(null);
-  const gradFromInputRef = useRef<HTMLInputElement>(null);
-  const gradToInputRef = useRef<HTMLInputElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'solid' | 'gradient'>('solid');
 
   const applyGradient = (from: string, to: string) => {
     setGradFrom(from);
@@ -489,16 +489,15 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
   const validCustomHex = /^#[0-9A-Fa-f]{6}$/.test(customHex);
 
   const handleCustomCardClick = () => {
-    if (hasCustom) return;
-    toggleSwatch('custom');
-    applyCustomHex(customHex);
-    colorInputRef.current?.click();
+    if (!hasCustom) toggleSwatch('custom');
+    setPickerMode('solid');
+    setPickerOpen(true);
   };
 
   const handleGradientCardClick = () => {
-    if (hasGradientCustom) return;
-    toggleSwatch('gradient-custom');
-    gradFromInputRef.current?.click();
+    if (!hasGradientCustom) toggleSwatch('gradient-custom');
+    setPickerMode('gradient');
+    setPickerOpen(true);
   };
 
   const XButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
@@ -536,33 +535,19 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
 
   return (
     <div className="space-y-3">
-      {/* Hidden native color inputs */}
-      <input
-        ref={colorInputRef}
-        type="color"
-        value={validCustomHex ? customHex : '#FFFFFF'}
-        onChange={e => applyCustomHex(e.target.value)}
-        className="sr-only"
-        tabIndex={-1}
-      />
-      <input
-        ref={gradFromInputRef}
-        type="color"
-        value={gradFrom}
-        onChange={e => {
-          applyGradient(e.target.value, gradTo);
-          setTimeout(() => gradToInputRef.current?.click(), 300);
-        }}
-        className="sr-only"
-        tabIndex={-1}
-      />
-      <input
-        ref={gradToInputRef}
-        type="color"
-        value={gradTo}
-        onChange={e => applyGradient(gradFrom, e.target.value)}
-        className="sr-only"
-        tabIndex={-1}
+      {/* Color Picker Dialog */}
+      <ColorPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        mode={pickerMode}
+        initialHex={customHex}
+        initialGradientFrom={gradFrom}
+        initialGradientTo={gradTo}
+        canSave={canSave}
+        onApplySolid={(h) => { applyCustomHex(h); if (!hasCustom) toggleSwatch('custom'); }}
+        onApplyGradient={(f, t) => { applyGradient(f, t); if (!hasGradientCustom) toggleSwatch('gradient-custom'); }}
+        onSaveColor={onSaveColor}
+        onSaveGradient={onSaveGradient}
       />
 
       {/* Swatch grid — square aspect cards, 8 per row */}
@@ -659,7 +644,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
           )}
         >
           {hasCustom && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch('custom'); }} />}
-          {hasCustom && <EditButton onClick={(e) => { e.stopPropagation(); colorInputRef.current?.click(); }} />}
+          {hasCustom && <EditButton onClick={(e) => { e.stopPropagation(); setPickerMode('solid'); setPickerOpen(true); }} />}
           {hasCustom && canSave && validCustomHex && (
             <SaveButton onClick={(e) => { e.stopPropagation(); onSaveColor(customHex); }} />
           )}
@@ -692,13 +677,13 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
           )}
         >
           {hasGradientCustom && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch('gradient-custom'); }} />}
-          {hasGradientCustom && <EditButton onClick={(e) => { e.stopPropagation(); gradFromInputRef.current?.click(); }} />}
+          {hasGradientCustom && <EditButton onClick={(e) => { e.stopPropagation(); setPickerMode('gradient'); setPickerOpen(true); }} />}
           {hasGradientCustom && canSave && (
             <SaveButton onClick={(e) => { e.stopPropagation(); onSaveGradient(gradFrom, gradTo); }} />
           )}
           <div
             className="aspect-square w-full flex items-center justify-center"
-            style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : undefined }}
+            style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : 'linear-gradient(135deg, #E8E8E8, #D0D0D0)' }}
           >
             {!hasGradientCustom && <Plus className="w-4 h-4 text-muted-foreground" />}
           </div>
