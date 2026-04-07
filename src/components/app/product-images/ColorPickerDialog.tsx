@@ -224,11 +224,6 @@ export function ColorPickerDialog({
               </div>
             </div>
 
-            {/* Gradient preview */}
-            <div
-              className="w-full h-20 rounded-lg border border-border shadow-inner"
-              style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }}
-            />
 
             {/* Two color wells */}
             <div className="grid grid-cols-2 gap-4">
