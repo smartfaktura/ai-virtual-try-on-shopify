@@ -29,7 +29,7 @@ export function useProductAnalysis() {
 
     for (const p of products) {
       const existing = (p as any).analysis_json as ProductAnalysis | null;
-      if (existing?.category) {
+      if (existing?.category && existing?.version === 2) {
         cached[p.id] = existing;
       } else {
         needsAnalysis.push(p);

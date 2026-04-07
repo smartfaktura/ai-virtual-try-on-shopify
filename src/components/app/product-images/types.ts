@@ -38,6 +38,9 @@ export type ProductCategory =
   | 'food-beverage' | 'supplements-wellness' | 'other';
 
 export interface ProductAnalysis {
+  /** Schema version — used to invalidate stale analyses */
+  version?: number;
+
   category: ProductCategory;
   sizeClass: 'very-small' | 'small' | 'medium' | 'large' | 'extra-large';
   colorFamily: string;
@@ -46,6 +49,129 @@ export interface ProductAnalysis {
   packagingRelevant: boolean;
   personCompatible: boolean;
   accentColor?: string;
+
+  // ── Global Visual tokens ──
+  productSubcategory?: string;
+  productForm?: string;
+  productSilhouette?: string;
+  productMainHex?: string;
+  productSecondaryHex?: string;
+  productAccentHex?: string;
+  backgroundBaseHex?: string;
+  backgroundSecondaryHex?: string;
+  shadowToneHex?: string;
+  productFinishType?: string;
+  materialPrimary?: string;
+  materialSecondary?: string;
+  textureType?: string;
+  transparencyType?: string;
+  metalTone?: string;
+  heroFeature?: string;
+  detailFocusAreas?: string;
+  scaleType?: string;
+  wearabilityMode?: string;
+  bodyPlacementSuggested?: string;
+
+  // ── Global Semantic tokens ──
+  ingredientFamilyPrimary?: string;
+  ingredientFamilySecondary?: string;
+  fruitsRelated?: string;
+  flowersRelated?: string;
+  botanicalsRelated?: string;
+  woodsRelated?: string;
+  spicesRelated?: string;
+  greensRelated?: string;
+  materialsRelated?: string;
+  regionRelated?: string;
+  landscapeRelated?: string;
+
+  // ── Fashion & Apparel ──
+  garmentType?: string;
+  fitType?: string;
+  fabricType?: string;
+  fabricWeight?: string;
+  drapeBehavior?: string;
+
+  // ── Beauty & Skincare ──
+  packagingType?: string;
+  formulaType?: string;
+  formulaTexture?: string;
+  applicationMode?: string;
+  skinAreaSuggested?: string;
+
+  // ── Fragrances ──
+  fragranceFamily?: string;
+  bottleType?: string;
+  capStyle?: string;
+  liquidColorHex?: string;
+  glassTintType?: string;
+  noteObjectsPrimary?: string;
+  noteObjectsSecondary?: string;
+  scentWorld?: string;
+
+  // ── Jewelry ──
+  jewelryType?: string;
+  gemType?: string;
+  gemColorHex?: string;
+  metalPrimary?: string;
+  metalFinish?: string;
+  wearPlacement?: string;
+  sparkleLevel?: string;
+
+  // ── Accessories ──
+  accessoryType?: string;
+  carryMode?: string;
+  strapType?: string;
+  hardwareType?: string;
+  hardwareFinish?: string;
+  structureType?: string;
+  signatureDetail?: string;
+
+  // ── Home & Decor ──
+  decorType?: string;
+  placementType?: string;
+  objectScale?: string;
+  baseMaterial?: string;
+  surfaceFinish?: string;
+  roomContextSuggested?: string;
+  stylingCompanions?: string;
+
+  // ── Food & Beverage ──
+  foodType?: string;
+  servingMode?: string;
+  ingredientObjectsPrimary?: string;
+  ingredientObjectsSecondary?: string;
+  textureCue?: string;
+  temperatureCue?: string;
+  consumptionContext?: string;
+
+  // ── Electronics ──
+  deviceType?: string;
+  interfaceType?: string;
+  screenPresence?: string;
+  screenStateSuggested?: string;
+  finishMaterialPrimary?: string;
+  industrialStyle?: string;
+  portDetail?: string;
+  buttonDetail?: string;
+
+  // ── Sports & Fitness ──
+  sportType?: string;
+  gearType?: string;
+  performanceMaterial?: string;
+  gripTexture?: string;
+  motionCue?: string;
+  usageContext?: string;
+  surfaceContext?: string;
+
+  // ── Health & Supplements ──
+  supplementType?: string;
+  dosageForm?: string;
+  mixingMode?: string;
+  wellnessIngredientObjects?: string;
+  containerType?: string;
+  clinicalCleanlinessLevel?: string;
+  routineContext?: string;
 }
 
 // ── Scene assignment ──
