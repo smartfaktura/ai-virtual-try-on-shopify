@@ -34,6 +34,7 @@ export default function AdminTrendWatch() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [refreshingAll, setRefreshingAll] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<any>(null);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
   const [activeTab, setActiveTab] = useState('feed');
 
@@ -188,7 +189,7 @@ export default function AdminTrendWatch() {
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => setAddModalOpen(true)}>
+            <Button size="sm" onClick={() => { setEditingAccount(null); setAddModalOpen(true); }}>
               <Plus className="w-4 h-4 mr-1" /> Add Account
             </Button>
             <Button size="sm" variant="secondary" onClick={() => { setPastedFile(null); setImageModalOpen(true); }}>
@@ -230,7 +231,7 @@ export default function AdminTrendWatch() {
                               account={account}
                               posts={(postsGrouped as Record<string, any[]>)[account.id] || []}
                               onSync={handleSync}
-                              onEdit={() => {}}
+                              onEdit={(account: any) => { setEditingAccount(account); setAddModalOpen(true); }}
                               onDeactivate={handleDeactivate}
                               onPostClick={(post) => { setSelectedPost(post); setDrawerOpen(true); }}
                               isSyncing={syncingId === account.id}
@@ -262,9 +263,11 @@ export default function AdminTrendWatch() {
 
       <AddAccountModal
         open={addModalOpen}
-        onOpenChange={setAddModalOpen}
+        onOpenChange={(v) => { setAddModalOpen(v); if (!v) setEditingAccount(null); }}
         onAdd={(a) => addAccount.mutate(a)}
-        isLoading={addAccount.isPending}
+        onUpdate={(a) => { const { id, ...rest } = a; updateAccount.mutate({ id, ...rest }); }}
+        editingAccount={editingAccount}
+        isLoading={addAccount.isPending || updateAccount.isPending}
       />
 
       <PostDetailDrawer
