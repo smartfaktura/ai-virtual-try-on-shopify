@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 export default function AdminTrendWatch() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
-  const { accounts, isLoading, addAccount, updateAccount, syncAccount } = useWatchAccounts();
+  const { accounts, isLoading, addAccount, updateAccount, syncAccount, loadMorePosts } = useWatchAccounts();
   const { createRecipe } = useSceneRecipes();
 
   const [search, setSearch] = useState('');
