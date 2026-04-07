@@ -67,7 +67,7 @@ export function AddAccountModal({ open, onOpenChange, onAdd, isLoading }: AddAcc
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="manual">Manual</SelectItem>
-                <SelectItem value="official_api">API (Apify)</SelectItem>
+                <SelectItem value="official_api">API (RapidAPI)</SelectItem>
               </SelectContent>
             </Select>
           </div>
