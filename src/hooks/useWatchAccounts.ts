@@ -96,7 +96,26 @@ export function useWatchAccounts() {
     };
   }, [queryClient]);
 
-  return { accounts, isLoading, addAccount, updateAccount, syncAccount };
+  const loadMorePosts = useMutation({
+    mutationFn: async ({ id, username }: { id: string; username: string }) => {
+      const { data, error } = await supabase.functions.invoke('fetch-instagram-feed', {
+        body: { username, account_id: id, load_more: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['watch-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['watch-posts-all'] });
+      queryClient.invalidateQueries({ queryKey: ['watch-posts'] });
+      const count = data?.posts_count ?? 0;
+      toast.success(`Loaded ${count} older posts`);
+    },
+    onError: (e: any) => toast.error(`Load more failed: ${e.message}`),
+  });
+
+  return { accounts, isLoading, addAccount, updateAccount, syncAccount, loadMorePosts };
 }
 
 export function useWatchPosts(accountId?: string) {
