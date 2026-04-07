@@ -5,55 +5,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const ANALYSIS_SCHEMA = {
-  name: "extract_visual_direction",
-  description: "Extract high-level visual direction from a product/lifestyle image for AI image generation. Do NOT replicate the exact image. Extract only reusable aesthetic signals with maximum precision for prompt engineering.",
-  parameters: {
-    type: "object",
-    properties: {
-      category: { type: "string", description: "Product category (e.g. skincare, jewelry, fashion, food, home decor)" },
-      subcategory: { type: "string", description: "More specific subcategory (e.g. serum, ring, sneaker)" },
-      scene_type: { type: "string", description: "Scene archetype: studio, lifestyle, editorial, flatlay, environmental, abstract" },
-      palette: { type: "array", items: { type: "string" }, description: "Dominant color palette as descriptive names (e.g. 'warm sand', 'deep navy', 'blush pink')" },
-      dominant_colors: { type: "array", items: { type: "string" }, description: "Hex codes or precise color names of the 3-5 most prominent colors" },
-      lighting_type: { type: "string", description: "Primary lighting setup: soft diffused, harsh directional, golden hour, rim-lit, backlit, overhead flat, dramatic side-light, window light, studio strobe" },
-      light_direction: { type: "string", description: "Where light comes from: top-left, top-right, frontal, side, back, overhead, 45-degree key" },
-      shadow_softness: { type: "string", description: "Shadow quality: razor-sharp, crisp, medium-soft, very soft/diffused, barely visible" },
-      depth_of_field: { type: "string", description: "Focus behavior: ultra-shallow (f/1.4 bokeh), shallow (f/2.8), medium (f/5.6), deep (f/11+), tilt-shift selective" },
-      background_type: { type: "string", description: "Background family: seamless paper, fabric drape, gradient, solid color, environmental, bokeh blur, abstract" },
-      background_detail: { type: "string", description: "Specific background description: e.g. 'crumpled linen in warm cream', 'smooth concrete with subtle grain', 'out-of-focus greenery with warm bokeh circles'" },
-      environment_type: { type: "string", description: "Setting: bathroom counter, kitchen marble, outdoor terrace, studio infinity cove, bedroom vanity, café table" },
-      crop_type: { type: "string", description: "Framing: tight product close-up, medium with breathing room, wide environmental, macro detail" },
-      camera_angle: { type: "string", description: "Viewpoint: eye-level, slightly above (15°), overhead (45°), top-down flat, low angle hero, three-quarter" },
-      framing_style: { type: "string", description: "Composition approach: centered hero, rule-of-thirds, asymmetric, diagonal, floating, layered depth" },
-      composition_logic: { type: "string", description: "Layout strategy: single hero product centered, grouped arrangement, scattered organic, stacked/nested, in-use context" },
-      product_placement: { type: "string", description: "How product sits in frame: dead-center, left-third, right-third, foreground with context behind, floating/suspended" },
-      negative_space: { type: "string", description: "Amount of empty space: minimal (product fills frame), moderate (30-40% breathing room), generous (60%+ clean space)" },
-      props: { type: "array", items: { type: "string" }, description: "Supporting objects: fresh flowers, water droplets, fabric swatch, citrus slices, greenery, stones" },
-      material_cues: { type: "array", items: { type: "string" }, description: "Materials visible: glass, ceramic, brushed metal, velvet, marble, wood grain, concrete" },
-      surface_cues: { type: "array", items: { type: "string" }, description: "Surface the product rests on: polished marble slab, raw linen, wet stone, frosted glass, reflective acrylic" },
-      texture_detail: { type: "string", description: "Dominant texture quality: ultra-glossy/reflective, satin/semi-matte, matte/powdery, rough/organic, mixed textures" },
-      reflections: { type: "string", description: "Reflection behavior: none, subtle surface reflection, prominent mirror-like reflection, caustics/light patterns, wet-look reflections" },
-      color_grading: { type: "string", description: "Post-processing color treatment: warm golden tones, cool blue-silver, neutral/true-to-life, desaturated editorial, high-contrast cinematic, pastel-lifted shadows" },
-      contrast_level: { type: "string", description: "Tonal contrast: low/flat (airy), medium (balanced), high (punchy), extreme (dramatic darks)" },
-      saturation_level: { type: "string", description: "Color intensity: desaturated/muted, natural, slightly boosted, vibrant/rich, hyper-saturated" },
-      styling_tone: { type: "string", description: "Overall styling direction: clinical-clean, luxe-editorial, organic-natural, minimalist-zen, maximalist, playful-pop, heritage-classic" },
-      mood: { type: "string", description: "Emotional atmosphere: serene, energetic, luxurious, intimate, fresh, mysterious, celebratory, raw/authentic" },
-      premium_cues: { type: "array", items: { type: "string" }, description: "Signals of quality/luxury: gold accents, selective focus, high-key lighting, monochromatic palette, negative space, material richness" },
-      realism_level: { type: "string", description: "How photographic: hyper-real photograph, slightly stylized, heavily edited/retouched, illustration-like" },
-      key_visual_elements: { type: "array", items: { type: "string" }, description: "Most striking visual details that make this image stand out: e.g. 'water droplets catching light on glass bottle', 'dramatic shadow lines from window blinds', 'steam rising from product'" },
-      has_model: { type: "boolean" },
-      has_hands: { type: "boolean" },
-      has_packaging: { type: "boolean" },
-      image_mode: { type: "string", description: "product-only or lifestyle" },
-      avoid_terms: { type: "array", items: { type: "string" }, description: "Things to NOT include in generation: brand logos, specific celebrity features, copyrighted designs" },
-      short_summary: { type: "string", description: "2-3 sentence description of the visual direction suitable for prompting an image generation AI. Focus on actionable visual details." },
-      recommended_scene_name: { type: "string", description: "A short evocative name for this scene style (e.g. 'Golden Hour Marble', 'Wet Stone Minimalist')" },
-      recommended_aesthetic_family: { type: "string", description: "Broader aesthetic grouping: clean-minimal, warm-organic, dark-luxe, bright-editorial, moody-cinematic" },
-    },
-    required: ["category", "scene_type", "lighting_type", "mood", "short_summary", "depth_of_field", "color_grading", "texture_detail"],
-  },
-};
+const ANALYSIS_FIELDS = [
+  "category", "subcategory", "scene_type", "palette", "dominant_colors",
+  "lighting_type", "light_direction", "shadow_softness", "depth_of_field",
+  "background_type", "background_detail", "environment_type", "crop_type",
+  "camera_angle", "framing_style", "composition_logic", "product_placement",
+  "negative_space", "props", "material_cues", "surface_cues", "texture_detail",
+  "reflections", "color_grading", "contrast_level", "saturation_level",
+  "styling_tone", "mood", "premium_cues", "realism_level", "key_visual_elements",
+  "has_model", "has_hands", "has_packaging", "image_mode", "avoid_terms",
+  "short_summary", "recommended_scene_name", "recommended_aesthetic_family",
+];
+
+function extractJson(text: string): any {
+  // Try fenced code block first
+  const fenced = text.match(/```(?:json)?\s*\n?([\s\S]*?)```/);
+  if (fenced) {
+    return JSON.parse(fenced[1].trim());
+  }
+  // Try raw JSON object
+  const braceStart = text.indexOf("{");
+  const braceEnd = text.lastIndexOf("}");
+  if (braceStart !== -1 && braceEnd > braceStart) {
+    return JSON.parse(text.slice(braceStart, braceEnd + 1));
+  }
+  throw new Error("No JSON object found in AI response");
+}
+
+function normalize(raw: any): Record<string, any> {
+  const result: Record<string, any> = {};
+  const arrayFields = new Set([
+    "palette", "dominant_colors", "props", "material_cues", "surface_cues",
+    "premium_cues", "key_visual_elements", "avoid_terms",
+  ]);
+  const boolFields = new Set(["has_model", "has_hands", "has_packaging"]);
+
+  for (const field of ANALYSIS_FIELDS) {
+    const val = raw[field];
+    if (boolFields.has(field)) {
+      result[field] = val === true;
+    } else if (arrayFields.has(field)) {
+      result[field] = Array.isArray(val) ? val : [];
+    } else {
+      result[field] = typeof val === "string" ? val : "";
+    }
+  }
+  return result;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -122,6 +120,48 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Use plain JSON prompt instead of tool-calling to avoid schema-too-complex errors
+    const fieldDescriptions = `Return a JSON object with these fields:
+- category (string): Product category e.g. skincare, jewelry, fashion
+- subcategory (string): More specific e.g. serum, ring, sneaker
+- scene_type (string): studio, lifestyle, editorial, flatlay, environmental, abstract
+- palette (string[]): Dominant colors as descriptive names
+- dominant_colors (string[]): Hex codes or precise color names of 3-5 most prominent colors
+- lighting_type (string): Primary lighting setup
+- light_direction (string): Where light comes from
+- shadow_softness (string): Shadow quality
+- depth_of_field (string): Focus behavior with f-stop equivalent
+- background_type (string): Background family
+- background_detail (string): Specific background description
+- environment_type (string): Setting description
+- crop_type (string): Framing type
+- camera_angle (string): Viewpoint
+- framing_style (string): Composition approach
+- composition_logic (string): Layout strategy
+- product_placement (string): How product sits in frame
+- negative_space (string): Amount of empty space
+- props (string[]): Supporting objects
+- material_cues (string[]): Materials visible
+- surface_cues (string[]): Surface the product rests on
+- texture_detail (string): Dominant texture quality
+- reflections (string): Reflection behavior
+- color_grading (string): Post-processing color treatment
+- contrast_level (string): Tonal contrast
+- saturation_level (string): Color intensity
+- styling_tone (string): Overall styling direction
+- mood (string): Emotional atmosphere
+- premium_cues (string[]): Signals of quality/luxury
+- realism_level (string): How photographic
+- key_visual_elements (string[]): Most striking visual details
+- has_model (boolean): Whether a human model is present
+- has_hands (boolean): Whether hands are visible
+- has_packaging (boolean): Whether product packaging is visible
+- image_mode (string): product-only or lifestyle
+- avoid_terms (string[]): Things to NOT include in generation
+- short_summary (string): 2-3 sentence visual direction summary for prompt engineering
+- recommended_scene_name (string): Short evocative name for this scene style
+- recommended_aesthetic_family (string): Broader aesthetic grouping`;
+
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -133,97 +173,55 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert visual direction analyst for VOVV, an AI product photography platform.
-Your job: extract PRECISE, ACTIONABLE visual signals from reference images so they can be used to generate new product photos via AI image generation.
+            content: `You are an expert visual direction analyst for AI product photography. Extract PRECISE, ACTIONABLE visual signals from reference images for AI image generation prompt engineering.
 
-CRITICAL RULES:
-- Be extremely specific about lighting setup (not just "soft" — describe the direction, quality, falloff)
-- Describe depth of field precisely (f-stop equivalent, bokeh character)
-- Note exact surface interactions: how light hits materials, reflections, caustics
-- Describe color grading in post-production terms (lifted shadows, crushed blacks, split toning)
-- Capture texture at a granular level: is glass surface frosted or polished? Is the fabric woven or knit?
-- Note every compositional detail: where exactly in the frame is the product, what's the ratio of product to negative space
-- Describe the background with enough detail to recreate it (not just "blurred" — what's behind and how blurred)
-- Extract mood through concrete visual attributes, not vague feelings
+Be extremely specific about lighting, depth of field, color grading, textures, composition, and mood. DO NOT include brand names, logos, or copyrighted elements.
 
-DO NOT: Include brand names, logos, celebrity likenesses, or exact copyrighted elements.
-Focus on: palette, lighting setup, surface interactions, depth of field, color grading, texture, composition, prop language, premium cues, mood.`,
+IMPORTANT: Respond with ONLY a valid JSON object. No markdown, no explanation, just the JSON.`,
           },
           {
             role: "user",
             content: [
-              { type: "text", text: `Analyze this image and extract detailed structured visual direction for AI image generation. Be as specific and granular as possible — every detail matters for prompt engineering. Caption context: ${post.caption?.slice(0, 500) || "none"}` },
+              {
+                type: "text",
+                text: `Analyze this image and extract detailed structured visual direction.\n\n${fieldDescriptions}\n\nCaption context: ${post.caption?.slice(0, 500) || "none"}\n\nRespond with ONLY the JSON object.`,
+              },
               { type: "image_url", image_url: { url: imageUrl } },
             ],
           },
         ],
-        tools: [{
-          type: "function",
-          function: ANALYSIS_SCHEMA,
-        }],
-        tool_choice: { type: "function", function: { name: "extract_visual_direction" } },
       }),
     });
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
-      throw new Error(`AI API error: ${aiResponse.status} ${errText}`);
+      console.error("AI API error:", aiResponse.status, errText);
+      throw new Error(`AI API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    let analysis: any = {};
+    const content = aiData.choices?.[0]?.message?.content;
 
-    if (toolCall?.function?.arguments) {
-      analysis = typeof toolCall.function.arguments === "string"
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
+    if (!content) {
+      throw new Error("AI returned empty response");
     }
+
+    let rawAnalysis: any;
+    try {
+      rawAnalysis = extractJson(content);
+    } catch (parseErr) {
+      console.error("Failed to parse AI output:", content.slice(0, 500));
+      throw new Error("AI returned invalid JSON — please retry");
+    }
+
+    const analysis = normalize(rawAnalysis);
 
     const { data: savedAnalysis, error: saveError } = await supabaseAdmin
       .from("reference_analyses")
       .insert({
         watch_post_id,
-        category: analysis.category || "",
-        subcategory: analysis.subcategory || "",
-        scene_type: analysis.scene_type || "",
-        palette: analysis.palette || [],
-        dominant_colors: analysis.dominant_colors || [],
-        lighting_type: analysis.lighting_type || "",
-        light_direction: analysis.light_direction || "",
-        shadow_softness: analysis.shadow_softness || "",
-        background_type: analysis.background_type || "",
-        environment_type: analysis.environment_type || "",
-        crop_type: analysis.crop_type || "",
-        camera_angle: analysis.camera_angle || "",
-        framing_style: analysis.framing_style || "",
-        composition_logic: analysis.composition_logic || "",
-        props: analysis.props || [],
-        material_cues: analysis.material_cues || [],
-        surface_cues: analysis.surface_cues || [],
-        styling_tone: analysis.styling_tone || "",
-        mood: analysis.mood || "",
-        premium_cues: analysis.premium_cues || [],
-        realism_level: analysis.realism_level || "",
-        has_model: analysis.has_model || false,
-        has_hands: analysis.has_hands || false,
-        has_packaging: analysis.has_packaging || false,
-        image_mode: analysis.image_mode || "",
-        avoid_terms: analysis.avoid_terms || [],
-        short_summary: analysis.short_summary || "",
-        recommended_scene_name: analysis.recommended_scene_name || "",
-        recommended_aesthetic_family: analysis.recommended_aesthetic_family || "",
-        depth_of_field: analysis.depth_of_field || "",
-        color_grading: analysis.color_grading || "",
-        texture_detail: analysis.texture_detail || "",
-        reflections: analysis.reflections || "",
-        contrast_level: analysis.contrast_level || "",
-        saturation_level: analysis.saturation_level || "",
-        key_visual_elements: analysis.key_visual_elements || [],
-        negative_space: analysis.negative_space || "",
-        product_placement: analysis.product_placement || "",
-        background_detail: analysis.background_detail || "",
-        raw_analysis_json: analysis,
+        ...analysis,
+        raw_analysis_json: rawAnalysis,
       })
       .select()
       .single();
@@ -234,6 +232,7 @@ Focus on: palette, lighting setup, surface interactions, depth of field, color g
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error("analyze-trend-post error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

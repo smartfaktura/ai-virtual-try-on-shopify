@@ -23,7 +23,6 @@ export function AddImageDraftModal({ open, onOpenChange, initialFile, onDraftCre
   const [isProcessing, setIsProcessing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Sync initialFile when modal opens with a file
   useEffect(() => {
     if (open && initialFile) {
       setFile(initialFile);
@@ -31,7 +30,6 @@ export function AddImageDraftModal({ open, onOpenChange, initialFile, onDraftCre
     }
   }, [open, initialFile]);
 
-  // Paste listener inside the dialog
   useEffect(() => {
     if (!open) return;
     const handlePaste = (e: ClipboardEvent) => {
@@ -87,7 +85,7 @@ export function AddImageDraftModal({ open, onOpenChange, initialFile, onDraftCre
         .getPublicUrl(path);
       const mediaUrl = urlData.publicUrl;
 
-      // 2. Create a watch_post row for this manual upload
+      // 2. Create a watch_post row
       const { data: post, error: postErr } = await supabase
         .from('watch_posts' as any)
         .insert({
@@ -100,47 +98,42 @@ export function AddImageDraftModal({ open, onOpenChange, initialFile, onDraftCre
         .single();
       if (postErr) throw postErr;
 
-      // 3. Analyze with edge function
+      // 3. Analyze — use returned analysis directly
       const { data: analysisResult, error: analysisErr } = await supabase.functions.invoke('analyze-trend-post', {
         body: { watch_post_id: (post as any).id },
       });
       if (analysisErr) throw analysisErr;
       if (analysisResult?.error) throw new Error(analysisResult.error);
 
-      // 4. Fetch the analysis
-      const { data: analysis } = await supabase
-        .from('reference_analyses' as any)
-        .select('*')
-        .eq('watch_post_id', (post as any).id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const analysis = analysisResult?.analysis;
+      if (!analysis) throw new Error('No analysis returned');
 
-      // 5. Create scene recipe from analysis
-      createRecipe.mutate({
-        name: (analysis as any)?.recommended_scene_name || 'Uploaded Scene',
-        category: (analysis as any)?.category || '',
-        subcategory: (analysis as any)?.subcategory || '',
-        aesthetic_family: (analysis as any)?.recommended_aesthetic_family || '',
-        scene_type: (analysis as any)?.scene_type || '',
-        palette: (analysis as any)?.palette || [],
-        lighting: (analysis as any)?.lighting_type || '',
-        background: (analysis as any)?.background_type || '',
-        composition: (analysis as any)?.composition_logic || '',
-        crop: (analysis as any)?.crop_type || '',
-        camera_feel: (analysis as any)?.camera_angle || '',
-        props: (analysis as any)?.props || [],
-        mood: (analysis as any)?.mood || '',
-        styling_tone: (analysis as any)?.styling_tone || '',
-        premium_cues: (analysis as any)?.premium_cues || [],
-        avoid_terms: (analysis as any)?.avoid_terms || [],
+      // 4. Create scene recipe from returned analysis
+      await createRecipe.mutateAsync({
+        name: analysis.recommended_scene_name || 'Uploaded Scene',
+        category: analysis.category || '',
+        subcategory: analysis.subcategory || '',
+        aesthetic_family: analysis.recommended_aesthetic_family || '',
+        scene_type: analysis.scene_type || '',
+        palette: analysis.palette || [],
+        lighting: analysis.lighting_type || '',
+        background: analysis.background_type || '',
+        composition: analysis.composition_logic || '',
+        crop: analysis.crop_type || '',
+        camera_feel: analysis.camera_angle || '',
+        props: analysis.props || [],
+        mood: analysis.mood || '',
+        styling_tone: analysis.styling_tone || '',
+        premium_cues: analysis.premium_cues || [],
+        avoid_terms: analysis.avoid_terms || [],
         source_type: 'manual_upload',
-        source_reference_analysis_id: (analysis as any)?.id,
+        source_reference_analysis_id: analysis.id,
         source_watch_post_id: (post as any).id,
         preview_image_url: mediaUrl,
-        short_description: (analysis as any)?.short_summary || '',
+        short_description: analysis.short_summary || '',
       });
 
+      toast.success('Draft scene created');
       onOpenChange(false);
       onDraftCreated();
       setFile(null);
