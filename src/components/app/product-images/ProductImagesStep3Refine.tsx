@@ -442,9 +442,8 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
   const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
   const [customHex, setCustomHex] = useState(details.backgroundCustomHex || '#FFFFFF');
 
-  const colorInputRef = useRef<HTMLInputElement>(null);
-  const gradFromInputRef = useRef<HTMLInputElement>(null);
-  const gradToInputRef = useRef<HTMLInputElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'solid' | 'gradient'>('solid');
 
   const applyGradient = (from: string, to: string) => {
     setGradFrom(from);
@@ -489,16 +488,15 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
   const validCustomHex = /^#[0-9A-Fa-f]{6}$/.test(customHex);
 
   const handleCustomCardClick = () => {
-    if (hasCustom) return;
-    toggleSwatch('custom');
-    applyCustomHex(customHex);
-    colorInputRef.current?.click();
+    if (!hasCustom) toggleSwatch('custom');
+    setPickerMode('solid');
+    setPickerOpen(true);
   };
 
   const handleGradientCardClick = () => {
-    if (hasGradientCustom) return;
-    toggleSwatch('gradient-custom');
-    gradFromInputRef.current?.click();
+    if (!hasGradientCustom) toggleSwatch('gradient-custom');
+    setPickerMode('gradient');
+    setPickerOpen(true);
   };
 
   const XButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
