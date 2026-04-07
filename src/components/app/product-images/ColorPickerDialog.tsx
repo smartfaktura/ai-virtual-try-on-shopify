@@ -231,7 +231,7 @@ export function ColorPickerDialog({
           </div>
 
           {/* ─── Solid Tab ─── */}
-          <TabsContent value="solid" className="px-5 pb-5 pt-4 space-y-4 mt-0">
+          <TabsContent value="solid" className="px-4 pb-4 pt-3 space-y-3 mt-0 overflow-y-auto max-h-[70vh]">
             {/* Quick-pick swatches */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted-foreground">Quick pick</span>
