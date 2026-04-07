@@ -263,9 +263,11 @@ export default function AdminTrendWatch() {
 
       <AddAccountModal
         open={addModalOpen}
-        onOpenChange={setAddModalOpen}
+        onOpenChange={(v) => { setAddModalOpen(v); if (!v) setEditingAccount(null); }}
         onAdd={(a) => addAccount.mutate(a)}
-        isLoading={addAccount.isPending}
+        onUpdate={(a) => { const { id, ...rest } = a; updateAccount.mutate({ id, ...rest }); }}
+        editingAccount={editingAccount}
+        isLoading={addAccount.isPending || updateAccount.isPending}
       />
 
       <PostDetailDrawer
