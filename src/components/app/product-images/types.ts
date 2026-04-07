@@ -241,6 +241,7 @@ export interface ProductImageScene {
   categoryCollection?: string;
   sceneType?: SceneType;
   subCategory?: string;
+  requiresExtraReference?: boolean;
 }
 
 export interface SubGroup {

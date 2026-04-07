@@ -33,6 +33,7 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     sceneType: (d.scene_type as ProductImageScene['sceneType']) ?? 'packshot',
     previewUrl: d.preview_image_url ?? undefined,
     subCategory: d.sub_category ?? undefined,
+    requiresExtraReference: d.requires_extra_reference ?? false,
   };
 }
 
