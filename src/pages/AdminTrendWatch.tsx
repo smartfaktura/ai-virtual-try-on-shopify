@@ -263,6 +263,8 @@ export default function AdminTrendWatch() {
                               onDeactivate={handleDeactivate}
                               onPostClick={(post) => { setSelectedPost(post); setDrawerOpen(true); }}
                               isSyncing={syncingId === account.id}
+                              onLoadMore={handleLoadMore}
+                              isLoadingMore={loadingMoreId === account.id}
                             />
                           ))}
                         </div>
