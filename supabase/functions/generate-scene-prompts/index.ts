@@ -1,5 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 const EXAMPLE_PROMPT = `High-end editorial product shot featuring a single {product} positioned between two rough volcanic rocks, suspended or naturally supported in a narrow gap, creating a sense of tension and balance. The rocks are dark, porous, and highly textured, with sharp edges and irregular surfaces, framing the {product} from both sides without overpowering it.
 
