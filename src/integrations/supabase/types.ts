@@ -1034,6 +1034,62 @@ export type Database = {
         }
         Relationships: []
       }
+      post_notes: {
+        Row: {
+          background: string | null
+          created_at: string
+          crop: string | null
+          id: string
+          internal_note: string | null
+          lighting: string | null
+          mood: string | null
+          palette: string | null
+          premium_cue: string | null
+          props: string | null
+          styling_tone: string | null
+          updated_at: string
+          watch_post_id: string
+        }
+        Insert: {
+          background?: string | null
+          created_at?: string
+          crop?: string | null
+          id?: string
+          internal_note?: string | null
+          lighting?: string | null
+          mood?: string | null
+          palette?: string | null
+          premium_cue?: string | null
+          props?: string | null
+          styling_tone?: string | null
+          updated_at?: string
+          watch_post_id: string
+        }
+        Update: {
+          background?: string | null
+          created_at?: string
+          crop?: string | null
+          id?: string
+          internal_note?: string | null
+          lighting?: string | null
+          mood?: string | null
+          palette?: string | null
+          premium_cue?: string | null
+          props?: string | null
+          styling_tone?: string | null
+          updated_at?: string
+          watch_post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_notes_watch_post_id_fkey"
+            columns: ["watch_post_id"]
+            isOneToOne: false
+            referencedRelation: "watch_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_image_scenes: {
         Row: {
           category_collection: string | null
@@ -1207,6 +1263,56 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_outputs: {
+        Row: {
+          composition_prompt: string | null
+          consistency_prompt: string | null
+          created_at: string
+          environment_prompt: string | null
+          id: string
+          lighting_prompt: string | null
+          master_scene_prompt: string | null
+          negative_prompt: string | null
+          scene_recipe_id: string
+          styling_prompt: string | null
+          updated_at: string
+        }
+        Insert: {
+          composition_prompt?: string | null
+          consistency_prompt?: string | null
+          created_at?: string
+          environment_prompt?: string | null
+          id?: string
+          lighting_prompt?: string | null
+          master_scene_prompt?: string | null
+          negative_prompt?: string | null
+          scene_recipe_id: string
+          styling_prompt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          composition_prompt?: string | null
+          consistency_prompt?: string | null
+          created_at?: string
+          environment_prompt?: string | null
+          id?: string
+          lighting_prompt?: string | null
+          master_scene_prompt?: string | null
+          negative_prompt?: string | null
+          scene_recipe_id?: string
+          styling_prompt?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_outputs_scene_recipe_id_fkey"
+            columns: ["scene_recipe_id"]
+            isOneToOne: false
+            referencedRelation: "scene_recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queue_dispatch_lock: {
         Row: {
           id: number
@@ -1224,6 +1330,125 @@ export type Database = {
           locked_by?: string | null
         }
         Relationships: []
+      }
+      reference_analyses: {
+        Row: {
+          avoid_terms: string[] | null
+          background_type: string | null
+          camera_angle: string | null
+          category: string | null
+          composition_logic: string | null
+          created_at: string
+          crop_type: string | null
+          dominant_colors: string[] | null
+          environment_type: string | null
+          framing_style: string | null
+          has_hands: boolean | null
+          has_model: boolean | null
+          has_packaging: boolean | null
+          id: string
+          image_mode: string | null
+          light_direction: string | null
+          lighting_type: string | null
+          material_cues: string[] | null
+          mood: string | null
+          palette: string[] | null
+          premium_cues: string[] | null
+          props: string[] | null
+          raw_analysis_json: Json | null
+          realism_level: string | null
+          recommended_aesthetic_family: string | null
+          recommended_scene_name: string | null
+          scene_type: string | null
+          shadow_softness: string | null
+          short_summary: string | null
+          styling_tone: string | null
+          subcategory: string | null
+          surface_cues: string[] | null
+          updated_at: string
+          watch_post_id: string
+        }
+        Insert: {
+          avoid_terms?: string[] | null
+          background_type?: string | null
+          camera_angle?: string | null
+          category?: string | null
+          composition_logic?: string | null
+          created_at?: string
+          crop_type?: string | null
+          dominant_colors?: string[] | null
+          environment_type?: string | null
+          framing_style?: string | null
+          has_hands?: boolean | null
+          has_model?: boolean | null
+          has_packaging?: boolean | null
+          id?: string
+          image_mode?: string | null
+          light_direction?: string | null
+          lighting_type?: string | null
+          material_cues?: string[] | null
+          mood?: string | null
+          palette?: string[] | null
+          premium_cues?: string[] | null
+          props?: string[] | null
+          raw_analysis_json?: Json | null
+          realism_level?: string | null
+          recommended_aesthetic_family?: string | null
+          recommended_scene_name?: string | null
+          scene_type?: string | null
+          shadow_softness?: string | null
+          short_summary?: string | null
+          styling_tone?: string | null
+          subcategory?: string | null
+          surface_cues?: string[] | null
+          updated_at?: string
+          watch_post_id: string
+        }
+        Update: {
+          avoid_terms?: string[] | null
+          background_type?: string | null
+          camera_angle?: string | null
+          category?: string | null
+          composition_logic?: string | null
+          created_at?: string
+          crop_type?: string | null
+          dominant_colors?: string[] | null
+          environment_type?: string | null
+          framing_style?: string | null
+          has_hands?: boolean | null
+          has_model?: boolean | null
+          has_packaging?: boolean | null
+          id?: string
+          image_mode?: string | null
+          light_direction?: string | null
+          lighting_type?: string | null
+          material_cues?: string[] | null
+          mood?: string | null
+          palette?: string[] | null
+          premium_cues?: string[] | null
+          props?: string[] | null
+          raw_analysis_json?: Json | null
+          realism_level?: string | null
+          recommended_aesthetic_family?: string | null
+          recommended_scene_name?: string | null
+          scene_type?: string | null
+          shadow_softness?: string | null
+          short_summary?: string | null
+          styling_tone?: string | null
+          subcategory?: string | null
+          surface_cues?: string[] | null
+          updated_at?: string
+          watch_post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reference_analyses_watch_post_id_fkey"
+            columns: ["watch_post_id"]
+            isOneToOne: false
+            referencedRelation: "watch_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_discover_items: {
         Row: {
@@ -1275,6 +1500,114 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      scene_recipes: {
+        Row: {
+          aesthetic_family: string | null
+          avoid_terms: string[] | null
+          background: string | null
+          camera_feel: string | null
+          category: string | null
+          composition: string | null
+          created_at: string
+          crop: string | null
+          id: string
+          lighting: string | null
+          mood: string | null
+          name: string
+          palette: string[] | null
+          premium_cues: string[] | null
+          preview_image_url: string | null
+          props: string[] | null
+          recommended_use_cases: string[] | null
+          scene_goal: string | null
+          scene_type: string | null
+          short_description: string | null
+          source_reference_analysis_id: string | null
+          source_type: string
+          source_watch_post_id: string | null
+          status: string
+          styling_tone: string | null
+          subcategory: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          aesthetic_family?: string | null
+          avoid_terms?: string[] | null
+          background?: string | null
+          camera_feel?: string | null
+          category?: string | null
+          composition?: string | null
+          created_at?: string
+          crop?: string | null
+          id?: string
+          lighting?: string | null
+          mood?: string | null
+          name: string
+          palette?: string[] | null
+          premium_cues?: string[] | null
+          preview_image_url?: string | null
+          props?: string[] | null
+          recommended_use_cases?: string[] | null
+          scene_goal?: string | null
+          scene_type?: string | null
+          short_description?: string | null
+          source_reference_analysis_id?: string | null
+          source_type?: string
+          source_watch_post_id?: string | null
+          status?: string
+          styling_tone?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          aesthetic_family?: string | null
+          avoid_terms?: string[] | null
+          background?: string | null
+          camera_feel?: string | null
+          category?: string | null
+          composition?: string | null
+          created_at?: string
+          crop?: string | null
+          id?: string
+          lighting?: string | null
+          mood?: string | null
+          name?: string
+          palette?: string[] | null
+          premium_cues?: string[] | null
+          preview_image_url?: string | null
+          props?: string[] | null
+          recommended_use_cases?: string[] | null
+          scene_goal?: string | null
+          scene_type?: string | null
+          short_description?: string | null
+          source_reference_analysis_id?: string | null
+          source_type?: string
+          source_watch_post_id?: string | null
+          status?: string
+          styling_tone?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scene_recipes_source_reference_analysis_id_fkey"
+            columns: ["source_reference_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "reference_analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scene_recipes_source_watch_post_id_fkey"
+            columns: ["source_watch_post_id"]
+            isOneToOne: false
+            referencedRelation: "watch_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scene_sort_order: {
         Row: {
@@ -1649,6 +1982,116 @@ export type Database = {
             columns: ["source_input_id"]
             isOneToOne: false
             referencedRelation: "video_inputs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_accounts: {
+        Row: {
+          category: string
+          created_at: string
+          display_name: string
+          id: string
+          instagram_account_id: string | null
+          is_active: boolean
+          last_synced_at: string | null
+          priority_order: number
+          profile_image_url: string | null
+          source_mode: string
+          sync_status: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          display_name: string
+          id?: string
+          instagram_account_id?: string | null
+          is_active?: boolean
+          last_synced_at?: string | null
+          priority_order?: number
+          profile_image_url?: string | null
+          source_mode?: string
+          sync_status?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          instagram_account_id?: string | null
+          is_active?: boolean
+          last_synced_at?: string | null
+          priority_order?: number
+          profile_image_url?: string | null
+          source_mode?: string
+          sync_status?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      watch_posts: {
+        Row: {
+          caption: string | null
+          comment_count: number | null
+          created_at: string
+          fetched_at: string | null
+          id: string
+          instagram_post_id: string | null
+          is_favorite: boolean
+          is_worth_aesthetic: boolean
+          like_count: number | null
+          media_type: string
+          media_url: string | null
+          permalink: string | null
+          posted_at: string | null
+          thumbnail_url: string | null
+          watch_account_id: string
+        }
+        Insert: {
+          caption?: string | null
+          comment_count?: number | null
+          created_at?: string
+          fetched_at?: string | null
+          id?: string
+          instagram_post_id?: string | null
+          is_favorite?: boolean
+          is_worth_aesthetic?: boolean
+          like_count?: number | null
+          media_type?: string
+          media_url?: string | null
+          permalink?: string | null
+          posted_at?: string | null
+          thumbnail_url?: string | null
+          watch_account_id: string
+        }
+        Update: {
+          caption?: string | null
+          comment_count?: number | null
+          created_at?: string
+          fetched_at?: string | null
+          id?: string
+          instagram_post_id?: string | null
+          is_favorite?: boolean
+          is_worth_aesthetic?: boolean
+          like_count?: number | null
+          media_type?: string
+          media_url?: string | null
+          permalink?: string | null
+          posted_at?: string | null
+          thumbnail_url?: string | null
+          watch_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_posts_watch_account_id_fkey"
+            columns: ["watch_account_id"]
+            isOneToOne: false
+            referencedRelation: "watch_accounts"
             referencedColumns: ["id"]
           },
         ]
