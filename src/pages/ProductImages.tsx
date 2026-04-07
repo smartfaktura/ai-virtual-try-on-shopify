@@ -69,6 +69,7 @@ export default function ProductImages() {
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
+  const [sceneExtraRefs, setSceneExtraRefs] = useState<Record<string, string>>({});
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
   const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
   const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
@@ -249,6 +250,7 @@ export default function ProductImages() {
     const key = Array.from(selectedProductIds).sort().join(',');
     if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
       setSelectedSceneIds(new Set());
+      setSceneExtraRefs({});
       setDetails(INITIAL_DETAILS);
       if (step > 1) setStep(1);
     }
@@ -399,6 +401,7 @@ export default function ProductImages() {
               ...(additionalProducts ? { additional_products: additionalProducts } : {}),
               ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
               ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
+              ...(sceneExtraRefs[scene.id] ? { extra_reference_image_url: sceneExtraRefs[scene.id] } : {}),
               quality: 'high',
               aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
               batch_id: batchId,
@@ -902,6 +905,8 @@ export default function ProductImages() {
                   selectedProductIds={selectedProductIds}
                   hasMultipleCategories={hasMultipleCategories}
                   primaryCategory={primaryCategory}
+                  sceneExtraRefs={sceneExtraRefs}
+                  onSceneExtraRefsChange={setSceneExtraRefs}
                 />
               </div>
             )}

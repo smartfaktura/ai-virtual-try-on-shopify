@@ -1425,6 +1425,8 @@ interface Step3RefineProps {
   selectedProductIds?: Set<string>;
   hasMultipleCategories?: boolean;
   primaryCategory?: string;
+  sceneExtraRefs?: Record<string, string>;
+  onSceneExtraRefsChange?: (refs: Record<string, string>) => void;
 }
 
 /* ══════════════════════════════════════════════
@@ -1443,8 +1445,13 @@ export function ProductImagesStep3Refine({
   selectedProductIds = new Set(),
   hasMultipleCategories = false,
   primaryCategory,
+  sceneExtraRefs = {},
+  onSceneExtraRefsChange,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
+  const [uploadingSceneId, setUploadingSceneId] = useState<string | null>(null);
+  const extraRefInputRef = useRef<HTMLInputElement>(null);
+  const pendingSceneIdRef = useRef<string | null>(null);
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
@@ -1499,11 +1506,45 @@ export function ProductImagesStep3Refine({
   const visibleScenes = showAllShots ? selectedScenes : selectedScenes.slice(0, SHOTS_LIMIT);
   const hasMoreShots = selectedScenes.length > SHOTS_LIMIT;
 
+  // Extra reference upload handler
+  const handleExtraRefUpload = useCallback(async (sceneId: string, file: File) => {
+    if (!onSceneExtraRefsChange) return;
+    setUploadingSceneId(sceneId);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { data, error } = await (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(data.path);
+      onSceneExtraRefsChange({ ...sceneExtraRefs, [sceneId]: urlData.publicUrl });
+    } catch (e: any) {
+      const { toast } = await import('@/lib/brandedToast');
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingSceneId(null);
+    }
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
+  const removeExtraRef = useCallback((sceneId: string) => {
+    if (!onSceneExtraRefsChange) return;
+    const next = { ...sceneExtraRefs };
+    delete next[sceneId];
+    onSceneExtraRefsChange(next);
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
   const renderShotCard = (scene: ProductImageScene) => {
     const sceneNeedsModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
     const hasBg = (scene.triggerBlocks || []).includes('background');
     const hasAction = sceneHasActionControls(scene);
     const isExpanded = expandedSceneId === scene.id;
+    const needsExtraRef = scene.requiresExtraReference === true;
+    const extraRefUrl = sceneExtraRefs[scene.id];
+    const isUploading = uploadingSceneId === scene.id;
 
     return (
       <div key={scene.id} className="space-y-1">
@@ -1540,6 +1581,43 @@ export function ProductImagesStep3Refine({
               <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">Needs model</span>
             )}
           </div>
+
+          {/* Extra reference upload area */}
+          {needsExtraRef && (
+            <div className="mt-1.5">
+              {extraRefUrl ? (
+                <div className="relative group rounded-md overflow-hidden border border-border">
+                  <img src={extraRefUrl} alt="Extra reference" className="w-full aspect-square object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeExtraRef(scene.id)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    pendingSceneIdRef.current = scene.id;
+                    extraRefInputRef.current?.click();
+                  }}
+                  disabled={isUploading}
+                  className="w-full flex flex-col items-center gap-1 py-2.5 rounded-md border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
+                >
+                  {isUploading ? (
+                    <span className="text-[10px] text-primary font-medium animate-pulse">Uploading…</span>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5 text-primary/60" />
+                      <span className="text-[9px] text-primary/80 font-medium leading-tight text-center px-1">Upload back/side photo</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1547,6 +1625,20 @@ export function ProductImagesStep3Refine({
 
   return (
     <div className="space-y-8 pb-20">
+      {/* Hidden file input for extra reference uploads */}
+      <input
+        ref={extraRefInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0];
+          const sid = pendingSceneIdRef.current;
+          if (f && sid) handleExtraRefUpload(sid, f);
+          e.target.value = '';
+          pendingSceneIdRef.current = null;
+        }}
+      />
       {/* ── HEADER ── */}
       <div className="space-y-3">
         <div>

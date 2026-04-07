@@ -716,6 +716,7 @@ async function generateImage(
     model: '[MODEL IMAGE] Identity reference — the person MUST look like this:',
     scene_reference: '[SCENE REFERENCE] Composition and style reference:',
     packaging_reference: '[PACKAGING REFERENCE] Packaging fidelity reference:',
+    product_extra_angle: '[PRODUCT EXTRA ANGLE] Additional product angle reference — use this to accurately render the product from the requested view:',
   };
 
   const contentParts: Array<Record<string, unknown>> = [
@@ -1208,6 +1209,11 @@ serve(async (req) => {
           if ((body as Record<string, unknown>).packaging_reference_url) {
             referenceImages.push({ url: (body as Record<string, unknown>).packaging_reference_url as string, label: "packaging_reference" });
             console.log(`[generate-workflow] Adding packaging reference image`);
+          }
+          // Add extra angle reference image (e.g. back/side view) when provided
+          if ((body as Record<string, unknown>).extra_reference_image_url) {
+            referenceImages.push({ url: (body as Record<string, unknown>).extra_reference_image_url as string, label: "product_extra_angle" });
+            console.log(`[generate-workflow] Adding extra angle reference image for "${variation.label}"`);
           }
 
           let imageUrl = await generateImage(

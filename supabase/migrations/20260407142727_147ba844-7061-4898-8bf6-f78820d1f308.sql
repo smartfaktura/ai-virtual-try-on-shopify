@@ -1,0 +1,1 @@
+ALTER TABLE product_image_scenes ADD COLUMN requires_extra_reference boolean NOT NULL DEFAULT false;
