@@ -2,7 +2,7 @@ import { useSceneRecipes, usePromptOutputs } from '@/hooks/useSceneRecipes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Trash2, Loader2 } from 'lucide-react';
+import { Sparkles, Trash2, Loader2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function DraftScenesPanel() {
@@ -17,7 +17,7 @@ export function DraftScenesPanel() {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <p className="text-sm">No draft scenes yet.</p>
-        <p className="text-xs mt-1">Analyze posts from the Accounts Feed and click "Create Draft Scene" to get started.</p>
+        <p className="text-xs mt-1">Analyze posts from the Accounts Feed, or paste/upload an image to get started.</p>
       </div>
     );
   }
@@ -48,12 +48,22 @@ function DraftSceneCard({
   isGenerating: boolean;
   onDelete: () => void;
 }) {
+  const { data: promptOutput } = usePromptOutputs(recipe.id);
+  const masterPrompt = promptOutput?.master_scene_prompt;
+
   const chips = [
     recipe.mood,
     recipe.lighting,
     recipe.scene_type,
     recipe.aesthetic_family,
   ].filter(Boolean);
+
+  const handleCopyPrompt = () => {
+    if (masterPrompt) {
+      navigator.clipboard.writeText(masterPrompt);
+      toast.success('Prompt copied');
+    }
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -70,7 +80,7 @@ function DraftSceneCard({
         <div className="flex items-start justify-between gap-2">
           <div>
             <h4 className="font-medium text-sm leading-tight">{recipe.name}</h4>
-            {recipe.short_description && (
+            {!masterPrompt && recipe.short_description && (
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{recipe.short_description}</p>
             )}
           </div>
@@ -85,10 +95,25 @@ function DraftSceneCard({
           </div>
         )}
 
+        {/* Show full prompt if generated */}
+        {masterPrompt && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Master Prompt</span>
+              <Button size="sm" variant="ghost" className="h-6 px-2" onClick={handleCopyPrompt}>
+                <Copy className="w-3 h-3 mr-1" /> Copy
+              </Button>
+            </div>
+            <div className="bg-muted rounded-md p-2.5 text-xs leading-relaxed max-h-40 overflow-y-auto">
+              {masterPrompt}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Button size="sm" className="flex-1" onClick={onGeneratePrompt} disabled={isGenerating}>
             {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
-            Generate Prompt
+            {masterPrompt ? 'Regenerate Prompt' : 'Generate Prompt'}
           </Button>
           <Button size="sm" variant="ghost" onClick={onDelete}>
             <Trash2 className="w-3.5 h-3.5" />
