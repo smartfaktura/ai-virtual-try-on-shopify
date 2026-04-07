@@ -1181,20 +1181,12 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
     setSavedPresets(updated); savePresetsToStorage(updated);
   };
 
-  const PRESET_DESCRIPTIONS: Record<string, string> = {
-    'Studio Standard': 'Clean, neutral styling for commercial product focus',
-    'Editorial': 'Sharper, more fashion-led styling with elevated polish',
-    'Minimal': 'Quiet neutrals, soft tones, relaxed premium simplicity',
-    'Streetwear': 'Relaxed silhouettes, darker tones, urban attitude',
-    'Luxury Soft': 'Warm neutrals, refined textures, elegant softness',
-  };
-
-  const PRESET_ACCENT: Record<string, string> = {
-    'Studio Standard': 'bg-muted-foreground/20',
-    'Editorial': 'bg-foreground/80',
-    'Minimal': 'bg-muted-foreground/10',
-    'Streetwear': 'bg-foreground/60',
-    'Luxury Soft': 'bg-primary/30',
+  const PRESET_GRADIENT: Record<string, string> = {
+    'Studio Standard': 'bg-gradient-to-b from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900',
+    'Editorial': 'bg-gradient-to-b from-zinc-200 to-zinc-100 dark:from-zinc-700 dark:to-zinc-800',
+    'Minimal': 'bg-gradient-to-b from-stone-50 to-white dark:from-stone-800 dark:to-stone-900',
+    'Streetwear': 'bg-gradient-to-b from-neutral-200 to-neutral-100 dark:from-neutral-700 dark:to-neutral-800',
+    'Luxury Soft': 'bg-gradient-to-b from-amber-50 to-orange-50/30 dark:from-amber-900/40 dark:to-orange-900/20',
   };
 
   return (
