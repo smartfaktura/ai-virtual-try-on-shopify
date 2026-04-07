@@ -1189,16 +1189,16 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
 
   const PRESET_DESCRIPTIONS: Record<string, string> = {
     'Studio Standard': 'Clean, neutral styling for commercial product focus',
-    'Editorial': 'Dark tones, tailored fits for magazine-ready shots',
-    'Minimal': 'Stripped-back whites and creams, relaxed silhouettes',
-    'Streetwear': 'Oversized fits, dark palette, urban energy',
-    'Luxury Soft': 'Silk and cashmere in warm neutrals, elevated elegance',
+    'Editorial': 'Sharper, more fashion-led styling with elevated polish',
+    'Minimal': 'Quiet neutrals, soft tones, relaxed premium simplicity',
+    'Streetwear': 'Relaxed silhouettes, darker tones, urban attitude',
+    'Luxury Soft': 'Warm neutrals, refined textures, elegant softness',
   };
 
   return (
     <div className="space-y-2">
       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-primary" />Presets
+        <Sparkles className="w-3.5 h-3.5 text-primary" />Style direction
       </span>
       <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
