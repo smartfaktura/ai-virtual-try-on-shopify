@@ -126,7 +126,7 @@ function DraftSceneCard({
             checked={injectTokens}
             onCheckedChange={(v) => setInjectTokens(!!v)}
           />
-          <span className="text-xs text-muted-foreground">Inject product tokens ({{...}})</span>
+          <span className="text-xs text-muted-foreground">{"Inject product tokens ({{...}})"}</span>
         </label>
 
         <div className="flex gap-2">
