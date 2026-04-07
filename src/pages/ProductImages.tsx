@@ -401,7 +401,11 @@ export default function ProductImages() {
               ...(additionalProducts ? { additional_products: additionalProducts } : {}),
               ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
               ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-              ...(sceneExtraRefs[scene.id] ? { extra_reference_image_url: sceneExtraRefs[scene.id] } : {}),
+              ...(sceneExtraRefs[scene.id]
+                ? { extra_reference_image_url: sceneExtraRefs[scene.id] }
+                : details.backReferenceUrl && scene.triggerBlocks?.includes('backView')
+                  ? { extra_reference_image_url: details.backReferenceUrl }
+                  : {}),
               quality: 'high',
               aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
               batch_id: batchId,
