@@ -16,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -179,6 +179,36 @@ export default function AdminProductImageScenes() {
     }
   };
 
+  const handleDuplicate = async (scene: DbScene) => {
+    const existingIds = new Set(rawScenes.map(s => s.scene_id));
+    let newId = `${scene.scene_id}-copy`;
+    let counter = 2;
+    while (existingIds.has(newId)) {
+      newId = `${scene.scene_id}-copy-${counter}`;
+      counter++;
+    }
+    try {
+      await upsertScene.mutateAsync({
+        scene_id: newId,
+        title: `${scene.title} (copy)`,
+        description: scene.description,
+        prompt_template: scene.prompt_template,
+        trigger_blocks: scene.trigger_blocks,
+        category_collection: scene.category_collection,
+        scene_type: scene.scene_type,
+        preview_image_url: scene.preview_image_url,
+        is_active: scene.is_active,
+        sort_order: scene.sort_order + 1,
+        sub_category: scene.sub_category,
+        category_sort_order: scene.category_sort_order,
+        requires_extra_reference: scene.requires_extra_reference,
+      });
+      toast.success(`Duplicated as ${newId}`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   const handleToggleActive = async (scene: DbScene) => {
     try {
       await updateScene.mutateAsync({ id: scene.id, updates: { is_active: !scene.is_active } });
@@ -329,6 +359,7 @@ export default function AdminProductImageScenes() {
                                 onToggleActive={handleToggleActive}
                                 onMove={handleMove}
                                 onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
+                                onDuplicate={handleDuplicate}
                                 setEditDraft={setEditDraft}
                                 updatePending={updateScene.isPending}
                               />
@@ -352,6 +383,7 @@ export default function AdminProductImageScenes() {
                             onToggleActive={handleToggleActive}
                             onMove={handleMove}
                             onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
+                            onDuplicate={handleDuplicate}
                             setEditDraft={setEditDraft}
                             updatePending={updateScene.isPending}
                           />
@@ -370,7 +402,7 @@ export default function AdminProductImageScenes() {
 }
 
 /* ── Scene row component ── */
-function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onDelete, setEditDraft, updatePending }: {
+function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onDelete, onDuplicate, setEditDraft, updatePending }: {
   scene: DbScene;
   idx: number;
   total: number;
@@ -382,6 +414,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
   onToggleActive: (s: DbScene) => void;
   onMove: (s: DbScene, dir: 'up' | 'down') => void;
   onDelete: (id: string) => void;
+  onDuplicate: (s: DbScene) => void;
   setEditDraft: (d: Partial<DbScene>) => void;
   updatePending: boolean;
 }) {
@@ -423,6 +456,9 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => editingId === scene.id ? onCancelEdit() : onStartEdit(scene)}>
             <Pencil className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(scene)} title="Duplicate scene">
+            <Copy className="w-3.5 h-3.5" />
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleActive(scene)}>
             {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
