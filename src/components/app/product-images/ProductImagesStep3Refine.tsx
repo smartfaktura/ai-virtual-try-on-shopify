@@ -36,6 +36,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
   globalModels: ModelProfile[];
   selectedModelId?: string;
   onSelect: (id: string) => void;
+  previewImages?: string[];
 }) {
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
   const [showAllModal, setShowAllModal] = useState(false);
