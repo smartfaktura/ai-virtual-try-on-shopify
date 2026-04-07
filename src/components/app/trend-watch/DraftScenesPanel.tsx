@@ -30,8 +30,13 @@ export function DraftScenesPanel() {
         <DraftSceneCard
           key={recipe.id}
           recipe={recipe}
-          onGeneratePrompt={() => generatePrompts.mutate(recipe.id)}
-          isGenerating={generatePrompts.isPending}
+          onGeneratePrompt={() => {
+            setGeneratingId(recipe.id);
+            generatePrompts.mutate(recipe.id, {
+              onSettled: () => setGeneratingId(null),
+            });
+          }}
+          isGenerating={generatingId === recipe.id}
           onDelete={() => updateRecipe.mutate({ id: recipe.id, status: 'archived' })}
         />
       ))}
