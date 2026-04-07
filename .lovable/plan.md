@@ -1,28 +1,42 @@
 
+Fix target
 
-# Fix "Analyze & Create Draft" — Two Root Causes
+The remaining error is no longer CORS or RLS. The request now reaches `analyze-trend-post`, but the AI provider rejects the current function/tool schema before analysis runs. The network error shows the real blocker: the schema has too much branching for Gemini tool-calling, so no `reference_analyses` row gets created.
 
-## Problem
-Clicking "Analyze & Create Draft" fails with "Edge Function returned a non-2xx status code". Two issues:
+Plan
 
-1. **RLS blocks the insert**: `AddImageDraftModal` inserts into `watch_posts` using the user's client (`supabase`), but the only RLS policy on `watch_posts` requires `admin` role via `has_role()`. The insert is rejected before the edge function is even called.
+1. Replace schema-based tool calling in `analyze-trend-post`
+- Remove the large function schema from the AI request.
+- Keep the same image + caption input, but ask the model to return one plain JSON object in the message body.
+- Manually parse that JSON, normalize the values, and save the same fields into `reference_analyses`.
+- Keep the existing admin/auth checks and current DB insert shape, so no migration is needed.
 
-2. **Incomplete CORS headers**: The `analyze-trend-post` edge function only lists `authorization, x-client-info, apikey, content-type` in `Access-Control-Allow-Headers`, but the Supabase JS client sends additional headers (`x-supabase-client-platform`, etc.) that get blocked by the preflight check.
+2. Harden the backend response handling
+- Support raw JSON and fenced ```json responses when parsing.
+- Normalize missing values to the expected types (`''`, `[]`, `false`) before insert.
+- Return clearer backend errors for malformed AI output instead of the current generic non-2xx failure.
+- Keep current CORS headers on all success and error responses.
 
-## Fix
+3. Tighten the draft creation flow
+- In `AddImageDraftModal`, stop re-querying `reference_analyses` immediately after the function call; use the function’s returned `analysis` directly.
+- Await scene creation before closing the modal and switching tabs, so the UI only reports success after the draft actually exists.
+- Apply the same await-based pattern to the post-detail “Analyze & Create Draft” flow so both entry points behave consistently.
 
-### 1. Update CORS headers in `analyze-trend-post` edge function
-Add the missing platform headers to the `corsHeaders` constant so the browser preflight passes.
+Files to update
+- `supabase/functions/analyze-trend-post/index.ts`
+- `src/components/app/trend-watch/AddImageDraftModal.tsx`
+- `src/pages/AdminTrendWatch.tsx`
+- `src/components/app/trend-watch/PostDetailDrawer.tsx` if needed to make the callback async end-to-end
 
-### 2. No RLS migration needed
-The `watch_posts` table already has an "Admins can manage" policy. The user calling this is an admin. The issue is just that the `as any` type cast may be hiding a column mismatch. With the `source` column now added (previous migration), and CORS fixed, the insert should work.
+Technical details
+- No database changes are needed.
+- No additional CORS work is needed beyond the headers already added.
+- The core fix is changing from provider-validated tool schema to prompt-driven JSON output, because the current schema is too large/branchy for Gemini function calling.
+- The saved analysis columns stay the same, so existing admin UI can keep reading `reference_analyses` without structural changes.
 
-However, if the admin check still fails, we should verify the user actually has the admin role. The modal code uses the anon client which goes through RLS — this is correct as long as the logged-in user has the admin role in `user_roles`.
-
-### Files
-| File | Change |
-|------|--------|
-| `supabase/functions/analyze-trend-post/index.ts` | Update `corsHeaders` to include all required Supabase client headers |
-
-This is a one-line fix in the CORS headers constant.
-
+Verification
+- Test “Analyze & Create Draft” from an existing Trend Watch post.
+- Test “Add Image → Analyze & Create Draft” with both upload and paste.
+- Confirm a `reference_analyses` row is created and a draft scene appears in Draft Scenes.
+- Confirm the UI only closes/navigates after the draft insert succeeds.
+- Confirm invalid AI output now shows a clearer error message instead of the generic edge-function failure.
