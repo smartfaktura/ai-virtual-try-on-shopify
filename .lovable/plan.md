@@ -1,32 +1,66 @@
 
 
-# Fix App Crash on Product Images Page
+# Extra Reference Image Upload in Step 3 (Setup)
 
-## Problem
-The app crashes with a full error overlay when interacting with the Product Images page (Step 1). The screenshot shows the error appearing while the "Outdated" badge and refresh button are visible on a product card.
+## What this does
+When an admin marks a scene as "requires extra reference image" (e.g. Back View, Side Profile), users selecting that scene will see a small upload area in Step 3 (Setup) to provide an additional product photo for that angle. This image gets sent to the AI alongside the main product image during generation.
 
-## Root Causes Identified
+## Changes
 
-### 1. Nested `<button>` inside `<button>` (HTML spec violation)
-In the **grid view** (lines 827-836), a `<button>` (re-analyze) is nested inside another `<button>` (product selection card). This is invalid HTML and causes unpredictable behavior across browsers — React may throw during event delegation. The same issue exists in the **list view** (lines 775-784).
+### 1. Database: add column to `product_image_scenes`
+```sql
+ALTER TABLE product_image_scenes 
+  ADD COLUMN requires_extra_reference boolean NOT NULL DEFAULT false;
+```
 
-### 2. Potential null access in `product_type` filter
-Line 732: `p.product_type.toLowerCase()` — while the DB schema says `product_type: string`, products created via certain import paths might have empty strings that combine with other edge cases. This is lower risk but worth guarding.
+### 2. Admin UI — checkbox in scene form
+**File: `src/pages/AdminProductImageScenes.tsx`**
+- Add a `Checkbox` row after the trigger blocks section labeled **"Requires extra reference image"** with helper text
+- Wire to `draft.requires_extra_reference` / `set('requires_extra_reference', v)`
+- Show a small `Camera` badge on scene rows where flag is true
 
-## Fix Plan
+### 3. Hook + types — expose new field
+**File: `src/hooks/useProductImageScenes.ts`**
+- Add `requires_extra_reference` to `DbScene` interface
+- Map it in `dbToFrontend` → `requiresExtraReference`
 
-### File: `src/pages/ProductImages.tsx`
+**File: `src/components/app/product-images/types.ts`**
+- Add `requiresExtraReference?: boolean` to `ProductImageScene`
 
-**Fix 1 — Replace nested buttons with `<div>` click handlers**
-- In both grid and list views, change the inner re-analyze `<button>` to a `<div role="button" tabIndex={0}>` or move it **outside** the parent button entirely
-- Better approach: wrap the product card in a `<div>` instead of a `<button>`, use `onClick` on the div, and keep the re-analyze as a proper `<button>` inside it
-- Ensure `e.stopPropagation()` still prevents the parent click
+### 4. Step 3 (Setup/Refine) — upload UI for flagged scenes
+**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
+- In the "Selected shots" section where scenes are listed, for each scene with `requiresExtraReference === true`:
+  - Show a small inline upload area with label like *"Upload back/side photo for better accuracy"*
+  - Upload button + drag area (compact, matching existing design patterns)
+  - After upload, show a thumbnail preview with remove button
+- Upload uses `product-uploads` bucket under `{userId}/scene-refs/{timestamp}.{ext}`
+- Store URLs in a new state map passed via props: `sceneExtraRefs: Record<string, string>`
 
-**Fix 2 — Guard product_type filter**
-- Change line 732 to: `(p.product_type || '').toLowerCase().includes(productSearch.toLowerCase())`
+### 5. Thread state through ProductImages.tsx
+**File: `src/pages/ProductImages.tsx`**
+- Add `sceneExtraRefs` state: `useState<Record<string, string>>({})`
+- Pass `sceneExtraRefs` + `onSceneExtraRefsChange` to Step 3 Refine component
+- In the generation loop (around line 383), if current scene has an extra ref URL, add it to payload as `extra_reference_image_url`
 
-### Technical Detail
-The grid view card (line 809) is a `<button>` element. The re-analyze trigger (line 827) is also a `<button>`. Per HTML spec, interactive content cannot be nested inside other interactive content. React's synthetic event system can throw when this happens during reconciliation.
+### 6. Edge function — inject extra reference into AI prompt
+**File: `supabase/functions/generate-workflow/index.ts`**
+- After the packaging reference check (line ~1211), add:
+  ```typescript
+  if ((body as any).extra_reference_image_url) {
+    referenceImages.push({ 
+      url: (body as any).extra_reference_image_url, 
+      label: "product_extra_angle" 
+    });
+  }
+  ```
+- This injects the extra angle photo as an additional reference image the AI uses for accurate rendering
 
-The fix changes the outer product card wrapper from `<button>` to `<div role="button" tabIndex={0} onKeyDown={...}` in both grid and list views, keeping proper accessibility while avoiding the nesting violation.
+## Files to modify
+- **Migration**: add `requires_extra_reference` column
+- `src/hooks/useProductImageScenes.ts` — expose field
+- `src/components/app/product-images/types.ts` — add to interface
+- `src/pages/AdminProductImageScenes.tsx` — admin checkbox
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — upload UI in setup step
+- `src/pages/ProductImages.tsx` — state + payload threading
+- `supabase/functions/generate-workflow/index.ts` — use extra reference
 
