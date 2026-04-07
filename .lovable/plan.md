@@ -1,61 +1,56 @@
 
 
-# Premium Setup Step Redesign
+# Fixes for Setup Step: Scroll, Wizard Label, Models, and Unified Style Section
 
-## Problem
-The current Setup step feels overcrowded and lacks premium spacing. Specific issues:
-- "Choose model" section has redundant text ("Select a model or skip..."), dated All/Women/Men pill tabs, and a single `User` icon instead of a visual model indicator
-- "Outfit details" and "Model styling" feel disconnected — users don't understand they're related styling controls
-- Style direction cards are plain white boxes with no visual personality
-- "Needs model" uses amber/yellow which isn't on-brand for VOVV.AI
-- Sticky bar still says "Refine" instead of "Setup"
+## Issues to fix
+
+1. **Wizard stepper still says "Refine"** — `STEP_DEFS` in `ProductImages.tsx` line 47 still has `'Refine'`
+2. **Scroll lands in the middle** — `wizardContentRef` scrolls to `block: 'start'` but the ref is on the content div below the stepper/context strip, so it works correctly in theory; the issue is likely that the scroll offset doesn't account for the sticky header. Fix by adding a small negative scroll margin.
+3. **Model cards show full body (3:4 ratio)** — `ModelSelectorCard` uses `aspect-[3/4]` with `object-cover`, showing full body. For the inline picker in Setup, models should show face-focused circles, not full cards.
+4. **Choose model has an icon (Users) that shouldn't be there** — remove the triple-avatar decorative circles from the header
+5. **Style direction and Outfit & Model styling feel like separate things** — merge them into one unified section so preset cards and custom outfit/appearance controls are clearly connected
 
 ## Changes
 
-### 1. Rename "Refine" → "Setup" in sticky bar
-**File: `ProductImagesStickyBar.tsx`**
-- Change `STEP_LABELS[3]` from `'Refine'` to `'Setup'`
-- Change CTA label case 2 from `'Refine'` to `'Setup'`
+### File: `src/pages/ProductImages.tsx`
+- Line 47: Change `'Refine'` → `'Setup'`
+- Line 227: Add `scrollMarginTop` approach — change the ref div (line 667) to include `scroll-mt-4` class so the scroll accounts for spacing
 
-### 2. Redesign "Choose model" card
-**File: `ProductImagesStep3Refine.tsx` — `ModelPickerSections`**
-- Remove the redundant subtitle "Select a model or skip to customize manually below."
-- Replace `User` icon in header with 3 small overlapping avatar circles (CSS `flex -space-x-2` with 3 `w-5 h-5` rounded-full divs using `Users` icon or gradient placeholders)
-- Replace the `Tabs` (All/Women/Men) with inline text-style filter links: `All · Women · Men` using simple underline-active styling (no pill background)
-- Move filter into the header row (right-aligned) to save vertical space
-- Add more padding (`p-5`) and `space-y-5` for premium breathing room
+### File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-### 3. Replace amber "Needs model" with branded color
-**File: `ProductImagesStep3Refine.tsx`**
-- Replace all `amber-100/amber-700/amber-400/amber-900` references with `primary/10`, `primary`, `primary/80` (the dark navy brand color)
-- Shot card "Needs model" badge: `bg-primary/10 text-primary border border-primary/20`
-- Summary stat chip for "N need a model": same primary-tinted style
-- Background "select a background" hint: use `primary/5` bg with `primary/60` text instead of amber
+#### A. Model picker: face circles instead of full cards
+Replace the `ModelSelectorCard` grid in `ModelPickerSections` (lines 113-116 and 140-143) with small circular face thumbnails:
+- Render each model as a `w-12 h-12 rounded-full` button with `object-cover object-top` (crops to face area)
+- Show name on hover via tooltip or small label below
+- Selected state: `ring-2 ring-primary`
+- This removes the need for zooming to see faces — they're already cropped circles
 
-### 4. Add visual flair to Style direction cards
-**File: `ProductImagesStep3Refine.tsx` — `OutfitPresetsOnly`**
-- Add a subtle colored accent bar (3px) at the top of each card using preset-specific tones:
-  - Studio Standard: `bg-slate-300`
-  - Editorial: `bg-zinc-800`
-  - Minimal: `bg-stone-200`
-  - Streetwear: `bg-neutral-700`
-  - Luxury Soft: `bg-amber-200`
-- Increase card width from `w-[160px]` to `w-[170px]`, add `overflow-hidden` for the accent bar
-- Increase internal padding slightly for premium feel
+#### B. Remove the decorative triple-avatar icon from "Choose model" header
+Lines 1581-1587: Remove the `flex -space-x-1.5` div with the three circles. Keep just the text "Choose model".
 
-### 5. Merge "Outfit details" + "Model styling" under unified section
-**File: `ProductImagesStep3Refine.tsx` — Optional section**
-- Replace the separate "Optional" label + two independent collapsibles with a single `Card` wrapper titled **"Outfit & Model styling"** with subtitle "Fine-tune outfit pieces, appearance, and accessories."
-- Inside: two collapsible sub-sections (Outfit details, Appearance) — same content, but now visually grouped as one related unit
-- Remove the generic "Optional" uppercase label
+#### C. Merge Style direction + Outfit & Model styling into one section
+Currently these are two separate sections (lines 1649-1667 and 1669-1715). Merge into a single section:
 
-### 6. Add premium spacing throughout
-**File: `ProductImagesStep3Refine.tsx`**
-- Increase outer `space-y-6` to `space-y-8`
-- Add `space-y-5` inside section cards instead of `space-y-3`
-- Add subtle section dividers with more margin (`my-6` on Separators)
+```
+Style & Appearance
+Choose the overall look and fine-tune styling details.
+
+[Style direction preset cards]  ← always visible
+[Outfit details]                ← collapsible
+[Appearance]                    ← collapsible
+```
+
+- Remove the separate "Style direction" section header
+- Move `OutfitPresetsOnly` inside the existing `Card` at line 1671, placing it above the collapsibles
+- Add a subtle label "Presets" above the preset cards row
+- Rename the section title from "Outfit & Model styling" to "Style & Appearance"
+- Keep the "Locked across all on-model scenes" note near the presets
+- This makes it clear that presets control the same outfit/appearance settings below
+
+#### D. Fix scroll-to-top
+The component itself should have no scroll logic change needed — the fix is in `ProductImages.tsx` adding `scroll-mt-4` to the ref div.
 
 ### Files modified
-1. `src/components/app/product-images/ProductImagesStickyBar.tsx` — "Refine" → "Setup"
-2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — all UI changes above
+1. `src/pages/ProductImages.tsx` — "Refine" → "Setup" + scroll margin fix
+2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — circle model thumbnails, remove decorative icon, merge style sections
 
