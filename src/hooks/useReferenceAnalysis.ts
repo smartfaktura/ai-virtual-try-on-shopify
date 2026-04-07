@@ -28,11 +28,10 @@ export function useReferenceAnalysis(watchPostId?: string) {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      return data;
+      return data.analysis;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reference-analysis'] });
-      toast.success('Analysis complete');
     },
     onError: (e: any) => toast.error(`Analysis failed: ${e.message}`),
   });

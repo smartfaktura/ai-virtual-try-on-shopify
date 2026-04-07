@@ -1334,12 +1334,16 @@ export type Database = {
       reference_analyses: {
         Row: {
           avoid_terms: string[] | null
+          background_detail: string | null
           background_type: string | null
           camera_angle: string | null
           category: string | null
+          color_grading: string | null
           composition_logic: string | null
+          contrast_level: string | null
           created_at: string
           crop_type: string | null
+          depth_of_field: string | null
           dominant_colors: string[] | null
           environment_type: string | null
           framing_style: string | null
@@ -1348,34 +1352,44 @@ export type Database = {
           has_packaging: boolean | null
           id: string
           image_mode: string | null
+          key_visual_elements: string[] | null
           light_direction: string | null
           lighting_type: string | null
           material_cues: string[] | null
           mood: string | null
+          negative_space: string | null
           palette: string[] | null
           premium_cues: string[] | null
+          product_placement: string | null
           props: string[] | null
           raw_analysis_json: Json | null
           realism_level: string | null
           recommended_aesthetic_family: string | null
           recommended_scene_name: string | null
+          reflections: string | null
+          saturation_level: string | null
           scene_type: string | null
           shadow_softness: string | null
           short_summary: string | null
           styling_tone: string | null
           subcategory: string | null
           surface_cues: string[] | null
+          texture_detail: string | null
           updated_at: string
           watch_post_id: string
         }
         Insert: {
           avoid_terms?: string[] | null
+          background_detail?: string | null
           background_type?: string | null
           camera_angle?: string | null
           category?: string | null
+          color_grading?: string | null
           composition_logic?: string | null
+          contrast_level?: string | null
           created_at?: string
           crop_type?: string | null
+          depth_of_field?: string | null
           dominant_colors?: string[] | null
           environment_type?: string | null
           framing_style?: string | null
@@ -1384,34 +1398,44 @@ export type Database = {
           has_packaging?: boolean | null
           id?: string
           image_mode?: string | null
+          key_visual_elements?: string[] | null
           light_direction?: string | null
           lighting_type?: string | null
           material_cues?: string[] | null
           mood?: string | null
+          negative_space?: string | null
           palette?: string[] | null
           premium_cues?: string[] | null
+          product_placement?: string | null
           props?: string[] | null
           raw_analysis_json?: Json | null
           realism_level?: string | null
           recommended_aesthetic_family?: string | null
           recommended_scene_name?: string | null
+          reflections?: string | null
+          saturation_level?: string | null
           scene_type?: string | null
           shadow_softness?: string | null
           short_summary?: string | null
           styling_tone?: string | null
           subcategory?: string | null
           surface_cues?: string[] | null
+          texture_detail?: string | null
           updated_at?: string
           watch_post_id: string
         }
         Update: {
           avoid_terms?: string[] | null
+          background_detail?: string | null
           background_type?: string | null
           camera_angle?: string | null
           category?: string | null
+          color_grading?: string | null
           composition_logic?: string | null
+          contrast_level?: string | null
           created_at?: string
           crop_type?: string | null
+          depth_of_field?: string | null
           dominant_colors?: string[] | null
           environment_type?: string | null
           framing_style?: string | null
@@ -1420,23 +1444,29 @@ export type Database = {
           has_packaging?: boolean | null
           id?: string
           image_mode?: string | null
+          key_visual_elements?: string[] | null
           light_direction?: string | null
           lighting_type?: string | null
           material_cues?: string[] | null
           mood?: string | null
+          negative_space?: string | null
           palette?: string[] | null
           premium_cues?: string[] | null
+          product_placement?: string | null
           props?: string[] | null
           raw_analysis_json?: Json | null
           realism_level?: string | null
           recommended_aesthetic_family?: string | null
           recommended_scene_name?: string | null
+          reflections?: string | null
+          saturation_level?: string | null
           scene_type?: string | null
           shadow_softness?: string | null
           short_summary?: string | null
           styling_tone?: string | null
           subcategory?: string | null
           surface_cues?: string[] | null
+          texture_detail?: string | null
           updated_at?: string
           watch_post_id?: string
         }
