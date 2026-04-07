@@ -5,7 +5,7 @@ import type { PIStep } from './types';
 const STEP_LABELS: Record<number, string> = {
   1: 'Products',
   2: 'Scenes',
-  3: 'Refine',
+  3: 'Setup',
   4: 'Review',
 };
 
