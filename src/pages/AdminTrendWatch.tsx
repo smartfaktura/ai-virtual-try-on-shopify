@@ -231,7 +231,7 @@ export default function AdminTrendWatch() {
                               account={account}
                               posts={(postsGrouped as Record<string, any[]>)[account.id] || []}
                               onSync={handleSync}
-                              onEdit={() => {}}
+                              onEdit={(account: any) => { setEditingAccount(account); setAddModalOpen(true); }}
                               onDeactivate={handleDeactivate}
                               onPostClick={(post) => { setSelectedPost(post); setDrawerOpen(true); }}
                               isSyncing={syncingId === account.id}
