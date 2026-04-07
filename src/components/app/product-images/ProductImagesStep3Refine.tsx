@@ -1670,6 +1670,18 @@ export function ProductImagesStep3Refine({
           pendingSceneIdRef.current = null;
         }}
       />
+      {/* Hidden file input for packaging reference uploads */}
+      <input
+        ref={packagingRefInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0];
+          if (f) handlePackagingRefUpload(f);
+          e.target.value = '';
+        }}
+      />
       {/* ── HEADER ── */}
       <div className="space-y-3">
         <div>
