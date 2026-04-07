@@ -110,9 +110,26 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
           <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
         </div>
         {filteredUser.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <div className="flex flex-wrap gap-3">
             {filteredUser.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+              <button
+                key={m.modelId}
+                type="button"
+                onClick={() => onSelect(m.modelId)}
+                className={cn(
+                  'flex flex-col items-center gap-1.5 group focus-visible:outline-none',
+                )}
+              >
+                <div className={cn(
+                  'w-12 h-12 rounded-full overflow-hidden transition-all border-2',
+                  selectedModelId === m.modelId
+                    ? 'border-primary ring-2 ring-primary/30 shadow-md'
+                    : 'border-border hover:border-primary/40',
+                )}>
+                  <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover object-top" />
+                </div>
+                <span className={cn('text-[10px] font-medium max-w-[56px] truncate', selectedModelId === m.modelId ? 'text-primary' : 'text-muted-foreground')}>{m.name}</span>
+              </button>
             ))}
           </div>
         ) : (
