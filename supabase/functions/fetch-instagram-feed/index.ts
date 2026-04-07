@@ -54,6 +54,39 @@ function getPostId(p: any): string {
   return p.id || p.pk || p.code || p.shortcode || p.shortCode || "";
 }
 
+function mapPostRow(p: any, account_id: string) {
+  const shortcode = p.code || p.shortcode || p.shortCode || "";
+  const imageUrl = getImageUrl(p);
+  const caption =
+    p.caption?.text || p.edge_media_to_caption?.edges?.[0]?.node?.text || p.caption || "";
+  const permalink =
+    p.permalink || (shortcode ? `https://www.instagram.com/p/${shortcode}/` : null);
+  const timestamp = p.taken_at || p.taken_at_timestamp || p.timestamp;
+  const postedAt = timestamp
+    ? new Date(
+        typeof timestamp === "number" && timestamp < 1e12 ? timestamp * 1000 : timestamp
+      ).toISOString()
+    : null;
+  const likes =
+    p.like_count ?? p.edge_media_preview_like?.count ?? p.likesCount ?? p.likes ?? 0;
+  const comments =
+    p.comment_count ?? p.edge_media_to_comment?.count ?? p.commentsCount ?? p.comments ?? 0;
+
+  return {
+    watch_account_id: account_id,
+    instagram_post_id: p.id || p.pk || shortcode || null,
+    media_type: "image",
+    media_url: imageUrl,
+    thumbnail_url: p.thumbnail_src || imageUrl,
+    caption: (typeof caption === "string" ? caption : "").slice(0, 2000),
+    permalink,
+    posted_at: postedAt,
+    like_count: typeof likes === "number" ? likes : 0,
+    comment_count: typeof comments === "number" ? comments : 0,
+    fetched_at: new Date().toISOString(),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -99,7 +132,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { username, account_id } = await req.json();
+    const { username, account_id, load_more } = await req.json();
     if (!username || !account_id) {
       return new Response(JSON.stringify({ error: "username and account_id required" }), {
         status: 400,
@@ -115,6 +148,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    // --- Load More mode: read stored cursor ---
+    let startCursor = "";
+    if (load_more) {
+      const { data: acctRow } = await supabaseAdmin
+        .from("watch_accounts")
+        .select("last_sync_cursor")
+        .eq("id", account_id)
+        .single();
+      startCursor = acctRow?.last_sync_cursor || "";
+      if (!startCursor) {
+        return new Response(
+          JSON.stringify({ error: "No cursor available — sync first" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     await supabaseAdmin.from("watch_accounts").update({ sync_status: "pending" }).eq("id", account_id);
 
     try {
@@ -123,7 +173,7 @@ Deno.serve(async (req) => {
       let videosSkipped = 0;
       let pagesFetched = 0;
       let exhaustedFeed = false;
-      let maxId = "";
+      let maxId = startCursor;
       let prevCursor = "";
 
       for (let page = 0; page < MAX_PAGES; page++) {
@@ -181,80 +231,61 @@ Deno.serve(async (req) => {
         maxId = cursor;
       }
 
-      // Delete old posts for this account
-      await supabaseAdmin.from("watch_posts").delete().eq("watch_account_id", account_id);
+      const finalCursor = maxId || prevCursor;
 
-      // Map and insert
-      const postRows = imagePosts.slice(0, TARGET_POSTS).map((p: any) => {
-        const shortcode = p.code || p.shortcode || p.shortCode || "";
-        const imageUrl = getImageUrl(p);
-        const caption =
-          p.caption?.text || p.edge_media_to_caption?.edges?.[0]?.node?.text || p.caption || "";
-        const permalink =
-          p.permalink || (shortcode ? `https://www.instagram.com/p/${shortcode}/` : null);
-        const timestamp = p.taken_at || p.taken_at_timestamp || p.timestamp;
-        const postedAt = timestamp
-          ? new Date(
-              typeof timestamp === "number" && timestamp < 1e12 ? timestamp * 1000 : timestamp
-            ).toISOString()
-          : null;
-        const likes =
-          p.like_count ?? p.edge_media_preview_like?.count ?? p.likesCount ?? p.likes ?? 0;
-        const comments =
-          p.comment_count ?? p.edge_media_to_comment?.count ?? p.commentsCount ?? p.comments ?? 0;
+      // --- Normal sync: delete old posts first. Load more: upsert only. ---
+      if (!load_more) {
+        await supabaseAdmin.from("watch_posts").delete().eq("watch_account_id", account_id);
+      }
 
-        return {
-          watch_account_id: account_id,
-          instagram_post_id: p.id || p.pk || shortcode || null,
-          media_type: "image",
-          media_url: imageUrl,
-          thumbnail_url: p.thumbnail_src || imageUrl,
-          caption: (typeof caption === "string" ? caption : "").slice(0, 2000),
-          permalink,
-          posted_at: postedAt,
-          like_count: typeof likes === "number" ? likes : 0,
-          comment_count: typeof comments === "number" ? comments : 0,
-          fetched_at: new Date().toISOString(),
-        };
-      });
+      const postRows = imagePosts.slice(0, TARGET_POSTS).map((p: any) => mapPostRow(p, account_id));
 
       if (postRows.length > 0) {
-        await supabaseAdmin.from("watch_posts").insert(postRows);
+        if (load_more) {
+          // Upsert with ignoreDuplicates to skip existing posts
+          await supabaseAdmin
+            .from("watch_posts")
+            .upsert(postRows, { onConflict: "watch_account_id,instagram_post_id", ignoreDuplicates: true });
+        } else {
+          await supabaseAdmin.from("watch_posts").insert(postRows);
+        }
       }
 
-      // Try to get profile image
+      // --- Profile image: skip in load_more mode to save API calls ---
       let profileImg: string | null = null;
-      if (imagePosts[0]?.owner?.profile_pic_url) {
-        profileImg = imagePosts[0].owner.profile_pic_url;
-      } else if (imagePosts[0]?.user?.profile_pic_url) {
-        profileImg = imagePosts[0].user.profile_pic_url;
-      }
+      if (!load_more) {
+        if (imagePosts[0]?.owner?.profile_pic_url) {
+          profileImg = imagePosts[0].owner.profile_pic_url;
+        } else if (imagePosts[0]?.user?.profile_pic_url) {
+          profileImg = imagePosts[0].user.profile_pic_url;
+        }
 
-      if (!profileImg) {
-        try {
-          const profileResponse = await fetch(
-            "https://instagram120.p.rapidapi.com/api/instagram/profile",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-rapidapi-host": "instagram120.p.rapidapi.com",
-                "x-rapidapi-key": rapidApiKey,
-              },
-              body: JSON.stringify({ username }),
+        if (!profileImg) {
+          try {
+            const profileResponse = await fetch(
+              "https://instagram120.p.rapidapi.com/api/instagram/profile",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-rapidapi-host": "instagram120.p.rapidapi.com",
+                  "x-rapidapi-key": rapidApiKey,
+                },
+                body: JSON.stringify({ username }),
+              }
+            );
+            if (profileResponse.ok) {
+              const profileData = await profileResponse.json();
+              profileImg =
+                profileData?.result?.profile_pic_url_hd ||
+                profileData?.result?.profile_pic_url ||
+                profileData?.data?.profile_pic_url_hd ||
+                profileData?.data?.profile_pic_url ||
+                null;
             }
-          );
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            profileImg =
-              profileData?.result?.profile_pic_url_hd ||
-              profileData?.result?.profile_pic_url ||
-              profileData?.data?.profile_pic_url_hd ||
-              profileData?.data?.profile_pic_url ||
-              null;
+          } catch {
+            // Profile fetch is optional
           }
-        } catch {
-          // Profile fetch is optional
         }
       }
 
@@ -263,8 +294,9 @@ Deno.serve(async (req) => {
         .update({
           sync_status: "synced",
           last_synced_at: new Date().toISOString(),
-          source_mode: "official_api",
-          ...(profileImg ? { profile_image_url: profileImg } : {}),
+          last_sync_cursor: finalCursor,
+          ...(load_more ? {} : { source_mode: "official_api" }),
+          ...(!load_more && profileImg ? { profile_image_url: profileImg } : {}),
         })
         .eq("id", account_id);
 
@@ -275,6 +307,7 @@ Deno.serve(async (req) => {
           pages_fetched: pagesFetched,
           videos_skipped: videosSkipped,
           exhausted_feed: exhaustedFeed,
+          has_more: !exhaustedFeed && postRows.length >= TARGET_POSTS,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

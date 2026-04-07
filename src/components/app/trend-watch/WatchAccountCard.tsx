@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, MoreHorizontal, Plus, ExternalLink } from 'lucide-react';
+import { RefreshCw, MoreHorizontal, Plus, ExternalLink, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SYNC_STATUS_MAP, SOURCE_MODE_MAP } from './constants';
 import { PostThumbnailRow } from './PostThumbnailRow';
@@ -19,6 +19,8 @@ interface WatchAccountCardProps {
   onDeactivate: (id: string) => void;
   onPostClick: (post: any) => void;
   isSyncing?: boolean;
+  onLoadMore?: (id: string, username: string) => void;
+  isLoadingMore?: boolean;
 }
 
 export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate, onPostClick, isSyncing }: WatchAccountCardProps) {
