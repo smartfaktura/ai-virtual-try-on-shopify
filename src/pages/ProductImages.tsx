@@ -809,15 +809,18 @@ export default function ProductImages() {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
                         return (
-                          <button key={up.id} type="button" disabled={isDisabled} onClick={() => {
-                            const s = new Set(selectedProductIds);
-                            if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
-                            setSelectedProductIds(s);
-                          }} className={cn(
-                            'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
-                            isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
-                            isDisabled && 'opacity-40 cursor-not-allowed'
-                          )}>
+                          <div key={up.id} role="button" tabIndex={0} onClick={() => {
+                             if (isDisabled) return;
+                             const s = new Set(selectedProductIds);
+                             if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
+                             setSelectedProductIds(s);
+                           }} onKeyDown={(e) => {
+                             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isDisabled) return; const s = new Set(selectedProductIds); if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id); setSelectedProductIds(s); }
+                           }} className={cn(
+                             'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left cursor-pointer',
+                             isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
+                             isDisabled && 'opacity-40 cursor-not-allowed'
+                           )}>
                             <div className={cn(
                               'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
                               isSelected ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
