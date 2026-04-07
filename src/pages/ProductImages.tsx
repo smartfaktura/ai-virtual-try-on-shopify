@@ -512,7 +512,9 @@ export default function ProductImages() {
       productMap.set(jobId, { productId, sceneName: scene?.title || 'Scene' });
     }
     pollingStartRef.current = Date.now();
+    let lastWakeTime = 0;
     const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+    const WAKE_INTERVAL_MS = 30_000; // Re-wake every 30s if queued jobs remain
 
     const poll = async () => {
       try {
@@ -568,6 +570,16 @@ export default function ProductImages() {
           }
           finishWithResults(jobs, productMap);
           return;
+        }
+
+        // Re-wake dispatcher if queued jobs remain (throttled to every 30s)
+        const hasQueued = jobs.some(j => j.status === 'queued');
+        if (hasQueued && Date.now() - lastWakeTime > WAKE_INTERVAL_MS) {
+          lastWakeTime = Date.now();
+          supabase.auth.getSession().then(({ data: s }) => {
+            const t = s?.session?.access_token;
+            if (t) sendWake(t);
+          }).catch(() => {});
         }
 
         // Near-complete auto-finish: if 90%+ done after 90 seconds, show available results
