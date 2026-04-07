@@ -201,6 +201,8 @@ const App = () => {
                         <Route path="/admin/feedback" element={<AdminFeedback />} />
                         <Route path="/admin/status" element={<AdminStatus />} />
                         <Route path="/admin/product-image-scenes" element={<AdminProductImageScenes />} />
+                        <Route path="/admin/trend-watch" element={<AdminTrendWatch />} />
+                        <Route path="/admin/scene-library" element={<AdminSceneLibrary />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
