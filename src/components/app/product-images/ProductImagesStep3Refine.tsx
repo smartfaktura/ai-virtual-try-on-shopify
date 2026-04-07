@@ -1188,22 +1188,31 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
     'Luxury Soft': 'Warm neutrals, refined textures, elegant softness',
   };
 
+  const PRESET_ACCENT: Record<string, string> = {
+    'Studio Standard': 'bg-muted-foreground/20',
+    'Editorial': 'bg-foreground/80',
+    'Minimal': 'bg-muted-foreground/10',
+    'Streetwear': 'bg-foreground/60',
+    'Luxury Soft': 'bg-primary/30',
+  };
+
   return (
     <div className="space-y-2">
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-primary" />Style direction
-      </span>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
           const description = PRESET_DESCRIPTIONS[preset.name] || '';
+          const accent = PRESET_ACCENT[preset.name] || 'bg-muted-foreground/15';
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
-                className={cn('w-[160px] text-left p-3 rounded-xl border transition-all cursor-pointer',
+                className={cn('w-[170px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
                   active ? 'bg-primary/10 border-primary ring-2 ring-primary/30 shadow-sm' : 'bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/60')}>
-                <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
-                {description && <span className="text-[10px] text-muted-foreground leading-snug mt-0.5 block">{description}</span>}
+                <div className={cn('h-[3px] w-full', accent)} />
+                <div className="p-3.5">
+                  <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
+                  {description && <span className="text-[10px] text-muted-foreground leading-snug mt-0.5 block">{description}</span>}
+                </div>
               </button>
               {!preset.isBuiltIn && (
                 <button type="button" onClick={() => deletePreset(preset.id)}
