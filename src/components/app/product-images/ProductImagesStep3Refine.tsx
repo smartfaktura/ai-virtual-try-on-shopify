@@ -1315,6 +1315,28 @@ function InlinePersonDetails({ details, update, outfitAccessories, onAccessories
 }
 
 /* ══════════════════════════════════════════════
+   Summary helpers for collapsible triggers
+   ══════════════════════════════════════════════ */
+
+function getOutfitSummary(config?: OutfitConfig): string {
+  if (!config) return '';
+  const parts: string[] = [];
+  if (config.top) parts.push(`${config.top.color || ''} ${config.top.garment || ''}`.trim());
+  if (config.bottom) parts.push(`${config.bottom.color || ''} ${config.bottom.garment || ''}`.trim());
+  if (config.shoes) parts.push(config.shoes.garment || '');
+  return parts.filter(Boolean).join(' · ') || '';
+}
+
+function getAppearanceSummary(d: DetailSettings): string {
+  const parts: string[] = [];
+  if (d.presentation && d.presentation !== 'auto') parts.push(d.presentation.charAt(0).toUpperCase() + d.presentation.slice(1));
+  if (d.ageRange && d.ageRange !== 'auto') parts.push(d.ageRange);
+  if (d.skinTone && d.skinTone !== 'auto') parts.push(d.skinTone.charAt(0).toUpperCase() + d.skinTone.slice(1));
+  if (d.expression && d.expression !== 'auto') parts.push(d.expression.replace('-', ' '));
+  return parts.join(' · ') || 'Auto';
+}
+
+/* ══════════════════════════════════════════════
    Constants
    ══════════════════════════════════════════════ */
 
