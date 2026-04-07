@@ -769,6 +769,21 @@ export default function ProductImages() {
                                 <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
                                 {up.product_type && <p className="text-[10px] text-muted-foreground truncate">{up.product_type}</p>}
                               </div>
+                              {isSelected && isStaleAnalysis(up) && (
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-400/50 text-amber-600 bg-amber-50">Outdated</Badge>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); reAnalyzeProduct(up); }}
+                                    className="p-1 rounded-md hover:bg-muted transition-colors"
+                                    title="Re-analyze product"
+                                  >
+                                    {pendingIds.has(up.id)
+                                      ? <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                                      : <RefreshCw className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />}
+                                  </button>
+                                </div>
+                              )}
                               <div className={cn(
                                 'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
                                 isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30'
