@@ -90,10 +90,11 @@ Deno.serve(async (req) => {
 
       const postsData = await postsResponse.json();
 
-      // RapidAPI response structure: extract posts from the response
-      // The API may return data in different shapes, handle common patterns
+      // RapidAPI response structure: { result: { edges: [{ node: {...} }] } }
       let posts: any[] = [];
-      if (Array.isArray(postsData)) {
+      if (postsData?.result?.edges) {
+        posts = postsData.result.edges.map((e: any) => e.node || e);
+      } else if (Array.isArray(postsData)) {
         posts = postsData;
       } else if (postsData?.data?.edges) {
         posts = postsData.data.edges.map((e: any) => e.node || e);
@@ -114,19 +115,20 @@ Deno.serve(async (req) => {
       // Map and insert new posts (max 9)
       const postRows = posts.slice(0, 9).map((p: any) => {
         // Handle various RapidAPI response field names
-        const shortcode = p.shortcode || p.code || p.shortCode || "";
-        const imageUrl = p.display_url || p.thumbnail_src || p.image_versions2?.candidates?.[0]?.url
-          || p.displayUrl || p.url || p.imageUrl || p.media_url || null;
-        const caption = p.edge_media_to_caption?.edges?.[0]?.node?.text
-          || p.caption?.text || p.caption || "";
+        const shortcode = p.code || p.shortcode || p.shortCode || "";
+        const imageUrl = p.image_versions2?.candidates?.[0]?.url 
+          || p.display_url || p.thumbnail_src || p.url || p.imageUrl || p.media_url || null;
+        const caption = p.caption?.text 
+          || p.edge_media_to_caption?.edges?.[0]?.node?.text || p.caption || "";
         const permalink = p.permalink || (shortcode ? `https://www.instagram.com/p/${shortcode}/` : null);
-        const timestamp = p.taken_at_timestamp || p.taken_at || p.timestamp;
+        const timestamp = p.taken_at || p.taken_at_timestamp || p.timestamp;
         const postedAt = timestamp
           ? new Date(typeof timestamp === "number" && timestamp < 1e12 ? timestamp * 1000 : timestamp).toISOString()
           : null;
-        const likes = p.edge_media_preview_like?.count ?? p.like_count ?? p.likesCount ?? p.likes ?? 0;
-        const comments = p.edge_media_to_comment?.count ?? p.comment_count ?? p.commentsCount ?? p.comments ?? 0;
-        const mediaType = p.is_video ? "video" : (p.media_type || p.type || "image");
+        const likes = p.like_count ?? p.edge_media_preview_like?.count ?? p.likesCount ?? p.likes ?? 0;
+        const comments = p.comment_count ?? p.edge_media_to_comment?.count ?? p.commentsCount ?? p.comments ?? 0;
+        const isVideo = p.is_video || p.video_versions?.length > 0;
+        const mediaType = isVideo ? "video" : (p.media_type || p.type || "image");
 
         return {
           watch_account_id: account_id,
@@ -172,10 +174,10 @@ Deno.serve(async (req) => {
           );
           if (profileResponse.ok) {
             const profileData = await profileResponse.json();
-            profileImg = profileData?.data?.profile_pic_url_hd
+            profileImg = profileData?.result?.profile_pic_url_hd
+              || profileData?.result?.profile_pic_url
+              || profileData?.data?.profile_pic_url_hd
               || profileData?.data?.profile_pic_url
-              || profileData?.profile_pic_url_hd
-              || profileData?.profile_pic_url
               || null;
           }
         } catch {
