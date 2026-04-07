@@ -425,6 +425,9 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => editingId === scene.id ? onCancelEdit() : onStartEdit(scene)}>
             <Pencil className="w-3.5 h-3.5" />
           </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(scene)} title="Duplicate scene">
+            <Copy className="w-3.5 h-3.5" />
+          </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleActive(scene)}>
             {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </Button>
