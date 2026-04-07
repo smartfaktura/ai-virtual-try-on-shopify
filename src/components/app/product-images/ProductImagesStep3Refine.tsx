@@ -1468,7 +1468,7 @@ export function ProductImagesStep3Refine({
             {hasBg && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">BG</span>}
             {sceneNeedsModel && !needsModel && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Model</span>}
             {sceneNeedsModel && needsModel && (
-              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">Needs model</span>
+              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">Needs model</span>
             )}
           </div>
         </div>
