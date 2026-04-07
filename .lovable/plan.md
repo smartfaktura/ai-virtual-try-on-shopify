@@ -1,57 +1,42 @@
 
 
-# Fix Analysis + Redesign Trend Watch with Tabs
+# Add Image Paste/Upload + Show Prompt in Draft Scenes
 
-## Bug: "Failed to analyze post"
+## What we're building
 
-Both `analyze-trend-post` and `generate-scene-prompts` edge functions import CORS headers from a path that does not exist in the Deno runtime:
+1. **Paste/upload any image** directly on the Trend Watch page to create a draft scene (without needing an Instagram account). The image gets analyzed by the same `analyze-trend-post` edge function, then auto-creates a `scene_recipe`.
 
-```typescript
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
-```
+2. **Show full prompt** by default on Draft Scene cards (fetching from `prompt_outputs` if a prompt has been generated).
 
-This crashes the function on any non-OPTIONS request. Fix: replace with inline `corsHeaders` constant (matching every other working edge function in the project).
+## Changes
 
-## Redesigned Flow (2-step with review)
+### 1. Add "Add Image" button + paste handler to `AdminTrendWatch.tsx`
+- Add an "Add from Image" button next to "Add Account" in the feed toolbar (also visible in drafts tab)
+- Add a global `paste` event listener on the page so admins can Ctrl+V any image
+- When an image is pasted or selected via file picker:
+  1. Upload to `scratch-uploads` bucket
+  2. Create a temporary `watch_posts` row with `source: 'manual_upload'` (or use the existing manual post flow)
+  3. Call `analyze-trend-post` with the post ID
+  4. On success, auto-create the `scene_recipe` from analysis and switch to Drafts tab
+- Show a small modal/dialog for the paste/upload flow with a preview and "Analyze & Create Draft" button
 
-### Step 1 — Analyze Post
-Click "Analyze Post" in the drawer. The edge function analyzes the image and saves a `reference_analyses` row. The drawer immediately shows the analysis results and a "Create Draft Scene" button. Clicking it auto-creates a `scene_recipes` row (status: `draft`) pre-filled from the analysis.
+### 2. New component: `AddImageDraftModal.tsx`
+- File input + paste zone (drag & drop optional)
+- Shows image preview
+- "Analyze & Create Draft Scene" button
+- Flow: upload image → create watch_post → analyze → create scene_recipe → close modal, switch to drafts tab
+- Uses existing `useReferenceAnalysis` hook for the analyze call
 
-### Step 2 — Generate Prompt (from Draft Scenes tab)
-In the Draft Scenes tab, each card shows a "Generate Prompt" button. This calls `generate-scene-prompts`, which creates `prompt_outputs` and sets the recipe status to `prompt_ready` (moves it to Ready Scenes).
+### 3. Update `DraftScenesPanel.tsx` — show prompt by default
+- For each draft card, fetch `prompt_outputs` using `usePromptOutputs(recipe.id)`
+- If a prompt exists, show it in a `bg-muted` text block below the image (not collapsed, shown by default)
+- If no prompt yet, show the `short_description` as before with the "Generate Prompt" button
 
-## New Tab Layout on AdminTrendWatch
+### 4. Update `analyze-trend-post/index.ts` 
+- The function already accepts a `watch_post_id` and reads the image from `media_url`. No changes needed as long as we create the `watch_posts` row with a valid `media_url` pointing to the uploaded image.
 
-Three tabs at top: **Accounts Feed** | **Draft Scenes** | **Ready Scenes**
-
-### Accounts Feed tab
-Current view — accounts with post grids, unchanged.
-
-### Draft Scenes tab
-Cards for `scene_recipes` with `status = 'draft'`. Each card shows:
-- Source post thumbnail (from `preview_image_url`)
-- Analysis chips: mood, lighting, scene_type, aesthetic_family
-- Status badge
-- Actions: "Generate Prompt", "Edit", "Delete"
-
-### Ready Scenes tab
-Cards for `scene_recipes` with `status = 'prompt_ready'` or `'published'`. Each card shows:
-- Source thumbnail
-- Analysis summary chips
-- Master prompt preview (expandable)
-- Actions:
-  - **Copy Prompt** — copies master_scene_prompt to clipboard
-  - **Add to Product Images** — inserts into `product_image_scenes` table
-  - **Add to Freestyle Scenes** — inserts into `custom_scenes` table
-  - Status badge (prompt_ready / published)
-
-## Files to change
-
-1. **`supabase/functions/analyze-trend-post/index.ts`** — replace broken CORS import with inline constant
-2. **`supabase/functions/generate-scene-prompts/index.ts`** — same CORS fix
-3. **`src/pages/AdminTrendWatch.tsx`** — add Tabs component with 3 tabs; move current account grid into first tab; add DraftScenesPanel and ReadyScenesPanel components
-4. **`src/components/app/trend-watch/DraftScenesPanel.tsx`** — new component; queries `scene_recipes` where status=draft, shows cards with analysis summary + Generate Prompt button
-5. **`src/components/app/trend-watch/ReadyScenesPanel.tsx`** — new component; queries `scene_recipes` where status in (prompt_ready, published) joined with `prompt_outputs`; shows cards with prompt preview + publish actions (copy prompt, add to product_image_scenes, add to custom_scenes)
-6. **`src/hooks/useSceneRecipes.ts`** — add `publishToProductImages` and `publishToFreestyle` mutations that insert into the respective tables using data from the recipe + prompt_outputs
-7. **`src/components/app/trend-watch/PostDetailDrawer.tsx`** — after analysis shows, add "Create Draft Scene" button that auto-fills recipe from analysis (existing `onCreateScene` handler); remove the separate "Create Scene Recipe" button from the analysis section since it's redundant
+## Files to modify/create
+- `src/components/app/trend-watch/AddImageDraftModal.tsx` — new modal for paste/upload image
+- `src/components/app/trend-watch/DraftScenesPanel.tsx` — add prompt display per card
+- `src/pages/AdminTrendWatch.tsx` — add paste listener, "Add Image" button, modal state
 
