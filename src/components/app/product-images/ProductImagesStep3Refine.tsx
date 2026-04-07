@@ -1411,12 +1411,11 @@ export function ProductImagesStep3Refine({
     const scene = selectedScenes.find(s => s.id === id);
     if (!scene) return;
 
-    // If it's an on-model scene without a model, redirect to outfit picker
-    const isOnModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
-    if (isOnModel && !details.selectedModelId && !sceneHasActionControls(scene)) {
-      scrollToOutfit();
-      return;
+    // Only expand if scene has action controls
+    if (sceneHasActionControls(scene)) {
+      setExpandedSceneId(prev => prev === id ? null : id);
     }
+  };
 
     // Only expand if scene has action controls
     if (sceneHasActionControls(scene)) {
