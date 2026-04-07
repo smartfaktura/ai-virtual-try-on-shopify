@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { ColorPickerDialog } from '@/components/app/product-images/ColorPickerDialog';
 import { useUserSavedColors } from '@/hooks/useUserSavedColors';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
