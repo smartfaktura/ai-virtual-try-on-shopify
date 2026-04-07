@@ -1498,7 +1498,7 @@ export function ProductImagesStep3Refine({
           {scenesNeedingModel.length > 0 && (
             <span className={cn(
               'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-              needsModel ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-muted text-foreground',
+              needsModel ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted text-foreground',
             )}>
               {scenesNeedingModel.length} need a model
             </span>
