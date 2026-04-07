@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useUserSavedColors } from '@/hooks/useUserSavedColors';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Crown, UserX } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Crown, UserX, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
