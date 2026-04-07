@@ -16,8 +16,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
 const CATEGORIES = [
