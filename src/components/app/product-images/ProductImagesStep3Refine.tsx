@@ -1486,7 +1486,7 @@ export function ProductImagesStep3Refine({
   };
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-8 pb-20">
       {/* ── HEADER ── */}
       <div className="space-y-3">
         <div>
