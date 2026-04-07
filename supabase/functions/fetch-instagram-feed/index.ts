@@ -157,12 +157,7 @@ Deno.serve(async (req) => {
         .eq("id", account_id)
         .single();
       startCursor = acctRow?.last_sync_cursor || "";
-      if (!startCursor) {
-        return new Response(
-          JSON.stringify({ error: "No cursor available — sync first" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      // If no cursor yet, fall back to a normal full sync instead of erroring
     }
 
     await supabaseAdmin.from("watch_accounts").update({ sync_status: "pending" }).eq("id", account_id);
