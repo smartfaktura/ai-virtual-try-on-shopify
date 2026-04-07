@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Plus, Library, Search } from 'lucide-react';
+import { ChevronDown, Plus, Library, Search, RefreshCw } from 'lucide-react';
 import { TREND_CATEGORIES } from '@/components/app/trend-watch/constants';
 import { WatchAccountCard } from '@/components/app/trend-watch/WatchAccountCard';
 import { AddAccountModal } from '@/components/app/trend-watch/AddAccountModal';
