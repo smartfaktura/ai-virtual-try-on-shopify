@@ -1425,6 +1425,8 @@ interface Step3RefineProps {
   selectedProductIds?: Set<string>;
   hasMultipleCategories?: boolean;
   primaryCategory?: string;
+  sceneExtraRefs?: Record<string, string>;
+  onSceneExtraRefsChange?: (refs: Record<string, string>) => void;
 }
 
 /* ══════════════════════════════════════════════
