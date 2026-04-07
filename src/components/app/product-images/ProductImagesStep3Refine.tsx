@@ -1542,6 +1542,9 @@ export function ProductImagesStep3Refine({
     const hasBg = (scene.triggerBlocks || []).includes('background');
     const hasAction = sceneHasActionControls(scene);
     const isExpanded = expandedSceneId === scene.id;
+    const needsExtraRef = scene.requiresExtraReference === true;
+    const extraRefUrl = sceneExtraRefs[scene.id];
+    const isUploading = uploadingSceneId === scene.id;
 
     return (
       <div key={scene.id} className="space-y-1">
@@ -1578,6 +1581,43 @@ export function ProductImagesStep3Refine({
               <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">Needs model</span>
             )}
           </div>
+
+          {/* Extra reference upload area */}
+          {needsExtraRef && (
+            <div className="mt-1.5">
+              {extraRefUrl ? (
+                <div className="relative group rounded-md overflow-hidden border border-border">
+                  <img src={extraRefUrl} alt="Extra reference" className="w-full aspect-square object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeExtraRef(scene.id)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    pendingSceneIdRef.current = scene.id;
+                    extraRefInputRef.current?.click();
+                  }}
+                  disabled={isUploading}
+                  className="w-full flex flex-col items-center gap-1 py-2.5 rounded-md border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
+                >
+                  {isUploading ? (
+                    <span className="text-[10px] text-primary font-medium animate-pulse">Uploading…</span>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5 text-primary/60" />
+                      <span className="text-[9px] text-primary/80 font-medium leading-tight text-center px-1">Upload back/side photo</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
