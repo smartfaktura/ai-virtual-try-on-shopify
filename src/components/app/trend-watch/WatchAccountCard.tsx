@@ -23,7 +23,7 @@ interface WatchAccountCardProps {
   isLoadingMore?: boolean;
 }
 
-export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate, onPostClick, isSyncing }: WatchAccountCardProps) {
+export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate, onPostClick, isSyncing, onLoadMore, isLoadingMore }: WatchAccountCardProps) {
   const [addPostOpen, setAddPostOpen] = useState(false);
   const queryClient = useQueryClient();
   const syncInfo = SYNC_STATUS_MAP[account.sync_status] || SYNC_STATUS_MAP.manual;
