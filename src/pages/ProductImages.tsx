@@ -69,6 +69,7 @@ export default function ProductImages() {
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
+  const [sceneExtraRefs, setSceneExtraRefs] = useState<Record<string, string>>({});
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
   const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
   const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
