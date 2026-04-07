@@ -83,17 +83,25 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
   };
 
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Select a model or skip to customize manually below.</p>
-
-      {/* Gender filter */}
-      <Tabs value={genderFilter} onValueChange={(v) => setGenderFilter(v as any)}>
-        <TabsList className="h-8">
-          <TabsTrigger value="all" className="text-[11px] px-3 h-6">All</TabsTrigger>
-          <TabsTrigger value="female" className="text-[11px] px-3 h-6">Women</TabsTrigger>
-          <TabsTrigger value="male" className="text-[11px] px-3 h-6">Men</TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <div className="space-y-5">
+      {/* Inline gender filter */}
+      <div className="flex items-center gap-3">
+        {(['all', 'female', 'male'] as const).map(g => (
+          <button
+            key={g}
+            type="button"
+            onClick={() => setGenderFilter(g)}
+            className={cn(
+              'text-xs font-medium transition-colors cursor-pointer pb-0.5',
+              genderFilter === g
+                ? 'text-foreground border-b border-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {g === 'all' ? 'All' : g === 'female' ? 'Women' : 'Men'}
+          </button>
+        ))}
+      </div>
 
       {/* Your Brand Models */}
       <div className="space-y-2">
