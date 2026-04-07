@@ -268,6 +268,13 @@ export default function AdminTrendWatch() {
         onOpenChange={setDrawerOpen}
         onCreateScene={handleCreateScene}
       />
+
+      <AddImageDraftModal
+        open={imageModalOpen}
+        onOpenChange={setImageModalOpen}
+        initialFile={pastedFile}
+        onDraftCreated={() => setActiveTab('drafts')}
+      />
     </div>
   );
 }
