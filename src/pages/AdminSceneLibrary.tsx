@@ -167,7 +167,7 @@ export default function AdminSceneLibrary() {
         open={editDrawerOpen}
         onOpenChange={setEditDrawerOpen}
         onUpdate={(updates) => { updateRecipe.mutate({ id: selectedRecipe?.id, ...updates }); }}
-        onGeneratePrompts={(id) => generatePrompts.mutate(id)}
+        onGeneratePrompts={(id) => generatePrompts.mutate({ sceneRecipeId: id })}
         isGenerating={generatePrompts.isPending}
       />
     </div>

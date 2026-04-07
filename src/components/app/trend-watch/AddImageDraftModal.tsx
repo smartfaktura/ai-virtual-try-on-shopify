@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,18 +18,40 @@ interface AddImageDraftModalProps {
 export function AddImageDraftModal({ open, onOpenChange, initialFile, onDraftCreated }: AddImageDraftModalProps) {
   const { user } = useAuth();
   const { createRecipe } = useSceneRecipes();
-  const [file, setFile] = useState<File | null>(initialFile ?? null);
+  const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Set preview when initialFile changes
-  useState(() => {
-    if (initialFile) {
+  // Sync initialFile when modal opens with a file
+  useEffect(() => {
+    if (open && initialFile) {
       setFile(initialFile);
       setPreview(URL.createObjectURL(initialFile));
     }
-  });
+  }, [open, initialFile]);
+
+  // Paste listener inside the dialog
+  useEffect(() => {
+    if (!open) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const f = item.getAsFile();
+          if (f) {
+            setFile(f);
+            setPreview(URL.createObjectURL(f));
+          }
+          return;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [open]);
 
   const handleFileSelect = useCallback((f: File) => {
     if (!f.type.startsWith('image/')) {

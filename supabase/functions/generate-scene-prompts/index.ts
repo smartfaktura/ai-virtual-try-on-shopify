@@ -17,6 +17,18 @@ Shot with an 85mm lens or macro perspective, shallow depth of field, high-detail
 
 Editorial campaign style — bold, minimal, and sculptural, combining raw natural textures with refined gradient color background for a modern, high-end commercial look.`;
 
+const EXAMPLE_TOKEN_PROMPT = `High-end editorial product shot featuring {{productName}} positioned between two rough volcanic rocks, suspended or naturally supported in a narrow gap. The {{materialPrimary}} body of the product catches light beautifully against the dark, porous stone.
+
+{{background}}. Color palette harmonizes with the product's {{productMainHex}} tone, transitioning through complementary shades to {{backgroundSecondaryHex}} in the upper area. The gradient is smooth and softly blended with no hard transitions.
+
+{{lightingDirective}}. Subtle rim lighting separates {{productName}} from the darker rock edges. {{shadowDirective}}.
+
+{{productName}} is the sharp focal point with {{productFinishType}} surface reflecting controlled highlights. {{cropDirective}}. {{compositionDirective}}.
+
+Shot with {{cameraDirective}}. The {{materialTexture}} is rendered with photographic precision. {{focusArea}} draws the eye immediately.
+
+Scattered {{flowersRelated}} petals and raw {{woodsRelated}} pieces add organic contrast to the sculptural rock arrangement. {{moodDirective}} aesthetic — bold, minimal, combining raw natural textures with refined color treatment for a modern, high-end commercial look. {{consistencyDirective}}.`;
+
 const PROMPT_SCHEMA = {
   name: "generate_scene_prompt",
   description: "Generate a high-end editorial product photography prompt from visual analysis signals.",
@@ -25,7 +37,7 @@ const PROMPT_SCHEMA = {
     properties: {
       master_scene_prompt: {
         type: "string",
-        description: "Complete editorial product photography prompt (200-400 words). Use '{product}' as placeholder. Structure: opening (shot type + product placement + prop interaction), environment/surface, background (with hex colors for gradients), lighting (direction, quality, rim/fill), product focus + DOF, lens/rendering, closing style statement.",
+        description: "Complete editorial product photography prompt (200-400 words). Structure: opening (shot type + product placement + prop interaction), environment/surface, background (with hex colors for gradients), lighting (direction, quality, rim/fill), product focus + DOF, lens/rendering, closing style statement.",
       },
       environment_prompt: {
         type: "string",
@@ -55,6 +67,89 @@ const PROMPT_SCHEMA = {
     required: ["master_scene_prompt", "lighting_prompt", "negative_prompt"],
   },
 };
+
+// Compact token reference for the AI when inject_tokens mode is active
+const DYNAMIC_TOKEN_REFERENCE = `
+DYNAMIC TOKEN MODE — IMPORTANT:
+Instead of using '{product}' as a generic placeholder, weave these dynamic tokens (as {{tokenName}}) into your prompt where contextually appropriate. Each token resolves to a real value from the user's product analysis at generation time.
+
+Available tokens:
+
+[System Directives]
+  - {{productName}} — Product title from catalog
+  - {{productType}} — Product type / category slug
+  - {{materialTexture}} — Resolved material + finish description
+  - {{background}} — Full background directive
+  - {{lightingDirective}} — Lighting sentence
+  - {{shadowDirective}} — Shadow sentence
+  - {{moodDirective}} — Styling direction
+  - {{surfaceDirective}} — Surface type sentence
+  - {{environmentDirective}} — Environment sentence
+  - {{consistencyDirective}} — Cross-shot consistency
+  - {{cameraDirective}} — Camera/lens specification
+  - {{personDirective}} — Person description for on-model
+  - {{outfitDirective}} — Outfit lock directive
+  - {{handStyle}} — Hand description
+  - {{actionDirective}} — Action type + intensity
+  - {{focusArea}} — What to focus on
+  - {{cropDirective}} — Crop intensity
+  - {{compositionDirective}} — Composition framing
+  - {{negativeSpaceDirective}} — Negative space usage
+  - {{bodyFramingDirective}} — Body framing for on-model
+  - {{modelDirective}} — Model reference directive
+
+[Global Visual]
+  - {{productCategory}} — Auto-detected category
+  - {{productForm}} — Physical form
+  - {{productSilhouette}} — Outline shape
+  - {{productMainHex}} — Dominant product color hex
+  - {{productSecondaryHex}} — Secondary product color hex
+  - {{productAccentHex}} — Accent color hex
+  - {{backgroundBaseHex}} — AI-suggested background color
+  - {{backgroundSecondaryHex}} — Secondary background color
+  - {{shadowToneHex}} — Shadow tone hex
+  - {{productFinishType}} — Surface finish type
+  - {{materialPrimary}} — Main material
+  - {{materialSecondary}} — Secondary material
+  - {{textureType}} — Surface texture
+  - {{transparencyType}} — Transparency level
+  - {{metalTone}} — Metal tone
+  - {{heroFeature}} — Most photogenic feature
+  - {{detailFocusAreas}} — Areas worth close-ups
+  - {{scaleType}} — Size scale reference
+
+[Global Semantic]
+  - {{ingredientFamilyPrimary}} — Primary ingredient family
+  - {{fruitsRelated}} — Related fruits for styling
+  - {{flowersRelated}} — Related flowers
+  - {{botanicalsRelated}} — Related botanicals/herbs
+  - {{woodsRelated}} — Related wood types
+  - {{spicesRelated}} — Related spices
+  - {{greensRelated}} — Related greenery
+  - {{materialsRelated}} — Related styling materials
+  - {{regionRelated}} — Geographic association
+
+[Category-Specific — use only if contextually relevant]
+  - {{garmentType}}, {{fitType}}, {{fabricType}} — Fashion
+  - {{packagingType}}, {{formulaType}}, {{formulaTexture}} — Beauty
+  - {{fragranceFamily}}, {{bottleType}}, {{liquidColorHex}}, {{noteObjectsPrimary}} — Fragrance
+  - {{jewelryType}}, {{gemType}}, {{metalPrimary}}, {{metalFinish}} — Jewelry
+  - {{accessoryType}}, {{hardwareType}}, {{signatureDetail}} — Accessories
+  - {{decorType}}, {{baseMaterial}}, {{roomContextSuggested}} — Home
+  - {{foodType}}, {{ingredientObjectsPrimary}}, {{textureCue}} — Food
+  - {{deviceType}}, {{finishMaterialPrimary}}, {{industrialStyle}} — Electronics
+  - {{gearType}}, {{performanceMaterial}}, {{motionCue}} — Sports
+  - {{supplementType}}, {{dosageForm}}, {{wellnessIngredientObjects}} — Health
+
+RULES:
+1. Use tokens NATURALLY within sentences — never as a bulleted list
+2. Only use tokens contextually relevant to this scene
+3. Keep the prompt reusable — tokens make it adaptive, not rigid
+4. ALWAYS use {{productName}} where you would have used {product}
+5. Use directive tokens ({{lightingDirective}}, {{background}}, etc.) as full sentences
+6. Use hex tokens ({{productMainHex}}, {{backgroundBaseHex}}) when describing color schemes
+7. Use semantic tokens ({{flowersRelated}}, {{woodsRelated}}) for prop/styling descriptions
+`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -93,7 +188,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { scene_recipe_id } = await req.json();
+    const body = await req.json();
+    const scene_recipe_id = body.scene_recipe_id;
+    const inject_tokens = body.inject_tokens === true;
+
     if (!scene_recipe_id) {
       return new Response(JSON.stringify({ error: "scene_recipe_id required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -173,11 +271,34 @@ Deno.serve(async (req) => {
       ].filter(Boolean).join('\n');
     }
 
+    // Choose placeholder instructions based on inject_tokens mode
+    const placeholderInstruction = inject_tokens
+      ? `Use dynamic {{tokenName}} placeholders instead of generic '{product}'. See the DYNAMIC TOKEN MODE section below for the complete list of available tokens.`
+      : `Use '{product}' as placeholder where the product would be mentioned.`;
+
+    const examplePrompt = inject_tokens ? EXAMPLE_TOKEN_PROMPT : EXAMPLE_PROMPT;
+    const tokenSection = inject_tokens ? `\n\n${DYNAMIC_TOKEN_REFERENCE}` : '';
+
+    // Update schema description based on mode
+    const dynamicSchema = { ...PROMPT_SCHEMA };
+    if (inject_tokens) {
+      dynamicSchema.parameters = {
+        ...dynamicSchema.parameters,
+        properties: {
+          ...dynamicSchema.parameters.properties,
+          master_scene_prompt: {
+            ...dynamicSchema.parameters.properties.master_scene_prompt,
+            description: "Complete editorial product photography prompt (200-400 words) using {{tokenName}} dynamic placeholders. Structure: opening, environment/surface, background, lighting, product focus, lens/rendering, closing style statement. Use tokens naturally within sentences.",
+          },
+        },
+      };
+    }
+
     // Build user content (text + optional image)
     const userContent: any[] = [
       {
         type: "text",
-        text: `Generate a complete editorial product photography prompt from this scene recipe:\n\n${recipeContext}${analysisContext}\n\nCreate a master prompt and individual layers (environment, lighting, composition, styling, negative, consistency). Use '{product}' as placeholder for the product.`,
+        text: `Generate a complete editorial product photography prompt from this scene recipe:\n\n${recipeContext}${analysisContext}\n\nCreate a master prompt and individual layers (environment, lighting, composition, styling, negative, consistency). ${placeholderInstruction}`,
       },
     ];
 
@@ -204,7 +325,7 @@ Deno.serve(async (req) => {
 Your job is to generate a detailed, structured photography prompt from scene recipe data and visual analysis signals.
 
 CRITICAL RULES:
-1. The prompt must be REUSABLE for ANY product. Use '{product}' as placeholder where the product would be mentioned.
+1. The prompt must be REUSABLE for ANY product. ${placeholderInstruction}
 2. Do NOT reference any specific brand, logo, or product identity from the source.
 3. Focus on: environment, surface textures, prop placement, background treatment (with specific color hex codes when palette is provided), lighting setup, composition, and editorial style.
 4. Write in the style of professional photography direction — specific, actionable, detailed.
@@ -216,14 +337,14 @@ CRITICAL RULES:
 Here is an example of the quality and style of prompt you should produce:
 
 ---
-${EXAMPLE_PROMPT}
+${examplePrompt}
 ---
 
-Generate prompts at this quality level. Be specific about materials, lighting angles, color transitions, and spatial relationships.`,
+Generate prompts at this quality level. Be specific about materials, lighting angles, color transitions, and spatial relationships.${tokenSection}`,
           },
           { role: "user", content: userContent },
         ],
-        tools: [{ type: "function", function: PROMPT_SCHEMA }],
+        tools: [{ type: "function", function: dynamicSchema }],
         tool_choice: { type: "function", function: { name: "generate_scene_prompt" } },
       }),
     });
