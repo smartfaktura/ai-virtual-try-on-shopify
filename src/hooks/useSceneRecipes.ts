@@ -71,9 +71,9 @@ export function useSceneRecipes() {
   });
 
   const generatePrompts = useMutation({
-    mutationFn: async (sceneRecipeId: string) => {
+    mutationFn: async ({ sceneRecipeId, injectTokens = false }: { sceneRecipeId: string; injectTokens?: boolean }) => {
       const { data, error } = await supabase.functions.invoke('generate-scene-prompts', {
-        body: { scene_recipe_id: sceneRecipeId },
+        body: { scene_recipe_id: sceneRecipeId, inject_tokens: injectTokens },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

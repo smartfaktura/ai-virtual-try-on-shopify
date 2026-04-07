@@ -3,6 +3,7 @@ import { useSceneRecipes, usePromptOutputs } from '@/hooks/useSceneRecipes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Sparkles, Trash2, Loader2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,11 +31,12 @@ export function DraftScenesPanel() {
         <DraftSceneCard
           key={recipe.id}
           recipe={recipe}
-          onGeneratePrompt={() => {
+          onGeneratePrompt={(injectTokens: boolean) => {
             setGeneratingId(recipe.id);
-            generatePrompts.mutate(recipe.id, {
-              onSettled: () => setGeneratingId(null),
-            });
+            generatePrompts.mutate(
+              { sceneRecipeId: recipe.id, injectTokens },
+              { onSettled: () => setGeneratingId(null) },
+            );
           }}
           isGenerating={generatingId === recipe.id}
           onDelete={() => updateRecipe.mutate({ id: recipe.id, status: 'archived' })}
@@ -51,12 +53,13 @@ function DraftSceneCard({
   onDelete,
 }: {
   recipe: any;
-  onGeneratePrompt: () => void;
+  onGeneratePrompt: (injectTokens: boolean) => void;
   isGenerating: boolean;
   onDelete: () => void;
 }) {
   const { data: promptOutput } = usePromptOutputs(recipe.id);
   const masterPrompt = promptOutput?.master_scene_prompt;
+  const [injectTokens, setInjectTokens] = useState(false);
 
   const chips = [
     recipe.mood,
@@ -117,8 +120,17 @@ function DraftSceneCard({
           </div>
         )}
 
+        {/* Inject tokens checkbox */}
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={injectTokens}
+            onCheckedChange={(v) => setInjectTokens(!!v)}
+          />
+          <span className="text-xs text-muted-foreground">Inject product tokens ({{...}})</span>
+        </label>
+
         <div className="flex gap-2">
-          <Button size="sm" className="flex-1" onClick={onGeneratePrompt} disabled={isGenerating}>
+          <Button size="sm" className="flex-1" onClick={() => onGeneratePrompt(injectTokens)} disabled={isGenerating}>
             {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
             {masterPrompt ? 'Regenerate Prompt' : 'Generate Prompt'}
           </Button>
