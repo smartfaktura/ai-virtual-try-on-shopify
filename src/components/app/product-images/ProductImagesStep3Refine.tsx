@@ -677,7 +677,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
           )}
         >
           {hasGradientCustom && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch('gradient-custom'); }} />}
-          {hasGradientCustom && <EditButton onClick={(e) => { e.stopPropagation(); gradFromInputRef.current?.click(); }} />}
+          {hasGradientCustom && <EditButton onClick={(e) => { e.stopPropagation(); setPickerMode('gradient'); setPickerOpen(true); }} />}
           {hasGradientCustom && canSave && (
             <SaveButton onClick={(e) => { e.stopPropagation(); onSaveGradient(gradFrom, gradTo); }} />
           )}
