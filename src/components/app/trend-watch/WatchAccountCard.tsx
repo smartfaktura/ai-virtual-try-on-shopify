@@ -92,7 +92,25 @@ export function WatchAccountCard({ account, posts, onSync, onEdit, onDeactivate,
 
       {/* Posts Row */}
       {posts.length > 0 ? (
-        <PostThumbnailRow posts={posts} onPostClick={onPostClick} />
+        <div className="space-y-2">
+          <PostThumbnailRow posts={posts} onPostClick={onPostClick} />
+          {posts.length >= 12 && onLoadMore && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full text-xs text-muted-foreground h-7"
+              onClick={() => onLoadMore(account.id, account.username)}
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? (
+                <RefreshCw className="w-3 h-3 mr-1.5 animate-spin" />
+              ) : (
+                <ChevronDown className="w-3 h-3 mr-1.5" />
+              )}
+              Load older posts
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="flex items-center justify-center h-20 rounded-lg border border-dashed text-xs text-muted-foreground">
           No posts yet — sync or add manually
