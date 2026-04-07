@@ -534,33 +534,19 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
 
   return (
     <div className="space-y-3">
-      {/* Hidden native color inputs */}
-      <input
-        ref={colorInputRef}
-        type="color"
-        value={validCustomHex ? customHex : '#FFFFFF'}
-        onChange={e => applyCustomHex(e.target.value)}
-        className="sr-only"
-        tabIndex={-1}
-      />
-      <input
-        ref={gradFromInputRef}
-        type="color"
-        value={gradFrom}
-        onChange={e => {
-          applyGradient(e.target.value, gradTo);
-          setTimeout(() => gradToInputRef.current?.click(), 300);
-        }}
-        className="sr-only"
-        tabIndex={-1}
-      />
-      <input
-        ref={gradToInputRef}
-        type="color"
-        value={gradTo}
-        onChange={e => applyGradient(gradFrom, e.target.value)}
-        className="sr-only"
-        tabIndex={-1}
+      {/* Color Picker Dialog */}
+      <ColorPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        mode={pickerMode}
+        initialHex={customHex}
+        initialGradientFrom={gradFrom}
+        initialGradientTo={gradTo}
+        canSave={canSave}
+        onApplySolid={(h) => { applyCustomHex(h); if (!hasCustom) toggleSwatch('custom'); }}
+        onApplyGradient={(f, t) => { applyGradient(f, t); if (!hasGradientCustom) toggleSwatch('gradient-custom'); }}
+        onSaveColor={onSaveColor}
+        onSaveGradient={onSaveGradient}
       />
 
       {/* Swatch grid — square aspect cards, 8 per row */}
