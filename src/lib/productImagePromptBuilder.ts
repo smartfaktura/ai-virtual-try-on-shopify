@@ -976,7 +976,7 @@ export function buildDynamicPrompt(
   // (e.g. forcing full-body framing onto a close-up hand scene).
 
   // Prepend reference isolation instruction BEFORE cleanup so it appears early
-  prompt = REFERENCE_ISOLATION + ' ' + prompt;
+  prompt = PRODUCT_FIDELITY + ' ' + REFERENCE_ISOLATION + ' ' + prompt;
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
