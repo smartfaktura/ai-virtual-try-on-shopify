@@ -193,8 +193,8 @@ export default function AdminTrendWatch() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="feed">Accounts Feed</TabsTrigger>
-          <TabsTrigger value="drafts">Draft Scenes</TabsTrigger>
-          <TabsTrigger value="ready">Ready Scenes</TabsTrigger>
+          <TabsTrigger value="drafts">Draft Scenes{draftCount > 0 ? ` (${draftCount})` : ''}</TabsTrigger>
+          <TabsTrigger value="ready">Ready Scenes{readyCount > 0 ? ` (${readyCount})` : ''}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="feed">
