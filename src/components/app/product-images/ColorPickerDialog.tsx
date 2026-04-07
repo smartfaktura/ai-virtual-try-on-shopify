@@ -126,11 +126,6 @@ export function ColorPickerDialog({
 
           {/* ─── Solid Tab ─── */}
           <TabsContent value="solid" className="px-5 pb-5 pt-4 space-y-4 mt-0">
-            {/* Preview */}
-            <div
-              className="w-full h-20 rounded-lg border border-border shadow-inner"
-              style={{ background: isValidHex(hex) ? hex : '#FFFFFF' }}
-            />
 
             {/* Quick-pick swatches */}
             <div className="space-y-1.5">
