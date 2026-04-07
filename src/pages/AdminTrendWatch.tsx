@@ -189,7 +189,7 @@ export default function AdminTrendWatch() {
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => setAddModalOpen(true)}>
+            <Button size="sm" onClick={() => { setEditingAccount(null); setAddModalOpen(true); }}>
               <Plus className="w-4 h-4 mr-1" /> Add Account
             </Button>
             <Button size="sm" variant="secondary" onClick={() => { setPastedFile(null); setImageModalOpen(true); }}>
