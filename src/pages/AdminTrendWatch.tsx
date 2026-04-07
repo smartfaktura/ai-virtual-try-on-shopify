@@ -23,7 +23,10 @@ export default function AdminTrendWatch() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
   const { accounts, isLoading, addAccount, updateAccount, syncAccount, loadMorePosts } = useWatchAccounts();
-  const { createRecipe } = useSceneRecipes();
+  const { recipes, createRecipe } = useSceneRecipes();
+
+  const draftCount = useMemo(() => recipes.filter((r: any) => r.status === 'draft').length, [recipes]);
+  const readyCount = useMemo(() => recipes.filter((r: any) => r.status === 'ready').length, [recipes]);
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
