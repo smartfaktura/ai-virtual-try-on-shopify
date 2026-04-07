@@ -223,11 +223,7 @@ export default function ProductImages() {
 
   // Scroll wizard into view on step change
   useEffect(() => {
-    if (wizardContentRef.current) {
-      wizardContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
   // Reset visible count when search changes
