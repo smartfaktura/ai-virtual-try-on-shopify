@@ -80,7 +80,7 @@ export function useWatchPosts(accountId?: string) {
         .from('watch_posts' as any)
         .select('*')
         .order('posted_at', { ascending: false })
-        .limit(9);
+        .limit(12);
       if (accountId) query.eq('watch_account_id', accountId);
       const { data, error } = await query;
       if (error) throw error;
