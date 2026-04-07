@@ -1,22 +1,21 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState, useEffect, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Loader2, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { UserProduct } from './types';
 
 const BRANDED_MESSAGES = [
-  { member: 'Sophia', message: 'Setting up your scene lighting...' },
-  { member: 'Kenji', message: 'Composing the perfect angle...' },
-  { member: 'Amara', message: 'Adjusting the exposure and color balance...' },
-  { member: 'Luna', message: 'Refining details and textures...' },
-  { member: 'Sienna', message: 'Applying your brand style...' },
-  { member: 'Leo', message: 'Building the background environment...' },
-  { member: 'Omar', message: 'Optimizing for visual impact...' },
-  { member: 'Zara', message: 'Styling the final composition...' },
+  { member: 'Sophia', message: 'Setting up your scene lighting…' },
+  { member: 'Kenji', message: 'Composing the perfect angle…' },
+  { member: 'Amara', message: 'Adjusting exposure and color balance…' },
+  { member: 'Luna', message: 'Refining details and textures…' },
+  { member: 'Sienna', message: 'Applying your brand style…' },
+  { member: 'Leo', message: 'Building the background environment…' },
+  { member: 'Omar', message: 'Optimizing for visual impact…' },
+  { member: 'Zara', message: 'Styling the final composition…' },
 ];
 
 interface Step5Props {
@@ -53,7 +52,9 @@ export function ProductImagesStep5Generating({
 }: Step5Props) {
   const [elapsed, setElapsed] = useState(0);
   const [msgIndex, setMsgIndex] = useState(0);
+  const [msgVisible, setMsgVisible] = useState(true);
   const [startTime] = useState(() => Date.now());
+  const pendingIndex = useRef(msgIndex);
 
   // Elapsed timer
   useEffect(() => {
@@ -63,10 +64,17 @@ export function ProductImagesStep5Generating({
     return () => clearInterval(interval);
   }, [startTime]);
 
-  // Rotating branded message
+  // Rotating branded message with crossfade
   useEffect(() => {
     const interval = setInterval(() => {
-      setMsgIndex(prev => (prev + 1) % BRANDED_MESSAGES.length);
+      // Fade out first
+      setMsgVisible(false);
+      pendingIndex.current = (pendingIndex.current + 1) % BRANDED_MESSAGES.length;
+      // After fade-out, swap content and fade in
+      setTimeout(() => {
+        setMsgIndex(pendingIndex.current);
+        setMsgVisible(true);
+      }, 400);
     }, 6000);
     return () => clearInterval(interval);
   }, []);
@@ -118,74 +126,76 @@ export function ProductImagesStep5Generating({
   const currentMsg = BRANDED_MESSAGES[msgIndex];
   const member = TEAM_MEMBERS.find(m => m.name === currentMsg.member);
 
+  // Dynamic bottom copy
+  const bottomCopy = effectiveTotal > 1
+    ? 'About 2 minutes for your batch. Safe to leave — results appear in your library.'
+    : 'Usually under a minute. Safe to leave — results appear in your library.';
+
   return (
     <div className="flex flex-col items-center justify-center py-20 space-y-8">
-      {/* Animated loader */}
-      <div className="relative">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-
       {/* Phase headline */}
       <div className="text-center space-y-2">
-        <h2 className="text-xl font-semibold tracking-tight">
-          {phase === 'queuing' && 'Setting up your scenes...'}
+        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+          {phase === 'queuing' && 'Setting up your scenes…'}
           {phase === 'generating' && 'Generating your visuals'}
-          {phase === 'finishing' && 'Finishing touches...'}
+          {phase === 'finishing' && 'Finishing touches…'}
         </h2>
         <p className="text-sm text-muted-foreground">
           {isQueuing
-            ? `Queuing scene ${enqueuedJobs} of ${expectedJobCount}...`
+            ? `Queuing scene ${enqueuedJobs} of ${expectedJobCount}…`
             : `${completedOk} of ${effectiveTotal} image${effectiveTotal !== 1 ? 's' : ''} completed`
           }
           {productCount > 1 && !isQueuing && ` across ${productCount} products`}
         </p>
       </div>
 
-      {/* Progress card */}
-      <Card className="w-full max-w-md">
-        <CardContent className="p-5 space-y-3">
-          <Progress value={displayPct} className="h-2" />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3 h-3" />
-              <span className="font-mono">{formatElapsed(elapsed)}</span>
-            </div>
-            <span>{displayPct}%</span>
+      {/* Progress bar — no card wrapper */}
+      <div className="w-full max-w-md space-y-2.5">
+        <Progress value={displayPct} className="h-2" />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3 h-3" />
+            <span className="font-mono">{formatElapsed(elapsed)}</span>
           </div>
-        </CardContent>
-      </Card>
+          <span>{displayPct}%</span>
+        </div>
+      </div>
 
-      {/* Per-product progress rows */}
-      {productStatuses && productStatuses.length > 1 && (
-        <Card className="w-full max-w-md">
-          <CardContent className="p-4 space-y-1.5">
-            {productStatuses.map((ps, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs">
-                {ps.done >= ps.total ? (
-                  ps.failed > 0
-                    ? <XCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
-                    : <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                ) : (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground flex-shrink-0" />
-                )}
-                <span className="truncate flex-1 text-foreground">{ps.name}</span>
-                <span className="text-muted-foreground whitespace-nowrap">{ps.done}/{ps.total}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Branded rotating team message */}
+      {/* Team message with crossfade */}
       {member && (
-        <div className="flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
+        <div
+          className="flex items-center gap-2.5 justify-center transition-all duration-300"
+          style={{
+            opacity: msgVisible ? 1 : 0,
+            transform: msgVisible ? 'translateY(0)' : 'translateY(4px)',
+          }}
+        >
           <Avatar className="w-7 h-7 border border-border">
             <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
             <AvatarFallback className="text-[10px]">{member.name[0]}</AvatarFallback>
           </Avatar>
-          <p className="text-xs text-muted-foreground italic">
-            {currentMsg.message}
+          <p className="text-sm text-muted-foreground">
+            {member.name} — {currentMsg.message}
           </p>
+        </div>
+      )}
+
+      {/* Per-product progress rows — no card wrapper */}
+      {productStatuses && productStatuses.length > 1 && (
+        <div className="w-full max-w-md divide-y divide-border">
+          {productStatuses.map((ps, i) => (
+            <div key={i} className="flex items-center gap-2 text-xs py-2.5">
+              {ps.done >= ps.total ? (
+                ps.failed > 0
+                  ? <XCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                  : <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+              ) : (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground flex-shrink-0" />
+              )}
+              <span className="truncate flex-1 text-foreground">{ps.name}</span>
+              <span className="text-muted-foreground whitespace-nowrap">{ps.done}/{ps.total}</span>
+            </div>
+          ))}
         </div>
       )}
 
@@ -218,8 +228,8 @@ export function ProductImagesStep5Generating({
         </Button>
       )}
 
-      <p className="text-xs text-muted-foreground text-center max-w-sm">
-        This usually takes 30–90 seconds per image. You can leave this page — results will appear in your library.
+      <p className="text-xs text-muted-foreground/70 text-center max-w-sm">
+        {bottomCopy}
       </p>
     </div>
   );
