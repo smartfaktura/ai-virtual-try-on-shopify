@@ -94,7 +94,16 @@ export default function AdminTrendWatch() {
     }
   };
 
-  const handleRefreshAll = async () => {
+  const handleLoadMore = async (id: string, username: string) => {
+    setLoadingMoreId(id);
+    try {
+      await loadMorePosts.mutateAsync({ id, username });
+    } finally {
+      setLoadingMoreId(null);
+    }
+  };
+
+
     const STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
     const now = Date.now();
     const active = (accounts || []).filter((a: any) => a.is_active);
