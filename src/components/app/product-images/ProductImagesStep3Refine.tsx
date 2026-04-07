@@ -799,6 +799,36 @@ const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
     shoes: { garment: 'loafers', color: 'black', material: 'leather' },
     accessories: 'none',
   },
+  'home-decor': {
+    top: { garment: 'sweater', color: 'cream', fit: 'relaxed', material: 'knit' },
+    bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'suede' },
+    accessories: 'none',
+  },
+  'tech-devices': {
+    top: { garment: 't-shirt', color: 'black', fit: 'fitted', material: 'cotton' },
+    bottom: { garment: 'jeans', color: 'charcoal', fit: 'slim', material: 'denim' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+    accessories: 'none',
+  },
+  'food-beverage': {
+    top: { garment: 'blouse', color: 'white', fit: 'relaxed', material: 'linen' },
+    bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
+    accessories: 'none',
+  },
+  'supplements-wellness': {
+    top: { garment: 'tank top', color: 'white', fit: 'fitted', material: 'cotton' },
+    bottom: { garment: 'joggers', color: 'grey', fit: 'slim', material: 'jersey' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'mesh' },
+    accessories: 'none',
+  },
+  other: {
+    top: { garment: 't-shirt', color: 'white', fit: 'fitted', material: 'cotton' },
+    bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+    accessories: 'none',
+  },
 };
 
 const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
@@ -824,11 +854,36 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
     bottom: { garment: 'chinos', color: 'charcoal', fit: 'slim', material: 'cotton' },
     shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
   },
+  'home-decor': {
+    top: { garment: 'henley', color: 'cream', fit: 'regular', material: 'cotton' },
+    bottom: { garment: 'chinos', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'suede' },
+  },
+  'tech-devices': {
+    top: { garment: 'crew-neck tee', color: 'black', fit: 'regular', material: 'cotton' },
+    bottom: { garment: 'jeans', color: 'charcoal', fit: 'slim', material: 'denim' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+  },
+  'food-beverage': {
+    top: { garment: 'shirt', color: 'white', fit: 'regular', material: 'linen' },
+    bottom: { garment: 'chinos', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
+  },
+  'supplements-wellness': {
+    top: { garment: 'tank top', color: 'white', fit: 'regular', material: 'cotton' },
+    bottom: { garment: 'joggers', color: 'grey', fit: 'slim', material: 'jersey' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'mesh' },
+  },
+  other: {
+    top: { garment: 'crew-neck tee', color: 'white', fit: 'regular', material: 'cotton' },
+    bottom: { garment: 'chinos', color: 'navy', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+  },
 };
 
 function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
   let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
-  if (!base) return [];
+  if (!base) base = CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
   if (!base.bottom) base = { ...base, bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' } };
   if (!base.shoes) base = { ...base, shoes: { garment: 'sneakers', color: 'white', material: 'leather' } };
   if (isMale && MALE_OUTFIT_OVERRIDES[category]) {
