@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
+import { saveOrShareImage } from '@/lib/mobileImageSave';
 
 interface ResultImage {
   url: string;
@@ -54,6 +55,11 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     }
   };
 
+  const handleSingleDownload = (url: string, sceneName: string) => {
+    const safeName = sceneName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    saveOrShareImage(url, `product_${safeName}`);
+  };
+
   return (
     <div className="space-y-8">
       <div className="text-center space-y-2">
@@ -76,7 +82,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
               <button
                 key={i}
                 onClick={() => openLightbox(images, i)}
-                className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group"
+                className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group relative"
               >
                 <div className="aspect-square bg-muted/30 overflow-hidden">
                   <ShimmerImage
@@ -88,6 +94,15 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                 <div className="px-2 py-1.5 bg-card border-t border-border">
                   <p className="text-[10px] text-muted-foreground truncate">{img.sceneName}</p>
                 </div>
+                {/* Per-image download button */}
+                <span
+                  role="button"
+                  onClick={(e) => { e.stopPropagation(); handleSingleDownload(img.url, img.sceneName); }}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  title="Download"
+                >
+                  <Download className="w-4 h-4" />
+                </span>
               </button>
             ))}
           </div>
@@ -116,6 +131,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
+          onDownload={(idx) => handleSingleDownload(lightboxImages[idx], `image_${idx + 1}`)}
         />
       )}
     </div>

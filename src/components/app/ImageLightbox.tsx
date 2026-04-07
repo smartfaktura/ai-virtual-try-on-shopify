@@ -52,6 +52,13 @@ export function ImageLightbox({
 
   useEffect(() => {
     if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') handlePrevious();
       else if (e.key === 'ArrowRight') handleNext();
@@ -119,7 +126,7 @@ export function ImageLightbox({
 
       {/* Main image + actions */}
       <div className={cn(
-        'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200',
+        'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200 overflow-hidden',
         isMobile ? 'max-w-[94vw] max-h-[90vh] px-1' : 'max-w-[90vw] max-h-[90vh]'
       )}>
         <ShimmerImage
