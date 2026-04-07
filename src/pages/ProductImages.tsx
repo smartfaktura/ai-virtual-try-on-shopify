@@ -89,6 +89,14 @@ export default function ProductImages() {
   const [visibleCount, setVisibleCount] = useState(25);
   const MAX_PRODUCTS = 20;
 
+  /** Check if a product's analysis is stale (missing or pre-v2) */
+  const isStaleAnalysis = useCallback((product: UserProduct) => {
+    const liveAnalysis = analyses[product.id];
+    if (liveAnalysis?.version === 2) return false;
+    const cached = (product as any).analysis_json;
+    return !cached?.version || cached.version < 2;
+  }, [analyses]);
+
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
   const [completedJobs, setCompletedJobs] = useState(0);
