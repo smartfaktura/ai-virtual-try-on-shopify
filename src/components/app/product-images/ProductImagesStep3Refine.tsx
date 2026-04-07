@@ -16,7 +16,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
-  Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
+  Paintbrush, User, Users, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
   Save, Trash2, History, Check, Info,
 } from 'lucide-react';
@@ -83,17 +83,25 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
   };
 
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Select a model or skip to customize manually below.</p>
-
-      {/* Gender filter */}
-      <Tabs value={genderFilter} onValueChange={(v) => setGenderFilter(v as any)}>
-        <TabsList className="h-8">
-          <TabsTrigger value="all" className="text-[11px] px-3 h-6">All</TabsTrigger>
-          <TabsTrigger value="female" className="text-[11px] px-3 h-6">Women</TabsTrigger>
-          <TabsTrigger value="male" className="text-[11px] px-3 h-6">Men</TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <div className="space-y-5">
+      {/* Inline gender filter */}
+      <div className="flex items-center gap-3">
+        {(['all', 'female', 'male'] as const).map(g => (
+          <button
+            key={g}
+            type="button"
+            onClick={() => setGenderFilter(g)}
+            className={cn(
+              'text-xs font-medium transition-colors cursor-pointer pb-0.5',
+              genderFilter === g
+                ? 'text-foreground border-b border-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {g === 'all' ? 'All' : g === 'female' ? 'Women' : 'Men'}
+          </button>
+        ))}
+      </div>
 
       {/* Your Brand Models */}
       <div className="space-y-2">
@@ -1180,22 +1188,31 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
     'Luxury Soft': 'Warm neutrals, refined textures, elegant softness',
   };
 
+  const PRESET_ACCENT: Record<string, string> = {
+    'Studio Standard': 'bg-muted-foreground/20',
+    'Editorial': 'bg-foreground/80',
+    'Minimal': 'bg-muted-foreground/10',
+    'Streetwear': 'bg-foreground/60',
+    'Luxury Soft': 'bg-primary/30',
+  };
+
   return (
     <div className="space-y-2">
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-primary" />Style direction
-      </span>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
           const description = PRESET_DESCRIPTIONS[preset.name] || '';
+          const accent = PRESET_ACCENT[preset.name] || 'bg-muted-foreground/15';
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
-                className={cn('w-[160px] text-left p-3 rounded-xl border transition-all cursor-pointer',
+                className={cn('w-[170px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
                   active ? 'bg-primary/10 border-primary ring-2 ring-primary/30 shadow-sm' : 'bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/60')}>
-                <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
-                {description && <span className="text-[10px] text-muted-foreground leading-snug mt-0.5 block">{description}</span>}
+                <div className={cn('h-[3px] w-full', accent)} />
+                <div className="p-3.5">
+                  <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
+                  {description && <span className="text-[10px] text-muted-foreground leading-snug mt-0.5 block">{description}</span>}
+                </div>
               </button>
               {!preset.isBuiltIn && (
                 <button type="button" onClick={() => deletePreset(preset.id)}
@@ -1438,7 +1455,7 @@ export function ProductImagesStep3Refine({
             isExpanded
               ? 'border-primary shadow-sm'
               : sceneNeedsModel && needsModel
-                ? 'border-amber-400/40 hover:border-amber-400/60'
+                ? 'border-primary/30 hover:border-primary/50'
                 : 'border-border hover:border-primary/30',
             hasAction ? 'cursor-pointer' : 'cursor-default',
           )}
@@ -1460,7 +1477,7 @@ export function ProductImagesStep3Refine({
             {hasBg && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">BG</span>}
             {sceneNeedsModel && !needsModel && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Model</span>}
             {sceneNeedsModel && needsModel && (
-              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">Needs model</span>
+              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">Needs model</span>
             )}
           </div>
         </div>
@@ -1469,7 +1486,7 @@ export function ProductImagesStep3Refine({
   };
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-8 pb-20">
       {/* ── HEADER ── */}
       <div className="space-y-3">
         <div>
@@ -1490,7 +1507,7 @@ export function ProductImagesStep3Refine({
           {scenesNeedingModel.length > 0 && (
             <span className={cn(
               'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-              needsModel ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-muted text-foreground',
+              needsModel ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted text-foreground',
             )}>
               {scenesNeedingModel.length} need a model
             </span>
@@ -1556,12 +1573,18 @@ export function ProductImagesStep3Refine({
 
           {/* Choose model card */}
           {scenesNeedingModel.length > 0 && (
-            <Card>
-              <CardContent className="p-4 space-y-4">
+           <Card>
+              <CardContent className="p-5 space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-primary" />
+                      <div className="flex -space-x-1.5">
+                        <div className="w-5 h-5 rounded-full bg-primary/20 border-2 border-card flex items-center justify-center">
+                          <Users className="w-2.5 h-2.5 text-primary" />
+                        </div>
+                        <div className="w-5 h-5 rounded-full bg-primary/15 border-2 border-card" />
+                        <div className="w-5 h-5 rounded-full bg-primary/10 border-2 border-card" />
+                      </div>
                       <span className="text-sm font-semibold">Choose model</span>
                       {details.selectedModelId && (
                         <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
@@ -1599,9 +1622,9 @@ export function ProductImagesStep3Refine({
                   <p className="text-xs text-muted-foreground mt-0.5">Applies to {bgScenes.length} selected shot{bgScenes.length !== 1 ? 's' : ''}.</p>
                 </div>
                 {!details.backgroundTone && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/15 border border-amber-200/30 dark:border-amber-800/20">
-                    <Paintbrush className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                    <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Select a background color for your selected scenes</span>
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                    <Paintbrush className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                    <span className="text-[11px] text-primary/60 font-medium">Select a background color for your selected scenes</span>
                   </div>
                 )}
                 <BackgroundSwatchSelector
@@ -1643,50 +1666,57 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── OPTIONAL SECTION ── */}
+      {/* ── OUTFIT & MODEL STYLING (unified section) ── */}
+      {hasPersonBlock && (
+        <Card className="border-none shadow-sm bg-secondary/5">
+          <CardContent className="p-5 space-y-5">
+            <div>
+              <h3 className="text-sm font-semibold">Outfit & Model styling</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Fine-tune outfit pieces, appearance, and accessories.</p>
+            </div>
+
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/customize">
+                <div className="flex items-center gap-2">
+                  <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit details</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-2 pt-3 pb-1">
+                  <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <Separator className="opacity-50" />
+
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/appear">
+                <div className="flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pt-3 pb-1">
+                  <InlinePersonDetails
+                    details={details}
+                    update={update}
+                    outfitAccessories={details.outfitConfig?.accessories}
+                    onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── ADDITIONAL NOTE ── */}
       <div className="space-y-3">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Optional</span>
-
-        {/* Outfit details */}
-        {hasPersonBlock && (
-          <Collapsible>
-            <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/customize">
-              <div className="flex items-center gap-2">
-                <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit details</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="space-y-2 pt-3 pb-1">
-                <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-
-        {/* Model styling */}
-        {hasPersonBlock && (
-          <Collapsible>
-            <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/appear">
-              <div className="flex items-center gap-2">
-                <User className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Model styling</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="pt-3 pb-1">
-                <InlinePersonDetails
-                  details={details}
-                  update={update}
-                  outfitAccessories={details.outfitConfig?.accessories}
-                  onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
 
         {/* Additional note */}
         <Card>
