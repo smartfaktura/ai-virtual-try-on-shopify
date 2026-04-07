@@ -54,6 +54,15 @@ const BG_MAP: Record<string, string> = {
   'colored': 'solid colored',
   'taupe': 'warm taupe',
   'stone': 'natural stone gray',
+  // Swatch values from BackgroundSwatchSelector UI
+  'sage': 'soft sage green (#E8EDE6)',
+  'blush': 'soft blush pink (#F8ECE8)',
+  'white': 'pure seamless white (#FFFFFF)',
+  'warm-neutral': 'warm beige (#F5F0EB)',
+  'cool-neutral': 'cool gray (#EDF0F4)',
+  'ivory': 'warm ivory (#FFFFF0)',
+  'charcoal': 'deep charcoal gray (#36454F)',
+  'navy': 'deep navy (#2B3A4E)',
 };
 
 // ── Color world map (stored in backgroundTone) ──
