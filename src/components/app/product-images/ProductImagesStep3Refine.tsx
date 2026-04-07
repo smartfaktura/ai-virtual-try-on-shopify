@@ -1449,6 +1449,9 @@ export function ProductImagesStep3Refine({
   onSceneExtraRefsChange,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
+  const [uploadingSceneId, setUploadingSceneId] = useState<string | null>(null);
+  const extraRefInputRef = useRef<HTMLInputElement>(null);
+  const pendingSceneIdRef = useRef<string | null>(null);
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
