@@ -1851,6 +1851,56 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
+      {/* ── BACK VIEW REFERENCE ── */}
+      {hasBackViewScenes && (
+        <div className="space-y-3">
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold">Back view reference</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Some of your selected scenes show the back of your product. Upload a photo of the back for accurate results — otherwise, the AI will interpret the back design on its own.
+                  </p>
+                </div>
+              </div>
+
+              {details.backReferenceUrl ? (
+                <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
+                  <img src={details.backReferenceUrl} alt="Back view reference" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => update({ backReferenceUrl: undefined })}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => backRefInputRef.current?.click()}
+                  disabled={uploadingBackRef}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
+                >
+                  {uploadingBackRef ? (
+                    <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 text-primary/60" />
+                      <span className="text-xs text-primary/80 font-medium">Upload back view photo</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* ── COMPLETE SETUP ── */}
       {(scenesNeedingModel.length > 0 || bgScenes.length > 0) && (
         <div className="space-y-3">

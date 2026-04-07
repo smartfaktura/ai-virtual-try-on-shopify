@@ -43,7 +43,7 @@ const CATEGORIES = [
 const TRIGGER_BLOCKS = [
   'background', 'visualDirection', 'sceneEnvironment', 'personDetails',
   'actionDetails', 'detailFocus', 'angleSelection', 'packagingDetails',
-  'productSize', 'branding', 'layout',
+  'backView', 'productSize', 'branding', 'layout',
 ];
 
 const CAT_LABEL_MAP: Record<string, string> = {};

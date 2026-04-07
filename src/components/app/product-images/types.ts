@@ -318,6 +318,9 @@ export interface DetailSettings {
   referenceStrength?: string;
   packagingReferenceUrl?: string;
 
+  // Back view reference image (uploaded when backView trigger scenes are selected)
+  backReferenceUrl?: string;
+
   // Product size
   productSize?: string;
 
