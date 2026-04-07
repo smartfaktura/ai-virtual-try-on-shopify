@@ -1,56 +1,32 @@
 
 
-# Fix Stale Analysis Detection & Title-Based Category Fallback
+# Fix App Crash on Product Images Page
 
 ## Problem
-Products with outdated or missing analysis (no `version: 2` stamp) get misclassified (e.g., perfume classified as "other"), causing prompts to use wrong tokens and generate incorrect images.
+The app crashes with a full error overlay when interacting with the Product Images page (Step 1). The screenshot shows the error appearing while the "Outdated" badge and refresh button are visible on a product card.
 
-## Plan
+## Root Causes Identified
 
-### 1. Edge function: title-based category fallback
-**File: `supabase/functions/analyze-product-category/index.ts`**
+### 1. Nested `<button>` inside `<button>` (HTML spec violation)
+In the **grid view** (lines 827-836), a `<button>` (re-analyze) is nested inside another `<button>` (product selection card). This is invalid HTML and causes unpredictable behavior across browsers — React may throw during event delegation. The same issue exists in the **list view** (lines 775-784).
 
-After parsing the AI response and before stamping `version: 2`, add a post-processing step that checks the product title against known keyword patterns. If the AI returned `category: "other"` but the title clearly indicates a known category, override it:
+### 2. Potential null access in `product_type` filter
+Line 732: `p.product_type.toLowerCase()` — while the DB schema says `product_type: string`, products created via certain import paths might have empty strings that combine with other edge cases. This is lower risk but worth guarding.
 
-- `perfume|fragrance|eau de|cologne|parfum` → `fragrance`
-- `lipstick|mascara|foundation|concealer|blush|eyeshadow` → `makeup-lipsticks`
-- `serum|moisturizer|cream|cleanser|toner|sunscreen` → `beauty-skincare`
-- `bag|handbag|clutch|wallet|belt|scarf` → `bags-accessories`
-- `hat|cap|beanie` → `hats-small`
-- `shoe|sneaker|boot|sandal|heel` → `shoes`
-- `shirt|dress|jacket|pants|skirt|coat|hoodie|sweater` → `garments`
-- `candle|vase|pillow|lamp|decor` → `home-decor`
-- `phone|laptop|tablet|headphone|speaker|camera|watch` → `tech-devices`
-- `protein|vitamin|supplement|probiotic` → `supplements-wellness`
+## Fix Plan
 
-Also switch from tool-calling schema to plain JSON prompt (same pattern as the `analyze-trend-post` fix) to avoid Gemini 400 errors on the large branchy schema.
+### File: `src/pages/ProductImages.tsx`
 
-### 2. Hook: add `reAnalyzeProduct` method
-**File: `src/hooks/useProductAnalysis.ts`**
+**Fix 1 — Replace nested buttons with `<div>` click handlers**
+- In both grid and list views, change the inner re-analyze `<button>` to a `<div role="button" tabIndex={0}>` or move it **outside** the parent button entirely
+- Better approach: wrap the product card in a `<div>` instead of a `<button>`, use `onClick` on the div, and keep the re-analyze as a proper `<button>` inside it
+- Ensure `e.stopPropagation()` still prevents the parent click
 
-Add a new `reAnalyzeProduct(product: UserProduct)` callback that:
-- Marks the product as pending
-- Calls `analyze-product-category` edge function
-- Updates state and persists to DB
-- Returns the fresh analysis
+**Fix 2 — Guard product_type filter**
+- Change line 732 to: `(p.product_type || '').toLowerCase().includes(productSearch.toLowerCase())`
 
-Export it alongside existing methods.
+### Technical Detail
+The grid view card (line 809) is a `<button>` element. The re-analyze trigger (line 827) is also a `<button>`. Per HTML spec, interactive content cannot be nested inside other interactive content. React's synthetic event system can throw when this happens during reconciliation.
 
-### 3. Step 1 UI: stale badge + re-analyze button
-**File: `src/pages/ProductImages.tsx`**
-
-In both grid and list views of Step 1:
-- For selected products, check if `analysis_json` is missing or `version < 2`
-- Show a small amber "Outdated" badge on the product card
-- Add a small `RefreshCw` icon button (visible on selected + stale products) that calls `reAnalyzeProduct`
-- Show a spinner on the icon while re-analysis is in progress
-- Import `reAnalyzeProduct` from the hook alongside existing destructured values
-
-### 4. Auto re-analysis on Step 2 entry (already works)
-The existing `analyzeProducts` call on Step 2 already filters for `version === 2`, so stale products will automatically get re-analyzed. No change needed here.
-
-## Files to update
-- `supabase/functions/analyze-product-category/index.ts` — switch to JSON prompt + add title fallback
-- `src/hooks/useProductAnalysis.ts` — add `reAnalyzeProduct` method
-- `src/pages/ProductImages.tsx` — add stale badge + re-analyze button on Step 1 cards
+The fix changes the outer product card wrapper from `<button>` to `<div role="button" tabIndex={0} onKeyDown={...}` in both grid and list views, keeping proper accessibility while avoiding the nesting violation.
 
