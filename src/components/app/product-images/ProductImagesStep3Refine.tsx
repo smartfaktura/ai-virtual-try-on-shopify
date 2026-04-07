@@ -1181,27 +1181,26 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
     setSavedPresets(updated); savePresetsToStorage(updated);
   };
 
-  const PRESET_GRADIENT: Record<string, string> = {
-    'Studio Standard': 'bg-gradient-to-b from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900',
-    'Editorial': 'bg-gradient-to-b from-zinc-200 to-zinc-100 dark:from-zinc-700 dark:to-zinc-800',
-    'Minimal': 'bg-gradient-to-b from-stone-50 to-white dark:from-stone-800 dark:to-stone-900',
-    'Streetwear': 'bg-gradient-to-b from-neutral-200 to-neutral-100 dark:from-neutral-700 dark:to-neutral-800',
-    'Luxury Soft': 'bg-gradient-to-b from-amber-50 to-orange-50/30 dark:from-amber-900/40 dark:to-orange-900/20',
-  };
+  // Auto-select Studio Standard on mount if nothing set
+  useEffect(() => {
+    if (!details.outfitConfig && builtInPresets.length > 0) {
+      update({ outfitConfig: { ...builtInPresets[0].config } });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
-          const gradient = PRESET_GRADIENT[preset.name] || 'bg-muted/40';
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
-                className={cn('w-[130px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
-                  gradient,
-                  active ? 'border-primary ring-2 ring-primary/30 shadow-sm' : 'border-border/60 hover:border-primary/40')}>
-                <div className="px-3 py-3">
+                className={cn('w-[130px] text-left rounded-lg border transition-colors duration-150 cursor-pointer',
+                  active
+                    ? 'border-primary/30 bg-primary/8 ring-1 ring-primary/40'
+                    : 'border-border/40 bg-muted/30 hover:bg-muted/50 hover:border-border/60')}>
+                <div className="px-3 py-2.5">
                   <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
                 </div>
               </button>
@@ -1616,6 +1615,55 @@ export function ProductImagesStep3Refine({
             </Card>
           )}
 
+          {/* ── STYLE & OUTFIT (unified) — right after model ── */}
+          {hasPersonBlock && (
+            <Card className="border-none shadow-sm bg-secondary/5">
+              <CardContent className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold">Style & Outfit</h3>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
+                </div>
+
+                <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+
+                <Separator className="opacity-40" />
+
+                <div className="space-y-1">
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/customize">
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit</span>
+                      <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getOutfitSummary(details.outfitConfig) || 'Auto'}</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 pt-2 pb-1 pl-6">
+                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
+                      <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2 pb-1 pl-6">
+                        <InlinePersonDetails
+                          details={details}
+                          update={update}
+                          outfitAccessories={details.outfitConfig?.accessories}
+                          onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Background style card */}
           {bgScenes.length > 0 && (
             <Card>
@@ -1655,55 +1703,6 @@ export function ProductImagesStep3Refine({
 
           <Separator />
         </div>
-      )}
-
-      {/* ── STYLE & OUTFIT (unified) ── */}
-      {hasPersonBlock && (
-        <Card className="border-none shadow-sm bg-secondary/5">
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold">Style & Outfit</h3>
-              <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
-            </div>
-
-            <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-
-            <Separator className="opacity-40" />
-
-            <div className="space-y-1">
-              <Collapsible>
-                <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/customize">
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90 flex-shrink-0" />
-                  <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit</span>
-                  <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getOutfitSummary(details.outfitConfig)}</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="space-y-2 pt-2 pb-1 pl-6">
-                    <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              <Collapsible>
-                <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
-                  <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
-                  <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="pt-2 pb-1 pl-6">
-                    <InlinePersonDetails
-                      details={details}
-                      update={update}
-                      outfitAccessories={details.outfitConfig?.accessories}
-                      onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* ── ADDITIONAL NOTE ── */}
