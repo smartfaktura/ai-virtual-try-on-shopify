@@ -1607,9 +1607,9 @@ export function ProductImagesStep3Refine({
                   <p className="text-xs text-muted-foreground mt-0.5">Applies to {bgScenes.length} selected shot{bgScenes.length !== 1 ? 's' : ''}.</p>
                 </div>
                 {!details.backgroundTone && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/15 border border-amber-200/30 dark:border-amber-800/20">
-                    <Paintbrush className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                    <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Select a background color for your selected scenes</span>
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                    <Paintbrush className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                    <span className="text-[11px] text-primary/60 font-medium">Select a background color for your selected scenes</span>
                   </div>
                 )}
                 <BackgroundSwatchSelector
