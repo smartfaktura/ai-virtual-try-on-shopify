@@ -28,12 +28,36 @@ export default function AdminTrendWatch() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [pastedFile, setPastedFile] = useState<File | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [refreshingAll, setRefreshingAll] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
   const [activeTab, setActiveTab] = useState('feed');
+
+  // Global paste handler for images
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            setPastedFile(file);
+            setImageModalOpen(true);
+            toast.info('Image pasted — ready to analyze');
+            return;
+          }
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
 
   const activeAccounts = useMemo(() => {
     return (accounts || []).filter((a: any) => {
