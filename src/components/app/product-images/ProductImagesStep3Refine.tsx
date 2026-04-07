@@ -644,7 +644,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
           )}
         >
           {hasCustom && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch('custom'); }} />}
-          {hasCustom && <EditButton onClick={(e) => { e.stopPropagation(); colorInputRef.current?.click(); }} />}
+          {hasCustom && <EditButton onClick={(e) => { e.stopPropagation(); setPickerMode('solid'); setPickerOpen(true); }} />}
           {hasCustom && canSave && validCustomHex && (
             <SaveButton onClick={(e) => { e.stopPropagation(); onSaveColor(customHex); }} />
           )}
