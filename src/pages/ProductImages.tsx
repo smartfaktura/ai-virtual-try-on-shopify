@@ -56,7 +56,7 @@ export default function ProductImages() {
   const { user } = useAuth();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
-  const { analyses, isAnalyzing, analyzeProducts } = useProductAnalysis();
+  const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds } = useProductAnalysis();
   const { allScenes } = useProductImageScenes();
 
   const INITIAL_DETAILS: DetailSettings = {
