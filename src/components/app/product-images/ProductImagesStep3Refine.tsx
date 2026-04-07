@@ -1199,20 +1199,18 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2.5">
+      <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
-          const description = PRESET_DESCRIPTIONS[preset.name] || '';
           const accent = PRESET_ACCENT[preset.name] || 'bg-muted-foreground/15';
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
-                className={cn('w-[170px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
+                className={cn('w-[130px] text-left rounded-xl border transition-all cursor-pointer overflow-hidden',
                   active ? 'bg-primary/10 border-primary ring-2 ring-primary/30 shadow-sm' : 'bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/60')}>
                 <div className={cn('h-[3px] w-full', accent)} />
-                <div className="p-3.5">
+                <div className="px-3 py-2.5">
                   <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
-                  {description && <span className="text-[10px] text-muted-foreground leading-snug mt-0.5 block">{description}</span>}
                 </div>
               </button>
               {!preset.isBuiltIn && (
@@ -1234,7 +1232,7 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
           </div>
         ) : (
           <button type="button" onClick={() => setShowSave(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
             <Plus className="w-3.5 h-3.5" />Save
           </button>
         )}
