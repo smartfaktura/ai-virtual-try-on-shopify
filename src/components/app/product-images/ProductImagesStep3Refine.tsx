@@ -110,9 +110,26 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
           <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
         </div>
         {filteredUser.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <div className="flex flex-wrap gap-3">
             {filteredUser.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+              <button
+                key={m.modelId}
+                type="button"
+                onClick={() => onSelect(m.modelId)}
+                className={cn(
+                  'flex flex-col items-center gap-1.5 group focus-visible:outline-none',
+                )}
+              >
+                <div className={cn(
+                  'w-12 h-12 rounded-full overflow-hidden transition-all border-2',
+                  selectedModelId === m.modelId
+                    ? 'border-primary ring-2 ring-primary/30 shadow-md'
+                    : 'border-border hover:border-primary/40',
+                )}>
+                  <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover object-top" />
+                </div>
+                <span className={cn('text-[10px] font-medium max-w-[56px] truncate', selectedModelId === m.modelId ? 'text-primary' : 'text-muted-foreground')}>{m.name}</span>
+              </button>
             ))}
           </div>
         ) : (
@@ -137,9 +154,24 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
       {filteredGlobal.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <div className="flex flex-wrap gap-3">
             {inlineModels.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+              <button
+                key={m.modelId}
+                type="button"
+                onClick={() => onSelect(m.modelId)}
+                className="flex flex-col items-center gap-1.5 group focus-visible:outline-none"
+              >
+                <div className={cn(
+                  'w-12 h-12 rounded-full overflow-hidden transition-all border-2',
+                  selectedModelId === m.modelId
+                    ? 'border-primary ring-2 ring-primary/30 shadow-md'
+                    : 'border-border hover:border-primary/40',
+                )}>
+                  <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover object-top" />
+                </div>
+                <span className={cn('text-[10px] font-medium max-w-[56px] truncate', selectedModelId === m.modelId ? 'text-primary' : 'text-muted-foreground')}>{m.name}</span>
+              </button>
             ))}
           </div>
           {filteredGlobal.length > INLINE_LIMIT && (
@@ -1578,13 +1610,6 @@ export function ProductImagesStep3Refine({
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <div className="flex -space-x-1.5">
-                        <div className="w-5 h-5 rounded-full bg-primary/20 border-2 border-card flex items-center justify-center">
-                          <Users className="w-2.5 h-2.5 text-primary" />
-                        </div>
-                        <div className="w-5 h-5 rounded-full bg-primary/15 border-2 border-card" />
-                        <div className="w-5 h-5 rounded-full bg-primary/10 border-2 border-card" />
-                      </div>
                       <span className="text-sm font-semibold">Choose model</span>
                       {details.selectedModelId && (
                         <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
@@ -1646,34 +1671,24 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── STYLE DIRECTION ── */}
-      {hasPersonBlock && (
-        <div className="space-y-3">
-          <div>
-            <span className="text-sm font-semibold">Style direction</span>
-            <p className="text-xs text-muted-foreground mt-0.5">Choose the overall look for applicable shots.</p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs text-muted-foreground">Locked across all on-model scenes.</span>
-            </div>
-            <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-          </div>
-
-          <Separator />
-        </div>
-      )}
-
-      {/* ── OUTFIT & MODEL STYLING (unified section) ── */}
+      {/* ── STYLE & APPEARANCE (unified section) ── */}
       {hasPersonBlock && (
         <Card className="border-none shadow-sm bg-secondary/5">
           <CardContent className="p-5 space-y-5">
             <div>
-              <h3 className="text-sm font-semibold">Outfit & Model styling</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Fine-tune outfit pieces, appearance, and accessories.</p>
+              <h3 className="text-sm font-semibold">Style & Appearance</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Choose the overall look and fine-tune styling details.</p>
             </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] text-muted-foreground">Presets · Locked across all on-model scenes</span>
+              </div>
+              <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+            </div>
+
+            <Separator className="opacity-50" />
 
             <Collapsible>
               <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/customize">
