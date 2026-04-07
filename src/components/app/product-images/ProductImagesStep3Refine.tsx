@@ -1445,6 +1445,8 @@ export function ProductImagesStep3Refine({
   selectedProductIds = new Set(),
   hasMultipleCategories = false,
   primaryCategory,
+  sceneExtraRefs = {},
+  onSceneExtraRefsChange,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
