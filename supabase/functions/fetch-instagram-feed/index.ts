@@ -1,6 +1,25 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
+const isVideo = (p: any) => p.is_video || p.video_versions?.length > 0 || p.__typename === 'GraphVideo';
+
+function extractPosts(postsData: any): any[] {
+  if (postsData?.result?.edges) return postsData.result.edges.map((e: any) => e.node || e);
+  if (Array.isArray(postsData)) return postsData;
+  if (postsData?.data?.edges) return postsData.data.edges.map((e: any) => e.node || e);
+  if (postsData?.data?.items) return postsData.data.items;
+  if (postsData?.items) return postsData.items;
+  if (postsData?.data && Array.isArray(postsData.data)) return postsData.data;
+  return [];
+}
+
+function extractCursor(postsData: any): string {
+  return postsData?.result?.page_info?.end_cursor
+    || postsData?.data?.page_info?.end_cursor
+    || postsData?.paging?.cursors?.after
+    || "";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -19,7 +38,6 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
-    // Verify admin
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await createClient(
       supabaseUrl,
@@ -63,51 +81,53 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update sync status to pending
     await supabaseAdmin
       .from("watch_accounts")
       .update({ sync_status: "pending" })
       .eq("id", account_id);
 
     try {
-      // Call RapidAPI Instagram scraper for posts
-      const postsResponse = await fetch(
-        "https://instagram120.p.rapidapi.com/api/instagram/posts",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-rapidapi-host": "instagram120.p.rapidapi.com",
-            "x-rapidapi-key": rapidApiKey,
-          },
-          body: JSON.stringify({ username, maxId: "" }),
+      // Paginate up to 3 pages to collect 12 image posts after filtering videos
+      let allPosts: any[] = [];
+      let maxId = "";
+      const MAX_PAGES = 3;
+
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const postsResponse = await fetch(
+          "https://instagram120.p.rapidapi.com/api/instagram/posts",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-rapidapi-host": "instagram120.p.rapidapi.com",
+              "x-rapidapi-key": rapidApiKey,
+            },
+            body: JSON.stringify({ username, maxId }),
+          }
+        );
+
+        if (!postsResponse.ok) {
+          throw new Error(`RapidAPI returned ${postsResponse.status}`);
         }
-      );
 
-      if (!postsResponse.ok) {
-        throw new Error(`RapidAPI returned ${postsResponse.status}`);
+        const postsData = await postsResponse.json();
+        const pagePosts = extractPosts(postsData);
+
+        if (pagePosts.length === 0) break;
+
+        allPosts.push(...pagePosts);
+
+        // Check if we have enough image posts
+        const imageOnly = allPosts.filter((p: any) => !isVideo(p));
+        if (imageOnly.length >= 12) break;
+
+        // Get cursor for next page
+        maxId = extractCursor(postsData);
+        if (!maxId) break;
       }
 
-      const postsData = await postsResponse.json();
-
-      // RapidAPI response structure: { result: { edges: [{ node: {...} }] } }
-      let posts: any[] = [];
-      if (postsData?.result?.edges) {
-        posts = postsData.result.edges.map((e: any) => e.node || e);
-      } else if (Array.isArray(postsData)) {
-        posts = postsData;
-      } else if (postsData?.data?.edges) {
-        posts = postsData.data.edges.map((e: any) => e.node || e);
-      } else if (postsData?.data?.items) {
-        posts = postsData.data.items;
-      } else if (postsData?.items) {
-        posts = postsData.items;
-      } else if (postsData?.data && Array.isArray(postsData.data)) {
-        posts = postsData.data;
-      }
-
-      // Filter out videos
-      posts = posts.filter((p: any) => !p.is_video && !p.video_versions?.length && p.__typename !== 'GraphVideo');
+      // Filter out videos and take 12
+      let posts = allPosts.filter((p: any) => !isVideo(p));
 
       // Delete old posts for this account
       await supabaseAdmin
@@ -117,7 +137,6 @@ Deno.serve(async (req) => {
 
       // Map and insert new posts (max 12)
       const postRows = posts.slice(0, 12).map((p: any) => {
-        // Handle various RapidAPI response field names
         const shortcode = p.code || p.shortcode || p.shortCode || "";
         const imageUrl = p.image_versions2?.candidates?.[0]?.url 
           || p.display_url || p.thumbnail_src || p.url || p.imageUrl || p.media_url || null;
@@ -130,13 +149,12 @@ Deno.serve(async (req) => {
           : null;
         const likes = p.like_count ?? p.edge_media_preview_like?.count ?? p.likesCount ?? p.likes ?? 0;
         const comments = p.comment_count ?? p.edge_media_to_comment?.count ?? p.commentsCount ?? p.comments ?? 0;
-        const isVideo = p.is_video || p.video_versions?.length > 0;
-        const mediaType = isVideo ? "video" : (p.media_type || p.type || "image");
+        const mediaType = "image";
 
         return {
           watch_account_id: account_id,
           instagram_post_id: p.id || shortcode || null,
-          media_type: typeof mediaType === "string" ? mediaType.toLowerCase() : "image",
+          media_type: mediaType,
           media_url: imageUrl,
           thumbnail_url: p.thumbnail_src || imageUrl,
           caption: (typeof caption === "string" ? caption : "").slice(0, 2000),
@@ -152,15 +170,14 @@ Deno.serve(async (req) => {
         await supabaseAdmin.from("watch_posts").insert(postRows);
       }
 
-      // Try to get profile image from the posts owner data or a separate call
+      // Try to get profile image
       let profileImg: string | null = null;
-      if (posts[0]?.owner?.profile_pic_url) {
-        profileImg = posts[0].owner.profile_pic_url;
-      } else if (posts[0]?.user?.profile_pic_url) {
-        profileImg = posts[0].user.profile_pic_url;
+      if (allPosts[0]?.owner?.profile_pic_url) {
+        profileImg = allPosts[0].owner.profile_pic_url;
+      } else if (allPosts[0]?.user?.profile_pic_url) {
+        profileImg = allPosts[0].user.profile_pic_url;
       }
 
-      // If no profile image from posts, try the profile endpoint
       if (!profileImg) {
         try {
           const profileResponse = await fetch(
@@ -184,11 +201,10 @@ Deno.serve(async (req) => {
               || null;
           }
         } catch {
-          // Profile fetch is optional, continue without it
+          // Profile fetch is optional
         }
       }
 
-      // Update account
       await supabaseAdmin
         .from("watch_accounts")
         .update({
