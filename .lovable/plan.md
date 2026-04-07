@@ -1,10 +1,17 @@
 
 
-# Pre-select "API (RapidAPI)" as Default Source Mode
+# Fix: Generate Prompt loading state affects all cards
 
-## Change
-In `AddAccountModal.tsx`, change the default value of `sourceMode` from `'manual'` to `'official_api'`, and update the reset in the `useEffect` to also default to `'official_api'` when not editing.
+## Problem
+`generatePrompts.isPending` from the shared `useMutation` is passed to every `DraftSceneCard`. When one card's button is clicked, all cards show the spinner and become disabled.
+
+## Fix
+Track which recipe ID is currently generating using local state in `DraftScenesPanel`:
+
+1. Add `const [generatingId, setGeneratingId] = useState<string | null>(null)` in `DraftScenesPanel`
+2. Wrap the `generatePrompts.mutate` call to set/clear `generatingId`
+3. Pass `isGenerating={generatingId === recipe.id}` instead of `generatePrompts.isPending`
 
 ## File
-- `src/components/app/trend-watch/AddAccountModal.tsx` — two lines: initial `useState` and the `else` branch in `useEffect`
+- `src/components/app/trend-watch/DraftScenesPanel.tsx` — add state tracking, update props
 
