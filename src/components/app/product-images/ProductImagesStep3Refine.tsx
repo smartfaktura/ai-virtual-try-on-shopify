@@ -1401,13 +1401,6 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
-  const [outfitOpen, setOutfitOpen] = useState(needsModel || hasPersonBlock);
-  const outfitRef = useRef<HTMLDivElement>(null);
-
-  const scrollToOutfit = useCallback(() => {
-    setOutfitOpen(true);
-    setTimeout(() => outfitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-  }, []);
 
   // Check if a scene has actionDetails controls (the only expandable block now)
   const sceneHasActionControls = (scene: ProductImageScene) => {
