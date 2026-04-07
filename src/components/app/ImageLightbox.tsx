@@ -52,6 +52,13 @@ export function ImageLightbox({
 
   useEffect(() => {
     if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') handlePrevious();
       else if (e.key === 'ArrowRight') handleNext();
