@@ -1666,50 +1666,57 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── OPTIONAL SECTION ── */}
+      {/* ── OUTFIT & MODEL STYLING (unified section) ── */}
+      {hasPersonBlock && (
+        <Card className="border-none shadow-sm bg-secondary/5">
+          <CardContent className="p-5 space-y-5">
+            <div>
+              <h3 className="text-sm font-semibold">Outfit & Model styling</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Fine-tune outfit pieces, appearance, and accessories.</p>
+            </div>
+
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/customize">
+                <div className="flex items-center gap-2">
+                  <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit details</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-2 pt-3 pb-1">
+                  <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <Separator className="opacity-50" />
+
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/appear">
+                <div className="flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pt-3 pb-1">
+                  <InlinePersonDetails
+                    details={details}
+                    update={update}
+                    outfitAccessories={details.outfitConfig?.accessories}
+                    onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── ADDITIONAL NOTE ── */}
       <div className="space-y-3">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Optional</span>
-
-        {/* Outfit details */}
-        {hasPersonBlock && (
-          <Collapsible>
-            <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/customize">
-              <div className="flex items-center gap-2">
-                <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit details</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="space-y-2 pt-3 pb-1">
-                <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-
-        {/* Model styling */}
-        {hasPersonBlock && (
-          <Collapsible>
-            <CollapsibleTrigger className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group/appear">
-              <div className="flex items-center gap-2">
-                <User className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Model styling</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="pt-3 pb-1">
-                <InlinePersonDetails
-                  details={details}
-                  update={update}
-                  outfitAccessories={details.outfitConfig?.accessories}
-                  onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
 
         {/* Additional note */}
         <Card>
