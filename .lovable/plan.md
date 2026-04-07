@@ -1,26 +1,32 @@
 
 
-# Fix Lightbox & Add Download Buttons to Product Images Results
+# Remove 20-Job Cap & Auto-Refill Queue
 
-## Problems
-1. **Lightbox has no download button** — `Step6Results` opens the lightbox without passing `onDownload`, so the action bar is empty
-2. **White bar at top of lightbox** — the `ShimmerImage` wrapper uses `w-full h-full` which can cause the image container to stretch beyond the viewport, pushing a white gap at the top. The lightbox also needs `overflow-hidden` on the body to prevent page scroll bleed
-3. **No per-image download on the grid** — users must open lightbox or use "Download All" to get a single image
+## Problem
+The `process-queue` dispatcher has a hard `MAX_CONCURRENT_JOBS = 20` cap. When a batch exceeds 20 images, the dispatcher exits after dispatching 20 jobs and nothing reliably wakes it again — causing the remaining jobs to sit `queued` indefinitely until a manual retry signal arrives.
+
+Additionally, `ProductImages.tsx` never calls `retry-queue` during polling (unlike the Catalog flow), so there's no client-side safety net either.
+
+## Why the cap isn't needed
+The cap was meant to prevent overwhelming the AI gateway. But since each job is **fire-and-forget** (dispatched via fetch, not awaited), the dispatcher itself finishes in seconds regardless of how many jobs it dispatches. The AI gateway and edge function runtime handle their own concurrency. The 1-second stagger between dispatches already prevents thundering herd. A 42-job batch just means ~42 seconds of dispatching time, well within the 25-second runtime (which we'll extend slightly).
 
 ## Changes
 
-### File: `src/components/app/product-images/ProductImagesStep6Results.tsx`
+### 1. `supabase/functions/process-queue/index.ts`
+- **Remove `MAX_CONCURRENT_JOBS`** and the active-job count check (lines 62, 94-103)
+- **Extend `MAX_RUNTIME_MS`** from 25s to 55s so a single invocation can dispatch up to ~55 jobs (one per second)
+- **Move lock release to `finally`** block so it's always released even on errors
+- Keep the 1-second stagger — that's a good rate limiter on its own
 
-1. **Wire `onDownload` into the lightbox** — import `saveOrShareImage` from `mobileImageSave.ts` and pass an `onDownload` handler that downloads the current image
-2. **Add a download icon overlay to each grid card** — small `Download` icon button in the bottom-right corner of each thumbnail, visible on hover (always visible on mobile). Clicking it downloads that single image without opening the lightbox (use `e.stopPropagation()` to prevent lightbox open)
+### 2. `src/pages/ProductImages.tsx`
+- **Add a re-wake loop** during Step 5 polling: if any jobs still have `status = 'queued'`, call `retry-queue` every 30 seconds (throttled) as a safety net — matching what Catalog already does
+- This ensures that even if the dispatcher finishes before all jobs are dispatched, the client nudges it again
 
-### File: `src/components/app/ImageLightbox.tsx`
+### 3. `src/components/app/product-images/ProductImagesStep5Generating.tsx`
+- **Fix the static "About 2 minutes" copy** — compute a dynamic estimate based on `effectiveTotal` (range: `ceil(total×10/60)` to `ceil(total×15/60)` minutes)
 
-3. **Fix the white bar / overflow issue** — add `useEffect` that sets `document.body.style.overflow = 'hidden'` when open, restores on close. This prevents the page behind from scrolling and creating visual artifacts
-4. **Constrain the image wrapper** — add `overflow-hidden` to the main content container so the ShimmerImage wrapper doesn't bleed outside the max-height bounds
-
-## What stays unchanged
-- All existing lightbox props and action bar logic
-- Download All zip functionality
-- Grid layout and scene name labels
+## Files
+- `supabase/functions/process-queue/index.ts` — remove cap, extend runtime, harden lock release
+- `src/pages/ProductImages.tsx` — add throttled re-wake during polling
+- `src/components/app/product-images/ProductImagesStep5Generating.tsx` — dynamic time estimate
 
