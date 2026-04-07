@@ -31,7 +31,7 @@ import type { ModelProfile } from '@/types';
    Model Picker with Brand / Library sections
    ══════════════════════════════════════════════ */
 
-function ModelPickerSections({ userModels, globalModels, selectedModelId, onSelect }: {
+function ModelPickerSections({ userModels, globalModels, selectedModelId, onSelect, previewImages }: {
   userModels: ModelProfile[];
   globalModels: ModelProfile[];
   selectedModelId?: string;
