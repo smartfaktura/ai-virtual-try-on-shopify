@@ -62,6 +62,18 @@ export default function AdminTrendWatch() {
     }
   };
 
+  const handleRefreshAll = async () => {
+    const active = (accounts || []).filter((a: any) => a.is_active);
+    if (active.length === 0) return;
+    setRefreshingAll(true);
+    for (const a of active) {
+      setSyncingId(a.id);
+      try { await syncAccount.mutateAsync({ id: a.id, username: a.username }); } catch {}
+    }
+    setSyncingId(null);
+    setRefreshingAll(false);
+  };
+
   const handleDeactivate = (id: string) => {
     const account = accounts.find((a: any) => a.id === id);
     updateAccount.mutate({ id, is_active: !account?.is_active });
