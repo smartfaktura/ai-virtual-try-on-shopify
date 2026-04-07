@@ -103,7 +103,7 @@ export default function AdminTrendWatch() {
     }
   };
 
-
+  const handleRefreshAll = async () => {
     const STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
     const now = Date.now();
     const active = (accounts || []).filter((a: any) => a.is_active);
