@@ -1,42 +1,26 @@
 
 
-# Add Image Paste/Upload + Show Prompt in Draft Scenes
+# Fix "Edit Account" for Trend Watch
 
-## What we're building
-
-1. **Paste/upload any image** directly on the Trend Watch page to create a draft scene (without needing an Instagram account). The image gets analyzed by the same `analyze-trend-post` edge function, then auto-creates a `scene_recipe`.
-
-2. **Show full prompt** by default on Draft Scene cards (fetching from `prompt_outputs` if a prompt has been generated).
+## Problem
+The "Edit Account" menu item does nothing — the `onEdit` handler is `() => {}`. The `AddAccountModal` also has no edit mode, so there's no way to change a category or other fields after adding an account.
 
 ## Changes
 
-### 1. Add "Add Image" button + paste handler to `AdminTrendWatch.tsx`
-- Add an "Add from Image" button next to "Add Account" in the feed toolbar (also visible in drafts tab)
-- Add a global `paste` event listener on the page so admins can Ctrl+V any image
-- When an image is pasted or selected via file picker:
-  1. Upload to `scratch-uploads` bucket
-  2. Create a temporary `watch_posts` row with `source: 'manual_upload'` (or use the existing manual post flow)
-  3. Call `analyze-trend-post` with the post ID
-  4. On success, auto-create the `scene_recipe` from analysis and switch to Drafts tab
-- Show a small modal/dialog for the paste/upload flow with a preview and "Analyze & Create Draft" button
+### 1. Update `AddAccountModal` to support edit mode
+- Add optional `editingAccount` prop with existing account data
+- When provided, pre-fill all fields (display name, username, category, source mode, profile URL)
+- Change dialog title to "Edit Account" and button text to "Save Changes"
+- Add an `onUpdate` callback prop that receives `{ id, ...fields }` and calls a Supabase update on `watch_accounts`
 
-### 2. New component: `AddImageDraftModal.tsx`
-- File input + paste zone (drag & drop optional)
-- Shows image preview
-- "Analyze & Create Draft Scene" button
-- Flow: upload image → create watch_post → analyze → create scene_recipe → close modal, switch to drafts tab
-- Uses existing `useReferenceAnalysis` hook for the analyze call
+### 2. Wire up edit flow in `AdminTrendWatch.tsx`
+- Add `editingAccount` state (`useState<any>(null)`)
+- When `onEdit(account)` is called, set `editingAccount` to that account and open the modal
+- Pass `editingAccount` to `AddAccountModal`
+- Add an `updateAccount` mutation that does `supabase.from('watch_accounts').update({...}).eq('id', id)` and invalidates queries
+- When the modal closes, clear `editingAccount`
 
-### 3. Update `DraftScenesPanel.tsx` — show prompt by default
-- For each draft card, fetch `prompt_outputs` using `usePromptOutputs(recipe.id)`
-- If a prompt exists, show it in a `bg-muted` text block below the image (not collapsed, shown by default)
-- If no prompt yet, show the `short_description` as before with the "Generate Prompt" button
-
-### 4. Update `analyze-trend-post/index.ts` 
-- The function already accepts a `watch_post_id` and reads the image from `media_url`. No changes needed as long as we create the `watch_posts` row with a valid `media_url` pointing to the uploaded image.
-
-## Files to modify/create
-- `src/components/app/trend-watch/AddImageDraftModal.tsx` — new modal for paste/upload image
-- `src/components/app/trend-watch/DraftScenesPanel.tsx` — add prompt display per card
-- `src/pages/AdminTrendWatch.tsx` — add paste listener, "Add Image" button, modal state
+## Files to modify
+- `src/components/app/trend-watch/AddAccountModal.tsx` — add edit mode with pre-filled fields
+- `src/pages/AdminTrendWatch.tsx` — wire `onEdit`, add update mutation, pass editing state to modal
 
