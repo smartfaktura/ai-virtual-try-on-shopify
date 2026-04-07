@@ -1468,6 +1468,37 @@ export function ProductImagesStep3Refine({
   );
   const needsModel = scenesNeedingModel.length > 0 && !details.selectedModelId;
 
+  // Packaging scenes detection
+  const hasPackagingScenes = useMemo(() =>
+    selectedScenes.some(s => (s.triggerBlocks || []).includes('packagingDetails')),
+    [selectedScenes]
+  );
+  const [uploadingPackagingRef, setUploadingPackagingRef] = useState(false);
+  const packagingRefInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePackagingRefUpload = useCallback(async (file: File) => {
+    setUploadingPackagingRef(true);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `packaging-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(data.path);
+      update({ packagingReferenceUrl: urlData.publicUrl });
+    } catch (e: any) {
+      const { toast } = await import('@/lib/brandedToast');
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingPackagingRef(false);
+    }
+  }, [update]);
+
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
 
