@@ -1,43 +1,73 @@
 
 
-# Add Global "Back Reference Image" Upload via `backView` Trigger Block
+# Refined Generation Loading State — Clean & Minimal
 
-## What this does
-Adds a new `backView` trigger block option in the admin panel and a global "Back Reference Image" upload card in Step 3 (like the existing Packaging Reference). When any selected scene has the `backView` trigger, users see a prompt to upload a photo of the product's back/rear view. This image is sent as `extra_reference_image_url` to the generation pipeline for all `backView` scenes.
+## Design Direction
+Aligned with the VOVV.AI luxury-restraint aesthetic: no glows, no pulsing rings, no gradients. Instead — clean typography, elegant spacing, a refined progress bar with a subtle shimmer, and smooth crossfade transitions for team messages.
+
+## Layout (ASCII)
+
+```text
+┌──────────────────────────────────────┐
+│                                      │
+│      Generating your visuals         │
+│      3 of 8 images completed         │
+│                                      │
+│   ━━━━━━━━━━━━━━━░░░░░░░  38%       │
+│   ⏱ 0m 24s                          │
+│                                      │
+│   (avatar) Sophia — Setting up       │
+│   your scene lighting...             │
+│                                      │
+│   ✓ Product A    ⟳ Product B        │
+│                                      │
+│   ~ 2 min remaining · safe to leave  │
+└──────────────────────────────────────┘
+```
 
 ## Changes
 
-### 1. Add `backView` to admin trigger blocks list
-**File: `src/pages/AdminProductImageScenes.tsx`**
-- Add `'backView'` to the `TRIGGER_BLOCKS` array so admins can assign it to scenes (e.g., "Back View" scene)
+### 1. Remove the Loader2 spinner entirely
+**File: `ProductImagesStep5Generating.tsx`**
+- Delete the `<Loader2 className="w-12 h-12 animate-spin">` block (lines 123-126)
+- The progress bar and completion counter already communicate activity — no spinner needed
+- This declutters the top and lets the headline breathe
 
-### 2. Add `backReferenceUrl` to `DetailSettings` type
-**File: `src/components/app/product-images/types.ts`**
-- Add `backReferenceUrl?: string` to `DetailSettings` (alongside existing `packagingReferenceUrl`)
+### 2. Remove the Card wrapper from the progress bar
+- Replace the `<Card>/<CardContent>` wrapper (lines 145-156) with a plain `<div className="w-full max-w-md space-y-3">`
+- Keeps progress bar + timer/percentage row, just without the bordered card chrome
+- Cleaner, more editorial
 
-### 3. Add global "Back Reference Image" card in Step 3
-**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
-- Detect `hasBackViewScenes` — any selected scene with `backView` trigger
-- Add upload state/refs (same pattern as packaging reference)
-- Render a card right after the packaging reference section:
-  - Icon: `RotateCcw` (already imported)
-  - Title: "Back view reference"
-  - Description: "Some of your selected scenes show the back of your product. Upload a photo of the back for accurate results — otherwise, the AI will interpret the back design on its own."
-  - Upload button / thumbnail preview with remove (identical UX to packaging card)
-- Upload to `product-uploads` bucket under `back-refs/` path
-- Call `update({ backReferenceUrl: url })`
+### 3. Add shimmer animation to the Progress bar indicator
+**File: `src/components/ui/progress.tsx`**
+- Add a shimmer overlay via a pseudo-element or extra class on the indicator
+- Use the existing `shimmer` keyframe from tailwind config (`backgroundPosition` shift)
+- Apply as: `bg-primary relative overflow-hidden` with an `after:` pseudo that sweeps a subtle white highlight across
 
-### 4. Wire `backReferenceUrl` into the generation payload
-**File: `src/pages/ProductImages.tsx`**
-- In the generation loop (line ~404), for scenes with `backView` trigger, inject `extra_reference_image_url: details.backReferenceUrl` (only when the scene has `backView` trigger and no per-scene extra ref already set)
-- This uses the existing `extra_reference_image_url` field already handled by the edge function as `[PRODUCT EXTRA ANGLE]`
+### 4. Smooth crossfade on team message rotation
+**File: `ProductImagesStep5Generating.tsx`**
+- Track a `visible` state that toggles to false 400ms before each message swap
+- Apply `transition-all duration-400` with opacity 0/1 and a slight translateY shift
+- Remove the italic style — use regular weight, slightly larger (`text-sm` instead of `text-xs`)
+- Remove the `pl-0.5` — center the avatar + message row
+
+### 5. Update the bottom copy (dynamic + accurate)
+Replace lines 221-223 with:
+- **Batch (2+ images):** `"About 2 minutes for your batch. Safe to leave — results appear in your library."`
+- **Single image:** `"Usually under a minute. Safe to leave — results appear in your library."`
+- Lighter tone: `text-xs text-muted-foreground/70` for even more subtlety
+
+### 6. Refine the per-product rows
+- Remove the Card wrapper from per-product progress (lines 159-177) — use a plain div with a top border separator instead
+- Slightly increase row height for breathing room
 
 ## Files to modify
-- `src/pages/AdminProductImageScenes.tsx` — add `'backView'` to `TRIGGER_BLOCKS`
-- `src/components/app/product-images/types.ts` — add `backReferenceUrl` to `DetailSettings`
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — detection + upload card UI
-- `src/pages/ProductImages.tsx` — inject `backReferenceUrl` as `extra_reference_image_url` for `backView` scenes
+- `src/components/app/product-images/ProductImagesStep5Generating.tsx` — layout, copy, crossfade, remove spinner + card wrappers
+- `src/components/ui/progress.tsx` — add shimmer sweep to indicator
 
-## No edge function changes needed
-The existing `extra_reference_image_url` → `[PRODUCT EXTRA ANGLE]` pipeline already handles this correctly.
+## What stays unchanged
+- All progress calculation logic, phase detection, time floor
+- Team data and rotation interval (6s)
+- Skip/View results button logic and thresholds
+- Slow warning + failed jobs summary
 
