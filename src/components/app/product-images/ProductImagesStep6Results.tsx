@@ -19,7 +19,7 @@ interface ResultImage {
 }
 
 interface Step6Props {
-  results: Map<string, { images: ResultImage[]; productName: string }>;
+  results: Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>;
   onGenerateMore: () => void;
   onGoToLibrary: () => void;
 }
