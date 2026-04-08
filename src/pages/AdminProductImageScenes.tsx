@@ -273,6 +273,8 @@ export default function AdminProductImageScenes() {
       toast.error(e.message);
     }
   };
+
+  if (!isAdmin) {
     return <div className="p-8 text-center text-muted-foreground">Admin access required</div>;
   }
 
