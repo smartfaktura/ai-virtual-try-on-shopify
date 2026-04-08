@@ -163,7 +163,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
-          onDownload={(idx) => handleSingleDownload(lightboxImages[idx], `image_${idx + 1}`)}
+          onDownload={(idx) => handleSingleDownload(lightboxImages[idx], lightboxProductName, lightboxSceneNames[idx] || `image_${idx + 1}`)}
         />
       )}
     </div>
