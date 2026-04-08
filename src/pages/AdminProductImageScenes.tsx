@@ -66,6 +66,7 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     sub_category: null,
     category_sort_order: 0,
     requires_extra_reference: false,
+    sub_category_sort_order: 0,
   };
 }
 
