@@ -216,9 +216,10 @@ export function ProductImagesStep3Settings({
   const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null); // null = all scenes
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
 
-  const globalRatio = details.aspectRatio || '1:1';
+  const globalRatios = details.selectedAspectRatios || [details.aspectRatio || '1:1'];
+  const globalRatio = globalRatios[0] || '1:1';
   const overrides = details.sceneAspectOverrides || {};
-  const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
+  const hasOverrides = Object.keys(overrides).length > 0;
   const sceneProps = details.sceneProps || {};
   const hasAnyProps = Object.values(sceneProps).some(arr => arr.length > 0);
   const propSceneCount = Object.values(sceneProps).filter(arr => arr.length > 0).length;
@@ -233,14 +234,16 @@ export function ProductImagesStep3Settings({
   const totalImages = productCount * sceneCount * imgCount;
   const totalCredits = totalImages * costPerImage;
 
-  const handleSceneRatioChange = (sceneId: string, ratio: string) => {
+  const handleSceneRatioChange = (sceneId: string, ratios: string[]) => {
     const next = { ...overrides };
-    if (ratio === globalRatio) { delete next[sceneId]; } else { next[sceneId] = ratio; }
+    // If ratios match global, remove override
+    const sameAsGlobal = ratios.length === globalRatios.length && ratios.every(r => globalRatios.includes(r));
+    if (sameAsGlobal) { delete next[sceneId]; } else { next[sceneId] = ratios; }
     update({ sceneAspectOverrides: next });
   };
 
   const resetAllOverrides = () => update({ sceneAspectOverrides: {} });
-  const overrideCount = Object.values(overrides).filter(v => v !== globalRatio).length;
+  const overrideCount = Object.keys(overrides).length;
 
   /* ── Prop handlers ── */
   const openPropModal = (sceneId: string | null) => {
