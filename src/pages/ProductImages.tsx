@@ -497,18 +497,18 @@ export default function ProductImages() {
     startPolling(newJobMap);
   }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
-  const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string; sceneId?: string }>) => {
-    const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string }>; productName: string }>();
+  const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string; sceneId?: string; aspectRatio?: string }>) => {
+    const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>();
     for (const job of jobs) {
       if (job.status !== 'completed' || !job.result) continue;
       const meta = productMap.get(job.id) || { productId: 'unknown', sceneName: 'Scene' };
       const product = selectedProducts.find(p => p.id === meta.productId);
       const r = job.result as any;
-      const images: Array<{ url: string; sceneName: string; sceneId?: string }> = [];
+      const images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }> = [];
       if (Array.isArray(r.images)) {
         for (const img of r.images) {
           const url = typeof img === 'string' ? img : img?.url || img?.image_url;
-          if (url) images.push({ url, sceneName: meta.sceneName, sceneId: meta.sceneId });
+          if (url) images.push({ url, sceneName: meta.sceneName, sceneId: meta.sceneId, aspectRatio: meta.aspectRatio });
         }
       }
       if (images.length > 0) {
@@ -525,13 +525,15 @@ export default function ProductImages() {
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
-    const productMap = new Map<string, { productId: string; sceneName: string; sceneId?: string }>();
+    const productMap = new Map<string, { productId: string; sceneName: string; sceneId?: string; aspectRatio?: string }>();
     for (const [key, jobId] of activeJobMap.entries()) {
       const parts = key.split('_');
       const productId = parts[0];
       const sceneId = parts[1] || '';
+      const ratioRaw = parts[3] || '';
+      const aspectRatio = ratioRaw.startsWith('r') ? ratioRaw.slice(1).replace('-', ':') : undefined;
       const scene = selectedScenes.find(s => s.id === sceneId);
-      productMap.set(jobId, { productId, sceneName: scene?.title || 'Scene', sceneId: sceneId || undefined });
+      productMap.set(jobId, { productId, sceneName: scene?.title || 'Scene', sceneId: sceneId || undefined, aspectRatio });
     }
     pollingStartRef.current = Date.now();
     let lastWakeTime = 0;
