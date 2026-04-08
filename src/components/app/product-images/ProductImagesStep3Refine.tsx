@@ -442,9 +442,9 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'taupe', label: 'Taupe', fill: '#D6CFC7' },
   { value: 'sage', label: 'Sage', fill: '#E8EDE6' },
   { value: 'blush', label: 'Blush', fill: '#F8ECE8' },
-  { value: 'gradient', label: 'Soft Gradient', fill: 'linear-gradient(135deg, #F8F8F8, #EEEEEE)', isGradient: true },
-  { value: 'gradient-warm', label: 'Warm Fade', fill: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)', isGradient: true },
-  { value: 'gradient-cool', label: 'Cool Fade', fill: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)', isGradient: true },
+  { value: 'gradient', label: 'Navy Fade', fill: 'linear-gradient(135deg, #FFFFFF, #123668)', isGradient: true },
+  { value: 'gradient-warm', label: 'Terracotta', fill: 'linear-gradient(135deg, #984D1B, #FBEFE9)', isGradient: true },
+  { value: 'gradient-cool', label: 'Ocean', fill: 'linear-gradient(135deg, #1C6CA0, #C7E6F5)', isGradient: true },
 ];
 
 function BackgroundSwatchSelector({ value, onChange, details, update, savedColors, canSave, onSaveColor, onSaveGradient, onDeleteSavedColor }: {
