@@ -1,172 +1,92 @@
 
 
-# Prompt Audit: All Non-Fragrance Product Image Scenes
+# Prompt Audit Round 2: Remaining Issues in Non-Fragrance Scenes
 
-## Methodology
-I compared every non-fragrance prompt template against:
-1. The proven fragrance templates (the "gold standard")
-2. The prompt builder logic in `productImagePromptBuilder.ts` — how tokens are resolved, what gets auto-injected, and what doesn't
-3. The server-side generation flow — how `[PRODUCT IMAGE]` and `[MODEL IMAGE]` are handled
+## Audit Methodology
+Cross-referenced every scene's `prompt_template`, `scene_type`, and `trigger_blocks` against the prompt builder logic in `productImagePromptBuilder.ts` (lines 166-174 for camera map, 533-546 for camera resolution, 570-574 for negative prompt, 638-641 for person directive, 906-1005 for build flow).
 
-## Critical Systemic Issues (Affect Multiple Categories)
+## Issues Found
 
-### Issue 1: Missing `[PRODUCT IMAGE]` anchor on packshot scenes
-**Affected**: Front View, Angle View, Side View, Back View across ALL categories (bags, shoes, hats, home, tech, food, supplements, other)
-**Problem**: These scenes start with `{{productName}} photographed in...` but do NOT include `[PRODUCT IMAGE]`. The fragrance Front View also omits it, BUT fragrance products are more recognizable. For generic products like bags, shoes, tech — the AI has less to anchor to and may hallucinate designs.
-**Fix**: Add `[PRODUCT IMAGE]` at the start of all packshot templates to anchor the AI to the actual reference photo.
+### 1. Wrong `scene_type` on Low-Angle & Negative Space scenes (22 scenes)
+**All `low-angle-*` and `negative-space-*` scenes** have `scene_type: 'lifestyle'` which maps to `35mm f/4` lens (wide environmental). These are product-only studio shots — they should use `scene_type: 'packshot'` → `50mm f/8` for sharp, distortion-free product rendering.
 
-### Issue 2: Missing `trigger_blocks` on portrait/model scenes
-**Affected**: All scenes with `{{personDirective}}` and `[MODEL IMAGE]` references
-**Problem**: Many portrait scenes have `trigger_blocks: []` (empty) instead of `['personDetails']` or `['background', 'personDetails']`. The `personDirective` token only generates meaningful output when `personDetails` is in trigger_blocks (see line 639 of promptBuilder). Without it, `{{personDirective}}` resolves to an empty string, and the model/outfit system doesn't activate.
-**Scenes affected**:
-- `in-hand-studio-bags` — has `{{personDirective}}` but trigger_blocks is `[]`
-- `in-hand-studio-beauty` — same
-- `in-hand-studio-makeup` — same
-- `in-hand-studio-shoes` — same
-- `in-hand-studio-hats` — same
-- `in-hand-studio-tech` — same
-- `in-hand-studio-food` — same
-- `in-hand-studio-supplements` — same
-- `in-hand-studio-other` — same
-- `in-hand-lifestyle-hats` — same
-- `in-hand-lifestyle-food` (if exists) — same
-- `in-hand-lifestyle-supplements` — same
-- `in-hand-lifestyle-other` — same
-**Fix**: Add `['background', 'personDetails']` to trigger_blocks for all in-hand and portrait scenes.
+**Affected (22 scenes)**:
+- `low-angle-bags`, `low-angle-beauty`, `low-angle-makeup`, `low-angle-shoes`, `low-angle-hats`, `low-angle-home`, `low-angle-tech`, `low-angle-food`, `low-angle-supplements`, `low-angle-other`
+- `negative-space-bags`, `negative-space-beauty`, `negative-space-makeup`, `negative-space-shoes`, `negative-space-hats`, `negative-space-home`, `negative-space-tech`, `negative-space-food`, `negative-space-supplements`, `negative-space-other`, `negative-space-garments`
 
-### Issue 3: Missing `trigger_blocks` on model-dependent scenes
-**Affected**: All on-model, worn, editorial, and application scenes
-**Problem**: Scenes like `on-model-front-garments`, `worn-portrait-hats`, `on-shoulder-bags`, `application-beauty`, `application-makeup`, `on-foot-studio-shoes`, `on-foot-lifestyle-shoes`, `on-model-editorial-garments`, `movement-shot-garments`, `on-body-lifestyle-hats`, `on-model-lifestyle-garments` all have `trigger_blocks: []` but reference `{{personDirective}}`, `[MODEL IMAGE]`, and model-dependent composition.
-**Fix**: Add `['background', 'personDetails']` to all of these.
+**Fix**: Change `scene_type` to `'packshot'` for all 22.
 
-### Issue 4: Inconsistent `scene_type` assignments
-**Problem**: Several scenes have incorrect `scene_type` which controls the camera lens directive (line 167-174 of promptBuilder):
-- `top-view-*` scenes are `lifestyle` but should be `packshot` or `flatlay` (they're overhead product shots, not environmental)
-- `in-hand-lifestyle-*` scenes are `lifestyle` (35mm f/4) but show close hand+product — should be `portrait` (85mm f/2)
-- `on-body-lifestyle-hats` is `portrait` which is correct
-- `serving-suggestion-food` is `lifestyle` — correct
-- `pour-action-food` is `lifestyle` — correct
-- `capsule-spill-supplements` is `macro` — correct
-- `on-foot-lifestyle-shoes` is `lifestyle` — correct (environmental)
+### 2. Wrong `scene_type` on Flat Lay Styled scenes (5 scenes)
+`flat-lay-styled-bags`, `flat-lay-styled-hats`, `flat-lay-styled-shoes`, `flat-lay-styled-other`, `styled-outfit-flat-lay-garments` have `scene_type: 'lifestyle'` but are overhead flat lay compositions. Should be `'flatlay'` → `35mm f/5.6 overhead`.
 
-### Issue 5: `Back View` scenes use unresolved tokens
-**Affected**: `back-view-shoes`, some others
-**Problem**: `back-view-shoes` uses `{{lightingDirective}} {{materialTexture}}. {{shadowDirective}}` which IS correct — these resolve via the token system. However, other Back View scenes (bags, hats, home, tech) DON'T use these tokens and instead hardcode lighting. This is inconsistent but not broken — just means shoes Back View responds to user lighting preferences while others don't.
+**Fix**: Change `scene_type` to `'flatlay'` for all 5.
 
-## Category-Specific Issues
+### 3. Missing `trigger_blocks` on lifestyle scenes needing background control (3 scenes)
+These scenes describe environmental context but have empty `trigger_blocks`, meaning the user's background settings won't apply:
+- `vignette-scene-home` — describes "marble countertop, wooden shelf" but user can't override background
+- `ingredients-spread-food` — overhead styled composition, user should control background
+- `flat-lay-styled-bags` / `flat-lay-styled-hats` / `flat-lay-styled-shoes` / `flat-lay-styled-other` — flat lay compositions where background matters
 
-### Beauty & Skincare
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `angle-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `side-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-beauty` | trigger_blocks empty, personDirective won't resolve | Set to `['background', 'personDetails']` |
-| `near-face-hold-beauty` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `application-beauty` | trigger_blocks empty; says "applying product to the face or skin" — too vague for skincare | Set trigger_blocks to `['background', 'personDetails']`; specify "applying cream/serum to cheek, forehead, or décolletage" |
-| `texture-swatch-beauty` | Good template, but missing `[PRODUCT IMAGE]` reference | Add `[PRODUCT IMAGE]` anchor |
-| `in-hand-lifestyle-beauty` | trigger_blocks empty | Set to `['personDetails']` |
-| `back-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
+**Fix**: Add `['background']` to `trigger_blocks` for these 6 scenes.
 
-### Makeup & Lipsticks
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-makeup` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-makeup` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `near-face-hold-makeup` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `application-makeup` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `swatch-detail-makeup` | scene_type `macro` — correct; but prompt says "color applied to a clean surface or forearm" — forearm needs person | Consider: if forearm needed, add personDetails trigger |
-| `in-hand-lifestyle-makeup` | trigger_blocks empty | Set to `['personDetails']` |
-| `open-product-makeup` | Good, but `requires_extra_reference` should be `true` — user needs to upload open-product reference | Set `requires_extra_reference = true` |
+### 4. `in-hand-lifestyle-beauty` and `in-hand-lifestyle-makeup` — `{{personDirective}}` at END instead of START
+Both templates have `{{personDirective}}` as the last token. For model injection (where `[MODEL IMAGE]` needs to be early for the AI to anchor to the face), the person directive should come first — same pattern as `near-face-hold-beauty` and `mid-portrait-hold-bags` which correctly start with `{{personDirective}}`.
 
-### Bags & Accessories
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-bags` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-bags` | trigger_blocks empty; `{{personDirective}}` at END of template (should be at START for model injection) | Move `{{personDirective}}` to start; set trigger_blocks to `['background', 'personDetails']` |
-| `mid-portrait-hold-bags` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `on-shoulder-bags` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `flat-lay-bags` | Missing `[PRODUCT IMAGE]` | Add at start |
+**Fix**: Move `{{personDirective}}` from end to start of prompt template for both scenes.
 
-### Hats & Small Accessories
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-hats` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-hats` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `worn-portrait-hats` | trigger_blocks empty — critical for on-model hat shots | Set to `['background', 'personDetails']` |
-| `in-hand-lifestyle-hats` | trigger_blocks empty | Set to `['personDetails']` |
-| `on-body-lifestyle-hats` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+### 5. `tabletop-lifestyle-home` still has hardcoded props
+Current: `"marble countertop, wooden shelf, or linen-draped table — with minimal complementary props (plant sprig, candle, small tray)"`
+This is too specific and will force the same props regardless of product type (e.g., a metal lamp doesn't need candles).
 
-### Shoes
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-shoes` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-shoes` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `on-foot-studio-shoes` | trigger_blocks empty — critical for on-foot shots | Set to `['background', 'personDetails']` |
-| `on-foot-lifestyle-shoes` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `pair-display-shoes` | Says "both shoes arranged" but user uploads single shoe — AI must infer the pair | Add note: "Generate the matching pair from the same reference" |
+**Fix**: Generalize to `"styled surface with minimal complementary objects appropriate to the product"`.
 
-### Garments
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `on-model-front-garments` | trigger_blocks empty — ALL on-model garment scenes broken | Set to `['background', 'personDetails']` |
-| `on-model-back-garments` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `on-model-editorial-garments` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `movement-shot-garments` | trigger_blocks empty; scene_type `portrait` — should maybe be `editorial` for motion feel | Set trigger_blocks; consider `editorial` scene_type |
-| `on-model-lifestyle-garments` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `label-tag-garments` | `requires_extra_reference` should be `true` — user should upload label photo | Set `requires_extra_reference = true` |
+### 6. `capsule-spill-supplements` missing `requires_extra_reference` flag
+The scene says "container open and capsules spilling out" — the AI can't know what the capsules look like from the closed container photo. The user should upload an extra reference of the open container.
 
-### Home Decor
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-home` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-room-styled-home` | Good concept but trigger_blocks empty — no background customization | Set trigger_blocks to `['background']` at minimum |
-| `vignette-home` | Hardcodes "candle, book, plant, vase" — too specific | Generalize to "complementary decor objects appropriate for the product" |
-| `scale-context-home` | "next to a common household object (book, mug, hand)" — hand mention could trigger person rendering | Remove "hand" from the prompt |
+**Fix**: Set `requires_extra_reference = true`. (Was in the previous plan but appears not applied — currently `false`.)
 
-### Tech / Devices
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-tech` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-tech` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `screen-interface-tech` | Good — correctly says "do NOT generate fake UI" | No change |
-| `in-use-lifestyle-tech` | Hardcodes "coffee cup, notebook, plant" — too specific; also says "minimal desk accessories" then lists them | Generalize; remove duplicate instruction |
+### 7. `open-product-makeup` missing `requires_extra_reference` flag
+Same issue — "lipstick fully extended", "compact opened" requires seeing the open state. Currently `requires_extra_reference: false`.
 
-### Food & Beverage
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-food` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-food` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `serving-suggestion-food` | Good concept but no trigger_blocks for background | Add `['background']` |
-| `pour-action-food` | Good concept, no trigger_blocks | Add `['background']` |
-| `ingredients-spread-food` | Hardcodes "fresh herbs, raw spices, fruits, grains" — too specific for all food | Generalize to "raw ingredients relevant to the product" |
+**Fix**: Set `requires_extra_reference = true`.
 
-### Supplements & Wellness
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-supplements` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-supplements` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `capsule-spill-supplements` | Good concept; `requires_extra_reference` should be `true` — user should upload open container photo | Set `requires_extra_reference = true` |
-| `in-hand-lifestyle-supplements` | trigger_blocks empty | Set to `['personDetails']` |
-| `scoop-detail-supplements` | `requires_extra_reference` should be `true` — need reference of powder/scoop | Set `requires_extra_reference = true` |
-| `wellness-lifestyle-supplements` | trigger_blocks empty; scene_type `lifestyle` with person — needs personDetails | Set to `['background', 'personDetails']` |
+### 8. Back View scenes inconsistent token usage
+`back-view-bags` uses `{{lightingDirective}} {{materialTexture}}. {{shadowDirective}}` (dynamic, user-controlled). But `back-view-food` and `back-view-supplements` skip `{{materialTexture}}` and `{{shadowDirective}}`. All back views should consistently use the full token set so user preferences apply uniformly.
 
-### Other / Custom
-| Scene | Issue | Fix |
-|-------|-------|-----|
-| `front-view-other` | Missing `[PRODUCT IMAGE]` | Add at start |
-| `in-hand-studio-other` | trigger_blocks empty | Set to `['background', 'personDetails']` |
-| `in-hand-lifestyle-other` | trigger_blocks empty | Set to `['personDetails']` |
+**Fix**: Add `{{materialTexture}}. {{shadowDirective}}` to `back-view-food` and `back-view-supplements` prompts.
+
+### 9. `on-foot-lifestyle-shoes` framing issue
+Current prompt says `"Frame from mid-calf down"` and `"No full body above waist"` — but the prompt builder will also inject `resolveBodyFramingDirective('shoes')` = `"Three-quarter to full-body shot — model visible from head to below the knees, shoes clearly visible and in-frame."` This CONTRADICTS the template's tight framing.
+
+**Fix**: The body framing directive is only injected if `{{bodyFramingDirective}}` token exists in the template (template-led, line 973-976). Since this template doesn't use that token, no conflict. **No fix needed** — confirmed safe.
+
+### 10. `movement-shot-garments` scene_type should be `editorial`
+Currently `scene_type: 'portrait'` (85mm f/2 — tight, shallow DOF). A walking motion shot needs wider framing: `'editorial'` → `50mm f/2.8` is better for capturing full garment movement.
+
+**Fix**: Change `scene_type` to `'editorial'`.
+
+### 11. Missing `[PRODUCT IMAGE]` on a few In-Hand Lifestyle scenes
+`in-hand-lifestyle-beauty` starts with `[PRODUCT IMAGE]` ✅, `in-hand-lifestyle-makeup` starts with `[PRODUCT IMAGE]` ✅. These are fine.
+
+However, checking other lifestyle scenes: `vignette-scene-home` starts with `[PRODUCT IMAGE]` ✅, `tabletop-lifestyle-home` starts with `[PRODUCT IMAGE]` ✅. All good.
+
+### 12. `on-model-lifestyle-garments` has `scene_type: 'lifestyle'` — correct?
+This scene has `trigger_blocks: ['background', 'personDetails']` and uses `{{personDirective}}`. The `lifestyle` type gives 35mm f/4 — appropriate for environmental on-model shots. ✅ Correct.
 
 ## Summary of Changes
 
-1. **~40 scenes**: Add `[PRODUCT IMAGE]` anchor to prompt_template start (all Front View, Angle View, Side View, Back View packshots)
-2. **~35 scenes**: Fix empty `trigger_blocks` → add `['background', 'personDetails']` or `['personDetails']` or `['background']`
-3. **~4 scenes**: Set `requires_extra_reference = true` (open-product-makeup, label-tag-garments, capsule-spill-supplements, scoop-detail-supplements)
-4. **~5 scenes**: Fix hardcoded props lists → generalize
-5. **~3 scenes**: Fix scene_type mismatches
-6. **~5 scenes**: Move `{{personDirective}}` position (should be at prompt start, not end, for model scenes)
+| # | Change | Scenes Affected |
+|---|--------|----------------|
+| 1 | `scene_type` → `'packshot'` | 22 (low-angle + negative-space) |
+| 2 | `scene_type` → `'flatlay'` | 5 (flat-lay-styled + styled-outfit) |
+| 3 | `trigger_blocks` → `['background']` | 6 (vignette, ingredients, flat-lays) |
+| 4 | Move `{{personDirective}}` to start | 2 (in-hand-lifestyle beauty + makeup) |
+| 5 | Generalize hardcoded props | 1 (tabletop-lifestyle-home) |
+| 6 | `requires_extra_reference` → `true` | 2 (capsule-spill, open-product-makeup) |
+| 7 | Add missing tokens to back-view | 2 (back-view-food, back-view-supplements) |
+| 8 | `scene_type` → `'editorial'` | 1 (movement-shot-garments) |
+| **Total** | | **~41 UPDATE statements** |
 
 ## Implementation
-All changes are database UPDATEs to `product_image_scenes`. No frontend code changes needed. Will be executed as a single migration with ~80-90 UPDATE statements.
+All database UPDATEs via the insert tool. No frontend code changes.
 
