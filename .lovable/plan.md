@@ -1,45 +1,42 @@
 
 
-# Add Reference-Image Trigger Blocks for Fragrance Detail Scenes
+# Fix Per-Scene Ratio Multi-Select & Improve Section Naming
 
-## What
-Add new trigger blocks (e.g. `atomizerDetail`, `openBottle`) that admins can assign to scenes like any other trigger. When a scene with one of these triggers is selected, the Setup step automatically shows a dedicated reference upload box with a clear instruction (e.g. "Upload a close-up of the atomizer nozzle/sprayer").
+## Problem
+1. **Broken multi-format per-scene view**: The global Format selector supports multi-select (e.g., selecting both 4:5 and 1:1), but the per-scene ratio chips (`MiniRatioChips`) only show/support a single active ratio. The override data model is `Record<string, string>` (single value), so selecting a ratio per scene overwrites the global multi-selection instead of extending it.
+2. **Poor section naming**: "Scene Ratios & Props" with subtitle "Set per-scene aspect ratios or add styling accessories" is unclear for users.
 
-No database changes needed — triggers are already stored as a text array. This is purely a code-level addition of new trigger definitions and their corresponding UI/prompt handling.
+## Solution
 
-## Trigger Block Definitions
+### 1. Upgrade per-scene overrides to multi-select — `types.ts`
+Change `sceneAspectOverrides` type from `Record<string, string>` to `Record<string, string[]>`. Each scene's override becomes an array of ratios. When no override exists, the scene inherits the global `selectedAspectRatios` array.
 
-| Trigger key | Upload label | Description shown to user |
-|---|---|---|
-| `atomizerDetail` | Upload atomizer close-up | Upload a close-up photo of the atomizer/sprayer mechanism so the AI can accurately render it. |
-| `openBottle` | Upload open bottle photo | Upload a photo of the bottle with cap removed so the AI knows the exact opening and inner detail. |
-| `capDetail` | Upload cap/closure photo | Upload a close-up of the cap or closure mechanism for accurate rendering. |
+### 2. Update `MiniRatioChips` to multi-select — `ProductImagesStep3Refine.tsx` + `ProductImagesStep3Settings.tsx`
+- Accept `activeRatios: string[]` (the effective ratios for this scene — either override or global) instead of a single `value`
+- Toggle individual ratios on/off; show all globally-selected ratios as active by default
+- Prevent deselecting the last ratio
+- Show a "×N" badge or highlight when a scene has a custom override differing from global
 
-## Changes
+### 3. Update Step 4 Review handler — `ProductImagesStep4Review.tsx`
+- `handleSceneRatioChange` toggles a ratio in the scene's override array
+- Show active count per scene
+- Inherit global ratios when scene has no override
 
-### 1. Define reference trigger config — `detailBlockConfig.ts`
-Add a new exported map `REFERENCE_TRIGGERS` that maps trigger keys to their upload label and description text. This is the single source of truth — adding a new reference trigger is just adding one entry here.
+### 4. Update generation logic — `ProductImages.tsx`
+Where `details.sceneAspectOverrides?.[scene.id]` is read (lines ~384, ~428), resolve it as an array. The existing loop already iterates `selectedRatios` — just replace with per-scene resolved ratios when an override exists.
 
-### 2. Admin trigger selector — `AdminProductImageScenes.tsx`
-The trigger blocks are already editable as a multi-select/input. These new triggers will automatically be available since triggers are free-text. No admin UI changes needed beyond ensuring the new trigger names appear in any autocomplete/chip list if one exists.
+### 5. Update `computeTotalImages` — `sceneVariations.ts`
+Account for per-scene ratio counts instead of one global `formatCount`.
 
-Check if there's a predefined trigger list in the admin — if so, add the new keys there.
-
-### 3. Setup step reference uploads — `ProductImagesStep3Refine.tsx`
-Replace the single `requires_extra_reference` per-scene upload with a system that checks each selected scene's `triggerBlocks` against `REFERENCE_TRIGGERS`. For each matched trigger across all selected scenes, show a grouped reference upload card (similar to the existing packaging/back-view cards) with the trigger-specific label and description.
-
-The upload stores into `sceneExtraRefs` keyed by trigger name (or scene+trigger), and the generation payload passes it as `extra_reference_image_url` with context.
-
-### 4. Generation payload — `ProductImages.tsx`
-When building the job payload, check if the scene has any reference triggers and attach the corresponding uploaded image URL. The existing `extra_reference_image_url` field already handles this — just ensure the right URL is picked per trigger.
-
-### 5. Prompt context — `generate-workflow/index.ts`
-When injecting the extra reference image, use the trigger key to provide a meaningful label to the AI model (e.g. `[PRODUCT EXTRA ANGLE: atomizer close-up]` instead of generic `[PRODUCT EXTRA ANGLE]`).
+### 6. Rename section — `ProductImagesStep4Review.tsx`
+- Title: **"Advanced Scene Controls"**
+- Subtitle: *"Fine-tune format and props for individual scenes"*
 
 ## Files modified
-1. `src/components/app/product-images/detailBlockConfig.ts` — add `REFERENCE_TRIGGERS` map
-2. `src/pages/AdminProductImageScenes.tsx` — add new triggers to any predefined trigger list
-3. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — render trigger-specific upload cards
-4. `src/pages/ProductImages.tsx` — pass correct ref URL per trigger
-5. `supabase/functions/generate-workflow/index.ts` — use trigger label in prompt injection
+1. `src/components/app/product-images/types.ts` — change override type to `string[]`
+2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — multi-select `MiniRatioChips`
+3. `src/components/app/product-images/ProductImagesStep3Settings.tsx` — same `MiniRatioChips` update
+4. `src/components/app/product-images/ProductImagesStep4Review.tsx` — multi-toggle handler + rename section
+5. `src/pages/ProductImages.tsx` — resolve per-scene ratio arrays in generation
+6. `src/lib/sceneVariations.ts` — per-scene ratio count in total calculation
 
