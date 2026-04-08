@@ -83,10 +83,7 @@ function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene
       const groupOrder = Math.min(...sc.map(s => s.sub_category_sort_order ?? 0));
       return { label: label || 'Uncategorized', scenes: sc, sortOrder: groupOrder, _isEmpty: !label };
     })
-    .sort((a, b) => {
-      if (a._isEmpty !== b._isEmpty) return a._isEmpty ? 1 : -1;
-      return a.sortOrder - b.sortOrder;
-    })
+    .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(({ label, scenes: sc, sortOrder }) => ({ label, scenes: sc, sortOrder }));
 }
 

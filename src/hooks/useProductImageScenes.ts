@@ -163,10 +163,7 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
           const groupOrder = Math.min(...dbScenes.filter(d => (d.sub_category || '') === label).map(d => d.sub_category_sort_order ?? 0));
           return { label: label || 'General', scenes, _groupOrder: groupOrder, _isGeneral: !label };
         })
-        .sort((a, b) => {
-          if (a._isGeneral !== b._isGeneral) return a._isGeneral ? 1 : -1;
-          return a._groupOrder - b._groupOrder;
-        })
+        .sort((a, b) => a._groupOrder - b._groupOrder)
         .map(({ label, scenes }) => ({ label, scenes }));
 
       return {
