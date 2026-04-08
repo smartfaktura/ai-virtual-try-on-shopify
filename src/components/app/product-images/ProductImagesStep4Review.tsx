@@ -85,13 +85,25 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const canAfford = balance >= totalCredits;
   const isLargeBatch = totalImages > 20;
 
-  const globalRatio = details.aspectRatio || '1:1';
+  const selectedRatios = details.selectedAspectRatios || [details.aspectRatio || '1:1'];
+  const globalRatio = selectedRatios[0] || '1:1';
   const overrides = details.sceneAspectOverrides || {};
   const sceneProps = details.sceneProps || {};
   const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
   const hasAnyProps = Object.values(sceneProps).some(arr => arr.length > 0);
 
   const ratioOptions = ASPECT_RATIOS.map(r => ({ ...r, icon: <RatioShape ratio={r.value} /> }));
+
+  const toggleRatio = (ratio: string) => {
+    if (selectedRatios.includes(ratio)) {
+      if (selectedRatios.length <= 1) return; // keep at least 1
+      const next = selectedRatios.filter(r => r !== ratio);
+      update({ selectedAspectRatios: next, aspectRatio: next[0] });
+    } else {
+      const next = [...selectedRatios, ratio];
+      update({ selectedAspectRatios: next, aspectRatio: next[0] });
+    }
+  };
 
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [propModalOpen, setPropModalOpen] = useState(false);
