@@ -339,6 +339,7 @@ export default function ProductImages() {
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
     const aspectRatio = details.aspectRatio || '1:1';
+    const selectedRatios = details.selectedAspectRatios || [aspectRatio];
     // imgCount already declared above
 
     let aborted = false;
