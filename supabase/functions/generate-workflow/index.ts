@@ -1210,10 +1210,18 @@ serve(async (req) => {
             referenceImages.push({ url: (body as Record<string, unknown>).packaging_reference_url as string, label: "packaging_reference" });
             console.log(`[generate-workflow] Adding packaging reference image`);
           }
-          // Add extra angle reference image (e.g. back/side view) when provided
+          // Add extra angle reference image (e.g. back/side view, atomizer, open bottle) when provided
           if ((body as Record<string, unknown>).extra_reference_image_url) {
-            referenceImages.push({ url: (body as Record<string, unknown>).extra_reference_image_url as string, label: "product_extra_angle" });
-            console.log(`[generate-workflow] Adding extra angle reference image for "${variation.label}"`);
+            const customLabel = (body as Record<string, unknown>).extra_reference_label as string | undefined;
+            referenceImages.push({
+              url: (body as Record<string, unknown>).extra_reference_image_url as string,
+              label: customLabel ? `product_extra_angle_custom` : "product_extra_angle",
+            });
+            // If a custom label was provided, register it in the label map dynamically
+            if (customLabel) {
+              IMAGE_LABEL_MAP['product_extra_angle_custom'] = `[PRODUCT EXTRA ANGLE] ${customLabel}`;
+            }
+            console.log(`[generate-workflow] Adding extra angle reference image for "${variation.label}"${customLabel ? ` (custom: ${customLabel})` : ''}`);
           }
 
           let imageUrl = await generateImage(
