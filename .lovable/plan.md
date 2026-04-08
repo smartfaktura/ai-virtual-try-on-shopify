@@ -1,26 +1,36 @@
 
 
-# Add Frosted Glass Background Indicator to Scene Cards
+# Multi-Format Selection in Product Images Review Step
 
 ## What
-Add a small frosted-glass pill at the bottom-right of scene card images showing 3 color dots + a gradient dot — only on scenes whose `promptTemplate` contains `{{background}}`. Apple-inspired material design.
+Convert the Format (aspect ratio) selector in Step 4 (Review) from single-select to multi-select. When multiple formats are selected, each scene generates images in every selected format, multiplying the total image count and credit cost accordingly.
 
 ## Changes
 
-**`src/components/app/product-images/ProductImagesStep2Scenes.tsx`** — `SceneCard` component (inside the `aspect-[3/4]` div, after the selected checkmark):
+### 1. Add `selectedAspectRatios` to `DetailSettings` — `types.ts`
+Add a new optional field `selectedAspectRatios?: string[]` to store multiple selected ratios. The existing `aspectRatio` stays as the "primary" for backward compatibility.
 
-```tsx
-const hasBackground = scene.promptTemplate?.includes('{{background}}');
+### 2. Convert Format selector to multi-select chips — `ProductImagesStep4Review.tsx`
+Replace the single-select `ChipSelector` for Format with a multi-select version (toggle on/off). Show a count badge when multiple are selected. Each chip toggles its ratio in/out of the set, with at least one always required.
 
-{hasBackground && (
-  <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
-    <div className="w-2.5 h-2.5 rounded-full bg-white border border-gray-200" />
-    <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
-    <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
-    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
-  </div>
-)}
-```
+### 3. Update `computeTotalImages` — `sceneVariations.ts`
+Factor in `details.selectedAspectRatios?.length || 1` as a multiplier in the total image calculation. This automatically flows into the credit cost display since `totalCredits = totalImages * 6`.
 
-One file, ~10 lines added. No other changes needed.
+### 4. Update generation loop — `ProductImages.tsx`
+When enqueuing jobs, loop over each selected aspect ratio (in addition to existing product × scene × variation loops), setting the correct `aspectRatio` on each payload.
+
+### 5. Update Step 4 credit summary
+The existing credit math already derives from `computeTotalImages`, so once that function accounts for multi-ratio, the UI updates automatically. Add a "× N formats" label in the breakdown text when multiple formats are selected.
+
+## UI behavior
+- Chips work as toggles (click to add/remove)
+- Selected chips get the existing `bg-primary text-primary-foreground` style
+- At least 1 format must remain selected (prevent deselecting the last one)
+- Credit cost updates in real-time as formats are toggled
+
+## Files modified
+1. `src/components/app/product-images/types.ts` — add `selectedAspectRatios`
+2. `src/lib/sceneVariations.ts` — multiply by format count
+3. `src/components/app/product-images/ProductImagesStep4Review.tsx` — multi-select chips UI
+4. `src/pages/ProductImages.tsx` — loop over ratios during generation
 
