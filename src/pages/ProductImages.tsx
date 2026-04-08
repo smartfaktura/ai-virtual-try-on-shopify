@@ -507,13 +507,13 @@ export default function ProductImages() {
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
-    const productMap = new Map<string, { productId: string; sceneName: string }>();
+    const productMap = new Map<string, { productId: string; sceneName: string; sceneId?: string }>();
     for (const [key, jobId] of activeJobMap.entries()) {
       const parts = key.split('_');
       const productId = parts[0];
       const sceneId = parts[1] || '';
       const scene = selectedScenes.find(s => s.id === sceneId);
-      productMap.set(jobId, { productId, sceneName: scene?.title || 'Scene' });
+      productMap.set(jobId, { productId, sceneName: scene?.title || 'Scene', sceneId: sceneId || undefined });
     }
     pollingStartRef.current = Date.now();
     let lastWakeTime = 0;
