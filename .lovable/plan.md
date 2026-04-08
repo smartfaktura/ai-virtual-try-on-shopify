@@ -1,24 +1,36 @@
 
 
-# Fix: Add `background` to `trigger_blocks` for All Scenes Using `{{background}}`
+# Fix: Remove Background Trigger from Lifestyle Person Scenes
 
-## The Issue
-146 non-fragrance scenes contain `{{background}}` in their prompt template but do NOT have `background` in their `trigger_blocks`. This means:
-- The prompt builder **can** resolve the background token
-- But the UI **never shows** the background picker for these scenes
-- Users have no way to customize backgrounds on packshots, macros, flat lays, or portrait scenes
+## Problem
+8 non-fragrance scenes with "lifestyle" in their name (person + real environment) incorrectly have `background` in `trigger_blocks` AND `{{background}}` in their prompt template. This causes a background color/gradient picker to appear for scenes that describe real-world environments (cafés, streets, gyms, vanities). A "sage green (#E8EDE6)" background injected into "a vanity, mirror, or getting-ready context" creates contradictory instructions.
 
-## The Fix
-Add `background` to the `trigger_blocks` array for all 146 affected scenes. This will make the background selection panel visible whenever a user selects any of these scenes.
+## Affected Scenes (8)
 
-**Breakdown by scene type:**
-- 92 packshot scenes
-- 35 macro scenes
-- 13 flatlay scenes
-- 6 portrait scenes (in-hand-lifestyle variants — already have `personDetails`, will get `background` added)
+| Scene ID | Category | Issue |
+|----------|----------|-------|
+| `in-hand-lifestyle-bags` | bags-accessories | `{{background}}` mid-sentence before "street, café, urban context" |
+| `in-hand-lifestyle-beauty` | beauty-skincare | `{{background}}` before "bathroom, vanity, self-care context" |
+| `in-hand-lifestyle-hats` | hats-small | `{{background}}` before "outdoor, casual, street context" |
+| `in-hand-lifestyle-makeup` | makeup-lipsticks | `{{background}}` before "vanity, mirror, getting-ready context" |
+| `in-hand-lifestyle-other` | other | `{{background}}` before "appropriate lifestyle context" |
+| `in-hand-lifestyle-supplements` | supplements-wellness | `{{background}}` before "gym, kitchen, wellness context" |
+| `on-body-lifestyle-hats` | hats-small | `BACKGROUND: {{background}} — use ONLY this` overrides natural context |
+| `on-foot-lifestyle-shoes` | shoes | `BACKGROUND: {{background}} — use ONLY this` overrides natural context |
 
-## Implementation
-A single SQL UPDATE using `array_append` on `trigger_blocks` for all scenes where `prompt_template LIKE '%{{background}}%'` and `background` is not already in `trigger_blocks`, excluding fragrance.
+## Fix (2 changes per scene = 16 UPDATEs)
 
-No frontend code changes needed — the UI already reads `trigger_blocks` to decide which panels to show.
+### 1. Remove `{{background}}` token from prompt templates
+- For `in-hand-lifestyle-*` (5 scenes): Delete the `{{background}}` token (it sits between two sentences — just remove it)
+- For `on-body-lifestyle-hats` and `on-foot-lifestyle-shoes`: Replace `BACKGROUND: {{background}} — use ONLY this background.` with the natural environment description already implied by the prompt
+
+### 2. Remove `background` from `trigger_blocks`
+Use `array_remove(trigger_blocks, 'background')` for all 8 scenes.
+
+## Result
+- Background picker hidden for all lifestyle person scenes
+- Prompt builder won't inject a color/gradient into environment-based prompts
+- Studio and packshot scenes remain unchanged (they correctly use `{{background}}`)
+
+All database UPDATEs. No frontend code changes.
 
