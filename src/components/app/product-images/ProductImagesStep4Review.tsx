@@ -89,14 +89,14 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const globalRatio = selectedRatios[0] || '1:1';
   const overrides = details.sceneAspectOverrides || {};
   const sceneProps = details.sceneProps || {};
-  const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
+  const hasOverrides = Object.keys(overrides).length > 0;
   const hasAnyProps = Object.values(sceneProps).some(arr => arr.length > 0);
 
   const ratioOptions = ASPECT_RATIOS.map(r => ({ ...r, icon: <RatioShape ratio={r.value} /> }));
 
   const toggleRatio = (ratio: string) => {
     if (selectedRatios.includes(ratio)) {
-      if (selectedRatios.length <= 1) return; // keep at least 1
+      if (selectedRatios.length <= 1) return;
       const next = selectedRatios.filter(r => r !== ratio);
       update({ selectedAspectRatios: next, aspectRatio: next[0] });
     } else {
@@ -109,9 +109,10 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const [propModalOpen, setPropModalOpen] = useState(false);
   const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null);
 
-  const handleSceneRatioChange = (sceneId: string, ratio: string) => {
+  const handleSceneRatioChange = (sceneId: string, ratios: string[]) => {
     const next = { ...overrides };
-    if (ratio === globalRatio) delete next[sceneId]; else next[sceneId] = ratio;
+    const sameAsGlobal = ratios.length === selectedRatios.length && ratios.every(r => selectedRatios.includes(r));
+    if (sameAsGlobal) delete next[sceneId]; else next[sceneId] = ratios;
     update({ sceneAspectOverrides: next });
   };
 
