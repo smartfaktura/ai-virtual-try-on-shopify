@@ -1,24 +1,26 @@
 
 
-# Fix Sub-Category Reorder — Remove Forced "Uncategorized Last" Override
+# Add Frosted Glass Background Indicator to Scene Cards
 
-## Root Cause
-Both `groupBySubCategory()` in `AdminProductImageScenes.tsx` and `buildCollections()` in `useProductImageScenes.ts` have a hardcoded sort rule:
-```typescript
-if (a._isGeneral !== b._isGeneral) return a._isGeneral ? 1 : -1;
+## What
+Add a small frosted-glass pill at the bottom-right of scene card images showing 3 color dots + a gradient dot — only on scenes whose `promptTemplate` contains `{{background}}`. Apple-inspired material design.
+
+## Changes
+
+**`src/components/app/product-images/ProductImagesStep2Scenes.tsx`** — `SceneCard` component (inside the `aspect-[3/4]` div, after the selected checkmark):
+
+```tsx
+const hasBackground = scene.promptTemplate?.includes('{{background}}');
+
+{hasBackground && (
+  <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
+    <div className="w-2.5 h-2.5 rounded-full bg-white border border-gray-200" />
+    <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
+    <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
+    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
+  </div>
+)}
 ```
-This **always** pushes empty-label groups to the bottom, ignoring `sub_category_sort_order`. So clicking the arrows updates the database, but the UI re-sorts with the override and nothing visually changes.
 
-## Fix
-Remove the `_isGeneral`/`_isEmpty` sort override from both files. Sort purely by `sub_category_sort_order`. If users want "Uncategorized" last, it naturally stays last because it already has a higher sort order value.
-
-### Files to change
-
-**1. `src/pages/AdminProductImageScenes.tsx`** — `groupBySubCategory` function (~line 86-88):
-Remove the `_isEmpty` priority sort. Sort only by `sortOrder`.
-
-**2. `src/hooks/useProductImageScenes.ts`** — `buildCollections` function (~line in subGroups sort):
-Remove the `_isGeneral` priority sort. Sort only by `_groupOrder`.
-
-Two small edits, both removing one line each.
+One file, ~10 lines added. No other changes needed.
 
