@@ -15,6 +15,7 @@ interface ResultImage {
   url: string;
   sceneName: string;
   sceneId?: string;
+  aspectRatio?: string;
 }
 
 interface Step6Props {
