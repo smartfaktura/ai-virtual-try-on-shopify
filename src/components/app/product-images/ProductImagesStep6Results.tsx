@@ -86,9 +86,10 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     }
   };
 
-  const handleSingleDownload = (url: string, sceneName: string) => {
-    const safeName = sceneName.replace(/[^a-zA-Z0-9_-]/g, '_');
-    saveOrShareImage(url, `product_${safeName}`);
+  const handleSingleDownload = (url: string, productName: string, sceneName: string) => {
+    const safeProd = productName.replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').replace(/\s+/g, '_');
+    const safeScene = sceneName.replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').replace(/\s+/g, '_');
+    saveOrShareImage(url, `${safeProd}_${safeScene}`);
   };
 
   return (
