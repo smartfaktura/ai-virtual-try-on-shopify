@@ -77,7 +77,7 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   'gradient': 'smooth gradient background fading from white to deep navy blue',
   // Gradient presets (also used as backgroundTone values)
   'gradient-warm': 'warm gradient background fading from rich terracotta brown to soft peach cream',
-  'gradient-cool': 'cool gradient background fading from ocean blue to pale sky blue',
+  'gradient-cool': 'cool gradient background fading from deep forest green to soft mint cream',
   'gradient-sunset': 'warm sunset-toned gradient background fading from soft peach to blush pink',
 };
 
