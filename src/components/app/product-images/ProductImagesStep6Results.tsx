@@ -56,8 +56,13 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   const allImages = Array.from(sortedResults.values()).flatMap(r => r.images);
   const totalImages = allImages.length;
 
-  const openLightbox = (images: ResultImage[], idx: number) => {
+  const [lightboxProductName, setLightboxProductName] = useState('');
+  const [lightboxSceneNames, setLightboxSceneNames] = useState<string[]>([]);
+
+  const openLightbox = (images: ResultImage[], idx: number, productName: string) => {
     setLightboxImages(images.map(i => i.url));
+    setLightboxSceneNames(images.map(i => i.sceneName));
+    setLightboxProductName(productName);
     setLightboxIndex(idx);
     setLightboxOpen(true);
   };
