@@ -1,36 +1,25 @@
 
 
-# Multi-Format Selection in Product Images Review Step
+# Sort Results by Admin Scene Order
 
 ## What
-Convert the Format (aspect ratio) selector in Step 4 (Review) from single-select to multi-select. When multiple formats are selected, each scene generates images in every selected format, multiplying the total image count and credit cost accordingly.
+Images on the "Your visuals are ready" step (Step 6) currently appear in random job-completion order. This change sorts them to match the admin scene sort order from the `scene_sort_order` table.
 
 ## Changes
 
-### 1. Add `selectedAspectRatios` to `DetailSettings` — `types.ts`
-Add a new optional field `selectedAspectRatios?: string[]` to store multiple selected ratios. The existing `aspectRatio` stays as the "primary" for backward compatibility.
+### 1. Add `sceneId` to result metadata — `ProductImages.tsx`
+In `startPolling`, include `sceneId` alongside `sceneName` in the `productMap`. In `finishWithResults`, pass `sceneId` through to each `ResultImage`.
 
-### 2. Convert Format selector to multi-select chips — `ProductImagesStep4Review.tsx`
-Replace the single-select `ChipSelector` for Format with a multi-select version (toggle on/off). Show a count badge when multiple are selected. Each chip toggles its ratio in/out of the set, with at least one always required.
+### 2. Extend `ResultImage` interface — `ProductImagesStep6Results.tsx`
+Add optional `sceneId?: string` field.
 
-### 3. Update `computeTotalImages` — `sceneVariations.ts`
-Factor in `details.selectedAspectRatios?.length || 1` as a multiplier in the total image calculation. This automatically flows into the credit cost display since `totalCredits = totalImages * 6`.
+### 3. Sort images by scene sort order — `ProductImagesStep6Results.tsx`
+Import `useSceneSortOrder` hook. Before rendering each product's images, sort them using the `sortMap` — images with lower sort values appear first, unranked scenes fall to the end.
 
-### 4. Update generation loop — `ProductImages.tsx`
-When enqueuing jobs, loop over each selected aspect ratio (in addition to existing product × scene × variation loops), setting the correct `aspectRatio` on each payload.
-
-### 5. Update Step 4 credit summary
-The existing credit math already derives from `computeTotalImages`, so once that function accounts for multi-ratio, the UI updates automatically. Add a "× N formats" label in the breakdown text when multiple formats are selected.
-
-## UI behavior
-- Chips work as toggles (click to add/remove)
-- Selected chips get the existing `bg-primary text-primary-foreground` style
-- At least 1 format must remain selected (prevent deselecting the last one)
-- Credit cost updates in real-time as formats are toggled
+### 4. Pass `sceneId` in recovery path — `ProductImages.tsx`
+The session recovery polling path (around line 960-970) also builds a `productMap` — add `sceneId` there too for consistency.
 
 ## Files modified
-1. `src/components/app/product-images/types.ts` — add `selectedAspectRatios`
-2. `src/lib/sceneVariations.ts` — multiply by format count
-3. `src/components/app/product-images/ProductImagesStep4Review.tsx` — multi-select chips UI
-4. `src/pages/ProductImages.tsx` — loop over ratios during generation
+1. `src/pages/ProductImages.tsx` — pass `sceneId` through productMap → finishWithResults
+2. `src/components/app/product-images/ProductImagesStep6Results.tsx` — add `sceneId` to interface, sort images by admin order
 
