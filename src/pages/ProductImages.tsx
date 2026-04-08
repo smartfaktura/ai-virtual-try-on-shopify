@@ -479,18 +479,18 @@ export default function ProductImages() {
     startPolling(newJobMap);
   }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
-  const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string }>) => {
-    const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string }>; productName: string }>();
+  const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string; sceneId?: string }>) => {
+    const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string }>; productName: string }>();
     for (const job of jobs) {
       if (job.status !== 'completed' || !job.result) continue;
       const meta = productMap.get(job.id) || { productId: 'unknown', sceneName: 'Scene' };
       const product = selectedProducts.find(p => p.id === meta.productId);
       const r = job.result as any;
-      const images: Array<{ url: string; sceneName: string }> = [];
+      const images: Array<{ url: string; sceneName: string; sceneId?: string }> = [];
       if (Array.isArray(r.images)) {
         for (const img of r.images) {
           const url = typeof img === 'string' ? img : img?.url || img?.image_url;
-          if (url) images.push({ url, sceneName: meta.sceneName });
+          if (url) images.push({ url, sceneName: meta.sceneName, sceneId: meta.sceneId });
         }
       }
       if (images.length > 0) {
