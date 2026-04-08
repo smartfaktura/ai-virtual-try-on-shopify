@@ -209,6 +209,7 @@ export default function AdminProductImageScenes() {
         sub_category: scene.sub_category,
         category_sort_order: scene.category_sort_order,
         requires_extra_reference: scene.requires_extra_reference,
+        sub_category_sort_order: scene.sub_category_sort_order,
       });
       toast.success(`Duplicated as ${newId}`);
     } catch (e: any) {
