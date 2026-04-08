@@ -403,11 +403,27 @@ export default function ProductImages() {
                 ...(additionalProducts ? { additional_products: additionalProducts } : {}),
                 ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
                 ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-                ...(sceneExtraRefs[scene.id]
-                  ? { extra_reference_image_url: sceneExtraRefs[scene.id] }
-                  : details.backReferenceUrl && scene.triggerBlocks?.includes('backView')
-                    ? { extra_reference_image_url: details.backReferenceUrl }
-                    : {}),
+                ...(() => {
+                  // Check for reference trigger uploads first (e.g. atomizerDetail, openBottle)
+                  const triggerBlocks = scene.triggerBlocks || [];
+                  for (const tb of triggerBlocks) {
+                    const refUrl = sceneExtraRefs[`trigger:${tb}`];
+                    if (refUrl && REFERENCE_TRIGGERS[tb]) {
+                      return {
+                        extra_reference_image_url: refUrl,
+                        extra_reference_label: REFERENCE_TRIGGERS[tb].promptLabel,
+                      };
+                    }
+                  }
+                  // Fall back to per-scene extra ref or back view ref
+                  if (sceneExtraRefs[scene.id]) {
+                    return { extra_reference_image_url: sceneExtraRefs[scene.id] };
+                  }
+                  if (details.backReferenceUrl && triggerBlocks.includes('backView')) {
+                    return { extra_reference_image_url: details.backReferenceUrl };
+                  }
+                  return {};
+                })(),
                 quality: 'high',
                 aspectRatio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
                 batch_id: batchId,
