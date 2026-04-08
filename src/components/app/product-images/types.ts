@@ -351,8 +351,8 @@ export interface DetailSettings {
   // Multiple selected aspect ratios (multi-format generation)
   selectedAspectRatios?: string[];
 
-  // Per-scene aspect ratio overrides (sceneId -> ratio)
-  sceneAspectOverrides?: Record<string, string>;
+  // Per-scene aspect ratio overrides (sceneId -> ratios array)
+  sceneAspectOverrides?: Record<string, string[]>;
 
   // Per-scene props (sceneId -> array of product IDs used as styling accessories)
   sceneProps?: Record<string, string[]>;
