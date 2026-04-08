@@ -39,19 +39,20 @@ export function getTotalMultiplier(
   return scenes.reduce((sum, scene) => sum + getSceneMultiplier(scene, details), 0);
 }
 
-/** Compute total images accounting for multi-select variations and multi-format */
+/** Compute total images accounting for multi-select variations and per-scene format overrides */
 export function computeTotalImages(
   productCount: number,
   scenes: ProductImageScene[],
   imageCountPerScene: number,
   details: DetailSettings,
 ): number {
-  const formatCount = details.selectedAspectRatios?.length || 1;
+  const globalFormats = details.selectedAspectRatios || [details.aspectRatio || '1:1'];
   let total = 0;
   for (const scene of scenes) {
-    total += getSceneMultiplier(scene, details) * imageCountPerScene;
+    const sceneFormats = details.sceneAspectOverrides?.[scene.id] || globalFormats;
+    total += getSceneMultiplier(scene, details) * imageCountPerScene * sceneFormats.length;
   }
-  return productCount * total * formatCount;
+  return productCount * total;
 }
 
 export interface VariationOverride {

@@ -427,7 +427,7 @@ export default function ProductImages() {
                   return {};
                 })(),
                 quality: 'high',
-                aspectRatio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
+                aspectRatio: ratioForJob,
                 batch_id: batchId,
                 scene_name: scene.title,
                 batch_outfit_lock: true,
