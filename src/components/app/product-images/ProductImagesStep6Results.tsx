@@ -9,7 +9,7 @@ import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
 import { saveOrShareImage } from '@/lib/mobileImageSave';
-import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 
 interface ResultImage {
   url: string;
