@@ -1,36 +1,40 @@
 
 
-# Sub-Category Ordering & Management for Product Image Scenes
+# Easier Sub-Category Ordering — No Per-Scene Sort Values Needed
 
-## Current State
+## Problem
+Right now, sub-category group order is derived from the minimum `sort_order` of scenes inside each group. That means you'd need to manually adjust `sort_order` on individual scenes to reorder groups — tedious with dozens of scenes.
 
-Sub-categories (like "Essential Shots") are just a **free-text field** (`sub_category`) on each scene row. There is no dedicated table or sort order for sub-categories themselves. The grouping in `buildCollections` uses `Map` insertion order — which means sub-categories appear in whatever order the first scene of that group was fetched from the database (by `sort_order`).
+## Solution: Drag-and-drop sub-category reorder panel
 
-You **can** already create new sub-categories (e.g., "Editorial") by simply typing the name into any scene's "Sub-Category" field in the admin panel. But you **cannot** control the display order of sub-categories within a category — whichever sub-category has the lowest `sort_order` scene appears first.
+Add a simple **sub-category reorder UI** inside each category's collapsible section in the admin page. This would be a small list of sub-category names with up/down arrows to reorder them. The order is stored as a lightweight JSON map on the `product_image_scenes` rows via a new column `sub_category_sort_order` (integer, default 0) — OR even simpler, we store it in the existing `category_sort_order` field which is already per-scene but underused.
 
-## Proposed Fix — Sub-Category Sort Order
-
-### Approach: Use each scene's existing `sort_order` to determine sub-group ordering
-
-Instead of adding a new database table, we sort sub-groups by the **minimum `sort_order`** of their scenes. This means: if you want "Editorial" to appear before "Essential Shots", just give the Editorial scenes lower `sort_order` numbers.
+**Simplest approach**: Add a `sub_category_sort_order` integer column to `product_image_scenes`. When you reorder sub-categories in the admin UI, it bulk-updates all scenes in that sub-category with the new group order value. Individual scene `sort_order` stays untouched — it only controls scene order *within* a sub-category.
 
 ### Changes
 
-**1. `src/hooks/useProductImageScenes.ts` — Sort sub-groups by min scene sort_order**
+**1. Database migration** — Add `sub_category_sort_order` column:
+```sql
+ALTER TABLE product_image_scenes
+ADD COLUMN sub_category_sort_order integer NOT NULL DEFAULT 0;
+```
 
-In `buildCollections`, track the minimum `sort_order` per sub-category and sort sub-groups accordingly. Currently sub-groups use Map insertion order with no sorting.
+**2. `src/hooks/useProductImageScenes.ts`** — Update `buildCollections` to sort sub-groups by `sub_category_sort_order` (from the first scene in each group) instead of by min `sort_order`.
 
-**2. `src/pages/AdminProductImageScenes.tsx` — Visual sub-category controls**
+**3. `src/pages/AdminProductImageScenes.tsx`** — Add a small reorder strip per category:
+- Shows sub-category names as a vertical list with up/down arrow buttons
+- Clicking up/down swaps the `sub_category_sort_order` values and bulk-updates all scenes in those two groups
+- No need to touch individual scene sort orders at all
 
-- Show sub-category groups visually separated in the admin scene list (they already show as badges, but aren't grouped)
-- Add a hint in the UI: "Sub-categories are ordered by their lowest scene sort_order"
-- Optionally add a quick "Set sub-category" bulk action for selected scenes
+### How it works for you
+- Open a category (e.g., Fragrance)
+- See sub-categories listed: "Editorial", "Essential Shots", "Uncategorized"
+- Click the up arrow on "Editorial" to move it above "Essential Shots"
+- Done — one click, all scenes in that group get the new order value automatically
 
-### How to use it
-
-- To create a new sub-category like "Editorial": edit any scene, type "Editorial" in the Sub-Category field
-- To make "Editorial" appear first: give its scenes lower `sort_order` values than "Essential Shots" scenes
-- Scenes with no sub-category fall into "General" (displayed last)
-
-This is a lightweight change — no new tables or migrations needed.
+### Files modified
+- **Migration**: new column `sub_category_sort_order`
+- `src/hooks/useProductImageScenes.ts`: sort by new column
+- `src/pages/AdminProductImageScenes.tsx`: add reorder arrows UI
+- `src/hooks/useProductImageScenes.ts`: include new column in `DbScene` interface
 
