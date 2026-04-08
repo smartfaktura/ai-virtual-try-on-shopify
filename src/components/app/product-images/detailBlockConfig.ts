@@ -39,6 +39,24 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
     description: 'Upload a close-up of the cap or closure mechanism for accurate rendering.',
     promptLabel: 'Cap/closure close-up reference — use this to accurately render the cap detail:',
   },
+  interiorDetail: {
+    key: 'interiorDetail',
+    label: 'Upload interior photo',
+    description: 'Upload a photo showing the inside of your bag — lining, pockets, compartments — so the AI can accurately render the interior layout and color.',
+    promptLabel: 'Bag interior reference — use this to accurately render the lining, pockets, and internal layout:',
+  },
+  strapDetail: {
+    key: 'strapDetail',
+    label: 'Upload strap close-up',
+    description: 'Upload a close-up of the strap showing hardware attachment, stitching, and adjustability so the AI can render it accurately.',
+    promptLabel: 'Strap/handle close-up reference — use this to accurately render strap construction and hardware attachment:',
+  },
+  hardwareDetail: {
+    key: 'hardwareDetail',
+    label: 'Upload hardware close-up',
+    description: 'Upload a close-up of the bag\'s metal hardware — zippers, clasps, buckles, rings — for accurate rendering.',
+    promptLabel: 'Hardware close-up reference — use this to accurately render metal details, clasps, and zipper pulls:',
+  },
 };
 
 /** All trigger block keys including reference triggers */
