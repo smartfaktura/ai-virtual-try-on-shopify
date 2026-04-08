@@ -381,9 +381,9 @@ export default function ProductImages() {
                 : undefined;
 
               const variationEntry = {
-                label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (selectedRatios.length > 1 ? ` [${ratioForJob}]` : ''),
+                label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (sceneRatios.length > 1 ? ` [${ratioForJob}]` : ''),
                 instruction: variationInstruction,
-                aspect_ratio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
+                aspect_ratio: ratioForJob,
               };
 
               const payload: Record<string, unknown> = {
