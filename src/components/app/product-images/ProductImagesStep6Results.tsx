@@ -4,15 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Download, RefreshCw, CheckCircle, Archive } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
 import { saveOrShareImage } from '@/lib/mobileImageSave';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 
 interface ResultImage {
   url: string;
   sceneName: string;
+  sceneId?: string;
 }
 
 interface Step6Props {
@@ -26,8 +28,32 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  const { rawScenes } = useProductImageScenes();
 
-  const allImages = Array.from(results.values()).flatMap(r => r.images);
+  // Build a sort map from product_image_scenes sort_order
+  const sceneSortMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of rawScenes) {
+      m.set(s.scene_id, s.sort_order);
+    }
+    return m;
+  }, [rawScenes]);
+
+  // Sort images within each product group by admin scene order
+  const sortedResults = useMemo(() => {
+    const sorted = new Map<string, { images: ResultImage[]; productName: string }>();
+    for (const [productId, { images, productName }] of results.entries()) {
+      const sortedImages = [...images].sort((a, b) => {
+        const sa = a.sceneId ? (sceneSortMap.get(a.sceneId) ?? 9999) : 9999;
+        const sb = b.sceneId ? (sceneSortMap.get(b.sceneId) ?? 9999) : 9999;
+        return sa - sb;
+      });
+      sorted.set(productId, { images: sortedImages, productName });
+    }
+    return sorted;
+  }, [results, sceneSortMap]);
+
+  const allImages = Array.from(sortedResults.values()).flatMap(r => r.images);
   const totalImages = allImages.length;
 
   const openLightbox = (images: ResultImage[], idx: number) => {
@@ -41,7 +67,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     setDownloading(true);
     try {
       const dropImages: DropImage[] = [];
-      for (const [, { images, productName }] of results.entries()) {
+      for (const [, { images, productName }] of sortedResults.entries()) {
         for (const img of images) {
           dropImages.push({ url: img.url, workflow_name: 'Product Images', product_title: productName });
         }
@@ -71,7 +97,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
       </div>
 
       {/* Results grouped by product */}
-      {Array.from(results.entries()).map(([productId, { images, productName }]) => (
+      {Array.from(sortedResults.entries()).map(([productId, { images, productName }]) => (
         <div key={productId} className="space-y-3">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold">{productName}</h3>
