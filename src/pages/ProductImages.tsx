@@ -361,7 +361,9 @@ export default function ProductImages() {
           const variationDetails: DetailSettings = { ...details, ...variationOverride };
           const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, selectedModelGender);
 
-          for (const ratioForJob of selectedRatios) {
+          // Resolve per-scene ratios: override array or global selection
+          const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
+          for (const ratioForJob of sceneRatios) {
             for (let i = 0; i < imgCount; i++) {
               // Resolve prop products for this scene
               const propProductIds = details.sceneProps?.[scene.id] || [];
@@ -379,9 +381,9 @@ export default function ProductImages() {
                 : undefined;
 
               const variationEntry = {
-                label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (selectedRatios.length > 1 ? ` [${ratioForJob}]` : ''),
+                label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (sceneRatios.length > 1 ? ` [${ratioForJob}]` : ''),
                 instruction: variationInstruction,
-                aspect_ratio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
+                aspect_ratio: ratioForJob,
               };
 
               const payload: Record<string, unknown> = {
@@ -425,7 +427,7 @@ export default function ProductImages() {
                   return {};
                 })(),
                 quality: 'high',
-                aspectRatio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
+                aspectRatio: ratioForJob,
                 batch_id: batchId,
                 scene_name: scene.title,
                 batch_outfit_lock: true,

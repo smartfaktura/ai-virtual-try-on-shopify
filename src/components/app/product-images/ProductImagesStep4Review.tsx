@@ -89,14 +89,14 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const globalRatio = selectedRatios[0] || '1:1';
   const overrides = details.sceneAspectOverrides || {};
   const sceneProps = details.sceneProps || {};
-  const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
+  const hasOverrides = Object.keys(overrides).length > 0;
   const hasAnyProps = Object.values(sceneProps).some(arr => arr.length > 0);
 
   const ratioOptions = ASPECT_RATIOS.map(r => ({ ...r, icon: <RatioShape ratio={r.value} /> }));
 
   const toggleRatio = (ratio: string) => {
     if (selectedRatios.includes(ratio)) {
-      if (selectedRatios.length <= 1) return; // keep at least 1
+      if (selectedRatios.length <= 1) return;
       const next = selectedRatios.filter(r => r !== ratio);
       update({ selectedAspectRatios: next, aspectRatio: next[0] });
     } else {
@@ -109,9 +109,10 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const [propModalOpen, setPropModalOpen] = useState(false);
   const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null);
 
-  const handleSceneRatioChange = (sceneId: string, ratio: string) => {
+  const handleSceneRatioChange = (sceneId: string, ratios: string[]) => {
     const next = { ...overrides };
-    if (ratio === globalRatio) delete next[sceneId]; else next[sceneId] = ratio;
+    const sameAsGlobal = ratios.length === selectedRatios.length && ratios.every(r => selectedRatios.includes(r));
+    if (sameAsGlobal) delete next[sceneId]; else next[sceneId] = ratios;
     update({ sceneAspectOverrides: next });
   };
 
@@ -238,8 +239,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               <Collapsible open={overridesOpen} onOpenChange={setOverridesOpen}>
                 <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group w-full">
                   <ChevronRight className={cn('w-4 h-4 transition-transform', overridesOpen && 'rotate-90')} />
-                  <span>Scene Ratios & Props</span>
-                  <span className="text-xs text-muted-foreground/70">Set per-scene aspect ratios or add styling accessories</span>
+                  <span>Advanced Scene Controls</span>
+                  <span className="text-xs text-muted-foreground/70">Fine-tune format and props for individual scenes</span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <Card className="mt-3">
@@ -255,8 +256,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                         )}
                       </div>
                       {selectedScenes.map(scene => {
-                        const sceneRatio = overrides[scene.id] || globalRatio;
-                        const isCustomRatio = overrides[scene.id] && overrides[scene.id] !== globalRatio;
+                        const sceneRatios = overrides[scene.id] || selectedRatios;
+                        const isCustomRatio = !!overrides[scene.id];
                         const props = sceneProps[scene.id] || [];
                         return (
                           <div key={scene.id} className={cn('flex flex-col gap-2 p-2 rounded-lg transition-colors', (isCustomRatio || props.length > 0) ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30')}>
@@ -265,7 +266,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                                 <span className={cn('text-xs font-medium truncate', (isCustomRatio || props.length > 0) ? 'text-foreground' : 'text-muted-foreground')}>{scene.title}</span>
                                 {isCustomRatio && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">custom</span>}
                               </div>
-                              <MiniRatioChips value={sceneRatio} globalValue={globalRatio} onChange={(r) => handleSceneRatioChange(scene.id, r)} />
+                              <MiniRatioChips activeRatios={sceneRatios} globalRatios={selectedRatios} onChange={(r) => handleSceneRatioChange(scene.id, r)} />
                               <button type="button" onClick={() => openPropModal(scene.id)} className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium text-muted-foreground border border-border/60 hover:border-primary/40 hover:text-foreground transition-all cursor-pointer ml-auto">
                                 <Plus className="w-3 h-3" />Add Prop
                               </button>

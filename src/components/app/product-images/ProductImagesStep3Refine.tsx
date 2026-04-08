@@ -313,15 +313,25 @@ function RatioShape({ ratio }: { ratio: string }) {
   );
 }
 
-function MiniRatioChips({ value, globalValue, onChange }: { value: string; globalValue: string; onChange: (v: string) => void }) {
+function MiniRatioChips({ activeRatios, globalRatios, onChange }: { activeRatios: string[]; globalRatios: string[]; onChange: (ratios: string[]) => void }) {
   const ratios = ['1:1', '4:5', '3:4', '9:16', '16:9'];
+  const activeSet = new Set(activeRatios);
+  const globalSet = new Set(globalRatios);
+  const toggle = (r: string) => {
+    if (activeSet.has(r)) {
+      if (activeSet.size <= 1) return; // keep at least 1
+      onChange(activeRatios.filter(x => x !== r));
+    } else {
+      onChange([...activeRatios, r]);
+    }
+  };
   return (
     <div className="flex gap-1">
       {ratios.map(r => {
-        const isActive = value === r;
-        const isGlobalDefault = r === globalValue;
+        const isActive = activeSet.has(r);
+        const isGlobalDefault = globalSet.has(r);
         return (
-          <button key={r} type="button" onClick={() => onChange(r)}
+          <button key={r} type="button" onClick={() => toggle(r)}
             className={cn(
               'flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all border cursor-pointer',
               isActive ? 'bg-primary text-primary-foreground border-primary'
