@@ -40,11 +40,8 @@ const CATEGORIES = [
   { value: 'supplements-wellness', label: 'Supplements & Wellness' },
   { value: 'other', label: 'Other / Custom' },
 ];
-const TRIGGER_BLOCKS = [
-  'background', 'visualDirection', 'sceneEnvironment', 'personDetails',
-  'actionDetails', 'detailFocus', 'angleSelection', 'packagingDetails',
-  'backView', 'productSize', 'branding', 'layout',
-];
+import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
+const TRIGGER_BLOCKS = ALL_TRIGGER_KEYS;
 
 const CAT_LABEL_MAP: Record<string, string> = {};
 CATEGORIES.forEach(c => { CAT_LABEL_MAP[c.value] = c.label; });

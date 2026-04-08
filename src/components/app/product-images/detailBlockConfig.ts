@@ -7,6 +7,48 @@ export interface DetailBlockDef {
   description: string;
 }
 
+/** Reference-image trigger definitions.
+ *  When a scene has one of these in its triggerBlocks, the Setup step shows
+ *  a dedicated upload card with the specified label & description. */
+export interface ReferenceTriggerDef {
+  key: string;
+  label: string;
+  description: string;
+  /** Icon hint (not enforced — UI picks its own icon) */
+  icon?: string;
+  /** Prompt label injected alongside the reference image */
+  promptLabel: string;
+}
+
+export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
+  atomizerDetail: {
+    key: 'atomizerDetail',
+    label: 'Upload atomizer close-up',
+    description: 'Upload a close-up photo of the atomizer/sprayer mechanism so the AI can accurately render it.',
+    promptLabel: 'Atomizer/sprayer close-up reference — use this to accurately render the atomizer mechanism:',
+  },
+  openBottle: {
+    key: 'openBottle',
+    label: 'Upload open bottle photo',
+    description: 'Upload a photo of the bottle with cap removed so the AI knows the exact opening and inner detail.',
+    promptLabel: 'Open bottle reference — use this to accurately render the bottle without cap:',
+  },
+  capDetail: {
+    key: 'capDetail',
+    label: 'Upload cap/closure photo',
+    description: 'Upload a close-up of the cap or closure mechanism for accurate rendering.',
+    promptLabel: 'Cap/closure close-up reference — use this to accurately render the cap detail:',
+  },
+};
+
+/** All trigger block keys including reference triggers */
+export const ALL_TRIGGER_KEYS = [
+  ...['background', 'visualDirection', 'sceneEnvironment', 'personDetails',
+    'actionDetails', 'detailFocus', 'angleSelection', 'packagingDetails',
+    'backView', 'productSize', 'branding', 'layout'],
+  ...Object.keys(REFERENCE_TRIGGERS),
+];
+
 export const DETAIL_BLOCKS: DetailBlockDef[] = [
   { key: 'personDetails', title: 'Visible Person Details', description: 'Configure presentation, age, skin tone, hand style, and more.' },
   { key: 'actionDetails', title: 'Action Details', description: 'Choose action type and intensity for product-in-use scenes.' },
