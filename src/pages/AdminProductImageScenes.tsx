@@ -66,11 +66,12 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     sub_category: null,
     category_sort_order: 0,
     requires_extra_reference: false,
+    sub_category_sort_order: 0,
   };
 }
 
-/** Group scenes by sub_category within a flat array, sorted by min sort_order (empty label last) */
-function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene[] }[] {
+/** Group scenes by sub_category within a flat array, sorted by sub_category_sort_order (empty label last) */
+function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene[]; sortOrder: number }[] {
   const map = new Map<string, DbScene[]>();
   for (const s of scenes) {
     const key = s.sub_category || '';
@@ -79,14 +80,14 @@ function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene
   }
   return Array.from(map.entries())
     .map(([label, sc]) => {
-      const minSort = Math.min(...sc.map(s => s.sort_order));
-      return { label: label || 'Uncategorized', scenes: sc, _minSort: minSort, _isEmpty: !label };
+      const groupOrder = Math.min(...sc.map(s => s.sub_category_sort_order ?? 0));
+      return { label: label || 'Uncategorized', scenes: sc, sortOrder: groupOrder, _isEmpty: !label };
     })
     .sort((a, b) => {
       if (a._isEmpty !== b._isEmpty) return a._isEmpty ? 1 : -1;
-      return a._minSort - b._minSort;
+      return a.sortOrder - b.sortOrder;
     })
-    .map(({ label, scenes: sc }) => ({ label, scenes: sc }));
+    .map(({ label, scenes: sc, sortOrder }) => ({ label, scenes: sc, sortOrder }));
 }
 
 /** Build inline sub-category summary string: "Essential Shots (6), Hero Scenes (4)" */
@@ -208,6 +209,7 @@ export default function AdminProductImageScenes() {
         sub_category: scene.sub_category,
         category_sort_order: scene.category_sort_order,
         requires_extra_reference: scene.requires_extra_reference,
+        sub_category_sort_order: scene.sub_category_sort_order,
       });
       toast.success(`Duplicated as ${newId}`);
     } catch (e: any) {
@@ -238,6 +240,37 @@ export default function AdminProductImageScenes() {
         updateScene.mutateAsync({ id: a.id, updates: { sort_order: b.sort_order } }),
         updateScene.mutateAsync({ id: b.id, updates: { sort_order: a.sort_order } }),
       ]);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const handleMoveSubCategory = async (categoryKey: string, subLabel: string, direction: 'up' | 'down') => {
+    const catScenes = grouped.get(categoryKey) || [];
+    const subGroups = groupBySubCategory(catScenes);
+    const idx = subGroups.findIndex(g => g.label === subLabel);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= subGroups.length) return;
+
+    const a = subGroups[idx];
+    const b = subGroups[swapIdx];
+    const newOrderA = b.sortOrder;
+    const newOrderB = a.sortOrder;
+    // If both have the same sortOrder, force different values
+    const finalA = newOrderA === newOrderB ? (direction === 'up' ? newOrderB - 1 : newOrderB + 1) : newOrderA;
+    const finalB = newOrderA === newOrderB ? newOrderB : newOrderB;
+
+    // Bulk update all scenes in both sub-categories
+    const scenesA = a.scenes.map(s => s.id);
+    const scenesB = b.scenes.map(s => s.id);
+    try {
+      await Promise.all([
+        supabase.from('product_image_scenes' as any).update({ sub_category_sort_order: finalA } as any).in('id', scenesA),
+        supabase.from('product_image_scenes' as any).update({ sub_category_sort_order: finalB } as any).in('id', scenesB),
+      ]);
+      // Invalidate queries
+      await updateScene.mutateAsync({ id: scenesA[0], updates: { sub_category_sort_order: finalA } });
+      toast.success('Sub-category order updated');
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -292,7 +325,7 @@ export default function AdminProductImageScenes() {
         <Badge variant="secondary" className="text-xs">{filtered.length} scenes</Badge>
       </div>
       <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-        <Info className="w-3 h-3" /> Sub-categories are ordered by their lowest scene sort_order. To reorder groups, adjust the sort_order of scenes within each sub-category.
+        <Info className="w-3 h-3" /> Sub-categories can be reordered with the arrows inside each category section. New sub-categories are created by typing a name in any scene's "Sub-Category" field.
       </p>
       {/* Add new form */}
       {addingNew && (
@@ -341,12 +374,20 @@ export default function AdminProductImageScenes() {
                 <CollapsibleContent>
                   <div className="pl-2 pt-2 space-y-3">
                     {hasMultipleSubGroups ? (
-                      subGroups.map(sg => (
+                      subGroups.map((sg, sgIdx) => (
                         <div key={sg.label}>
                           <div className="flex items-center gap-2 mb-1.5 pl-1">
                             <div className="h-px flex-1 max-w-[60px] bg-border" />
                             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{sg.label}</span>
                             <Badge variant="outline" className="text-[9px]">{sg.scenes.length}</Badge>
+                            <div className="flex items-center gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMoveSubCategory(key, sg.label, 'up')} disabled={sgIdx === 0 || sg.label === 'Uncategorized'}>
+                                <ArrowUp className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMoveSubCategory(key, sg.label, 'down')} disabled={sgIdx === subGroups.length - 1 || sg.label === 'Uncategorized'}>
+                                <ArrowDown className="w-3 h-3" />
+                              </Button>
+                            </div>
                             <div className="h-px flex-1 bg-border" />
                           </div>
                           <div className="space-y-1.5">

@@ -1,0 +1,1 @@
+ALTER TABLE product_image_scenes ADD COLUMN sub_category_sort_order integer NOT NULL DEFAULT 0;

@@ -20,6 +20,7 @@ export interface DbScene {
   sub_category: string | null;
   category_sort_order: number;
   requires_extra_reference: boolean;
+  sub_category_sort_order: number;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
@@ -156,15 +157,15 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
         if (!subGroupMap.has(key)) subGroupMap.set(key, []);
         subGroupMap.get(key)!.push(s);
       }
-      // Sort sub-groups by the minimum sort_order of their scenes; empty label ("General") goes last
+      // Sort sub-groups by sub_category_sort_order (from first scene in group); empty label ("General") goes last
       const subGroups = Array.from(subGroupMap.entries())
         .map(([label, scenes]) => {
-          const minSort = Math.min(...dbScenes.filter(d => (d.sub_category || '') === label).map(d => d.sort_order));
-          return { label: label || 'General', scenes, _minSort: minSort, _isGeneral: !label };
+          const groupOrder = Math.min(...dbScenes.filter(d => (d.sub_category || '') === label).map(d => d.sub_category_sort_order ?? 0));
+          return { label: label || 'General', scenes, _groupOrder: groupOrder, _isGeneral: !label };
         })
         .sort((a, b) => {
           if (a._isGeneral !== b._isGeneral) return a._isGeneral ? 1 : -1;
-          return a._minSort - b._minSort;
+          return a._groupOrder - b._groupOrder;
         })
         .map(({ label, scenes }) => ({ label, scenes }));
 
