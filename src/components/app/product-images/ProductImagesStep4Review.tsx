@@ -370,8 +370,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             </div>
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Format</span>
-                <span className="font-medium">{globalRatio}</span>
+                <span className="text-muted-foreground">Format{selectedRatios.length > 1 ? 's' : ''}</span>
+                <span className="font-medium">{selectedRatios.join(', ')}{selectedRatios.length > 1 ? ` (×${selectedRatios.length})` : ''}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Quality</span>

@@ -348,6 +348,9 @@ export interface DetailSettings {
   // Custom gradient (used when backgroundTone = 'gradient-custom')
   backgroundCustomGradient?: { from: string; to: string };
 
+  // Multiple selected aspect ratios (multi-format generation)
+  selectedAspectRatios?: string[];
+
   // Per-scene aspect ratio overrides (sceneId -> ratio)
   sceneAspectOverrides?: Record<string, string>;
 
