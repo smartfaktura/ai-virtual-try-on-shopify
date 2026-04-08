@@ -4,15 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Download, RefreshCw, CheckCircle, Archive } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
 import { saveOrShareImage } from '@/lib/mobileImageSave';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 
 interface ResultImage {
   url: string;
   sceneName: string;
+  sceneId?: string;
 }
 
 interface Step6Props {
