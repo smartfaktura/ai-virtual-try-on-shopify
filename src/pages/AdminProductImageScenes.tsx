@@ -69,8 +69,8 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
   };
 }
 
-/** Group scenes by sub_category within a flat array, sorted by min sort_order (empty label last) */
-function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene[] }[] {
+/** Group scenes by sub_category within a flat array, sorted by sub_category_sort_order (empty label last) */
+function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene[]; sortOrder: number }[] {
   const map = new Map<string, DbScene[]>();
   for (const s of scenes) {
     const key = s.sub_category || '';
@@ -79,14 +79,14 @@ function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene
   }
   return Array.from(map.entries())
     .map(([label, sc]) => {
-      const minSort = Math.min(...sc.map(s => s.sort_order));
-      return { label: label || 'Uncategorized', scenes: sc, _minSort: minSort, _isEmpty: !label };
+      const groupOrder = Math.min(...sc.map(s => s.sub_category_sort_order ?? 0));
+      return { label: label || 'Uncategorized', scenes: sc, sortOrder: groupOrder, _isEmpty: !label };
     })
     .sort((a, b) => {
       if (a._isEmpty !== b._isEmpty) return a._isEmpty ? 1 : -1;
-      return a._minSort - b._minSort;
+      return a.sortOrder - b.sortOrder;
     })
-    .map(({ label, scenes: sc }) => ({ label, scenes: sc }));
+    .map(({ label, scenes: sc, sortOrder }) => ({ label, scenes: sc, sortOrder }));
 }
 
 /** Build inline sub-category summary string: "Essential Shots (6), Hero Scenes (4)" */
