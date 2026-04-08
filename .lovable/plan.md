@@ -1,46 +1,30 @@
 
 
-# Bags Category: Reference Triggers + New Scenes
+# Fix: Strengthen Background Directive in Back View & Interior View (Bags)
 
-## Summary
-Create dedicated reference trigger definitions for bags (like fragrance has `atomizerDetail`, `openBottle`, `capDetail`), rename one scene, and add 3 new scenes. The reference triggers will show dedicated upload cards in the Setup step with bag-specific instructions.
+## Problem
+Two bag scenes use a weak inline `{{background}}` token that the AI model ignores during generation:
 
-## Changes
+- **Back View**: `...structural details. {{background}} {{lightingDirective}}...` — background sits between sentences, gets lost
+- **Interior View**: `...around the opening. {{background}} Soft even studio lighting...` — same issue, AI hallucinates its own background instead of using the selected gradient
 
-### 1. New Reference Triggers in `detailBlockConfig.ts`
+Meanwhile, portrait scenes like "On Shoulder Editorial" and "Mid Portrait Hold" use the stronger pattern `BACKGROUND: {{background}} — use ONLY this background.` and those work correctly.
 
-Add 3 new bag-specific reference triggers to the `REFERENCE_TRIGGERS` map:
+## Fix (2 database UPDATEs)
 
-| Trigger Key | Label | Description | Prompt Label |
-|-------------|-------|-------------|--------------|
-| `interiorDetail` | Upload interior photo | Upload a photo showing the inside of your bag — lining, pockets, compartments — so the AI can accurately render the interior layout and color. | Bag interior reference — use this to accurately render the lining, pockets, and internal layout: |
-| `strapDetail` | Upload strap close-up | Upload a close-up of the strap showing hardware attachment, stitching, and adjustability so the AI can render it accurately. | Strap/handle close-up reference — use this to accurately render strap construction and hardware attachment: |
-| `hardwareDetail` | Upload hardware close-up | Upload a close-up of the bag's metal hardware — zippers, clasps, buckles, rings — for accurate rendering. | Hardware close-up reference — use this to accurately render metal details, clasps, and zipper pulls: |
+Replace the weak inline `{{background}}` with the enforced directive pattern in both templates:
 
-### 2. Database Updates (via insert tool)
+### 1. Back View
+**Before**: `...structural details. {{background}} {{lightingDirective}} {{materialTexture}}.`
+**After**: `...structural details. BACKGROUND: {{background}} — use ONLY this background. {{lightingDirective}} {{materialTexture}}.`
 
-**Rename**: `hardware-macro-bags` title → "Hardware Close-Up"
+### 2. Interior View  
+**Before**: `...around the opening. {{background}} Soft even studio lighting...`
+**After**: `...around the opening. BACKGROUND: {{background}} — use ONLY this background. Soft even studio lighting...`
 
-**Update `interior-view-bags`**: Add `interiorDetail` to its `trigger_blocks` array. This makes the interior reference upload card appear automatically when this scene is selected.
+## Why This Works
+The `BACKGROUND: ... — use ONLY this background.` pattern is already proven in 2 other bag scenes (on-shoulder-editorial, mid-portrait-hold). It makes the directive explicit and authoritative so the AI model respects gradient/color selections instead of hallucinating its own environment.
 
-**Update `hardware-macro-bags`**: Add `hardwareDetail` to its `trigger_blocks` array. Same pattern — hardware close-up reference appears when selected.
-
-**Insert 3 new scenes** into `bags-accessories` / `Essential Shots`:
-
-| Scene ID | Title | Type | Triggers | Sort |
-|----------|-------|------|----------|------|
-| `strap-detail-bags` | Strap Detail | macro | `{background,strapDetail}` | 19 |
-| `arm-cradle-hold-bags` | Arm Cradle Hold | portrait | `{background,personDetails}` | 20 |
-| `hanging-strap-bags` | Hanging Strap | packshot | `{background}` | 21 |
-
-The `strap-detail-bags` scene includes `strapDetail` trigger so the strap reference upload card appears when selected.
-
-### 3. No other frontend changes needed
-The existing `REFERENCE_TRIGGERS` rendering loop in `ProductImagesStep3Refine.tsx` already handles any key present in the map — it shows the upload card with label/description, handles upload to `product-uploads` bucket, and passes the reference URL + prompt label through to the generation pipeline via `ProductImages.tsx`.
-
-## How it works end-to-end
-1. User selects "Interior View" → `interiorDetail` trigger detected → Setup step shows "Upload interior photo" card
-2. User uploads interior photo → stored as `sceneExtraRefs['trigger:interiorDetail']`
-3. At generation time, the reference image URL + prompt label ("Bag interior reference — use this to...") are injected alongside the product image
-4. Same flow for Strap Detail (strapDetail) and Hardware Close-Up (hardwareDetail)
+## No frontend changes needed
+Both scenes already have `background` in `trigger_blocks` — the UI background picker already appears. This is purely a prompt template fix.
 
