@@ -1,36 +1,46 @@
 
 
-# Fix: Remove Background Trigger from Lifestyle Person Scenes
+# Bags Category: Reference Triggers + New Scenes
 
-## Problem
-8 non-fragrance scenes with "lifestyle" in their name (person + real environment) incorrectly have `background` in `trigger_blocks` AND `{{background}}` in their prompt template. This causes a background color/gradient picker to appear for scenes that describe real-world environments (cafés, streets, gyms, vanities). A "sage green (#E8EDE6)" background injected into "a vanity, mirror, or getting-ready context" creates contradictory instructions.
+## Summary
+Create dedicated reference trigger definitions for bags (like fragrance has `atomizerDetail`, `openBottle`, `capDetail`), rename one scene, and add 3 new scenes. The reference triggers will show dedicated upload cards in the Setup step with bag-specific instructions.
 
-## Affected Scenes (8)
+## Changes
 
-| Scene ID | Category | Issue |
-|----------|----------|-------|
-| `in-hand-lifestyle-bags` | bags-accessories | `{{background}}` mid-sentence before "street, café, urban context" |
-| `in-hand-lifestyle-beauty` | beauty-skincare | `{{background}}` before "bathroom, vanity, self-care context" |
-| `in-hand-lifestyle-hats` | hats-small | `{{background}}` before "outdoor, casual, street context" |
-| `in-hand-lifestyle-makeup` | makeup-lipsticks | `{{background}}` before "vanity, mirror, getting-ready context" |
-| `in-hand-lifestyle-other` | other | `{{background}}` before "appropriate lifestyle context" |
-| `in-hand-lifestyle-supplements` | supplements-wellness | `{{background}}` before "gym, kitchen, wellness context" |
-| `on-body-lifestyle-hats` | hats-small | `BACKGROUND: {{background}} — use ONLY this` overrides natural context |
-| `on-foot-lifestyle-shoes` | shoes | `BACKGROUND: {{background}} — use ONLY this` overrides natural context |
+### 1. New Reference Triggers in `detailBlockConfig.ts`
 
-## Fix (2 changes per scene = 16 UPDATEs)
+Add 3 new bag-specific reference triggers to the `REFERENCE_TRIGGERS` map:
 
-### 1. Remove `{{background}}` token from prompt templates
-- For `in-hand-lifestyle-*` (5 scenes): Delete the `{{background}}` token (it sits between two sentences — just remove it)
-- For `on-body-lifestyle-hats` and `on-foot-lifestyle-shoes`: Replace `BACKGROUND: {{background}} — use ONLY this background.` with the natural environment description already implied by the prompt
+| Trigger Key | Label | Description | Prompt Label |
+|-------------|-------|-------------|--------------|
+| `interiorDetail` | Upload interior photo | Upload a photo showing the inside of your bag — lining, pockets, compartments — so the AI can accurately render the interior layout and color. | Bag interior reference — use this to accurately render the lining, pockets, and internal layout: |
+| `strapDetail` | Upload strap close-up | Upload a close-up of the strap showing hardware attachment, stitching, and adjustability so the AI can render it accurately. | Strap/handle close-up reference — use this to accurately render strap construction and hardware attachment: |
+| `hardwareDetail` | Upload hardware close-up | Upload a close-up of the bag's metal hardware — zippers, clasps, buckles, rings — for accurate rendering. | Hardware close-up reference — use this to accurately render metal details, clasps, and zipper pulls: |
 
-### 2. Remove `background` from `trigger_blocks`
-Use `array_remove(trigger_blocks, 'background')` for all 8 scenes.
+### 2. Database Updates (via insert tool)
 
-## Result
-- Background picker hidden for all lifestyle person scenes
-- Prompt builder won't inject a color/gradient into environment-based prompts
-- Studio and packshot scenes remain unchanged (they correctly use `{{background}}`)
+**Rename**: `hardware-macro-bags` title → "Hardware Close-Up"
 
-All database UPDATEs. No frontend code changes.
+**Update `interior-view-bags`**: Add `interiorDetail` to its `trigger_blocks` array. This makes the interior reference upload card appear automatically when this scene is selected.
+
+**Update `hardware-macro-bags`**: Add `hardwareDetail` to its `trigger_blocks` array. Same pattern — hardware close-up reference appears when selected.
+
+**Insert 3 new scenes** into `bags-accessories` / `Essential Shots`:
+
+| Scene ID | Title | Type | Triggers | Sort |
+|----------|-------|------|----------|------|
+| `strap-detail-bags` | Strap Detail | macro | `{background,strapDetail}` | 19 |
+| `arm-cradle-hold-bags` | Arm Cradle Hold | portrait | `{background,personDetails}` | 20 |
+| `hanging-strap-bags` | Hanging Strap | packshot | `{background}` | 21 |
+
+The `strap-detail-bags` scene includes `strapDetail` trigger so the strap reference upload card appears when selected.
+
+### 3. No other frontend changes needed
+The existing `REFERENCE_TRIGGERS` rendering loop in `ProductImagesStep3Refine.tsx` already handles any key present in the map — it shows the upload card with label/description, handles upload to `product-uploads` bucket, and passes the reference URL + prompt label through to the generation pipeline via `ProductImages.tsx`.
+
+## How it works end-to-end
+1. User selects "Interior View" → `interiorDetail` trigger detected → Setup step shows "Upload interior photo" card
+2. User uploads interior photo → stored as `sceneExtraRefs['trigger:interiorDetail']`
+3. At generation time, the reference image URL + prompt label ("Bag interior reference — use this to...") are injected alongside the product image
+4. Same flow for Strap Detail (strapDetail) and Hardware Close-Up (hardwareDetail)
 
