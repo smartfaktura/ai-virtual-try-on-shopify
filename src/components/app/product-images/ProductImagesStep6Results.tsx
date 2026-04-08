@@ -28,21 +28,30 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [downloading, setDownloading] = useState(false);
-  const { sortMap } = useSceneSortOrder();
+  const { rawScenes } = useProductImageScenes();
+
+  // Build a sort map from product_image_scenes sort_order
+  const sceneSortMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of rawScenes) {
+      m.set(s.scene_id, s.sort_order);
+    }
+    return m;
+  }, [rawScenes]);
 
   // Sort images within each product group by admin scene order
   const sortedResults = useMemo(() => {
     const sorted = new Map<string, { images: ResultImage[]; productName: string }>();
     for (const [productId, { images, productName }] of results.entries()) {
       const sortedImages = [...images].sort((a, b) => {
-        const sa = a.sceneId ? (sortMap.get(a.sceneId) ?? 9999) : 9999;
-        const sb = b.sceneId ? (sortMap.get(b.sceneId) ?? 9999) : 9999;
+        const sa = a.sceneId ? (sceneSortMap.get(a.sceneId) ?? 9999) : 9999;
+        const sb = b.sceneId ? (sceneSortMap.get(b.sceneId) ?? 9999) : 9999;
         return sa - sb;
       });
       sorted.set(productId, { images: sortedImages, productName });
     }
     return sorted;
-  }, [results, sortMap]);
+  }, [results, sceneSortMap]);
 
   const allImages = Array.from(sortedResults.values()).flatMap(r => r.images);
   const totalImages = allImages.length;
