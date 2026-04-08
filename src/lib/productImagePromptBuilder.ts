@@ -74,10 +74,10 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   // Scene-specific backgroundTone chip values
   'white': 'clean white color palette with pure, bright tones',
   'light-gray': 'soft light-gray color palette with neutral, understated tones',
-  'gradient': 'subtle gradient color palette with smooth tonal transitions',
+  'gradient': 'smooth gradient background fading from white to deep navy blue',
   // Gradient presets (also used as backgroundTone values)
-  'gradient-warm': 'warm gradient background fading from soft cream to warm sand tones',
-  'gradient-cool': 'cool gradient background fading from pale blue-white to soft steel gray',
+  'gradient-warm': 'warm gradient background fading from rich terracotta brown to soft peach cream',
+  'gradient-cool': 'cool gradient background fading from ocean blue to pale sky blue',
   'gradient-sunset': 'warm sunset-toned gradient background fading from soft peach to blush pink',
 };
 

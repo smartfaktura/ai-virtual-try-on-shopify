@@ -12,12 +12,12 @@ const PRESET_SWATCHES = [
 ];
 
 const GRADIENT_PRESETS = [
-  { name: 'Studio white', from: '#FFFFFF', to: '#E8E8E8' },
-  { name: 'Brand navy', from: '#FFFFFF', to: '#2B3A4E' },
-  { name: 'Sunset peach', from: '#FFF0E6', to: '#FFB088' },
-  { name: 'Ocean', from: '#E0F2FE', to: '#7DD3FC' },
-  { name: 'Lavender', from: '#F3E8FF', to: '#C084FC' },
-  { name: 'Mint', from: '#ECFDF5', to: '#6EE7B7' },
+  { name: 'Terracotta', from: '#984D1B', to: '#FBEFE9' },
+  { name: 'Ocean', from: '#1C6CA0', to: '#C7E6F5' },
+  { name: 'Crimson', from: '#B62020', to: '#FBE9E9' },
+  { name: 'Forest', from: '#0F570F', to: '#EAFBE9' },
+  { name: 'Sunset Duo', from: '#D42525', to: '#246DCC' },
+  { name: 'Navy Fade', from: '#FFFFFF', to: '#123668' },
 ];
 
 function isValidHex(v: string) {
