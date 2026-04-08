@@ -189,14 +189,26 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Aspect Ratio */}
+              {/* Aspect Ratio — multi-select */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <RatioShape ratio={globalRatio} />
                   <span className="text-xs font-semibold">Format</span>
-                  <span className="text-[10px] text-muted-foreground">(all scenes)</span>
+                  {selectedRatios.length > 1 && (
+                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">×{selectedRatios.length}</Badge>
+                  )}
                 </div>
-                <ChipSelector label="" value={globalRatio} onChange={v => update({ aspectRatio: v })} options={ratioOptions} />
+                <div className="flex flex-wrap gap-1.5">
+                  {ratioOptions.map(o => (
+                    <button key={o.value} type="button" onClick={() => toggleRatio(o.value)}
+                      className={cn(
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
+                        selectedRatios.includes(o.value) ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40',
+                      )}>
+                      {o.icon}{o.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Images per scene */}
