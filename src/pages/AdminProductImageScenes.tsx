@@ -69,7 +69,7 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
   };
 }
 
-/** Group scenes by sub_category within a flat array */
+/** Group scenes by sub_category within a flat array, sorted by min sort_order (empty label last) */
 function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene[] }[] {
   const map = new Map<string, DbScene[]>();
   for (const s of scenes) {
@@ -77,10 +77,16 @@ function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(s);
   }
-  return Array.from(map.entries()).map(([label, sc]) => ({
-    label: label || 'Uncategorized',
-    scenes: sc,
-  }));
+  return Array.from(map.entries())
+    .map(([label, sc]) => {
+      const minSort = Math.min(...sc.map(s => s.sort_order));
+      return { label: label || 'Uncategorized', scenes: sc, _minSort: minSort, _isEmpty: !label };
+    })
+    .sort((a, b) => {
+      if (a._isEmpty !== b._isEmpty) return a._isEmpty ? 1 : -1;
+      return a._minSort - b._minSort;
+    })
+    .map(({ label, scenes: sc }) => ({ label, scenes: sc }));
 }
 
 /** Build inline sub-category summary string: "Essential Shots (6), Hero Scenes (4)" */
@@ -285,10 +291,9 @@ export default function AdminProductImageScenes() {
         </Link>
         <Badge variant="secondary" className="text-xs">{filtered.length} scenes</Badge>
       </div>
-
-
-
-
+      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+        <Info className="w-3 h-3" /> Sub-categories are ordered by their lowest scene sort_order. To reorder groups, adjust the sort_order of scenes within each sub-category.
+      </p>
       {/* Add new form */}
       {addingNew && (
         <Card className="border-primary/30">

@@ -156,8 +156,17 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
         if (!subGroupMap.has(key)) subGroupMap.set(key, []);
         subGroupMap.get(key)!.push(s);
       }
+      // Sort sub-groups by the minimum sort_order of their scenes; empty label ("General") goes last
       const subGroups = Array.from(subGroupMap.entries())
-        .map(([label, scenes]) => ({ label: label || 'General', scenes }));
+        .map(([label, scenes]) => {
+          const minSort = Math.min(...dbScenes.filter(d => (d.sub_category || '') === label).map(d => d.sort_order));
+          return { label: label || 'General', scenes, _minSort: minSort, _isGeneral: !label };
+        })
+        .sort((a, b) => {
+          if (a._isGeneral !== b._isGeneral) return a._isGeneral ? 1 : -1;
+          return a._minSort - b._minSort;
+        })
+        .map(({ label, scenes }) => ({ label, scenes }));
 
       return {
         id,
