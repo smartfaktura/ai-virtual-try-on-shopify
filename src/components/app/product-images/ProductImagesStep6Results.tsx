@@ -129,7 +129,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                 {/* Per-image download button */}
                 <span
                   role="button"
-                  onClick={(e) => { e.stopPropagation(); handleSingleDownload(img.url, img.sceneName); }}
+                  onClick={(e) => { e.stopPropagation(); handleSingleDownload(img.url, productName, img.sceneName); }}
                   className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                   title="Download"
                 >
