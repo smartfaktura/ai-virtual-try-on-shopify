@@ -1507,6 +1507,51 @@ export function ProductImagesStep3Refine({
   const [uploadingBackRef, setUploadingBackRef] = useState(false);
   const backRefInputRef = useRef<HTMLInputElement>(null);
 
+  // Reference trigger detection — find which REFERENCE_TRIGGERS are active from selected scenes
+  const activeReferenceTriggers = useMemo(() => {
+    const found = new Set<string>();
+    for (const scene of selectedScenes) {
+      for (const tb of (scene.triggerBlocks || [])) {
+        if (REFERENCE_TRIGGERS[tb]) found.add(tb);
+      }
+    }
+    return Array.from(found);
+  }, [selectedScenes]);
+
+  const [uploadingRefTrigger, setUploadingRefTrigger] = useState<string | null>(null);
+  const refTriggerInputRef = useRef<HTMLInputElement>(null);
+  const pendingRefTriggerRef = useRef<string | null>(null);
+
+  const handleRefTriggerUpload = useCallback(async (triggerKey: string, file: File) => {
+    if (!onSceneExtraRefsChange) return;
+    setUploadingRefTrigger(triggerKey);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { data, error } = await (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(data.path);
+      onSceneExtraRefsChange({ ...sceneExtraRefs, [`trigger:${triggerKey}`]: urlData.publicUrl });
+    } catch (e: any) {
+      const { toast } = await import('@/lib/brandedToast');
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingRefTrigger(null);
+    }
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
+  const removeRefTrigger = useCallback((triggerKey: string) => {
+    if (!onSceneExtraRefsChange) return;
+    const next = { ...sceneExtraRefs };
+    delete next[`trigger:${triggerKey}`];
+    onSceneExtraRefsChange(next);
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
   const handleBackRefUpload = useCallback(async (file: File) => {
     setUploadingBackRef(true);
     try {
