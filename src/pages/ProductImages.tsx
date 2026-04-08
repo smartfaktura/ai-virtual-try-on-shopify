@@ -361,6 +361,9 @@ export default function ProductImages() {
           const variationDetails: DetailSettings = { ...details, ...variationOverride };
           const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, selectedModelGender);
 
+          for (const ratioForJob of selectedRatios) {
+          const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, selectedModelGender);
+
           for (let i = 0; i < imgCount; i++) {
             // Resolve prop products for this scene
             const propProductIds = details.sceneProps?.[scene.id] || [];
