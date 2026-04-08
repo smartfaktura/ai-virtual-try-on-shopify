@@ -1,258 +1,172 @@
 
 
-# Replace Generic Essential Shots with Category-Specific Scenes
+# Prompt Audit: All Non-Fragrance Product Image Scenes
 
-## Overview
-The Fragrance category has 24 carefully crafted Essential Shots with tailored prompts. All other 10 categories have 12–14 generic "Essential Shots" using identical template-placeholder prompts (`{{categoryPackshotDirective}} Professional ecommerce...`), plus 5–8 older uncategorized scenes. We need to delete all non-fragrance scenes and create new category-appropriate Essential Shots for each category.
+## Methodology
+I compared every non-fragrance prompt template against:
+1. The proven fragrance templates (the "gold standard")
+2. The prompt builder logic in `productImagePromptBuilder.ts` — how tokens are resolved, what gets auto-injected, and what doesn't
+3. The server-side generation flow — how `[PRODUCT IMAGE]` and `[MODEL IMAGE]` are handled
 
-## Approach
-Each category gets a curated Essential Shots list based on what makes sense for that product type. Some shots are universal (Front View, Angle View, Close-Up Detail, Back View), while others are category-specific.
+## Critical Systemic Issues (Affect Multiple Categories)
 
-## Fragrance Reference (24 shots — DO NOT TOUCH)
-Front View, Angle View, Side View, Straight Laydown Shadow, Near Face Hold, Top View, In-Hand Studio, Mid Portrait Hold, Cap Macro, Negative Space Hero, Close-Up Detail, In-Hand Lifestyle, Low-Angle Hero, Product + Packaging, Back View, Packaging Detail, Bottle Silhouette Detail, Floating Straight, Atomizer Detail, Open Bottle, Hard Shadow Hero, Echo Blur, Repeated Shadow Grid, Motion Blur Float
+### Issue 1: Missing `[PRODUCT IMAGE]` anchor on packshot scenes
+**Affected**: Front View, Angle View, Side View, Back View across ALL categories (bags, shoes, hats, home, tech, food, supplements, other)
+**Problem**: These scenes start with `{{productName}} photographed in...` but do NOT include `[PRODUCT IMAGE]`. The fragrance Front View also omits it, BUT fragrance products are more recognizable. For generic products like bags, shoes, tech — the AI has less to anchor to and may hallucinate designs.
+**Fix**: Add `[PRODUCT IMAGE]` at the start of all packshot templates to anchor the AI to the actual reference photo.
 
-## Proposed Essential Shots per Category
+### Issue 2: Missing `trigger_blocks` on portrait/model scenes
+**Affected**: All scenes with `{{personDirective}}` and `[MODEL IMAGE]` references
+**Problem**: Many portrait scenes have `trigger_blocks: []` (empty) instead of `['personDetails']` or `['background', 'personDetails']`. The `personDirective` token only generates meaningful output when `personDetails` is in trigger_blocks (see line 639 of promptBuilder). Without it, `{{personDirective}}` resolves to an empty string, and the model/outfit system doesn't activate.
+**Scenes affected**:
+- `in-hand-studio-bags` — has `{{personDirective}}` but trigger_blocks is `[]`
+- `in-hand-studio-beauty` — same
+- `in-hand-studio-makeup` — same
+- `in-hand-studio-shoes` — same
+- `in-hand-studio-hats` — same
+- `in-hand-studio-tech` — same
+- `in-hand-studio-food` — same
+- `in-hand-studio-supplements` — same
+- `in-hand-studio-other` — same
+- `in-hand-lifestyle-hats` — same
+- `in-hand-lifestyle-food` (if exists) — same
+- `in-hand-lifestyle-supplements` — same
+- `in-hand-lifestyle-other` — same
+**Fix**: Add `['background', 'personDetails']` to trigger_blocks for all in-hand and portrait scenes.
 
-### 🧴 Beauty & Skincare (18 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Universal |
-| 3 | Side View | packshot | Universal |
-| 4 | Straight Laydown Shadow | packshot | Works for tubes/bottles |
-| 5 | In-Hand Studio | portrait | Showing scale + usage |
-| 6 | Top View | lifestyle | Cap/opening detail |
-| 7 | Near Face Hold | portrait | Skincare = face context |
-| 8 | Application Shot | portrait | Showing product on skin — unique to beauty |
-| 9 | Negative Space Hero | lifestyle | Editorial composition |
-| 10 | Close-Up Detail | macro | Label/ingredient detail |
-| 11 | Texture Swatch | macro | **Category-specific**: formula/cream texture on surface |
-| 12 | In-Hand Lifestyle | lifestyle | Bathroom/vanity context |
-| 13 | Low-Angle Hero | lifestyle | Dramatic product hero |
-| 14 | Product + Packaging | packshot | Box + product |
-| 15 | Back View | packshot | Ingredients panel |
-| 16 | Packaging Detail | macro | Box detail |
-| 17 | Hard Shadow Hero | packshot | Creative lighting |
-| 18 | Floating Straight | packshot | Levitation shot |
+### Issue 3: Missing `trigger_blocks` on model-dependent scenes
+**Affected**: All on-model, worn, editorial, and application scenes
+**Problem**: Scenes like `on-model-front-garments`, `worn-portrait-hats`, `on-shoulder-bags`, `application-beauty`, `application-makeup`, `on-foot-studio-shoes`, `on-foot-lifestyle-shoes`, `on-model-editorial-garments`, `movement-shot-garments`, `on-body-lifestyle-hats`, `on-model-lifestyle-garments` all have `trigger_blocks: []` but reference `{{personDirective}}`, `[MODEL IMAGE]`, and model-dependent composition.
+**Fix**: Add `['background', 'personDetails']` to all of these.
 
-### 💄 Makeup & Lipsticks (18 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Universal |
-| 3 | Side View | packshot | Universal |
-| 4 | Straight Laydown Shadow | packshot | Lipstick/compact flat |
-| 5 | In-Hand Studio | portrait | Scale + hold |
-| 6 | Top View | lifestyle | Compact open view |
-| 7 | Near Face Hold | portrait | Makeup = face context |
-| 8 | Application Shot | portrait | **Category-specific**: applying lipstick/product to face |
-| 9 | Swatch Detail | macro | **Category-specific**: color swatch on skin/surface |
-| 10 | Negative Space Hero | lifestyle | Editorial |
-| 11 | Close-Up Detail | macro | Mechanism/texture |
-| 12 | In-Hand Lifestyle | lifestyle | Lifestyle context |
-| 13 | Low-Angle Hero | lifestyle | Dramatic |
-| 14 | Product + Packaging | packshot | With box |
-| 15 | Back View | packshot | Info panel |
-| 16 | Packaging Detail | macro | Box detail |
-| 17 | Hard Shadow Hero | packshot | Creative |
-| 18 | Open Product | packshot | **Category-specific**: lipstick twisted up, compact open |
+### Issue 4: Inconsistent `scene_type` assignments
+**Problem**: Several scenes have incorrect `scene_type` which controls the camera lens directive (line 167-174 of promptBuilder):
+- `top-view-*` scenes are `lifestyle` but should be `packshot` or `flatlay` (they're overhead product shots, not environmental)
+- `in-hand-lifestyle-*` scenes are `lifestyle` (35mm f/4) but show close hand+product — should be `portrait` (85mm f/2)
+- `on-body-lifestyle-hats` is `portrait` which is correct
+- `serving-suggestion-food` is `lifestyle` — correct
+- `pour-action-food` is `lifestyle` — correct
+- `capsule-spill-supplements` is `macro` — correct
+- `on-foot-lifestyle-shoes` is `lifestyle` — correct (environmental)
 
-### 👜 Bags & Accessories (18 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Universal |
-| 3 | Side View | packshot | Depth/profile |
-| 4 | In-Hand Studio | portrait | Carry/hold |
-| 5 | Top View | lifestyle | Interior peek |
-| 6 | Mid Portrait Hold | portrait | On-body carry context |
-| 7 | Close-Up Detail | macro | Hardware/stitching |
-| 8 | Interior View | macro | **Category-specific**: inside compartments |
-| 9 | Negative Space Hero | lifestyle | Editorial |
-| 10 | In-Hand Lifestyle | lifestyle | Street/café context |
-| 11 | Low-Angle Hero | lifestyle | Dramatic |
-| 12 | Product + Packaging | packshot | With dust bag/box |
-| 13 | Back View | packshot | Back panel |
-| 14 | Packaging Detail | macro | Box detail |
-| 15 | Hardware Macro | macro | **Category-specific**: zipper, clasp, lock detail |
-| 16 | Hard Shadow Hero | packshot | Creative |
-| 17 | Flat Lay Styled | flatlay | **Category-specific**: bag with contents spread |
-| 18 | On Shoulder Editorial | portrait | **Category-specific**: worn on shoulder/arm |
+### Issue 5: `Back View` scenes use unresolved tokens
+**Affected**: `back-view-shoes`, some others
+**Problem**: `back-view-shoes` uses `{{lightingDirective}} {{materialTexture}}. {{shadowDirective}}` which IS correct — these resolve via the token system. However, other Back View scenes (bags, hats, home, tech) DON'T use these tokens and instead hardcode lighting. This is inconsistent but not broken — just means shoes Back View responds to user lighting preferences while others don't.
 
-### 🧢 Hats & Small Accessories (16 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Universal |
-| 3 | Side View | packshot | Profile shape |
-| 4 | In-Hand Studio | portrait | Hold/display |
-| 5 | Top View | lifestyle | Crown/brim from above |
-| 6 | Worn Portrait | portrait | **Category-specific**: hat on model head |
-| 7 | Close-Up Detail | macro | Stitching/logo |
-| 8 | Negative Space Hero | lifestyle | Editorial |
-| 9 | In-Hand Lifestyle | lifestyle | Outdoor context |
-| 10 | Low-Angle Hero | lifestyle | Dramatic |
-| 11 | Back View | packshot | Back panel/strap |
-| 12 | Flat Lay Styled | flatlay | With complementary items |
-| 13 | Texture Detail | macro | Fabric/material close-up |
-| 14 | Hard Shadow Hero | packshot | Creative |
-| 15 | Product + Packaging | packshot | With box/tag |
-| 16 | On-Body Lifestyle | portrait | **Category-specific**: styled outfit context |
+## Category-Specific Issues
 
-### 👟 Shoes (18 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Universal — three-quarter |
-| 3 | Side View | packshot | Classic lateral profile |
-| 4 | Top View | lifestyle | From above showing laces/opening |
-| 5 | In-Hand Studio | portrait | Holding shoe |
-| 6 | Sole Detail | macro | **Category-specific**: outsole tread pattern |
-| 7 | Close-Up Detail | macro | Stitching/material |
-| 8 | Back View | packshot | Heel counter |
-| 9 | Negative Space Hero | lifestyle | Editorial |
-| 10 | On-Foot Studio | portrait | **Category-specific**: worn on foot, studio |
-| 11 | On-Foot Lifestyle | lifestyle | **Category-specific**: walking/street |
-| 12 | Pair Display | packshot | **Category-specific**: both shoes arranged |
-| 13 | Low-Angle Hero | lifestyle | Dramatic |
-| 14 | Product + Packaging | packshot | With shoebox |
-| 15 | Packaging Detail | macro | Box detail |
-| 16 | Hard Shadow Hero | packshot | Creative |
-| 17 | Flat Lay Styled | flatlay | With outfit elements |
-| 18 | Interior Detail | macro | **Category-specific**: insole/lining |
+### Beauty & Skincare
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `angle-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `side-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-beauty` | trigger_blocks empty, personDirective won't resolve | Set to `['background', 'personDetails']` |
+| `near-face-hold-beauty` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `application-beauty` | trigger_blocks empty; says "applying product to the face or skin" — too vague for skincare | Set trigger_blocks to `['background', 'personDetails']`; specify "applying cream/serum to cheek, forehead, or décolletage" |
+| `texture-swatch-beauty` | Good template, but missing `[PRODUCT IMAGE]` reference | Add `[PRODUCT IMAGE]` anchor |
+| `in-hand-lifestyle-beauty` | trigger_blocks empty | Set to `['personDetails']` |
+| `back-view-beauty` | Missing `[PRODUCT IMAGE]` | Add at start |
 
-### 👗 Garments / Clothing & Apparel (18 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View Flat Lay | flatlay | **Primary**: garment laid flat, front |
-| 2 | Folded Display | packshot | Neatly folded stack |
-| 3 | Hanging Display | packshot | On hanger |
-| 4 | On-Model Front | portrait | **Category-specific**: worn front view |
-| 5 | On-Model Back | portrait | **Category-specific**: worn back view |
-| 6 | On-Model Editorial | portrait | Styled editorial |
-| 7 | Movement Shot | editorial | Walking/motion |
-| 8 | Close-Up Detail | macro | Fabric/stitch/button |
-| 9 | Label & Tag Detail | macro | **Category-specific**: neck label, care tag |
-| 10 | Back View Flat Lay | flatlay | Garment flat, back |
-| 11 | Negative Space Hero | lifestyle | Editorial |
-| 12 | Styled Outfit Flat Lay | flatlay | With accessories |
-| 13 | Texture Detail | macro | Fabric weave/knit |
-| 14 | Product + Packaging | packshot | With tissue/bag |
-| 15 | Packaging Detail | macro | Box/bag branding |
-| 16 | Hard Shadow Hero | packshot | Dramatic flat lay |
-| 17 | On-Model Lifestyle | lifestyle | Environmental context |
-| 18 | Angle View | packshot | Three-quarter folded |
+### Makeup & Lipsticks
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-makeup` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-makeup` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `near-face-hold-makeup` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `application-makeup` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `swatch-detail-makeup` | scene_type `macro` — correct; but prompt says "color applied to a clean surface or forearm" — forearm needs person | Consider: if forearm needed, add personDetails trigger |
+| `in-hand-lifestyle-makeup` | trigger_blocks empty | Set to `['personDetails']` |
+| `open-product-makeup` | Good, but `requires_extra_reference` should be `true` — user needs to upload open-product reference | Set `requires_extra_reference = true` |
 
-### 🏠 Home Decor / Furniture (16 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Three-quarter |
-| 3 | Side View | packshot | Profile |
-| 4 | In-Room Styled | lifestyle | **Category-specific**: placed in styled room |
-| 5 | Top View | lifestyle | From above |
-| 6 | Close-Up Detail | macro | Texture/grain/finish |
-| 7 | Material Detail | macro | **Category-specific**: wood grain, fabric, ceramic |
-| 8 | Negative Space Hero | lifestyle | Editorial minimal |
-| 9 | Low-Angle Hero | lifestyle | Dramatic |
-| 10 | Vignette Scene | lifestyle | **Category-specific**: styled with complementary objects |
-| 11 | Scale Context | lifestyle | **Category-specific**: next to human/common object |
-| 12 | Product + Packaging | packshot | With box |
-| 13 | Back View | packshot | Backside/label |
-| 14 | Packaging Detail | macro | Box detail |
-| 15 | Hard Shadow Hero | packshot | Creative |
-| 16 | Tabletop Lifestyle | lifestyle | On surface with props |
+### Bags & Accessories
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-bags` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-bags` | trigger_blocks empty; `{{personDirective}}` at END of template (should be at START for model injection) | Move `{{personDirective}}` to start; set trigger_blocks to `['background', 'personDetails']` |
+| `mid-portrait-hold-bags` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `on-shoulder-bags` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `flat-lay-bags` | Missing `[PRODUCT IMAGE]` | Add at start |
 
-### 📱 Tech / Devices (16 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Three-quarter |
-| 3 | Side View | packshot | Profile/thickness |
-| 4 | In-Hand Studio | portrait | Scale + usage |
-| 5 | Top View | lifestyle | From above |
-| 6 | Screen/Interface Detail | macro | **Category-specific**: screen or display |
-| 7 | Port & Button Detail | macro | **Category-specific**: ports, buttons, connectors |
-| 8 | Close-Up Detail | macro | Material/finish |
-| 9 | Negative Space Hero | lifestyle | Editorial |
-| 10 | In-Use Lifestyle | lifestyle | **Category-specific**: desk/workspace context |
-| 11 | Low-Angle Hero | lifestyle | Dramatic |
-| 12 | Product + Packaging | packshot | With box |
-| 13 | Back View | packshot | Back panel |
-| 14 | Packaging Detail | macro | Box detail |
-| 15 | Hard Shadow Hero | packshot | Creative |
-| 16 | Floating Straight | packshot | Levitation |
+### Hats & Small Accessories
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-hats` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-hats` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `worn-portrait-hats` | trigger_blocks empty — critical for on-model hat shots | Set to `['background', 'personDetails']` |
+| `in-hand-lifestyle-hats` | trigger_blocks empty | Set to `['personDetails']` |
+| `on-body-lifestyle-hats` | trigger_blocks empty | Set to `['background', 'personDetails']` |
 
-### 🍕 Food & Beverage (16 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal (packaging front) |
-| 2 | Angle View | packshot | Three-quarter |
-| 3 | Side View | packshot | Profile |
-| 4 | Top View | lifestyle | From above |
-| 5 | In-Hand Studio | portrait | Holding product |
-| 6 | Serving Suggestion | lifestyle | **Category-specific**: plated/poured/served |
-| 7 | Pour / Action Shot | lifestyle | **Category-specific**: pouring, opening, scooping |
-| 8 | Close-Up Detail | macro | Label/ingredients |
-| 9 | Negative Space Hero | lifestyle | Editorial |
-| 10 | Tabletop Lifestyle | lifestyle | Kitchen/dining context |
-| 11 | Low-Angle Hero | lifestyle | Dramatic |
-| 12 | Product + Packaging | packshot | With outer box |
-| 13 | Back View | packshot | Nutrition/info panel |
-| 14 | Packaging Detail | macro | Label/seal detail |
-| 15 | Hard Shadow Hero | packshot | Creative |
-| 16 | Ingredients Spread | flatlay | **Category-specific**: product with raw ingredients |
+### Shoes
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-shoes` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-shoes` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `on-foot-studio-shoes` | trigger_blocks empty — critical for on-foot shots | Set to `['background', 'personDetails']` |
+| `on-foot-lifestyle-shoes` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `pair-display-shoes` | Says "both shoes arranged" but user uploads single shoe — AI must infer the pair | Add note: "Generate the matching pair from the same reference" |
 
-### 💊 Supplements & Wellness (16 shots)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Three-quarter |
-| 3 | Side View | packshot | Profile |
-| 4 | In-Hand Studio | portrait | Scale/hold |
-| 5 | Top View | lifestyle | Cap/opening from above |
-| 6 | Capsule / Tablet Spill | macro | **Category-specific**: pills spilling from container |
-| 7 | Close-Up Detail | macro | Label/supplement facts |
-| 8 | Negative Space Hero | lifestyle | Editorial |
-| 9 | In-Hand Lifestyle | lifestyle | Wellness/gym/kitchen context |
-| 10 | Low-Angle Hero | lifestyle | Dramatic |
-| 11 | Product + Packaging | packshot | With box |
-| 12 | Back View | packshot | Supplement facts panel |
-| 13 | Packaging Detail | macro | Box detail |
-| 14 | Hard Shadow Hero | packshot | Creative |
-| 15 | Scoop Detail | macro | **Category-specific**: powder scoop/serving |
-| 16 | Wellness Lifestyle | lifestyle | **Category-specific**: morning routine, workout context |
+### Garments
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `on-model-front-garments` | trigger_blocks empty — ALL on-model garment scenes broken | Set to `['background', 'personDetails']` |
+| `on-model-back-garments` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `on-model-editorial-garments` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `movement-shot-garments` | trigger_blocks empty; scene_type `portrait` — should maybe be `editorial` for motion feel | Set trigger_blocks; consider `editorial` scene_type |
+| `on-model-lifestyle-garments` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `label-tag-garments` | `requires_extra_reference` should be `true` — user should upload label photo | Set `requires_extra_reference = true` |
 
-### 📦 Other / Custom (14 shots — generic but solid)
-| # | Title | Type | Rationale |
-|---|-------|------|-----------|
-| 1 | Front View | packshot | Universal |
-| 2 | Angle View | packshot | Universal |
-| 3 | Side View | packshot | Universal |
-| 4 | In-Hand Studio | portrait | Scale |
-| 5 | Top View | lifestyle | From above |
-| 6 | Close-Up Detail | macro | Surface/material |
-| 7 | Negative Space Hero | lifestyle | Editorial |
-| 8 | In-Hand Lifestyle | lifestyle | Context |
-| 9 | Low-Angle Hero | lifestyle | Dramatic |
-| 10 | Product + Packaging | packshot | With box |
-| 11 | Back View | packshot | Back/info |
-| 12 | Packaging Detail | macro | Box detail |
-| 13 | Hard Shadow Hero | packshot | Creative |
-| 14 | Flat Lay Styled | flatlay | With props |
+### Home Decor
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-home` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-room-styled-home` | Good concept but trigger_blocks empty — no background customization | Set trigger_blocks to `['background']` at minimum |
+| `vignette-home` | Hardcodes "candle, book, plant, vase" — too specific | Generalize to "complementary decor objects appropriate for the product" |
+| `scale-context-home` | "next to a common household object (book, mug, hand)" — hand mention could trigger person rendering | Remove "hand" from the prompt |
 
-## Execution Steps
+### Tech / Devices
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-tech` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-tech` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `screen-interface-tech` | Good — correctly says "do NOT generate fake UI" | No change |
+| `in-use-lifestyle-tech` | Hardcodes "coffee cup, notebook, plant" — too specific; also says "minimal desk accessories" then lists them | Generalize; remove duplicate instruction |
 
-1. **Delete all non-fragrance scenes** — bulk DELETE from `product_image_scenes` WHERE `category_collection != 'fragrance'`
-2. **Insert new Essential Shots** — one INSERT per category with crafted `prompt_template` values modeled after the fragrance templates but adapted for each product type (e.g., "bottle" → "garment", "glass tint" → "fabric texture")
-3. Each prompt template will follow the same proven structure: `[PRODUCT IMAGE] {{productName}} — [specific framing instruction]. {{background}} [lighting directive]. [fidelity constraints]. [negative instructions].`
+### Food & Beverage
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-food` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-food` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `serving-suggestion-food` | Good concept but no trigger_blocks for background | Add `['background']` |
+| `pour-action-food` | Good concept, no trigger_blocks | Add `['background']` |
+| `ingredients-spread-food` | Hardcodes "fresh herbs, raw spices, fruits, grains" — too specific for all food | Generalize to "raw ingredients relevant to the product" |
 
-## Scale
-- Delete: ~170 existing non-fragrance scenes
-- Insert: ~170 new category-specific scenes (11 categories × ~16 avg)
-- Each with a unique, tailored prompt template
-- Fragrance: **ZERO changes**
+### Supplements & Wellness
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-supplements` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-supplements` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `capsule-spill-supplements` | Good concept; `requires_extra_reference` should be `true` — user should upload open container photo | Set `requires_extra_reference = true` |
+| `in-hand-lifestyle-supplements` | trigger_blocks empty | Set to `['personDetails']` |
+| `scoop-detail-supplements` | `requires_extra_reference` should be `true` — need reference of powder/scoop | Set `requires_extra_reference = true` |
+| `wellness-lifestyle-supplements` | trigger_blocks empty; scene_type `lifestyle` with person — needs personDetails | Set to `['background', 'personDetails']` |
+
+### Other / Custom
+| Scene | Issue | Fix |
+|-------|-------|-----|
+| `front-view-other` | Missing `[PRODUCT IMAGE]` | Add at start |
+| `in-hand-studio-other` | trigger_blocks empty | Set to `['background', 'personDetails']` |
+| `in-hand-lifestyle-other` | trigger_blocks empty | Set to `['personDetails']` |
+
+## Summary of Changes
+
+1. **~40 scenes**: Add `[PRODUCT IMAGE]` anchor to prompt_template start (all Front View, Angle View, Side View, Back View packshots)
+2. **~35 scenes**: Fix empty `trigger_blocks` → add `['background', 'personDetails']` or `['personDetails']` or `['background']`
+3. **~4 scenes**: Set `requires_extra_reference = true` (open-product-makeup, label-tag-garments, capsule-spill-supplements, scoop-detail-supplements)
+4. **~5 scenes**: Fix hardcoded props lists → generalize
+5. **~3 scenes**: Fix scene_type mismatches
+6. **~5 scenes**: Move `{{personDirective}}` position (should be at prompt start, not end, for model scenes)
 
 ## Implementation
-This will be done via the database insert tool (UPDATE/DELETE/INSERT operations on existing data). No frontend code changes needed — the hook already reads scenes dynamically from the database.
+All changes are database UPDATEs to `product_image_scenes`. No frontend code changes needed. Will be executed as a single migration with ~80-90 UPDATE statements.
 
