@@ -88,7 +88,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
       </div>
 
       {/* Results grouped by product */}
-      {Array.from(results.entries()).map(([productId, { images, productName }]) => (
+      {Array.from(sortedResults.entries()).map(([productId, { images, productName }]) => (
         <div key={productId} className="space-y-3">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold">{productName}</h3>
