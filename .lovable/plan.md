@@ -1,32 +1,31 @@
 
 
-# Add Product Name + Scene Name to Downloaded Image Filenames
-
-## Problem
-Currently, single-image downloads use `product_{sceneName}` and zip downloads use generic `image_{index}` or `scene_name_{index}` filenames. The user wants every downloaded file named as `{ProductName}_{SceneName}.ext` — both for individual downloads and inside the zip.
+# Improve Gradient Presets in Color Picker & Background Swatches
 
 ## Changes
 
-### 1. Single image downloads — `ProductImagesStep6Results.tsx`
-Update `handleSingleDownload` to accept `productName` alongside `sceneName` and build filename as `{productName}_{sceneName}`:
-```
-Verdén_317_Vert_Sauge_Eau_de_Parfum_Front_View.png
-```
+### 1. Update `GRADIENT_PRESETS` in `ColorPickerDialog.tsx`
+Replace the current 6 generic presets with the user's 6 specific gradients:
 
-Also fix the lightbox download handler which currently loses context — pass product name + scene name through.
+| Name | From | To |
+|---|---|---|
+| Terracotta | #984D1B | #FBEFE9 |
+| Ocean | #1C6CA0 | #C7E6F5 |
+| Crimson | #B62020 | #FBE9E9 |
+| Forest | #0F570F | #EAFBE9 |
+| Sunset Duo | #D42525 | #246DCC |
+| Navy Fade | #FFFFFF | #123668 |
 
-### 2. Zip downloads — `ProductImagesStep6Results.tsx`
-Pass `scene_name` on each `DropImage` so the zip builder uses it for the filename.
+### 2. Update gradient preset swatches in `ProductImagesStep3Refine.tsx`
+Replace the 3 existing gradient entries in `BG_SWATCH_OPTIONS` (`gradient`, `gradient-warm`, `gradient-cool`) with updated presets that use the new gradient values. Keep 3 preset gradient cards but use the more visually distinct ones (e.g. Navy Fade, Terracotta, Ocean) so users see real variety. The "Custom Gradient" card still opens the picker for full control.
 
-### 3. Zip filename builder — `dropDownload.ts`
-Update the zip file naming logic to use `{product_title}_{scene_name}_{index}.ext` when both are available. Files will be organized in the zip as:
-```
-Product_Images/
-  Verdén_317_Front_View_1.png
-  Verdén_317_Angle_View_2.png
-```
+Also update the `Soft Gradient` / `Warm Fade` / `Cool Fade` labels to match the new names.
 
-### Files modified
-1. `src/components/app/product-images/ProductImagesStep6Results.tsx` — pass productName to single download + scene_name to zip images + fix lightbox download
-2. `src/lib/dropDownload.ts` — use `product_title + scene_name` for zip filenames
+### 3. Update prompt builder gradient mappings in `productImagePromptBuilder.ts`
+Update `BG_MAP` entries for the renamed gradient keys so the AI model receives correct color descriptions.
+
+## Files modified
+1. `src/components/app/product-images/ColorPickerDialog.tsx` — replace `GRADIENT_PRESETS` array
+2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — update 3 gradient entries in `BG_SWATCH_OPTIONS`
+3. `src/lib/productImagePromptBuilder.ts` — update gradient key mappings in `BG_MAP`
 
