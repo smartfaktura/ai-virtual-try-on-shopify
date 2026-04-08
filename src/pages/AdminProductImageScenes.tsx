@@ -243,7 +243,36 @@ export default function AdminProductImageScenes() {
     }
   };
 
-  if (!isAdmin) {
+  const handleMoveSubCategory = async (categoryKey: string, subLabel: string, direction: 'up' | 'down') => {
+    const catScenes = grouped.get(categoryKey) || [];
+    const subGroups = groupBySubCategory(catScenes);
+    const idx = subGroups.findIndex(g => g.label === subLabel);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= subGroups.length) return;
+
+    const a = subGroups[idx];
+    const b = subGroups[swapIdx];
+    const newOrderA = b.sortOrder;
+    const newOrderB = a.sortOrder;
+    // If both have the same sortOrder, force different values
+    const finalA = newOrderA === newOrderB ? (direction === 'up' ? newOrderB - 1 : newOrderB + 1) : newOrderA;
+    const finalB = newOrderA === newOrderB ? newOrderB : newOrderB;
+
+    // Bulk update all scenes in both sub-categories
+    const scenesA = a.scenes.map(s => s.id);
+    const scenesB = b.scenes.map(s => s.id);
+    try {
+      await Promise.all([
+        supabase.from('product_image_scenes' as any).update({ sub_category_sort_order: finalA } as any).in('id', scenesA),
+        supabase.from('product_image_scenes' as any).update({ sub_category_sort_order: finalB } as any).in('id', scenesB),
+      ]);
+      // Invalidate queries
+      await updateScene.mutateAsync({ id: scenesA[0], updates: { sub_category_sort_order: finalA } });
+      toast.success('Sub-category order updated');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
     return <div className="p-8 text-center text-muted-foreground">Admin access required</div>;
   }
 
