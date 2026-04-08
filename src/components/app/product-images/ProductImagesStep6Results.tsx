@@ -113,7 +113,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
             {images.map((img, i) => (
               <button
                 key={i}
-                onClick={() => openLightbox(images, i)}
+                onClick={() => openLightbox(images, i, productName)}
                 className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group relative"
               >
                 <div className="aspect-square bg-muted/30 overflow-hidden">
