@@ -20,6 +20,7 @@ export interface DbScene {
   sub_category: string | null;
   category_sort_order: number;
   requires_extra_reference: boolean;
+  sub_category_sort_order: number;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
