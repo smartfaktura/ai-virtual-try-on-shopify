@@ -1946,7 +1946,78 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── COMPLETE SETUP ── */}
+      {/* ── REFERENCE TRIGGER UPLOADS (atomizer, open bottle, cap, etc.) ── */}
+      {activeReferenceTriggers.map(triggerKey => {
+        const def = REFERENCE_TRIGGERS[triggerKey];
+        if (!def) return null;
+        const refUrl = sceneExtraRefs[`trigger:${triggerKey}`];
+        const isUploading = uploadingRefTrigger === triggerKey;
+        return (
+          <div key={triggerKey} className="space-y-3">
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Camera className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold">{def.label}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">{def.description}</p>
+                  </div>
+                </div>
+
+                {refUrl ? (
+                  <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
+                    <img src={refUrl} alt={def.label} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeRefTrigger(triggerKey)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      pendingRefTriggerRef.current = triggerKey;
+                      refTriggerInputRef.current?.click();
+                    }}
+                    disabled={isUploading}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
+                  >
+                    {isUploading ? (
+                      <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 text-primary/60" />
+                        <span className="text-xs text-primary/80 font-medium">{def.label}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })}
+      {/* Hidden file input for reference trigger uploads */}
+      <input
+        ref={refTriggerInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0];
+          const tk = pendingRefTriggerRef.current;
+          if (f && tk) handleRefTriggerUpload(tk, f);
+          e.target.value = '';
+          pendingRefTriggerRef.current = null;
+        }}
+      />
+
+
       {(scenesNeedingModel.length > 0 || bgScenes.length > 0) && (
         <div className="space-y-3">
           <div>
