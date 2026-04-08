@@ -291,10 +291,9 @@ export default function AdminProductImageScenes() {
         </Link>
         <Badge variant="secondary" className="text-xs">{filtered.length} scenes</Badge>
       </div>
-
-
-
-
+      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+        <Info className="w-3 h-3" /> Sub-categories are ordered by their lowest scene sort_order. To reorder groups, adjust the sort_order of scenes within each sub-category.
+      </p>
       {/* Add new form */}
       {addingNew && (
         <Card className="border-primary/30">
