@@ -372,12 +372,20 @@ export default function AdminProductImageScenes() {
                 <CollapsibleContent>
                   <div className="pl-2 pt-2 space-y-3">
                     {hasMultipleSubGroups ? (
-                      subGroups.map(sg => (
+                      subGroups.map((sg, sgIdx) => (
                         <div key={sg.label}>
                           <div className="flex items-center gap-2 mb-1.5 pl-1">
                             <div className="h-px flex-1 max-w-[60px] bg-border" />
                             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{sg.label}</span>
                             <Badge variant="outline" className="text-[9px]">{sg.scenes.length}</Badge>
+                            <div className="flex items-center gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMoveSubCategory(key, sg.label, 'up')} disabled={sgIdx === 0 || sg.label === 'Uncategorized'}>
+                                <ArrowUp className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMoveSubCategory(key, sg.label, 'down')} disabled={sgIdx === subGroups.length - 1 || sg.label === 'Uncategorized'}>
+                                <ArrowDown className="w-3 h-3" />
+                              </Button>
+                            </div>
                             <div className="h-px flex-1 bg-border" />
                           </div>
                           <div className="space-y-1.5">
