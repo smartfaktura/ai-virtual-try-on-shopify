@@ -56,8 +56,13 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   const allImages = Array.from(sortedResults.values()).flatMap(r => r.images);
   const totalImages = allImages.length;
 
-  const openLightbox = (images: ResultImage[], idx: number) => {
+  const [lightboxProductName, setLightboxProductName] = useState('');
+  const [lightboxSceneNames, setLightboxSceneNames] = useState<string[]>([]);
+
+  const openLightbox = (images: ResultImage[], idx: number, productName: string) => {
     setLightboxImages(images.map(i => i.url));
+    setLightboxSceneNames(images.map(i => i.sceneName));
+    setLightboxProductName(productName);
     setLightboxIndex(idx);
     setLightboxOpen(true);
   };
@@ -81,9 +86,10 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     }
   };
 
-  const handleSingleDownload = (url: string, sceneName: string) => {
-    const safeName = sceneName.replace(/[^a-zA-Z0-9_-]/g, '_');
-    saveOrShareImage(url, `product_${safeName}`);
+  const handleSingleDownload = (url: string, productName: string, sceneName: string) => {
+    const safeProd = productName.replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').replace(/\s+/g, '_');
+    const safeScene = sceneName.replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').replace(/\s+/g, '_');
+    saveOrShareImage(url, `${safeProd}_${safeScene}`);
   };
 
   return (
@@ -107,7 +113,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
             {images.map((img, i) => (
               <button
                 key={i}
-                onClick={() => openLightbox(images, i)}
+                onClick={() => openLightbox(images, i, productName)}
                 className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group relative"
               >
                 <div className="aspect-square bg-muted/30 overflow-hidden">
@@ -123,7 +129,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                 {/* Per-image download button */}
                 <span
                   role="button"
-                  onClick={(e) => { e.stopPropagation(); handleSingleDownload(img.url, img.sceneName); }}
+                  onClick={(e) => { e.stopPropagation(); handleSingleDownload(img.url, productName, img.sceneName); }}
                   className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                   title="Download"
                 >
@@ -157,7 +163,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
-          onDownload={(idx) => handleSingleDownload(lightboxImages[idx], `image_${idx + 1}`)}
+          onDownload={(idx) => handleSingleDownload(lightboxImages[idx], lightboxProductName, lightboxSceneNames[idx] || `image_${idx + 1}`)}
         />
       )}
     </div>

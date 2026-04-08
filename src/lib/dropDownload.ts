@@ -37,9 +37,16 @@ export async function downloadDropAsZip(
       const ext = getExtensionFromContentType(contentType);
       const arrayBuffer = await response.arrayBuffer();
       const folder = (img.workflow_name || 'General').replace(/\//g, '–');
-      const fileName = img.scene_name
-        ? `${img.scene_name.replace(/\//g, '–')}_${i + 1}${ext}`
-        : `image_${i + 1}${ext}`;
+      let fileName: string;
+      if (img.product_title && img.scene_name) {
+        const safeProd = img.product_title.replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').replace(/\s+/g, '_');
+        const safeScene = img.scene_name.replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').replace(/\s+/g, '_');
+        fileName = `${safeProd}_${safeScene}_${i + 1}${ext}`;
+      } else if (img.scene_name) {
+        fileName = `${img.scene_name.replace(/\//g, '–')}_${i + 1}${ext}`;
+      } else {
+        fileName = `image_${i + 1}${ext}`;
+      }
       zip.file(`${folder}/${fileName}`, arrayBuffer, { binary: true });
     } catch {
       // skip failed downloads
