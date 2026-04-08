@@ -101,7 +101,7 @@ export default function ProductImages() {
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
   const [completedJobs, setCompletedJobs] = useState(0);
-  const [results, setResults] = useState<Map<string, { images: Array<{ url: string; sceneName: string }>; productName: string }>>(new Map());
+  const [results, setResults] = useState<Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string }>; productName: string }>>(new Map());
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expectedJobCount, setExpectedJobCount] = useState(0);
   const [enqueuedCount, setEnqueuedCount] = useState(0);
