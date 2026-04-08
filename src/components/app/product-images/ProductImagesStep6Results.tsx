@@ -121,15 +121,21 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                 onClick={() => openLightbox(images, i, productName)}
                 className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group relative"
               >
-                <div className="aspect-square bg-muted/30 overflow-hidden">
+                <div
+                  className="bg-muted/30 overflow-hidden"
+                  style={{ aspectRatio: img.aspectRatio ? img.aspectRatio.replace(':', '/') : '1/1' }}
+                >
                   <ShimmerImage
                     src={img.url}
                     alt={`${productName} - ${img.sceneName} - ${i + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <div className="px-2 py-1.5 bg-card border-t border-border">
+                <div className="px-2 py-1.5 bg-card border-t border-border flex items-center gap-1.5">
                   <p className="text-[10px] text-muted-foreground truncate">{img.sceneName}</p>
+                  {hasMultipleRatios && img.aspectRatio && (
+                    <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-3.5 shrink-0 font-medium">{img.aspectRatio}</Badge>
+                  )}
                 </div>
                 {/* Per-image download button */}
                 <span
