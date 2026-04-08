@@ -1,92 +1,67 @@
 
 
-# Prompt Audit Round 2: Remaining Issues in Non-Fragrance Scenes
+# Prompt Audit Round 3: Remaining Issues in Non-Fragrance Scenes
 
-## Audit Methodology
-Cross-referenced every scene's `prompt_template`, `scene_type`, and `trigger_blocks` against the prompt builder logic in `productImagePromptBuilder.ts` (lines 166-174 for camera map, 533-546 for camera resolution, 570-574 for negative prompt, 638-641 for person directive, 906-1005 for build flow).
+After three prior rounds of fixes, I found **8 remaining issues** across the 184 non-fragrance scenes.
+
+---
 
 ## Issues Found
 
-### 1. Wrong `scene_type` on Low-Angle & Negative Space scenes (22 scenes)
-**All `low-angle-*` and `negative-space-*` scenes** have `scene_type: 'lifestyle'` which maps to `35mm f/4` lens (wide environmental). These are product-only studio shots — they should use `scene_type: 'packshot'` → `50mm f/8` for sharp, distortion-free product rendering.
+### 1. Wrong `scene_type` on garment flat lay scenes (2 scenes)
+`front-flat-lay-garments` and `back-flat-lay-garments` have `scene_type: 'packshot'` (→ 50mm f/8 lens, standard angle). But their prompts say "strict overhead flat lay composition" — they are clearly overhead shots and need `scene_type: 'flatlay'` (→ 35mm f/5.6 overhead, even sharpness across the flat surface).
 
-**Affected (22 scenes)**:
-- `low-angle-bags`, `low-angle-beauty`, `low-angle-makeup`, `low-angle-shoes`, `low-angle-hats`, `low-angle-home`, `low-angle-tech`, `low-angle-food`, `low-angle-supplements`, `low-angle-other`
-- `negative-space-bags`, `negative-space-beauty`, `negative-space-makeup`, `negative-space-shoes`, `negative-space-hats`, `negative-space-home`, `negative-space-tech`, `negative-space-food`, `negative-space-supplements`, `negative-space-other`, `negative-space-garments`
+**Fix**: Change `scene_type` to `'flatlay'` for both.
 
-**Fix**: Change `scene_type` to `'packshot'` for all 22.
+### 2. `wellness-lifestyle-supplements` has wrong `trigger_blocks`
+Currently: `{background, personDetails}`. But the prompt is a **product-only lifestyle** scene — "placed naturally beside a water bottle on a gym bench." There is no `{{personDirective}}` in the template, no `[MODEL IMAGE]` reference, and no model is needed. Having `personDetails` in the trigger causes the UI to show the model/outfit selection panel unnecessarily.
 
-### 2. Wrong `scene_type` on Flat Lay Styled scenes (5 scenes)
-`flat-lay-styled-bags`, `flat-lay-styled-hats`, `flat-lay-styled-shoes`, `flat-lay-styled-other`, `styled-outfit-flat-lay-garments` have `scene_type: 'lifestyle'` but are overhead flat lay compositions. Should be `'flatlay'` → `35mm f/5.6 overhead`.
+**Fix**: Change `trigger_blocks` to `{background}` only.
 
-**Fix**: Change `scene_type` to `'flatlay'` for all 5.
+### 3. `ingredients-spread-food` has wrong `scene_type`
+Currently `lifestyle` (35mm f/4 wide angle). But the prompt says "photographed from above in a flat lay composition" — this is an overhead shot that should use `scene_type: 'flatlay'` (35mm f/5.6 overhead, even sharpness).
 
-### 3. Missing `trigger_blocks` on lifestyle scenes needing background control (3 scenes)
-These scenes describe environmental context but have empty `trigger_blocks`, meaning the user's background settings won't apply:
-- `vignette-scene-home` — describes "marble countertop, wooden shelf" but user can't override background
-- `ingredients-spread-food` — overhead styled composition, user should control background
-- `flat-lay-styled-bags` / `flat-lay-styled-hats` / `flat-lay-styled-shoes` / `flat-lay-styled-other` — flat lay compositions where background matters
+**Fix**: Change `scene_type` to `'flatlay'`.
 
-**Fix**: Add `['background']` to `trigger_blocks` for these 6 scenes.
+### 4. `swatch-detail-makeup` references "forearm" without `personDetails` trigger
+The prompt says "color swatched on skin or a clean surface" and may show swatches on a forearm, but `trigger_blocks` is empty. If the AI renders a forearm, the `personDirective` token won't resolve and no model/skin-tone preferences will apply. Since the swatch can also be on a clean surface (not requiring a person), the safer fix is to clarify the prompt to prefer surfaces over skin.
 
-### 4. `in-hand-lifestyle-beauty` and `in-hand-lifestyle-makeup` — `{{personDirective}}` at END instead of START
-Both templates have `{{personDirective}}` as the last token. For model injection (where `[MODEL IMAGE]` needs to be early for the AI to anchor to the face), the person directive should come first — same pattern as `near-face-hold-beauty` and `mid-portrait-hold-bags` which correctly start with `{{personDirective}}`.
+**Fix**: Update prompt to emphasize "clean surface, marble slab, or paper" rather than skin, keeping it a product-only macro shot. This avoids needing person triggers for a color swatch.
 
-**Fix**: Move `{{personDirective}}` from end to start of prompt template for both scenes.
+### 5. `pair-display-shoes` — AI must generate mirrored shoe from single reference
+The prompt says "both the left and right shoe arranged together as a pair." Users upload a single shoe. The AI must generate the matching pair — this should be explicitly stated.
 
-### 5. `tabletop-lifestyle-home` still has hardcoded props
-Current: `"marble countertop, wooden shelf, or linen-draped table — with minimal complementary props (plant sprig, candle, small tray)"`
-This is too specific and will force the same props regardless of product type (e.g., a metal lamp doesn't need candles).
+**Fix**: Add to prompt: "Generate the matching opposite-foot shoe mirrored from the reference — same design, same color, same material."
 
-**Fix**: Generalize to `"styled surface with minimal complementary objects appropriate to the product"`.
+### 6. `on-foot-lifestyle-shoes` — `scene_type: 'lifestyle'` but shows lower-leg close framing
+The prompt says "Frame from mid-calf down" and "No full body above waist" — this is tight framing on the foot area. `lifestyle` (35mm f/4 wide) is too wide for this crop. Should be `portrait` (85mm f/2) for tight lower-body framing matching the prompt intent.
 
-### 6. `capsule-spill-supplements` missing `requires_extra_reference` flag
-The scene says "container open and capsules spilling out" — the AI can't know what the capsules look like from the closed container photo. The user should upload an extra reference of the open container.
+**Fix**: Change `scene_type` to `'portrait'`.
 
-**Fix**: Set `requires_extra_reference = true`. (Was in the previous plan but appears not applied — currently `false`.)
+### 7. `in-hand-lifestyle-bags` has `{{personDirective}}` at the end
+The prompt ends with `{{personDirective}}`. For model injection (where `[MODEL IMAGE]` anchoring works best early in the prompt), `{{personDirective}}` should be at the start — same pattern as the already-fixed beauty and makeup versions.
 
-### 7. `open-product-makeup` missing `requires_extra_reference` flag
-Same issue — "lipstick fully extended", "compact opened" requires seeing the open state. Currently `requires_extra_reference: false`.
+**Fix**: Move `{{personDirective}}` from end to start of the template.
 
-**Fix**: Set `requires_extra_reference = true`.
+### 8. `in-hand-lifestyle-*` (hats, supplements, other) — same `{{personDirective}}` position issue
+`in-hand-lifestyle-hats`, `in-hand-lifestyle-supplements`, `in-hand-lifestyle-other` all have `{{personDirective}}` at the very end. Needs to be moved to the start.
 
-### 8. Back View scenes inconsistent token usage
-`back-view-bags` uses `{{lightingDirective}} {{materialTexture}}. {{shadowDirective}}` (dynamic, user-controlled). But `back-view-food` and `back-view-supplements` skip `{{materialTexture}}` and `{{shadowDirective}}`. All back views should consistently use the full token set so user preferences apply uniformly.
+**Fix**: Move `{{personDirective}}` from end to start for all three.
 
-**Fix**: Add `{{materialTexture}}. {{shadowDirective}}` to `back-view-food` and `back-view-supplements` prompts.
+---
 
-### 9. `on-foot-lifestyle-shoes` framing issue
-Current prompt says `"Frame from mid-calf down"` and `"No full body above waist"` — but the prompt builder will also inject `resolveBodyFramingDirective('shoes')` = `"Three-quarter to full-body shot — model visible from head to below the knees, shoes clearly visible and in-frame."` This CONTRADICTS the template's tight framing.
+## Summary
 
-**Fix**: The body framing directive is only injected if `{{bodyFramingDirective}}` token exists in the template (template-led, line 973-976). Since this template doesn't use that token, no conflict. **No fix needed** — confirmed safe.
+| # | Change | Scenes |
+|---|--------|--------|
+| 1 | `scene_type` → `'flatlay'` | 2 (front/back-flat-lay-garments) |
+| 2 | `trigger_blocks` → `{background}` only | 1 (wellness-lifestyle-supplements) |
+| 3 | `scene_type` → `'flatlay'` | 1 (ingredients-spread-food) |
+| 4 | Prompt update: surface-only swatch | 1 (swatch-detail-makeup) |
+| 5 | Prompt update: add pair-generation instruction | 1 (pair-display-shoes) |
+| 6 | `scene_type` → `'portrait'` | 1 (on-foot-lifestyle-shoes) |
+| 7-8 | Move `{{personDirective}}` to start | 4 (in-hand-lifestyle bags/hats/supplements/other) |
+| **Total** | | **11 UPDATE statements** |
 
-### 10. `movement-shot-garments` scene_type should be `editorial`
-Currently `scene_type: 'portrait'` (85mm f/2 — tight, shallow DOF). A walking motion shot needs wider framing: `'editorial'` → `50mm f/2.8` is better for capturing full garment movement.
-
-**Fix**: Change `scene_type` to `'editorial'`.
-
-### 11. Missing `[PRODUCT IMAGE]` on a few In-Hand Lifestyle scenes
-`in-hand-lifestyle-beauty` starts with `[PRODUCT IMAGE]` ✅, `in-hand-lifestyle-makeup` starts with `[PRODUCT IMAGE]` ✅. These are fine.
-
-However, checking other lifestyle scenes: `vignette-scene-home` starts with `[PRODUCT IMAGE]` ✅, `tabletop-lifestyle-home` starts with `[PRODUCT IMAGE]` ✅. All good.
-
-### 12. `on-model-lifestyle-garments` has `scene_type: 'lifestyle'` — correct?
-This scene has `trigger_blocks: ['background', 'personDetails']` and uses `{{personDirective}}`. The `lifestyle` type gives 35mm f/4 — appropriate for environmental on-model shots. ✅ Correct.
-
-## Summary of Changes
-
-| # | Change | Scenes Affected |
-|---|--------|----------------|
-| 1 | `scene_type` → `'packshot'` | 22 (low-angle + negative-space) |
-| 2 | `scene_type` → `'flatlay'` | 5 (flat-lay-styled + styled-outfit) |
-| 3 | `trigger_blocks` → `['background']` | 6 (vignette, ingredients, flat-lays) |
-| 4 | Move `{{personDirective}}` to start | 2 (in-hand-lifestyle beauty + makeup) |
-| 5 | Generalize hardcoded props | 1 (tabletop-lifestyle-home) |
-| 6 | `requires_extra_reference` → `true` | 2 (capsule-spill, open-product-makeup) |
-| 7 | Add missing tokens to back-view | 2 (back-view-food, back-view-supplements) |
-| 8 | `scene_type` → `'editorial'` | 1 (movement-shot-garments) |
-| **Total** | | **~41 UPDATE statements** |
-
-## Implementation
-All database UPDATEs via the insert tool. No frontend code changes.
+All changes are database UPDATEs. No frontend code changes.
 
