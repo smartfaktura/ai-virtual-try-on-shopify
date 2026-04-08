@@ -339,6 +339,7 @@ export default function ProductImages() {
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
     const aspectRatio = details.aspectRatio || '1:1';
+    const selectedRatios = details.selectedAspectRatios || [aspectRatio];
     // imgCount already declared above
 
     let aborted = false;
@@ -360,88 +361,91 @@ export default function ProductImages() {
           const variationDetails: DetailSettings = { ...details, ...variationOverride };
           const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, selectedModelGender);
 
-          for (let i = 0; i < imgCount; i++) {
-            // Resolve prop products for this scene
-            const propProductIds = details.sceneProps?.[scene.id] || [];
-            const propProducts = propProductIds
-              .map(pid => userProducts.find(p => p.id === pid))
-              .filter(Boolean)
-              .map(p => p!);
-            const additionalProducts = propProducts.length > 0
-              ? await Promise.all(propProducts.map(async pp => ({
-                  title: pp.title,
-                  productType: pp.product_type,
-                  description: pp.description,
-                  imageUrl: await convertImageToBase64(pp.image_url),
-                })))
-              : undefined;
+          for (const ratioForJob of selectedRatios) {
+            for (let i = 0; i < imgCount; i++) {
+              // Resolve prop products for this scene
+              const propProductIds = details.sceneProps?.[scene.id] || [];
+              const propProducts = propProductIds
+                .map(pid => userProducts.find(p => p.id === pid))
+                .filter(Boolean)
+                .map(p => p!);
+              const additionalProducts = propProducts.length > 0
+                ? await Promise.all(propProducts.map(async pp => ({
+                    title: pp.title,
+                    productType: pp.product_type,
+                    description: pp.description,
+                    imageUrl: await convertImageToBase64(pp.image_url),
+                  })))
+                : undefined;
 
-            const variationEntry = {
-              label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : ''),
-              instruction: variationInstruction,
-              aspect_ratio: details.sceneAspectOverrides?.[scene.id] || undefined,
-            };
+              const variationEntry = {
+                label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (selectedRatios.length > 1 ? ` [${ratioForJob}]` : ''),
+                instruction: variationInstruction,
+                aspect_ratio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
+              };
 
-            const payload: Record<string, unknown> = {
-              workflow_id: WORKFLOW_ID,
-              workflow_name: 'Product Images',
-              workflow_slug: 'product-images',
-              product: {
-                title: product.title,
-                productType: productAnalysis?.category || product.product_type,
-                description: product.description,
-                dimensions: product.dimensions || undefined,
-                imageUrl: base64Image,
-                analysis: productAnalysis || undefined,
-              },
-              product_name: product.title,
-              product_image_url: product.image_url,
-              extra_variations: [variationEntry],
-              selected_variations: [0],
-              ...(additionalProducts ? { additional_products: additionalProducts } : {}),
-              ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
-              ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-              ...(sceneExtraRefs[scene.id]
-                ? { extra_reference_image_url: sceneExtraRefs[scene.id] }
-                : details.backReferenceUrl && scene.triggerBlocks?.includes('backView')
-                  ? { extra_reference_image_url: details.backReferenceUrl }
-                  : {}),
-              quality: 'high',
-              aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
-              batch_id: batchId,
-              scene_name: scene.title,
-              batch_outfit_lock: true,
-              batch_size: selectedScenes.length,
-            };
-
-            await paceDelay(newJobMap.size);
-
-            const result = await enqueueWithRetry(
-              { jobType: 'workflow', payload, imageCount: 1, quality: 'high', hasModel: !!modelRef, hasScene: false, skipWake: true },
-              token,
-            );
-
-            if (!isEnqueueError(result)) {
-              const key = `${product.id}_${scene.id}_v${vIdx}_${i}`;
-              newJobMap.set(key, result.jobId);
-              lastBalance = result.newBalance;
-              setJobMap(new Map(newJobMap));
-              setEnqueuedCount(newJobMap.size);
-              injectActiveJob(queryClient, {
-                jobId: result.jobId,
+              const payload: Record<string, unknown> = {
+                workflow_id: WORKFLOW_ID,
                 workflow_name: 'Product Images',
                 workflow_slug: 'product-images',
+                product: {
+                  title: product.title,
+                  productType: productAnalysis?.category || product.product_type,
+                  description: product.description,
+                  dimensions: product.dimensions || undefined,
+                  imageUrl: base64Image,
+                  analysis: productAnalysis || undefined,
+                },
                 product_name: product.title,
-                job_type: 'workflow',
+                product_image_url: product.image_url,
+                extra_variations: [variationEntry],
+                selected_variations: [0],
+                ...(additionalProducts ? { additional_products: additionalProducts } : {}),
+                ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
+                ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
+                ...(sceneExtraRefs[scene.id]
+                  ? { extra_reference_image_url: sceneExtraRefs[scene.id] }
+                  : details.backReferenceUrl && scene.triggerBlocks?.includes('backView')
+                    ? { extra_reference_image_url: details.backReferenceUrl }
+                    : {}),
                 quality: 'high',
-                imageCount: 1,
+                aspectRatio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
                 batch_id: batchId,
-              });
-            } else if (result.type === 'insufficient_credits') {
-              toast.error(result.message);
-              aborted = true;
-              break;
+                scene_name: scene.title,
+                batch_outfit_lock: true,
+                batch_size: selectedScenes.length,
+              };
+
+              await paceDelay(newJobMap.size);
+
+              const result = await enqueueWithRetry(
+                { jobType: 'workflow', payload, imageCount: 1, quality: 'high', hasModel: !!modelRef, hasScene: false, skipWake: true },
+                token,
+              );
+
+              if (!isEnqueueError(result)) {
+                const key = `${product.id}_${scene.id}_v${vIdx}_r${ratioForJob}_${i}`;
+                newJobMap.set(key, result.jobId);
+                lastBalance = result.newBalance;
+                setJobMap(new Map(newJobMap));
+                setEnqueuedCount(newJobMap.size);
+                injectActiveJob(queryClient, {
+                  jobId: result.jobId,
+                  workflow_name: 'Product Images',
+                  workflow_slug: 'product-images',
+                  product_name: product.title,
+                  job_type: 'workflow',
+                  quality: 'high',
+                  imageCount: 1,
+                  batch_id: batchId,
+                });
+              } else if (result.type === 'insufficient_credits') {
+                toast.error(result.message);
+                aborted = true;
+                break;
+              }
             }
+            if (aborted) break;
           }
           if (aborted) break;
         }
