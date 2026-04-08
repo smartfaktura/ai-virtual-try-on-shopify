@@ -239,8 +239,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               <Collapsible open={overridesOpen} onOpenChange={setOverridesOpen}>
                 <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group w-full">
                   <ChevronRight className={cn('w-4 h-4 transition-transform', overridesOpen && 'rotate-90')} />
-                  <span>Scene Ratios & Props</span>
-                  <span className="text-xs text-muted-foreground/70">Set per-scene aspect ratios or add styling accessories</span>
+                  <span>Advanced Scene Controls</span>
+                  <span className="text-xs text-muted-foreground/70">Fine-tune format and props for individual scenes</span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <Card className="mt-3">
