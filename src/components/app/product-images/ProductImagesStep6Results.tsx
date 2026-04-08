@@ -58,7 +58,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     setDownloading(true);
     try {
       const dropImages: DropImage[] = [];
-      for (const [, { images, productName }] of results.entries()) {
+      for (const [, { images, productName }] of sortedResults.entries()) {
         for (const img of images) {
           dropImages.push({ url: img.url, workflow_name: 'Product Images', product_title: productName });
         }
