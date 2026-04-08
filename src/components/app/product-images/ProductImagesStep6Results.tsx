@@ -28,8 +28,23 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  const { sortMap } = useSceneSortOrder();
 
-  const allImages = Array.from(results.values()).flatMap(r => r.images);
+  // Sort images within each product group by admin scene order
+  const sortedResults = useMemo(() => {
+    const sorted = new Map<string, { images: ResultImage[]; productName: string }>();
+    for (const [productId, { images, productName }] of results.entries()) {
+      const sortedImages = [...images].sort((a, b) => {
+        const sa = a.sceneId ? (sortMap.get(a.sceneId) ?? 9999) : 9999;
+        const sb = b.sceneId ? (sortMap.get(b.sceneId) ?? 9999) : 9999;
+        return sa - sb;
+      });
+      sorted.set(productId, { images: sortedImages, productName });
+    }
+    return sorted;
+  }, [results, sortMap]);
+
+  const allImages = Array.from(sortedResults.values()).flatMap(r => r.images);
   const totalImages = allImages.length;
 
   const openLightbox = (images: ResultImage[], idx: number) => {

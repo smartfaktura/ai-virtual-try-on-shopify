@@ -960,12 +960,12 @@ export default function ProductImages() {
                   // Fetch final state and transition
                   const jobIds = Array.from(jobMap.values());
                   supabase.from('generation_queue').select('id, status, result, payload').in('id', jobIds).then(({ data }) => {
-                    const productMap = new Map<string, { productId: string; sceneName: string }>();
+                    const productMap = new Map<string, { productId: string; sceneName: string; sceneId?: string }>();
                     for (const [key, jobId] of jobMap.entries()) {
                       const parts = key.split('_');
                       const sceneId = parts[1] || '';
                       const scene = selectedScenes.find(s => s.id === sceneId);
-                      productMap.set(jobId, { productId: parts[0], sceneName: scene?.title || 'Scene' });
+                      productMap.set(jobId, { productId: parts[0], sceneName: scene?.title || 'Scene', sceneId: sceneId || undefined });
                     }
                     // Enrich scene names from payload
                     for (const j of data || []) {
