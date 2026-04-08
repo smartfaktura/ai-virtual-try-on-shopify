@@ -256,8 +256,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                         )}
                       </div>
                       {selectedScenes.map(scene => {
-                        const sceneRatio = overrides[scene.id] || globalRatio;
-                        const isCustomRatio = overrides[scene.id] && overrides[scene.id] !== globalRatio;
+                        const sceneRatios = overrides[scene.id] || selectedRatios;
+                        const isCustomRatio = !!overrides[scene.id];
                         const props = sceneProps[scene.id] || [];
                         return (
                           <div key={scene.id} className={cn('flex flex-col gap-2 p-2 rounded-lg transition-colors', (isCustomRatio || props.length > 0) ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30')}>
@@ -266,7 +266,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                                 <span className={cn('text-xs font-medium truncate', (isCustomRatio || props.length > 0) ? 'text-foreground' : 'text-muted-foreground')}>{scene.title}</span>
                                 {isCustomRatio && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">custom</span>}
                               </div>
-                              <MiniRatioChips value={sceneRatio} globalValue={globalRatio} onChange={(r) => handleSceneRatioChange(scene.id, r)} />
+                              <MiniRatioChips activeRatios={sceneRatios} globalRatios={selectedRatios} onChange={(r) => handleSceneRatioChange(scene.id, r)} />
                               <button type="button" onClick={() => openPropModal(scene.id)} className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium text-muted-foreground border border-border/60 hover:border-primary/40 hover:text-foreground transition-all cursor-pointer ml-auto">
                                 <Plus className="w-3 h-3" />Add Prop
                               </button>
