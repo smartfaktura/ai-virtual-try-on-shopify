@@ -72,6 +72,8 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
 // Global scenes removed — all scenes now belong to individual categories
 
 function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; selected: boolean; onToggle: () => void }) {
+  const hasBackground = scene.promptTemplate?.includes('{{background}}');
+
   return (
     <button
       onClick={onToggle}
@@ -90,6 +92,14 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
         {selected && (
           <div className="absolute top-1.5 right-1.5">
             <CheckCircle className="w-5 h-5 text-primary fill-primary/20 drop-shadow-sm" />
+          </div>
+        )}
+        {hasBackground && (
+          <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-white border border-gray-200" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
           </div>
         )}
       </div>
