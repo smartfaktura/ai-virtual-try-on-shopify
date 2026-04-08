@@ -15,7 +15,7 @@ import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { CATEGORY_KEYWORDS } from '@/components/app/product-images/ProductImagesStep2Scenes';
-import { getTriggeredBlocks, BLOCK_FIELD_MAP } from '@/components/app/product-images/detailBlockConfig';
+import { getTriggeredBlocks, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -403,11 +403,27 @@ export default function ProductImages() {
                 ...(additionalProducts ? { additional_products: additionalProducts } : {}),
                 ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
                 ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-                ...(sceneExtraRefs[scene.id]
-                  ? { extra_reference_image_url: sceneExtraRefs[scene.id] }
-                  : details.backReferenceUrl && scene.triggerBlocks?.includes('backView')
-                    ? { extra_reference_image_url: details.backReferenceUrl }
-                    : {}),
+                ...(() => {
+                  // Check for reference trigger uploads first (e.g. atomizerDetail, openBottle)
+                  const triggerBlocks = scene.triggerBlocks || [];
+                  for (const tb of triggerBlocks) {
+                    const refUrl = sceneExtraRefs[`trigger:${tb}`];
+                    if (refUrl && REFERENCE_TRIGGERS[tb]) {
+                      return {
+                        extra_reference_image_url: refUrl,
+                        extra_reference_label: REFERENCE_TRIGGERS[tb].promptLabel,
+                      };
+                    }
+                  }
+                  // Fall back to per-scene extra ref or back view ref
+                  if (sceneExtraRefs[scene.id]) {
+                    return { extra_reference_image_url: sceneExtraRefs[scene.id] };
+                  }
+                  if (details.backReferenceUrl && triggerBlocks.includes('backView')) {
+                    return { extra_reference_image_url: details.backReferenceUrl };
+                  }
+                  return {};
+                })(),
                 quality: 'high',
                 aspectRatio: details.sceneAspectOverrides?.[scene.id] || ratioForJob,
                 batch_id: batchId,

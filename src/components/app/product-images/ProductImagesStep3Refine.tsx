@@ -21,7 +21,7 @@ import {
   Save, Trash2, History, Check, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getBlocksByScene, BLOCK_FIELD_MAP } from './detailBlockConfig';
+import { getBlocksByScene, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from './detailBlockConfig';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
@@ -1507,6 +1507,51 @@ export function ProductImagesStep3Refine({
   const [uploadingBackRef, setUploadingBackRef] = useState(false);
   const backRefInputRef = useRef<HTMLInputElement>(null);
 
+  // Reference trigger detection — find which REFERENCE_TRIGGERS are active from selected scenes
+  const activeReferenceTriggers = useMemo(() => {
+    const found = new Set<string>();
+    for (const scene of selectedScenes) {
+      for (const tb of (scene.triggerBlocks || [])) {
+        if (REFERENCE_TRIGGERS[tb]) found.add(tb);
+      }
+    }
+    return Array.from(found);
+  }, [selectedScenes]);
+
+  const [uploadingRefTrigger, setUploadingRefTrigger] = useState<string | null>(null);
+  const refTriggerInputRef = useRef<HTMLInputElement>(null);
+  const pendingRefTriggerRef = useRef<string | null>(null);
+
+  const handleRefTriggerUpload = useCallback(async (triggerKey: string, file: File) => {
+    if (!onSceneExtraRefsChange) return;
+    setUploadingRefTrigger(triggerKey);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { data, error } = await (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(data.path);
+      onSceneExtraRefsChange({ ...sceneExtraRefs, [`trigger:${triggerKey}`]: urlData.publicUrl });
+    } catch (e: any) {
+      const { toast } = await import('@/lib/brandedToast');
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingRefTrigger(null);
+    }
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
+  const removeRefTrigger = useCallback((triggerKey: string) => {
+    if (!onSceneExtraRefsChange) return;
+    const next = { ...sceneExtraRefs };
+    delete next[`trigger:${triggerKey}`];
+    onSceneExtraRefsChange(next);
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
   const handleBackRefUpload = useCallback(async (file: File) => {
     setUploadingBackRef(true);
     try {
@@ -1901,7 +1946,78 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── COMPLETE SETUP ── */}
+      {/* ── REFERENCE TRIGGER UPLOADS (atomizer, open bottle, cap, etc.) ── */}
+      {activeReferenceTriggers.map(triggerKey => {
+        const def = REFERENCE_TRIGGERS[triggerKey];
+        if (!def) return null;
+        const refUrl = sceneExtraRefs[`trigger:${triggerKey}`];
+        const isUploading = uploadingRefTrigger === triggerKey;
+        return (
+          <div key={triggerKey} className="space-y-3">
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Camera className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold">{def.label}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">{def.description}</p>
+                  </div>
+                </div>
+
+                {refUrl ? (
+                  <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
+                    <img src={refUrl} alt={def.label} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeRefTrigger(triggerKey)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      pendingRefTriggerRef.current = triggerKey;
+                      refTriggerInputRef.current?.click();
+                    }}
+                    disabled={isUploading}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
+                  >
+                    {isUploading ? (
+                      <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 text-primary/60" />
+                        <span className="text-xs text-primary/80 font-medium">{def.label}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })}
+      {/* Hidden file input for reference trigger uploads */}
+      <input
+        ref={refTriggerInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0];
+          const tk = pendingRefTriggerRef.current;
+          if (f && tk) handleRefTriggerUpload(tk, f);
+          e.target.value = '';
+          pendingRefTriggerRef.current = null;
+        }}
+      />
+
+
       {(scenesNeedingModel.length > 0 || bgScenes.length > 0) && (
         <div className="space-y-3">
           <div>
