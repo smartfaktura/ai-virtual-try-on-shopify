@@ -352,8 +352,8 @@ export function ProductImagesStep3Settings({
 
                 {/* Scene rows */}
                 {selectedScenes.map(scene => {
-                  const sceneRatio = overrides[scene.id] || globalRatio;
-                  const isCustomRatio = overrides[scene.id] && overrides[scene.id] !== globalRatio;
+                  const sceneRatios = overrides[scene.id] || globalRatios;
+                  const isCustomRatio = !!overrides[scene.id];
                   const props = sceneProps[scene.id] || [];
 
                   return (
@@ -376,8 +376,8 @@ export function ProductImagesStep3Settings({
                           )}
                         </div>
                         <MiniRatioChips
-                          value={sceneRatio}
-                          globalValue={globalRatio}
+                          activeRatios={sceneRatios}
+                          globalRatios={globalRatios}
                           onChange={(r) => handleSceneRatioChange(scene.id, r)}
                         />
                         <button
