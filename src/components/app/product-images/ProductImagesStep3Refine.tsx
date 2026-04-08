@@ -444,7 +444,7 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'blush', label: 'Blush', fill: '#F8ECE8' },
   { value: 'gradient', label: 'Navy Fade', fill: 'linear-gradient(135deg, #FFFFFF, #123668)', isGradient: true },
   { value: 'gradient-warm', label: 'Terracotta', fill: 'linear-gradient(135deg, #984D1B, #FBEFE9)', isGradient: true },
-  { value: 'gradient-cool', label: 'Ocean', fill: 'linear-gradient(135deg, #1C6CA0, #C7E6F5)', isGradient: true },
+  { value: 'gradient-cool', label: 'Forest', fill: 'linear-gradient(135deg, #0F570F, #EAFBE9)', isGradient: true },
 ];
 
 function BackgroundSwatchSelector({ value, onChange, details, update, savedColors, canSave, onSaveColor, onSaveGradient, onDeleteSavedColor }: {
@@ -702,9 +702,9 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
           )}
           <div
             className="aspect-square w-full flex items-center justify-center"
-            style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : 'linear-gradient(135deg, #E8E8E8, #D0D0D0)' }}
+            style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : 'linear-gradient(135deg, #F8B4C8, #C8A8E8, #A8D8EA, #B8E8C8)' }}
           >
-            {!hasGradientCustom && <Plus className="w-4 h-4 text-muted-foreground" />}
+            {!hasGradientCustom && <Plus className="w-4 h-4 text-white drop-shadow-sm" />}
           </div>
           {hasGradientCustom && (
             <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
@@ -712,7 +712,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
             </div>
           )}
           <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
-            <p className="text-[9px] font-medium text-white leading-tight">Gradient</p>
+            <p className="text-[9px] font-medium text-white leading-tight">Custom</p>
           </div>
         </button>
       </div>

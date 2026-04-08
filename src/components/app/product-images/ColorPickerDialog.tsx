@@ -13,7 +13,7 @@ const PRESET_SWATCHES = [
 
 const GRADIENT_PRESETS = [
   { name: 'Terracotta', from: '#984D1B', to: '#FBEFE9' },
-  { name: 'Ocean', from: '#1C6CA0', to: '#C7E6F5' },
+  { name: 'Sage', from: '#2D5A27', to: '#E8F5E3' },
   { name: 'Crimson', from: '#B62020', to: '#FBE9E9' },
   { name: 'Forest', from: '#0F570F', to: '#EAFBE9' },
   { name: 'Sunset Duo', from: '#D42525', to: '#246DCC' },
