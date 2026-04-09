@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
@@ -365,11 +366,11 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             </div>
           </div>
 
-          {/* Show all extracted images with click-to-cycle role assignment */}
+          {/* Show all extracted images with role assignment popover */}
           {extracted.image_urls && extracted.image_urls.length > 1 && (
             <div className="space-y-2.5">
               <p className="text-[11px] text-muted-foreground">
-                <span className="font-medium text-foreground">Click</span> any image to cycle its role: Main → Back → Side → Pack
+                Tap an image to set its role
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {extracted.image_urls.map((imgUrl, i) => {
@@ -386,59 +387,107 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     Pack: 'bg-muted text-muted-foreground',
                   };
 
-                  const cycleRole = () => {
-                    // Clear current role for this index
+                  const assignRole = (newRole: string | null) => {
+                    // Clear this image from any current role
+                    if (i === selectedImageIndex && newRole !== 'Main') {
+                      // Don't unset main if assigning main
+                    }
                     if (i === backImageIndex) setBackImageIndex(null);
                     if (i === sideImageIndex) setSideImageIndex(null);
                     if (i === packagingImageIndex) setPackagingImageIndex(null);
 
-                    if (!role) {
-                      // Unassigned → Main
+                    if (!newRole) return; // "None" selected
+
+                    // If another image already has this role, clear it
+                    if (newRole === 'Main') {
                       setSelectedImageIndex(i);
-                    } else if (role === 'Main') {
-                      // Main → Back (set a different main first)
+                    } else if (newRole === 'Back') {
                       setBackImageIndex(i);
-                    } else if (role === 'Back') {
+                    } else if (newRole === 'Side') {
                       setSideImageIndex(i);
-                    } else if (role === 'Side') {
+                    } else if (newRole === 'Pack') {
                       setPackagingImageIndex(i);
-                    } else {
-                      // Pack → unassigned (do nothing, already cleared above)
                     }
                   };
 
+                  const roleOptions = [
+                    { value: 'Main', label: 'Main' },
+                    { value: 'Back', label: 'Back' },
+                    { value: 'Side', label: 'Side' },
+                    { value: 'Pack', label: 'Package' },
+                  ];
+
                   return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={cycleRole}
-                      className={cn(
-                        'relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0 border-2 transition-all',
-                        i === selectedImageIndex
-                          ? 'border-primary ring-1 ring-primary/30'
-                          : role
-                          ? 'border-accent-foreground/40 ring-1 ring-accent-foreground/20'
-                          : 'border-border hover:border-muted-foreground/40'
-                      )}
-                    >
-                      <img
-                        src={imgUrl}
-                        alt={`Product image ${i + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {role && (
-                        <div className="absolute inset-x-0 bottom-0">
-                          <Badge className={cn('rounded-none w-full justify-center text-[8px] py-0 font-bold uppercase tracking-wider', ROLE_COLORS[role])}>
-                            {role}
-                          </Badge>
+                    <Popover key={i}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            'relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0 border-2 transition-all',
+                            i === selectedImageIndex
+                              ? 'border-primary ring-1 ring-primary/30'
+                              : role
+                              ? 'border-accent-foreground/40 ring-1 ring-accent-foreground/20'
+                              : 'border-border hover:border-muted-foreground/40'
+                          )}
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`Product image ${i + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {role && (
+                            <div className="absolute inset-x-0 bottom-0">
+                              <Badge className={cn('rounded-none w-full justify-center text-[8px] py-0 font-bold uppercase tracking-wider', ROLE_COLORS[role])}>
+                                {role}
+                              </Badge>
+                            </div>
+                          )}
+                          {i === selectedImageIndex && (
+                            <div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-32 p-1" align="center" sideOffset={6}>
+                        <div className="flex flex-col">
+                          {roleOptions.map(opt => {
+                            const isActive = role === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => assignRole(opt.value)}
+                                className={cn(
+                                  'flex items-center gap-2 px-2 py-1.5 text-xs rounded-md transition-colors text-left',
+                                  isActive
+                                    ? 'bg-primary/10 text-primary font-medium'
+                                    : 'hover:bg-muted text-foreground'
+                                )}
+                              >
+                                {isActive && <Check className="w-3 h-3 shrink-0" />}
+                                {!isActive && <span className="w-3" />}
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                          {role && (
+                            <>
+                              <div className="h-px bg-border my-1" />
+                              <button
+                                type="button"
+                                onClick={() => assignRole(null)}
+                                className="flex items-center gap-2 px-2 py-1.5 text-xs rounded-md hover:bg-muted text-muted-foreground text-left"
+                              >
+                                <X className="w-3 h-3 shrink-0" />
+                                None
+                              </button>
+                            </>
+                          )}
                         </div>
-                      )}
-                      {i === selectedImageIndex && (
-                        <div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                        </div>
-                      )}
-                    </button>
+                      </PopoverContent>
+                    </Popover>
                   );
                 })}
               </div>
