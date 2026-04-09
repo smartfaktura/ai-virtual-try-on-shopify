@@ -284,7 +284,8 @@ function defaultBackground(category?: string): string {
 
 function defaultSurface(category?: string): string {
   switch (category) {
-    case 'food-beverage':
+    case 'food':
+    case 'beverages':
       return 'placed on a warm, natural wood surface with visible grain';
     case 'home-decor':
       return 'placed on a premium styled surface with complementary texture';
