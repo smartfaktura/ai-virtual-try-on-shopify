@@ -821,7 +821,13 @@ const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
     shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
     accessories: 'none',
   },
-  'food-beverage': {
+  food: {
+    top: { garment: 'blouse', color: 'white', fit: 'relaxed', material: 'linen' },
+    bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
+    accessories: 'none',
+  },
+  beverages: {
     top: { garment: 'blouse', color: 'white', fit: 'relaxed', material: 'linen' },
     bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
     shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
