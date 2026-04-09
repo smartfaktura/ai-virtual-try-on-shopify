@@ -445,6 +445,76 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             </div>
           )}
 
+          {/* Manual reference angle uploads for unassigned roles */}
+          {(() => {
+            const hasBack = backImageIndex !== null || manualBack.url;
+            const hasSide = sideImageIndex !== null || manualSide.url;
+            const hasPack = packagingImageIndex !== null || manualPack.url;
+            const showSection = !hasBack || !hasSide || !hasPack;
+
+            if (!showSection) return null;
+
+            const slots: { label: string; icon: React.ReactNode; state: typeof manualBack; setter: typeof setManualBack; inputRef: React.RefObject<HTMLInputElement>; role: string; assigned: boolean }[] = [
+              { label: 'Back', icon: <RotateCcw className="w-4 h-4" />, state: manualBack, setter: setManualBack, inputRef: backInputRef as React.RefObject<HTMLInputElement>, role: 'back', assigned: backImageIndex !== null },
+              { label: 'Side', icon: <ArrowRight className="w-4 h-4" />, state: manualSide, setter: setManualSide, inputRef: sideInputRef as React.RefObject<HTMLInputElement>, role: 'side', assigned: sideImageIndex !== null },
+              { label: 'Package', icon: <Package className="w-4 h-4" />, state: manualPack, setter: setManualPack, inputRef: packInputRef as React.RefObject<HTMLInputElement>, role: 'pack', assigned: packagingImageIndex !== null },
+            ];
+
+            return (
+              <div className="space-y-2">
+                <p className="text-[11px] text-muted-foreground/70 font-medium">
+                  📐 Extra angles improve AI accuracy
+                </p>
+                <div className="flex gap-2">
+                  {slots.filter(s => !s.assigned).map((slot) => (
+                    <div key={slot.role} className="flex flex-col items-center gap-1">
+                      <input
+                        ref={slot.inputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleRefUpload(f, slot.setter, slot.role);
+                          e.target.value = '';
+                        }}
+                      />
+                      {slot.state.url ? (
+                        <div className="relative w-[72px] h-[72px] rounded-lg overflow-hidden border border-border">
+                          <img src={slot.state.url} alt={slot.label} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => slot.setter({ url: '', uploading: false })}
+                            className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-background/80 flex items-center justify-center"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => slot.inputRef.current?.click()}
+                          disabled={slot.state.uploading}
+                          className="w-[72px] h-[72px] rounded-lg border border-dashed border-border hover:border-muted-foreground/40 flex flex-col items-center justify-center gap-1 transition-colors"
+                        >
+                          {slot.state.uploading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          ) : (
+                            <>
+                              {slot.icon}
+                              <Plus className="w-3 h-3 text-muted-foreground/50" />
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">{slot.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setExtracted(null)}>
               Discard
