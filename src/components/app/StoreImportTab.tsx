@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
