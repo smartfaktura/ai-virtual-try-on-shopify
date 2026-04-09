@@ -285,6 +285,32 @@ export default function ProductImages() {
     }
   }, [step, selectedProducts, analyzeProducts]);
 
+  // Auto-fill back/packaging/side references from stored product data when entering step 3
+  useEffect(() => {
+    if (step === 3 && selectedProducts.length > 0) {
+      const firstProduct = selectedProducts[0] as any;
+      setDetails(prev => {
+        const updates: Partial<DetailSettings> = {};
+        if (firstProduct.back_image_url && !prev.backReferenceUrl) {
+          updates.backReferenceUrl = firstProduct.back_image_url;
+        }
+        if (firstProduct.packaging_image_url && !prev.packagingReferenceUrl) {
+          updates.packagingReferenceUrl = firstProduct.packaging_image_url;
+        }
+        if (Object.keys(updates).length === 0) return prev;
+        return { ...prev, ...updates };
+      });
+      // Auto-fill side view into sceneExtraRefs for scenes with side-angle triggers
+      if (firstProduct.side_image_url) {
+        setSceneExtraRefs(prev => {
+          const sideKey = 'trigger:sideView';
+          if (prev[sideKey]) return prev;
+          return { ...prev, [sideKey]: firstProduct.side_image_url };
+        });
+      }
+    }
+  }, [step, selectedProducts]);
+
   // Resolve selected model gender for prompt builder
   const selectedModelGender = useMemo(() => {
     if (!details.selectedModelId) return undefined;
@@ -395,6 +421,9 @@ export default function ProductImages() {
                   productType: productAnalysis?.category || product.product_type,
                   description: product.description,
                   dimensions: product.dimensions || undefined,
+                  weight: (product as any).weight || undefined,
+                  materials: (product as any).materials || undefined,
+                  color: (product as any).color || undefined,
                   imageUrl: base64Image,
                   analysis: productAnalysis || undefined,
                 },

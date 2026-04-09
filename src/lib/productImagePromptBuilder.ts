@@ -583,6 +583,9 @@ interface TokenContext {
   productName: string;
   productType: string;
   productDescription?: string;
+  productWeight?: string | null;
+  productMaterials?: string | null;
+  productColor?: string | null;
   analysis: ProductAnalysis | null;
   details: DetailSettings;
   selectedModelId?: string;
@@ -879,6 +882,11 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'clinicalCleanlinessLevel': return analysis?.clinicalCleanlinessLevel || '';
     case 'routineContext': return analysis?.routineContext || '';
 
+    // ── Product metadata tokens (from product upload) ──
+    case 'productWeight': return ctx.productWeight || '';
+    case 'productMaterials': return ctx.productMaterials || '';
+    case 'productColor': return ctx.productColor || '';
+
     default: return '';
   }
 }
@@ -909,7 +917,7 @@ function cleanupPrompt(raw: string): string {
 
 export function buildDynamicPrompt(
   scene: ProductImageScene,
-  product: { title: string; product_type?: string; description?: string; dimensions?: string | null },
+  product: { title: string; product_type?: string; description?: string; dimensions?: string | null; weight?: string | null; materials?: string | null; color?: string | null },
   analysis: ProductAnalysis | null,
   details: DetailSettings,
   modelGender?: string,
@@ -920,6 +928,9 @@ export function buildDynamicPrompt(
     productName: product.title,
     productType: product.product_type || analysis?.category || '',
     productDescription: product.description,
+    productWeight: product.weight,
+    productMaterials: product.materials,
+    productColor: product.color,
     analysis,
     details,
     selectedModelId: details.selectedModelId,

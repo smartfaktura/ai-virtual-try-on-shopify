@@ -20,6 +20,14 @@ interface UserProduct {
   tags: string[] | null;
   created_at: string;
   updated_at: string;
+  back_image_url?: string | null;
+  side_image_url?: string | null;
+  packaging_image_url?: string | null;
+  extra_image_urls?: string[];
+  weight?: string | null;
+  materials?: string | null;
+  color?: string | null;
+  sku?: string | null;
 }
 
 interface AddProductModalProps {

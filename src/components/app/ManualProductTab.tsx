@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, RotateCcw, Package, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +22,14 @@ interface UserProduct {
   tags: string[] | null;
   created_at: string;
   updated_at: string;
+  back_image_url?: string | null;
+  side_image_url?: string | null;
+  packaging_image_url?: string | null;
+  extra_image_urls?: string[];
+  weight?: string | null;
+  materials?: string | null;
+  color?: string | null;
+  sku?: string | null;
 }
 
 interface ManualProductTabProps {
@@ -56,6 +65,19 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [description, setDescription] = useState('');
   const [dimensions, setDimensions] = useState('');
   const [singleImage, setSingleImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+
+  // Reference angles
+  const [backImage, setBackImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [refAnglesOpen, setRefAnglesOpen] = useState(false);
+
+  // Extra details
+  const [weight, setWeight] = useState('');
+  const [materials, setMaterials] = useState('');
+  const [color, setColor] = useState('');
+  const [sku, setSku] = useState('');
+  const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -81,6 +103,17 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       setDimensions((editingProduct as any).dimensions || '');
       setSingleImage({ previewUrl: editingProduct.image_url });
       hasManualEdits.current = { title: true, productType: true, description: true };
+      // Load reference angles
+      if (editingProduct.back_image_url) setBackImage({ previewUrl: editingProduct.back_image_url });
+      if (editingProduct.side_image_url) setSideImage({ previewUrl: editingProduct.side_image_url });
+      if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
+      if (editingProduct.back_image_url || editingProduct.side_image_url || editingProduct.packaging_image_url) setRefAnglesOpen(true);
+      // Load extra fields
+      if (editingProduct.weight) setWeight(editingProduct.weight);
+      if (editingProduct.materials) setMaterials(editingProduct.materials);
+      if (editingProduct.color) setColor(editingProduct.color);
+      if (editingProduct.sku) setSku(editingProduct.sku);
+      if (editingProduct.weight || editingProduct.materials || editingProduct.color || editingProduct.sku) setMoreDetailsOpen(true);
     }
   }, [editingProduct]);
 
@@ -338,6 +371,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     return urlData.publicUrl;
   }
 
+  // Upload reference angle if it has a file
+  async function uploadRefImage(ref: { file?: File; previewUrl: string } | null): Promise<string | null> {
+    if (!ref) return null;
+    if (ref.file) return uploadFile(ref.file);
+    return ref.previewUrl; // Already uploaded URL (edit mode)
+  }
+
   // Submit: single product (new or edit)
   const handleSubmitSingle = async () => {
     if (!user || !singleImage || !title.trim()) {
@@ -353,30 +393,37 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         setUploadProgress({ current: 1, total: 1 });
       }
 
+      // Upload reference angles
+      const backUrl = await uploadRefImage(backImage);
+      const sideUrl = await uploadRefImage(sideImage);
+      const packUrl = await uploadRefImage(packagingImage);
+
+      const productData: Record<string, unknown> = {
+        title: title.trim().substring(0, 200),
+        product_type: productType || '',
+        description: description.trim().substring(0, 500),
+        image_url: imageUrl,
+        dimensions: dimensions.trim() || null,
+        back_image_url: backUrl || null,
+        side_image_url: sideUrl || null,
+        packaging_image_url: packUrl || null,
+        weight: weight.trim() || null,
+        materials: materials.trim() || null,
+        color: color.trim() || null,
+        sku: sku.trim() || null,
+      };
+
       if (isEditing && editingProduct) {
         const { error } = await supabase
           .from('user_products')
-          .update({
-            title: title.trim().substring(0, 200),
-            product_type: productType || '',
-            description: description.trim().substring(0, 500),
-            image_url: imageUrl,
-            dimensions: dimensions.trim() || null,
-          } as any)
+          .update(productData as any)
           .eq('id', editingProduct.id);
         if (error) throw new Error(error.message);
         toastSophia('Product updated!');
       } else {
         const { error } = await supabase
           .from('user_products')
-          .insert({
-            user_id: user.id,
-            title: title.trim().substring(0, 200),
-            product_type: productType || '',
-            description: description.trim().substring(0, 500),
-            image_url: imageUrl,
-            dimensions: dimensions.trim() || null,
-          } as any);
+          .insert({ ...productData, user_id: user.id } as any);
         if (error) throw new Error(error.message);
         toastSophia('Product added — ready for your first shoot!');
       }
@@ -867,6 +914,92 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         </div>
       </div>
+
+      {/* Reference Angles (optional, collapsible) */}
+      <Collapsible open={refAnglesOpen} onOpenChange={setRefAnglesOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span className="font-medium">Reference angles</span>
+          <span className="text-muted-foreground/60">(optional)</span>
+          <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', refAnglesOpen && 'rotate-180')} />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="grid grid-cols-3 gap-2 pt-2">
+            {([
+              { label: 'Back View', state: backImage, setter: setBackImage },
+              { label: 'Side View', state: sideImage, setter: setSideImage },
+              { label: 'Packaging', state: packagingImage, setter: setPackagingImage },
+            ] as const).map(({ label, state, setter }) => (
+              <div key={label} className="space-y-1">
+                <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                {state ? (
+                  <div className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted/20">
+                    <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => setter(null)}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/40 bg-muted/10 cursor-pointer transition-colors">
+                    <Plus className="w-4 h-4 text-muted-foreground/50" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && file.type.startsWith('image/')) {
+                          setter({ file, previewUrl: URL.createObjectURL(file) });
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-1.5">
+            Extra angles auto-fill during generation for back-view and packaging scenes.
+          </p>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* More Details (optional, collapsible) */}
+      <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
+          <Package className="w-3.5 h-3.5" />
+          <span className="font-medium">More details</span>
+          <span className="text-muted-foreground/60">(optional)</span>
+          <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', moreDetailsOpen && 'rotate-180')} />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">Weight</Label>
+              <Input placeholder="e.g. 250g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">Color</Label>
+              <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">Materials</Label>
+              <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">SKU</Label>
+              <Input placeholder="e.g. SKU-12345" value={sku} onChange={(e) => setSku(e.target.value)} maxLength={50} className="h-8 text-xs" />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-1.5">
+            Weight and materials help the AI generate more realistic product scenes.
+          </p>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Upload Progress */}
       {isUploading && uploadProgress.total > 0 && (
