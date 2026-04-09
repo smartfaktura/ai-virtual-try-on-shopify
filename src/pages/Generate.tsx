@@ -3807,15 +3807,15 @@ export default function Generate() {
                   {/* Top Picks */}
                   {(() => {
                     const productType = (selectedProduct?.productType || scratchUpload?.productInfo.productType || '').toLowerCase();
-                    let productCategory: TemplateCategory = 'universal';
-                    if (['sweater', 'shirt', 'apparel', 'hoodie', 'leggings', 'tank', 'jogger'].some(kw => productType.includes(kw))) productCategory = 'clothing';
-                    else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'cosmetics';
-                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food';
-                    else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home';
-                    else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements';
+                    let productCategory: TemplateCategory = 'other';
+                    if (['sweater', 'shirt', 'apparel', 'hoodie', 'leggings', 'tank', 'jogger'].some(kw => productType.includes(kw))) productCategory = 'garments';
+                    else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'beauty-skincare';
+                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food-beverage';
+                    else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home-decor';
+                    else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements-wellness';
 
                     const topPicks = mockTemplates.filter(t => t.enabled && t.category === productCategory).slice(0, 3);
-                    if (topPicks.length < 3) topPicks.push(...mockTemplates.filter(t => t.enabled && t.category === 'universal').slice(0, 3 - topPicks.length));
+                    if (topPicks.length < 3) topPicks.push(...mockTemplates.filter(t => t.enabled && t.category === 'other').slice(0, 3 - topPicks.length));
                     const topPickIds = topPicks.map(t => t.templateId);
 
                     return (
