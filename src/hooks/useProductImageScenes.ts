@@ -163,7 +163,8 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
     eyewear: 'Eyewear',
     'home-decor': 'Home Decor / Furniture',
     'tech-devices': 'Tech / Devices',
-    'food-beverage': 'Food & Beverage',
+    food: 'Food & Snacks',
+    beverages: 'Beverages',
     'supplements-wellness': 'Supplements & Wellness',
     other: 'Other / Custom',
   };

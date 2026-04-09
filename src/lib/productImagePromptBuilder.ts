@@ -272,7 +272,8 @@ function defaultBackground(category?: string): string {
       return 'soft neutral light gray seamless background';
     case 'tech-devices':
       return 'clean matte white seamless background';
-    case 'food-beverage':
+    case 'food':
+    case 'beverages':
       return 'warm off-white background with natural warmth';
     case 'home-decor':
       return 'soft white studio background';
@@ -283,7 +284,8 @@ function defaultBackground(category?: string): string {
 
 function defaultSurface(category?: string): string {
   switch (category) {
-    case 'food-beverage':
+    case 'food':
+    case 'beverages':
       return 'placed on a warm, natural wood surface with visible grain';
     case 'home-decor':
       return 'placed on a premium styled surface with complementary texture';
@@ -322,7 +324,8 @@ function defaultStyling(category?: string): string {
       return 'Minimal luxury styling — clean, restrained, premium composition.';
     case 'tech-devices':
       return 'Modern sleek styling — contemporary, geometric, sharp composition.';
-    case 'food-beverage':
+    case 'food':
+    case 'beverages':
       return 'Organic natural styling — relaxed, authentic composition.';
     default:
       return 'Clean commercial styling — crisp, professional composition.';
@@ -335,7 +338,8 @@ function defaultLighting(category?: string): string {
     case 'beauty-skincare':
     case 'makeup-lipsticks': return 'Soft overhead beauty lighting with even glow and subtle specular accents.';
     case 'tech-devices': return 'Crisp controlled studio lighting with clean specular reflections.';
-    case 'food-beverage': return 'Warm natural diffused lighting with appetite-enhancing warmth.';
+    case 'food':
+    case 'beverages': return 'Warm natural diffused lighting with appetite-enhancing warmth.';
     case 'garments': return 'Even soft studio lighting revealing fabric texture and true color.';
     case 'bags-accessories':
     case 'shoes': return 'Controlled directional lighting revealing leather grain and material depth.';

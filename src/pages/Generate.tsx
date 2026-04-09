@@ -772,7 +772,8 @@ export default function Generate() {
     { id: 'all', label: 'All Templates' },
     { id: 'garments', label: 'Clothing' },
     { id: 'beauty-skincare', label: 'Cosmetics' },
-    { id: 'food-beverage', label: 'Food' },
+    { id: 'food', label: 'Food' },
+    { id: 'beverages', label: 'Beverages' },
     { id: 'home-decor', label: 'Home & Interior' },
     { id: 'supplements-wellness', label: 'Supplements' },
     { id: 'other', label: 'Universal' },
@@ -837,8 +838,10 @@ export default function Generate() {
     const combined = `${type} ${tags}`;
     const cosmeticsKeywords = ['serum', 'moisturizer', 'lipstick', 'foundation', 'mascara', 'skincare', 'beauty', 'makeup', 'cream', 'treatment', 'powder', 'lip'];
     if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'beauty-skincare';
-    const foodKeywords = ['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'snack', 'beverage', 'juice', 'food', 'organic'];
-    if (foodKeywords.some(kw => combined.includes(kw))) return 'food-beverage';
+    const beverageKeywords = ['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'drink', 'kombucha', 'smoothie'];
+    if (beverageKeywords.some(kw => combined.includes(kw))) return 'beverages';
+    const foodKeywords = ['cereal', 'granola', 'chocolate', 'honey', 'snack', 'food', 'organic', 'candy', 'chips', 'cookie'];
+    if (foodKeywords.some(kw => combined.includes(kw))) return 'food';
     const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'lamp', 'decor', 'home', 'interior', 'carafe', 'ceramic'];
     if (homeKeywords.some(kw => combined.includes(kw))) return 'home-decor';
     const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'omega', 'wellness', 'greens', 'superfood'];
@@ -3810,7 +3813,8 @@ export default function Generate() {
                     let productCategory: TemplateCategory = 'other';
                     if (['sweater', 'shirt', 'apparel', 'hoodie', 'leggings', 'tank', 'jogger'].some(kw => productType.includes(kw))) productCategory = 'garments';
                     else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'beauty-skincare';
-                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food-beverage';
+                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food';
+                    else if (['coffee', 'tea', 'juice', 'beverage', 'drink'].some(kw => productType.includes(kw))) productCategory = 'beverages';
                     else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home-decor';
                     else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements-wellness';
 

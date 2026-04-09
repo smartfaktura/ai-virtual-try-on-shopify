@@ -821,7 +821,13 @@ const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
     shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
     accessories: 'none',
   },
-  'food-beverage': {
+  food: {
+    top: { garment: 'blouse', color: 'white', fit: 'relaxed', material: 'linen' },
+    bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
+    accessories: 'none',
+  },
+  beverages: {
     top: { garment: 'blouse', color: 'white', fit: 'relaxed', material: 'linen' },
     bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
     shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
@@ -874,7 +880,12 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
     bottom: { garment: 'jeans', color: 'charcoal', fit: 'slim', material: 'denim' },
     shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
   },
-  'food-beverage': {
+  food: {
+    top: { garment: 'shirt', color: 'white', fit: 'regular', material: 'linen' },
+    bottom: { garment: 'chinos', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
+  },
+  beverages: {
     top: { garment: 'shirt', color: 'white', fit: 'regular', material: 'linen' },
     bottom: { garment: 'chinos', color: 'beige', fit: 'slim', material: 'cotton' },
     shoes: { garment: 'loafers', color: 'tan', material: 'leather' },

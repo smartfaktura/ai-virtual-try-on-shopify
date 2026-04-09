@@ -199,7 +199,7 @@ export const mockTemplates: Template[] = [
   // Food
   {
     templateId: 'tpl_007',
-    category: 'food-beverage',
+    category: 'food',
     name: 'Bright Commercial Food Shot',
     description: 'Appetizing commercial food photography with vibrant colors',
     promptBlueprint: {
@@ -226,7 +226,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_008',
-    category: 'food-beverage',
+    category: 'food',
     name: 'Rustic Table Lifestyle',
     description: 'Warm rustic setting with natural textures and props',
     promptBlueprint: {
@@ -252,7 +252,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_009',
-    category: 'food-beverage',
+    category: 'food',
     name: 'Minimal Packaging Focus',
     description: 'Clean product-focused shots emphasizing packaging design',
     promptBlueprint: {

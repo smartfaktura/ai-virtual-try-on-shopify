@@ -46,7 +46,8 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/candle|vase|pillow|lamp|decor|cushion|throw|planter|frame/i, "home-decor"],
   [/phone|laptop|tablet|headphone|speaker|camera|earbuds|charger|keyboard|mouse/i, "tech-devices"],
   [/protein|vitamin|supplement|probiotic|collagen|creatine|pre-?workout/i, "supplements-wellness"],
-  [/coffee|tea|chocolate|wine|beer|juice|snack|cookie|sauce|jam|honey|olive oil/i, "food-beverage"],
+  [/coffee|tea|juice|soda|wine|beer|kombucha|smoothie|energy drink|lemonade|milk/i, "beverages"],
+  [/chocolate|cereal|granola|honey|jam|sauce|snack|cookie|candy|chips|olive oil|food/i, "food"],
 ];
 
 function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
@@ -88,7 +89,7 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, streetwear, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, tech-devices, food-beverage, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, streetwear, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, tech-devices, food, beverages, supplements-wellness, other
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above
