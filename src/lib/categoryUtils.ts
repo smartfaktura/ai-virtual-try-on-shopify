@@ -67,13 +67,36 @@ export function detectProductCategory(product: Product): TemplateCategory | null
 /**
  * Human-readable category labels
  */
-export const categoryLabels: Record<TemplateCategory, string> = {
+export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   clothing: 'Clothing',
   cosmetics: 'Cosmetics',
   food: 'Food & Beverage',
   home: 'Home & Interior',
   supplements: 'Supplements',
   universal: 'Universal',
+  backpacks: 'Backpacks',
+  'wallets-cardholders': 'Wallets & Cardholders',
+  belts: 'Belts',
+  scarves: 'Scarves',
+  'jewellery-necklaces': 'Jewellery – Necklaces',
+  'jewellery-earrings': 'Jewellery – Earrings',
+  'jewellery-bracelets': 'Jewellery – Bracelets',
+  'jewellery-rings': 'Jewellery – Rings',
+  watches: 'Watches',
+  dresses: 'Dresses',
+  hoodies: 'Hoodies',
+  streetwear: 'Streetwear',
+  sneakers: 'Sneakers',
+  boots: 'Boots',
+  'high-heels': 'High Heels',
+  activewear: 'Activewear',
+  eyewear: 'Eyewear',
+  swimwear: 'Swimwear',
+  lingerie: 'Lingerie',
+  kidswear: 'Kidswear',
+  jeans: 'Jeans',
+  jackets: 'Jackets',
+  makeup: 'Makeup',
 };
 
 /**
