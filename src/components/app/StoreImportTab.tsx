@@ -171,9 +171,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       const imageUrls = extracted.image_urls || [extracted.image_url];
       const primaryImageUrl = imageUrls[selectedImageIndex] || extracted.image_url;
 
-      const backUrl = backImageIndex !== null ? imageUrls[backImageIndex] || null : null;
-      const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : null;
-      const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : null;
+      const backUrl = backImageIndex !== null ? imageUrls[backImageIndex] || null : (manualBack.url || null);
+      const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : (manualSide.url || null);
+      const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : (manualPack.url || null);
 
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
