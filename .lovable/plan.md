@@ -1,56 +1,59 @@
 
 
-# Enhanced Product Upload: Multi-Angle References + Extra Fields
+# Improve Product Upload Layout: Visible Reference Angles + URL Import Roles
 
-## Context
+## What's Wrong Now
+1. Reference angle uploads (Back/Side/Packaging) are hidden inside a collapsed accordion — users can't see them
+2. When importing from URL, users can only pick a "primary" image — no way to assign back/side/packaging roles to other imported images
+3. The layout feels cramped, especially in edit mode
 
-Currently, the product upload form (`ManualProductTab`) captures: **title**, **product type**, **description**, **dimensions**, and a **single hero image**. The generation flow (`/app/generate/product-images`) already supports `backReferenceUrl` and `packagingReferenceUrl` — but these are uploaded ad-hoc during the Setup step (Step 3), not stored persistently with the product.
+## Changes
 
-The `user_products` table has: `id`, `user_id`, `title`, `product_type`, `description`, `image_url`, `tags`, `dimensions`, `analysis_json`.
+### 1. ManualProductTab — Show reference slots inline next to main image
+Replace the collapsed "Reference angles" Collapsible with a visible layout where the main image sits on the left (larger) and 3 small placeholder slots (Back, Side, Packaging) sit to its right in a vertical stack. Each slot shows a dashed placeholder with a label when empty, and a thumbnail with remove button when filled. This makes them immediately visible without clicking anything.
 
-## What We'll Add
+Layout (single product mode, after image is uploaded):
+```text
+┌──────────────────┐  ┌──────────┐
+│                  │  │ Back     │
+│   Main Image     │  │  + add   │
+│   (hero)         │  ├──────────┤
+│                  │  │ Side     │
+│                  │  │  + add   │
+│                  │  ├──────────┤
+│                  │  │ Packaging│
+│                  │  │  + add   │
+└──────────────────┘  └──────────┘
+```
+- Main image: ~200px tall, takes ~65% width
+- Reference slots: 3 stacked, ~56×56px each, right side
+- Small helper text below: "Extra angles auto-fill during generation"
+- Remove the old Collapsible for reference angles entirely
 
-### Database: New columns on `user_products`
-- `back_image_url` (text, nullable) — persistent back-view photo
-- `side_image_url` (text, nullable) — persistent side-view photo  
-- `packaging_image_url` (text, nullable) — persistent packaging photo
-- `extra_image_urls` (text[], default `'{}'`) — up to 3 additional reference angles
-- `weight` (text, nullable) — e.g. "250g", "1.2kg"
-- `materials` (text, nullable) — e.g. "Italian leather, brass hardware"
-- `color` (text, nullable) — primary color/finish description
-- `sku` (text, nullable) — product SKU for internal reference
+### 2. ManualProductTab — Empty state (no image yet)
+Keep the existing dropzone but add a subtle note: "You can add back, side & packaging views after uploading"
 
-### Product Upload Form (`ManualProductTab`)
-- **After the hero image**: Add an expandable "Reference angles (optional)" section with 3 small upload slots: Back View, Side View, Packaging
-- **Extra fields section** (collapsible "More details" accordion):
-  - Weight, Materials, Color, SKU inputs
-  - These are all optional, collapsed by default to keep the form clean for casual users
-- Batch mode: Each batch item gets the same optional fields (collapsed)
-- Edit mode: Populate from existing data
+### 3. StoreImportTab — Add role assignment for imported images
+After URL import, when showing the image thumbnails grid, add role badges. Currently users click to set "primary". Enhance:
+- First click = set as Primary (existing behavior, blue border + check)
+- Add small dropdown/badge buttons below the thumbnails row: "Back", "Side", "Packaging"
+- User can long-press or right-click a thumbnail to assign a role, or simpler: add a row of 3 small labeled slots below the primary selector (same pattern as ManualProductTab) where users can drag/click from the extracted images
+- On save, pass `back_image_url`, `side_image_url`, `packaging_image_url` to the insert
 
-### Auto-fill in Product Images Generation (Step 3 — Setup)
-- When a product has `back_image_url` stored, auto-populate `details.backReferenceUrl` so the "Back View Reference" upload card shows the image pre-filled (user can still replace it)
-- Same for `packaging_image_url` → `details.packagingReferenceUrl`
-- Side view: inject as `extra_reference_image_url` for scenes with side-angle triggers
-- The `dimensions` field is already passed to generation payload (line 397 of ProductImages.tsx) — confirmed working. New fields (`weight`, `materials`, `color`) will be added to the product object in the payload so the prompt builder can use them.
+Implementation: Add state for `backImageIndex`, `sideImageIndex`, `packagingImageIndex`. Show clickable role labels under each thumbnail. Save these URLs alongside the product.
 
-### Prompt Builder Enhancement
-- `buildDynamicPrompt` already accepts `product.dimensions`. We'll extend the product parameter type to include `weight`, `materials`, `color`
-- Add tokens: `{{productWeight}}`, `{{productMaterials}}`, `{{productColor}}` that resolve from product data
-- These inject naturally into prompts (e.g., "250g glass bottle" gives the AI better scale/material context)
+### 4. Layout polish for edit mode
+- Tighten spacing, ensure the image + reference angles layout works well on both `/app/products/new` and `/app/products/:id` edit pages
+- "More details" accordion stays collapsed (it's fine as-is for power users)
 
 ## Files to Change
 
-1. **Database migration** — add 7 new columns to `user_products`
-2. **`src/components/app/ManualProductTab.tsx`** — reference angle uploads + extra fields UI
-3. **`src/components/app/AddProductModal.tsx`** — update `UserProduct` interface
-4. **`src/pages/ProductImages.tsx`** — auto-fill back/packaging/side references from product data
-5. **`src/lib/productImagePromptBuilder.ts`** — add weight/materials/color token resolution
-6. **`src/components/app/product-images/types.ts`** — extend product type if needed (may auto-update from Supabase types)
+1. **`src/components/app/ManualProductTab.tsx`** — Replace collapsible reference angles with inline visible slots next to main image; adjust layout
+2. **`src/components/app/StoreImportTab.tsx`** — Add role assignment (back/side/packaging) to imported image thumbnails; save extra URLs on product insert
+3. **`src/pages/AddProduct.tsx`** — Minor layout spacing tweaks if needed
 
-## UX Notes
-- All new fields are **optional** — zero friction for users who just want to drag-drop one image
-- "Reference angles" section uses a subtle expandable card with small thumbnail upload slots (64×64px each)
-- "More details" uses an accordion that starts collapsed
-- Pre-filled references in Step 3 show a "(from product)" badge so users know the source
+## Scope
+- ~150 lines changed in ManualProductTab (layout restructure)
+- ~80 lines changed in StoreImportTab (role assignment + save logic)
+- No database changes needed (columns already exist)
 
