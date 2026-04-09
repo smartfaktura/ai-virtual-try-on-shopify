@@ -834,7 +834,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   <CollapsibleTrigger className="flex items-center gap-2 w-full group/trigger py-1">
                     <Camera className="w-3.5 h-3.5 text-muted-foreground/60" />
                     <span className="text-[11px] font-medium text-muted-foreground">Extra angles improve AI accuracy</span>
-                    <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/40 ml-auto transition-transform", open && "rotate-180")} />
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/40 ml-auto transition-transform", anglesOpen && "rotate-180")} />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pt-2">
                     <div className="flex gap-3">
