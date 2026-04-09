@@ -123,6 +123,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
 
       setExtracted(data as ExtractedProduct);
       setSelectedImageIndex(0);
+      setBackImageIndex(null);
+      setSideImageIndex(null);
+      setPackagingImageIndex(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Import failed';
       setImportError({ code: 'unknown', message: msg });
