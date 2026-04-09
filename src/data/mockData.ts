@@ -226,7 +226,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_008',
-    category: 'food-beverage',
+    category: 'food',
     name: 'Rustic Table Lifestyle',
     description: 'Warm rustic setting with natural textures and props',
     promptBlueprint: {
