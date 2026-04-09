@@ -371,6 +371,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     return urlData.publicUrl;
   }
 
+  // Upload reference angle if it has a file
+  async function uploadRefImage(ref: { file?: File; previewUrl: string } | null): Promise<string | null> {
+    if (!ref) return null;
+    if (ref.file) return uploadFile(ref.file);
+    return ref.previewUrl; // Already uploaded URL (edit mode)
+  }
+
   // Submit: single product (new or edit)
   const handleSubmitSingle = async () => {
     if (!user || !singleImage || !title.trim()) {
@@ -386,30 +393,37 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         setUploadProgress({ current: 1, total: 1 });
       }
 
+      // Upload reference angles
+      const backUrl = await uploadRefImage(backImage);
+      const sideUrl = await uploadRefImage(sideImage);
+      const packUrl = await uploadRefImage(packagingImage);
+
+      const productData: Record<string, unknown> = {
+        title: title.trim().substring(0, 200),
+        product_type: productType || '',
+        description: description.trim().substring(0, 500),
+        image_url: imageUrl,
+        dimensions: dimensions.trim() || null,
+        back_image_url: backUrl || null,
+        side_image_url: sideUrl || null,
+        packaging_image_url: packUrl || null,
+        weight: weight.trim() || null,
+        materials: materials.trim() || null,
+        color: color.trim() || null,
+        sku: sku.trim() || null,
+      };
+
       if (isEditing && editingProduct) {
         const { error } = await supabase
           .from('user_products')
-          .update({
-            title: title.trim().substring(0, 200),
-            product_type: productType || '',
-            description: description.trim().substring(0, 500),
-            image_url: imageUrl,
-            dimensions: dimensions.trim() || null,
-          } as any)
+          .update(productData as any)
           .eq('id', editingProduct.id);
         if (error) throw new Error(error.message);
         toastSophia('Product updated!');
       } else {
         const { error } = await supabase
           .from('user_products')
-          .insert({
-            user_id: user.id,
-            title: title.trim().substring(0, 200),
-            product_type: productType || '',
-            description: description.trim().substring(0, 500),
-            image_url: imageUrl,
-            dimensions: dimensions.trim() || null,
-          } as any);
+          .insert({ ...productData, user_id: user.id } as any);
         if (error) throw new Error(error.message);
         toastSophia('Product added — ready for your first shoot!');
       }
