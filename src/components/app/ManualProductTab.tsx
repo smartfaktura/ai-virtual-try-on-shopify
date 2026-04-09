@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, RotateCcw, Package, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
