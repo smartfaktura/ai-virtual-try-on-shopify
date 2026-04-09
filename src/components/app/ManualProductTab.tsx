@@ -892,7 +892,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                     </div>
                   </CollapsibleContent>
                 </>
-              )}
+
             </Collapsible>
           </div>
         )}
