@@ -199,7 +199,7 @@ export const mockTemplates: Template[] = [
   // Food
   {
     templateId: 'tpl_007',
-    category: 'food-beverage',
+    category: 'food',
     name: 'Bright Commercial Food Shot',
     description: 'Appetizing commercial food photography with vibrant colors',
     promptBlueprint: {
