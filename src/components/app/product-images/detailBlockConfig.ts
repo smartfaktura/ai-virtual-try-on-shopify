@@ -57,6 +57,12 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
     description: 'Upload a close-up of the bag\'s metal hardware — zippers, clasps, buckles, rings — for accurate rendering.',
     promptLabel: 'Hardware close-up reference — use this to accurately render metal details, clasps, and zipper pulls:',
   },
+  sideView: {
+    key: 'sideView',
+    label: 'Upload side view photo',
+    description: 'Upload a side-view photo of your product for accurate profile rendering.',
+    promptLabel: 'Side-view reference — use this to accurately render the product profile and side details:',
+  },
 };
 
 /** All trigger block keys including reference triggers */
