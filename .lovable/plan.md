@@ -1,120 +1,72 @@
 
 
-# Debug Report: New Category Scenes
-
-## What's Working (34 categories, all present)
-
-All 22 new categories were created successfully with scenes:
-
-| Category | Scenes | Unique Shots | Status |
-|---|---|---|---|
-| backpacks | 24 | 3 (Back Panel, Straps & Harness, Packed/Loaded) | OK |
-| wallets-cardholders | 24 | 3 (Open Interior, Card Slot, Pocket Fit) | OK |
-| belts | 24 | 3 (Buckle Close-Up, Coiled Display, On-Waist Crop) | OK |
-| scarves | 24 | 3 (Draped Fabric, Knot/Wrap, Folded Display) | OK |
-| jewellery-necklaces | 24 | 3 | OK |
-| jewellery-earrings | 24 | 3 | OK |
-| jewellery-bracelets | 24 | 3 | OK |
-| jewellery-rings | 24 | 3 | OK |
-| watches | 19 | 3 (Dial Macro, On-Wrist, Crown & Pushers) | OK |
-| eyewear | 19 | 3 (Lens Detail, On-Face, Folded Temple) | OK |
-| sneakers | 21 | 3 | OK |
-| boots | 21 | 3 | OK |
-| high-heels | 21 | 3 | OK |
-| dresses | 21 | 3 | OK |
-| hoodies | 21 | 3 | OK |
-| streetwear | 21 | 3 | OK |
-| jeans | 21 | 3 | OK |
-| jackets | 21 | 3 | OK |
-| activewear | 21 | 3 | OK |
-| swimwear | 21 | 3 | OK |
-| lingerie | 21 | 3 | OK |
-| kidswear | 21 | 3 | OK |
-
-No empty prompts, no missing scene_ids. Classification code and keyword matching are in place.
-
----
+# Debug Report + Food/Beverage Split Plan
 
 ## Issues Found
 
-### Issue 1: Irrelevant bag-specific scenes cloned into jewellery, belts, scarves, wallets
+### Issue 1 (CRITICAL): Bag-referencing prompts still active in 7 categories
 
-All 4 jewellery categories, belts, scarves, and wallets inherited **every** bags-accessories scene — including scenes that make no sense for those products:
+The previous fix only deactivated 5 scene *titles* (Interior View, On Shoulder Editorial, etc.) but the **remaining active scenes** in jewellery, belts, scarves, and wallets still have prompt templates that say "bag", "leather grain", "zipper pull", etc. This means ~96 active scenes across 7 categories will generate bag-related imagery for jewellery/belt/scarf products.
 
-- **"Interior View"** — designed for bag interiors (lining, compartments). Irrelevant for earrings, rings, belts, scarves.
-- **"On Shoulder Editorial"** — bag held on shoulder. Makes no sense for rings, earrings, wallets, belts.
-- **"Strap Detail"** — bag strap close-up. Irrelevant for rings, earrings, scarves, wallets.
-- **"Arm Cradle Hold"** — bag cradled in arm. Doesn't apply to small jewellery, belts, scarves.
-- **"Hanging Strap"** — bag dangling from strap. Irrelevant for all these categories.
-- **"Hardware Close-Up"** — somewhat OK for some, but the prompt template references bag hardware.
-- **"Mid Portrait Hold"** — person holding a bag at mid-body. Odd for rings/earrings.
+**Affected categories and counts of bad prompts:**
+- jewellery-necklaces: 14 scenes with "bag" in prompt
+- jewellery-earrings: 14
+- jewellery-bracelets: 14
+- jewellery-rings: 14
+- belts: 13
+- scarves: 13
+- wallets-cardholders: 14
 
-That's ~5-7 scenes per category that will produce bad/confusing results because the **prompt templates still reference bags** (e.g., "the bag displayed from the back showing stitching details").
+**Examples of broken prompts:** "Close-Up Detail" says "zipper pull, clasp, lock, buckle... leather grain"; "In-Hand Lifestyle" says "the bag should be the hero subject"; "Flat Lay Styled" says "items spilling out of the bag".
 
-### Issue 2: `categoryUtils.ts` maps to old generic category slugs
+### Issue 2 (MINOR): Fashion categories have 3 scenes each with "bag" in prompt
+`Packaging Detail`, `Product + Packaging`, and `Styled Outfit Flat Lay` in dresses/hoodies/streetwear etc. reference "bag" — less critical since these are generic packshot scenes where the word appears incidentally, but should be cleaned.
 
-The detection rules in `categoryUtils.ts` map some categories to old slugs that don't match `category_collection` values in the DB:
-
-- `'cosmetics'` (line 36, 39) — no `category_collection` called `cosmetics`; should be `beauty-skincare` or `fragrance`
-- `'clothing'` (line 38) — no `category_collection` called `clothing`; should be `garments`
-- `'food'` (line 40) — should be `food-beverage`
-- `'home'` (line 41) — should be `home-decor`
-- `'supplements'` (line 42) — should be `supplements-wellness`
-- `'universal'` (lines 43-49) — no `category_collection` called `universal`; should be `shoes`, `bags-accessories`, `tech-devices`, `other`, etc.
-
-These mismatches mean products that don't match a specific new category will fall into slugs that have **zero scenes** in the DB, showing nothing or falling back to the hardcoded `FALLBACK_ALL`.
-
-### Issue 3: `makeup` vs `makeup-lipsticks` mismatch
-
-`categoryUtils.ts` line 35 maps to `'makeup'`, but `CATEGORY_KEYWORDS` in Step2 and the DB both use `'makeup-lipsticks'`. The classification won't find the right DB collection.
+### Issue 3: No separate food vs beverages categories
+Currently one `food-beverage` collection serves both. User wants `food` and `beverages` split.
 
 ---
 
 ## Fix Plan
 
-### Step 1: Remove irrelevant inherited scenes from jewellery, belts, scarves, wallets (DB UPDATEs)
+### Step 1: Rewrite prompt templates for jewellery, belts, scarves, wallets (~96 UPDATEs)
 
-Deactivate (`is_active = false`) the following scene types from these 8 categories: `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets`, `jewellery-rings`, `belts`, `scarves`, `wallets-cardholders`:
+For each of the 7 categories, UPDATE prompt templates to replace bag-specific language with category-appropriate language:
+- **Jewellery**: Replace "bag" → "piece", "leather grain" → "metal finish", "zipper pull" → "clasp/setting", etc.
+- **Belts**: Replace "bag" → "belt", context-appropriate references
+- **Scarves**: Replace "bag" → "scarf/wrap", references to draping/folding
+- **Wallets**: Replace "bag" → "wallet/cardholder"
 
-Scenes to remove:
-- Interior View (title)
-- On Shoulder Editorial
-- Strap Detail
-- Arm Cradle Hold
-- Hanging Strap
+This will be done with targeted SQL UPDATE statements using `REPLACE()` and manual prompt rewrites for scenes that need complete overhauls (e.g., "Flat Lay Styled" describing items spilling out of a bag).
 
-Additionally for `belts` and `scarves` specifically, also deactivate:
-- Mid Portrait Hold (doesn't make sense for a belt)
+### Step 2: Split `food-beverage` into `food` and `beverages`
 
-For `wallets-cardholders`, keep Mid Portrait Hold (holding wallet is fine).
+**Database:**
+- Clone all 16 `food-beverage` scenes → `food` collection
+- Clone all 16 `food-beverage` scenes → `beverages` collection
+- Add 2-3 unique scenes per new category:
+  - **food**: Plating Detail, Bite/Cut Cross-Section, Recipe Context
+  - **beverages**: Glass Pour, Condensation Detail, Can/Bottle Lineup
+- Keep `food-beverage` active as a fallback (or deactivate — TBD)
 
-This is ~35-42 DELETE/deactivate operations across these categories.
+**Code updates:**
+- `types/index.ts`: Add `'food'` and `'beverages'` to TemplateCategory
+- `categoryUtils.ts`: Split keywords — beverages (coffee, tea, juice, beverage, soda, wine, beer, water, kombucha, smoothie, energy drink) vs food (chocolate, cereal, granola, honey, jam, sauce, snack, candy, chips, protein bar)
+- `analyze-product-category` edge function: Add both to valid categories + regex fallback
+- `ProductImagesStep2Scenes.tsx`: Add CATEGORY_KEYWORDS entries
+- `useProductImageScenes.ts`: Add TITLE_MAP entries
+- `ProductImagesStep3Refine.tsx`: Add outfit preset fallbacks
+- `categoryConstants.ts`: Add display labels and headlines
 
-### Step 2: Fix `categoryUtils.ts` slug mapping
+### Step 3: Fix minor "bag" references in fashion categories
+Update ~27 prompt templates (3 per 9 garment-based categories) to use generic product language instead of bag-specific wording.
 
-Update the generic fallback rules to use correct DB `category_collection` slugs:
+---
 
-| Current | Should be |
-|---|---|
-| `'cosmetics'` (beauty products) | `'beauty-skincare'` |
-| `'cosmetics'` (fragrance) | `'fragrance'` |
-| `'clothing'` | `'garments'` |
-| `'food'` | `'food-beverage'` |
-| `'home'` | `'home-decor'` |
-| `'supplements'` | `'supplements-wellness'` |
-| `'universal'` (shoes) | `'shoes'` |
-| `'universal'` (bags) | `'bags-accessories'` |
-| `'universal'` (tech) | `'tech-devices'` |
-| `'universal'` (other groups) | `'other'` |
-| `'makeup'` | `'makeup-lipsticks'` |
-
-### Step 3: Update `TemplateCategory` type if needed
-
-Ensure the union type in `types/index.ts` includes all the correct DB slugs and doesn't include orphan values.
-
-### Summary
-
-- ~40 scene deactivations (DB data updates)
-- 1 file fix: `categoryUtils.ts` — fix ~12 slug mappings
-- 1 file fix: `types/index.ts` — align type values
+## Scale
+- ~96 prompt template rewrites (jewellery/belts/scarves/wallets)
+- ~27 minor prompt fixes (fashion categories)
+- ~35 new scene records (food + beverages clones + unique)
+- 6 code files updated
+- 1 edge function updated
 
