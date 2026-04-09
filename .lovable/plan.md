@@ -1,59 +1,54 @@
 
+# Audit: Product Reference Images → Generation Pipeline Link
 
-# Improve Product Upload Layout: Visible Reference Angles + URL Import Roles
+## Findings
 
-## What's Wrong Now
-1. Reference angle uploads (Back/Side/Packaging) are hidden inside a collapsed accordion — users can't see them
-2. When importing from URL, users can only pick a "primary" image — no way to assign back/side/packaging roles to other imported images
-3. The layout feels cramped, especially in edit mode
+### 1. Back Image → Works correctly
+- **Storage**: `back_image_url` saved to `user_products` from both ManualProductTab and StoreImportTab
+- **Auto-fill**: When entering Step 3, `ProductImages.tsx:294` checks `firstProduct.back_image_url` and sets `details.backReferenceUrl`
+- **Consumption**: At generation time (line 453), scenes with `backView` trigger block use `details.backReferenceUrl` as `extra_reference_image_url` in the payload
+- **Verdict**: End-to-end link is correct
 
-## Changes
+### 2. Packaging Image → Works correctly
+- **Storage**: `packaging_image_url` saved correctly
+- **Auto-fill**: `ProductImages.tsx:297` sets `details.packagingReferenceUrl`
+- **Consumption**: Line 436 passes `packaging_reference_url` in the payload for all scenes
+- **Verdict**: End-to-end link is correct
 
-### 1. ManualProductTab — Show reference slots inline next to main image
-Replace the collapsed "Reference angles" Collapsible with a visible layout where the main image sits on the left (larger) and 3 small placeholder slots (Back, Side, Packaging) sit to its right in a vertical stack. Each slot shows a dashed placeholder with a label when empty, and a thumbnail with remove button when filled. This makes them immediately visible without clicking anything.
+### 3. Side Image → Has a gap
+- **Storage**: `side_image_url` saved correctly
+- **Auto-fill**: `ProductImages.tsx:304-309` stores it as `sceneExtraRefs['trigger:sideView']`
+- **Problem**: `sideView` is NOT registered in `REFERENCE_TRIGGERS` (detailBlockConfig.ts) — only `atomizerDetail`, `openBottle`, `capDetail`, `interiorDetail`, `strapDetail`, `hardwareDetail` exist there. This means:
+  1. The generation payload resolver (line 440-446) checks `REFERENCE_TRIGGERS[tb]` — since `sideView` isn't in that map, the `if (refUrl && REFERENCE_TRIGGERS[tb])` check **fails** and the side image is silently dropped
+  2. No scenes in the DB have `sideView` as a trigger block, so even if the ref was stored, no scene would look it up
+- **Fix needed**: Register `sideView` in `REFERENCE_TRIGGERS` AND add `sideView` to the trigger_blocks of relevant side-angle scenes in the DB
 
-Layout (single product mode, after image is uploaded):
-```text
-┌──────────────────┐  ┌──────────┐
-│                  │  │ Back     │
-│   Main Image     │  │  + add   │
-│   (hero)         │  ├──────────┤
-│                  │  │ Side     │
-│                  │  │  + add   │
-│                  │  ├──────────┤
-│                  │  │ Packaging│
-│                  │  │  + add   │
-└──────────────────┘  └──────────┘
+### 4. Query fetches all columns → OK
+- `supabase.from('user_products').select('*')` at line 128 returns all columns including the new ones
+
+## Fix Plan
+
+### Step 1: Register `sideView` in `REFERENCE_TRIGGERS` (detailBlockConfig.ts)
+Add a new entry:
+```ts
+sideView: {
+  key: 'sideView',
+  label: 'Upload side view photo',
+  description: 'Upload a side-view photo of your product for accurate profile rendering.',
+  promptLabel: 'Side-view reference — use this to accurately render the product profile and side details:',
+},
 ```
-- Main image: ~200px tall, takes ~65% width
-- Reference slots: 3 stacked, ~56×56px each, right side
-- Small helper text below: "Extra angles auto-fill during generation"
-- Remove the old Collapsible for reference angles entirely
 
-### 2. ManualProductTab — Empty state (no image yet)
-Keep the existing dropzone but add a subtle note: "You can add back, side & packaging views after uploading"
+### Step 2: Add `sideView` to trigger_blocks of relevant scenes (DB migration)
+Update scenes whose titles indicate a side/profile angle (e.g., "Side Profile", "Side View" scenes across categories) to include `'sideView'` in their `trigger_blocks` array. This ensures the side reference image is only injected into scenes that actually need it.
 
-### 3. StoreImportTab — Add role assignment for imported images
-After URL import, when showing the image thumbnails grid, add role badges. Currently users click to set "primary". Enhance:
-- First click = set as Primary (existing behavior, blue border + check)
-- Add small dropdown/badge buttons below the thumbnails row: "Back", "Side", "Packaging"
-- User can long-press or right-click a thumbnail to assign a role, or simpler: add a row of 3 small labeled slots below the primary selector (same pattern as ManualProductTab) where users can drag/click from the extracted images
-- On save, pass `back_image_url`, `side_image_url`, `packaging_image_url` to the insert
-
-Implementation: Add state for `backImageIndex`, `sideImageIndex`, `packagingImageIndex`. Show clickable role labels under each thumbnail. Save these URLs alongside the product.
-
-### 4. Layout polish for edit mode
-- Tighten spacing, ensure the image + reference angles layout works well on both `/app/products/new` and `/app/products/:id` edit pages
-- "More details" accordion stays collapsed (it's fine as-is for power users)
+### Step 3: Handle multi-product side refs
+Currently auto-fill only uses `firstProduct.side_image_url`. This matches the existing pattern for back/packaging (also first product only), so no change needed — consistent behavior.
 
 ## Files to Change
-
-1. **`src/components/app/ManualProductTab.tsx`** — Replace collapsible reference angles with inline visible slots next to main image; adjust layout
-2. **`src/components/app/StoreImportTab.tsx`** — Add role assignment (back/side/packaging) to imported image thumbnails; save extra URLs on product insert
-3. **`src/pages/AddProduct.tsx`** — Minor layout spacing tweaks if needed
+1. `src/components/app/product-images/detailBlockConfig.ts` — add `sideView` to `REFERENCE_TRIGGERS`
+2. DB migration — add `'sideView'` to `trigger_blocks` on relevant side-angle scenes
 
 ## Scope
-- ~150 lines changed in ManualProductTab (layout restructure)
-- ~80 lines changed in StoreImportTab (role assignment + save logic)
-- No database changes needed (columns already exist)
-
+- ~10 lines code change
+- ~1 SQL migration (UPDATE trigger_blocks for matching scenes)
