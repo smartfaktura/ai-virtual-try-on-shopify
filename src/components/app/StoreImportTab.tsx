@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,6 +100,34 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
   const [sideImageIndex, setSideImageIndex] = useState<number | null>(null);
   const [packagingImageIndex, setPackagingImageIndex] = useState<number | null>(null);
 
+  // Manual reference angle uploads (for single-image imports or unassigned roles)
+  const [manualBack, setManualBack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const [manualSide, setManualSide] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const [manualPack, setManualPack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const backInputRef = useRef<HTMLInputElement>(null);
+  const sideInputRef = useRef<HTMLInputElement>(null);
+  const packInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRefUpload = async (
+    file: File,
+    setter: typeof setManualBack,
+    role: string,
+  ) => {
+    if (!user) return;
+    setter({ url: '', uploading: true });
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `${user.id}/ref-${role}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('product-uploads').upload(path, file);
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('product-uploads').getPublicUrl(path);
+      setter({ url: pub.publicUrl, uploading: false });
+    } catch {
+      toast.error(`Failed to upload ${role} image`);
+      setter({ url: '', uploading: false });
+    }
+  };
+
   const handleImport = async () => {
     if (!url.trim()) return;
     setIsImporting(true);
@@ -143,9 +171,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       const imageUrls = extracted.image_urls || [extracted.image_url];
       const primaryImageUrl = imageUrls[selectedImageIndex] || extracted.image_url;
 
-      const backUrl = backImageIndex !== null ? imageUrls[backImageIndex] || null : null;
-      const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : null;
-      const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : null;
+      const backUrl = backImageIndex !== null ? imageUrls[backImageIndex] || null : (manualBack.url || null);
+      const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : (manualSide.url || null);
+      const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : (manualPack.url || null);
 
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
@@ -416,6 +444,76 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               </div>
             </div>
           )}
+
+          {/* Manual reference angle uploads for unassigned roles */}
+          {(() => {
+            const hasBack = backImageIndex !== null || manualBack.url;
+            const hasSide = sideImageIndex !== null || manualSide.url;
+            const hasPack = packagingImageIndex !== null || manualPack.url;
+            const showSection = !hasBack || !hasSide || !hasPack;
+
+            if (!showSection) return null;
+
+            const slots: { label: string; icon: React.ReactNode; state: typeof manualBack; setter: typeof setManualBack; inputRef: React.RefObject<HTMLInputElement>; role: string; assigned: boolean }[] = [
+              { label: 'Back', icon: <RotateCcw className="w-4 h-4" />, state: manualBack, setter: setManualBack, inputRef: backInputRef as React.RefObject<HTMLInputElement>, role: 'back', assigned: backImageIndex !== null },
+              { label: 'Side', icon: <ArrowRight className="w-4 h-4" />, state: manualSide, setter: setManualSide, inputRef: sideInputRef as React.RefObject<HTMLInputElement>, role: 'side', assigned: sideImageIndex !== null },
+              { label: 'Package', icon: <Package className="w-4 h-4" />, state: manualPack, setter: setManualPack, inputRef: packInputRef as React.RefObject<HTMLInputElement>, role: 'pack', assigned: packagingImageIndex !== null },
+            ];
+
+            return (
+              <div className="space-y-2">
+                <p className="text-[11px] text-muted-foreground/70 font-medium">
+                  📐 Extra angles improve AI accuracy
+                </p>
+                <div className="flex gap-2">
+                  {slots.filter(s => !s.assigned).map((slot) => (
+                    <div key={slot.role} className="flex flex-col items-center gap-1">
+                      <input
+                        ref={slot.inputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleRefUpload(f, slot.setter, slot.role);
+                          e.target.value = '';
+                        }}
+                      />
+                      {slot.state.url ? (
+                        <div className="relative w-[72px] h-[72px] rounded-lg overflow-hidden border border-border">
+                          <img src={slot.state.url} alt={slot.label} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => slot.setter({ url: '', uploading: false })}
+                            className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-background/80 flex items-center justify-center"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => slot.inputRef.current?.click()}
+                          disabled={slot.state.uploading}
+                          className="w-[72px] h-[72px] rounded-lg border border-dashed border-border hover:border-muted-foreground/40 flex flex-col items-center justify-center gap-1 transition-colors"
+                        >
+                          {slot.state.uploading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          ) : (
+                            <>
+                              {slot.icon}
+                              <Plus className="w-3 h-3 text-muted-foreground/50" />
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">{slot.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setExtracted(null)}>
