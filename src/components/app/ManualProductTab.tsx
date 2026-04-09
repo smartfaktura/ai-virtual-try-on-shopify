@@ -107,7 +107,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (editingProduct.back_image_url) setBackImage({ previewUrl: editingProduct.back_image_url });
       if (editingProduct.side_image_url) setSideImage({ previewUrl: editingProduct.side_image_url });
       if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
-      if (editingProduct.back_image_url || editingProduct.side_image_url || editingProduct.packaging_image_url) setRefAnglesOpen(true);
+      
       // Load extra fields
       if (editingProduct.weight) setWeight(editingProduct.weight);
       if (editingProduct.materials) setMaterials(editingProduct.materials);
