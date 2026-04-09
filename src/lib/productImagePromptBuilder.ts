@@ -324,7 +324,8 @@ function defaultStyling(category?: string): string {
       return 'Minimal luxury styling — clean, restrained, premium composition.';
     case 'tech-devices':
       return 'Modern sleek styling — contemporary, geometric, sharp composition.';
-    case 'food-beverage':
+    case 'food':
+    case 'beverages':
       return 'Organic natural styling — relaxed, authentic composition.';
     default:
       return 'Clean commercial styling — crisp, professional composition.';
