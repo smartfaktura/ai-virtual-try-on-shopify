@@ -35,7 +35,7 @@ export type ProductCategory =
   | 'fragrance' | 'beauty-skincare' | 'makeup-lipsticks'
   | 'bags-accessories' | 'hats-small' | 'shoes'
   | 'garments' | 'home-decor' | 'tech-devices'
-  | 'food-beverage' | 'supplements-wellness' | 'other';
+  | 'food' | 'beverages' | 'supplements-wellness' | 'other';
 
 export interface ProductAnalysis {
   /** Schema version — used to invalidate stale analyses */
