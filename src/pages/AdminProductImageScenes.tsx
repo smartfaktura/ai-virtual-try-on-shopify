@@ -36,7 +36,8 @@ const CATEGORIES = [
   { value: 'garments', label: 'Clothing & Apparel' },
   { value: 'home-decor', label: 'Home Decor' },
   { value: 'tech-devices', label: 'Tech / Devices' },
-  { value: 'food-beverage', label: 'Food & Beverage' },
+  { value: 'food', label: 'Food & Snacks' },
+  { value: 'beverages', label: 'Beverages' },
   { value: 'supplements-wellness', label: 'Supplements & Wellness' },
   { value: 'other', label: 'Other / Custom' },
 ];

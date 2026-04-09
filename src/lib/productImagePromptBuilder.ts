@@ -338,7 +338,8 @@ function defaultLighting(category?: string): string {
     case 'beauty-skincare':
     case 'makeup-lipsticks': return 'Soft overhead beauty lighting with even glow and subtle specular accents.';
     case 'tech-devices': return 'Crisp controlled studio lighting with clean specular reflections.';
-    case 'food-beverage': return 'Warm natural diffused lighting with appetite-enhancing warmth.';
+    case 'food':
+    case 'beverages': return 'Warm natural diffused lighting with appetite-enhancing warmth.';
     case 'garments': return 'Even soft studio lighting revealing fabric texture and true color.';
     case 'bags-accessories':
     case 'shoes': return 'Controlled directional lighting revealing leather grain and material depth.';
