@@ -65,6 +65,19 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [description, setDescription] = useState('');
   const [dimensions, setDimensions] = useState('');
   const [singleImage, setSingleImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+
+  // Reference angles
+  const [backImage, setBackImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [refAnglesOpen, setRefAnglesOpen] = useState(false);
+
+  // Extra details
+  const [weight, setWeight] = useState('');
+  const [materials, setMaterials] = useState('');
+  const [color, setColor] = useState('');
+  const [sku, setSku] = useState('');
+  const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
