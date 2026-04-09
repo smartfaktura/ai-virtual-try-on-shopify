@@ -1768,42 +1768,66 @@ export type Database = {
       user_products: {
         Row: {
           analysis_json: Json | null
+          back_image_url: string | null
+          color: string | null
           created_at: string
           description: string
           dimensions: string | null
+          extra_image_urls: string[]
           id: string
           image_url: string
+          materials: string | null
+          packaging_image_url: string | null
           product_type: string
+          side_image_url: string | null
+          sku: string | null
           tags: string[] | null
           title: string
           updated_at: string
           user_id: string
+          weight: string | null
         }
         Insert: {
           analysis_json?: Json | null
+          back_image_url?: string | null
+          color?: string | null
           created_at?: string
           description?: string
           dimensions?: string | null
+          extra_image_urls?: string[]
           id?: string
           image_url: string
+          materials?: string | null
+          packaging_image_url?: string | null
           product_type?: string
+          side_image_url?: string | null
+          sku?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
           user_id: string
+          weight?: string | null
         }
         Update: {
           analysis_json?: Json | null
+          back_image_url?: string | null
+          color?: string | null
           created_at?: string
           description?: string
           dimensions?: string | null
+          extra_image_urls?: string[]
           id?: string
           image_url?: string
+          materials?: string | null
+          packaging_image_url?: string | null
           product_type?: string
+          side_image_url?: string | null
+          sku?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
+          weight?: string | null
         }
         Relationships: []
       }
