@@ -272,7 +272,8 @@ function defaultBackground(category?: string): string {
       return 'soft neutral light gray seamless background';
     case 'tech-devices':
       return 'clean matte white seamless background';
-    case 'food-beverage':
+    case 'food':
+    case 'beverages':
       return 'warm off-white background with natural warmth';
     case 'home-decor':
       return 'soft white studio background';
