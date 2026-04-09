@@ -37,7 +37,8 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   // Generic parents
   [['sweater', 'shirt', 'apparel', 'pants', 'coat', 'blouse', 'skirt', 'suit', 't-shirt', 'clothing', 'tank', 'jogger', 'shorts', 'top', 'cardigan', 'vest', 'romper', 'jumpsuit', 'sweatshirt', 'pullover'], 'garments' as TemplateCategory],
   [['perfume', 'cologne', 'fragrance', 'eau de', 'parfum'], 'fragrance' as TemplateCategory],
-  [['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'jam', 'sauce', 'snack', 'beverage', 'juice', 'food'], 'food-beverage' as TemplateCategory],
+  [['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'kombucha', 'smoothie', 'energy drink', 'drink', 'lemonade', 'milk'], 'beverages' as TemplateCategory],
+  [['cereal', 'granola', 'chocolate', 'honey', 'jam', 'sauce', 'snack', 'candy', 'chips', 'protein bar', 'cookie', 'food', 'olive oil'], 'food' as TemplateCategory],
   [['candle', 'vase', 'planter', 'pillow', 'blanket', 'lamp', 'clock', 'frame', 'mirror', 'rug', 'decor', 'home', 'interior', 'ceramic'], 'home-decor' as TemplateCategory],
   [['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'], 'supplements-wellness' as TemplateCategory],
   [['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford'], 'shoes' as TemplateCategory],
