@@ -1,51 +1,59 @@
 
 
-# Fix: Allow Reference Angle Uploads for Single-Image URL Imports
+# Improve Role Assignment UX for URL-Imported Images
 
 ## Problem
-When importing from a URL that returns only 1 image, the role-cycling gallery (Back/Side/Pack) is completely hidden because it requires `image_urls.length > 1`. Users have no way to add reference angles for these products.
+The current "click to cycle" interaction is confusing:
+1. Users don't understand what "cycle its role" means — it's a non-standard interaction pattern
+2. The cycling order (Main → Back → Side → Pack → unassigned) is error-prone — one wrong click and you have to cycle through all states again
+3. The separate manual upload slots below add visual noise when images are already available
 
-## Solution
-Add manual reference angle upload slots (identical to the ManualProductTab design) below the product preview when URL import detects only 1 image. When multiple images exist, keep the current click-to-cycle system but also show the upload slots for any unassigned roles.
+## Solution: Direct Role Assignment via Dropdown/Tap
+
+Replace the cycling mechanic with a **direct role picker**. When a user clicks an unassigned image, show a small popover/menu with the available roles (Back, Side, Pack). Clicking an already-assigned image lets them change or clear the role.
+
+### New Layout
+```text
+Click any image to cycle its role: Main → Back → Side → Pack    ← DELETE THIS
+
+  [img1]    [img2]    [img3]    [img4]    [img5]
+  MAIN ✓    ← tap →   ← tap →  ← tap →  ← tap →
+
+  When tapped, show role menu:
+  ┌─────────┐
+  │ ✓ Main  │
+  │   Back  │
+  │   Side  │
+  │   Pack  │
+  │ — None  │
+  └─────────┘
+```
+
+### Interaction
+- Tap any image → opens a small **Popover** with role options
+- Already-taken roles show as disabled or with "swap" hint
+- Assigned images show their role badge (as now) — no change
+- Instruction text changes to: **"Tap any image to assign its role"**
+
+### Manual upload slots
+Keep the manual upload slots but only for roles that have NO image assigned (from cycling OR from the detected images). This covers the single-image case too.
 
 ## Changes
 
 ### `src/components/app/StoreImportTab.tsx`
 
-**1. Add state for manually uploaded reference images**
-Add 3 state variables for file uploads + their preview URLs (back, side, packaging), plus a small upload helper that stores to Supabase storage and returns the public URL.
+1. **Replace `cycleRole` with a Popover-based role picker** (~40 lines)
+   - Import `Popover, PopoverTrigger, PopoverContent` from UI
+   - Each image button becomes a `PopoverTrigger`
+   - PopoverContent shows 5 options: Main, Back, Side, Pack, None
+   - Selecting a role updates the corresponding state index directly
+   - If the role is already assigned to another image, swap them
 
-**2. Add reference angle upload section after the product preview**
-Below the existing image gallery (or below the single-image preview), add a section:
-- Header: "Extra angles improve AI accuracy" (matching ManualProductTab style)
-- 3 upload slots (88px each) for Back, Side, Packaging
-- Each slot opens a file picker; once uploaded, shows thumbnail with remove button
-- Only show slots for roles NOT already assigned via the click-to-cycle system
+2. **Update instruction text** (1 line)
+   - Change to: `"Tap an image to set its role"`
 
-**3. Update `handleSave` to use manually uploaded URLs**
-Merge the manually uploaded reference URLs with the cycle-assigned ones — manual uploads take priority when the cycle system hasn't assigned a role.
-
-### Layout when only 1 image from URL:
-```text
-┌────────────────────────────────┐
-│ 🖼 Product preview (80px)     │
-│ Title, type, description       │
-└────────────────────────────────┘
-
-📐 Extra angles improve AI accuracy
-┌──────────┐ ┌──────────┐ ┌──────────┐
-│  ↺  +    │ │  →  +    │ │  📦  +   │
-│ Back     │ │ Side     │ │ Packaging│
-└──────────┘ └──────────┘ └──────────┘
-
-              [Discard] [Save Product]
-```
+3. **Keep manual upload slots** as-is for unassigned roles — no changes needed there
 
 ## Files
-- `src/components/app/StoreImportTab.tsx` — ~60 lines added
-
-## What stays the same
-- Click-to-cycle for multi-image imports still works
-- Import/save logic structure unchanged
-- ManualProductTab unchanged
+- `src/components/app/StoreImportTab.tsx` — ~40 lines modified in the image gallery section (lines 368-445)
 
