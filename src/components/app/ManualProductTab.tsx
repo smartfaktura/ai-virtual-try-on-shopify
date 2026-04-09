@@ -747,6 +747,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   Each image creates a separate product · up to {MAX_BATCH} at once
                 </p>
               </div>
+              <p className="text-[10px] text-muted-foreground/40 mt-1">
+                💡 You can add back, side & packaging views after uploading
+              </p>
               <input
                 id="dropzone-file-input"
                 type="file"
@@ -763,31 +766,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   e.target.value = '';
                 }}
               />
-            </div>
-
-            {/* Pre-upload reference angle placeholders */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <p className="text-[11px] font-medium text-muted-foreground">Reference Angles</p>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground/50 border-border/50">Optional</Badge>
-              </div>
-              <div className="flex gap-3">
-                {([
-                  { label: 'Back view', Icon: RotateCcw },
-                  { label: 'Side view', Icon: ArrowRight },
-                  { label: 'Packaging', Icon: Package },
-                ] as const).map(({ label, Icon }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed border-border/40 bg-muted/5 opacity-50 cursor-not-allowed gap-1.5"
-                    title="Upload main image first"
-                  >
-                    <Icon className="w-4 h-4 text-muted-foreground/40" />
-                    <span className="text-[10px] text-muted-foreground/40 font-medium leading-tight text-center">{label}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted-foreground/50">Upload main image first, then add extra angles</p>
             </div>
           </div>
         ) : (
