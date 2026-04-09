@@ -915,6 +915,92 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </div>
       </div>
 
+      {/* Reference Angles (optional, collapsible) */}
+      <Collapsible open={refAnglesOpen} onOpenChange={setRefAnglesOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span className="font-medium">Reference angles</span>
+          <span className="text-muted-foreground/60">(optional)</span>
+          <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', refAnglesOpen && 'rotate-180')} />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="grid grid-cols-3 gap-2 pt-2">
+            {([
+              { label: 'Back View', state: backImage, setter: setBackImage },
+              { label: 'Side View', state: sideImage, setter: setSideImage },
+              { label: 'Packaging', state: packagingImage, setter: setPackagingImage },
+            ] as const).map(({ label, state, setter }) => (
+              <div key={label} className="space-y-1">
+                <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                {state ? (
+                  <div className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted/20">
+                    <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => setter(null)}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/40 bg-muted/10 cursor-pointer transition-colors">
+                    <Plus className="w-4 h-4 text-muted-foreground/50" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && file.type.startsWith('image/')) {
+                          setter({ file, previewUrl: URL.createObjectURL(file) });
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-1.5">
+            Extra angles auto-fill during generation for back-view and packaging scenes.
+          </p>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* More Details (optional, collapsible) */}
+      <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
+          <Package className="w-3.5 h-3.5" />
+          <span className="font-medium">More details</span>
+          <span className="text-muted-foreground/60">(optional)</span>
+          <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', moreDetailsOpen && 'rotate-180')} />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">Weight</Label>
+              <Input placeholder="e.g. 250g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">Color</Label>
+              <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">Materials</Label>
+              <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-medium text-muted-foreground">SKU</Label>
+              <Input placeholder="e.g. SKU-12345" value={sku} onChange={(e) => setSku(e.target.value)} maxLength={50} className="h-8 text-xs" />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-1.5">
+            Weight and materials help the AI generate more realistic product scenes.
+          </p>
+        </CollapsibleContent>
+      </Collapsible>
+
       {/* Upload Progress */}
       {isUploading && uploadProgress.total > 0 && (
         <div className="space-y-1.5">
