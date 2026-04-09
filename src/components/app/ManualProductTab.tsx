@@ -716,171 +716,194 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         )}
 
         {!singleImage ? (
-          <div
-            className={cn(
-              'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 py-6 sm:py-8 cursor-pointer',
-              dragActive
-                ? 'bg-primary/8 border-2 border-primary scale-[1.02] shadow-lg shadow-primary/10'
-                : 'bg-muted/30 hover:bg-muted/50 border-2 border-dashed border-border hover:border-muted-foreground/30'
-            )}
-            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById('dropzone-file-input')?.click()}
-          >
-            <div className={cn(
-              'w-10 h-10 rounded-full flex items-center justify-center mb-2.5 transition-all duration-300',
-              dragActive ? 'bg-primary/15 scale-110' : 'bg-muted'
-            )}>
-              <ImagePlus className={cn(
-                'w-5 h-5 transition-colors duration-300',
-                dragActive ? 'text-primary' : 'text-muted-foreground'
-              )} />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Drop images, <span className="text-primary font-medium">browse</span>, or paste
-            </p>
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <Layers className="w-3 h-3 text-muted-foreground/50" />
-              <p className="text-[11px] text-muted-foreground/60">
-                Each image creates a separate product · up to {MAX_BATCH} at once
+          <div className="space-y-4">
+            <div
+              className={cn(
+                'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 py-6 sm:py-8 cursor-pointer',
+                dragActive
+                  ? 'bg-primary/8 border-2 border-primary scale-[1.02] shadow-lg shadow-primary/10'
+                  : 'bg-muted/30 hover:bg-muted/50 border-2 border-dashed border-border hover:border-muted-foreground/30'
+              )}
+              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={handleDrop}
+              onClick={() => document.getElementById('dropzone-file-input')?.click()}
+            >
+              <div className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center mb-2.5 transition-all duration-300',
+                dragActive ? 'bg-primary/15 scale-110' : 'bg-muted'
+              )}>
+                <ImagePlus className={cn(
+                  'w-5 h-5 transition-colors duration-300',
+                  dragActive ? 'text-primary' : 'text-muted-foreground'
+                )} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Drop images, <span className="text-primary font-medium">browse</span>, or paste
               </p>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <Layers className="w-3 h-3 text-muted-foreground/50" />
+                <p className="text-[11px] text-muted-foreground/60">
+                  Each image creates a separate product · up to {MAX_BATCH} at once
+                </p>
+              </div>
+              <input
+                id="dropzone-file-input"
+                type="file"
+                accept="image/*"
+                multiple={!isEditing}
+                className="hidden"
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length) {
+                    if (isEditing) handleEditImageReplace(files);
+                    else addFiles(files);
+                  }
+                  e.target.value = '';
+                }}
+              />
             </div>
-            <p className="text-[10px] text-muted-foreground/40 mt-1">
-              You can add back, side & packaging views after uploading
-            </p>
-            <input
-              id="dropzone-file-input"
-              type="file"
-              accept="image/*"
-              multiple={!isEditing}
-              className="hidden"
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                if (files.length) {
-                  if (isEditing) handleEditImageReplace(files);
-                  else addFiles(files);
-                }
-                e.target.value = '';
-              }}
-            />
+
+            {/* Pre-upload reference angle placeholders */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-medium text-muted-foreground">Reference Angles</p>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground/50 border-border/50">Optional</Badge>
+              </div>
+              <div className="flex gap-3">
+                {([
+                  { label: 'Back view', Icon: RotateCcw },
+                  { label: 'Side view', Icon: ArrowRight },
+                  { label: 'Packaging', Icon: Package },
+                ] as const).map(({ label, Icon }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed border-border/40 bg-muted/5 opacity-50 cursor-not-allowed gap-1.5"
+                    title="Upload main image first"
+                  >
+                    <Icon className="w-4 h-4 text-muted-foreground/40" />
+                    <span className="text-[10px] text-muted-foreground/40 font-medium leading-tight text-center">{label}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground/50">Upload main image first, then add extra angles</p>
+            </div>
           </div>
         ) : (
-          /* Main image + reference angle slots */
+          /* Main image + reference angle slots — stacked vertically */
           <div className="rounded-2xl border border-border/50 bg-muted/10 p-3 space-y-3">
-            <div className="flex gap-3">
-              {/* Main image — constrained width */}
-              <div className="relative group rounded-2xl overflow-hidden bg-muted/20 max-w-[280px] w-full min-w-0">
-                <img
-                  src={singleImage.previewUrl}
-                  alt={title || 'Product preview'}
-                  className="w-full max-h-[200px] object-contain rounded-2xl"
-                />
-                <div className="absolute top-2 left-2">
-                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-background/70 backdrop-blur-sm">
-                    Main
-                  </Badge>
-                </div>
-                <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {!isEditing && (
-                    <button
-                      onClick={() => {
-                        setSingleImage(null);
-                        setTitle('');
-                        setProductType('');
-                        setDescription('');
-                        setBackImage(null);
-                        setSideImage(null);
-                        setPackagingImage(null);
-                        hasManualEdits.current = { title: false, productType: false, description: false };
-                      }}
-                      className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <label className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-muted cursor-pointer transition-colors">
-                    <Pencil className="w-3.5 h-3.5" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (files.length) {
-                          if (isEditing) handleEditImageReplace(files);
-                          else {
-                            const file = files[0];
-                            const previewUrl = URL.createObjectURL(file);
-                            setSingleImage({ file, previewUrl });
-                            const reader = new FileReader();
-                            reader.onload = (ev) => analyzeImage(ev.target?.result as string);
-                            reader.readAsDataURL(file);
-                          }
-                        }
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-                </div>
+            {/* Main image — constrained width */}
+            <div className="relative group rounded-2xl overflow-hidden bg-muted/20 max-w-[280px] w-full min-w-0">
+              <img
+                src={singleImage.previewUrl}
+                alt={title || 'Product preview'}
+                className="w-full max-h-[200px] object-contain rounded-2xl"
+              />
+              <div className="absolute top-2 left-2">
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-background/70 backdrop-blur-sm">
+                  Main
+                </Badge>
               </div>
+              <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {!isEditing && (
+                  <button
+                    onClick={() => {
+                      setSingleImage(null);
+                      setTitle('');
+                      setProductType('');
+                      setDescription('');
+                      setBackImage(null);
+                      setSideImage(null);
+                      setPackagingImage(null);
+                      hasManualEdits.current = { title: false, productType: false, description: false };
+                    }}
+                    className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <label className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-muted cursor-pointer transition-colors">
+                  <Pencil className="w-3.5 h-3.5" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length) {
+                        if (isEditing) handleEditImageReplace(files);
+                        else {
+                          const file = files[0];
+                          const previewUrl = URL.createObjectURL(file);
+                          setSingleImage({ file, previewUrl });
+                          const reader = new FileReader();
+                          reader.onload = (ev) => analyzeImage(ev.target?.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
 
-              {/* Reference Angles — vertical on desktop, horizontal in edit mode */}
-              <div className={cn('flex gap-2 shrink-0', isEditing ? 'flex-row items-start' : 'flex-col')}>
-                <div className="space-y-1">
-                  <p className="text-[11px] font-medium text-muted-foreground">Reference Angles</p>
-                  <p className="text-[10px] text-muted-foreground/60 leading-tight max-w-[160px]">Helps AI render accurate back-view & packaging scenes</p>
-                </div>
-                <div className={cn('flex gap-2', isEditing ? 'flex-row' : 'flex-col')}>
-                  {([
-                    { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
-                    { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
-                    { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
-                  ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
-                    <div key={shortLabel} className="relative">
-                      {state ? (
-                        <HoverCard openDelay={200} closeDelay={100}>
-                          <HoverCardTrigger asChild>
-                            <div className="relative group/ref w-[72px] h-[72px] rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer">
-                              <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
-                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
-                                <span className="text-[9px] text-white font-medium">{label}</span>
-                              </div>
-                              <button
-                                onClick={() => setter(null)}
-                                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
+            {/* Reference Angles — horizontal row below main image */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-medium text-muted-foreground">Reference Angles</p>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground/50 border-border/50">Optional</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 leading-tight">Helps AI render accurate back-view & packaging scenes</p>
+              <div className="flex gap-3">
+                {([
+                  { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
+                  { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
+                  { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
+                ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
+                  <div key={shortLabel} className="relative">
+                    {state ? (
+                      <HoverCard openDelay={200} closeDelay={100}>
+                        <HoverCardTrigger asChild>
+                          <div className="relative group/ref w-20 h-20 rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
+                            <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
+                              <span className="text-[10px] text-white font-medium">{label}</span>
                             </div>
-                          </HoverCardTrigger>
-                          <HoverCardContent side="left" className="w-[200px] p-1.5">
-                            <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
-                            <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
-                          </HoverCardContent>
-                        </HoverCard>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center w-[72px] h-[72px] rounded-xl border-2 border-dashed border-border/60 hover:border-muted-foreground/40 bg-muted/5 cursor-pointer transition-colors gap-1">
-                          <Icon className="w-4 h-4 text-muted-foreground/30" />
-                          <span className="text-[9px] text-muted-foreground/50 font-medium leading-tight text-center">{label}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file && file.type.startsWith('image/')) {
-                                setter({ file, previewUrl: URL.createObjectURL(file) });
-                              }
-                              e.target.value = '';
-                            }}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                            <button
+                              onClick={() => setter(null)}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent side="top" className="w-[200px] p-1.5">
+                          <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
+                          <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
+                        </HoverCardContent>
+                      </HoverCard>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed border-border/60 hover:border-muted-foreground/40 hover:shadow-sm hover:shadow-primary/5 bg-muted/5 cursor-pointer transition-all gap-1.5">
+                        <Icon className="w-4.5 h-4.5 text-muted-foreground/50" />
+                        <span className="text-[10px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file && file.type.startsWith('image/')) {
+                              setter({ file, previewUrl: URL.createObjectURL(file) });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
