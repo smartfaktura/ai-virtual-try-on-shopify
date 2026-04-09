@@ -424,8 +424,8 @@ export const CATEGORY_COLLECTIONS: CategoryCollection[] = [
     ],
   },
   {
-    id: 'food-beverage',
-    title: 'Food & Beverage',
+    id: 'food',
+    title: 'Food & Snacks',
     scenes: [
       {
         id: 'food_tabletop_placement', title: 'Tabletop Product Placement',
