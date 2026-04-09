@@ -68,16 +68,22 @@ export function detectProductCategory(product: Product): TemplateCategory | null
  * Human-readable category labels
  */
 export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
-  clothing: 'Clothing',
-  cosmetics: 'Cosmetics',
-  food: 'Food & Beverage',
-  home: 'Home & Interior',
-  supplements: 'Supplements',
-  universal: 'Universal',
+  garments: 'Clothing & Apparel',
+  'beauty-skincare': 'Beauty & Skincare',
+  'makeup-lipsticks': 'Makeup & Lipsticks',
+  fragrance: 'Fragrance',
+  'food-beverage': 'Food & Beverage',
+  'home-decor': 'Home & Interior',
+  'supplements-wellness': 'Supplements & Wellness',
+  shoes: 'Shoes',
+  'bags-accessories': 'Bags & Accessories',
+  'tech-devices': 'Tech / Devices',
+  other: 'Other / Custom',
   backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders',
   belts: 'Belts',
   scarves: 'Scarves',
+  'hats-small': 'Hats & Headwear',
   'jewellery-necklaces': 'Jewellery – Necklaces',
   'jewellery-earrings': 'Jewellery – Earrings',
   'jewellery-bracelets': 'Jewellery – Bracelets',
@@ -96,7 +102,6 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   kidswear: 'Kidswear',
   jeans: 'Jeans',
   jackets: 'Jackets',
-  makeup: 'Makeup',
 };
 
 /**
