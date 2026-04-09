@@ -882,6 +882,11 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'clinicalCleanlinessLevel': return analysis?.clinicalCleanlinessLevel || '';
     case 'routineContext': return analysis?.routineContext || '';
 
+    // ── Product metadata tokens (from product upload) ──
+    case 'productWeight': return ctx.productWeight || '';
+    case 'productMaterials': return ctx.productMaterials || '';
+    case 'productColor': return ctx.productColor || '';
+
     default: return '';
   }
 }
