@@ -95,6 +95,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
   const [isSaving, setIsSaving] = useState(false);
   const [importError, setImportError] = useState<ImportError | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [backImageIndex, setBackImageIndex] = useState<number | null>(null);
+  const [sideImageIndex, setSideImageIndex] = useState<number | null>(null);
+  const [packagingImageIndex, setPackagingImageIndex] = useState<number | null>(null);
 
   const handleImport = async () => {
     if (!url.trim()) return;
