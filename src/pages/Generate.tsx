@@ -770,12 +770,12 @@ export default function Generate() {
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
-    { id: 'clothing', label: 'Clothing' },
-    { id: 'cosmetics', label: 'Cosmetics' },
-    { id: 'food', label: 'Food' },
-    { id: 'home', label: 'Home & Interior' },
-    { id: 'supplements', label: 'Supplements' },
-    { id: 'universal', label: 'Universal' },
+    { id: 'garments', label: 'Clothing' },
+    { id: 'beauty-skincare', label: 'Cosmetics' },
+    { id: 'food-beverage', label: 'Food' },
+    { id: 'home-decor', label: 'Home & Interior' },
+    { id: 'supplements-wellness', label: 'Supplements' },
+    { id: 'other', label: 'Universal' },
   ];
 
   const filteredTemplates = mockTemplates.filter(t => {
@@ -836,14 +836,14 @@ export default function Generate() {
     const tags = product.tags.map(t => t.toLowerCase()).join(' ');
     const combined = `${type} ${tags}`;
     const cosmeticsKeywords = ['serum', 'moisturizer', 'lipstick', 'foundation', 'mascara', 'skincare', 'beauty', 'makeup', 'cream', 'treatment', 'powder', 'lip'];
-    if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'cosmetics';
+    if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'beauty-skincare';
     const foodKeywords = ['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'snack', 'beverage', 'juice', 'food', 'organic'];
-    if (foodKeywords.some(kw => combined.includes(kw))) return 'food';
+    if (foodKeywords.some(kw => combined.includes(kw))) return 'food-beverage';
     const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'lamp', 'decor', 'home', 'interior', 'carafe', 'ceramic'];
-    if (homeKeywords.some(kw => combined.includes(kw))) return 'home';
+    if (homeKeywords.some(kw => combined.includes(kw))) return 'home-decor';
     const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'omega', 'wellness', 'greens', 'superfood'];
-    if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements';
-    if (isClothingProduct(product)) return 'clothing';
+    if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements-wellness';
+    if (isClothingProduct(product)) return 'garments';
     return null;
   };
 
@@ -3807,15 +3807,15 @@ export default function Generate() {
                   {/* Top Picks */}
                   {(() => {
                     const productType = (selectedProduct?.productType || scratchUpload?.productInfo.productType || '').toLowerCase();
-                    let productCategory: TemplateCategory = 'universal';
-                    if (['sweater', 'shirt', 'apparel', 'hoodie', 'leggings', 'tank', 'jogger'].some(kw => productType.includes(kw))) productCategory = 'clothing';
-                    else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'cosmetics';
-                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food';
-                    else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home';
-                    else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements';
+                    let productCategory: TemplateCategory = 'other';
+                    if (['sweater', 'shirt', 'apparel', 'hoodie', 'leggings', 'tank', 'jogger'].some(kw => productType.includes(kw))) productCategory = 'garments';
+                    else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'beauty-skincare';
+                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food-beverage';
+                    else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home-decor';
+                    else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements-wellness';
 
                     const topPicks = mockTemplates.filter(t => t.enabled && t.category === productCategory).slice(0, 3);
-                    if (topPicks.length < 3) topPicks.push(...mockTemplates.filter(t => t.enabled && t.category === 'universal').slice(0, 3 - topPicks.length));
+                    if (topPicks.length < 3) topPicks.push(...mockTemplates.filter(t => t.enabled && t.category === 'other').slice(0, 3 - topPicks.length));
                     const topPickIds = topPicks.map(t => t.templateId);
 
                     return (

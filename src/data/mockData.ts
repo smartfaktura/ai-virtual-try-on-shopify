@@ -37,7 +37,7 @@ export const mockTemplates: Template[] = [
   // Clothing
   {
     templateId: 'tpl_001',
-    category: 'clothing',
+    category: 'garments',
     name: 'Premium Studio Apparel',
     description: 'High-end fashion photography with soft studio lighting and clean backgrounds',
     promptBlueprint: {
@@ -64,7 +64,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_002',
-    category: 'clothing',
+    category: 'garments',
     name: 'Lifestyle Streetwear',
     description: 'Urban lifestyle shots with natural outdoor lighting',
     promptBlueprint: {
@@ -90,7 +90,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_003',
-    category: 'clothing',
+    category: 'garments',
     name: 'Minimal Flat Lay',
     description: 'Clean overhead flat lay compositions for e-commerce',
     promptBlueprint: {
@@ -118,7 +118,7 @@ export const mockTemplates: Template[] = [
   // Cosmetics
   {
     templateId: 'tpl_004',
-    category: 'cosmetics',
+    category: 'beauty-skincare',
     name: 'Luxury Skincare Studio',
     description: 'Premium beauty photography with elegant lighting and reflections',
     promptBlueprint: {
@@ -145,7 +145,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_005',
-    category: 'cosmetics',
+    category: 'beauty-skincare',
     name: 'Glossy Product + Water Drops',
     description: 'Fresh and hydrating look with water droplets and dewy effects',
     promptBlueprint: {
@@ -171,7 +171,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_006',
-    category: 'cosmetics',
+    category: 'beauty-skincare',
     name: 'Soft Pastel Clean Beauty',
     description: 'Gentle pastel tones for clean beauty and wellness brands',
     promptBlueprint: {
@@ -199,7 +199,7 @@ export const mockTemplates: Template[] = [
   // Food
   {
     templateId: 'tpl_007',
-    category: 'food',
+    category: 'food-beverage',
     name: 'Bright Commercial Food Shot',
     description: 'Appetizing commercial food photography with vibrant colors',
     promptBlueprint: {
@@ -226,7 +226,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_008',
-    category: 'food',
+    category: 'food-beverage',
     name: 'Rustic Table Lifestyle',
     description: 'Warm rustic setting with natural textures and props',
     promptBlueprint: {
@@ -252,7 +252,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_009',
-    category: 'food',
+    category: 'food-beverage',
     name: 'Minimal Packaging Focus',
     description: 'Clean product-focused shots emphasizing packaging design',
     promptBlueprint: {
@@ -280,7 +280,7 @@ export const mockTemplates: Template[] = [
   // Home/Interior
   {
     templateId: 'tpl_010',
-    category: 'home',
+    category: 'home-decor',
     name: 'Japandi Minimal Shelf Scene',
     description: 'Zen-inspired minimal interior styling with natural materials',
     promptBlueprint: {
@@ -307,7 +307,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_011',
-    category: 'home',
+    category: 'home-decor',
     name: 'Warm Lamp + Shadows',
     description: 'Cozy evening ambiance with warm lighting and dramatic shadows',
     promptBlueprint: {
@@ -333,7 +333,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_012',
-    category: 'home',
+    category: 'home-decor',
     name: 'Concrete Studio Modern',
     description: 'Contemporary industrial aesthetic with concrete and metal',
     promptBlueprint: {
@@ -361,7 +361,7 @@ export const mockTemplates: Template[] = [
   // Supplements
   {
     templateId: 'tpl_013',
-    category: 'supplements',
+    category: 'supplements-wellness',
     name: 'Clinical Clean White Studio',
     description: 'Medical-grade clean aesthetic for health products',
     promptBlueprint: {
@@ -388,7 +388,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_014',
-    category: 'supplements',
+    category: 'supplements-wellness',
     name: 'Athletic Lifestyle Countertop',
     description: 'Active lifestyle context for sports nutrition',
     promptBlueprint: {
@@ -414,7 +414,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_015',
-    category: 'supplements',
+    category: 'supplements-wellness',
     name: 'Luxury Matte Black Studio',
     description: 'Premium dark aesthetic for high-end supplements',
     promptBlueprint: {
@@ -442,7 +442,7 @@ export const mockTemplates: Template[] = [
   // Universal
   {
     templateId: 'tpl_016',
-    category: 'universal',
+    category: 'other',
     name: 'Ultra Clean Studio',
     description: 'Versatile white studio setup for any product type',
     promptBlueprint: {
@@ -468,7 +468,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_017',
-    category: 'universal',
+    category: 'other',
     name: 'Gradient Premium Background',
     description: 'Elegant gradient backgrounds for premium product positioning',
     promptBlueprint: {

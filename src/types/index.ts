@@ -34,12 +34,13 @@ export interface Template {
   updatedAt: string;
 }
 
-export type TemplateCategory = 'clothing' | 'cosmetics' | 'food' | 'home' | 'supplements' | 'universal'
+export type TemplateCategory = 'garments' | 'beauty-skincare' | 'makeup-lipsticks' | 'fragrance'
+  | 'food-beverage' | 'home-decor' | 'supplements-wellness'
+  | 'shoes' | 'bags-accessories' | 'tech-devices' | 'hats-small' | 'other'
   | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves'
   | 'jewellery-necklaces' | 'jewellery-earrings' | 'jewellery-bracelets' | 'jewellery-rings' | 'watches'
   | 'dresses' | 'hoodies' | 'streetwear' | 'sneakers' | 'boots' | 'high-heels'
-  | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'jackets'
-  | 'makeup';
+  | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'jackets';
 
 export interface PromptBlueprint {
   sceneDescription: string;

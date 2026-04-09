@@ -32,21 +32,21 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['lingerie', 'bra', 'underwear', 'corset', 'negligee', 'intimates'], 'lingerie' as TemplateCategory],
   [['kids', 'children', 'baby', 'toddler', 'infant', 'kidswear'], 'kidswear' as TemplateCategory],
   // Makeup vs beauty
-  [['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'bronzer', 'highlighter', 'primer', 'eyeliner', 'lip gloss', 'lip liner', 'contour', 'rouge', 'cheek'], 'makeup' as TemplateCategory],
-  [['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'shampoo', 'conditioner', 'body wash', 'lotion', 'retinol'], 'cosmetics'],
+  [['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'bronzer', 'highlighter', 'primer', 'eyeliner', 'lip gloss', 'lip liner', 'contour', 'rouge', 'cheek'], 'makeup-lipsticks' as TemplateCategory],
+  [['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'shampoo', 'conditioner', 'body wash', 'lotion', 'retinol'], 'beauty-skincare' as TemplateCategory],
   // Generic parents
-  [['sweater', 'shirt', 'apparel', 'pants', 'coat', 'blouse', 'skirt', 'suit', 't-shirt', 'clothing', 'tank', 'jogger', 'shorts', 'top', 'cardigan', 'vest', 'romper', 'jumpsuit', 'sweatshirt', 'pullover'], 'clothing'],
-  [['perfume', 'cologne', 'fragrance', 'eau de', 'parfum'], 'cosmetics'],
-  [['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'jam', 'sauce', 'snack', 'beverage', 'juice', 'food'], 'food'],
-  [['candle', 'vase', 'planter', 'pillow', 'blanket', 'lamp', 'clock', 'frame', 'mirror', 'rug', 'decor', 'home', 'interior', 'ceramic'], 'home'],
-  [['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'], 'supplements'],
-  [['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford'], 'universal'],
-  [['bag', 'handbag', 'purse', 'clutch', 'tote', 'briefcase', 'satchel', 'crossbody'], 'universal'],
-  [['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'tech', 'gadget'], 'universal'],
-  [['dog', 'cat', 'pet', 'collar', 'leash', 'harness'], 'universal'],
-  [['ball', 'racket', 'helmet', 'bike', 'camping', 'tent', 'fitness', 'gym', 'sport'], 'universal'],
-  [['toy', 'puzzle', 'game', 'doll', 'plush', 'figurine', 'baby'], 'universal'],
-  [['notebook', 'pen', 'pencil', 'planner', 'desk', 'office', 'stationery'], 'universal'],
+  [['sweater', 'shirt', 'apparel', 'pants', 'coat', 'blouse', 'skirt', 'suit', 't-shirt', 'clothing', 'tank', 'jogger', 'shorts', 'top', 'cardigan', 'vest', 'romper', 'jumpsuit', 'sweatshirt', 'pullover'], 'garments' as TemplateCategory],
+  [['perfume', 'cologne', 'fragrance', 'eau de', 'parfum'], 'fragrance' as TemplateCategory],
+  [['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'jam', 'sauce', 'snack', 'beverage', 'juice', 'food'], 'food-beverage' as TemplateCategory],
+  [['candle', 'vase', 'planter', 'pillow', 'blanket', 'lamp', 'clock', 'frame', 'mirror', 'rug', 'decor', 'home', 'interior', 'ceramic'], 'home-decor' as TemplateCategory],
+  [['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'], 'supplements-wellness' as TemplateCategory],
+  [['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford'], 'shoes' as TemplateCategory],
+  [['bag', 'handbag', 'purse', 'clutch', 'tote', 'briefcase', 'satchel', 'crossbody'], 'bags-accessories' as TemplateCategory],
+  [['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'tech', 'gadget'], 'tech-devices' as TemplateCategory],
+  [['dog', 'cat', 'pet', 'collar', 'leash', 'harness'], 'other' as TemplateCategory],
+  [['ball', 'racket', 'helmet', 'bike', 'camping', 'tent', 'fitness', 'gym', 'sport'], 'other' as TemplateCategory],
+  [['toy', 'puzzle', 'game', 'doll', 'plush', 'figurine', 'baby'], 'other' as TemplateCategory],
+  [['notebook', 'pen', 'pencil', 'planner', 'desk', 'office', 'stationery'], 'other' as TemplateCategory],
 ];
 
 /**
@@ -68,16 +68,22 @@ export function detectProductCategory(product: Product): TemplateCategory | null
  * Human-readable category labels
  */
 export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
-  clothing: 'Clothing',
-  cosmetics: 'Cosmetics',
-  food: 'Food & Beverage',
-  home: 'Home & Interior',
-  supplements: 'Supplements',
-  universal: 'Universal',
+  garments: 'Clothing & Apparel',
+  'beauty-skincare': 'Beauty & Skincare',
+  'makeup-lipsticks': 'Makeup & Lipsticks',
+  fragrance: 'Fragrance',
+  'food-beverage': 'Food & Beverage',
+  'home-decor': 'Home & Interior',
+  'supplements-wellness': 'Supplements & Wellness',
+  shoes: 'Shoes',
+  'bags-accessories': 'Bags & Accessories',
+  'tech-devices': 'Tech / Devices',
+  other: 'Other / Custom',
   backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders',
   belts: 'Belts',
   scarves: 'Scarves',
+  'hats-small': 'Hats & Headwear',
   'jewellery-necklaces': 'Jewellery – Necklaces',
   'jewellery-earrings': 'Jewellery – Earrings',
   'jewellery-bracelets': 'Jewellery – Bracelets',
@@ -96,7 +102,6 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   kidswear: 'Kidswear',
   jeans: 'Jeans',
   jackets: 'Jackets',
-  makeup: 'Makeup',
 };
 
 /**
