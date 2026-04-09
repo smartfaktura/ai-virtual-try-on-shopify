@@ -836,14 +836,14 @@ export default function Generate() {
     const tags = product.tags.map(t => t.toLowerCase()).join(' ');
     const combined = `${type} ${tags}`;
     const cosmeticsKeywords = ['serum', 'moisturizer', 'lipstick', 'foundation', 'mascara', 'skincare', 'beauty', 'makeup', 'cream', 'treatment', 'powder', 'lip'];
-    if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'cosmetics';
+    if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'beauty-skincare';
     const foodKeywords = ['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'snack', 'beverage', 'juice', 'food', 'organic'];
-    if (foodKeywords.some(kw => combined.includes(kw))) return 'food';
+    if (foodKeywords.some(kw => combined.includes(kw))) return 'food-beverage';
     const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'lamp', 'decor', 'home', 'interior', 'carafe', 'ceramic'];
-    if (homeKeywords.some(kw => combined.includes(kw))) return 'home';
+    if (homeKeywords.some(kw => combined.includes(kw))) return 'home-decor';
     const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'omega', 'wellness', 'greens', 'superfood'];
-    if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements';
-    if (isClothingProduct(product)) return 'clothing';
+    if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements-wellness';
+    if (isClothingProduct(product)) return 'garments';
     return null;
   };
 
