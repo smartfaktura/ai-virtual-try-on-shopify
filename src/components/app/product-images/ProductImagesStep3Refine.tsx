@@ -892,7 +892,33 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
 };
 
 function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
-  let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
+  // Map new sub-categories to their parent outfit config
+  const OUTFIT_CATEGORY_FALLBACK: Record<string, string> = {
+    backpacks: 'bags-accessories',
+    'wallets-cardholders': 'bags-accessories',
+    belts: 'bags-accessories',
+    scarves: 'bags-accessories',
+    'jewellery-necklaces': 'fragrance',
+    'jewellery-earrings': 'fragrance',
+    'jewellery-bracelets': 'fragrance',
+    'jewellery-rings': 'fragrance',
+    watches: 'hats-small',
+    eyewear: 'hats-small',
+    sneakers: 'shoes',
+    boots: 'shoes',
+    'high-heels': 'shoes',
+    dresses: 'garments',
+    hoodies: 'garments',
+    streetwear: 'garments',
+    jeans: 'garments',
+    jackets: 'garments',
+    activewear: 'supplements-wellness',
+    swimwear: 'garments',
+    lingerie: 'fragrance',
+    kidswear: 'garments',
+  };
+  const resolvedCategory = OUTFIT_CATEGORY_FALLBACK[category] || category;
+  let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[resolvedCategory];
   if (!base) base = CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
   if (!base.bottom) base = { ...base, bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' } };
   if (!base.shoes) base = { ...base, shoes: { garment: 'sneakers', color: 'white', material: 'leather' } };

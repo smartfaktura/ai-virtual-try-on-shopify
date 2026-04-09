@@ -8,13 +8,41 @@ const corsHeaders = {
 
 /** Title-based category fallback when AI returns "other" */
 const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
+  // Jewellery (specific first)
+  [/necklace|pendant|choker|lariat|chain necklace/i, "jewellery-necklaces"],
+  [/earring|stud|hoop|drop earring|huggie|ear cuff/i, "jewellery-earrings"],
+  [/bracelet|bangle|cuff bracelet|charm bracelet|tennis bracelet/i, "jewellery-bracelets"],
+  [/\bring\b|signet|band ring|cocktail ring|engagement ring|wedding band/i, "jewellery-rings"],
+  [/\bwatch\b|timepiece|chronograph|wristwatch/i, "watches"],
+  [/sunglasses|glasses|eyewear|optical|aviator|spectacles/i, "eyewear"],
+  // Accessories (specific first)
+  [/backpack|rucksack|daypack/i, "backpacks"],
+  [/wallet|cardholder|card holder|card case|money clip|billfold/i, "wallets-cardholders"],
+  [/\bbelt\b|waist belt|leather belt|buckle belt/i, "belts"],
+  [/scarf|shawl|bandana|neckerchief|stole/i, "scarves"],
+  // Footwear (specific first)
+  [/sneaker|trainer|air max|nike dunk|jordan|running shoe/i, "sneakers"],
+  [/\bboot\b|\bboots\b|ankle boot|chelsea boot|combat boot|hiking boot|cowboy boot/i, "boots"],
+  [/high heel|stiletto|pump|platform heel|kitten heel|wedge heel/i, "high-heels"],
+  // Fashion (specific first)
+  [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
+  [/hoodie|hooded sweatshirt/i, "hoodies"],
+  [/streetwear|graphic tee|oversized tee|urban wear/i, "streetwear"],
+  [/\bjeans\b|denim|skinny jeans|wide-leg jeans|mom jeans/i, "jeans"],
+  [/jacket|blazer|bomber|puffer|windbreaker|parka|trench coat/i, "jackets"],
+  [/activewear|sportswear|\byoga\b|gym wear|athletic|workout|legging|sports bra/i, "activewear"],
+  [/swimwear|bikini|swimsuit|swim trunks|bathing suit/i, "swimwear"],
+  [/lingerie|\bbra\b|underwear|corset|negligee|intimates/i, "lingerie"],
+  [/\bkids\b|children|baby|toddler|infant|kidswear/i, "kidswear"],
+  // Beauty / Makeup split
   [/perfume|fragrance|eau de|cologne|parfum|body mist/i, "fragrance"],
-  [/lipstick|mascara|foundation|concealer|blush|eyeshadow|eyeliner|lip gloss|bronzer|primer|highlighter/i, "makeup-lipsticks"],
-  [/serum|moisturizer|cream|cleanser|toner|sunscreen|lotion|face wash|body wash|shampoo|conditioner/i, "beauty-skincare"],
-  [/\bbag\b|handbag|clutch|wallet|belt|scarf|purse|tote|backpack|satchel/i, "bags-accessories"],
+  [/lipstick|mascara|foundation|concealer|blush|eyeshadow|eyeliner|lip gloss|bronzer|primer|highlighter|contour|rouge/i, "makeup-lipsticks"],
+  [/serum|moisturizer|cream|cleanser|toner|sunscreen|lotion|face wash|body wash|shampoo|conditioner|exfoliant|retinol/i, "beauty-skincare"],
+  // Generic parents
+  [/\bbag\b|handbag|clutch|purse|tote|satchel/i, "bags-accessories"],
   [/\bhat\b|\bcap\b|beanie|headband|beret|fedora/i, "hats-small"],
-  [/\bshoe\b|\bshoes\b|sneaker|boot|sandal|heel|loafer|slipper|mule/i, "shoes"],
-  [/\bshirt\b|dress|jacket|pants|skirt|coat|hoodie|sweater|blazer|jeans|trouser|blouse|cardigan|vest/i, "garments"],
+  [/\bshoe\b|\bshoes\b|sandal|loafer|slipper|mule/i, "shoes"],
+  [/\bshirt\b|pants|skirt|coat|sweater|blouse|cardigan|vest/i, "garments"],
   [/candle|vase|pillow|lamp|decor|cushion|throw|planter|frame/i, "home-decor"],
   [/phone|laptop|tablet|headphone|speaker|camera|earbuds|charger|keyboard|mouse/i, "tech-devices"],
   [/protein|vitamin|supplement|probiotic|collagen|creatine|pre-?workout/i, "supplements-wellness"],
@@ -60,7 +88,7 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, hats-small, shoes, garments, home-decor, tech-devices, food-beverage, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, streetwear, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, tech-devices, food-beverage, supplements-wellness, other
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above

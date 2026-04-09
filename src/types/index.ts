@@ -34,7 +34,12 @@ export interface Template {
   updatedAt: string;
 }
 
-export type TemplateCategory = 'clothing' | 'cosmetics' | 'food' | 'home' | 'supplements' | 'universal';
+export type TemplateCategory = 'clothing' | 'cosmetics' | 'food' | 'home' | 'supplements' | 'universal'
+  | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves'
+  | 'jewellery-necklaces' | 'jewellery-earrings' | 'jewellery-bracelets' | 'jewellery-rings' | 'watches'
+  | 'dresses' | 'hoodies' | 'streetwear' | 'sneakers' | 'boots' | 'high-heels'
+  | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'jackets'
+  | 'makeup';
 
 export interface PromptBlueprint {
   sceneDescription: string;

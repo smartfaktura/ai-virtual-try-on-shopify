@@ -14,15 +14,44 @@ interface Step2Props {
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  'beauty-skincare': ['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'mask'],
-  'makeup-lipsticks': ['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'cosmetic', 'lip', 'bronzer', 'highlighter', 'primer', 'beauty'],
+  // ── Specific categories FIRST (matched before generic parents) ──
+  // Jewellery (before hats-small)
+  'jewellery-necklaces': ['necklace', 'pendant', 'chain necklace', 'choker', 'lariat'],
+  'jewellery-earrings': ['earring', 'stud', 'hoop', 'drop earring', 'huggie', 'ear cuff'],
+  'jewellery-bracelets': ['bracelet', 'bangle', 'cuff bracelet', 'charm bracelet', 'tennis bracelet', 'wristband'],
+  'jewellery-rings': ['ring', 'signet', 'band ring', 'cocktail ring', 'engagement ring', 'wedding band'],
+  'watches': ['watch', 'timepiece', 'chronograph', 'wristwatch', 'smartwatch'],
+  'eyewear': ['sunglasses', 'glasses', 'eyewear', 'optical', 'aviator', 'wayfarer', 'spectacles'],
+  // Accessories (before bags-accessories)
+  'backpacks': ['backpack', 'rucksack', 'daypack', 'school bag', 'laptop bag'],
+  'wallets-cardholders': ['wallet', 'cardholder', 'card holder', 'card case', 'money clip', 'billfold'],
+  'belts': ['belt', 'waist belt', 'leather belt', 'buckle belt', 'chain belt'],
+  'scarves': ['scarf', 'shawl', 'wrap', 'bandana', 'neckerchief', 'stole'],
+  // Footwear (before shoes)
+  'sneakers': ['sneaker', 'trainer', 'air max', 'nike dunk', 'jordan', 'running shoe', 'tennis shoe', 'skate shoe', 'new balance'],
+  'boots': ['boot', 'ankle boot', 'chelsea boot', 'combat boot', 'hiking boot', 'cowboy boot', 'rain boot', 'lace-up boot'],
+  'high-heels': ['high heel', 'stiletto', 'pump', 'platform heel', 'kitten heel', 'wedge heel', 'strappy heel', 'mule heel'],
+  // Fashion (before garments)
+  'dresses': ['dress', 'gown', 'maxi dress', 'midi dress', 'mini dress', 'sundress', 'cocktail dress', 'evening dress', 'wrap dress'],
+  'hoodies': ['hoodie', 'hooded sweatshirt', 'zip-up hoodie', 'pullover hoodie', 'oversized hoodie'],
+  'streetwear': ['streetwear', 'graphic tee', 'oversized tee', 'graphic print', 'urban wear', 'skate', 'hypebeast'],
+  'jeans': ['jeans', 'denim', 'skinny jeans', 'wide-leg jeans', 'straight-leg jeans', 'mom jeans', 'boyfriend jeans', 'distressed jeans'],
+  'jackets': ['jacket', 'blazer', 'bomber', 'puffer', 'windbreaker', 'denim jacket', 'leather jacket', 'parka', 'trench coat', 'overcoat'],
+  'activewear': ['activewear', 'sportswear', 'yoga', 'gym wear', 'athletic', 'workout', 'running', 'legging', 'sports bra', 'alo yoga', 'lululemon', 'fitness'],
+  'swimwear': ['swimwear', 'bikini', 'swimsuit', 'one-piece', 'swim trunks', 'board shorts', 'bathing suit', 'rash guard'],
+  'lingerie': ['lingerie', 'bra', 'underwear', 'bodysuit', 'corset', 'negligee', 'camisole', 'teddy', 'intimates'],
+  'kidswear': ['kids', 'children', 'baby', 'toddler', 'infant', 'kidswear', 'boys', 'girls', 'newborn', 'junior'],
+  // Beauty split
+  'makeup-lipsticks': ['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'cosmetic', 'lip gloss', 'lip liner', 'bronzer', 'highlighter', 'primer', 'eyeliner', 'contour', 'setting powder', 'setting spray', 'rouge', 'cheek'],
+  'beauty-skincare': ['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'mask', 'shampoo', 'conditioner', 'body wash', 'face wash', 'lotion', 'exfoliant', 'retinol', 'hyaluronic'],
+  // ── Generic parent categories (fallback) ──
   'fragrance': ['perfume', 'cologne', 'fragrance', 'eau de', 'scent', 'parfum'],
-  'bags-accessories': ['bag', 'handbag', 'purse', 'clutch', 'wallet', 'tote', 'backpack', 'briefcase', 'satchel', 'crossbody', 'messenger', 'duffel', 'case', 'pouch'],
-  'hats-small': ['hat', 'cap', 'beanie', 'scarf', 'gloves', 'belt', 'watch', 'bracelet', 'necklace', 'earring', 'ring', 'sunglasses', 'jewelry', 'jewellery'],
-  'shoes': ['shoe', 'sneaker', 'boot', 'sandal', 'heel', 'loafer', 'slipper', 'footwear', 'trainer', 'mule', 'clog', 'pump', 'oxford', 'derby'],
-  'garments': ['shirt', 'dress', 'jacket', 'pants', 'jeans', 'sweater', 'hoodie', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'legging', 'clothing', 'apparel', 'garment', 'jersey', 'tank', 'polo', 'uniform', 'tracksuit', 'jogger', 'vest', 'cardigan', 'blazer', 'suit', 'romper', 'jumpsuit', 'athletic', 'activewear', 'sportswear', 'basketball'],
+  'bags-accessories': ['bag', 'handbag', 'purse', 'clutch', 'tote', 'briefcase', 'satchel', 'crossbody', 'messenger', 'duffel', 'case', 'pouch'],
+  'hats-small': ['hat', 'cap', 'beanie', 'fedora', 'beret', 'headband', 'visor', 'bucket hat'],
+  'shoes': ['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford', 'derby', 'flat'],
+  'garments': ['shirt', 'pants', 'sweater', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'clothing', 'apparel', 'garment', 'jersey', 'tank', 'polo', 'uniform', 'tracksuit', 'jogger', 'vest', 'cardigan', 'suit', 'romper', 'jumpsuit'],
   'home-decor': ['candle', 'vase', 'pillow', 'blanket', 'lamp', 'decor', 'home', 'interior', 'furniture', 'rug', 'curtain', 'mirror', 'frame', 'planter', 'ceramic'],
-  'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'smartwatch', 'monitor', 'console', 'controller', 'drone', 'wearable'],
+  'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'monitor', 'console', 'controller', 'drone', 'wearable'],
   'food-beverage': ['food', 'coffee', 'tea', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'juice', 'beverage', 'organic', 'artisan'],
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
 };
