@@ -880,7 +880,12 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
     bottom: { garment: 'jeans', color: 'charcoal', fit: 'slim', material: 'denim' },
     shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
   },
-  'food-beverage': {
+  food: {
+    top: { garment: 'shirt', color: 'white', fit: 'regular', material: 'linen' },
+    bottom: { garment: 'chinos', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'tan', material: 'leather' },
+  },
+  beverages: {
     top: { garment: 'shirt', color: 'white', fit: 'regular', material: 'linen' },
     bottom: { garment: 'chinos', color: 'beige', fit: 'slim', material: 'cotton' },
     shoes: { garment: 'loafers', color: 'tan', material: 'leather' },

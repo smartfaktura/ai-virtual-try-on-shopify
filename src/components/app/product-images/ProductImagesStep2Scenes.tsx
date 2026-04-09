@@ -52,7 +52,8 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'garments': ['shirt', 'pants', 'sweater', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'clothing', 'apparel', 'garment', 'jersey', 'tank', 'polo', 'uniform', 'tracksuit', 'jogger', 'vest', 'cardigan', 'suit', 'romper', 'jumpsuit'],
   'home-decor': ['candle', 'vase', 'pillow', 'blanket', 'lamp', 'decor', 'home', 'interior', 'furniture', 'rug', 'curtain', 'mirror', 'frame', 'planter', 'ceramic'],
   'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'monitor', 'console', 'controller', 'drone', 'wearable'],
-  'food-beverage': ['food', 'coffee', 'tea', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'juice', 'beverage', 'organic', 'artisan'],
+  'food': ['food', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'candy', 'chips', 'cookie', 'protein bar', 'organic', 'artisan', 'olive oil'],
+  'beverages': ['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'kombucha', 'smoothie', 'energy drink', 'drink', 'lemonade', 'milk'],
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
 };
 
