@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, Package, Plus, RotateCcw, ArrowRight } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check } from 'lucide-react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,7 +71,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [backImage, setBackImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
-  
+  const [anglesOpen, setAnglesOpen] = useState(true);
 
   // Extra details
   const [weight, setWeight] = useState('');
@@ -747,6 +747,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   Each image creates a separate product · up to {MAX_BATCH} at once
                 </p>
               </div>
+              <p className="text-[10px] text-muted-foreground/40 mt-1">
+                💡 You can add back, side & packaging views after uploading
+              </p>
               <input
                 id="dropzone-file-input"
                 type="file"
@@ -763,31 +766,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   e.target.value = '';
                 }}
               />
-            </div>
-
-            {/* Pre-upload reference angle placeholders */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <p className="text-[11px] font-medium text-muted-foreground">Reference Angles</p>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground/50 border-border/50">Optional</Badge>
-              </div>
-              <div className="flex gap-3">
-                {([
-                  { label: 'Back view', Icon: RotateCcw },
-                  { label: 'Side view', Icon: ArrowRight },
-                  { label: 'Packaging', Icon: Package },
-                ] as const).map(({ label, Icon }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed border-border/40 bg-muted/5 opacity-50 cursor-not-allowed gap-1.5"
-                    title="Upload main image first"
-                  >
-                    <Icon className="w-4 h-4 text-muted-foreground/40" />
-                    <span className="text-[10px] text-muted-foreground/40 font-medium leading-tight text-center">{label}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted-foreground/50">Upload main image first, then add extra angles</p>
             </div>
           </div>
         ) : (
@@ -849,63 +827,73 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               </div>
             </div>
 
-            {/* Reference Angles — horizontal row below main image */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <p className="text-[11px] font-medium text-muted-foreground">Reference Angles</p>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground/50 border-border/50">Optional</Badge>
-              </div>
-              <p className="text-[10px] text-muted-foreground/60 leading-tight">Helps AI render accurate back-view & packaging scenes</p>
-              <div className="flex gap-3">
-                {([
-                  { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
-                  { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
-                  { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
-                ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
-                  <div key={shortLabel} className="relative">
-                    {state ? (
-                      <HoverCard openDelay={200} closeDelay={100}>
-                        <HoverCardTrigger asChild>
-                          <div className="relative group/ref w-20 h-20 rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
-                            <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
-                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
-                              <span className="text-[10px] text-white font-medium">{label}</span>
-                            </div>
-                            <button
-                              onClick={() => setter(null)}
-                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent side="top" className="w-[200px] p-1.5">
-                          <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
-                          <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
-                        </HoverCardContent>
-                      </HoverCard>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed border-border/60 hover:border-muted-foreground/40 hover:shadow-sm hover:shadow-primary/5 bg-muted/5 cursor-pointer transition-all gap-1.5">
-                        <Icon className="w-4.5 h-4.5 text-muted-foreground/50" />
-                        <span className="text-[10px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file && file.type.startsWith('image/')) {
-                              setter({ file, previewUrl: URL.createObjectURL(file) });
-                            }
-                            e.target.value = '';
-                          }}
-                        />
-                      </label>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Reference Angles — collapsible section below main image */}
+            <Collapsible open={anglesOpen} onOpenChange={setAnglesOpen}>
+                <>
+
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full group/trigger py-1">
+                    <Camera className="w-3.5 h-3.5 text-muted-foreground/60" />
+                    <span className="text-[11px] font-medium text-muted-foreground">Extra angles improve AI accuracy</span>
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/40 ml-auto transition-transform", anglesOpen && "rotate-180")} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <div className="flex gap-3">
+                      {([
+                        { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
+                        { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
+                        { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
+                      ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
+                        <div key={shortLabel} className="relative">
+                          {state ? (
+                            <HoverCard openDelay={200} closeDelay={100}>
+                              <HoverCardTrigger asChild>
+                                <div className="relative group/ref w-[88px] h-[88px] rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
+                                  <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
+                                    <span className="text-[11px] text-white font-medium">{label}</span>
+                                  </div>
+                                  <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-green-500/90 flex items-center justify-center">
+                                    <Check className="w-2.5 h-2.5 text-white" />
+                                  </div>
+                                  <button
+                                    onClick={() => setter(null)}
+                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </HoverCardTrigger>
+                              <HoverCardContent side="top" className="w-[200px] p-1.5">
+                                <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
+                                <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
+                              </HoverCardContent>
+                            </HoverCard>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center w-[88px] h-[88px] rounded-xl border-2 border-dashed border-border/70 hover:border-primary/30 hover:bg-muted/20 bg-muted/10 cursor-pointer transition-all gap-1">
+                              <Plus className="w-4 h-4 text-muted-foreground/40" />
+                              <Icon className="w-4 h-4 text-muted-foreground/50" />
+                              <span className="text-[11px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file && file.type.startsWith('image/')) {
+                                    setter({ file, previewUrl: URL.createObjectURL(file) });
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </>
+
+            </Collapsible>
           </div>
         )}
       </div>
