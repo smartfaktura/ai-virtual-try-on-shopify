@@ -747,9 +747,18 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   Each image creates a separate product · up to {MAX_BATCH} at once
                 </p>
               </div>
-              <p className="text-[10px] text-muted-foreground/40 mt-1">
-                💡 You can add back, side & packaging views after uploading
-              </p>
+              <div className="bg-muted/30 rounded-lg px-3 py-2 mt-3 text-center">
+                <p className="text-[11px] text-muted-foreground/70 font-medium mb-1">
+                  📐 Add multiple angles for better AI results
+                </p>
+                <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/50">
+                  <span className="flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Back</span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1"><ArrowRight className="w-3 h-3" /> Side</span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Package</span>
+                </div>
+              </div>
               <input
                 id="dropzone-file-input"
                 type="file"
