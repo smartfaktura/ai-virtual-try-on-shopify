@@ -1232,8 +1232,8 @@ serve(async (req) => {
             aspectRatio
           );
 
-          // Seedream fallback: only for product-only (no model reference — Seedream can't preserve identity)
-          if (imageUrl === null && !body.model?.imageUrl) {
+          // Seedream fallback: works for all generations including model references
+          if (imageUrl === null) {
             const arkApiKey = Deno.env.get("BYTEPLUS_ARK_API_KEY");
             if (arkApiKey) {
               console.warn(`[generate-workflow] Gemini returned null — falling back to Seedream 4.5 for "${variation.label}"`);
@@ -1252,7 +1252,7 @@ serve(async (req) => {
 
           // Flash fallback: last resort if primary + Seedream both failed
           if (imageUrl === null) {
-            console.warn(`[generate-workflow] Primary${body.model?.imageUrl ? '' : ' + Seedream'} failed — trying Flash fallback for "${variation.label}"`);
+            console.warn(`[generate-workflow] Primary + Seedream both failed — trying Flash fallback for "${variation.label}"`);
             imageUrl = await generateImage(
               prompt,
               referenceImages,
