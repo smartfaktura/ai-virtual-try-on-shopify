@@ -100,6 +100,34 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
   const [sideImageIndex, setSideImageIndex] = useState<number | null>(null);
   const [packagingImageIndex, setPackagingImageIndex] = useState<number | null>(null);
 
+  // Manual reference angle uploads (for single-image imports or unassigned roles)
+  const [manualBack, setManualBack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const [manualSide, setManualSide] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const [manualPack, setManualPack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const backInputRef = useRef<HTMLInputElement>(null);
+  const sideInputRef = useRef<HTMLInputElement>(null);
+  const packInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRefUpload = async (
+    file: File,
+    setter: typeof setManualBack,
+    role: string,
+  ) => {
+    if (!user) return;
+    setter({ url: '', uploading: true });
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `${user.id}/ref-${role}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('product-uploads').upload(path, file);
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('product-uploads').getPublicUrl(path);
+      setter({ url: pub.publicUrl, uploading: false });
+    } catch {
+      toast.error(`Failed to upload ${role} image`);
+      setter({ url: '', uploading: false });
+    }
+  };
+
   const handleImport = async () => {
     if (!url.trim()) return;
     setIsImporting(true);
