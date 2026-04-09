@@ -770,12 +770,12 @@ export default function Generate() {
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
-    { id: 'clothing', label: 'Clothing' },
-    { id: 'cosmetics', label: 'Cosmetics' },
-    { id: 'food', label: 'Food' },
-    { id: 'home', label: 'Home & Interior' },
-    { id: 'supplements', label: 'Supplements' },
-    { id: 'universal', label: 'Universal' },
+    { id: 'garments', label: 'Clothing' },
+    { id: 'beauty-skincare', label: 'Cosmetics' },
+    { id: 'food-beverage', label: 'Food' },
+    { id: 'home-decor', label: 'Home & Interior' },
+    { id: 'supplements-wellness', label: 'Supplements' },
+    { id: 'other', label: 'Universal' },
   ];
 
   const filteredTemplates = mockTemplates.filter(t => {
