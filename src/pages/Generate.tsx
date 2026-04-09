@@ -838,8 +838,10 @@ export default function Generate() {
     const combined = `${type} ${tags}`;
     const cosmeticsKeywords = ['serum', 'moisturizer', 'lipstick', 'foundation', 'mascara', 'skincare', 'beauty', 'makeup', 'cream', 'treatment', 'powder', 'lip'];
     if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'beauty-skincare';
-    const foodKeywords = ['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'snack', 'beverage', 'juice', 'food', 'organic'];
-    if (foodKeywords.some(kw => combined.includes(kw))) return 'food-beverage';
+    const beverageKeywords = ['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'drink', 'kombucha', 'smoothie'];
+    if (beverageKeywords.some(kw => combined.includes(kw))) return 'beverages';
+    const foodKeywords = ['cereal', 'granola', 'chocolate', 'honey', 'snack', 'food', 'organic', 'candy', 'chips', 'cookie'];
+    if (foodKeywords.some(kw => combined.includes(kw))) return 'food';
     const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'lamp', 'decor', 'home', 'interior', 'carafe', 'ceramic'];
     if (homeKeywords.some(kw => combined.includes(kw))) return 'home-decor';
     const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'omega', 'wellness', 'greens', 'superfood'];
