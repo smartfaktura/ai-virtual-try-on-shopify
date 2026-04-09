@@ -1,59 +1,41 @@
 
 
-# Improve Role Assignment UX for URL-Imported Images
+# Remove Seedream Model-Reference Restriction in generate-workflow
 
 ## Problem
-The current "click to cycle" interaction is confusing:
-1. Users don't understand what "cycle its role" means — it's a non-standard interaction pattern
-2. The cycling order (Main → Back → Side → Pack → unassigned) is error-prone — one wrong click and you have to cycle through all states again
-3. The separate manual upload slots below add visual noise when images are already available
+Line 1236 in `supabase/functions/generate-workflow/index.ts` has a guard `!body.model?.imageUrl` that skips the Seedream fallback when a model reference image is present. This is incorrect — Seedream already handles model references successfully in the try-on flow (`generate-tryon`), where `body.model.imageUrl` is passed as a reference image (line 829).
 
-## Solution: Direct Role Assignment via Dropdown/Tap
+## Change
 
-Replace the cycling mechanic with a **direct role picker**. When a user clicks an unassigned image, show a small popover/menu with the available roles (Back, Side, Pack). Clicking an already-assigned image lets them change or clear the role.
+### `supabase/functions/generate-workflow/index.ts`
 
-### New Layout
-```text
-Click any image to cycle its role: Main → Back → Side → Pack    ← DELETE THIS
+**Line 1236**: Remove the `!body.model?.imageUrl` guard so Seedream is used as fallback regardless of whether a model reference is present.
 
-  [img1]    [img2]    [img3]    [img4]    [img5]
-  MAIN ✓    ← tap →   ← tap →  ← tap →  ← tap →
+```typescript
+// BEFORE (line 1236):
+if (imageUrl === null && !body.model?.imageUrl) {
 
-  When tapped, show role menu:
-  ┌─────────┐
-  │ ✓ Main  │
-  │   Back  │
-  │   Side  │
-  │   Pack  │
-  │ — None  │
-  └─────────┘
+// AFTER:
+if (imageUrl === null) {
 ```
 
-### Interaction
-- Tap any image → opens a small **Popover** with role options
-- Already-taken roles show as disabled or with "swap" hint
-- Assigned images show their role badge (as now) — no change
-- Instruction text changes to: **"Tap any image to assign its role"**
+**Line 1255**: Update the log message since the condition no longer varies:
 
-### Manual upload slots
-Keep the manual upload slots but only for roles that have NO image assigned (from cycling OR from the detected images). This covers the single-image case too.
+```typescript
+// BEFORE:
+console.warn(`[generate-workflow] Primary${body.model?.imageUrl ? '' : ' + Seedream'} failed — trying Flash fallback`);
 
-## Changes
+// AFTER:
+console.warn(`[generate-workflow] Primary + Seedream both failed — trying Flash fallback`);
+```
 
-### `src/components/app/StoreImportTab.tsx`
+That's it — 2 lines changed. The `generateImageSeedream` function already accepts an array of reference image URLs and passes `body.model.imageUrl` into it (via `referenceImages`), so no other changes are needed.
 
-1. **Replace `cycleRole` with a Popover-based role picker** (~40 lines)
-   - Import `Popover, PopoverTrigger, PopoverContent` from UI
-   - Each image button becomes a `PopoverTrigger`
-   - PopoverContent shows 5 options: Main, Back, Side, Pack, None
-   - Selecting a role updates the corresponding state index directly
-   - If the role is already assigned to another image, swap them
-
-2. **Update instruction text** (1 line)
-   - Change to: `"Tap an image to set its role"`
-
-3. **Keep manual upload slots** as-is for unassigned roles — no changes needed there
+## Impact
+- Swimwear/lingerie generations with model references will now fall back to Seedream when Gemini blocks the content, instead of skipping directly to Flash
+- All other product-image workflows with models benefit from the same improved fallback chain
+- The 3-tier chain becomes: **Gemini → Seedream → Flash** for ALL generations (not just product-only)
 
 ## Files
-- `src/components/app/StoreImportTab.tsx` — ~40 lines modified in the image gallery section (lines 368-445)
+- `supabase/functions/generate-workflow/index.ts` — 2 lines modified
 
