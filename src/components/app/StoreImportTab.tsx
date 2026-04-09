@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles } from 'lucide-react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,6 +95,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
   const [isSaving, setIsSaving] = useState(false);
   const [importError, setImportError] = useState<ImportError | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [backImageIndex, setBackImageIndex] = useState<number | null>(null);
+  const [sideImageIndex, setSideImageIndex] = useState<number | null>(null);
+  const [packagingImageIndex, setPackagingImageIndex] = useState<number | null>(null);
 
   const handleImport = async () => {
     if (!url.trim()) return;
@@ -120,6 +123,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
 
       setExtracted(data as ExtractedProduct);
       setSelectedImageIndex(0);
+      setBackImageIndex(null);
+      setSideImageIndex(null);
+      setPackagingImageIndex(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Import failed';
       setImportError({ code: 'unknown', message: msg });
@@ -136,6 +142,10 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       const imageUrls = extracted.image_urls || [extracted.image_url];
       const primaryImageUrl = imageUrls[selectedImageIndex] || extracted.image_url;
 
+      const backUrl = backImageIndex !== null ? imageUrls[backImageIndex] || null : null;
+      const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : null;
+      const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : null;
+
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
         .insert({
@@ -145,6 +155,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
           description: extracted.description || '',
           image_url: primaryImageUrl,
           dimensions: extracted.dimensions || null,
+          back_image_url: backUrl,
+          side_image_url: sideUrl,
+          packaging_image_url: packUrl,
         } as any)
         .select('id')
         .single();
@@ -323,34 +336,101 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             </div>
           </div>
 
-          {/* Show all extracted images as thumbnails */}
+          {/* Show all extracted images as thumbnails with role assignment */}
           {extracted.image_urls && extracted.image_urls.length > 1 && (
-            <div className="space-y-1.5">
-              <p className="text-[11px] text-muted-foreground">Click to set primary image:</p>
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground">Click to set primary · use labels below for other angles:</p>
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {extracted.image_urls.map((imgUrl, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setSelectedImageIndex(i)}
-                    className={`relative w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border-2 transition-all ${
-                      i === selectedImageIndex
-                        ? 'border-primary ring-1 ring-primary/30'
-                        : 'border-border hover:border-muted-foreground/40'
-                    }`}
-                  >
-                    <img
-                      src={imgUrl}
-                      alt={`Product image ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {i === selectedImageIndex && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
-                        <Check className="w-4 h-4 text-primary-foreground drop-shadow" />
-                      </div>
-                    )}
-                  </button>
-                ))}
+                {extracted.image_urls.map((imgUrl, i) => {
+                  const role = i === selectedImageIndex ? 'Main'
+                    : i === backImageIndex ? 'Back'
+                    : i === sideImageIndex ? 'Side'
+                    : i === packagingImageIndex ? 'Pack'
+                    : null;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        // Clear any role this index had
+                        if (i === backImageIndex) setBackImageIndex(null);
+                        if (i === sideImageIndex) setSideImageIndex(null);
+                        if (i === packagingImageIndex) setPackagingImageIndex(null);
+                        setSelectedImageIndex(i);
+                      }}
+                      className={`relative w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border-2 transition-all ${
+                        i === selectedImageIndex
+                          ? 'border-primary ring-1 ring-primary/30'
+                          : role
+                          ? 'border-accent-foreground/40 ring-1 ring-accent-foreground/20'
+                          : 'border-border hover:border-muted-foreground/40'
+                      }`}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`Product image ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {role && (
+                        <div className={`absolute inset-x-0 bottom-0 px-0.5 py-px text-center ${
+                          role === 'Main' ? 'bg-primary/80' : 'bg-foreground/60'
+                        }`}>
+                          <span className="text-[7px] font-bold text-primary-foreground uppercase tracking-wider">{role}</span>
+                        </div>
+                      )}
+                      {i === selectedImageIndex && (
+                        <div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Role assignment slots */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground/60 shrink-0">Assign:</span>
+                {([
+                  { label: 'Back', index: backImageIndex, setter: setBackImageIndex },
+                  { label: 'Side', index: sideImageIndex, setter: setSideImageIndex },
+                  { label: 'Pack', index: packagingImageIndex, setter: setPackagingImageIndex },
+                ] as const).map(({ label, index, setter }) => {
+                  const imgUrl = index !== null ? extracted.image_urls![index] : null;
+                  return (
+                    <div key={label} className="relative">
+                      {imgUrl ? (
+                        <div className="relative group/role w-10 h-10 rounded-md overflow-hidden border border-border bg-muted/20">
+                          <img src={imgUrl} alt={label} className="w-full h-full object-cover" />
+                          <div className="absolute inset-x-0 bottom-0 bg-foreground/60 px-0.5 py-px text-center">
+                            <span className="text-[6px] font-bold text-primary-foreground uppercase">{label}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setter(null); }}
+                            className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/role:opacity-100 transition-opacity"
+                          >
+                            <span className="text-[8px] font-bold text-foreground">×</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Find first unassigned, non-primary image
+                            const usedIndices = new Set([selectedImageIndex, backImageIndex, sideImageIndex, packagingImageIndex].filter(x => x !== null));
+                            const available = extracted.image_urls!.findIndex((_, idx) => !usedIndices.has(idx));
+                            if (available !== -1) setter(available);
+                          }}
+                          className="flex flex-col items-center justify-center w-10 h-10 rounded-md border-2 border-dashed border-border/50 hover:border-muted-foreground/40 bg-muted/5 transition-colors gap-0"
+                        >
+                          <Plus className="w-2.5 h-2.5 text-muted-foreground/40" />
+                          <span className="text-[7px] text-muted-foreground/50 font-medium">{label}</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, RotateCcw, Package, Plus } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, Package, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -70,7 +70,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [backImage, setBackImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
-  const [refAnglesOpen, setRefAnglesOpen] = useState(false);
+  
 
   // Extra details
   const [weight, setWeight] = useState('');
@@ -107,7 +107,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (editingProduct.back_image_url) setBackImage({ previewUrl: editingProduct.back_image_url });
       if (editingProduct.side_image_url) setSideImage({ previewUrl: editingProduct.side_image_url });
       if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
-      if (editingProduct.back_image_url || editingProduct.side_image_url || editingProduct.packaging_image_url) setRefAnglesOpen(true);
+      
       // Load extra fields
       if (editingProduct.weight) setWeight(editingProduct.weight);
       if (editingProduct.materials) setMaterials(editingProduct.materials);
@@ -707,14 +707,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     <div className="space-y-3 sm:space-y-4">
       {/* Image Section */}
       <div className="space-y-2">
-        {singleImage && (
-          <div className="flex items-center justify-between">
-            {isAnalyzing && (
-              <div className="flex items-center gap-1.5 text-[11px] text-primary">
-                <Sparkles className="w-3 h-3 animate-pulse" />
-                AI analyzing…
-              </div>
-            )}
+        {singleImage && isAnalyzing && (
+          <div className="flex items-center gap-1.5 text-[11px] text-primary">
+            <Sparkles className="w-3 h-3 animate-pulse" />
+            AI analyzing…
           </div>
         )}
 
@@ -749,6 +745,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                 Each image creates a separate product · up to {MAX_BATCH} at once
               </p>
             </div>
+            <p className="text-[10px] text-muted-foreground/40 mt-1">
+              You can add back, side & packaging views after uploading
+            </p>
             <input
               id="dropzone-file-input"
               type="file"
@@ -767,52 +766,113 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             />
           </div>
         ) : (
-          <div className="relative group rounded-2xl overflow-hidden bg-muted/20">
-            <img
-              src={singleImage.previewUrl}
-              alt={title || 'Product preview'}
-              className="w-full max-h-[200px] object-contain rounded-2xl"
-            />
-            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              {!isEditing && (
-                <button
-                  onClick={() => {
-                    setSingleImage(null);
-                    setTitle('');
-                    setProductType('');
-                    setDescription('');
-                    hasManualEdits.current = { title: false, productType: false, description: false };
-                  }}
-                  className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-              <label className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-muted cursor-pointer transition-colors">
-                <Pencil className="w-3.5 h-3.5" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (files.length) {
-                      if (isEditing) handleEditImageReplace(files);
-                      else {
-                        const file = files[0];
-                        const previewUrl = URL.createObjectURL(file);
-                        setSingleImage({ file, previewUrl });
-                        const reader = new FileReader();
-                        reader.onload = (ev) => analyzeImage(ev.target?.result as string);
-                        reader.readAsDataURL(file);
+          /* Main image + reference angle slots side by side */
+          <div className="flex gap-3">
+            {/* Main image */}
+            <div className="relative group rounded-2xl overflow-hidden bg-muted/20 flex-1 min-w-0">
+              <img
+                src={singleImage.previewUrl}
+                alt={title || 'Product preview'}
+                className="w-full max-h-[200px] object-contain rounded-2xl"
+              />
+              <div className="absolute top-2 left-2">
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-background/70 backdrop-blur-sm">
+                  Main
+                </Badge>
+              </div>
+              <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {!isEditing && (
+                  <button
+                    onClick={() => {
+                      setSingleImage(null);
+                      setTitle('');
+                      setProductType('');
+                      setDescription('');
+                      setBackImage(null);
+                      setSideImage(null);
+                      setPackagingImage(null);
+                      hasManualEdits.current = { title: false, productType: false, description: false };
+                    }}
+                    className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <label className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-muted cursor-pointer transition-colors">
+                  <Pencil className="w-3.5 h-3.5" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length) {
+                        if (isEditing) handleEditImageReplace(files);
+                        else {
+                          const file = files[0];
+                          const previewUrl = URL.createObjectURL(file);
+                          setSingleImage({ file, previewUrl });
+                          const reader = new FileReader();
+                          reader.onload = (ev) => analyzeImage(ev.target?.result as string);
+                          reader.readAsDataURL(file);
+                        }
                       }
-                    }
-                    e.target.value = '';
-                  }}
-                />
-              </label>
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Reference angle slots — always visible */}
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <span className="text-[9px] text-muted-foreground/60 font-medium uppercase tracking-wider">Optional</span>
+              {([
+                { label: 'Back', state: backImage, setter: setBackImage },
+                { label: 'Side', state: sideImage, setter: setSideImage },
+                { label: 'Pack', state: packagingImage, setter: setPackagingImage },
+              ] as const).map(({ label, state, setter }) => (
+                <div key={label} className="relative">
+                  {state ? (
+                    <div className="relative group/ref w-14 h-14 rounded-lg overflow-hidden border border-border bg-muted/20">
+                      <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-1 py-0.5">
+                        <span className="text-[8px] text-white font-medium">{label}</span>
+                      </div>
+                      <button
+                        onClick={() => setter(null)}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-14 h-14 rounded-lg border-2 border-dashed border-border/60 hover:border-muted-foreground/40 bg-muted/5 cursor-pointer transition-colors gap-0.5">
+                      <Plus className="w-3 h-3 text-muted-foreground/40" />
+                      <span className="text-[8px] text-muted-foreground/50 font-medium">{label}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type.startsWith('image/')) {
+                            setter({ file, previewUrl: URL.createObjectURL(file) });
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
+        )}
+        {singleImage && (
+          <p className="text-[10px] text-muted-foreground/50">
+            Extra angles auto-fill during generation for back-view and packaging scenes
+          </p>
         )}
       </div>
 
@@ -914,59 +974,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         </div>
       </div>
-
-      {/* Reference Angles (optional, collapsible) */}
-      <Collapsible open={refAnglesOpen} onOpenChange={setRefAnglesOpen}>
-        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span className="font-medium">Reference angles</span>
-          <span className="text-muted-foreground/60">(optional)</span>
-          <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', refAnglesOpen && 'rotate-180')} />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="grid grid-cols-3 gap-2 pt-2">
-            {([
-              { label: 'Back View', state: backImage, setter: setBackImage },
-              { label: 'Side View', state: sideImage, setter: setSideImage },
-              { label: 'Packaging', state: packagingImage, setter: setPackagingImage },
-            ] as const).map(({ label, state, setter }) => (
-              <div key={label} className="space-y-1">
-                <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
-                {state ? (
-                  <div className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted/20">
-                    <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => setter(null)}
-                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <X className="w-2.5 h-2.5" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex items-center justify-center w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/40 bg-muted/10 cursor-pointer transition-colors">
-                    <Plus className="w-4 h-4 text-muted-foreground/50" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file && file.type.startsWith('image/')) {
-                          setter({ file, previewUrl: URL.createObjectURL(file) });
-                        }
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-muted-foreground/60 mt-1.5">
-            Extra angles auto-fill during generation for back-view and packaging scenes.
-          </p>
-        </CollapsibleContent>
-      </Collapsible>
 
       {/* More Details (optional, collapsible) */}
       <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen}>
