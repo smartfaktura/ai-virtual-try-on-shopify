@@ -285,17 +285,23 @@ export default function ProductImages() {
     }
   }, [step, selectedProducts, analyzeProducts]);
 
+  // Track which refs were auto-filled from product data vs manually uploaded
+  const [autoFilledRefs, setAutoFilledRefs] = useState<Set<string>>(new Set());
+
   // Auto-fill back/packaging/side references from stored product data when entering step 3
   useEffect(() => {
     if (step === 3 && selectedProducts.length > 0) {
       const firstProduct = selectedProducts[0] as any;
+      const newAutoFilled = new Set<string>();
       setDetails(prev => {
         const updates: Partial<DetailSettings> = {};
         if (firstProduct.back_image_url && !prev.backReferenceUrl) {
           updates.backReferenceUrl = firstProduct.back_image_url;
+          newAutoFilled.add('backReferenceUrl');
         }
         if (firstProduct.packaging_image_url && !prev.packagingReferenceUrl) {
           updates.packagingReferenceUrl = firstProduct.packaging_image_url;
+          newAutoFilled.add('packagingReferenceUrl');
         }
         if (Object.keys(updates).length === 0) return prev;
         return { ...prev, ...updates };
@@ -305,8 +311,12 @@ export default function ProductImages() {
         setSceneExtraRefs(prev => {
           const sideKey = 'trigger:sideView';
           if (prev[sideKey]) return prev;
+          newAutoFilled.add(sideKey);
           return { ...prev, [sideKey]: firstProduct.side_image_url };
         });
+      }
+      if (newAutoFilled.size > 0) {
+        setAutoFilledRefs(prev => new Set([...prev, ...newAutoFilled]));
       }
     }
   }, [step, selectedProducts]);
