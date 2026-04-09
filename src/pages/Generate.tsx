@@ -3813,7 +3813,8 @@ export default function Generate() {
                     let productCategory: TemplateCategory = 'other';
                     if (['sweater', 'shirt', 'apparel', 'hoodie', 'leggings', 'tank', 'jogger'].some(kw => productType.includes(kw))) productCategory = 'garments';
                     else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'beauty-skincare';
-                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food-beverage';
+                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food';
+                    else if (['coffee', 'tea', 'juice', 'beverage', 'drink'].some(kw => productType.includes(kw))) productCategory = 'beverages';
                     else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home-decor';
                     else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements-wellness';
 

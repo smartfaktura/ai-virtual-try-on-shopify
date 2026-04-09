@@ -252,7 +252,7 @@ export const mockTemplates: Template[] = [
   },
   {
     templateId: 'tpl_009',
-    category: 'food-beverage',
+    category: 'food',
     name: 'Minimal Packaging Focus',
     description: 'Clean product-focused shots emphasizing packaging design',
     promptBlueprint: {
