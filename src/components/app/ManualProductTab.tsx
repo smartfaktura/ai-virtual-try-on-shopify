@@ -70,7 +70,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [backImage, setBackImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
-  const [refAnglesOpen, setRefAnglesOpen] = useState(false);
+  
 
   // Extra details
   const [weight, setWeight] = useState('');
