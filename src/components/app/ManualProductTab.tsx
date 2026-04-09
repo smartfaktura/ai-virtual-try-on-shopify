@@ -103,6 +103,17 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       setDimensions((editingProduct as any).dimensions || '');
       setSingleImage({ previewUrl: editingProduct.image_url });
       hasManualEdits.current = { title: true, productType: true, description: true };
+      // Load reference angles
+      if (editingProduct.back_image_url) setBackImage({ previewUrl: editingProduct.back_image_url });
+      if (editingProduct.side_image_url) setSideImage({ previewUrl: editingProduct.side_image_url });
+      if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
+      if (editingProduct.back_image_url || editingProduct.side_image_url || editingProduct.packaging_image_url) setRefAnglesOpen(true);
+      // Load extra fields
+      if (editingProduct.weight) setWeight(editingProduct.weight);
+      if (editingProduct.materials) setMaterials(editingProduct.materials);
+      if (editingProduct.color) setColor(editingProduct.color);
+      if (editingProduct.sku) setSku(editingProduct.sku);
+      if (editingProduct.weight || editingProduct.materials || editingProduct.color || editingProduct.sku) setMoreDetailsOpen(true);
     }
   }, [editingProduct]);
 
