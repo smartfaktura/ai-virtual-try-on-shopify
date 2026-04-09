@@ -909,7 +909,7 @@ function cleanupPrompt(raw: string): string {
 
 export function buildDynamicPrompt(
   scene: ProductImageScene,
-  product: { title: string; product_type?: string; description?: string; dimensions?: string | null },
+  product: { title: string; product_type?: string; description?: string; dimensions?: string | null; weight?: string | null; materials?: string | null; color?: string | null },
   analysis: ProductAnalysis | null,
   details: DetailSettings,
   modelGender?: string,
