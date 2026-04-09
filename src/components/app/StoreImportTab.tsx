@@ -142,6 +142,10 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       const imageUrls = extracted.image_urls || [extracted.image_url];
       const primaryImageUrl = imageUrls[selectedImageIndex] || extracted.image_url;
 
+      const backUrl = backImageIndex !== null ? imageUrls[backImageIndex] || null : null;
+      const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : null;
+      const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : null;
+
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
         .insert({
@@ -151,6 +155,9 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
           description: extracted.description || '',
           image_url: primaryImageUrl,
           dimensions: extracted.dimensions || null,
+          back_image_url: backUrl,
+          side_image_url: sideUrl,
+          packaging_image_url: packUrl,
         } as any)
         .select('id')
         .single();
