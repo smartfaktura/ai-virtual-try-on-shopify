@@ -46,7 +46,8 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/candle|vase|pillow|lamp|decor|cushion|throw|planter|frame/i, "home-decor"],
   [/phone|laptop|tablet|headphone|speaker|camera|earbuds|charger|keyboard|mouse/i, "tech-devices"],
   [/protein|vitamin|supplement|probiotic|collagen|creatine|pre-?workout/i, "supplements-wellness"],
-  [/coffee|tea|chocolate|wine|beer|juice|snack|cookie|sauce|jam|honey|olive oil/i, "food-beverage"],
+  [/coffee|tea|juice|soda|wine|beer|kombucha|smoothie|energy drink|lemonade|milk/i, "beverages"],
+  [/chocolate|cereal|granola|honey|jam|sauce|snack|cookie|candy|chips|olive oil|food/i, "food"],
 ];
 
 function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
