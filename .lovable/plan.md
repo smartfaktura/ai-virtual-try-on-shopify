@@ -1,54 +1,63 @@
 
-# Audit: Product Reference Images → Generation Pipeline Link
 
-## Findings
+# 10 UX Improvements for Product Upload Reference Images
 
-### 1. Back Image → Works correctly
-- **Storage**: `back_image_url` saved to `user_products` from both ManualProductTab and StoreImportTab
-- **Auto-fill**: When entering Step 3, `ProductImages.tsx:294` checks `firstProduct.back_image_url` and sets `details.backReferenceUrl`
-- **Consumption**: At generation time (line 453), scenes with `backView` trigger block use `details.backReferenceUrl` as `extra_reference_image_url` in the payload
-- **Verdict**: End-to-end link is correct
+## Problems Identified (from screenshot + code)
 
-### 2. Packaging Image → Works correctly
-- **Storage**: `packaging_image_url` saved correctly
-- **Auto-fill**: `ProductImages.tsx:297` sets `details.packagingReferenceUrl`
-- **Consumption**: Line 436 passes `packaging_reference_url` in the payload for all scenes
-- **Verdict**: End-to-end link is correct
+1. **Reference slots are tiny (14×14 = 56px)** — barely visible, feel like an afterthought
+2. **"Optional" label is cramped** — the 9px uppercase text is nearly invisible at the top right
+3. **No visual guidance** — empty slots show just "+" and a 3-letter label, no hint what photo to take
+4. **No preview tooltip** — can't see reference images at full size once uploaded
+5. **Main image has no max-width constraint** — stretches awkwardly on wide screens while refs stay tiny
+6. **Helper text is buried** — "Extra angles auto-fill during generation…" is 10px text below the image, easily missed
+7. **StoreImportTab role assignment is confusing** — "Assign:" row with tiny 10×10 slots is unclear; users don't know how to assign roles to imported images
+8. **No drag-to-assign** — in URL import, you must click individual role slots after clicking a thumbnail, no intuitive flow
+9. **Edit mode doesn't show existing refs prominently** — on the edit page (screenshot), the Back/Side/Pack slots on the right edge are barely noticeable
+10. **Missing "from product" badge** — when refs auto-fill in generation, there's no visual indicator where the image came from
 
-### 3. Side Image → Has a gap
-- **Storage**: `side_image_url` saved correctly
-- **Auto-fill**: `ProductImages.tsx:304-309` stores it as `sceneExtraRefs['trigger:sideView']`
-- **Problem**: `sideView` is NOT registered in `REFERENCE_TRIGGERS` (detailBlockConfig.ts) — only `atomizerDetail`, `openBottle`, `capDetail`, `interiorDetail`, `strapDetail`, `hardwareDetail` exist there. This means:
-  1. The generation payload resolver (line 440-446) checks `REFERENCE_TRIGGERS[tb]` — since `sideView` isn't in that map, the `if (refUrl && REFERENCE_TRIGGERS[tb])` check **fails** and the side image is silently dropped
-  2. No scenes in the DB have `sideView` as a trigger block, so even if the ref was stored, no scene would look it up
-- **Fix needed**: Register `sideView` in `REFERENCE_TRIGGERS` AND add `sideView` to the trigger_blocks of relevant side-angle scenes in the DB
+## Plan: 10 Changes
 
-### 4. Query fetches all columns → OK
-- `supabase.from('user_products').select('*')` at line 128 returns all columns including the new ones
+### 1. Enlarge reference slots from 56px → 72px with descriptive labels
+Change `w-14 h-14` → `w-[72px] h-[72px]`. Add descriptive mini-labels inside placeholders: "Back view", "Side view", "Packaging" instead of just "Back", "Side", "Pack".
 
-## Fix Plan
+### 2. Add icon hints to empty slots
+Each empty slot gets a subtle camera/angle icon (RotateCcw for back, ArrowRight for side, Package for packaging) instead of just the generic "+" icon.
 
-### Step 1: Register `sideView` in `REFERENCE_TRIGGERS` (detailBlockConfig.ts)
-Add a new entry:
-```ts
-sideView: {
-  key: 'sideView',
-  label: 'Upload side view photo',
-  description: 'Upload a side-view photo of your product for accurate profile rendering.',
-  promptLabel: 'Side-view reference — use this to accurately render the product profile and side details:',
-},
-```
+### 3. Add section header with inline explanation
+Replace the tiny "Optional" label with a proper row: **"Reference Angles"** with a subtle info line "Helps AI render accurate back-view & packaging scenes" — placed as a small header above the reference column.
 
-### Step 2: Add `sideView` to trigger_blocks of relevant scenes (DB migration)
-Update scenes whose titles indicate a side/profile angle (e.g., "Side Profile", "Side View" scenes across categories) to include `'sideView'` in their `trigger_blocks` array. This ensures the side reference image is only injected into scenes that actually need it.
+### 4. Constrain main image width and balance layout
+Set main image container to `max-w-[280px]` on desktop so it doesn't dominate. Make the reference column sit naturally beside it with proper vertical alignment.
 
-### Step 3: Handle multi-product side refs
-Currently auto-fill only uses `firstProduct.side_image_url`. This matches the existing pattern for back/packaging (also first product only), so no change needed — consistent behavior.
+### 5. Add hover-to-enlarge preview on filled reference slots
+When a reference is uploaded, hovering shows a 200px tooltip preview using the existing HoverCard component. Quick visual check without opening anything.
+
+### 6. Improve StoreImportTab role assignment UX
+Replace the tiny "Assign:" row with a clearer layout:
+- Each thumbnail in the grid gets a small dropdown on click (or cycle: Main → Back → Side → Pack → unassigned)
+- Clicking an already-assigned thumbnail cycles its role
+- Role badge is larger (proper Badge component) and color-coded
+
+### 7. Add "click to assign role" instruction in StoreImportTab
+Replace "Click to set primary · use labels below for other angles:" with clearer: "**Click** any image to cycle its role: Main → Back → Side → Pack"
+
+### 8. Polish edit mode layout
+On the edit page, move the reference slots from the far right edge to directly below the main image in a horizontal row (3 slots side by side) when in edit mode. This is more discoverable than a vertical stack pushed to the edge.
+
+### 9. Add subtle border + background to image section
+Wrap the entire image section (main + refs) in a light `bg-muted/10 rounded-2xl p-3 border border-border/50` container to visually group them as a cohesive "images" area.
+
+### 10. Add "(from product)" badge support for generation auto-fill
+In `ProductImages.tsx`, when a reference URL comes from the product data (not manually uploaded in Step 3), show a small badge "(from product)" on the reference card. Track this with a `source: 'product' | 'manual'` flag on the ref state.
 
 ## Files to Change
-1. `src/components/app/product-images/detailBlockConfig.ts` — add `sideView` to `REFERENCE_TRIGGERS`
-2. DB migration — add `'sideView'` to `trigger_blocks` on relevant side-angle scenes
+
+1. **`src/components/app/ManualProductTab.tsx`** — Changes 1-5, 8-9 (reference slot sizing, icons, labels, layout, hover preview, edit mode horizontal layout, container styling)
+2. **`src/components/app/StoreImportTab.tsx`** — Changes 6-7 (role cycling UX, clearer instructions)
+3. **`src/pages/ProductImages.tsx`** — Change 10 (source badge on auto-filled refs)
 
 ## Scope
-- ~10 lines code change
-- ~1 SQL migration (UPDATE trigger_blocks for matching scenes)
+- ~120 lines changed in ManualProductTab
+- ~60 lines changed in StoreImportTab  
+- ~15 lines changed in ProductImages
+
