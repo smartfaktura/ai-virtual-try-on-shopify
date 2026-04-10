@@ -413,7 +413,7 @@ serve(async (req) => {
         // Tier 3: Gemini Flash fallback
         if (imageUrl === null) {
           console.warn(`[generate-text-product] Primary + Seedream both failed — trying Flash fallback for "${label}"`);
-          imageUrl = await generateImageGemini(prompt, "gemini-3.1-flash-image-preview", GEMINI_API_KEY, aspectRatio);
+          imageUrl = await generateImageGemini(prompt, "gemini-3.1-flash-image-preview", GEMINI_API_KEY, aspectRatio, referenceParts);
           if (imageUrl) console.log(`[generate-text-product] Flash fallback succeeded for "${label}"`);
         }
 
