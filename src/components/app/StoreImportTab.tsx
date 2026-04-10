@@ -511,13 +511,15 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             const hasBack = backImageIndex !== null || manualBack.url;
             const hasSide = sideImageIndex !== null || manualSide.url;
             const hasPack = packagingImageIndex !== null || manualPack.url;
-            const showSection = !hasBack || !hasSide || !hasPack;
+            const hasInside = insideImageIndex !== null || manualInside.url;
+            const showSection = !hasBack || !hasSide || !hasPack || !hasInside;
 
             if (!showSection) return null;
 
             const slots: { label: string; icon: React.ReactNode; state: typeof manualBack; setter: typeof setManualBack; inputRef: React.RefObject<HTMLInputElement>; role: string; assigned: boolean }[] = [
               { label: 'Back', icon: <RotateCcw className="w-4 h-4" />, state: manualBack, setter: setManualBack, inputRef: backInputRef as React.RefObject<HTMLInputElement>, role: 'back', assigned: backImageIndex !== null },
               { label: 'Side', icon: <ArrowRight className="w-4 h-4" />, state: manualSide, setter: setManualSide, inputRef: sideInputRef as React.RefObject<HTMLInputElement>, role: 'side', assigned: sideImageIndex !== null },
+              { label: 'Inside', icon: <FolderOpen className="w-4 h-4" />, state: manualInside, setter: setManualInside, inputRef: insideInputRef as React.RefObject<HTMLInputElement>, role: 'inside', assigned: insideImageIndex !== null },
               { label: 'Package', icon: <Package className="w-4 h-4" />, state: manualPack, setter: setManualPack, inputRef: packInputRef as React.RefObject<HTMLInputElement>, role: 'pack', assigned: packagingImageIndex !== null },
             ];
 
