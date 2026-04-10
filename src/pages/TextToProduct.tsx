@@ -10,8 +10,21 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
-import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2 } from 'lucide-react';
+import { paceDelay } from '@/lib/enqueueGeneration';
+import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
+
+// ── Product entry ──────────────────────────────────────────────────
+interface ProductEntry {
+  id: string;
+  title: string;
+  specification: string;
+}
+
+function makeProduct(): ProductEntry {
+  return { id: crypto.randomUUID(), title: '', specification: '' };
+}
 
 // ── Scene templates ────────────────────────────────────────────────
 interface SceneTemplate {
@@ -271,13 +284,17 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 const CREDITS_PER_IMAGE = 6;
+const MAX_PRODUCTS = 10;
 
 export default function TextToProduct() {
   const [step, setStep] = useState<Step>('describe');
-  const [title, setTitle] = useState('');
-  const [specification, setSpecification] = useState('');
+  const [products, setProducts] = useState<ProductEntry[]>([makeProduct()]);
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(() => new Set([products[0].id]));
   const [selectedScenes, setSelectedScenes] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState('1:1');
+  const [jobProductMap, setJobProductMap] = useState<Map<string, string>>(new Map());
+  const [completedJobs, setCompletedJobs] = useState<Map<string, { images: string[]; productTitle: string }>>(new Map());
+  const [enqueuedCount, setEnqueuedCount] = useState(0);
   const { refreshBalance } = useCredits();
 
   const {
@@ -294,7 +311,8 @@ export default function TextToProduct() {
     },
   });
 
-  const creditCost = selectedScenes.length * CREDITS_PER_IMAGE;
+  const totalImages = products.length * selectedScenes.length;
+  const creditCost = totalImages * CREDITS_PER_IMAGE;
 
   const progress = useMemo(() => {
     if (!activeJob?.result) return null;
@@ -313,63 +331,119 @@ export default function TextToProduct() {
     return (r.images as string[]) || [];
   }, [activeJob]);
 
+  // Collect all results across jobs for multi-product
+  const allResults = useMemo(() => {
+    const results: { productTitle: string; images: string[] }[] = [];
+    completedJobs.forEach(v => results.push(v));
+    // Also include current active job results if completed
+    if (activeJob?.status === 'completed' && resultImages.length > 0) {
+      const productTitle = jobProductMap.get(activeJob.id) || products[0]?.title || 'Product';
+      if (!completedJobs.has(activeJob.id)) {
+        results.push({ productTitle, images: resultImages });
+      }
+    }
+    return results;
+  }, [completedJobs, activeJob, resultImages, jobProductMap, products]);
+
   const toggleScene = (id: string) => {
     setSelectedScenes(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     );
   };
 
-  const canProceedFromDescribe = title.trim().length > 0 && specification.trim().length > 20;
+  const toggleExpanded = (id: string) => {
+    setExpandedProducts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const updateProduct = (id: string, field: 'title' | 'specification', value: string) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+  };
+
+  const addProduct = () => {
+    if (products.length >= MAX_PRODUCTS) return;
+    const np = makeProduct();
+    setProducts(prev => [...prev, np]);
+    setExpandedProducts(prev => new Set(prev).add(np.id));
+  };
+
+  const removeProduct = (id: string) => {
+    if (products.length <= 1) return;
+    setProducts(prev => prev.filter(p => p.id !== id));
+    setExpandedProducts(prev => { const n = new Set(prev); n.delete(id); return n; });
+  };
+
+  const canProceedFromDescribe = products.every(p => p.title.trim().length > 0 && p.specification.trim().length > 20);
   const canProceedFromScenes = selectedScenes.length > 0;
 
   const handleGenerate = useCallback(async () => {
     const scenesToGenerate = SCENE_TEMPLATES.filter(t => selectedScenes.includes(t.id));
-    const scenes = scenesToGenerate.map(s => ({
-      label: s.label,
-      prompt: s.promptTemplate.replace('{{PRODUCT_SPECIFICATION}}', specification),
-      aspect_ratio: aspectRatio,
-    }));
+    const newJobProductMap = new Map<string, string>();
+    setCompletedJobs(new Map());
+    setEnqueuedCount(0);
 
-    const result = await enqueue(
-      {
-        jobType: 'text-product' as any,
-        payload: {
-          title,
-          specification,
-          scenes,
-          aspectRatio,
+    let enqueueIndex = 0;
+    for (const product of products) {
+      const scenes = scenesToGenerate.map(s => ({
+        label: s.label,
+        prompt: s.promptTemplate.replace('{{PRODUCT_SPECIFICATION}}', product.specification),
+        aspect_ratio: aspectRatio,
+      }));
+
+      await paceDelay(enqueueIndex);
+
+      const result = await enqueue(
+        {
+          jobType: 'text-product' as any,
+          payload: {
+            title: product.title,
+            specification: product.specification,
+            scenes,
+            aspectRatio,
+          },
+          imageCount: scenes.length,
+          quality: 'high',
         },
-        imageCount: scenes.length,
-        quality: 'high',
-      },
-      {
-        imageCount: scenes.length,
-        quality: 'high',
-        hasModel: false,
-        hasScene: false,
-        hasProduct: false,
-      }
-    );
+        {
+          imageCount: scenes.length,
+          quality: 'high',
+          hasModel: false,
+          hasScene: false,
+          hasProduct: false,
+        }
+      );
 
-    if (result) {
+      if (result) {
+        newJobProductMap.set(result.jobId, product.title);
+        setEnqueuedCount(prev => prev + 1);
+      }
+      enqueueIndex++;
+    }
+
+    setJobProductMap(newJobProductMap);
+    if (newJobProductMap.size > 0) {
       setStep('generating');
     }
-  }, [selectedScenes, specification, aspectRatio, title, enqueue]);
+  }, [selectedScenes, products, aspectRatio, enqueue]);
 
   // Auto-transition from generating → results
-  if (step === 'generating' && activeJob?.status === 'completed') {
+  if (step === 'generating' && activeJob?.status === 'completed' && products.length === 1) {
     setStep('results');
   }
 
   const stepIndex = STEPS.indexOf(step);
 
-  const handleDownload = async (url: string, idx: number) => {
+  const handleDownload = async (url: string, label: string, idx: number) => {
     try {
       const res = await fetch(url);
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `${title.replace(/\s+/g, '-').toLowerCase()}-${idx + 1}.png`;
+      a.download = `${label.replace(/\s+/g, '-').toLowerCase()}-${idx + 1}.png`;
       a.click();
       URL.revokeObjectURL(a.href);
     } catch {
@@ -381,7 +455,7 @@ export default function TextToProduct() {
     <div className="space-y-6">
       <PageHeader
         title="Text to Product"
-        subtitle="Generate photorealistic product images from a detailed text description"
+        subtitle="Generate photorealistic product images from detailed text descriptions"
       >
         <div /></PageHeader>
 
@@ -401,27 +475,81 @@ export default function TextToProduct() {
       {/* Step 1: Describe */}
       {step === 'describe' && (
         <div className="space-y-4 max-w-3xl">
-          <div>
-            <label className="text-sm font-medium mb-1.5 block">Product Title</label>
-            <Input
-              placeholder="e.g. Powder Pink Satin Pearl Mini"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1.5 block">Full Product Specification</label>
-            <Textarea
-              placeholder="Describe the product in full detail: silhouette, construction, materials, colors (hex codes), branding placement, fabric finish, negative constraints..."
-              value={specification}
-              onChange={e => setSpecification(e.target.value)}
-              className="min-h-[300px] font-mono text-xs"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Include hex colors, construction details, materials, and negative constraints for best results.
-            </p>
-          </div>
-          <div className="flex justify-end">
+          {products.map((product, idx) => (
+            <Collapsible
+              key={product.id}
+              open={expandedProducts.has(product.id)}
+              onOpenChange={() => toggleExpanded(product.id)}
+            >
+              <Card className="overflow-hidden">
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">{idx + 1}</Badge>
+                      <span className="font-medium text-sm">
+                        {product.title.trim() || `Product ${idx + 1}`}
+                      </span>
+                      {product.title.trim() && product.specification.trim().length > 20 && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {products.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={e => { e.stopPropagation(); removeProduct(product.id); }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      )}
+                      {expandedProducts.has(product.id) ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-4 pb-4 space-y-3 border-t">
+                    <div className="pt-3">
+                      <label className="text-sm font-medium mb-1.5 block">Product Title</label>
+                      <Input
+                        placeholder="e.g. Powder Pink Satin Pearl Mini"
+                        value={product.title}
+                        onChange={e => updateProduct(product.id, 'title', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Full Product Specification</label>
+                      <Textarea
+                        placeholder="Describe the product in full detail: silhouette, construction, materials, colors (hex codes), branding placement, fabric finish, negative constraints..."
+                        value={product.specification}
+                        onChange={e => updateProduct(product.id, 'specification', e.target.value)}
+                        className="min-h-[240px] font-mono text-xs"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Include hex colors, construction details, materials, and negative constraints for best results.
+                      </p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          ))}
+
+          {products.length < MAX_PRODUCTS && (
+            <Button variant="outline" className="w-full" onClick={addProduct}>
+              <Plus className="h-4 w-4 mr-1.5" /> Add Another Product
+            </Button>
+          )}
+
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {products.length} product{products.length !== 1 ? 's' : ''}
+            </span>
             <Button onClick={() => setStep('scenes')} disabled={!canProceedFromDescribe}>
               Next: Select Scenes <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
@@ -432,7 +560,10 @@ export default function TextToProduct() {
       {/* Step 2: Select Scenes */}
       {step === 'scenes' && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Select which views to generate. Each scene costs {CREDITS_PER_IMAGE} credits.</p>
+          <p className="text-sm text-muted-foreground">
+            Select which views to generate for {products.length > 1 ? `each of ${products.length} products` : 'your product'}.
+            Each scene costs {CREDITS_PER_IMAGE} credits per product.
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {SCENE_TEMPLATES.map(scene => {
               const selected = selectedScenes.includes(scene.id);
@@ -488,15 +619,19 @@ export default function TextToProduct() {
       {/* Step 3: Review */}
       {step === 'review' && (
         <div className="space-y-4 max-w-3xl">
+          {/* Products summary */}
+          {products.map((product, idx) => (
+            <Card key={product.id} className="p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">{idx + 1}</Badge>
+                <span className="font-medium">{product.title}</span>
+              </div>
+              <p className="text-xs text-muted-foreground line-clamp-3 font-mono">{product.specification}</p>
+            </Card>
+          ))}
+
+          {/* Scenes + config */}
           <Card className="p-4 space-y-3">
-            <div>
-              <span className="text-xs text-muted-foreground">Product</span>
-              <p className="font-medium">{title}</p>
-            </div>
-            <div>
-              <span className="text-xs text-muted-foreground">Description</span>
-              <p className="text-xs text-muted-foreground line-clamp-4 font-mono">{specification}</p>
-            </div>
             <div>
               <span className="text-xs text-muted-foreground">Scenes ({selectedScenes.length})</span>
               <div className="flex flex-wrap gap-1.5 mt-1">
@@ -507,6 +642,12 @@ export default function TextToProduct() {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <span>Aspect Ratio: <strong>{aspectRatio}</strong></span>
+              <span>
+                Total: <strong>{totalImages} image{totalImages !== 1 ? 's' : ''}</strong>
+                {products.length > 1 && (
+                  <span className="text-muted-foreground"> ({products.length} products × {selectedScenes.length} scenes)</span>
+                )}
+              </span>
               <span>Credits: <strong>{creditCost}</strong></span>
             </div>
           </Card>
@@ -517,7 +658,7 @@ export default function TextToProduct() {
             </Button>
             <Button onClick={handleGenerate} disabled={isEnqueuing}>
               {isEnqueuing ? (
-                <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Enqueuing...</>
+                <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Enqueuing{products.length > 1 ? ` (${enqueuedCount}/${products.length})` : ''}...</>
               ) : (
                 <><Sparkles className="mr-1 h-4 w-4" /> Generate ({creditCost} credits)</>
               )}
@@ -530,7 +671,9 @@ export default function TextToProduct() {
       {step === 'generating' && (
         <div className="space-y-4 max-w-xl mx-auto text-center py-12">
           <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-          <h3 className="text-lg font-semibold">Generating your product images...</h3>
+          <h3 className="text-lg font-semibold">
+            Generating {totalImages} image{totalImages !== 1 ? 's' : ''} for {products.length} product{products.length !== 1 ? 's' : ''}...
+          </h3>
           {progress && (
             <div className="space-y-2">
               <Progress value={(progress.generated / progress.total) * 100} className="h-2" />
@@ -553,27 +696,52 @@ export default function TextToProduct() {
 
       {/* Step 5: Results */}
       {step === 'results' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">
               {resultImages.length} image{resultImages.length !== 1 ? 's' : ''} generated
             </h3>
-            <Button variant="outline" onClick={() => { resetQueue(); setStep('describe'); }}>
+            <Button variant="outline" onClick={() => { resetQueue(); setProducts([makeProduct()]); setExpandedProducts(new Set()); setSelectedScenes([]); setCompletedJobs(new Map()); setStep('describe'); }}>
               New Generation
             </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {resultImages.map((url, idx) => (
-              <Card key={idx} className="overflow-hidden group relative">
-                <img src={url} alt={`Generated ${idx + 1}`} className="w-full aspect-square object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button size="sm" variant="secondary" onClick={() => handleDownload(url, idx)}>
-                    <Download className="h-4 w-4 mr-1" /> Download
-                  </Button>
+
+          {/* If multi-product with grouped results */}
+          {allResults.length > 1 ? (
+            allResults.map((group, gIdx) => (
+              <div key={gIdx} className="space-y-3">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <Badge variant="outline">{gIdx + 1}</Badge>
+                  {group.productTitle}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {group.images.map((url, idx) => (
+                    <Card key={idx} className="overflow-hidden group relative">
+                      <img src={url} alt={`${group.productTitle} ${idx + 1}`} className="w-full aspect-square object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button size="sm" variant="secondary" onClick={() => handleDownload(url, group.productTitle, idx)}>
+                          <Download className="h-4 w-4 mr-1" /> Download
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-              </Card>
-            ))}
-          </div>
+              </div>
+            ))
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {resultImages.map((url, idx) => (
+                <Card key={idx} className="overflow-hidden group relative">
+                  <img src={url} alt={`Generated ${idx + 1}`} className="w-full aspect-square object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button size="sm" variant="secondary" onClick={() => handleDownload(url, products[0]?.title || 'product', idx)}>
+                      <Download className="h-4 w-4 mr-1" /> Download
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
