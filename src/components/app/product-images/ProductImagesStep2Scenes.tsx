@@ -337,26 +337,55 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
                   const items = ids.filter(id => otherIds.has(id));
                   if (items.length === 0) return null;
                   items.forEach(id => rendered.add(id));
+
+                  // Chunk items into pairs for 2-column layout
+                  const pairs: string[][] = [];
+                  for (let i = 0; i < items.length; i += 2) {
+                    pairs.push(items.slice(i, i + 2));
+                  }
+
                   return (
                     <div key={label} className="space-y-1.5">
                       <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest mt-2">{label}</p>
-                      {items.map(id => {
-                        const cat = unifiedOther.find(c => c.id === id)!;
+                      {pairs.map((pair, pairIdx) => {
+                        // Find expanded category within this pair (if any)
+                        const expandedInPair = pair.find(id => expandedCategories.has(id));
+                        const expandedCat = expandedInPair ? unifiedOther.find(c => c.id === expandedInPair) : null;
+
                         return (
-                          <UnifiedCategorySectionWithSelectAll
-                            key={cat.id}
-                            catId={cat.id}
-                            catTitle={cat.title}
-                            essentialScenes={cat.essentialScenes}
-                            categoryScenes={cat.scenes}
-                            categorySubGroups={cat.subGroups}
-                            selectedSceneIds={selectedSceneIds}
-                            onSelectionChange={onSelectionChange}
-                            isOpen={expandedCategories.has(cat.id)}
-                            onToggleOpen={() => toggleCategory(cat.id)}
-                            toggleScene={toggleScene}
-                            gridClass={gridClass}
-                          />
+                          <div key={pairIdx}>
+                            {/* 2-column grid of triggers */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                              {pair.map(id => {
+                                const cat = unifiedOther.find(c => c.id === id)!;
+                                return (
+                                  <CategoryRowTrigger
+                                    key={cat.id}
+                                    catId={cat.id}
+                                    catTitle={cat.title}
+                                    allScenes={[...cat.essentialScenes, ...cat.scenes]}
+                                    selectedSceneIds={selectedSceneIds}
+                                    isOpen={expandedCategories.has(cat.id)}
+                                    onToggleOpen={() => toggleCategory(cat.id)}
+                                  />
+                                );
+                              })}
+                            </div>
+                            {/* Full-width expanded content below the pair */}
+                            {expandedCat && (
+                              <CategoryExpandedContent
+                                catId={expandedCat.id}
+                                catTitle={expandedCat.title}
+                                essentialScenes={expandedCat.essentialScenes}
+                                categoryScenes={expandedCat.scenes}
+                                categorySubGroups={expandedCat.subGroups}
+                                selectedSceneIds={selectedSceneIds}
+                                onSelectionChange={onSelectionChange}
+                                toggleScene={toggleScene}
+                                gridClass={gridClass}
+                              />
+                            )}
+                          </div>
                         );
                       })}
                     </div>
