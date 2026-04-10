@@ -315,6 +315,15 @@ export default function ProductImages() {
           return { ...prev, [sideKey]: firstProduct.side_image_url };
         });
       }
+      // Auto-fill inside image into sceneExtraRefs for scenes with interiorDetail triggers
+      if (firstProduct.inside_image_url) {
+        setSceneExtraRefs(prev => {
+          const insideKey = 'trigger:interiorDetail';
+          if (prev[insideKey]) return prev;
+          newAutoFilled.add(insideKey);
+          return { ...prev, [insideKey]: firstProduct.inside_image_url };
+        });
+      }
       if (newAutoFilled.size > 0) {
         setAutoFilledRefs(prev => new Set([...prev, ...newAutoFilled]));
       }

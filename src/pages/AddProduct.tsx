@@ -27,6 +27,7 @@ interface UserProduct {
   back_image_url?: string | null;
   side_image_url?: string | null;
   packaging_image_url?: string | null;
+  inside_image_url?: string | null;
   extra_image_urls?: string[];
   weight?: string | null;
   materials?: string | null;

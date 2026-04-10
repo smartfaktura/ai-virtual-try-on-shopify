@@ -1776,6 +1776,7 @@ export type Database = {
           extra_image_urls: string[]
           id: string
           image_url: string
+          inside_image_url: string | null
           materials: string | null
           packaging_image_url: string | null
           product_type: string
@@ -1797,6 +1798,7 @@ export type Database = {
           extra_image_urls?: string[]
           id?: string
           image_url: string
+          inside_image_url?: string | null
           materials?: string | null
           packaging_image_url?: string | null
           product_type?: string
@@ -1818,6 +1820,7 @@ export type Database = {
           extra_image_urls?: string[]
           id?: string
           image_url?: string
+          inside_image_url?: string | null
           materials?: string | null
           packaging_image_url?: string | null
           product_type?: string

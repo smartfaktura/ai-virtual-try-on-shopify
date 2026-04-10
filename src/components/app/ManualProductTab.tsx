@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen } from 'lucide-react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ interface UserProduct {
   back_image_url?: string | null;
   side_image_url?: string | null;
   packaging_image_url?: string | null;
+  inside_image_url?: string | null;
   extra_image_urls?: string[];
   weight?: string | null;
   materials?: string | null;
@@ -71,6 +72,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [backImage, setBackImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [insideImage, setInsideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [anglesOpen, setAnglesOpen] = useState(true);
 
   // Extra details
@@ -108,6 +110,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (editingProduct.back_image_url) setBackImage({ previewUrl: editingProduct.back_image_url });
       if (editingProduct.side_image_url) setSideImage({ previewUrl: editingProduct.side_image_url });
       if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
+      if (editingProduct.inside_image_url) setInsideImage({ previewUrl: editingProduct.inside_image_url });
       
       // Load extra fields
       if (editingProduct.weight) setWeight(editingProduct.weight);
@@ -398,6 +401,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       const backUrl = await uploadRefImage(backImage);
       const sideUrl = await uploadRefImage(sideImage);
       const packUrl = await uploadRefImage(packagingImage);
+      const insideUrl = await uploadRefImage(insideImage);
 
       const productData: Record<string, unknown> = {
         title: title.trim().substring(0, 200),
@@ -408,6 +412,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         back_image_url: backUrl || null,
         side_image_url: sideUrl || null,
         packaging_image_url: packUrl || null,
+        inside_image_url: insideUrl || null,
         weight: weight.trim() || null,
         materials: materials.trim() || null,
         color: color.trim() || null,
@@ -752,11 +757,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   📐 Add multiple angles for better AI results
                 </p>
                 <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/50">
-                  <span className="flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Back</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1"><ArrowRight className="w-3 h-3" /> Side</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Package</span>
+                   <span className="flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Back</span>
+                   <span>·</span>
+                   <span className="flex items-center gap-1"><ArrowRight className="w-3 h-3" /> Side</span>
+                   <span>·</span>
+                   <span className="flex items-center gap-1"><FolderOpen className="w-3 h-3" /> Inside</span>
+                   <span>·</span>
+                   <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Package</span>
                 </div>
               </div>
               <input
@@ -803,6 +810,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                       setBackImage(null);
                       setSideImage(null);
                       setPackagingImage(null);
+                      setInsideImage(null);
                       hasManualEdits.current = { title: false, productType: false, description: false };
                     }}
                     className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
@@ -850,6 +858,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                       {([
                         { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
                         { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
+                        { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
                         { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
                       ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
                         <div key={shortLabel} className="relative">
