@@ -785,7 +785,10 @@ export default function TextToProduct() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">
-              {resultImages.length} image{resultImages.length !== 1 ? 's' : ''} generated
+              {allResults.length > 0
+                ? `${allResults.reduce((s, g) => s + g.images.length, 0)} image${allResults.reduce((s, g) => s + g.images.length, 0) !== 1 ? 's' : ''} generated`
+                : `${resultImages.length} image${resultImages.length !== 1 ? 's' : ''} generated`
+              }
             </h3>
             <Button variant="outline" onClick={() => { resetQueue(); setProducts([makeProduct()]); setExpandedProducts(new Set()); setSelectedScenes([]); setCompletedJobs(new Map()); setStep('describe'); }}>
               New Generation
