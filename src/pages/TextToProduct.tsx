@@ -819,3 +819,123 @@ export default function TextToProduct() {
     </div>
   );
 }
+
+// ── Results sub-component with lightbox ─────────────────────────────
+function ResultsStep({
+  allResults,
+  resultImages,
+  products,
+  handleDownload,
+  resetQueue,
+  setProducts,
+  setExpandedProducts,
+  setSelectedScenes,
+  setCompletedJobs,
+  setStep,
+  makeProduct,
+}: {
+  allResults: { productTitle: string; images: { url: string; label: string }[] }[];
+  resultImages: { url: string; label: string }[];
+  products: ProductEntry[];
+  handleDownload: (url: string, productTitle: string, sceneLabel: string) => void;
+  resetQueue: () => void;
+  setProducts: React.Dispatch<React.SetStateAction<ProductEntry[]>>;
+  setExpandedProducts: React.Dispatch<React.SetStateAction<Set<string>>>;
+  setSelectedScenes: React.Dispatch<React.SetStateAction<string[]>>;
+  setCompletedJobs: React.Dispatch<React.SetStateAction<Map<string, { images: { url: string; label: string }[]; productTitle: string }>>>;
+  setStep: React.Dispatch<React.SetStateAction<Step>>;
+  makeProduct: () => ProductEntry;
+}) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxImages, setLightboxImages] = useState<{ url: string; label: string }[]>([]);
+  const [lightboxProductTitle, setLightboxProductTitle] = useState('');
+
+  const openLightbox = (images: { url: string; label: string }[], idx: number, productTitle: string) => {
+    setLightboxImages(images);
+    setLightboxProductTitle(productTitle);
+    setLightboxIndex(idx);
+    setLightboxOpen(true);
+  };
+
+  const totalCount = allResults.length > 0
+    ? allResults.reduce((s, g) => s + g.images.length, 0)
+    : resultImages.length;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">
+          {totalCount} image{totalCount !== 1 ? 's' : ''} generated
+        </h3>
+        <Button variant="outline" onClick={() => { resetQueue(); setProducts([makeProduct()]); setExpandedProducts(new Set()); setSelectedScenes([]); setCompletedJobs(new Map()); setStep('describe'); }}>
+          New Generation
+        </Button>
+      </div>
+
+      {allResults.length > 1 ? (
+        allResults.map((group, gIdx) => (
+          <div key={gIdx} className="space-y-3">
+            <h4 className="font-medium text-sm flex items-center gap-2">
+              <Badge variant="outline">{gIdx + 1}</Badge>
+              {group.productTitle}
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {group.images.map((img, idx) => (
+                <Card key={idx} className="overflow-hidden group relative cursor-zoom-in" onClick={() => openLightbox(group.images, idx, group.productTitle)}>
+                  <div className="bg-muted/30">
+                    <img src={img.url} alt={`${group.productTitle} – ${img.label}`} className="w-full h-auto object-contain" />
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pointer-events-none">
+                    <span className="text-xs text-white font-medium">{img.label}</span>
+                  </div>
+                  <span
+                    role="button"
+                    onClick={(e) => { e.stopPropagation(); handleDownload(img.url, group.productTitle, img.label); }}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Download"
+                  >
+                    <Download className="w-4 h-4" />
+                  </span>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {resultImages.map((img, idx) => (
+            <Card key={idx} className="overflow-hidden group relative cursor-zoom-in" onClick={() => openLightbox(resultImages, idx, products[0]?.title || 'Product')}>
+              <div className="bg-muted/30">
+                <img src={img.url} alt={`${products[0]?.title || 'Product'} – ${img.label}`} className="w-full h-auto object-contain" />
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pointer-events-none">
+                <span className="text-xs text-white font-medium">{img.label}</span>
+              </div>
+              <span
+                role="button"
+                onClick={(e) => { e.stopPropagation(); handleDownload(img.url, products[0]?.title || 'product', img.label); }}
+                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Download"
+              >
+                <Download className="w-4 h-4" />
+              </span>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {lightboxOpen && (
+        <ImageLightbox
+          images={lightboxImages.map(i => i.url)}
+          currentIndex={lightboxIndex}
+          open={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          onNavigate={setLightboxIndex}
+          onDownload={(idx) => handleDownload(lightboxImages[idx].url, lightboxProductTitle, lightboxImages[idx].label)}
+          productName={lightboxProductTitle}
+        />
+      )}
+    </div>
+  );
+}
