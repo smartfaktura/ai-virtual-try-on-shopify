@@ -1,21 +1,18 @@
 
 
-# Fix `analyze-product-image` Boot Crash
+# Fix: Remove Confusing "Outdated" Badge from Product Selection
 
 ## Problem
-The edge function fails to boot with: `Identifier 'data' has already been declared` at line 111.
+Every product shows an "Outdated" badge because their stored `analysis_json` was created before the `version: 2` stamp was added. This is alarming but harmless — re-analysis already runs automatically when you move to Step 2 (Scenes).
 
-- Line 20: `const { data, error: claimsError } = await supabase.auth.getClaims(token);`
-- Line 93: `const data = await response.json();`
+## Solution
+Remove the "Outdated" badge and refresh button from Step 1 entirely. Since re-analysis is already triggered automatically at Step 2, showing a stale-data warning on the selection screen adds confusion without value.
 
-Both use `const data` in the same scope, which is a syntax error that prevents the function from even loading.
+## Changes
 
-## Fix
-Rename the second `data` variable on line 93 to `aiData` and update its reference on line 94.
+| File | What |
+|------|------|
+| `src/pages/ProductImages.tsx` | Remove the two `isStaleAnalysis` badge blocks (list view ~line 880 and grid view ~line 935). Remove the `isStaleAnalysis` callback (~line 94-99). |
 
-| File | Change |
-|------|--------|
-| `supabase/functions/analyze-product-image/index.ts` | Line 93: `const data` → `const aiData`; Line 94: `data.choices` → `aiData.choices` |
-
-Then redeploy the function.
+This is purely a UI cleanup — no backend or analysis logic changes needed.
 
