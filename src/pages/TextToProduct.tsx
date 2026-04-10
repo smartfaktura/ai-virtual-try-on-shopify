@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
-import { useCredit } from '@/contexts/CreditContext';
+import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -278,7 +278,7 @@ export default function TextToProduct() {
   const [specification, setSpecification] = useState('');
   const [selectedScenes, setSelectedScenes] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState('1:1');
-  const { refreshCredits } = useCredit();
+  const { refreshCredits } = useCredits();
 
   const {
     enqueue,
@@ -381,7 +381,7 @@ export default function TextToProduct() {
     <div className="space-y-6">
       <PageHeader
         title="Text to Product"
-        description="Generate photorealistic product images from a detailed text description"
+        subtitle="Generate photorealistic product images from a detailed text description"
       />
 
       {/* Stepper */}
