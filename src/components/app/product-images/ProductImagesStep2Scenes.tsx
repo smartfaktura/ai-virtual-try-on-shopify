@@ -65,6 +65,16 @@ const GRID_CLASSES: Record<GridSize, string> = {
   large: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 };
 
+const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
+  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'] },
+  { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
+  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'] },
+  { label: 'Jewelry & Watches', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets', 'watches', 'eyewear'] },
+  { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
+  { label: 'Food & Drink', ids: ['food', 'beverages'] },
+  { label: 'Home & Lifestyle', ids: ['home-decor', 'tech-devices', 'supplements-wellness'] },
+];
+
 function detectRelevantCategories(products: UserProduct[], productAnalyses?: Record<string, { category: string }>): Set<string> {
   const matched = new Set<string>();
   const analyzedIds = new Set<string>();
@@ -75,17 +85,7 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
       if (cat) {
         matched.add(cat);
         analyzedIds.add(p.id);
-};
-
-const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'] },
-  { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
-  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'] },
-  { label: 'Jewelry & Watches', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets', 'watches', 'eyewear'] },
-  { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
-  { label: 'Food & Drink', ids: ['food', 'beverages'] },
-  { label: 'Home & Lifestyle', ids: ['home-decor', 'tech-devices', 'supplements-wellness'] },
-];
+      }
     }
   }
   for (const p of products) {
