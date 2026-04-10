@@ -524,7 +524,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             const hasSide = sideImageIndex !== null || manualSide.url;
             const hasPack = packagingImageIndex !== null || manualPack.url;
             const hasInside = insideImageIndex !== null || manualInside.url;
-            const showSection = !hasBack || !hasSide || !hasPack || !hasInside;
+            const hasTexture = textureImageIndex !== null || manualTexture.url;
+            const showSection = !hasBack || !hasSide || !hasPack || !hasInside || !hasTexture;
 
             if (!showSection) return null;
 
@@ -533,6 +534,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               { label: 'Side', icon: <ArrowRight className="w-4 h-4" />, state: manualSide, setter: setManualSide, inputRef: sideInputRef as React.RefObject<HTMLInputElement>, role: 'side', assigned: sideImageIndex !== null },
               { label: 'Inside', icon: <FolderOpen className="w-4 h-4" />, state: manualInside, setter: setManualInside, inputRef: insideInputRef as React.RefObject<HTMLInputElement>, role: 'inside', assigned: insideImageIndex !== null },
               { label: 'Package', icon: <Package className="w-4 h-4" />, state: manualPack, setter: setManualPack, inputRef: packInputRef as React.RefObject<HTMLInputElement>, role: 'pack', assigned: packagingImageIndex !== null },
+              { label: 'Texture', icon: <Droplets className="w-4 h-4" />, state: manualTexture, setter: setManualTexture, inputRef: textureInputRef as React.RefObject<HTMLInputElement>, role: 'texture', assigned: textureImageIndex !== null },
             ];
 
             return (
