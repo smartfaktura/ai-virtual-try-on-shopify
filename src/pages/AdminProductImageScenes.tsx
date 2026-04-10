@@ -106,6 +106,27 @@ export default function AdminProductImageScenes() {
   const [editDraft, setEditDraft] = useState<Partial<DbScene>>({});
   const [addingNew, setAddingNew] = useState(false);
   const [newDraft, setNewDraft] = useState(emptyScene());
+
+  // Derive all existing sub-categories for the dropdown
+  const allSubCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of rawScenes) {
+      if (s.sub_category) set.add(s.sub_category);
+    }
+    return Array.from(set).sort();
+  }, [rawScenes]);
+
+  const handleAddNewForCategory = (categoryKey: string, categorySortOrder: number) => {
+    const draft = emptyScene();
+    draft.category_collection = categoryKey;
+    draft.category_sort_order = categorySortOrder;
+    setNewDraft(draft);
+    setAddingNew(true);
+    // Expand that section
+    setExpandedSections(prev => new Set(prev).add(categoryKey));
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   // showTokenRef state removed — tokens now on dedicated page
 
   const filtered = useMemo(() => {
@@ -327,10 +348,10 @@ export default function AdminProductImageScenes() {
         <Card className="border-primary/30">
           <CardContent className="py-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">New Scene</h3>
+              <h3 className="font-semibold">New Scene {newDraft.category_collection && <span className="text-muted-foreground font-normal text-sm">in {catLabel(newDraft.category_collection)}</span>}</h3>
               <Button variant="ghost" size="icon" onClick={() => setAddingNew(false)}><X className="w-4 h-4" /></Button>
             </div>
-            <SceneForm draft={newDraft} onChange={setNewDraft as any} />
+            <SceneForm draft={newDraft} onChange={setNewDraft as any} allSubCategories={allSubCategories} />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setAddingNew(false)}>Cancel</Button>
               <Button onClick={saveNew} disabled={upsertScene.isPending} className="gap-1.5">
@@ -353,19 +374,32 @@ export default function AdminProductImageScenes() {
 
             return (
               <Collapsible key={key} open={expandedSections.has(key)} onOpenChange={() => toggleSection(key)}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Layers className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-semibold">{catLabel(key)}</span>
-                      <Badge variant="secondary" className="text-[10px]">{scenes.length}</Badge>
-                      {summary && (
-                        <span className="text-[10px] text-muted-foreground">{summary}</span>
-                      )}
+                <div className="flex items-center gap-1.5">
+                  <CollapsibleTrigger className="flex-1">
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Layers className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-semibold">{catLabel(key)}</span>
+                        <Badge variant="secondary" className="text-[10px]">{scenes.length}</Badge>
+                        {summary && (
+                          <span className="text-[10px] text-muted-foreground">{summary}</span>
+                        )}
+                      </div>
+                      {expandedSections.has(key) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                     </div>
-                    {expandedSections.has(key) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </div>
-                </CollapsibleTrigger>
+                  </CollapsibleTrigger>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1 text-xs shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddNewForCategory(key, scenes[0]?.category_sort_order ?? 0);
+                    }}
+                  >
+                    <Plus className="w-3.5 h-3.5" /> New
+                  </Button>
+                </div>
                 <CollapsibleContent>
                   <div className="pl-2 pt-2 space-y-3">
                     {hasMultipleSubGroups ? (
@@ -535,7 +569,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
       {editingId === scene.id && (
         <Card className="mt-1.5 border-primary/20">
           <CardContent className="py-4 space-y-4">
-            <SceneForm draft={editDraft} onChange={setEditDraft as any} />
+            <SceneForm draft={editDraft} onChange={setEditDraft as any} allSubCategories={allSubCategories} />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={onCancelEdit}>Cancel</Button>
               <Button onClick={onSaveEdit} disabled={updatePending} className="gap-1.5">
@@ -550,10 +584,11 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
 }
 
 /* ── Reusable scene edit form ── */
-function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d: Partial<DbScene>) => void }) {
+function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<DbScene>; onChange: (d: Partial<DbScene>) => void; allSubCategories?: string[] }) {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [creatingSubCat, setCreatingSubCat] = useState(false);
   const set = (field: string, value: any) => onChange({ ...draft, [field]: value });
 
   const handleImageUpload = async (file: File) => {
@@ -625,7 +660,43 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-xs">Sub-Category (grouping label)</Label>
-          <Input value={draft.sub_category || ''} onChange={e => set('sub_category', e.target.value || null)} placeholder="e.g. Essential Shots, On-Model, Hero Scenes" />
+          {creatingSubCat ? (
+            <div className="flex gap-1.5">
+              <Input
+                autoFocus
+                value={draft.sub_category || ''}
+                onChange={e => set('sub_category', e.target.value || null)}
+                placeholder="Type new sub-category name..."
+                className="text-xs"
+              />
+              <Button variant="ghost" size="sm" className="h-9 px-2 shrink-0" onClick={() => setCreatingSubCat(false)}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <Select
+              value={draft.sub_category || '__none__'}
+              onValueChange={v => {
+                if (v === '__create_new__') {
+                  set('sub_category', '');
+                  setCreatingSubCat(true);
+                } else if (v === '__none__') {
+                  set('sub_category', null);
+                } else {
+                  set('sub_category', v);
+                }
+              }}
+            >
+              <SelectTrigger className="text-xs"><SelectValue placeholder="Select sub-category..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">None</SelectItem>
+                {allSubCategories.map(sc => (
+                  <SelectItem key={sc} value={sc}>{sc}</SelectItem>
+                ))}
+                <SelectItem value="__create_new__">＋ Create new...</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Category Sort Order (section position)</Label>
