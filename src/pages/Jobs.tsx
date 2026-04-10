@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -19,6 +19,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
@@ -99,6 +109,8 @@ export default function Jobs() {
   const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
@@ -200,6 +212,56 @@ export default function Jobs() {
   const cancelSelect = () => {
     setSelectMode(false);
     setSelectedIds(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    let deleted = 0;
+    try {
+      for (const id of Array.from(selectedIds)) {
+        const item = items.find(i => i.id === id);
+        if (!item) continue;
+        try {
+          if (item.source === 'freestyle') {
+            const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
+            if (error) throw error;
+          } else {
+            const dashIndex = item.id.lastIndexOf('-');
+            const jobId = item.id.substring(0, dashIndex);
+            const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
+            const { data: job } = await supabase
+              .from('generation_jobs')
+              .select('results')
+              .eq('id', jobId)
+              .maybeSingle();
+            if (job) {
+              const results = job.results as any[];
+              if (results.length <= 1) {
+                const { error } = await supabase.from('generation_jobs').delete().eq('id', jobId);
+                if (error) throw error;
+              } else {
+                const updated = results.filter((_, i) => i !== imageIndex);
+                const { error } = await supabase.from('generation_jobs').update({ results: updated }).eq('id', jobId);
+                if (error) throw error;
+              }
+            }
+          }
+          deleted++;
+        } catch (err) {
+          console.error(`[Library] Failed to delete ${id}:`, err);
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      setSelectedIds(new Set());
+      setSelectMode(false);
+      toast.success(`${deleted} image${deleted !== 1 ? 's' : ''} deleted`);
+    } catch (err) {
+      console.error('[Library] Bulk delete failed:', err);
+      toast.error('Failed to delete images');
+    } finally {
+      setBulkDeleting(false);
+      setBulkDeleteOpen(false);
+    }
   };
 
   const handleDeleteItem = useCallback((item: LibraryItem) => {
@@ -510,6 +572,14 @@ export default function Jobs() {
             {isZipping ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
             Download ZIP
           </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete
+          </Button>
           <button onClick={cancelSelect} className="ml-1 hover:opacity-70 transition-opacity">
             <X className="w-4 h-4" />
           </button>
@@ -555,6 +625,28 @@ export default function Jobs() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} image{selectedIds.size !== 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. {selectedIds.size} image{selectedIds.size !== 1 ? 's' : ''} will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {bulkDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
