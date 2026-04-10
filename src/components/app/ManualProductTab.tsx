@@ -57,7 +57,7 @@ const QUICK_TYPES = [
   'Home Decor', 'Electronics', 'Jewelry', 'Accessories', 'Pet Supplies', 'Other',
 ];
 
-const MAX_BATCH = 10;
+const MAX_BATCH = 100;
 
 export function ManualProductTab({ onProductAdded, onClose, editingProduct }: ManualProductTabProps) {
   const { user } = useAuth();
