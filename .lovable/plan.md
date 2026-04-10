@@ -1,35 +1,47 @@
 
 
-# Show Real Aspect Ratios + Add Preview Lightbox on Results Page
+# Fix: Library "Download ZIP" Only Contains 1 File
 
-## Problem
-1. All result images are forced to `aspect-square object-cover`, cropping non-square outputs
-2. No way to open a full-screen preview of individual images
-
-## Changes — `src/pages/TextToProduct.tsx`
-
-### 1. Remove forced square aspect ratio
-Replace `aspect-square object-cover` with `w-full object-contain` (or `object-cover` with a natural aspect container) on all result `<img>` tags so images display at their actual proportions.
-
-### 2. Add lightbox state
-Add state for the lightbox:
-```typescript
-const [lightboxOpen, setLightboxOpen] = useState(false);
-const [lightboxIndex, setLightboxIndex] = useState(0);
-const [lightboxImages, setLightboxImages] = useState<{url: string; label: string}[]>([]);
+## Root Cause
+In `src/pages/Jobs.tsx`, line 180, each file in the zip is named:
+```
+${safeLabel}-${item.id.slice(0, 8)}.png
 ```
 
-### 3. Wire up click-to-preview
-When clicking an image card (not the download button), open `ImageLightbox` with the current group's images and index. Pass `onDownload` to enable downloading from the lightbox.
+`item.id` is formatted as `${jobId}-${imageIndex}`. When multiple selected images come from the same generation job, `item.id.slice(0, 8)` produces the same 8-character prefix for all of them. Combined with an identical `safeLabel`, all files get the exact same filename in the zip — each one overwrites the previous, leaving only the last image.
 
-### 4. Render ImageLightbox
-Import and render `ImageLightbox` at the bottom of the results section, passing `lightboxImages.map(i => i.url)` as the `images` prop.
+## Fix
 
-### 5. Both result grids updated
-Apply changes to both the multi-product grouped grid and the single-product grid.
+Use the full `item.id` (which includes the image index suffix) instead of slicing to 8 characters. Also add proper error handling per-item and check `res.ok`:
 
-## File
+```typescript
+const handleBulkDownload = async () => {
+  setIsZipping(true);
+  try {
+    const zip = new JSZip();
+    const selected = items.filter(i => selectedIds.has(i.id));
+    for (const item of selected) {
+      try {
+        const res = await fetch(item.imageUrl);
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        const safeLabel = item.label.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+        const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+        zip.file(`${safeLabel}_${safeId}.png`, blob);
+      } catch {
+        // skip failed downloads
+      }
+    }
+    const content = await zip.generateAsync({ type: 'blob' });
+    // ... trigger download
+  } finally {
+    setIsZipping(false);
+  }
+};
+```
+
+## File Changed
 | File | Change |
 |------|--------|
-| `src/pages/TextToProduct.tsx` | Remove forced square, add lightbox state + component |
+| `src/pages/Jobs.tsx` | Fix zip filename uniqueness by using full `item.id`, add per-item error handling |
 
