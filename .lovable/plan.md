@@ -1,12 +1,21 @@
 
 
-# Increase Product Upload Limit from 10 to 100
+# Fix `analyze-product-image` Boot Crash
 
-## Change
-Update the `MAX_BATCH` constant in `src/components/app/ManualProductTab.tsx` from `10` to `100`. This single constant controls the batch upload limit — all references (toast message, "Add more" button visibility, help text) use it dynamically.
+## Problem
+The edge function fails to boot with: `Identifier 'data' has already been declared` at line 111.
 
-## File Changed
+- Line 20: `const { data, error: claimsError } = await supabase.auth.getClaims(token);`
+- Line 93: `const data = await response.json();`
+
+Both use `const data` in the same scope, which is a syntax error that prevents the function from even loading.
+
+## Fix
+Rename the second `data` variable on line 93 to `aiData` and update its reference on line 94.
+
 | File | Change |
 |------|--------|
-| `src/components/app/ManualProductTab.tsx` | Change `const MAX_BATCH = 10;` to `const MAX_BATCH = 100;` |
+| `supabase/functions/analyze-product-image/index.ts` | Line 93: `const data` → `const aiData`; Line 94: `data.choices` → `aiData.choices` |
+
+Then redeploy the function.
 
