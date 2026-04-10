@@ -757,11 +757,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                   📐 Add multiple angles for better AI results
                 </p>
                 <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/50">
-                  <span className="flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Back</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1"><ArrowRight className="w-3 h-3" /> Side</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Package</span>
+                   <span className="flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Back</span>
+                   <span>·</span>
+                   <span className="flex items-center gap-1"><ArrowRight className="w-3 h-3" /> Side</span>
+                   <span>·</span>
+                   <span className="flex items-center gap-1"><FolderOpen className="w-3 h-3" /> Inside</span>
+                   <span>·</span>
+                   <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Package</span>
                 </div>
               </div>
               <input
