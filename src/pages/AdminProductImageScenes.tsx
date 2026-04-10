@@ -477,7 +477,7 @@ export default function AdminProductImageScenes() {
 }
 
 /* ── Scene row component ── */
-function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onDelete, onDuplicate, setEditDraft, updatePending }: {
+function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onDelete, onDuplicate, setEditDraft, updatePending, allSubCategories }: {
   scene: DbScene;
   idx: number;
   total: number;
@@ -492,6 +492,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
   onDuplicate: (s: DbScene) => void;
   setEditDraft: (d: Partial<DbScene>) => void;
   updatePending: boolean;
+  allSubCategories: string[];
 }) {
   return (
     <div>
