@@ -723,7 +723,32 @@ export default function TextToProduct() {
           <h3 className="text-lg font-semibold">
             Generating {totalImages} image{totalImages !== 1 ? 's' : ''} for {products.length} product{products.length !== 1 ? 's' : ''}...
           </h3>
-          {progress && (
+
+          {/* Multi-product aggregate progress */}
+          {products.length > 1 && jobProductMap.size > 0 && (
+            <div className="space-y-2">
+              <Progress value={(completedJobs.size / jobProductMap.size) * 100} className="h-2" />
+              <p className="text-sm text-muted-foreground">
+                {completedJobs.size} / {jobProductMap.size} product{jobProductMap.size !== 1 ? 's' : ''} completed
+              </p>
+              {/* Per-product chips */}
+              <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+                {products.map(p => {
+                  const jobId = Array.from(jobProductMap.entries()).find(([, title]) => title === p.title)?.[0];
+                  const isDone = jobId ? completedJobs.has(jobId) : false;
+                  return (
+                    <Badge key={p.id} variant={isDone ? 'default' : 'outline'} className="text-xs gap-1">
+                      {isDone ? <Check className="h-3 w-3" /> : <Loader2 className="h-3 w-3 animate-spin" />}
+                      {p.title || `Product`}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Single-product progress from activeJob */}
+          {products.length === 1 && progress && (
             <div className="space-y-2">
               <Progress value={(progress.generated / progress.total) * 100} className="h-2" />
               <p className="text-sm text-muted-foreground">
@@ -732,6 +757,7 @@ export default function TextToProduct() {
               </p>
             </div>
           )}
+
           {activeJob?.status === 'failed' && (
             <div className="text-destructive">
               <p>{activeJob.error_message || 'Generation failed'}</p>
@@ -740,6 +766,17 @@ export default function TextToProduct() {
               </Button>
             </div>
           )}
+
+          {/* View Results fallback for multi-product */}
+          {completedJobs.size > 0 && completedJobs.size < jobProductMap.size && (
+            <Button variant="ghost" size="sm" className="mt-4 text-muted-foreground" onClick={() => setStep('results')}>
+              View {completedJobs.size} completed result{completedJobs.size !== 1 ? 's' : ''} so far
+            </Button>
+          )}
+
+          <p className="text-xs text-muted-foreground/70 mt-4">
+            Safe to leave — results will appear in your library.
+          </p>
         </div>
       )}
 
