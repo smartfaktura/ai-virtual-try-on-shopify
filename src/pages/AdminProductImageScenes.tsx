@@ -437,6 +437,7 @@ export default function AdminProductImageScenes() {
                                 onDuplicate={handleDuplicate}
                                 setEditDraft={setEditDraft}
                                 updatePending={updateScene.isPending}
+                                allSubCategories={allSubCategories}
                               />
                             ))}
                           </div>
@@ -461,6 +462,7 @@ export default function AdminProductImageScenes() {
                             onDuplicate={handleDuplicate}
                             setEditDraft={setEditDraft}
                             updatePending={updateScene.isPending}
+                            allSubCategories={allSubCategories}
                           />
                         ))}
                       </div>
