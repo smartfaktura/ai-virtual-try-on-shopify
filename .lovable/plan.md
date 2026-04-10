@@ -1,31 +1,34 @@
 
 
-# Improve Admin Scene Creation UX
+# Filter Sub-Category Dropdown to Current Category
 
-## Changes
+## Problem
+When creating a new scene in a specific category (e.g. "Hats & Small Accessories"), the sub-category dropdown shows sub-categories from ALL categories instead of only those belonging to the current category.
 
-### 1. Add "＋ New Scene" button per category section
-In the category header row (line ~357), add a small "＋ New" button next to the category label. Clicking it opens the add-new form pre-filled with that category's `category_collection` value, so admins don't have to select the category manually.
+## Solution
+Replace the single global `allSubCategories` list with a per-category lookup, then pass only the relevant sub-categories to `SceneForm`.
 
-### 2. Sub-Category: dropdown with existing values + "Create new"
-Replace the free-text `<Input>` for Sub-Category (line ~628) with a `<Select>` that:
-- Lists all existing sub-category values from the current scenes (e.g. "Essential Shots", "Hero Scenes", "Editorial", etc.)
-- Has a "＋ Create new..." option at the bottom
-- When "Create new" is selected, shows a text input to type a new name
-- Prevents typos and inconsistencies
+### Changes in `src/pages/AdminProductImageScenes.tsx`
 
-### File
-- `src/pages/AdminProductImageScenes.tsx`
+1. **Replace `allSubCategories` memo** with a `Map<string, string[]>` keyed by `category_collection`:
+   ```typescript
+   const subCategoriesByCategory = useMemo(() => {
+     const map = new Map<string, Set<string>>();
+     for (const s of rawScenes) {
+       if (s.sub_category && s.category_collection) {
+         if (!map.has(s.category_collection)) map.set(s.category_collection, new Set());
+         map.get(s.category_collection)!.add(s.sub_category);
+       }
+     }
+     return new Map(Array.from(map.entries()).map(([k, v]) => [k, Array.from(v).sort()]));
+   }, [rawScenes]);
+   ```
 
-### Technical details
+2. **Pass filtered list** wherever `allSubCategories` is used:
+   - New scene form: `subCategoriesByCategory.get(newDraft.category_collection || '') || []`
+   - Edit form in SceneRow: `subCategoriesByCategory.get(scene.category_collection || '') || []`
 
-**Per-category "New Scene" button:**
-- Add a `<Button>` in the category header (inside `CollapsibleTrigger`'s sibling, using `e.stopPropagation()` to avoid toggling the collapsible)
-- On click: set `addingNew = true`, pre-fill `newDraft` with `category_collection: key` and `category_sort_order` from the group
+3. **Update prop name** in `SceneRow` and `SceneForm` signatures accordingly (or keep the same name, just pass the filtered array).
 
-**Sub-Category dropdown:**
-- Compute `allSubCategories` from `rawScenes` — a deduplicated, sorted list of all non-empty `sub_category` values
-- In `SceneForm`, replace the Input with a Select + conditional Input combo
-- Select options: existing sub-categories + "＋ Create new..."
-- When "＋ Create new..." is picked, show an Input; the typed value becomes the new `sub_category`
+No other files affected. The "＋ Create new..." option remains available for defining new sub-categories within that category.
 
