@@ -465,23 +465,28 @@ export default function ProductImages() {
                 ...(() => {
                   // Check for reference trigger uploads first (e.g. atomizerDetail, openBottle)
                   const triggerBlocks = scene.triggerBlocks || [];
+                  const refs: Record<string, string> = {};
                   for (const tb of triggerBlocks) {
                     const refUrl = sceneExtraRefs[`trigger:${tb}`];
                     if (refUrl && REFERENCE_TRIGGERS[tb]) {
-                      return {
-                        extra_reference_image_url: refUrl,
-                        extra_reference_label: REFERENCE_TRIGGERS[tb].promptLabel,
-                      };
+                      refs.extra_reference_image_url = refUrl;
+                      refs.extra_reference_label = REFERENCE_TRIGGERS[tb].promptLabel;
+                      break;
                     }
                   }
                   // Fall back to per-scene extra ref or back view ref
-                  if (sceneExtraRefs[scene.id]) {
-                    return { extra_reference_image_url: sceneExtraRefs[scene.id] };
+                  if (!refs.extra_reference_image_url) {
+                    if (sceneExtraRefs[scene.id]) {
+                      refs.extra_reference_image_url = sceneExtraRefs[scene.id];
+                    } else if (details.backReferenceUrl && triggerBlocks.includes('backView')) {
+                      refs.extra_reference_image_url = details.backReferenceUrl;
+                    }
                   }
-                  if (details.backReferenceUrl && triggerBlocks.includes('backView')) {
-                    return { extra_reference_image_url: details.backReferenceUrl };
+                  // Pass brand logo text if present
+                  if (details.brandLogoText && triggerBlocks.includes('brandLogoOverlay')) {
+                    refs.brand_logo_text = details.brandLogoText;
                   }
-                  return {};
+                  return refs;
                 })(),
                 quality: 'high',
                 aspectRatio: ratioForJob,

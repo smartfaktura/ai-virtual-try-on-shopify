@@ -2013,7 +2013,7 @@ export function ProductImagesStep3Refine({
                   </div>
                 </div>
 
-                {refUrl ? (
+              {refUrl ? (
                   <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
                     <img src={refUrl} alt={def.label} className="w-full h-full object-cover" />
                     <button
@@ -2043,6 +2043,21 @@ export function ProductImagesStep3Refine({
                       </>
                     )}
                   </button>
+                )}
+
+                {/* Brand logo overlay: additional text input */}
+                {triggerKey === 'brandLogoOverlay' && (
+                  <div className="pt-1">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Text / brand name to display</label>
+                    <input
+                      type="text"
+                      value={details.brandLogoText || ''}
+                      onChange={e => onDetailsChange({ ...details, brandLogoText: e.target.value })}
+                      placeholder="e.g. BOTTEGA VENETA"
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">Optional — if left empty, AI uses branding visible on the product</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
