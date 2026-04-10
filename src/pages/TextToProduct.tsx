@@ -13,7 +13,7 @@ import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { paceDelay } from '@/lib/enqueueGeneration';
-import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2, Plus, Trash2, ChevronDown, ChevronUp, Upload, X, ClipboardPaste } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,10 +22,24 @@ interface ProductEntry {
   id: string;
   title: string;
   specification: string;
+  referenceImageFile?: File;
+  referenceImagePreview?: string;
 }
 
 function makeProduct(): ProductEntry {
   return { id: crypto.randomUUID(), title: '', specification: '' };
+}
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_REF_SIZE = 10 * 1024 * 1024;
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
 }
 
 // ── Scene templates ────────────────────────────────────────────────
@@ -374,6 +388,29 @@ export default function TextToProduct() {
   const updateProduct = (id: string, field: 'title' | 'specification', value: string) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
+
+  const handleReferenceImage = useCallback((productId: string, file: File) => {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Please use JPG, PNG, or WEBP images.');
+      return;
+    }
+    if (file.size > MAX_REF_SIZE) {
+      toast.error('Reference image must be under 10MB.');
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, referenceImageFile: file, referenceImagePreview: previewUrl } : p));
+  }, []);
+
+  const removeReferenceImage = useCallback((productId: string) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId && p.referenceImagePreview) {
+        URL.revokeObjectURL(p.referenceImagePreview);
+        return { ...p, referenceImageFile: undefined, referenceImagePreview: undefined };
+      }
+      return p;
+    }));
+  }, []);
 
   const addProduct = () => {
     if (products.length >= MAX_PRODUCTS) return;
