@@ -72,6 +72,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [backImage, setBackImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [insideImage, setInsideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [anglesOpen, setAnglesOpen] = useState(true);
 
   // Extra details
@@ -109,6 +110,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (editingProduct.back_image_url) setBackImage({ previewUrl: editingProduct.back_image_url });
       if (editingProduct.side_image_url) setSideImage({ previewUrl: editingProduct.side_image_url });
       if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
+      if (editingProduct.inside_image_url) setInsideImage({ previewUrl: editingProduct.inside_image_url });
       
       // Load extra fields
       if (editingProduct.weight) setWeight(editingProduct.weight);
