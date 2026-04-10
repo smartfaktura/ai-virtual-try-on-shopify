@@ -278,7 +278,7 @@ export default function TextToProduct() {
   const [specification, setSpecification] = useState('');
   const [selectedScenes, setSelectedScenes] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState('1:1');
-  const { refreshCredits } = useCredits();
+  const { refreshBalance } = useCredits();
 
   const {
     enqueue,
@@ -288,7 +288,7 @@ export default function TextToProduct() {
     reset: resetQueue,
   } = useGenerationQueue({
     jobTypes: ['text-product' as any],
-    onCreditRefresh: refreshCredits,
+    onCreditRefresh: refreshBalance,
     onGenerationFailed: (_id, msg) => {
       toast.error(msg || 'Generation failed');
     },
@@ -382,7 +382,8 @@ export default function TextToProduct() {
       <PageHeader
         title="Text to Product"
         subtitle="Generate photorealistic product images from a detailed text description"
-      />
+      >
+        <div /></PageHeader>
 
       {/* Stepper */}
       <div className="flex items-center gap-2 text-sm">
