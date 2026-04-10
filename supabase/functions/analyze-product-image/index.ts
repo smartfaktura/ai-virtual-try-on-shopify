@@ -32,21 +32,15 @@ serve(async (req) => {
       ? `\nThe user has indicated this is: "${title}". Focus your analysis specifically on that item in the image.`
       : "";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `Analyze this image. It could be a product photo OR a room/building/space photo.${titleContext}
+    const aiBody = JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analyze this image. It could be a product photo OR a room/building/space photo.${titleContext}
 
 If it's a PRODUCT, return:
 - "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle")
@@ -61,21 +55,39 @@ If it's a ROOM, BUILDING, or SPACE, return:
 - "specification": A detailed 30-50 word description of the space's architecture, materials, color palette, lighting, and key design elements suitable for image generation.
 
 Return ONLY the JSON object, no markdown or explanation.`,
-              },
-              {
-                type: "image_url",
-                image_url: { url: imageUrl },
-              },
-            ],
-          },
-        ],
-      }),
+            },
+            {
+              type: "image_url",
+              image_url: { url: imageUrl },
+            },
+          ],
+        },
+      ],
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
-      throw new Error("AI analysis failed");
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: aiBody,
+      });
+      if (response.ok || (response.status !== 503 && response.status !== 429)) break;
+      const retryText = await response.text();
+      console.warn(`AI gateway attempt ${attempt + 1} failed: ${response.status} ${retryText}`);
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+    }
+
+    if (!response || !response.ok) {
+      const errText = response ? await response.text() : "no response";
+      console.error("AI gateway error after retries:", response?.status, errText);
+      return new Response(
+        JSON.stringify({ error: "AI analysis temporarily unavailable. Please try again in a moment." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const data = await response.json();
