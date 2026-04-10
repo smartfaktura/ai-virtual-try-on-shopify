@@ -1,16 +1,29 @@
 
 
-# Remove SKU Field from Product Form
+# Fix Jewelry Group: Consistent Spelling + Better Grouping
 
-## Change
-Remove the SKU field from `ManualProductTab.tsx` — it's not relevant to AI image generation.
+## Issues Found
 
-### File: `src/components/app/ManualProductTab.tsx`
-1. Remove `sku` from the interface (~line 35)
-2. Remove `sku` state (~line 84)
-3. Remove `sku` loading from editingProduct (~line 122)
-4. Remove `sku` from the `moreDetailsOpen` auto-open check (~line 123)
-5. Remove `sku` from the insert payload (~line 424)
-6. Remove the SKU input field (~lines 1040-1043)
-7. Make the Materials field full-width (currently shares a row with SKU)
+1. **Inconsistent spelling**: The super-group header says "Jewelry & Watches" (American) but the category labels say "Jewellery – Rings", "Jewellery – Necklaces" etc. (British). Need to pick one.
+2. **Watches & Eyewear orphaned**: They sit under "Jewelry & Watches" but display as standalone rows without the "Jewellery –" prefix, looking disconnected from the group.
+
+## Fix
+
+### 1. Standardize spelling to "Jewelry" (American English)
+Update the display labels in two files:
+- `src/hooks/useProductImageScenes.ts` — change "Jewellery – Necklaces" → "Jewelry – Necklaces" etc.
+- `src/lib/categoryUtils.ts` — same changes
+
+### 2. Rename the super-group to "Jewelry, Watches & Eyewear"
+In `ProductImagesStep2Scenes.tsx`, change the group label to make it clear that watches and eyewear belong here:
+```
+{ label: 'Jewelry, Watches & Eyewear', ids: [...] }
+```
+
+This is a 3-file, ~10-line cosmetic fix.
+
+## Files
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — rename group label
+- `src/hooks/useProductImageScenes.ts` — fix 4 labels (Jewellery → Jewelry)
+- `src/lib/categoryUtils.ts` — fix 4 labels (Jewellery → Jewelry)
 
