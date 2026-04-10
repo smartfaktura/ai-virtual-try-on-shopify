@@ -1,0 +1,1 @@
+ALTER TABLE public.user_products ADD COLUMN texture_image_url text;
