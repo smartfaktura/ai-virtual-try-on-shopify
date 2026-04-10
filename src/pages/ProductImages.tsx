@@ -90,13 +90,6 @@ export default function ProductImages() {
   const [visibleCount, setVisibleCount] = useState(25);
   const MAX_PRODUCTS = 20;
 
-  /** Check if a product's analysis is stale (missing or pre-v2) */
-  const isStaleAnalysis = useCallback((product: UserProduct) => {
-    const liveAnalysis = analyses[product.id];
-    if (liveAnalysis?.version === 2) return false;
-    const cached = (product as any).analysis_json;
-    return !cached?.version || cached.version < 2;
-  }, [analyses]);
 
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
@@ -877,21 +870,6 @@ export default function ProductImages() {
                                 <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
                                 {up.product_type && <p className="text-[10px] text-muted-foreground truncate">{up.product_type}</p>}
                               </div>
-                              {isSelected && isStaleAnalysis(up) && (
-                                <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-400/50 text-amber-600 bg-amber-50">Outdated</Badge>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); reAnalyzeProduct(up); }}
-                                    className="p-1 rounded-md hover:bg-muted transition-colors"
-                                    title="Re-analyze product"
-                                  >
-                                    {pendingIds.has(up.id)
-                                      ? <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                                      : <RefreshCw className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />}
-                                  </button>
-                                </div>
-                              )}
                               <div className={cn(
                                 'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
                                 isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30'
@@ -932,21 +910,6 @@ export default function ProductImages() {
                             )}>
                               {isSelected && <Check className="w-3 h-3" />}
                             </div>
-                            {isSelected && isStaleAnalysis(up) && (
-                              <div className="absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
-                                <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-amber-400/50 text-amber-600 bg-amber-50/90 backdrop-blur-sm">Outdated</Badge>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); reAnalyzeProduct(up); }}
-                                  className="p-0.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
-                                  title="Re-analyze product"
-                                >
-                                  {pendingIds.has(up.id)
-                                    ? <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-                                    : <RefreshCw className="w-3 h-3 text-muted-foreground hover:text-foreground" />}
-                                </button>
-                              </div>
-                            )}
                             <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
                             <div className="px-1.5 py-1.5 bg-card">
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
