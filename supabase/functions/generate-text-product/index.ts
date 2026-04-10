@@ -337,7 +337,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { scenes, title, user_id: userId, job_id: jobId, credits_reserved: creditsReserved } = body;
+    const { scenes, title, user_id: userId, job_id: jobId, credits_reserved: creditsReserved, referenceImageUrl } = body;
 
     if (!scenes || !Array.isArray(scenes) || scenes.length === 0) {
       if (jobId && userId && creditsReserved) {
@@ -349,13 +349,29 @@ serve(async (req) => {
       );
     }
 
+    // Build reference image parts if provided
+    let referenceParts: Record<string, unknown>[] | undefined;
+    if (referenceImageUrl) {
+      try {
+        const refPart = await urlToInlineDataPart(referenceImageUrl);
+        referenceParts = [refPart];
+        console.log(`[generate-text-product] Reference image provided — will use as visual inspiration`);
+      } catch (refErr) {
+        console.warn(`[generate-text-product] Failed to process reference image:`, refErr);
+      }
+    }
+
+    const ANTI_COPYRIGHT_INSTRUCTION = referenceParts
+      ? `REFERENCE IMAGE RULES: The attached image is visual inspiration ONLY. Use it for shape, silhouette, color palette, and style direction. Do NOT copy any brand logos, labels, text, trademarks, or brand-specific patterns. Create a generic unbranded version. Remove or replace all visible branding.\n\n`
+      : "";
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
     const totalToGenerate = scenes.length;
     const model = "gemini-3-pro-image-preview";
 
-    console.log(`[generate-text-product] Generating ${totalToGenerate} scenes using ${model} for "${title || 'untitled'}"`);
+    console.log(`[generate-text-product] Generating ${totalToGenerate} scenes using ${model} for "${title || 'untitled'}"${referenceParts ? ' (with reference image)' : ''}`);
 
     const images: Array<{ url: string; label: string; aspect_ratio: string }> = [];
     const errors: string[] = [];
