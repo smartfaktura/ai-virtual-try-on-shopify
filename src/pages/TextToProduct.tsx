@@ -642,6 +642,57 @@ export default function TextToProduct() {
                         Include hex colors, construction details, materials, and negative constraints for best results.
                       </p>
                     </div>
+
+                    {/* Reference Image Upload */}
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Reference Image <span className="text-muted-foreground font-normal">(optional)</span></label>
+                      {product.referenceImagePreview ? (
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-card flex-shrink-0">
+                            <img src={product.referenceImagePreview} alt="Reference" className="w-full h-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => removeReferenceImage(product.id)}
+                              className="absolute top-1 right-1 p-0.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">AI will use this as style inspiration — no branding will be copied.</p>
+                        </div>
+                      ) : (
+                        <div
+                          className="relative border border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
+                          onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleReferenceImage(product.id, f); }}
+                          onDragOver={(e) => e.preventDefault()}
+                          onPaste={(e) => {
+                            const items = e.clipboardData?.items;
+                            if (!items) return;
+                            for (const item of Array.from(items)) {
+                              if (item.type.startsWith('image/')) {
+                                e.preventDefault();
+                                const f = item.getAsFile();
+                                if (f) handleReferenceImage(product.id, f);
+                                return;
+                              }
+                            }
+                          }}
+                          tabIndex={0}
+                        >
+                          <input
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.webp"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleReferenceImage(product.id, f); }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                            <Upload className="h-3.5 w-3.5" />
+                            <span>Paste, drag, or click to add a reference image</span>
+                            <ClipboardPaste className="h-3 w-3 opacity-50" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CollapsibleContent>
               </Card>
