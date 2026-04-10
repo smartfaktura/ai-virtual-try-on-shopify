@@ -32,7 +32,6 @@ interface UserProduct {
   weight?: string | null;
   materials?: string | null;
   color?: string | null;
-  sku?: string | null;
 }
 
 interface ManualProductTabProps {
@@ -81,7 +80,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [weight, setWeight] = useState('');
   const [materials, setMaterials] = useState('');
   const [color, setColor] = useState('');
-  const [sku, setSku] = useState('');
+  
   const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -119,8 +118,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (editingProduct.weight) setWeight(editingProduct.weight);
       if (editingProduct.materials) setMaterials(editingProduct.materials);
       if (editingProduct.color) setColor(editingProduct.color);
-      if (editingProduct.sku) setSku(editingProduct.sku);
-      if (editingProduct.weight || editingProduct.materials || editingProduct.color || editingProduct.sku) setMoreDetailsOpen(true);
+      if (editingProduct.weight || editingProduct.materials || editingProduct.color) setMoreDetailsOpen(true);
     }
   }, [editingProduct]);
 
@@ -421,7 +419,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         weight: weight.trim() || null,
         materials: materials.trim() || null,
         color: color.trim() || null,
-        sku: sku.trim() || null,
+        
       };
 
       if (isEditing && editingProduct) {
@@ -1036,10 +1034,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             <div className="space-y-1">
               <Label className="text-[10px] font-medium text-muted-foreground">Materials</Label>
               <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} className="h-8 text-xs" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] font-medium text-muted-foreground">SKU</Label>
-              <Input placeholder="e.g. SKU-12345" value={sku} onChange={(e) => setSku(e.target.value)} maxLength={50} className="h-8 text-xs" />
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground/60 mt-1.5">
