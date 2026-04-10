@@ -442,6 +442,16 @@ export default function TextToProduct() {
         aspect_ratio: aspectRatio,
       }));
 
+      // Convert reference image to base64 if present
+      let referenceImageUrl: string | null = null;
+      if (product.referenceImageFile) {
+        try {
+          referenceImageUrl = await fileToBase64(product.referenceImageFile);
+        } catch {
+          console.warn('[TextToProduct] Failed to convert reference image to base64');
+        }
+      }
+
       await paceDelay(enqueueIndex);
 
       const result = await enqueue(
@@ -452,6 +462,7 @@ export default function TextToProduct() {
             specification: product.specification,
             scenes,
             aspectRatio,
+            ...(referenceImageUrl ? { referenceImageUrl } : {}),
           },
           imageCount: scenes.length,
           quality: 'high',

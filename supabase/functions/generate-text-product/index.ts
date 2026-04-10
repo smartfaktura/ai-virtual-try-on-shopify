@@ -47,12 +47,13 @@ function extractImageFromGeminiResponse(data: Record<string, unknown>): string |
   return null;
 }
 
-// ── Gemini native image generation (no reference images for text-only) ──
+// ── Gemini native image generation ──────────────────────────────────
 async function generateImageGemini(
   prompt: string,
   model: string,
   apiKey: string,
-  aspectRatio?: string
+  aspectRatio?: string,
+  referenceParts?: Record<string, unknown>[],
 ): Promise<string | null> {
   const maxRetries = 1;
   const PER_IMAGE_TIMEOUT = 100_000;
