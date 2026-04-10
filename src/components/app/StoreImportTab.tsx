@@ -384,6 +384,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     : i === backImageIndex ? 'Back'
                     : i === sideImageIndex ? 'Side'
                     : i === packagingImageIndex ? 'Pack'
+                    : i === insideImageIndex ? 'Inside'
                     : null;
 
                   const ROLE_COLORS: Record<string, string> = {
@@ -391,6 +392,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     Back: 'bg-accent text-accent-foreground',
                     Side: 'bg-secondary text-secondary-foreground',
                     Pack: 'bg-muted text-muted-foreground',
+                    Inside: 'bg-accent text-accent-foreground',
                   };
 
                   const assignRole = (newRole: string | null) => {
@@ -401,6 +403,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     if (i === backImageIndex) setBackImageIndex(null);
                     if (i === sideImageIndex) setSideImageIndex(null);
                     if (i === packagingImageIndex) setPackagingImageIndex(null);
+                    if (i === insideImageIndex) setInsideImageIndex(null);
 
                     if (!newRole) return; // "None" selected
 
@@ -413,6 +416,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                       setSideImageIndex(i);
                     } else if (newRole === 'Pack') {
                       setPackagingImageIndex(i);
+                    } else if (newRole === 'Inside') {
+                      setInsideImageIndex(i);
                     }
                   };
 
@@ -420,6 +425,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     { value: 'Main', label: 'Main' },
                     { value: 'Back', label: 'Back' },
                     { value: 'Side', label: 'Side' },
+                    { value: 'Inside', label: 'Inside' },
                     { value: 'Pack', label: 'Package' },
                   ];
 
