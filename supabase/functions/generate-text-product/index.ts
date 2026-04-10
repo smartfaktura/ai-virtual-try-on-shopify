@@ -379,7 +379,7 @@ serve(async (req) => {
 
     for (let i = 0; i < scenes.length && !wallClockBreak; i++) {
       const scene = scenes[i];
-      const prompt = scene.prompt as string;
+      const prompt = ANTI_COPYRIGHT_INSTRUCTION + (scene.prompt as string);
       const label = scene.label as string || `Scene ${i + 1}`;
       const aspectRatio = scene.aspect_ratio as string || "1:1";
 
@@ -392,8 +392,8 @@ serve(async (req) => {
       try {
         console.log(`[generate-text-product] Scene ${i + 1}/${totalToGenerate}: "${label}" (${aspectRatio})`);
 
-        // Tier 1: Gemini Pro
-        let imageUrl = await generateImageGemini(prompt, model, GEMINI_API_KEY, aspectRatio);
+        // Tier 1: Gemini Pro (with reference image if available)
+        let imageUrl = await generateImageGemini(prompt, model, GEMINI_API_KEY, aspectRatio, referenceParts);
 
         // Tier 2: Seedream 4.5 fallback
         if (imageUrl === null) {
