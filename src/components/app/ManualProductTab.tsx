@@ -134,6 +134,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         body: { imageUrl: imageDataUrl },
       });
       if (error) throw error;
+      if (data?.error) {
+        console.warn('AI analysis returned error:', data.error);
+        if (target) {
+          setBatchItems(prev => prev.map(b => b.id === target.batchId ? { ...b, isAnalyzing: false } : b));
+        }
+        return;
+      }
       if (data) {
         if (target) {
           setBatchItems(prev => prev.map(b => {
