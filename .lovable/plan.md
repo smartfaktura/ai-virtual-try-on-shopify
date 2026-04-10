@@ -1,41 +1,54 @@
 
 
-# Remove Seedream Model-Reference Restriction in generate-workflow
+# Add "Inside" Angle Reference — Full Plan
 
-## Problem
-Line 1236 in `supabase/functions/generate-workflow/index.ts` has a guard `!body.model?.imageUrl` that skips the Seedream fallback when a model reference image is present. This is incorrect — Seedream already handles model references successfully in the try-on flow (`generate-tryon`), where `body.model.imageUrl` is passed as a reference image (line 829).
+## Overview
+Add persistent inside/interior image storage for products, and ensure all interior-type scenes trigger the `interiorDetail` reference upload card.
 
-## Change
+## Changes
 
-### `supabase/functions/generate-workflow/index.ts`
-
-**Line 1236**: Remove the `!body.model?.imageUrl` guard so Seedream is used as fallback regardless of whether a model reference is present.
-
-```typescript
-// BEFORE (line 1236):
-if (imageUrl === null && !body.model?.imageUrl) {
-
-// AFTER:
-if (imageUrl === null) {
+### 1. Database Migration — Add column
+```sql
+ALTER TABLE public.user_products ADD COLUMN inside_image_url text;
 ```
 
-**Line 1255**: Update the log message since the condition no longer varies:
+### 2. Database Data Update — Add missing `interiorDetail` triggers
+7 interior-type scenes are missing `interiorDetail` in their `trigger_blocks`. These need updating:
+- `interior-detail-shoes`, `interior-detail-shoes-boots`, `interior-detail-shoes-highheels`, `interior-detail-shoes-sneakers` (shoe interiors)
+- `lining-interior-jackets` (jacket lining)
+- `open-interior-wallets` (wallet open layout)
+- `band-interior-rings` (ring band interior)
 
-```typescript
-// BEFORE:
-console.warn(`[generate-workflow] Primary${body.model?.imageUrl ? '' : ' + Seedream'} failed — trying Flash fallback`);
+Each gets `interiorDetail` appended to their existing `trigger_blocks`.
 
-// AFTER:
-console.warn(`[generate-workflow] Primary + Seedream both failed — trying Flash fallback`);
-```
+### 3. `ManualProductTab.tsx` (~8 lines)
+- Add `insideImage` state alongside `backImage`, `sideImage`, `packagingImage`
+- Add "Inside" upload slot in the angle reference grid (with appropriate icon)
+- Save as `inside_image_url` on insert/update
+- Load from `editingProduct.inside_image_url` in edit mode
 
-That's it — 2 lines changed. The `generateImageSeedream` function already accepts an array of reference image URLs and passes `body.model.imageUrl` into it (via `referenceImages`), so no other changes are needed.
+### 4. `StoreImportTab.tsx` (~4 lines)
+- Add `{ value: 'Inside', label: 'Inside' }` to `roleOptions`
+- Add `insideImageIndex` state
+- Save as `inside_image_url` on product insert
 
-## Impact
-- Swimwear/lingerie generations with model references will now fall back to Seedream when Gemini blocks the content, instead of skipping directly to Flash
-- All other product-image workflows with models benefit from the same improved fallback chain
-- The 3-tier chain becomes: **Gemini → Seedream → Flash** for ALL generations (not just product-only)
+### 5. `ProductImages.tsx` (~4 lines)
+- Auto-fill `inside_image_url` into `sceneExtraRefs` with key `trigger:interiorDetail` (matching existing pattern for `sideView`, `backView`, etc.)
 
-## Files
-- `supabase/functions/generate-workflow/index.ts` — 2 lines modified
+### 6. Type updates
+- `AddProduct.tsx` and `AddProductModal.tsx` — add `inside_image_url` to the Product type interface
+
+## What already works (no changes needed)
+- `interiorDetail` trigger is fully defined in `detailBlockConfig.ts` with label, description, and promptLabel
+- `ProductImagesStep3Refine.tsx` reference trigger upload system handles any key from `REFERENCE_TRIGGERS` automatically
+- Generation workflow passes `sceneExtraRefs` through to the prompt builder
+
+## Files touched
+- **Migration**: `user_products` — add `inside_image_url` column
+- **Data update**: `product_image_scenes` — add `interiorDetail` trigger to 7 scenes
+- `src/components/app/ManualProductTab.tsx`
+- `src/components/app/StoreImportTab.tsx`
+- `src/pages/ProductImages.tsx`
+- `src/pages/AddProduct.tsx`
+- `src/components/app/AddProductModal.tsx`
 
