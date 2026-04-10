@@ -417,7 +417,112 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   );
 }
 
-/** Wrapper that adds per-sub-group Select All buttons */
+/** Compact trigger row for 2-column grid layout */
+function CategoryRowTrigger({ catId, catTitle, allScenes, selectedSceneIds, isOpen, onToggleOpen }: {
+  catId: string;
+  catTitle: string;
+  allScenes: ProductImageScene[];
+  selectedSceneIds: Set<string>;
+  isOpen: boolean;
+  onToggleOpen: () => void;
+}) {
+  const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
+  return (
+    <button
+      onClick={onToggleOpen}
+      className={`flex items-center justify-between w-full p-3 rounded-lg border transition-colors cursor-pointer ${
+        isOpen ? 'border-primary/30 bg-primary/[0.03]' : 'border-border hover:bg-muted/30'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">{catTitle}</span>
+        {selectedCount > 0 && (
+          <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedCount} / {allScenes.length}</Badge>
+        )}
+        {selectedCount === 0 && (
+          <span className="text-[10px] text-muted-foreground">{allScenes.length}</span>
+        )}
+      </div>
+      {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+    </button>
+  );
+}
+
+/** Full-width expanded content for a category */
+function CategoryExpandedContent({ catId, catTitle, essentialScenes, categoryScenes, categorySubGroups, selectedSceneIds, onSelectionChange, toggleScene, gridClass }: {
+  catId: string;
+  catTitle: string;
+  essentialScenes: ProductImageScene[];
+  categoryScenes: ProductImageScene[];
+  categorySubGroups?: SubGroup[];
+  selectedSceneIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
+  toggleScene: (id: string) => void;
+  gridClass: string;
+}) {
+  const resolveLabel = (scene: ProductImageScene, fallback: string) => scene.subCategory || fallback;
+
+  const essentialSubGroups = useMemo(() => {
+    const map = new Map<string, ProductImageScene[]>();
+    for (const s of essentialScenes) {
+      const key = resolveLabel(s, 'Essential Shots');
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+    return Array.from(map.entries()).map(([label, scenes]) => ({ label, scenes }));
+  }, [essentialScenes]);
+
+  const catSubGroups = useMemo(() => {
+    if (categorySubGroups && categorySubGroups.length > 0) return categorySubGroups;
+    if (categoryScenes.length === 0) return [];
+    return [{ label: `${catTitle} Shots`, scenes: categoryScenes }];
+  }, [categorySubGroups, categoryScenes, catTitle]);
+
+  const bulkToggle = (scenes: ProductImageScene[]) => {
+    const next = new Set(selectedSceneIds);
+    const allSelected = scenes.every(s => next.has(s.id));
+    if (allSelected) scenes.forEach(s => next.delete(s.id));
+    else scenes.forEach(s => next.add(s.id));
+    onSelectionChange(next);
+  };
+
+  return (
+    <div className="mt-1.5 rounded-lg border border-border bg-muted/10 p-2">
+      {essentialSubGroups.map((sg, i) => {
+        const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+        return (
+          <SubGroupSection
+            key={`ess-${i}`}
+            label={sg.label}
+            scenes={sg.scenes}
+            selectedSceneIds={selectedSceneIds}
+            toggleScene={toggleScene}
+            allSelected={sgAllSelected}
+            onToggleAll={() => bulkToggle(sg.scenes)}
+            gridClass={gridClass}
+          />
+        );
+      })}
+      {catSubGroups.map((sg, i) => {
+        const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+        return (
+          <SubGroupSection
+            key={`cat-${i}`}
+            label={sg.label}
+            scenes={sg.scenes}
+            selectedSceneIds={selectedSceneIds}
+            toggleScene={toggleScene}
+            allSelected={sgAllSelected}
+            onToggleAll={() => bulkToggle(sg.scenes)}
+            gridClass={gridClass}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+
 function UnifiedCategorySectionWithSelectAll({
   catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
   selectedSceneIds, onSelectionChange, isOpen, onToggleOpen, toggleScene,
