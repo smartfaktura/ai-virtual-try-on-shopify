@@ -174,10 +174,16 @@ export default function Jobs() {
       const zip = new JSZip();
       const selected = items.filter(i => selectedIds.has(i.id));
       for (const item of selected) {
-        const res = await fetch(item.imageUrl);
-        const blob = await res.blob();
-        const safeLabel = item.label.replace(/\//g, '–');
-        zip.file(`${safeLabel}-${item.id.slice(0, 8)}.png`, blob);
+        try {
+          const res = await fetch(item.imageUrl);
+          if (!res.ok) continue;
+          const blob = await res.blob();
+          const safeLabel = item.label.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+          const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+          zip.file(`${safeLabel}_${safeId}.png`, blob);
+        } catch {
+          // skip failed downloads
+        }
       }
       const content = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(content);
