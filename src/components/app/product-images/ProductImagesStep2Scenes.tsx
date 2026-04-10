@@ -68,8 +68,8 @@ const GRID_CLASSES: Record<GridSize, string> = {
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
   { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'] },
   { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
-  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'] },
-  { label: 'Jewelry, Watches & Eyewear', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets', 'watches', 'eyewear'] },
+  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small', 'watches', 'eyewear'] },
+  { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
   { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
   { label: 'Food & Drink', ids: ['food', 'beverages'] },
   { label: 'Home & Lifestyle', ids: ['home-decor', 'tech-devices', 'supplements-wellness'] },
