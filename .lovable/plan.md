@@ -1,37 +1,35 @@
 
 
-# Name Generated Images by Product Title + Scene Type
+# Show Real Aspect Ratios + Add Preview Lightbox on Results Page
 
-## Current State
-- The **edge function** already stores images as `{ url, label, aspect_ratio }` objects (e.g., label = "White Front")
-- The **results screen** treats them as flat URL strings and names downloads `product-name-1.png`
-- The **library** (Jobs page) pulls labels from `job.prompt_final`, ignoring per-image labels
-- `generation_jobs.scene_name` is not populated for text-product jobs
+## Problem
+1. All result images are forced to `aspect-square object-cover`, cropping non-square outputs
+2. No way to open a full-screen preview of individual images
 
-## Changes
+## Changes — `src/pages/TextToProduct.tsx`
 
-### 1. `src/pages/TextToProduct.tsx` — Fix download naming + results display
+### 1. Remove forced square aspect ratio
+Replace `aspect-square object-cover` with `w-full object-contain` (or `object-cover` with a natural aspect container) on all result `<img>` tags so images display at their actual proportions.
 
-**Download function**: Replace the generic `label-idx.png` pattern with `ProductTitle_SceneName.png` using the image's `label` field from the backend result.
+### 2. Add lightbox state
+Add state for the lightbox:
+```typescript
+const [lightboxOpen, setLightboxOpen] = useState(false);
+const [lightboxIndex, setLightboxIndex] = useState(0);
+const [lightboxImages, setLightboxImages] = useState<{url: string; label: string}[]>([]);
+```
 
-**Parse results properly**: Currently `resultImages` and `allResults` extract `images` as `string[]`. Change to extract `{ url, label }[]` so scene labels are available for both display and download.
+### 3. Wire up click-to-preview
+When clicking an image card (not the download button), open `ImageLightbox` with the current group's images and index. Pass `onDownload` to enable downloading from the lightbox.
 
-**Show scene labels**: Display the scene name (e.g., "White Front") as a caption under each result image.
+### 4. Render ImageLightbox
+Import and render `ImageLightbox` at the bottom of the results section, passing `lightboxImages.map(i => i.url)` as the `images` prop.
 
-**Concrete changes**:
-- `resultImages` memo: parse each item as `{ url, label }` instead of plain string
-- `allResults` memo: change `images` type from `string[]` to `{ url: string; label: string }[]`
-- `completedJobs` polling: extract `{ url, label }` from result data
-- `handleDownload`: use the image's `label` instead of index — `ProductTitle_White_Front.png`
-- Results grid: show `label` as a caption on each card
+### 5. Both result grids updated
+Apply changes to both the multi-product grouped grid and the single-product grid.
 
-### 2. Library naming (no changes needed)
-The library page (Generate.tsx line 381) already handles object results (`r?.url`). It uses `job.prompt_final` for label which is acceptable since library items are not downloads. No change required here unless you want scene-level labels in the library too — but that's a separate scope.
-
-## Files Changed
+## File
 | File | Change |
 |------|--------|
-| `src/pages/TextToProduct.tsx` | Parse image objects with labels, update download naming, show scene captions |
-
-No backend changes needed — the edge function already returns labeled image objects.
+| `src/pages/TextToProduct.tsx` | Remove forced square, add lightbox state + component |
 
