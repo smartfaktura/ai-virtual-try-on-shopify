@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -430,10 +430,59 @@ export default function TextToProduct() {
     }
   }, [selectedScenes, products, aspectRatio, enqueue]);
 
-  // Auto-transition from generating → results
+  // Auto-transition from generating → results (single product via activeJob)
   if (step === 'generating' && activeJob?.status === 'completed' && products.length === 1) {
     setStep('results');
   }
+
+  // Polling effect for multi-product: track all jobs and auto-transition when all complete
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (step !== 'generating' || jobProductMap.size <= 1) return;
+
+    const jobIds = Array.from(jobProductMap.keys());
+    if (jobIds.length === 0) return;
+
+    const poll = async () => {
+      const { data } = await supabase
+        .from('generation_queue')
+        .select('id, status, result, error_message')
+        .in('id', jobIds);
+
+      if (!data) return;
+
+      let allDone = true;
+      const nextCompleted = new Map(completedJobs);
+
+      for (const job of data) {
+        if (job.status === 'completed' && job.result && !nextCompleted.has(job.id)) {
+          const r = job.result as Record<string, unknown>;
+          const images = (r.images as string[]) || [];
+          const productTitle = jobProductMap.get(job.id) || 'Product';
+          if (images.length > 0) {
+            nextCompleted.set(job.id, { images, productTitle });
+          }
+        }
+        if (job.status !== 'completed' && job.status !== 'failed') {
+          allDone = false;
+        }
+      }
+
+      if (nextCompleted.size !== completedJobs.size) {
+        setCompletedJobs(nextCompleted);
+      }
+
+      if (allDone && nextCompleted.size > 0) {
+        setStep('results');
+      }
+    };
+
+    poll(); // immediate first check
+    pollingRef.current = setInterval(poll, 3000);
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [step, jobProductMap, completedJobs]);
 
   const stepIndex = STEPS.indexOf(step);
 
@@ -674,7 +723,32 @@ export default function TextToProduct() {
           <h3 className="text-lg font-semibold">
             Generating {totalImages} image{totalImages !== 1 ? 's' : ''} for {products.length} product{products.length !== 1 ? 's' : ''}...
           </h3>
-          {progress && (
+
+          {/* Multi-product aggregate progress */}
+          {products.length > 1 && jobProductMap.size > 0 && (
+            <div className="space-y-2">
+              <Progress value={(completedJobs.size / jobProductMap.size) * 100} className="h-2" />
+              <p className="text-sm text-muted-foreground">
+                {completedJobs.size} / {jobProductMap.size} product{jobProductMap.size !== 1 ? 's' : ''} completed
+              </p>
+              {/* Per-product chips */}
+              <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+                {products.map(p => {
+                  const jobId = Array.from(jobProductMap.entries()).find(([, title]) => title === p.title)?.[0];
+                  const isDone = jobId ? completedJobs.has(jobId) : false;
+                  return (
+                    <Badge key={p.id} variant={isDone ? 'default' : 'outline'} className="text-xs gap-1">
+                      {isDone ? <Check className="h-3 w-3" /> : <Loader2 className="h-3 w-3 animate-spin" />}
+                      {p.title || `Product`}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Single-product progress from activeJob */}
+          {products.length === 1 && progress && (
             <div className="space-y-2">
               <Progress value={(progress.generated / progress.total) * 100} className="h-2" />
               <p className="text-sm text-muted-foreground">
@@ -683,6 +757,7 @@ export default function TextToProduct() {
               </p>
             </div>
           )}
+
           {activeJob?.status === 'failed' && (
             <div className="text-destructive">
               <p>{activeJob.error_message || 'Generation failed'}</p>
@@ -691,6 +766,17 @@ export default function TextToProduct() {
               </Button>
             </div>
           )}
+
+          {/* View Results fallback for multi-product */}
+          {completedJobs.size > 0 && completedJobs.size < jobProductMap.size && (
+            <Button variant="ghost" size="sm" className="mt-4 text-muted-foreground" onClick={() => setStep('results')}>
+              View {completedJobs.size} completed result{completedJobs.size !== 1 ? 's' : ''} so far
+            </Button>
+          )}
+
+          <p className="text-xs text-muted-foreground/70 mt-4">
+            Safe to leave — results will appear in your library.
+          </p>
         </div>
       )}
 
@@ -699,7 +785,10 @@ export default function TextToProduct() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">
-              {resultImages.length} image{resultImages.length !== 1 ? 's' : ''} generated
+              {allResults.length > 0
+                ? `${allResults.reduce((s, g) => s + g.images.length, 0)} image${allResults.reduce((s, g) => s + g.images.length, 0) !== 1 ? 's' : ''} generated`
+                : `${resultImages.length} image${resultImages.length !== 1 ? 's' : ''} generated`
+              }
             </h3>
             <Button variant="outline" onClick={() => { resetQueue(); setProducts([makeProduct()]); setExpandedProducts(new Set()); setSelectedScenes([]); setCompletedJobs(new Map()); setStep('describe'); }}>
               New Generation
