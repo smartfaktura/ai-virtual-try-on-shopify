@@ -59,8 +59,8 @@ async function generateImageGemini(
   const PER_IMAGE_TIMEOUT = 100_000;
 
   const nativeParts: Record<string, unknown>[] = [
-    { text: prompt },
     ...(referenceParts || []),
+    { text: prompt },
   ];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
