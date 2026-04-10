@@ -1,30 +1,12 @@
 
 
-# Fix duplicate `data` variable in analyze-product-image
+# Increase Product Upload Limit from 10 to 100
 
-## Problem
-The edge function fails to boot because `const data` is declared twice:
-1. Line ~25: `const { data, error: claimsError } = await supabase.auth.getClaims(token);`
-2. Line ~111: `const data = await response.json();`
-
-## Fix
-Rename the second `data` to `aiData` in `supabase/functions/analyze-product-image/index.ts`.
-
-Change:
-```typescript
-const data = await response.json();
-const content = data.choices?.[0]?.message?.content || "";
-```
-To:
-```typescript
-const aiData = await response.json();
-const content = aiData.choices?.[0]?.message?.content || "";
-```
-
-Then redeploy the function.
+## Change
+Update the `MAX_BATCH` constant in `src/components/app/ManualProductTab.tsx` from `10` to `100`. This single constant controls the batch upload limit — all references (toast message, "Add more" button visibility, help text) use it dynamically.
 
 ## File Changed
 | File | Change |
 |------|--------|
-| `supabase/functions/analyze-product-image/index.ts` | Rename second `data` to `aiData` |
+| `src/components/app/ManualProductTab.tsx` | Change `const MAX_BATCH = 10;` to `const MAX_BATCH = 100;` |
 

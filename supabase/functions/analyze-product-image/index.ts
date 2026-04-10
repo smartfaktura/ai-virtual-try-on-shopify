@@ -90,15 +90,13 @@ Return ONLY the JSON object, no markdown or explanation.`,
       );
     }
 
-    const aiData = await response.json();
-    const content = aiData.choices?.[0]?.message?.content || "";
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Could not parse AI response");
 
-    // Remove control characters that break JSON parsing
-    const sanitized = jsonMatch[0].replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
-    const parsed = JSON.parse(sanitized);
+    const parsed = JSON.parse(jsonMatch[0]);
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
