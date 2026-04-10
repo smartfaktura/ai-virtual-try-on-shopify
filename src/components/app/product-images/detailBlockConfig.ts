@@ -69,6 +69,12 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
     description: 'Upload a photo showing the product texture — cream smear, serum drop, gel swatch — so the AI can accurately render consistency and transparency.',
     promptLabel: 'Product texture reference — use this to accurately render the cream/gel/serum consistency, color, and transparency:',
   },
+  brandLogoOverlay: {
+    key: 'brandLogoOverlay',
+    label: 'Upload brand logo',
+    description: 'Upload your brand logo or type the exact text/brand name to display in this shot. If skipped, the AI uses whatever branding is visible on the product.',
+    promptLabel: 'Brand logo reference — use this to accurately render the brand logo in the scene:',
+  },
 };
 
 /** All trigger block keys including reference triggers */

@@ -368,6 +368,9 @@ export interface DetailSettings {
 
   // Structured outfit config (preferred over flat strings)
   outfitConfig?: OutfitConfig;
+
+  // Brand logo overlay text (used when brandLogoOverlay trigger is active)
+  brandLogoText?: string;
 }
 
 export interface GenerationPlan {

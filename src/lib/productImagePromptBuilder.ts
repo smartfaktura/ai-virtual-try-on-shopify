@@ -1011,6 +1011,11 @@ export function buildDynamicPrompt(
   const negatives = buildNegativePrompt(scene);
   prompt += ' ' + negatives;
 
+  // Append brand logo text directive if present
+  if (details.brandLogoText && scene.triggerBlocks?.includes('brandLogoOverlay')) {
+    prompt += ` BRAND TEXT DIRECTIVE: Display the following brand text prominently and legibly in the scene: "${details.brandLogoText}". Render it with accurate typography matching luxury/premium brand standards.`;
+  }
+
   // Append custom note at the end
   if (details.customNote && !prompt.includes(details.customNote)) {
     prompt += ' ' + details.customNote;
