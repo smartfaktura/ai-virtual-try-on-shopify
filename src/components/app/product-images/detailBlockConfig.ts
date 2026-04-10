@@ -63,6 +63,12 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
     description: 'Upload a side-view photo of your product for accurate profile rendering.',
     promptLabel: 'Side-view reference — use this to accurately render the product profile and side details:',
   },
+  textureDetail: {
+    key: 'textureDetail',
+    label: 'Upload texture/swatch photo',
+    description: 'Upload a photo showing the product texture — cream smear, serum drop, gel swatch — so the AI can accurately render consistency and transparency.',
+    promptLabel: 'Product texture reference — use this to accurately render the cream/gel/serum consistency, color, and transparency:',
+  },
 };
 
 /** All trigger block keys including reference triggers */
