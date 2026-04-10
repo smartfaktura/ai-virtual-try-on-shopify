@@ -803,64 +803,19 @@ export default function TextToProduct() {
       )}
 
       {/* Step 5: Results */}
-      {step === 'results' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">
-              {allResults.length > 0
-                ? `${allResults.reduce((s, g) => s + g.images.length, 0)} image${allResults.reduce((s, g) => s + g.images.length, 0) !== 1 ? 's' : ''} generated`
-                : `${resultImages.length} image${resultImages.length !== 1 ? 's' : ''} generated`
-              }
-            </h3>
-            <Button variant="outline" onClick={() => { resetQueue(); setProducts([makeProduct()]); setExpandedProducts(new Set()); setSelectedScenes([]); setCompletedJobs(new Map()); setStep('describe'); }}>
-              New Generation
-            </Button>
-          </div>
-
-          {/* If multi-product with grouped results */}
-          {allResults.length > 1 ? (
-            allResults.map((group, gIdx) => (
-              <div key={gIdx} className="space-y-3">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <Badge variant="outline">{gIdx + 1}</Badge>
-                  {group.productTitle}
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {group.images.map((img, idx) => (
-                    <Card key={idx} className="overflow-hidden group relative">
-                      <img src={img.url} alt={`${group.productTitle} – ${img.label}`} className="w-full aspect-square object-cover" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pointer-events-none">
-                        <span className="text-xs text-white font-medium">{img.label}</span>
-                      </div>
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button size="sm" variant="secondary" onClick={() => handleDownload(img.url, group.productTitle, img.label)}>
-                          <Download className="h-4 w-4 mr-1" /> Download
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {resultImages.map((img, idx) => (
-                <Card key={idx} className="overflow-hidden group relative">
-                  <img src={img.url} alt={`${products[0]?.title || 'Product'} – ${img.label}`} className="w-full aspect-square object-cover" />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pointer-events-none">
-                    <span className="text-xs text-white font-medium">{img.label}</span>
-                  </div>
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button size="sm" variant="secondary" onClick={() => handleDownload(img.url, products[0]?.title || 'product', img.label)}>
-                      <Download className="h-4 w-4 mr-1" /> Download
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {step === 'results' && <ResultsStep
+        allResults={allResults}
+        resultImages={resultImages}
+        products={products}
+        handleDownload={handleDownload}
+        resetQueue={resetQueue}
+        setProducts={setProducts}
+        setExpandedProducts={setExpandedProducts}
+        setSelectedScenes={setSelectedScenes}
+        setCompletedJobs={setCompletedJobs}
+        setStep={setStep}
+        makeProduct={makeProduct}
+      />}
     </div>
   );
 }
