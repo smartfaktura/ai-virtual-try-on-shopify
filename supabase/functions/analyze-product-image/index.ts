@@ -90,8 +90,8 @@ Return ONLY the JSON object, no markdown or explanation.`,
       );
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    const aiData = await response.json();
+    const content = aiData.choices?.[0]?.message?.content || "";
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Could not parse AI response");
