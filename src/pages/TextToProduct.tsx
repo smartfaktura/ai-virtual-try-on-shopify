@@ -293,7 +293,7 @@ export default function TextToProduct() {
   const [selectedScenes, setSelectedScenes] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [jobProductMap, setJobProductMap] = useState<Map<string, string>>(new Map());
-  const [completedJobs, setCompletedJobs] = useState<Map<string, { images: string[]; productTitle: string }>>(new Map());
+  const [completedJobs, setCompletedJobs] = useState<Map<string, { images: { url: string; label: string }[]; productTitle: string }>>(new Map());
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const { refreshBalance } = useCredits();
 
@@ -325,15 +325,24 @@ export default function TextToProduct() {
     };
   }, [activeJob?.result, selectedScenes.length]);
 
-  const resultImages = useMemo(() => {
+  const resultImages = useMemo((): { url: string; label: string }[] => {
     if (activeJob?.status !== 'completed' || !activeJob.result) return [];
     const r = activeJob.result as Record<string, unknown>;
-    return (r.images as string[]) || [];
-  }, [activeJob]);
+    const raw = (r.images as unknown[]) || [];
+    return raw.map((img, idx) => {
+      if (typeof img === 'string') {
+        const sceneId = selectedScenes[idx];
+        const sceneLabel = SCENE_TEMPLATES.find(s => s.id === sceneId)?.label || `Scene ${idx + 1}`;
+        return { url: img, label: sceneLabel };
+      }
+      const obj = img as Record<string, unknown>;
+      return { url: (obj.url as string) || '', label: (obj.label as string) || `Scene ${idx + 1}` };
+    });
+  }, [activeJob, selectedScenes]);
 
   // Collect all results across jobs for multi-product
   const allResults = useMemo(() => {
-    const results: { productTitle: string; images: string[] }[] = [];
+    const results: { productTitle: string; images: { url: string; label: string }[] }[] = [];
     completedJobs.forEach(v => results.push(v));
     // Also include current active job results if completed
     if (activeJob?.status === 'completed' && resultImages.length > 0) {
@@ -457,7 +466,16 @@ export default function TextToProduct() {
       for (const job of data) {
         if (job.status === 'completed' && job.result && !nextCompleted.has(job.id)) {
           const r = job.result as Record<string, unknown>;
-          const images = (r.images as string[]) || [];
+          const raw = (r.images as unknown[]) || [];
+          const images: { url: string; label: string }[] = raw.map((img, idx) => {
+            if (typeof img === 'string') {
+              const sceneId = selectedScenes[idx];
+              const sceneLabel = SCENE_TEMPLATES.find(s => s.id === sceneId)?.label || `Scene ${idx + 1}`;
+              return { url: img, label: sceneLabel };
+            }
+            const obj = img as Record<string, unknown>;
+            return { url: (obj.url as string) || '', label: (obj.label as string) || `Scene ${idx + 1}` };
+          });
           const productTitle = jobProductMap.get(job.id) || 'Product';
           if (images.length > 0) {
             nextCompleted.set(job.id, { images, productTitle });
@@ -486,13 +504,15 @@ export default function TextToProduct() {
 
   const stepIndex = STEPS.indexOf(step);
 
-  const handleDownload = async (url: string, label: string, idx: number) => {
+  const handleDownload = async (url: string, productTitle: string, sceneLabel: string) => {
     try {
+      const safeTitle = productTitle.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+      const safeScene = sceneLabel.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
       const res = await fetch(url);
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `${label.replace(/\s+/g, '-').toLowerCase()}-${idx + 1}.png`;
+      a.download = `${safeTitle}_${safeScene}.png`;
       a.click();
       URL.revokeObjectURL(a.href);
     } catch {
@@ -804,11 +824,14 @@ export default function TextToProduct() {
                   {group.productTitle}
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {group.images.map((url, idx) => (
+                  {group.images.map((img, idx) => (
                     <Card key={idx} className="overflow-hidden group relative">
-                      <img src={url} alt={`${group.productTitle} ${idx + 1}`} className="w-full aspect-square object-cover" />
+                      <img src={img.url} alt={`${group.productTitle} – ${img.label}`} className="w-full aspect-square object-cover" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pointer-events-none">
+                        <span className="text-xs text-white font-medium">{img.label}</span>
+                      </div>
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button size="sm" variant="secondary" onClick={() => handleDownload(url, group.productTitle, idx)}>
+                        <Button size="sm" variant="secondary" onClick={() => handleDownload(img.url, group.productTitle, img.label)}>
                           <Download className="h-4 w-4 mr-1" /> Download
                         </Button>
                       </div>
@@ -819,11 +842,14 @@ export default function TextToProduct() {
             ))
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {resultImages.map((url, idx) => (
+              {resultImages.map((img, idx) => (
                 <Card key={idx} className="overflow-hidden group relative">
-                  <img src={url} alt={`Generated ${idx + 1}`} className="w-full aspect-square object-cover" />
+                  <img src={img.url} alt={`${products[0]?.title || 'Product'} – ${img.label}`} className="w-full aspect-square object-cover" />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pointer-events-none">
+                    <span className="text-xs text-white font-medium">{img.label}</span>
+                  </div>
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button size="sm" variant="secondary" onClick={() => handleDownload(url, products[0]?.title || 'product', idx)}>
+                    <Button size="sm" variant="secondary" onClick={() => handleDownload(img.url, products[0]?.title || 'product', img.label)}>
                       <Download className="h-4 w-4 mr-1" /> Download
                     </Button>
                   </div>
