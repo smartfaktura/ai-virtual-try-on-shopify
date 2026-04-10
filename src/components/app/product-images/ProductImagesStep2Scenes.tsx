@@ -65,6 +65,16 @@ const GRID_CLASSES: Record<GridSize, string> = {
   large: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 };
 
+const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
+  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'] },
+  { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
+  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'] },
+  { label: 'Jewelry & Watches', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets', 'watches', 'eyewear'] },
+  { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
+  { label: 'Food & Drink', ids: ['food', 'beverages'] },
+  { label: 'Home & Lifestyle', ids: ['home-decor', 'tech-devices', 'supplements-wellness'] },
+];
+
 function detectRelevantCategories(products: UserProduct[], productAnalyses?: Record<string, { category: string }>): Set<string> {
   const matched = new Set<string>();
   const analyzedIds = new Set<string>();
@@ -316,24 +326,62 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
       )}
 
       {unifiedOther.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
-          {unifiedOther.map(cat => (
-            <UnifiedCategorySectionWithSelectAll
-              key={cat.id}
-              catId={cat.id}
-              catTitle={cat.title}
-              essentialScenes={cat.essentialScenes}
-              categoryScenes={cat.scenes}
-              categorySubGroups={cat.subGroups}
-              selectedSceneIds={selectedSceneIds}
-              onSelectionChange={onSelectionChange}
-              isOpen={expandedCategories.has(cat.id)}
-              onToggleOpen={() => toggleCategory(cat.id)}
-              toggleScene={toggleScene}
-              gridClass={gridClass}
-            />
-          ))}
+          {(() => {
+            const otherIds = new Set(unifiedOther.map(c => c.id));
+            const rendered = new Set<string>();
+            return (
+              <>
+                {CATEGORY_SUPER_GROUPS.map(({ label, ids }) => {
+                  const items = ids.filter(id => otherIds.has(id));
+                  if (items.length === 0) return null;
+                  items.forEach(id => rendered.add(id));
+                  return (
+                    <div key={label} className="space-y-1.5">
+                      <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest mt-2">{label}</p>
+                      {items.map(id => {
+                        const cat = unifiedOther.find(c => c.id === id)!;
+                        return (
+                          <UnifiedCategorySectionWithSelectAll
+                            key={cat.id}
+                            catId={cat.id}
+                            catTitle={cat.title}
+                            essentialScenes={cat.essentialScenes}
+                            categoryScenes={cat.scenes}
+                            categorySubGroups={cat.subGroups}
+                            selectedSceneIds={selectedSceneIds}
+                            onSelectionChange={onSelectionChange}
+                            isOpen={expandedCategories.has(cat.id)}
+                            onToggleOpen={() => toggleCategory(cat.id)}
+                            toggleScene={toggleScene}
+                            gridClass={gridClass}
+                          />
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+                {/* Uncategorized leftovers */}
+                {unifiedOther.filter(c => !rendered.has(c.id)).map(cat => (
+                  <UnifiedCategorySectionWithSelectAll
+                    key={cat.id}
+                    catId={cat.id}
+                    catTitle={cat.title}
+                    essentialScenes={cat.essentialScenes}
+                    categoryScenes={cat.scenes}
+                    categorySubGroups={cat.subGroups}
+                    selectedSceneIds={selectedSceneIds}
+                    onSelectionChange={onSelectionChange}
+                    isOpen={expandedCategories.has(cat.id)}
+                    onToggleOpen={() => toggleCategory(cat.id)}
+                    toggleScene={toggleScene}
+                    gridClass={gridClass}
+                  />
+                ))}
+              </>
+            );
+          })()}
         </div>
       )}
     </div>
