@@ -316,24 +316,62 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
       )}
 
       {unifiedOther.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
-          {unifiedOther.map(cat => (
-            <UnifiedCategorySectionWithSelectAll
-              key={cat.id}
-              catId={cat.id}
-              catTitle={cat.title}
-              essentialScenes={cat.essentialScenes}
-              categoryScenes={cat.scenes}
-              categorySubGroups={cat.subGroups}
-              selectedSceneIds={selectedSceneIds}
-              onSelectionChange={onSelectionChange}
-              isOpen={expandedCategories.has(cat.id)}
-              onToggleOpen={() => toggleCategory(cat.id)}
-              toggleScene={toggleScene}
-              gridClass={gridClass}
-            />
-          ))}
+          {(() => {
+            const otherIds = new Set(unifiedOther.map(c => c.id));
+            const rendered = new Set<string>();
+            return (
+              <>
+                {CATEGORY_SUPER_GROUPS.map(({ label, ids }) => {
+                  const items = ids.filter(id => otherIds.has(id));
+                  if (items.length === 0) return null;
+                  items.forEach(id => rendered.add(id));
+                  return (
+                    <div key={label} className="space-y-1.5">
+                      <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest mt-2">{label}</p>
+                      {items.map(id => {
+                        const cat = unifiedOther.find(c => c.id === id)!;
+                        return (
+                          <UnifiedCategorySectionWithSelectAll
+                            key={cat.id}
+                            catId={cat.id}
+                            catTitle={cat.title}
+                            essentialScenes={cat.essentialScenes}
+                            categoryScenes={cat.scenes}
+                            categorySubGroups={cat.subGroups}
+                            selectedSceneIds={selectedSceneIds}
+                            onSelectionChange={onSelectionChange}
+                            isOpen={expandedCategories.has(cat.id)}
+                            onToggleOpen={() => toggleCategory(cat.id)}
+                            toggleScene={toggleScene}
+                            gridClass={gridClass}
+                          />
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+                {/* Uncategorized leftovers */}
+                {unifiedOther.filter(c => !rendered.has(c.id)).map(cat => (
+                  <UnifiedCategorySectionWithSelectAll
+                    key={cat.id}
+                    catId={cat.id}
+                    catTitle={cat.title}
+                    essentialScenes={cat.essentialScenes}
+                    categoryScenes={cat.scenes}
+                    categorySubGroups={cat.subGroups}
+                    selectedSceneIds={selectedSceneIds}
+                    onSelectionChange={onSelectionChange}
+                    isOpen={expandedCategories.has(cat.id)}
+                    onToggleOpen={() => toggleCategory(cat.id)}
+                    toggleScene={toggleScene}
+                    gridClass={gridClass}
+                  />
+                ))}
+              </>
+            );
+          })()}
         </div>
       )}
     </div>
