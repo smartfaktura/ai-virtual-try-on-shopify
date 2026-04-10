@@ -13,7 +13,7 @@ import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { paceDelay } from '@/lib/enqueueGeneration';
-import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2, Plus, Trash2, ChevronDown, ChevronUp, Upload, X, ClipboardPaste } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,10 +22,24 @@ interface ProductEntry {
   id: string;
   title: string;
   specification: string;
+  referenceImageFile?: File;
+  referenceImagePreview?: string;
 }
 
 function makeProduct(): ProductEntry {
   return { id: crypto.randomUUID(), title: '', specification: '' };
+}
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_REF_SIZE = 10 * 1024 * 1024;
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
 }
 
 // ── Scene templates ────────────────────────────────────────────────
@@ -375,6 +389,29 @@ export default function TextToProduct() {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
+  const handleReferenceImage = useCallback((productId: string, file: File) => {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Please use JPG, PNG, or WEBP images.');
+      return;
+    }
+    if (file.size > MAX_REF_SIZE) {
+      toast.error('Reference image must be under 10MB.');
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, referenceImageFile: file, referenceImagePreview: previewUrl } : p));
+  }, []);
+
+  const removeReferenceImage = useCallback((productId: string) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId && p.referenceImagePreview) {
+        URL.revokeObjectURL(p.referenceImagePreview);
+        return { ...p, referenceImageFile: undefined, referenceImagePreview: undefined };
+      }
+      return p;
+    }));
+  }, []);
+
   const addProduct = () => {
     if (products.length >= MAX_PRODUCTS) return;
     const np = makeProduct();
@@ -405,6 +442,16 @@ export default function TextToProduct() {
         aspect_ratio: aspectRatio,
       }));
 
+      // Convert reference image to base64 if present
+      let referenceImageUrl: string | null = null;
+      if (product.referenceImageFile) {
+        try {
+          referenceImageUrl = await fileToBase64(product.referenceImageFile);
+        } catch {
+          console.warn('[TextToProduct] Failed to convert reference image to base64');
+        }
+      }
+
       await paceDelay(enqueueIndex);
 
       const result = await enqueue(
@@ -415,6 +462,7 @@ export default function TextToProduct() {
             specification: product.specification,
             scenes,
             aspectRatio,
+            ...(referenceImageUrl ? { referenceImageUrl } : {}),
           },
           imageCount: scenes.length,
           quality: 'high',
@@ -604,6 +652,57 @@ export default function TextToProduct() {
                       <p className="text-xs text-muted-foreground mt-1">
                         Include hex colors, construction details, materials, and negative constraints for best results.
                       </p>
+                    </div>
+
+                    {/* Reference Image Upload */}
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Reference Image <span className="text-muted-foreground font-normal">(optional)</span></label>
+                      {product.referenceImagePreview ? (
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-card flex-shrink-0">
+                            <img src={product.referenceImagePreview} alt="Reference" className="w-full h-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => removeReferenceImage(product.id)}
+                              className="absolute top-1 right-1 p-0.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">AI will use this as style inspiration — no branding will be copied.</p>
+                        </div>
+                      ) : (
+                        <div
+                          className="relative border border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
+                          onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleReferenceImage(product.id, f); }}
+                          onDragOver={(e) => e.preventDefault()}
+                          onPaste={(e) => {
+                            const items = e.clipboardData?.items;
+                            if (!items) return;
+                            for (const item of Array.from(items)) {
+                              if (item.type.startsWith('image/')) {
+                                e.preventDefault();
+                                const f = item.getAsFile();
+                                if (f) handleReferenceImage(product.id, f);
+                                return;
+                              }
+                            }
+                          }}
+                          tabIndex={0}
+                        >
+                          <input
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.webp"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleReferenceImage(product.id, f); }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                            <Upload className="h-3.5 w-3.5" />
+                            <span>Paste, drag, or click to add a reference image</span>
+                            <ClipboardPaste className="h-3 w-3 opacity-50" />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CollapsibleContent>

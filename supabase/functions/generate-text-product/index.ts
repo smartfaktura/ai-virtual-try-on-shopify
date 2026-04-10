@@ -47,17 +47,21 @@ function extractImageFromGeminiResponse(data: Record<string, unknown>): string |
   return null;
 }
 
-// ── Gemini native image generation (no reference images for text-only) ──
+// ── Gemini native image generation ──────────────────────────────────
 async function generateImageGemini(
   prompt: string,
   model: string,
   apiKey: string,
-  aspectRatio?: string
+  aspectRatio?: string,
+  referenceParts?: Record<string, unknown>[],
 ): Promise<string | null> {
   const maxRetries = 1;
   const PER_IMAGE_TIMEOUT = 100_000;
 
-  const nativeParts: Record<string, unknown>[] = [{ text: prompt }];
+  const nativeParts: Record<string, unknown>[] = [
+    { text: prompt },
+    ...(referenceParts || []),
+  ];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -333,7 +337,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { scenes, title, user_id: userId, job_id: jobId, credits_reserved: creditsReserved } = body;
+    const { scenes, title, user_id: userId, job_id: jobId, credits_reserved: creditsReserved, referenceImageUrl } = body;
 
     if (!scenes || !Array.isArray(scenes) || scenes.length === 0) {
       if (jobId && userId && creditsReserved) {
@@ -345,13 +349,29 @@ serve(async (req) => {
       );
     }
 
+    // Build reference image parts if provided
+    let referenceParts: Record<string, unknown>[] | undefined;
+    if (referenceImageUrl) {
+      try {
+        const refPart = await urlToInlineDataPart(referenceImageUrl);
+        referenceParts = [refPart];
+        console.log(`[generate-text-product] Reference image provided — will use as visual inspiration`);
+      } catch (refErr) {
+        console.warn(`[generate-text-product] Failed to process reference image:`, refErr);
+      }
+    }
+
+    const ANTI_COPYRIGHT_INSTRUCTION = referenceParts
+      ? `REFERENCE IMAGE RULES: The attached image is visual inspiration ONLY. Use it for shape, silhouette, color palette, and style direction. Do NOT copy any brand logos, labels, text, trademarks, or brand-specific patterns. Create a generic unbranded version. Remove or replace all visible branding.\n\n`
+      : "";
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
     const totalToGenerate = scenes.length;
     const model = "gemini-3-pro-image-preview";
 
-    console.log(`[generate-text-product] Generating ${totalToGenerate} scenes using ${model} for "${title || 'untitled'}"`);
+    console.log(`[generate-text-product] Generating ${totalToGenerate} scenes using ${model} for "${title || 'untitled'}"${referenceParts ? ' (with reference image)' : ''}`);
 
     const images: Array<{ url: string; label: string; aspect_ratio: string }> = [];
     const errors: string[] = [];
@@ -359,7 +379,7 @@ serve(async (req) => {
 
     for (let i = 0; i < scenes.length && !wallClockBreak; i++) {
       const scene = scenes[i];
-      const prompt = scene.prompt as string;
+      const prompt = ANTI_COPYRIGHT_INSTRUCTION + (scene.prompt as string);
       const label = scene.label as string || `Scene ${i + 1}`;
       const aspectRatio = scene.aspect_ratio as string || "1:1";
 
@@ -372,8 +392,8 @@ serve(async (req) => {
       try {
         console.log(`[generate-text-product] Scene ${i + 1}/${totalToGenerate}: "${label}" (${aspectRatio})`);
 
-        // Tier 1: Gemini Pro
-        let imageUrl = await generateImageGemini(prompt, model, GEMINI_API_KEY, aspectRatio);
+        // Tier 1: Gemini Pro (with reference image if available)
+        let imageUrl = await generateImageGemini(prompt, model, GEMINI_API_KEY, aspectRatio, referenceParts);
 
         // Tier 2: Seedream 4.5 fallback
         if (imageUrl === null) {
@@ -393,7 +413,7 @@ serve(async (req) => {
         // Tier 3: Gemini Flash fallback
         if (imageUrl === null) {
           console.warn(`[generate-text-product] Primary + Seedream both failed — trying Flash fallback for "${label}"`);
-          imageUrl = await generateImageGemini(prompt, "gemini-3.1-flash-image-preview", GEMINI_API_KEY, aspectRatio);
+          imageUrl = await generateImageGemini(prompt, "gemini-3.1-flash-image-preview", GEMINI_API_KEY, aspectRatio, referenceParts);
           if (imageUrl) console.log(`[generate-text-product] Flash fallback succeeded for "${label}"`);
         }
 
