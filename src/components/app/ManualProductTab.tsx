@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen } from 'lucide-react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -808,6 +808,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                       setBackImage(null);
                       setSideImage(null);
                       setPackagingImage(null);
+                      setInsideImage(null);
                       hasManualEdits.current = { title: false, productType: false, description: false };
                     }}
                     className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
@@ -855,6 +856,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                       {([
                         { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
                         { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
+                        { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
                         { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
                       ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
                         <div key={shortLabel} className="relative">
