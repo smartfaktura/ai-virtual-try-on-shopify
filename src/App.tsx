@@ -21,6 +21,7 @@ const Home = lazy(() => import('@/pages/Home'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
 const ProductImages = lazy(() => import('@/pages/ProductImages'));
+const TextToProduct = lazy(() => import('@/pages/TextToProduct'));
 
 const Templates = lazy(() => import('@/pages/Templates'));
 const Discover = lazy(() => import('@/pages/Discover'));
@@ -178,6 +179,7 @@ const App = () => {
                         <Route path="/creative-drops" element={<CreativeDrops />} />
                         <Route path="/generate" element={<Generate />} />
                         <Route path="/generate/product-images" element={<ProductImages />} />
+                        <Route path="/generate/text-to-product" element={<TextToProduct />} />
                         <Route path="/generate/:workflowSlug" element={<Generate />} />
                         <Route path="/library" element={<Jobs />} />
                         <Route path="/library/:id" element={<Jobs />} />

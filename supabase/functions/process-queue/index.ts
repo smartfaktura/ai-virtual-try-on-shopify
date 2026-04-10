@@ -15,6 +15,7 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   upscale: "upscale-worker",
   video: "generate-video",
   catalog: "generate-catalog",
+  "text-product": "generate-text-product",
 };
 
 /**
