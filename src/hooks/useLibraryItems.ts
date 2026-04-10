@@ -11,9 +11,142 @@ const PAGE_SIZE = 20;
 const JOB_FETCH_LIMIT = 60;
 const FS_FETCH_LIMIT = PAGE_SIZE;
 
-type Cursor = { jobCursor?: string; fsCursor?: string; jobsDone?: boolean; fsDone?: boolean };
+type RawItem = { item: Omit<LibraryItem, 'imageUrl'>; url: string; sourceCreatedAt: string; source: 'job' | 'fs' };
+
+type Cursor = {
+  jobCursor?: string;
+  fsCursor?: string;
+  jobsDone?: boolean;
+  fsDone?: boolean;
+  overflow?: RawItem[];
+};
 
 export type LibrarySourceFilter = 'all' | 'freestyle' | 'workflow';
+
+// ── helpers ──
+
+function resolveModelFromMaps(
+  modelId: string | null,
+  customModelsMap: Map<string, any>,
+): { name?: string; imageUrl?: string } {
+  if (!modelId) return {};
+  if (modelId.startsWith('custom-')) {
+    const cm = customModelsMap.get(modelId.replace('custom-', ''));
+    return cm ? { name: cm.name, imageUrl: cm.image_url } : {};
+  }
+  const mock = mockModels.find(m => m.modelId === modelId);
+  return mock ? { name: mock.name, imageUrl: mock.previewUrl } : {};
+}
+
+function resolveSceneFromMaps(
+  sceneId: string | null,
+  customScenesMap: Map<string, any>,
+): { name?: string; imageUrl?: string } {
+  if (!sceneId) return {};
+  if (sceneId.startsWith('custom-')) {
+    const cs = customScenesMap.get(sceneId.replace('custom-', ''));
+    return cs ? { name: cs.name, imageUrl: cs.image_url } : {};
+  }
+  const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
+  return mock ? { name: mock.name, imageUrl: mock.previewUrl } : {};
+}
+
+function jobsToRawItems(jobsData: any[], q: string): RawItem[] {
+  const items: RawItem[] = [];
+  for (const job of jobsData) {
+    const results = job.results as any;
+    if (!Array.isArray(results)) continue;
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+      if (!url || url.startsWith('data:')) continue;
+
+      const workflowName = (job.workflows as any)?.name || '';
+      const productTitle = (job.user_products as any)?.title || '';
+      const label = workflowName || productTitle || 'Generated';
+      const promptText = job.prompt_final || '';
+
+      if (q && !label.toLowerCase().includes(q) &&
+          !promptText.toLowerCase().includes(q) &&
+          !productTitle.toLowerCase().includes(q)) continue;
+
+      items.push({
+        url,
+        sourceCreatedAt: job.created_at,
+        source: 'job',
+        item: {
+          id: `${job.id}-${i}`,
+          source: 'generation',
+          label,
+          prompt: job.prompt_final || undefined,
+          date: new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          createdAt: job.created_at,
+          status: job.status,
+          aspectRatio: job.ratio,
+          quality: job.quality,
+          sceneName: job.scene_name || undefined,
+          modelName: job.model_name || undefined,
+          sceneImageUrl: job.scene_image_url || undefined,
+          modelImageUrl: job.model_image_url || undefined,
+          workflowSlug: job.workflow_slug || undefined,
+          productName: (job as any).product_name || undefined,
+          productImageUrl: (job as any).product_image_url || undefined,
+        },
+      });
+    }
+  }
+  return items;
+}
+
+function freestyleToRawItems(
+  fsData: any[],
+  q: string,
+  customModelsMap: Map<string, any>,
+  customScenesMap: Map<string, any>,
+): RawItem[] {
+  const items: RawItem[] = [];
+  for (const f of fsData) {
+    if (!f.image_url || f.image_url.startsWith('data:') || f.image_url === 'saved_to_storage') continue;
+    const wfLabel = (f as any).workflow_label as string | null;
+    const userPrompt = (f as any).user_prompt as string | null;
+
+    const modelInfo = resolveModelFromMaps((f as any).model_id, customModelsMap);
+    const sceneInfo = resolveSceneFromMaps((f as any).scene_id, customScenesMap);
+
+    const nameParts = [modelInfo.name, sceneInfo.name].filter(Boolean);
+    const freestyleLabel = nameParts.length > 0
+      ? nameParts.join(' · ')
+      : (userPrompt ? userPrompt.slice(0, 40) + (userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
+    const displayLabel = wfLabel || freestyleLabel;
+
+    if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
+
+    items.push({
+      url: f.image_url,
+      sourceCreatedAt: f.created_at,
+      source: 'fs',
+      item: {
+        id: f.id,
+        source: wfLabel ? 'generation' : 'freestyle',
+        label: displayLabel,
+        prompt: userPrompt || undefined,
+        date: new Date(f.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        createdAt: f.created_at,
+        status: 'completed',
+        aspectRatio: f.aspect_ratio,
+        quality: f.quality,
+        modelName: modelInfo.name,
+        modelImageUrl: modelInfo.imageUrl,
+        sceneName: sceneInfo.name,
+        sceneImageUrl: sceneInfo.imageUrl,
+        providerUsed: (f as any).provider_used || null,
+      },
+    });
+  }
+  return items;
+}
+
+// ── main hook ──
 
 export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sourceFilter: LibrarySourceFilter = 'all') {
   const { user } = useAuth();
@@ -25,6 +158,9 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
       try {
         const cursor = pageParam as Cursor;
         const q = searchQuery.toLowerCase();
+
+        // Start with overflow items carried from the previous page
+        const carryOver: RawItem[] = cursor.overflow ?? [];
 
         // Build jobs query
         let jobsQuery = supabase
@@ -66,57 +202,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         const jobsData = jobsResult.data ?? [];
         const fsData = freestyleResult.data ?? [];
 
-        // Track whether each source is exhausted
         const jobsExhausted = skipJobs || jobsData.length < JOB_FETCH_LIMIT;
         const fsExhausted = skipFs || fsData.length < FS_FETCH_LIMIT;
 
-        // Collect raw items
-        const rawItems: { item: Omit<LibraryItem, 'imageUrl'>; url: string; sourceCreatedAt: string; source: 'job' | 'fs' }[] = [];
-
-        for (const job of jobsData) {
-          const results = job.results as any;
-          if (!Array.isArray(results)) continue;
-          for (let i = 0; i < results.length; i++) {
-            const r = results[i];
-            const url = typeof r === 'string' ? r : r?.url || r?.image_url;
-            if (!url || url.startsWith('data:')) continue;
-
-            const workflowName = (job.workflows as any)?.name || '';
-            const productTitle = (job.user_products as any)?.title || '';
-            const label = workflowName || productTitle || 'Generated';
-            const promptText = job.prompt_final || '';
-
-            if (q && !label.toLowerCase().includes(q) &&
-                !promptText.toLowerCase().includes(q) &&
-                !productTitle.toLowerCase().includes(q)) continue;
-
-            rawItems.push({
-              url,
-              sourceCreatedAt: job.created_at,
-              source: 'job',
-              item: {
-                id: `${job.id}-${i}`,
-                source: 'generation',
-                label,
-                prompt: job.prompt_final || undefined,
-                date: new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                createdAt: job.created_at,
-                status: job.status,
-                aspectRatio: job.ratio,
-                quality: job.quality,
-                sceneName: job.scene_name || undefined,
-                modelName: job.model_name || undefined,
-                sceneImageUrl: job.scene_image_url || undefined,
-                modelImageUrl: job.model_image_url || undefined,
-                workflowSlug: job.workflow_slug || undefined,
-                productName: (job as any).product_name || undefined,
-                productImageUrl: (job as any).product_image_url || undefined,
-              },
-            });
-          }
-        }
-
-        // Resolve custom model/scene IDs to names + image URLs
+        // Resolve custom model/scene IDs
         const customModelIds = [...new Set(fsData.map(f => (f as any).model_id).filter((id: string | null) => id?.startsWith('custom-')).map((id: string) => id.replace('custom-', '')))];
         const customSceneIds = [...new Set(fsData.map(f => (f as any).scene_id).filter((id: string | null) => id?.startsWith('custom-')).map((id: string) => id.replace('custom-', '')))];
 
@@ -128,119 +217,54 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         const customModelsMap = new Map((customModelsRes.data ?? []).map((m: any) => [m.id, m]));
         const customScenesMap = new Map((customScenesRes.data ?? []).map((s: any) => [s.id, s]));
 
-        function resolveModel(modelId: string | null): { name?: string; imageUrl?: string } {
-          if (!modelId) return {};
-          if (modelId.startsWith('custom-')) {
-            const cm = customModelsMap.get(modelId.replace('custom-', '')) as { name: string; image_url: string } | undefined;
-            return cm ? { name: cm.name, imageUrl: cm.image_url } : {};
-          }
-          const mock = mockModels.find(m => m.modelId === modelId);
-          return mock ? { name: mock.name, imageUrl: mock.previewUrl } : {};
-        }
+        // Convert fetched rows to raw items
+        const newJobItems = jobsToRawItems(jobsData, q);
+        const newFsItems = freestyleToRawItems(fsData, q, customModelsMap, customScenesMap);
 
-        function resolveScene(sceneId: string | null): { name?: string; imageUrl?: string } {
-          if (!sceneId) return {};
-          if (sceneId.startsWith('custom-')) {
-            const cs = customScenesMap.get(sceneId.replace('custom-', '')) as { name: string; image_url: string } | undefined;
-            return cs ? { name: cs.name, imageUrl: cs.image_url } : {};
-          }
-          const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
-          return mock ? { name: mock.name, imageUrl: mock.previewUrl } : {};
-        }
-
-        for (const f of fsData) {
-          if (!f.image_url || f.image_url.startsWith('data:') || f.image_url === 'saved_to_storage') continue;
-          const wfLabel = (f as any).workflow_label as string | null;
-          const userPrompt = (f as any).user_prompt as string | null;
-
-          const modelInfo = resolveModel((f as any).model_id);
-          const sceneInfo = resolveScene((f as any).scene_id);
-
-          const nameParts = [modelInfo.name, sceneInfo.name].filter(Boolean);
-          const freestyleLabel = nameParts.length > 0
-            ? nameParts.join(' · ')
-            : (userPrompt ? userPrompt.slice(0, 40) + (userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
-          const displayLabel = wfLabel || freestyleLabel;
-
-          if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
-
-          rawItems.push({
-            url: f.image_url,
-            sourceCreatedAt: f.created_at,
-            source: 'fs',
-            item: {
-              id: f.id,
-              source: wfLabel ? 'generation' : 'freestyle',
-              label: displayLabel,
-              prompt: userPrompt || undefined,
-              date: new Date(f.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-              createdAt: f.created_at,
-              status: 'completed',
-              aspectRatio: f.aspect_ratio,
-              quality: f.quality,
-              modelName: modelInfo.name,
-              modelImageUrl: modelInfo.imageUrl,
-              sceneName: sceneInfo.name,
-              sceneImageUrl: sceneInfo.imageUrl,
-              providerUsed: (f as any).provider_used || null,
-            },
-          });
-        }
+        // Merge carry-over + newly fetched
+        const allItems = [...carryOver, ...newJobItems, ...newFsItems];
 
         // Sort merged results
-        rawItems.sort((a, b) => {
+        allItems.sort((a, b) => {
           const diff = new Date(b.item.createdAt).getTime() - new Date(a.item.createdAt).getTime();
           return ascending ? -diff : diff;
         });
 
-        // Trim to PAGE_SIZE
-        const trimmed = rawItems.slice(0, PAGE_SIZE);
+        // Split into page + overflow
+        const pageItems = allItems.slice(0, PAGE_SIZE);
+        const overflowItems = allItems.slice(PAGE_SIZE);
 
         // Sign all URLs in parallel
-        const signedUrls = await toSignedUrls(trimmed.map(r => r.url));
-        const items: LibraryItem[] = trimmed.map((r, i) => ({
+        const signedUrls = await toSignedUrls(pageItems.map(r => r.url));
+        const items: LibraryItem[] = pageItems.map((r, i) => ({
           ...r.item,
           imageUrl: signedUrls[i],
         } as LibraryItem));
 
-        // Compute next cursor from the LAST item of each source that made it into trimmed
-        // We need the last created_at from each source in the raw fetched data (not trimmed)
-        // to know where to continue fetching from
-        let lastJobCreatedAt = cursor.jobCursor;
-        let lastFsCreatedAt = cursor.fsCursor;
+        // Advance cursors based on what was actually fetched from DB
+        const nextJobCursor = jobsData.length > 0
+          ? jobsData[jobsData.length - 1].created_at
+          : cursor.jobCursor;
+        const nextFsCursor = fsData.length > 0
+          ? fsData[fsData.length - 1].created_at
+          : cursor.fsCursor;
 
-        // Use the last fetched row's created_at from each source as the cursor
-        if (jobsData.length > 0) {
-          lastJobCreatedAt = jobsData[jobsData.length - 1].created_at;
-        }
-        if (fsData.length > 0) {
-          lastFsCreatedAt = fsData[fsData.length - 1].created_at;
-        }
+        // A source is done only when exhausted AND no overflow items remain from it
+        const overflowHasJobs = overflowItems.some(r => r.source === 'job');
+        const overflowHasFs = overflowItems.some(r => r.source === 'fs');
 
-        // But we need to be smarter: only advance the cursor for a source
-        // if all its items were consumed (appeared in trimmed).
-        // If trimmed cut off items from a source, we should NOT advance that source's cursor
-        // past what was actually used.
-        
-        // Find the "boundary" timestamp of the last trimmed item
-        const lastTrimmedTime = trimmed.length > 0 ? trimmed[trimmed.length - 1].item.createdAt : null;
-        
-        // For each source, find the last item that was included in trimmed
-        const lastUsedJob = [...trimmed].reverse().find(r => r.source === 'job');
-        const lastUsedFs = [...trimmed].reverse().find(r => r.source === 'fs');
+        const jobsDone = jobsExhausted && !overflowHasJobs;
+        const fsDone = fsExhausted && !overflowHasFs;
 
-        // Use the last USED item as cursor (not last fetched) to avoid skipping
-        const nextJobCursor = lastUsedJob?.sourceCreatedAt ?? lastJobCreatedAt;
-        const nextFsCursor = lastUsedFs?.sourceCreatedAt ?? lastFsCreatedAt;
-
-        const hasMore = !jobsExhausted || !fsExhausted || rawItems.length > PAGE_SIZE;
+        const hasMore = !jobsDone || !fsDone || overflowItems.length > 0;
 
         const nextCursor: Cursor | null = hasMore
           ? {
               jobCursor: nextJobCursor,
               fsCursor: nextFsCursor,
-              jobsDone: jobsExhausted && !rawItems.slice(PAGE_SIZE).some(r => r.source === 'job'),
-              fsDone: fsExhausted && !rawItems.slice(PAGE_SIZE).some(r => r.source === 'fs'),
+              jobsDone,
+              fsDone,
+              overflow: overflowItems,
             }
           : null;
 
