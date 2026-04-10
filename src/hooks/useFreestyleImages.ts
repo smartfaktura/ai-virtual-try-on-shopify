@@ -195,6 +195,7 @@ export function useFreestyleImages() {
     }
 
     queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    queryClient.invalidateQueries({ queryKey: ['library'] });
     toast.success('Image deleted');
   }, [user, images, queryClient]);
 
@@ -273,6 +274,7 @@ export function useFreestyleImages() {
     }
 
     queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    queryClient.invalidateQueries({ queryKey: ['library'] });
     return saved;
   }, [user, queryClient]);
 
