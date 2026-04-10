@@ -401,6 +401,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       const backUrl = await uploadRefImage(backImage);
       const sideUrl = await uploadRefImage(sideImage);
       const packUrl = await uploadRefImage(packagingImage);
+      const insideUrl = await uploadRefImage(insideImage);
 
       const productData: Record<string, unknown> = {
         title: title.trim().substring(0, 200),
@@ -411,6 +412,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         back_image_url: backUrl || null,
         side_image_url: sideUrl || null,
         packaging_image_url: packUrl || null,
+        inside_image_url: insideUrl || null,
         weight: weight.trim() || null,
         materials: materials.trim() || null,
         color: color.trim() || null,
