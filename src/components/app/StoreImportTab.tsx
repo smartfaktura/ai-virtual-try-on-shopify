@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, X } from 'lucide-react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, FolderOpen, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,14 +100,17 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
   const [backImageIndex, setBackImageIndex] = useState<number | null>(null);
   const [sideImageIndex, setSideImageIndex] = useState<number | null>(null);
   const [packagingImageIndex, setPackagingImageIndex] = useState<number | null>(null);
+  const [insideImageIndex, setInsideImageIndex] = useState<number | null>(null);
 
   // Manual reference angle uploads (for single-image imports or unassigned roles)
   const [manualBack, setManualBack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
   const [manualSide, setManualSide] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
   const [manualPack, setManualPack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const [manualInside, setManualInside] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
   const backInputRef = useRef<HTMLInputElement>(null);
   const sideInputRef = useRef<HTMLInputElement>(null);
   const packInputRef = useRef<HTMLInputElement>(null);
+  const insideInputRef = useRef<HTMLInputElement>(null);
 
   const handleRefUpload = async (
     file: File,
@@ -156,6 +159,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       setBackImageIndex(null);
       setSideImageIndex(null);
       setPackagingImageIndex(null);
+      setInsideImageIndex(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Import failed';
       setImportError({ code: 'unknown', message: msg });
@@ -175,6 +179,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       const backUrl = backImageIndex !== null ? imageUrls[backImageIndex] || null : (manualBack.url || null);
       const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : (manualSide.url || null);
       const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : (manualPack.url || null);
+      const insideUrl = insideImageIndex !== null ? imageUrls[insideImageIndex] || null : (manualInside.url || null);
 
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
@@ -188,6 +193,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
           back_image_url: backUrl,
           side_image_url: sideUrl,
           packaging_image_url: packUrl,
+          inside_image_url: insideUrl,
         } as any)
         .select('id')
         .single();
