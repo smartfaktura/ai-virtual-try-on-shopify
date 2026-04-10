@@ -107,13 +107,16 @@ export default function AdminProductImageScenes() {
   const [addingNew, setAddingNew] = useState(false);
   const [newDraft, setNewDraft] = useState(emptyScene());
 
-  // Derive all existing sub-categories for the dropdown
-  const allSubCategories = useMemo(() => {
-    const set = new Set<string>();
+  // Derive sub-categories grouped by category_collection
+  const subCategoriesByCategory = useMemo(() => {
+    const map = new Map<string, Set<string>>();
     for (const s of rawScenes) {
-      if (s.sub_category) set.add(s.sub_category);
+      if (s.sub_category && s.category_collection) {
+        if (!map.has(s.category_collection)) map.set(s.category_collection, new Set());
+        map.get(s.category_collection)!.add(s.sub_category);
+      }
     }
-    return Array.from(set).sort();
+    return new Map(Array.from(map.entries()).map(([k, v]) => [k, Array.from(v).sort()]));
   }, [rawScenes]);
 
   const handleAddNewForCategory = (categoryKey: string, categorySortOrder: number) => {
@@ -351,7 +354,7 @@ export default function AdminProductImageScenes() {
               <h3 className="font-semibold">New Scene {newDraft.category_collection && <span className="text-muted-foreground font-normal text-sm">in {catLabel(newDraft.category_collection)}</span>}</h3>
               <Button variant="ghost" size="icon" onClick={() => setAddingNew(false)}><X className="w-4 h-4" /></Button>
             </div>
-            <SceneForm draft={newDraft} onChange={setNewDraft as any} allSubCategories={allSubCategories} />
+            <SceneForm draft={newDraft} onChange={setNewDraft as any} allSubCategories={subCategoriesByCategory.get(newDraft.category_collection || '') || []} />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setAddingNew(false)}>Cancel</Button>
               <Button onClick={saveNew} disabled={upsertScene.isPending} className="gap-1.5">
@@ -437,7 +440,7 @@ export default function AdminProductImageScenes() {
                                 onDuplicate={handleDuplicate}
                                 setEditDraft={setEditDraft}
                                 updatePending={updateScene.isPending}
-                                allSubCategories={allSubCategories}
+                                allSubCategories={subCategoriesByCategory.get(scene.category_collection || '') || []}
                               />
                             ))}
                           </div>
@@ -462,7 +465,7 @@ export default function AdminProductImageScenes() {
                             onDuplicate={handleDuplicate}
                             setEditDraft={setEditDraft}
                             updatePending={updateScene.isPending}
-                            allSubCategories={allSubCategories}
+                            allSubCategories={subCategoriesByCategory.get(scene.category_collection || '') || []}
                           />
                         ))}
                       </div>
