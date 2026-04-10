@@ -430,10 +430,59 @@ export default function TextToProduct() {
     }
   }, [selectedScenes, products, aspectRatio, enqueue]);
 
-  // Auto-transition from generating → results
+  // Auto-transition from generating → results (single product via activeJob)
   if (step === 'generating' && activeJob?.status === 'completed' && products.length === 1) {
     setStep('results');
   }
+
+  // Polling effect for multi-product: track all jobs and auto-transition when all complete
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (step !== 'generating' || jobProductMap.size <= 1) return;
+
+    const jobIds = Array.from(jobProductMap.keys());
+    if (jobIds.length === 0) return;
+
+    const poll = async () => {
+      const { data } = await supabase
+        .from('generation_queue')
+        .select('id, status, result, error_message')
+        .in('id', jobIds);
+
+      if (!data) return;
+
+      let allDone = true;
+      const nextCompleted = new Map(completedJobs);
+
+      for (const job of data) {
+        if (job.status === 'completed' && job.result && !nextCompleted.has(job.id)) {
+          const r = job.result as Record<string, unknown>;
+          const images = (r.images as string[]) || [];
+          const productTitle = jobProductMap.get(job.id) || 'Product';
+          if (images.length > 0) {
+            nextCompleted.set(job.id, { images, productTitle });
+          }
+        }
+        if (job.status !== 'completed' && job.status !== 'failed') {
+          allDone = false;
+        }
+      }
+
+      if (nextCompleted.size !== completedJobs.size) {
+        setCompletedJobs(nextCompleted);
+      }
+
+      if (allDone && nextCompleted.size > 0) {
+        setStep('results');
+      }
+    };
+
+    poll(); // immediate first check
+    pollingRef.current = setInterval(poll, 3000);
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [step, jobProductMap, completedJobs]);
 
   const stepIndex = STEPS.indexOf(step);
 
