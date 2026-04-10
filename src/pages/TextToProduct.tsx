@@ -311,6 +311,7 @@ export default function TextToProduct() {
   const [jobProductMap, setJobProductMap] = useState<Map<string, string>>(new Map());
   const [completedJobs, setCompletedJobs] = useState<Map<string, { images: { url: string; label: string }[]; productTitle: string }>>(new Map());
   const [enqueuedCount, setEnqueuedCount] = useState(0);
+  const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const { refreshBalance } = useCredits();
 
   const {
@@ -389,6 +390,37 @@ export default function TextToProduct() {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
+  const analyzeReferenceImage = useCallback(async (productId: string, file: File, currentTitle: string) => {
+    setAnalyzingIds(prev => new Set(prev).add(productId));
+    try {
+      const base64 = await fileToBase64(file);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Not authenticated');
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-product-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ imageUrl: base64, title: currentTitle || undefined }),
+      });
+      if (!resp.ok) throw new Error('Analysis failed');
+      const data = await resp.json();
+      setProducts(prev => prev.map(p => {
+        if (p.id !== productId) return p;
+        return {
+          ...p,
+          title: p.title.trim() ? p.title : (data.title || p.title),
+          specification: (!p.specification.trim() || p.specification.trim().length < 20)
+            ? (data.specification || data.description || p.specification)
+            : p.specification,
+        };
+      }));
+      toast.success('AI analyzed your reference image');
+    } catch {
+      // Silent fail — user can fill manually
+    } finally {
+      setAnalyzingIds(prev => { const n = new Set(prev); n.delete(productId); return n; });
+    }
+  }, []);
+
   const handleReferenceImage = useCallback((productId: string, file: File) => {
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       toast.error('Please use JPG, PNG, or WEBP images.');
@@ -400,7 +432,10 @@ export default function TextToProduct() {
     }
     const previewUrl = URL.createObjectURL(file);
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, referenceImageFile: file, referenceImagePreview: previewUrl } : p));
-  }, []);
+    // Get current title for context-aware analysis
+    const currentTitle = products.find(p => p.id === productId)?.title || '';
+    analyzeReferenceImage(productId, file, currentTitle);
+  }, [products, analyzeReferenceImage]);
 
   const removeReferenceImage = useCallback((productId: string) => {
     setProducts(prev => prev.map(p => {
@@ -600,7 +635,22 @@ export default function TextToProduct() {
               open={expandedProducts.has(product.id)}
               onOpenChange={() => toggleExpanded(product.id)}
             >
-              <Card className="overflow-hidden">
+              <Card
+                className="overflow-hidden"
+                onPaste={(e) => {
+                  if (product.referenceImagePreview) return;
+                  const items = e.clipboardData?.items;
+                  if (!items) return;
+                  for (const item of Array.from(items)) {
+                    if (item.type.startsWith('image/')) {
+                      e.preventDefault();
+                      const f = item.getAsFile();
+                      if (f) handleReferenceImage(product.id, f);
+                      return;
+                    }
+                  }
+                }}
+              >
                 <CollapsibleTrigger asChild>
                   <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2">
@@ -668,27 +718,28 @@ export default function TextToProduct() {
                             >
                               <X className="w-3 h-3" />
                             </button>
+                            {analyzingIds.has(product.id) && (
+                              <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                              </div>
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground">AI will use this as style inspiration — no branding will be copied.</p>
+                          <div className="text-xs text-muted-foreground">
+                            {analyzingIds.has(product.id) ? (
+                              <span className="flex items-center gap-1.5">
+                                <Sparkles className="h-3 w-3 text-primary" />
+                                Analyzing image…
+                              </span>
+                            ) : (
+                              'AI will use this as style inspiration — no branding will be copied.'
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <div
                           className="relative border border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
                           onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleReferenceImage(product.id, f); }}
                           onDragOver={(e) => e.preventDefault()}
-                          onPaste={(e) => {
-                            const items = e.clipboardData?.items;
-                            if (!items) return;
-                            for (const item of Array.from(items)) {
-                              if (item.type.startsWith('image/')) {
-                                e.preventDefault();
-                                const f = item.getAsFile();
-                                if (f) handleReferenceImage(product.id, f);
-                                return;
-                              }
-                            }
-                          }}
-                          tabIndex={0}
                         >
                           <input
                             type="file"

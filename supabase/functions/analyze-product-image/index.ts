@@ -22,11 +22,15 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { imageUrl } = await req.json();
+    const { imageUrl, title } = await req.json();
     if (!imageUrl) throw new Error("imageUrl is required");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+    const titleContext = title
+      ? `\nThe user has indicated this is: "${title}". Focus your analysis specifically on that item in the image.`
+      : "";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -42,17 +46,19 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: `Analyze this image. It could be a product photo OR a room/building/space photo.
+                text: `Analyze this image. It could be a product photo OR a room/building/space photo.${titleContext}
 
 If it's a PRODUCT, return:
 - "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle")
 - "productType": Short category (e.g. "Leggings", "Scented Candle", "Face Serum")
 - "description": 10-20 word description of color, material, style, key features
+- "specification": A detailed 30-50 word generation-ready description covering the product's silhouette, construction, materials, colors, finish, texture, and key visual details. Include hex color codes if identifiable. This should read like a technical product spec for image generation.
 
 If it's a ROOM, BUILDING, or SPACE, return:
 - "title": Descriptive room/space name (e.g. "Modern Open-Plan Living Room", "Sunny Master Bedroom", "Victorian Brick Facade")
 - "productType": Space type (e.g. "Living Room", "Bedroom", "Kitchen", "Front Facade", "Office")
 - "description": 10-20 word description of the space style, lighting, notable features
+- "specification": A detailed 30-50 word description of the space's architecture, materials, color palette, lighting, and key design elements suitable for image generation.
 
 Return ONLY the JSON object, no markdown or explanation.`,
               },
