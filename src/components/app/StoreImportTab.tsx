@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, FolderOpen, X } from 'lucide-react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, FolderOpen, Droplets, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,16 +101,19 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
   const [sideImageIndex, setSideImageIndex] = useState<number | null>(null);
   const [packagingImageIndex, setPackagingImageIndex] = useState<number | null>(null);
   const [insideImageIndex, setInsideImageIndex] = useState<number | null>(null);
+  const [textureImageIndex, setTextureImageIndex] = useState<number | null>(null);
 
   // Manual reference angle uploads (for single-image imports or unassigned roles)
   const [manualBack, setManualBack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
   const [manualSide, setManualSide] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
   const [manualPack, setManualPack] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
   const [manualInside, setManualInside] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
+  const [manualTexture, setManualTexture] = useState<{ url: string; uploading: boolean }>({ url: '', uploading: false });
   const backInputRef = useRef<HTMLInputElement>(null);
   const sideInputRef = useRef<HTMLInputElement>(null);
   const packInputRef = useRef<HTMLInputElement>(null);
   const insideInputRef = useRef<HTMLInputElement>(null);
+  const textureInputRef = useRef<HTMLInputElement>(null);
 
   const handleRefUpload = async (
     file: File,
@@ -160,6 +163,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       setSideImageIndex(null);
       setPackagingImageIndex(null);
       setInsideImageIndex(null);
+      setTextureImageIndex(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Import failed';
       setImportError({ code: 'unknown', message: msg });
@@ -180,6 +184,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       const sideUrl = sideImageIndex !== null ? imageUrls[sideImageIndex] || null : (manualSide.url || null);
       const packUrl = packagingImageIndex !== null ? imageUrls[packagingImageIndex] || null : (manualPack.url || null);
       const insideUrl = insideImageIndex !== null ? imageUrls[insideImageIndex] || null : (manualInside.url || null);
+      const textureUrl = textureImageIndex !== null ? imageUrls[textureImageIndex] || null : (manualTexture.url || null);
 
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
@@ -194,6 +199,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
           side_image_url: sideUrl,
           packaging_image_url: packUrl,
           inside_image_url: insideUrl,
+          texture_image_url: textureUrl,
         } as any)
         .select('id')
         .single();
@@ -380,11 +386,12 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {extracted.image_urls.map((imgUrl, i) => {
-                  const role = i === selectedImageIndex ? 'Main'
+                   const role = i === selectedImageIndex ? 'Main'
                     : i === backImageIndex ? 'Back'
                     : i === sideImageIndex ? 'Side'
                     : i === packagingImageIndex ? 'Pack'
                     : i === insideImageIndex ? 'Inside'
+                    : i === textureImageIndex ? 'Texture'
                     : null;
 
                   const ROLE_COLORS: Record<string, string> = {
@@ -392,7 +399,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     Back: 'bg-accent text-accent-foreground',
                     Side: 'bg-secondary text-secondary-foreground',
                     Pack: 'bg-muted text-muted-foreground',
-                    Inside: 'bg-accent text-accent-foreground',
+                     Inside: 'bg-accent text-accent-foreground',
+                     Texture: 'bg-accent text-accent-foreground',
                   };
 
                   const assignRole = (newRole: string | null) => {
@@ -404,6 +412,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     if (i === sideImageIndex) setSideImageIndex(null);
                     if (i === packagingImageIndex) setPackagingImageIndex(null);
                     if (i === insideImageIndex) setInsideImageIndex(null);
+                    if (i === textureImageIndex) setTextureImageIndex(null);
 
                     if (!newRole) return; // "None" selected
 
@@ -418,6 +427,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                       setPackagingImageIndex(i);
                     } else if (newRole === 'Inside') {
                       setInsideImageIndex(i);
+                    } else if (newRole === 'Texture') {
+                      setTextureImageIndex(i);
                     }
                   };
 
@@ -427,6 +438,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                     { value: 'Side', label: 'Side' },
                     { value: 'Inside', label: 'Inside' },
                     { value: 'Pack', label: 'Package' },
+                    { value: 'Texture', label: 'Texture' },
                   ];
 
                   return (
@@ -512,7 +524,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             const hasSide = sideImageIndex !== null || manualSide.url;
             const hasPack = packagingImageIndex !== null || manualPack.url;
             const hasInside = insideImageIndex !== null || manualInside.url;
-            const showSection = !hasBack || !hasSide || !hasPack || !hasInside;
+            const hasTexture = textureImageIndex !== null || manualTexture.url;
+            const showSection = !hasBack || !hasSide || !hasPack || !hasInside || !hasTexture;
 
             if (!showSection) return null;
 
@@ -521,6 +534,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               { label: 'Side', icon: <ArrowRight className="w-4 h-4" />, state: manualSide, setter: setManualSide, inputRef: sideInputRef as React.RefObject<HTMLInputElement>, role: 'side', assigned: sideImageIndex !== null },
               { label: 'Inside', icon: <FolderOpen className="w-4 h-4" />, state: manualInside, setter: setManualInside, inputRef: insideInputRef as React.RefObject<HTMLInputElement>, role: 'inside', assigned: insideImageIndex !== null },
               { label: 'Package', icon: <Package className="w-4 h-4" />, state: manualPack, setter: setManualPack, inputRef: packInputRef as React.RefObject<HTMLInputElement>, role: 'pack', assigned: packagingImageIndex !== null },
+              { label: 'Texture', icon: <Droplets className="w-4 h-4" />, state: manualTexture, setter: setManualTexture, inputRef: textureInputRef as React.RefObject<HTMLInputElement>, role: 'texture', assigned: textureImageIndex !== null },
             ];
 
             return (

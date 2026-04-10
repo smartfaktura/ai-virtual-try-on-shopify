@@ -324,6 +324,15 @@ export default function ProductImages() {
           return { ...prev, [insideKey]: firstProduct.inside_image_url };
         });
       }
+      // Auto-fill texture image into sceneExtraRefs for scenes with textureDetail triggers
+      if (firstProduct.texture_image_url) {
+        setSceneExtraRefs(prev => {
+          const textureKey = 'trigger:textureDetail';
+          if (prev[textureKey]) return prev;
+          newAutoFilled.add(textureKey);
+          return { ...prev, [textureKey]: firstProduct.texture_image_url };
+        });
+      }
       if (newAutoFilled.size > 0) {
         setAutoFilledRefs(prev => new Set([...prev, ...newAutoFilled]));
       }

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen, Droplets } from 'lucide-react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ interface UserProduct {
   side_image_url?: string | null;
   packaging_image_url?: string | null;
   inside_image_url?: string | null;
+  texture_image_url?: string | null;
   extra_image_urls?: string[];
   weight?: string | null;
   materials?: string | null;
@@ -73,6 +74,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [sideImage, setSideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [packagingImage, setPackagingImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [insideImage, setInsideImage] = useState<{ file?: File; previewUrl: string } | null>(null);
+  const [textureImage, setTextureImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [anglesOpen, setAnglesOpen] = useState(true);
 
   // Extra details
@@ -111,6 +113,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (editingProduct.side_image_url) setSideImage({ previewUrl: editingProduct.side_image_url });
       if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
       if (editingProduct.inside_image_url) setInsideImage({ previewUrl: editingProduct.inside_image_url });
+      if (editingProduct.texture_image_url) setTextureImage({ previewUrl: editingProduct.texture_image_url });
       
       // Load extra fields
       if (editingProduct.weight) setWeight(editingProduct.weight);
@@ -402,6 +405,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       const sideUrl = await uploadRefImage(sideImage);
       const packUrl = await uploadRefImage(packagingImage);
       const insideUrl = await uploadRefImage(insideImage);
+      const textureUrl = await uploadRefImage(textureImage);
 
       const productData: Record<string, unknown> = {
         title: title.trim().substring(0, 200),
@@ -413,6 +417,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         side_image_url: sideUrl || null,
         packaging_image_url: packUrl || null,
         inside_image_url: insideUrl || null,
+        texture_image_url: textureUrl || null,
         weight: weight.trim() || null,
         materials: materials.trim() || null,
         color: color.trim() || null,
@@ -811,6 +816,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                       setSideImage(null);
                       setPackagingImage(null);
                       setInsideImage(null);
+                      setTextureImage(null);
                       hasManualEdits.current = { title: false, productType: false, description: false };
                     }}
                     className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
@@ -860,6 +866,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                         { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
                         { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
                         { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
+                        { label: 'Texture', shortLabel: 'Texture', state: textureImage, setter: setTextureImage, Icon: Droplets },
                       ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
                         <div key={shortLabel} className="relative">
                           {state ? (
