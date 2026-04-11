@@ -1,71 +1,66 @@
 
 
-# Safety Analysis: Prompt Redundancy Cleanup
+# Fix: Product-Aware Outfit System for Mixed Categories
 
-## What's SAFE to remove (true duplicates)
+## The Problem
 
-| Client constant | Edge function equivalent | Identical? |
-|---|---|---|
-| `PRODUCT_FIDELITY` (line 237, prepended at 1169) | CRITICAL REQUIREMENT #2 (line 560) | Yes — same intent, same detail level |
-| `REFERENCE_ISOLATION` (line 235, prepended at 1169) | CRITICAL REQUIREMENT #7 (line 565) | Yes — nearly word-for-word identical |
-| `QUALITY_SUFFIX` (line 1077, appended at 1175-1177) | CRITICAL REQUIREMENT #4 (line 562) | Yes — "Ultra high resolution, professional quality" |
+When you select products from different categories (e.g., a skirt + a jacket + sneakers), the outfit panel in Step 3 uses only the **first product's category** (`primaryCategory`). This means:
 
-These 3 removals are safe. The edge function already says the same thing.
+- If a skirt comes first → outfit defaults to "garments" → shows a `Bottom: trousers` slot that **conflicts** with the skirt
+- If sneakers come first → outfit defaults to "shoes" → shows a `Shoes: sneakers` slot that conflicts with the product
+- The prompt builder already receives per-product analysis at generation time, but the **UI gives no hint** that certain slots will be auto-nullified for specific products
 
-## What's NOT safe to remove
+## Two-Part Fix
 
-**`buildNegativePrompt` (line 750-755) — has a GAP.**
+### Part A: Prompt Builder — Auto-Null Conflicting Slots at Generation Time
 
-The client appends 3 negative blocks:
-- `BASE_NEGATIVES`: "No watermarks, no text overlays, no chromatic aberration, **no lens flare artifacts, no color banding, no over-saturation**."
-- `PRODUCT_NEGATIVES`: "No warped product edges, **no melted or distorted labels**, no duplicated products, **no floating elements. No background from reference image, no original product photo environment**."
-- `PERSON_NEGATIVES` (conditional, only for model/hand scenes): "**No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.**"
+**File: `src/lib/productImagePromptBuilder.ts`** (~25 lines)
 
-The edge function's `allNegatives` only contains:
-- `config.negative_prompt_additions` = "No watermarks, no text overlays, no chromatic aberration, no warped product edges, no duplicated products."
+Add a `getConflictingSlots(garmentType)` helper that returns which outfit slots should be nullified based on the product's `garmentType` from analysis:
 
-**Missing from edge function:**
-1. `PERSON_NEGATIVES` — critical for hand/model scenes (extra fingers, distorted joints)
-2. "no lens flare artifacts, no color banding, no over-saturation"
-3. "no melted or distorted labels, no floating elements"
-4. "no background from reference image" (though req #7 covers this narratively)
+```text
+Product garmentType        → Null slots
+───────────────────────────────────────
+skirt, shorts, trousers    → bottom
+dress, jumpsuit, romper    → bottom + top
+crop top, blouse, hoodie   → top
+sneakers, boots, heels     → shoes
+```
 
-If we blindly remove `buildNegativePrompt`, **hand scenes and model scenes lose finger/anatomy safeguards**.
+Update `defaultOutfitDirective()` to check the product's `garmentType` (from `analysis`) and skip conflicting slots from the outfit string. This way, even if the UI sends `bottom: trousers`, the prompt for a skirt product will omit it.
 
-## Revised Safe Plan
+Update `buildStructuredOutfitString()` to accept an optional `skipSlots` parameter.
 
-### Step 1: Remove 3 safe duplicates from client builder
-**File**: `src/lib/productImagePromptBuilder.ts`
-- Remove `PRODUCT_FIDELITY` + `REFERENCE_ISOLATION` prepend (line 1169)
-- Remove `QUALITY_SUFFIX` append (lines 1175-1177)
-- Delete the now-unused constants: `PRODUCT_FIDELITY`, `REFERENCE_ISOLATION`, `QUALITY_SUFFIX`
+### Part B: UI — Show Per-Category Awareness in Step 3
 
-**Keep** `buildNegativePrompt` and its constants — the edge function does NOT cover `PERSON_NEGATIVES`.
+**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`** (~40 lines)
 
-### Step 2: Lower temperature
-**File**: `supabase/functions/generate-workflow/index.ts` (line 752)
-- `temperature: 1.0` → `temperature: 0.8`
+1. **Multi-category info banner**: When `hasMultipleCategories` is true, show a small info note above the outfit panel: "Outfit applies to on-model scenes. Conflicting slots are auto-adjusted per product (e.g., Bottom is skipped for skirt products)."
 
-### Step 3: Update workflow DB config
-Slim `prompt_template` in the `workflows` table for slug `product-images` to a minimal line (the verbose version is redundant with CRITICAL REQUIREMENTS).
+2. **Compute hidden slots from all selected products**: Scan all selected products' `garmentType` values to determine which slots have conflicts. If ANY product is a skirt, show a subtle badge on the Bottom field: "Skipped for skirt products".
 
-### Step 4: Negative-to-positive template conversion (DB migration)
-Targeted `REPLACE()` on ~650 scene templates:
-- `"No mannequin, no model, no hanger."` → `"Product standalone, isolated."`
-- `"No model, no mannequin, single garment."` → `"Single garment, product-only."`
-- `"No different model, no different garment."` → `"Same model, same garment throughout."`
-- `"Single garment folded, no props."` → `"Single garment folded, product-only."`
+3. **Fix the forced fallback useEffect** (lines 1094-1100): Currently forces `bottom = trousers` and `shoes = sneakers` even when the category intentionally omits them (e.g., fragrance has no bottom/shoes). Change to only add fallbacks when the slot isn't intentionally empty for that category.
 
-### What we are NOT touching (confirmed unsafe to remove)
-- `buildNegativePrompt` — `PERSON_NEGATIVES` has no edge function equivalent
-- Camera directive — not duplicated anywhere
-- Brand logo text — not duplicated
-- Custom note — not duplicated
+4. **Dress/jumpsuit mode**: When all selected products are full-body garments, collapse the outfit panel to show only Shoes, with a label: "Full-body garment — only shoes apply."
 
-### Net result
-- ~400 tokens removed per prompt (fidelity + isolation + quality suffix = 3 blocks gone)
-- `PERSON_NEGATIVES` preserved for hand/model safety
-- Temperature lowered for consistency
-- Negative framing converted to positive in templates
-- **2 files changed, 1 DB workflow update, 1 DB migration for templates**
+### How It Works for Mixed Batches
+
+Example: User selects a skirt (dresses) + a jacket (jackets) + sneakers (shoes)
+
+**UI shows**: All 3 slots (Top, Bottom, Shoes) with badges:
+- Top: "Skipped for jacket" 
+- Bottom: "Skipped for skirt"
+- Shoes: "Skipped for sneaker products"
+
+**At generation time** (per-product):
+- Skirt job → outfit = "Top: white t-shirt; Shoes: white sneakers" (bottom nulled)
+- Jacket job → outfit = "Bottom: beige trousers; Shoes: white sneakers" (top nulled)  
+- Sneakers job → outfit = "Top: white t-shirt; Bottom: beige trousers" (shoes nulled)
+
+### Files Changed
+1. `src/lib/productImagePromptBuilder.ts` — add `getConflictingSlots`, update `defaultOutfitDirective` and `buildStructuredOutfitString`
+2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — multi-category banner, slot badges, fix forced fallback
+3. `src/pages/ProductImages.tsx` — pass `analyses` map to Step 3 (already available, just needs threading)
+
+No database changes needed — uses existing `garmentType` from product analysis.
 
