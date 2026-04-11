@@ -12,11 +12,12 @@ interface Step2Props {
   onSelectionChange: (ids: Set<string>) => void;
   selectedProducts: UserProduct[];
   productAnalyses?: Record<string, { category: string }>;
-  perProductScenes?: Map<string, Set<string>>;
-  onPerProductScenesChange?: (map: Map<string, Set<string>>) => void;
+  perCategoryScenes?: Map<string, Set<string>>;
+  onPerCategoryScenesChange?: (map: Map<string, Set<string>>) => void;
+  categoryGroups?: Map<string, string[]>;
   hasMultipleCategories?: boolean;
-  forcedActiveProductId?: string | null;
-  onForcedActiveProductIdConsumed?: () => void;
+  forcedActiveCategoryId?: string | null;
+  onForcedActiveCategoryIdConsumed?: () => void;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -723,47 +724,66 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
   );
 }
 
+/** Category label lookup */
+const CATEGORY_LABELS: Record<string, string> = {
+  garments: 'Clothing & Apparel', 'beauty-skincare': 'Beauty & Skincare',
+  'makeup-lipsticks': 'Makeup & Lipsticks', fragrance: 'Fragrance',
+  food: 'Food & Snacks', beverages: 'Beverages', 'home-decor': 'Home & Interior',
+  'supplements-wellness': 'Supplements & Wellness', shoes: 'Shoes',
+  'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
+  other: 'Other / Custom', backpacks: 'Backpacks',
+  'wallets-cardholders': 'Wallets & Cardholders', belts: 'Belts', scarves: 'Scarves',
+  'hats-small': 'Hats & Headwear', 'jewellery-necklaces': 'Necklaces',
+  'jewellery-earrings': 'Earrings', 'jewellery-bracelets': 'Bracelets',
+  'jewellery-rings': 'Rings', watches: 'Watches', dresses: 'Dresses',
+  hoodies: 'Hoodies', streetwear: 'Streetwear', sneakers: 'Sneakers',
+  boots: 'Boots', 'high-heels': 'High Heels', activewear: 'Activewear',
+  eyewear: 'Eyewear', swimwear: 'Swimwear', lingerie: 'Lingerie',
+  kidswear: 'Kidswear', jeans: 'Jeans', jackets: 'Jackets',
+};
+
 export function ProductImagesStep2Scenes(props: Step2Props) {
-  const { hasMultipleCategories, perProductScenes, onPerProductScenesChange, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveProductId, onForcedActiveProductIdConsumed } = props;
-  const [activeProductId, setActiveProductId] = useState<string | null>(null);
+  const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed } = props;
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  const isMultiCategory = !!hasMultipleCategories && !!perProductScenes && !!onPerProductScenesChange && selectedProducts.length > 1;
+  const isMultiCategory = !!hasMultipleCategories && !!perCategoryScenes && !!onPerCategoryScenesChange && !!categoryGroups && categoryGroups.size > 1;
 
   // Handle forced tab switch from parent (validation)
   useEffect(() => {
-    if (forcedActiveProductId && isMultiCategory) {
-      setActiveProductId(forcedActiveProductId);
-      onForcedActiveProductIdConsumed?.();
-      // Scroll tabs into view
+    if (forcedActiveCategoryId && isMultiCategory) {
+      setActiveCategoryId(forcedActiveCategoryId);
+      onForcedActiveCategoryIdConsumed?.();
       setTimeout(() => {
         tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 100);
     }
-  }, [forcedActiveProductId, isMultiCategory, onForcedActiveProductIdConsumed]);
+  }, [forcedActiveCategoryId, isMultiCategory, onForcedActiveCategoryIdConsumed]);
 
   if (!isMultiCategory) {
     return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} />;
   }
 
-  const activeProduct = selectedProducts.find(p => p.id === activeProductId) || selectedProducts[0];
-  const activeIds = perProductScenes.get(activeProduct.id) || new Set<string>();
+  const categoryIds = Array.from(categoryGroups.keys());
+  const activeCategory = activeCategoryId && categoryGroups.has(activeCategoryId) ? activeCategoryId : categoryIds[0];
+  const activeIds = perCategoryScenes.get(activeCategory) || new Set<string>();
+  const activeCategoryProducts = (categoryGroups.get(activeCategory) || []).map(pid => selectedProducts.find(p => p.id === pid)).filter(Boolean) as UserProduct[];
 
   const handleChange = (ids: Set<string>) => {
-    const next = new Map(perProductScenes);
-    next.set(activeProduct.id, ids);
-    onPerProductScenesChange(next);
+    const next = new Map(perCategoryScenes);
+    next.set(activeCategory, ids);
+    onPerCategoryScenesChange(next);
     const union = new Set<string>();
     for (const s of next.values()) s.forEach(id => union.add(id));
     onSelectionChange(union);
   };
 
   const handleApplyToAll = () => {
-    const next = new Map(perProductScenes);
-    for (const p of selectedProducts) {
-      next.set(p.id, new Set(activeIds));
+    const next = new Map(perCategoryScenes);
+    for (const catId of categoryIds) {
+      next.set(catId, new Set(activeIds));
     }
-    onPerProductScenesChange(next);
+    onPerCategoryScenesChange(next);
     const union = new Set<string>();
     for (const s of next.values()) s.forEach(id => union.add(id));
     onSelectionChange(union);
@@ -771,18 +791,21 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
 
   return (
     <div className="space-y-4">
-      {/* Product tabs */}
+      {/* Category group tabs */}
       <div ref={tabsRef} className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        {selectedProducts.map(p => {
-          const isActive = p.id === activeProduct.id;
-          const count = perProductScenes.get(p.id)?.size || 0;
+        {categoryIds.map(catId => {
+          const isActive = catId === activeCategory;
+          const count = perCategoryScenes.get(catId)?.size || 0;
           const needsShots = count === 0;
+          const productIds = categoryGroups.get(catId) || [];
+          const catProducts = productIds.map(pid => selectedProducts.find(p => p.id === pid)).filter(Boolean) as UserProduct[];
+          const label = CATEGORY_LABELS[catId] || catId;
           return (
             <button
-              key={p.id}
-              onClick={() => setActiveProductId(p.id)}
+              key={catId}
+              onClick={() => setActiveCategoryId(catId)}
               className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all whitespace-nowrap flex-shrink-0 cursor-pointer',
+                'flex items-center gap-2.5 px-4 py-2.5 rounded-xl border-2 transition-all whitespace-nowrap flex-shrink-0 cursor-pointer',
                 isActive
                   ? needsShots
                     ? 'border-destructive/60 bg-destructive/[0.05] shadow-sm'
@@ -792,39 +815,55 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
                     : 'border-border hover:border-primary/30 hover:bg-muted/30'
               )}
             >
-              <img src={p.image_url} alt={p.title} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
-              <span className="text-xs font-medium truncate max-w-[100px]">{p.title}</span>
+              {/* Mini product thumbnails */}
+              <div className="flex -space-x-1.5">
+                {catProducts.slice(0, 3).map(p => (
+                  <img key={p.id} src={p.image_url} alt={p.title} className="w-7 h-7 rounded-md object-cover flex-shrink-0 border-2 border-background" />
+                ))}
+                {catProducts.length > 3 && (
+                  <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground border-2 border-background">
+                    +{catProducts.length - 3}
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-semibold">{label}</span>
+                <span className="text-[10px] text-muted-foreground">{productIds.length} product{productIds.length !== 1 ? 's' : ''}</span>
+              </div>
               {count > 0 && <Badge variant="default" className="text-[10px] h-5 px-1.5">{count}</Badge>}
-              {needsShots && <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />}
+              {needsShots && (
+                <span className="text-[10px] font-medium text-destructive animate-pulse">Select shots →</span>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Per-product summary strip */}
+      {/* Per-category summary strip */}
       <div className="flex items-center gap-3 flex-wrap text-xs">
-        {selectedProducts.map(p => {
-          const count = perProductScenes.get(p.id)?.size || 0;
+        {categoryIds.map(catId => {
+          const count = perCategoryScenes.get(catId)?.size || 0;
           const needsShots = count === 0;
+          const label = CATEGORY_LABELS[catId] || catId;
           return (
-            <span key={p.id} className={cn("text-muted-foreground", needsShots && "text-destructive")}>
-              <span className={cn("font-medium", needsShots ? "text-destructive" : "text-foreground")}>{p.title?.split(' ').slice(0, 3).join(' ')}</span>
+            <span key={catId} className={cn("text-muted-foreground", needsShots && "text-destructive")}>
+              <span className={cn("font-medium", needsShots ? "text-destructive" : "text-foreground")}>{label}</span>
               {' → '}{needsShots ? 'needs shots' : `${count} shot${count !== 1 ? 's' : ''}`}
             </span>
           );
         })}
         {activeIds.size > 0 && (
           <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 ml-auto" onClick={handleApplyToAll}>
-            <Copy className="w-3 h-3" />Apply to all
+            <Copy className="w-3 h-3" />Apply to all categories
           </Button>
         )}
       </div>
 
-      {/* Scene picker for active product */}
+      {/* Scene picker for active category */}
       <SharedScenePicker
         selectedSceneIds={activeIds}
         onSelectionChange={handleChange}
-        selectedProducts={[activeProduct]}
+        selectedProducts={activeCategoryProducts}
         productAnalyses={productAnalyses}
       />
     </div>
