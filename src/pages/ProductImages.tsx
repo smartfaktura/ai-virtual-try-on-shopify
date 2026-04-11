@@ -1184,7 +1184,29 @@ export default function ProductImages() {
 
         {step >= 2 && step <= 6 && (
           <Suspense fallback={<div className="space-y-4 py-8"><Skeleton className="h-8 w-48" /><div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div></div>}>
-            {step === 2 && (
+            {step === 2 && (() => {
+              const needsAnalysis = selectedProducts.some(p => pendingIds.has(p.id) && !analyses[p.id] && !(p as any).analysis_json);
+              if (isAnalyzing && needsAnalysis) {
+                return (
+                  <div className="space-y-4 py-8 animate-fade-in">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-muted/30 border border-border/40 overflow-hidden flex-shrink-0">
+                        {selectedProducts[0]?.image_url && (
+                          <img src={selectedProducts[0].image_url} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Analyzing your product…</p>
+                        <p className="text-xs text-muted-foreground">Finding the best scenes for your product category</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}
+                    </div>
+                  </div>
+                );
+              }
+              return (
               <ProductImagesStep2Scenes
                 selectedSceneIds={selectedSceneIds}
                 onSelectionChange={setSelectedSceneIds}
@@ -1196,8 +1218,9 @@ export default function ProductImages() {
                 hasMultipleCategories={hasMultipleCategories}
                 forcedActiveCategoryId={forcedActiveCategoryId}
                 onForcedActiveCategoryIdConsumed={() => setForcedActiveCategoryId(null)}
-              />
-            )}
+              />);
+            })()}
+
 
             {step === 3 && (
               <div>
