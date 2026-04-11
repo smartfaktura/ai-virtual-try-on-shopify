@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal, Trash2, Heart, Shield, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -10,6 +10,8 @@ import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLibraryFavorites } from '@/hooks/useLibraryFavorites';
+import { useLibraryAssetStatus, type AssetStatus } from '@/hooks/useLibraryAssetStatus';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -48,6 +50,14 @@ const SOURCE_FILTERS: { id: LibrarySourceFilter; label: string }[] = [
   { id: 'workflow', label: 'Workflow' },
 ];
 
+type SmartView = 'all' | 'favorites' | 'brand_ready' | 'ready_to_publish';
+
+const SMART_VIEWS: { id: SmartView; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'favorites', label: 'Favorites' },
+  { id: 'brand_ready', label: 'Brand Ready' },
+  { id: 'ready_to_publish', label: 'Ready to Publish' },
+];
 
 type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -66,7 +76,7 @@ const COLUMN_OPTIONS: Record<DeviceType, number[]> = {
 const COLUMN_DEFAULTS: Record<DeviceType, number> = {
   mobile: 2,
   tablet: 3,
-  desktop: 5,
+  desktop: 4,
 };
 
 function useColumnCount() {
@@ -98,6 +108,7 @@ export default function Jobs() {
   const { user } = useAuth();
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [sourceFilter, setSourceFilter] = useState<LibrarySourceFilter>('all');
+  const [smartView, setSmartView] = useState<SmartView>('all');
   const [searchQuery, setSearchQuery] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('search') || '';
@@ -114,8 +125,21 @@ export default function Jobs() {
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
+  const { favoriteIds, toggleFavorite, bulkFavorite } = useLibraryFavorites();
+  const { getStatus, setStatus, setStatusMany } = useLibraryAssetStatus();
+
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery, sourceFilter);
-  const items = data?.pages.flatMap(p => p.items) ?? [];
+  const allItems = data?.pages.flatMap(p => p.items) ?? [];
+
+  // Apply smart view filter client-side
+  const items = useMemo(() => {
+    if (smartView === 'all') return allItems;
+    if (smartView === 'favorites') return allItems.filter(i => favoriteIds.has(i.id));
+    if (smartView === 'brand_ready') return allItems.filter(i => getStatus(i.id) === 'brand_ready');
+    if (smartView === 'ready_to_publish') return allItems.filter(i => getStatus(i.id) === 'ready_to_publish');
+    return allItems;
+  }, [allItems, smartView, favoriteIds, getStatus]);
+
   const { lastCompletedAt } = useGenerationQueue();
   const { count: columnCount, options: columnOptions, setColumns } = useColumnCount();
 
@@ -219,7 +243,7 @@ export default function Jobs() {
     let deleted = 0;
     try {
       for (const id of Array.from(selectedIds)) {
-        const item = items.find(i => i.id === id);
+        const item = allItems.find(i => i.id === id);
         if (!item) continue;
         try {
           if (item.source === 'freestyle') {
@@ -271,7 +295,6 @@ export default function Jobs() {
   const confirmDelete = async () => {
     const item = deleteTarget;
     if (!item) return;
-    console.log('[Library] Deleting item:', item.id, item.source);
     try {
       if (item.source === 'freestyle') {
         const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
@@ -280,13 +303,11 @@ export default function Jobs() {
         const dashIndex = item.id.lastIndexOf('-');
         const jobId = item.id.substring(0, dashIndex);
         const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
-
         const { data: job } = await supabase
           .from('generation_jobs')
           .select('results')
           .eq('id', jobId)
           .maybeSingle();
-
         if (job) {
           const results = job.results as any[];
           if (results.length <= 1) {
@@ -309,13 +330,35 @@ export default function Jobs() {
     }
   };
 
+  const activeFilterCount = (sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0);
+
   return (
     <div className="min-h-screen">
       <div className="px-4 sm:px-6 py-8 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
-          <p className="text-muted-foreground mt-1">Your brand visuals, created with workflows and freestyle tools</p>
+          <h1 className="text-3xl font-semibold tracking-tight">My Library</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            All your visuals, organized for review, selection, and publishing.
+          </p>
+        </div>
+
+        {/* Smart Views */}
+        <div className="flex items-center gap-1.5">
+          {SMART_VIEWS.map(v => (
+            <button
+              key={v.id}
+              onClick={() => setSmartView(v.id)}
+              className={cn(
+                'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                smartView === v.id
+                  ? 'bg-foreground text-background shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted/50'
+              )}
+            >
+              {v.label}
+            </button>
+          ))}
         </div>
 
         {/* Incoming images banner */}
@@ -337,36 +380,36 @@ export default function Jobs() {
           </div>
         )}
 
-        {/* Search + Sort + Select */}
+        {/* Search + Filters + Columns + Select */}
         <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-          <div className="relative w-full sm:max-w-md sm:flex-1">
+          <div className="relative w-full sm:max-w-lg sm:flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search by product, model, scene..."
+              placeholder="Search by product, campaign, prompt, model, or scene..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Filter popover trigger */}
+            {/* Filter popover */}
             <div className="relative group">
               <button
                 onClick={() => setFilterOpen(o => !o)}
                 className={cn(
                   'px-3 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-1.5',
-                  (sourceFilter !== 'all' || sortBy !== 'newest')
+                  activeFilterCount > 0
                     ? 'bg-foreground text-background shadow-sm'
                     : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
                 )}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Filters</span>
-                {(sourceFilter !== 'all' || sortBy !== 'newest') && (
+                {activeFilterCount > 0 && (
                   <span className="ml-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
-                    {(sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0)}
+                    {activeFilterCount}
                   </span>
                 )}
               </button>
@@ -376,12 +419,12 @@ export default function Jobs() {
                   <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl bg-popover border border-border shadow-xl p-4 space-y-4">
                     <div>
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Source</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Type</p>
                       <div className="flex flex-wrap gap-1.5">
                         {SOURCE_FILTERS.map(f => (
                           <button
                             key={f.id}
-                            onClick={() => { setSourceFilter(f.id); }}
+                            onClick={() => setSourceFilter(f.id)}
                             className={cn(
                               'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
                               sourceFilter === f.id
@@ -401,7 +444,7 @@ export default function Jobs() {
                         {SORTS.map(s => (
                           <button
                             key={s.id}
-                            onClick={() => { setSortBy(s.id); }}
+                            onClick={() => setSortBy(s.id)}
                             className={cn(
                               'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
                               sortBy === s.id
@@ -463,6 +506,22 @@ export default function Jobs() {
           </div>
         ) : items.length === 0 ? (
           (() => {
+            if (smartView !== 'all' && allItems.length > 0) {
+              const emptyLabel = smartView === 'favorites' ? 'No favorites yet' : smartView === 'brand_ready' ? 'No brand-ready assets' : 'No publish-ready assets';
+              const emptyDesc = smartView === 'favorites'
+                ? 'Hover over any image and tap the heart to save it here.'
+                : 'Mark assets as ready using the hover actions or select mode.';
+              return (
+                <div className="py-8">
+                  <EmptyStateCard
+                    heading={emptyLabel}
+                    description={emptyDesc}
+                    icon={<Heart className="w-7 h-7 text-muted-foreground" />}
+                    action={{ content: 'View All', onAction: () => setSmartView('all') }}
+                  />
+                </div>
+              );
+            }
             const kenji = TEAM_MEMBERS.find(m => m.name === 'Kenji');
             return (
               <div className="py-8">
@@ -492,36 +551,41 @@ export default function Jobs() {
           <>
             <div className="relative">
               {isFetching && !isLoading && (
-                <div className="absolute inset-0 z-10 flex items-start justify-center">
+                <div className="absolute inset-0 z-10 flex items-start justify-center pointer-events-none">
                   <div className="sticky top-[40vh]">
                     <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
                 </div>
               )}
-            <div className={cn("flex gap-1 transition-opacity", isFetching && !isLoading && "opacity-50 pointer-events-none")}>
-              {columns.map((col, i) => (
-                <div key={i} className="flex-1 flex flex-col gap-1">
-                  {col.map(item => (
-                    <LibraryImageCard
-                      key={item.id}
-                      item={item}
-                      selectMode={selectMode}
-                      selected={selectedIds.has(item.id)}
-                      isUpscaling={upscalingSourceIds.has(item.id)}
-                      isAdmin={isAdmin}
-                      onDelete={() => handleDeleteItem(item)}
-                      onClick={() => {
-                        if (selectMode) {
-                          toggleSelect(item.id);
-                        } else {
-                          setSelectedItem(item);
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
+              <div className="flex gap-2">
+                {columns.map((col, i) => (
+                  <div key={i} className="flex-1 flex flex-col gap-2">
+                    {col.map(item => (
+                      <LibraryImageCard
+                        key={item.id}
+                        item={item}
+                        selectMode={selectMode}
+                        selected={selectedIds.has(item.id)}
+                        isUpscaling={upscalingSourceIds.has(item.id)}
+                        isAdmin={isAdmin}
+                        isFavorited={favoriteIds.has(item.id)}
+                        assetStatus={getStatus(item.id)}
+                        onToggleFavorite={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite.mutate(item.id);
+                        }}
+                        onClick={() => {
+                          if (selectMode) {
+                            toggleSelect(item.id);
+                          } else {
+                            setSelectedItem(item);
+                          }
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
             {hasNextPage && (
               <div className="flex justify-center pt-6 pb-2">
@@ -542,12 +606,54 @@ export default function Jobs() {
 
       {/* Floating action bar */}
       {selectMode && selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-foreground text-background shadow-2xl">
-          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl bg-foreground text-background shadow-2xl">
+          <span className="text-sm font-medium mr-1">{selectedIds.size} selected</span>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            className="text-xs"
+            onClick={() => {
+              bulkFavorite.mutate(Array.from(selectedIds));
+              toast.success('Added to favorites');
+            }}
+          >
+            <Heart className="w-3.5 h-3.5 mr-1.5" />
+            Favorite
+          </Button>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            className="text-xs"
+            onClick={() => {
+              setStatusMany.mutate({ imageIds: Array.from(selectedIds), status: 'brand_ready' });
+              toast.success('Marked as Brand Ready');
+            }}
+          >
+            <Shield className="w-3.5 h-3.5 mr-1.5" />
+            Brand Ready
+          </Button>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            className="text-xs"
+            onClick={() => {
+              setStatusMany.mutate({ imageIds: Array.from(selectedIds), status: 'ready_to_publish' });
+              toast.success('Marked as Ready to Publish');
+            }}
+          >
+            <Send className="w-3.5 h-3.5 mr-1.5" />
+            Publish Ready
+          </Button>
+
+          <div className="w-px h-5 bg-background/20 mx-1" />
+
           <Button
             size="sm"
             onClick={() => {
-              const nonUpscaled = items.filter(i => selectedIds.has(i.id) && !i.quality?.startsWith('upscaled_') && i.quality !== 'upscaled');
+              const nonUpscaled = allItems.filter(i => selectedIds.has(i.id) && !i.quality?.startsWith('upscaled_') && i.quality !== 'upscaled');
               if (nonUpscaled.length === 0) {
                 toast.info('All selected images are already upscaled');
                 return;
@@ -559,27 +665,32 @@ export default function Jobs() {
               setUpscaleModalOpen(true);
             }}
             variant="secondary"
+            className="text-xs"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Enhance 2K / 4K
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+            Enhance
           </Button>
+
           <Button
             size="sm"
             onClick={handleBulkDownload}
             disabled={isZipping}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
           >
-            {isZipping ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
-            Download ZIP
+            {isZipping ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Download className="w-3.5 h-3.5 mr-1.5" />}
+            Download
           </Button>
+
           <Button
             size="sm"
             variant="destructive"
+            className="text-xs"
             onClick={() => setBulkDeleteOpen(true)}
           >
-            <Trash2 className="w-4 h-4 mr-2" />
+            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
             Delete
           </Button>
+
           <button onClick={cancelSelect} className="ml-1 hover:opacity-70 transition-opacity">
             <X className="w-4 h-4" />
           </button>
@@ -589,7 +700,7 @@ export default function Jobs() {
       <UpscaleModal
         open={upscaleModalOpen}
         onClose={() => setUpscaleModalOpen(false)}
-        items={items
+        items={allItems
           .filter(i => selectedIds.has(i.id) && !i.quality?.startsWith('upscaled_') && i.quality !== 'upscaled')
           .map(i => ({
             imageUrl: i.imageUrl,
