@@ -1,37 +1,33 @@
 
 
-# Rebuild History Page as Job Log
+# Rebuild History as Job-Grouped Cards (like Recent Creations)
 
-## What changes
-Replace the current image-gallery History page with a **job-level activity log** showing completed generation jobs and freestyle batches as rows — each row displays the job type, image count, credits used, timestamp, status, and a thumbnail strip. Clicking a row opens the existing `LibraryDetailModal` with all images from that job.
+## Problem
+The current History page shows flat rows — each generation job appears as a single row with small thumbnails. The user wants it to match the "Recent Creations" card layout from `/app/workflows`: each job is a **card** with a main thumbnail, a mini-thumbnail strip showing additional images, image count, and clicking opens the `LibraryDetailModal` with ALL images from that job.
 
 ## Design
-- Dashboard-style list/card layout with rows (not an image grid)
-- Each row: avatar + job type label, product/scene name, image count badge, credits used, relative timestamp, status badge, small thumbnail preview
-- Tabs: All / Workflows / Freestyle (same as now)
-- "Load More" pagination
-- Empty state reused from current code
+- Replace the flat list layout with a **grid of cards** (2 cols mobile, 3 cols tablet, 4 cols desktop)
+- Each card = one generation job or one freestyle generation
+- Card layout matches `WorkflowRecentRow`'s `ThumbnailCard`:
+  - Square main thumbnail (first image from the job)
+  - Mini-thumbnail strip below (up to 3 small squares + "+N" overflow)
+  - Label (workflow name / "Freestyle" / "Product Images")
+  - Relative timestamp ("about 1 hour ago")
+  - Hover overlay with Eye + "View"
+- Clicking a card opens `LibraryDetailModal` with ALL signed images from that job
+- Keep the tabs (All / Workflows / Freestyle) and Load More pagination
+- Sign all URLs in batch via `toSignedUrls`
 
 ## Technical changes
 
-### 1. Rewrite `src/pages/History.tsx`
-- Query `generation_jobs` at **job level** (not expanding individual images): `id, results, created_at, workflow_slug, scene_name, model_name, product_name, credits_used, requested_count, status, ratio, quality, prompt_final`
-- Query `freestyle_generations` grouped or as-is (each is 1 image = 1 job)
-- Display as a vertical list of job cards, each showing:
-  - Team avatar (same `pickAvatar` logic)
-  - Job type (workflow name / Freestyle / Try-On / Enhanced)
-  - Product name / scene name subtitle
-  - Image count (e.g. "4 images")
-  - Credits used
-  - Relative time ("2 hours ago")
-  - Status badge (Completed)
-  - Small thumbnail strip (first 3 result images)
-- Click row → open `LibraryDetailModal` with all signed images from that job
-- Sign URLs via `toSignedUrls` (batch all first-images for thumbnails)
-- Keep tabs (All / Workflows / Freestyle) and Load More pagination
+### `src/pages/History.tsx` — full rewrite
+- Keep the `useHistoryJobs` hook structure (fetching `generation_jobs` + `freestyle_generations`)
+- Change data model: each `HistoryJob` stores ALL image URLs (not just first 4 thumbnails)
+- Replace the row-based `HistoryJobList` with a grid of cards that mirror the `ThumbnailCard` pattern from `WorkflowRecentRow`
+- Each card: square aspect ratio main image, mini-thumb strip, workflow label, timestamp
+- Click → open `LibraryDetailModal` with all images from that job, with `initialIndex` support for clicking specific mini-thumbs
+- Remove avatar column (not in the Recent Creations pattern)
+- Keep tabs + "Load More"
 
-No database or routing changes needed — same `/app/history` route, same nav item.
-
-### Files
-- `src/pages/History.tsx` — full rewrite (single file)
+Single file change.
 
