@@ -441,14 +441,25 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
           >
             Cancel
           </Button>
-          <Button
-            className="flex-1 gap-2"
-            onClick={handlePublishVariation}
-            disabled={publishing}
-          >
-            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
-            Publish as Public Model
-          </Button>
+          {makePublic ? (
+            <Button
+              className="flex-1 gap-2"
+              onClick={handlePublishVariation}
+              disabled={publishing}
+            >
+              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+              Publish as Public Model
+            </Button>
+          ) : (
+            <Button
+              className="flex-1 gap-2"
+              onClick={handleSaveBrandModel}
+              disabled={publishing}
+            >
+              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Save as Brand Model (20 credits)
+            </Button>
+          )}
         </div>
       </div>
     );
