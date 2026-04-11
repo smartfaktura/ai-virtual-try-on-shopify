@@ -216,7 +216,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
           {/* Discover Category */}
           {!isAnalyzing && (
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Discover Category</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Explore Category</label>
               <div className="flex flex-wrap gap-1.5">
               {PRODUCT_CATEGORIES.filter(cat => cat.id !== 'any').map(cat => {
                   const isSelected = discoverCategories.includes(cat.id);
