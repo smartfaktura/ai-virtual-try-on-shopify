@@ -1227,6 +1227,7 @@ export default function ProductImages() {
                   primaryCategory={primaryCategory}
                   sceneExtraRefs={sceneExtraRefs}
                   onSceneExtraRefsChange={setSceneExtraRefs}
+                  analyses={analyses}
                 />
               </div>
             )}

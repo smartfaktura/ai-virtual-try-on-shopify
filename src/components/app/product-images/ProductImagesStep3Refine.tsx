@@ -25,8 +25,9 @@ import { cn } from '@/lib/utils';
 import { getBlocksByScene, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from './detailBlockConfig';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
-import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
+import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset, ProductAnalysis } from './types';
 import type { ModelProfile } from '@/types';
+import { getConflictingSlots, type OutfitSlot } from '@/lib/productImagePromptBuilder';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
@@ -1092,12 +1093,8 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
     prevCatRef.current = cat;
     if (!details.outfitConfig || categoryChanged) {
       const config = { ...defaultConfig };
-      if (!config.bottom) {
-        config.bottom = { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' };
-      }
-      if (!config.shoes) {
-        config.shoes = { garment: 'sneakers', color: 'white', material: 'leather' };
-      }
+      // Don't force bottom/shoes — respect categories that intentionally omit them
+      // (e.g., fragrance, beauty). The prompt builder handles per-product slot nullification.
       update({ outfitConfig: config });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1336,11 +1333,13 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
 }
 
 /** Piece fields portion of OutfitLockPanel — shown in collapsible */
-function OutfitPieceFields({ details, update, primaryCategory, modelGender }: {
+function OutfitPieceFields({ details, update, primaryCategory, modelGender, analyses, selectedProductIds }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
   primaryCategory?: string;
   modelGender?: string;
+  analyses?: Record<string, ProductAnalysis>;
+  selectedProductIds?: Set<string>;
 }) {
   const cat = primaryCategory || 'garments';
   const isMale = modelGender === 'male';
@@ -1355,11 +1354,47 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender }: {
     update({ outfitConfig: { ...currentConfig, ...partial } });
   }, [currentConfig, update]);
 
+  // Compute conflicting slots across all selected products
+  const slotConflicts = useMemo(() => {
+    const conflicts: Record<OutfitSlot, string[]> = { top: [], bottom: [], shoes: [] };
+    if (!analyses || !selectedProductIds) return conflicts;
+    for (const pid of selectedProductIds) {
+      const a = analyses[pid];
+      if (!a?.garmentType) continue;
+      const conflicting = getConflictingSlots(a.garmentType);
+      for (const slot of conflicting) {
+        conflicts[slot].push(a.garmentType);
+      }
+    }
+    return conflicts;
+  }, [analyses, selectedProductIds]);
+
+  const slotBadge = (slot: OutfitSlot) => {
+    const types = slotConflicts[slot];
+    if (types.length === 0) return null;
+    const unique = [...new Set(types)];
+    const label = unique.length <= 2 ? unique.join(', ') : `${unique.length} products`;
+    return (
+      <span className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-1.5 py-0.5 rounded-full ml-1.5 font-medium whitespace-nowrap">
+        Auto-skipped for {label}
+      </span>
+    );
+  };
+
   return (
     <>
-      <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
-      <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />
-      <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />
+      <div className="flex items-center gap-1">
+        <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
+        {slotBadge('top')}
+      </div>
+      <div className="flex items-center gap-1">
+        <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />
+        {slotBadge('bottom')}
+      </div>
+      <div className="flex items-center gap-1">
+        <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />
+        {slotBadge('shoes')}
+      </div>
     </>
   );
 }
@@ -1475,6 +1510,7 @@ interface Step3RefineProps {
   primaryCategory?: string;
   sceneExtraRefs?: Record<string, string>;
   onSceneExtraRefsChange?: (refs: Record<string, string>) => void;
+  analyses?: Record<string, import('./types').ProductAnalysis>;
 }
 
 /* ══════════════════════════════════════════════
@@ -1495,6 +1531,7 @@ export function ProductImagesStep3Refine({
   primaryCategory,
   sceneExtraRefs = {},
   onSceneExtraRefsChange,
+  analyses = {},
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const [uploadingSceneId, setUploadingSceneId] = useState<string | null>(null);
@@ -2000,6 +2037,12 @@ export function ProductImagesStep3Refine({
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
+                  {hasMultipleCategories && (
+                    <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 mt-2 flex items-center gap-1.5">
+                      <Info className="w-3 h-3 flex-shrink-0 text-primary" />
+                      Mixed categories — outfit slots are auto-adjusted per product at generation time (e.g., Bottom is skipped for skirt products).
+                    </p>
+                  )}
                 </div>
 
                 <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
@@ -2015,7 +2058,7 @@ export function ProductImagesStep3Refine({
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="space-y-2 pt-2 pb-1 pl-6">
-                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} analyses={analyses} selectedProductIds={selectedProductIds} />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
