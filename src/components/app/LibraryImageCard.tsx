@@ -87,6 +87,7 @@ export function LibraryImageCard({
   onSetStatus,
 }: LibraryImageCardProps) {
   const statusInfo = STATUS_PILL[assetStatus];
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div
