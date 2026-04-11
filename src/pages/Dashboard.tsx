@@ -454,7 +454,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
-                Browse Templates
+                Create Visuals
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -529,13 +529,13 @@ export default function Dashboard() {
         <div className="flex flex-col gap-3 mt-5">
           <div className="relative">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:overflow-visible sm:flex-wrap sm:[mask-image:none]">
+              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
+                <Layers className="w-3.5 h-3.5" />
+                Create Visuals
+              </Button>
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/freestyle')}>
                 <Wand2 className="w-3.5 h-3.5" />
                 Create with Promt
-              </Button>
-              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
-                <Layers className="w-3.5 h-3.5" />
-                Browse Templates
               </Button>
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/discover')}>
                 <Compass className="w-3.5 h-3.5" />
@@ -632,7 +632,7 @@ export default function Dashboard() {
               </p>
             </div>
             <Button className="w-full rounded-full font-semibold gap-2 mt-4 shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
-              Browse Templates
+              Create Visuals
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
