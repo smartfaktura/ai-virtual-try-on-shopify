@@ -1,31 +1,66 @@
 
 
-# Streamline Step 1 Product Selection Header
+# Fix: Collapse Conflicting Outfit Slots in UI
 
 ## The Problem
 
-There are **two stacked headers** before the product grid:
-1. `PageHeader`: "Product Visuals" / "Select one or multiple products to create visuals for"
-2. Section header: "Your Products (317)" / "Select from your catalog or upload a new image · Tip: drag & drop or paste (⌘V)"
+The prompt builder correctly skips conflicting slots at generation time (sweater → skip top), but the **UI still renders the full PieceField** with all garment/color/fit/material options. The tiny amber badge is easy to miss. Users think their Top selection matters when it will be silently ignored.
 
-Both say "select products" — redundant. The section header wastes ~60px of vertical space repeating what the page title already communicates.
+## Current Coverage Map
+
+The `getConflictingSlots` function already covers a comprehensive set:
+
+```text
+Full-body (skip top + bottom):
+  dress, jumpsuit, romper, bodysuit, one-piece, overalls, coverall
+
+Bottom (skip bottom):
+  skirt, shorts, trousers, pants, leggings, jeans, wide-leg,
+  culottes, joggers, sweatpants
+
+Top (skip top):
+  crop top, blouse, shirt, hoodie, sweater, cardigan, tank top,
+  vest, jacket, blazer, coat, parka, bomber
+
+Footwear (skip shoes):
+  sneaker, boot, heel, sandal, loafer, mule, slipper, clog,
+  flat, oxford, derby, trainer, shoe
+```
+
+**Missing types to add**: `polo`, `tunic`, `cape`, `poncho`, `turtleneck`, `henley`, `pullover`, `windbreaker`, `anorak`, `gilet` (tops); `bermuda`, `chinos`, `cargo pants`, `palazzo` (bottoms); `espadrille`, `wedge`, `pump`, `brogue` (shoes); `kimono`, `kaftan`, `saree`, `gown`, `maxi dress`, `mini dress`, `co-ord set`, `suit` (full-body).
 
 ## The Fix
 
-**Merge useful info into the toolbar row, remove the section header entirely.**
+### Part A: Collapse conflicting slots in UI (~15 lines)
 
-The count "(317)" and the tip are useful — but they don't need their own heading block. Instead:
+**File: `ProductImagesStep3Refine.tsx`**
 
-- **Remove** the "Your Products (317)" / subtitle `<div>` block entirely (lines 972-976)
-- **Move the count** into the search bar placeholder: `"Search 317 products…"` — always visible, zero extra space
-- **Move the tip** into a subtle inline hint next to the search bar (only on desktop): a small `Cmd+V` keyboard shortcut badge
-- The `PageHeader` subtitle already tells users what to do, so no information is lost
+In `OutfitPieceFields`, when a slot has conflicts:
+- **Replace the full PieceField** with a collapsed single-line row showing a lock icon + explanation: "👕 TOP — Filled by your sweater" (using the actual garmentType)
+- For mixed batches (some products conflict, some don't): show the PieceField but **dimmed with an overlay note**: "Applied only to non-sweater products"
+- Remove the current tiny badge approach
 
-### Result
+Logic:
+```text
+allConflict (every selected product conflicts) → collapse to label
+someConflict (mixed batch) → show field + dim overlay note
+noConflict → show field normally
+```
 
-The grid moves up ~60px. The search bar shows the count contextually. The drag-and-drop tip appears as a keyboard shortcut hint rather than a sentence.
+### Part B: Expand garment type coverage (~10 lines)
+
+**File: `productImagePromptBuilder.ts`**
+
+Add missing garment types to each category array in `getConflictingSlots`.
+
+### Part C: Full-body mode for dresses
+
+When ALL products are full-body garments (dress/jumpsuit), collapse both Top and Bottom to labels, leaving only Shoes visible. Add a header: "Full-body garment — only shoes & accessories apply."
 
 ## Files Changed
 
-1. **`src/pages/ProductImages.tsx`** (~10 lines) — Remove the section header div (lines 972-976), update search placeholder to include product count, add a small `⌘V` hint badge next to the search input
+1. **`src/lib/productImagePromptBuilder.ts`** — expand `getConflictingSlots` arrays with ~20 missing types
+2. **`src/components/app/product-images/ProductImagesStep3Refine.tsx`** — replace badge approach with collapsed slot rendering; add full-body mode header
+
+No database changes.
 
