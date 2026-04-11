@@ -333,12 +333,12 @@ export default function PublicDiscover() {
 
   return (
     <PageLayout>
-      <SEOHead title="Discover AI Photography Presets & Scenes — VOVV AI" description="All images on this page were generated with VOVV.AI. Explore AI fashion photography styles, scenes and prompts — start generating for free." canonical={`${SITE_URL}/discover`} />
+      <SEOHead title="Explore AI Photography Presets & Scenes — VOVV AI" description="All images on this page were generated with VOVV.AI. Explore AI fashion photography styles, scenes and prompts — start generating for free." canonical={`${SITE_URL}/discover`} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
         {/* Header */}
         <div className="space-y-3 text-center">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
-            Discover
+            Explore
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
             Every image here was created by AI. Yours can be next.
