@@ -1358,17 +1358,19 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender, anal
   // Compute conflicting slots across all selected products
   const slotConflicts = useMemo(() => {
     const conflicts: Record<OutfitSlot, string[]> = { top: [], bottom: [], shoes: [] };
-    if (!analyses || !selectedProductIds) return conflicts;
+    if (!selectedProductIds) return conflicts;
     for (const pid of selectedProductIds) {
-      const a = analyses[pid];
-      if (!a?.garmentType) continue;
-      const conflicting = getConflictingSlots(a.garmentType);
+      const a = analyses?.[pid];
+      const product = allProducts?.find(p => p.id === pid);
+      const resolved = resolveGarmentType(a, product);
+      if (!resolved) continue;
+      const conflicting = getConflictingSlots(resolved);
       for (const slot of conflicting) {
-        conflicts[slot].push(a.garmentType);
+        conflicts[slot].push(resolved);
       }
     }
     return conflicts;
-  }, [analyses, selectedProductIds]);
+  }, [analyses, selectedProductIds, allProducts]);
 
   const totalProducts = selectedProductIds?.size || 0;
 
