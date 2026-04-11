@@ -365,38 +365,27 @@ serve(async (req) => {
       });
     }
 
-    // ─── Regular user: generate 1 ───
-    console.log("Generating model portrait...");
-    const generatedImageUrl = await generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY);
+    // ─── Regular user: generate 3 variations (no credits deducted yet) ───
+    console.log("Generating 3 brand model variations in parallel...");
+    const results = await Promise.allSettled(
+      Array.from({ length: 3 }, () =>
+        generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY)
+          .then((b64) => uploadBase64Image(supabaseAdmin, user.id, b64))
+      )
+    );
 
-    const { data: bal, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
-      p_user_id: user.id,
-      p_amount: 20,
-    });
-    if (deductError) throw new Error("Failed to deduct credits");
+    const userVariations = results
+      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+      .map((r) => r.value);
 
-    const finalImageUrl = await uploadBase64Image(supabaseAdmin, user.id, generatedImageUrl);
+    if (userVariations.length === 0) throw new Error("All generation attempts failed. Please try again.");
 
-    const modelName = body.name || metadata.name || "My Model";
-    const { data, error: insertError } = await supabaseAdmin
-      .from("user_models")
-      .insert({
-        user_id: user.id,
-        name: modelName,
-        gender: metadata.gender || "female",
-        body_type: metadata.body_type || "average",
-        ethnicity: metadata.ethnicity || "",
-        age_range: metadata.age_range || "adult",
-        image_url: finalImageUrl,
-        source_image_url: sourceImageUrl,
-        credits_used: 20,
-      })
-      .select()
-      .single();
-
-    if (insertError) throw new Error("Failed to save model");
-
-    return new Response(JSON.stringify({ model: data, new_balance: bal, target: "private" }), {
+    return new Response(JSON.stringify({
+      variations: userVariations,
+      metadata,
+      name: body.name || metadata.name,
+      sourceImageUrl: sourceImageUrl,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

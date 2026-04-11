@@ -103,13 +103,13 @@ const LOADING_TIPS = [
 
 const LOADING_AVATARS = TEAM_MEMBERS.slice(0, 6);
 
-function BrandedLoadingState({ isPublicMode = false }: { isPublicMode?: boolean }) {
+function BrandedLoadingState() {
   const [tipIndex, setTipIndex] = useState(0);
   const [activeAvatar, setActiveAvatar] = useState(0);
   const [elapsed, setElapsed] = useState(0);
 
-  const estimateSeconds = isPublicMode ? 90 : 40;
-  const estimateLabel = isPublicMode ? '~1-2 min' : '~30-50 sec';
+  const estimateSeconds = 90;
+  const estimateLabel = '~1-2 min';
   const ratio = elapsed / estimateSeconds;
   const progress = ratio <= 1 ? Math.min(ratio * 90, 90) : Math.min(90 + (ratio - 1) * 5, 95);
 
@@ -163,7 +163,7 @@ function BrandedLoadingState({ isPublicMode = false }: { isPublicMode?: boolean 
 
       <div className="text-center space-y-2">
         <p className="text-sm font-semibold text-foreground">
-          {isPublicMode ? 'Generating 3 model variations…' : 'Creating your brand model...'}
+          Generating 3 model variations…
         </p>
         <p className="text-xs text-muted-foreground h-4 transition-all duration-300">{overtimeMsg || LOADING_TIPS[tipIndex]}</p>
       </div>
