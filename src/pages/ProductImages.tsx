@@ -281,51 +281,63 @@ export default function ProductImages() {
   // Track which refs were auto-filled from product data vs manually uploaded
   const [autoFilledRefs, setAutoFilledRefs] = useState<Set<string>>(new Set());
 
-  // Auto-fill back/packaging/side references from stored product data when entering step 3
+  // Auto-fill back/packaging/side/inside/texture references from stored product data when entering step 3
   useEffect(() => {
     if (step === 3 && selectedProducts.length > 0) {
-      const firstProduct = selectedProducts[0] as any;
       const newAutoFilled = new Set<string>();
-      setDetails(prev => {
-        const updates: Partial<DetailSettings> = {};
-        if (firstProduct.back_image_url && !prev.backReferenceUrl) {
-          updates.backReferenceUrl = firstProduct.back_image_url;
-          newAutoFilled.add('backReferenceUrl');
+      const isMulti = selectedProducts.length > 1;
+
+      // For single product, keep backward-compatible global keys
+      // For multi product, use per-product keys: trigger:{type}:{productId}
+      setSceneExtraRefs(prev => {
+        const next = { ...prev };
+        for (const product of selectedProducts) {
+          const p = product as any;
+          const suffix = isMulti ? `:${product.id}` : '';
+
+          if (p.back_image_url) {
+            const key = `trigger:backView${suffix}`;
+            if (!next[key]) { next[key] = p.back_image_url; newAutoFilled.add(key); }
+          }
+          if (p.packaging_image_url) {
+            const key = `trigger:packagingDetails${suffix}`;
+            if (!next[key]) { next[key] = p.packaging_image_url; newAutoFilled.add(key); }
+          }
+          if (p.side_image_url) {
+            const key = `trigger:sideView${suffix}`;
+            if (!next[key]) { next[key] = p.side_image_url; newAutoFilled.add(key); }
+          }
+          if (p.inside_image_url) {
+            const key = `trigger:interiorDetail${suffix}`;
+            if (!next[key]) { next[key] = p.inside_image_url; newAutoFilled.add(key); }
+          }
+          if (p.texture_image_url) {
+            const key = `trigger:textureDetail${suffix}`;
+            if (!next[key]) { next[key] = p.texture_image_url; newAutoFilled.add(key); }
+          }
         }
-        if (firstProduct.packaging_image_url && !prev.packagingReferenceUrl) {
-          updates.packagingReferenceUrl = firstProduct.packaging_image_url;
-          newAutoFilled.add('packagingReferenceUrl');
-        }
-        if (Object.keys(updates).length === 0) return prev;
-        return { ...prev, ...updates };
+        if (Object.keys(next).length === Object.keys(prev).length) return prev;
+        return next;
       });
-      // Auto-fill side view into sceneExtraRefs for scenes with side-angle triggers
-      if (firstProduct.side_image_url) {
-        setSceneExtraRefs(prev => {
-          const sideKey = 'trigger:sideView';
-          if (prev[sideKey]) return prev;
-          newAutoFilled.add(sideKey);
-          return { ...prev, [sideKey]: firstProduct.side_image_url };
+
+      // Also fill legacy detail fields for single product backward compat
+      if (!isMulti) {
+        const firstProduct = selectedProducts[0] as any;
+        setDetails(prev => {
+          const updates: Partial<DetailSettings> = {};
+          if (firstProduct.back_image_url && !prev.backReferenceUrl) {
+            updates.backReferenceUrl = firstProduct.back_image_url;
+            newAutoFilled.add('backReferenceUrl');
+          }
+          if (firstProduct.packaging_image_url && !prev.packagingReferenceUrl) {
+            updates.packagingReferenceUrl = firstProduct.packaging_image_url;
+            newAutoFilled.add('packagingReferenceUrl');
+          }
+          if (Object.keys(updates).length === 0) return prev;
+          return { ...prev, ...updates };
         });
       }
-      // Auto-fill inside image into sceneExtraRefs for scenes with interiorDetail triggers
-      if (firstProduct.inside_image_url) {
-        setSceneExtraRefs(prev => {
-          const insideKey = 'trigger:interiorDetail';
-          if (prev[insideKey]) return prev;
-          newAutoFilled.add(insideKey);
-          return { ...prev, [insideKey]: firstProduct.inside_image_url };
-        });
-      }
-      // Auto-fill texture image into sceneExtraRefs for scenes with textureDetail triggers
-      if (firstProduct.texture_image_url) {
-        setSceneExtraRefs(prev => {
-          const textureKey = 'trigger:textureDetail';
-          if (prev[textureKey]) return prev;
-          newAutoFilled.add(textureKey);
-          return { ...prev, [textureKey]: firstProduct.texture_image_url };
-        });
-      }
+
       if (newAutoFilled.size > 0) {
         setAutoFilledRefs(prev => new Set([...prev, ...newAutoFilled]));
       }
