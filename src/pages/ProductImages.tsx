@@ -772,8 +772,8 @@ export default function ProductImages() {
 
   return (
     <div className="space-y-6 pb-24">
-      <SEOHead title="Product Images — VOVV" description="Generate product images" />
-      <PageHeader title="Product Images" subtitle="Generate stunning product visuals across multiple scene types."><span /></PageHeader>
+      <SEOHead title="Product Visuals — VOVV" description="Generate product visuals" />
+      <PageHeader title="Product Visuals" subtitle="Select one or multiple products to create visuals for"><span /></PageHeader>
 
       {step <= 4 && (
         <CatalogStepper
