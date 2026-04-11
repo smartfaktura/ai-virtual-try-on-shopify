@@ -6,25 +6,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/** Title-based category fallback when AI returns "other" */
+/** All valid category_collection IDs */
+const VALID_CATEGORIES = new Set([
+  "fragrance", "beauty-skincare", "makeup-lipsticks", "bags-accessories", "backpacks",
+  "wallets-cardholders", "belts", "scarves", "hats-small", "shoes", "sneakers", "boots",
+  "high-heels", "garments", "dresses", "hoodies", "streetwear", "jeans", "jackets",
+  "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
+  "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
+  "home-decor", "tech-devices", "food", "beverages", "supplements-wellness",
+]);
+
+/** Title-based category fallback when AI returns "other" or invalid */
 const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
-  // Jewellery (specific first)
   [/necklace|pendant|choker|lariat|chain necklace/i, "jewellery-necklaces"],
   [/earring|stud|hoop|drop earring|huggie|ear cuff/i, "jewellery-earrings"],
   [/bracelet|bangle|cuff bracelet|charm bracelet|tennis bracelet/i, "jewellery-bracelets"],
   [/\bring\b|signet|band ring|cocktail ring|engagement ring|wedding band/i, "jewellery-rings"],
   [/\bwatch\b|timepiece|chronograph|wristwatch/i, "watches"],
   [/sunglasses|glasses|eyewear|optical|aviator|spectacles/i, "eyewear"],
-  // Accessories (specific first)
   [/backpack|rucksack|daypack/i, "backpacks"],
   [/wallet|cardholder|card holder|card case|money clip|billfold/i, "wallets-cardholders"],
   [/\bbelt\b|waist belt|leather belt|buckle belt/i, "belts"],
   [/scarf|shawl|bandana|neckerchief|stole/i, "scarves"],
-  // Footwear (specific first)
   [/sneaker|trainer|air max|nike dunk|jordan|running shoe/i, "sneakers"],
   [/\bboot\b|\bboots\b|ankle boot|chelsea boot|combat boot|hiking boot|cowboy boot/i, "boots"],
   [/high heel|stiletto|pump|platform heel|kitten heel|wedge heel/i, "high-heels"],
-  // Fashion (specific first)
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
   [/hoodie|hooded sweatshirt/i, "hoodies"],
   [/streetwear|graphic tee|oversized tee|urban wear/i, "streetwear"],
@@ -34,11 +40,9 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/swimwear|bikini|swimsuit|swim trunks|bathing suit/i, "swimwear"],
   [/lingerie|\bbra\b|underwear|corset|negligee|intimates/i, "lingerie"],
   [/\bkids\b|children|baby|toddler|infant|kidswear/i, "kidswear"],
-  // Beauty / Makeup split
   [/perfume|fragrance|eau de|cologne|parfum|body mist/i, "fragrance"],
   [/lipstick|mascara|foundation|concealer|blush|eyeshadow|eyeliner|lip gloss|bronzer|primer|highlighter|contour|rouge/i, "makeup-lipsticks"],
   [/serum|moisturizer|cream|cleanser|toner|sunscreen|lotion|face wash|body wash|shampoo|conditioner|exfoliant|retinol/i, "beauty-skincare"],
-  // Generic parents
   [/\bbag\b|handbag|clutch|purse|tote|satchel/i, "bags-accessories"],
   [/\bhat\b|\bcap\b|beanie|headband|beret|fedora/i, "hats-small"],
   [/\bshoe\b|\bshoes\b|sandal|loafer|slipper|mule/i, "shoes"],
@@ -50,12 +54,41 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/chocolate|cereal|granola|honey|jam|sauce|snack|cookie|candy|chips|olive oil|food/i, "food"],
 ];
 
+/** Parent->Child specificity overrides */
+const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
+  ["bags-accessories", /scarf|shawl|wrap|stole/i, "scarves"],
+  ["bags-accessories", /wallet|cardholder|card holder|card case/i, "wallets-cardholders"],
+  ["bags-accessories", /\bbelt\b|waist belt/i, "belts"],
+  ["bags-accessories", /backpack|rucksack|daypack/i, "backpacks"],
+  ["garments", /\bdress\b|\bdresses\b|gown/i, "dresses"],
+  ["garments", /hoodie|hooded sweatshirt/i, "hoodies"],
+  ["garments", /\bjeans\b|denim/i, "jeans"],
+  ["garments", /jacket|blazer|bomber|puffer/i, "jackets"],
+  ["shoes", /sneaker|trainer/i, "sneakers"],
+  ["shoes", /\bboot\b|\bboots\b/i, "boots"],
+  ["shoes", /high heel|stiletto|pump/i, "high-heels"],
+];
+
 function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
-  if (analysis.category && analysis.category !== "other") return;
+  const cat = analysis.category as string | undefined;
+
+  // If valid category, still check specificity overrides
+  if (cat && cat !== "other" && VALID_CATEGORIES.has(cat)) {
+    for (const [parent, pattern, child] of SPECIFICITY_OVERRIDES) {
+      if (cat === parent && pattern.test(title || "")) {
+        console.log(`Category specificity override: "${cat}" -> "${child}" (title: "${title}")`);
+        analysis.category = child;
+        return;
+      }
+    }
+    return;
+  }
+
+  // Category is missing, "other", or invalid — run title fallback
   const combined = (title || "").toLowerCase();
   for (const [pattern, category] of TITLE_CATEGORY_PATTERNS) {
     if (pattern.test(combined)) {
-      console.log(`Category fallback: "${analysis.category}" → "${category}" (matched title: "${title}")`);
+      console.log(`Category fallback: "${cat}" -> "${category}" (matched title: "${title}")`);
       analysis.category = category;
       return;
     }

@@ -75,6 +75,28 @@ const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
   { label: 'Home & Lifestyle', ids: ['home-decor', 'tech-devices', 'supplements-wellness'] },
 ];
 
+/** Refine generic parent categories to specific child when title strongly matches */
+const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
+  ["bags-accessories", /scarf|shawl|wrap|stole/i, "scarves"],
+  ["bags-accessories", /wallet|cardholder|card holder|card case/i, "wallets-cardholders"],
+  ["bags-accessories", /\bbelt\b|waist belt/i, "belts"],
+  ["bags-accessories", /backpack|rucksack|daypack/i, "backpacks"],
+  ["garments", /\bdress\b|\bdresses\b|gown/i, "dresses"],
+  ["garments", /hoodie|hooded sweatshirt/i, "hoodies"],
+  ["garments", /\bjeans\b|denim/i, "jeans"],
+  ["garments", /jacket|blazer|bomber|puffer/i, "jackets"],
+  ["shoes", /sneaker|trainer/i, "sneakers"],
+  ["shoes", /\bboot\b|\bboots\b/i, "boots"],
+  ["shoes", /high heel|stiletto|pump/i, "high-heels"],
+];
+
+function refineCategory(cat: string, title: string): string {
+  for (const [parent, pattern, child] of SPECIFICITY_OVERRIDES) {
+    if (cat === parent && pattern.test(title)) return child;
+  }
+  return cat;
+}
+
 function detectRelevantCategories(products: UserProduct[], productAnalyses?: Record<string, { category: string }>): Set<string> {
   const matched = new Set<string>();
   const analyzedIds = new Set<string>();
@@ -83,7 +105,7 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
     for (const p of products) {
       const cat = productAnalyses[p.id]?.category;
       if (cat) {
-        matched.add(cat);
+        matched.add(refineCategory(cat, p.title || ''));
         analyzedIds.add(p.id);
       }
     }
@@ -92,7 +114,7 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
     if (analyzedIds.has(p.id)) continue;
     const aj = (p as any).analysis_json as { category?: string } | null;
     if (aj?.category) {
-      matched.add(aj.category);
+      matched.add(refineCategory(aj.category, p.title || ''));
       analyzedIds.add(p.id);
     }
   }
