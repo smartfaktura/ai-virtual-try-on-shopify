@@ -1,13 +1,10 @@
 
 
-# Change "Create with Prompt" Icon to Sparkles
-
-ChatGPT/OpenAI uses a sparkle-style icon. The closest Lucide equivalent is `Sparkles` — a multi-point star burst that conveys AI-powered generation.
+# Hide Upcoming Drops from Dashboard
 
 ## Change
-In `src/components/app/AppShell.tsx`:
-- Replace `Command` import with `Sparkles`
-- Update the icon reference in the navGroups array
+Remove the `<UpcomingDropsCard />` component from the Dashboard page so it no longer appears at `/app`.
 
-Single import swap + one line in the nav config.
+## File
+`src/pages/Dashboard.tsx` — remove the import and usage of `UpcomingDropsCard`.
 
