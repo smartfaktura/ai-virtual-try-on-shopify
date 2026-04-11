@@ -60,6 +60,7 @@ const navGroups = [
     items: [
       { label: 'Visual Studio', icon: Layers, path: '/app/workflows' },
       { label: 'Create with Prompt', icon: Wand2, path: '/app/freestyle' },
+      { label: 'Video', icon: Film, path: '/app/video' },
     ],
   },
   {
@@ -68,13 +69,7 @@ const navGroups = [
       { label: 'Products', icon: Package, path: '/app/products' },
       { label: 'Brand Models', icon: Users, path: '/app/models' },
       { label: 'Explore', icon: Compass, path: '/app/discover' },
-    ],
-  },
-  {
-    label: 'Media',
-    items: [
       { label: 'Library', icon: Image, path: '/app/library' },
-      { label: 'Video', icon: Film, path: '/app/video' },
     ],
   },
 ];
