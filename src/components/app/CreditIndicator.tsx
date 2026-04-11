@@ -20,7 +20,7 @@ export function CreditIndicator() {
       {/* Plan name + Upgrade */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/40">
-          {planConfig.name} Plan
+          Your plan: {planConfig.name}
         </span>
         {planConfig.nextPlanId && (
           <button

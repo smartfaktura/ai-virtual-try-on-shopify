@@ -199,9 +199,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Main Nav */}
         <nav className={cn('flex-1 py-4 space-y-1 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
-          {!isCollapsed && (
-            <p className="px-3 py-2 mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30">Main</p>
-          )}
+          <div className="h-px bg-white/[0.06] mx-3 mb-2" />
           {navItems.map((item) => (
             <NavItemButton key={item.path} item={item} />
           ))}
