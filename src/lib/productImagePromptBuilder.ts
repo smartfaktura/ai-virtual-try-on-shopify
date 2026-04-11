@@ -243,15 +243,36 @@ function resolveBodyFramingDirective(category?: string, sceneType?: string): str
 
   switch (category) {
     case 'garments':
+    case 'dresses':
+    case 'hoodies':
+    case 'streetwear':
+    case 'jeans':
+    case 'jackets':
       return 'Full-body shot — model visible from head to toe, feet fully inside frame, natural standing pose. Do NOT crop at the knees or waist.';
     case 'lingerie':
     case 'swimwear':
     case 'activewear':
+    case 'kidswear':
       return 'Full-body shot — model visible from head to toe, feet fully inside frame. The product IS the outfit — show the full garment coverage clearly.';
     case 'shoes':
+    case 'sneakers':
+    case 'boots':
+    case 'high-heels':
       return 'Three-quarter to full-body shot — model visible from head to below the knees, shoes clearly visible and in-frame.';
     case 'bags-accessories':
+    case 'backpacks':
+    case 'wallets-cardholders':
+    case 'belts':
+    case 'scarves':
+    case 'hats-small':
       return 'Three-quarter shot — model visible from head to mid-thigh, bag and hands fully in-frame.';
+    case 'jewellery-necklaces':
+    case 'jewellery-earrings':
+    case 'jewellery-bracelets':
+    case 'jewellery-rings':
+    case 'watches':
+    case 'eyewear':
+      return 'Close-up to upper-body shot — product clearly visible and in sharp focus, model provides context.';
     case 'beauty-skincare':
     case 'makeup-lipsticks':
       return 'Close-up beauty shot — shoulders and face, product interaction zone fully visible.';
@@ -267,16 +288,36 @@ function resolveBodyFramingDirective(category?: string, sceneType?: string): str
 function defaultBackground(category?: string): string {
   switch (category) {
     case 'garments':
+    case 'dresses':
+    case 'hoodies':
+    case 'streetwear':
+    case 'jeans':
+    case 'jackets':
     case 'shoes':
+    case 'sneakers':
+    case 'boots':
+    case 'high-heels':
     case 'bags-accessories':
+    case 'backpacks':
+    case 'wallets-cardholders':
+    case 'belts':
+    case 'scarves':
+    case 'hats-small':
       return 'soft warm white seamless studio background — do NOT reproduce the background from the product reference photo';
     case 'lingerie':
     case 'swimwear':
     case 'activewear':
+    case 'kidswear':
       return 'soft neutral seamless studio background with warm undertone — do NOT reproduce the background from the product reference photo';
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
+    case 'jewellery-necklaces':
+    case 'jewellery-earrings':
+    case 'jewellery-bracelets':
+    case 'jewellery-rings':
+    case 'watches':
+    case 'eyewear':
       return 'soft neutral light gray seamless background';
     case 'tech-devices':
       return 'clean matte white seamless background';
@@ -305,16 +346,36 @@ function defaultSurface(category?: string): string {
 function defaultShadow(category?: string): string {
   switch (category) {
     case 'garments':
+    case 'dresses':
+    case 'hoodies':
+    case 'streetwear':
+    case 'jeans':
+    case 'jackets':
     case 'shoes':
+    case 'sneakers':
+    case 'boots':
+    case 'high-heels':
     case 'bags-accessories':
+    case 'backpacks':
+    case 'wallets-cardholders':
+    case 'belts':
+    case 'scarves':
+    case 'hats-small':
       return 'Soft diffused shadow beneath the product for a refined, airy feel.';
     case 'lingerie':
     case 'swimwear':
     case 'activewear':
+    case 'kidswear':
       return 'Soft diffused shadow beneath for a refined, beauty-oriented feel.';
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
+    case 'jewellery-necklaces':
+    case 'jewellery-earrings':
+    case 'jewellery-bracelets':
+    case 'jewellery-rings':
+    case 'watches':
+    case 'eyewear':
       return 'Barely-visible contact shadow for floating elegance.';
     case 'tech-devices':
       return 'Crisp, well-defined shadow adding depth and dimension.';
@@ -326,17 +387,37 @@ function defaultShadow(category?: string): string {
 function defaultStyling(category?: string): string {
   switch (category) {
     case 'garments':
+    case 'dresses':
+    case 'hoodies':
+    case 'streetwear':
+    case 'jeans':
+    case 'jackets':
       return 'Clean commercial styling — crisp, professional composition.';
     case 'lingerie':
     case 'swimwear':
     case 'activewear':
+    case 'kidswear':
       return 'Beauty-editorial styling — soft, confident, body-positive composition with premium feel.';
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
+    case 'jewellery-necklaces':
+    case 'jewellery-earrings':
+    case 'jewellery-bracelets':
+    case 'jewellery-rings':
+    case 'watches':
+    case 'eyewear':
       return 'Beauty-clean styling — luminous, minimal composition with premium product focus.';
     case 'shoes':
+    case 'sneakers':
+    case 'boots':
+    case 'high-heels':
     case 'bags-accessories':
+    case 'backpacks':
+    case 'wallets-cardholders':
+    case 'belts':
+    case 'scarves':
+    case 'hats-small':
       return 'Minimal luxury styling — clean, restrained, premium composition.';
     case 'tech-devices':
       return 'Modern sleek styling — contemporary, geometric, sharp composition.';
@@ -353,15 +434,35 @@ function defaultLighting(category?: string): string {
     case 'fragrance': return 'Soft directional side lighting with gentle glass refraction highlights.';
     case 'beauty-skincare':
     case 'makeup-lipsticks': return 'Soft overhead beauty lighting with even glow and subtle specular accents.';
+    case 'jewellery-necklaces':
+    case 'jewellery-earrings':
+    case 'jewellery-bracelets':
+    case 'jewellery-rings':
+    case 'watches':
+    case 'eyewear': return 'Soft overhead beauty lighting with precise specular highlights on metal and stone surfaces.';
     case 'lingerie':
     case 'swimwear':
-    case 'activewear': return 'Soft diffused beauty lighting with warm undertone, even skin illumination, and gentle contouring.';
+    case 'activewear':
+    case 'kidswear': return 'Soft diffused beauty lighting with warm undertone, even skin illumination, and gentle contouring.';
     case 'tech-devices': return 'Crisp controlled studio lighting with clean specular reflections.';
     case 'food':
     case 'beverages': return 'Warm natural diffused lighting with appetite-enhancing warmth.';
-    case 'garments': return 'Even soft studio lighting revealing fabric texture and true color.';
+    case 'garments':
+    case 'dresses':
+    case 'hoodies':
+    case 'streetwear':
+    case 'jeans':
+    case 'jackets': return 'Even soft studio lighting revealing fabric texture and true color.';
     case 'bags-accessories':
-    case 'shoes': return 'Controlled directional lighting revealing leather grain and material depth.';
+    case 'backpacks':
+    case 'wallets-cardholders':
+    case 'belts':
+    case 'scarves':
+    case 'hats-small':
+    case 'shoes':
+    case 'sneakers':
+    case 'boots':
+    case 'high-heels': return 'Controlled directional lighting revealing leather grain and material depth.';
     case 'home-decor': return 'Warm ambient interior lighting with natural window-light feel.';
     default: return 'Professional studio lighting with soft fill and controlled highlights.';
   }
@@ -388,14 +489,36 @@ function defaultMaterial(materialFamily?: string, finish?: string, productDescri
 function defaultPersonDirective(category?: string): string {
   switch (category) {
     case 'garments':
+    case 'dresses':
+    case 'hoodies':
+    case 'streetwear':
+    case 'jeans':
+    case 'jackets':
       return 'Professional fashion model with natural, contemporary look — realistic skin texture, confident but relaxed posture, editorial presence.';
     case 'lingerie':
     case 'swimwear':
     case 'activewear':
       return 'Professional model with natural, confident posture — realistic skin texture, body-positive presence, soft editorial beauty lighting on skin.';
+    case 'kidswear':
+      return 'Child model with natural, age-appropriate expression — playful, joyful energy, realistic appearance, bright and wholesome presence.';
     case 'shoes':
+    case 'sneakers':
+    case 'boots':
+    case 'high-heels':
     case 'bags-accessories':
+    case 'backpacks':
+    case 'wallets-cardholders':
+    case 'belts':
+    case 'scarves':
+    case 'hats-small':
       return 'Stylish model with clean, modern look — natural skin, understated elegance, product is the focus.';
+    case 'jewellery-necklaces':
+    case 'jewellery-earrings':
+    case 'jewellery-bracelets':
+    case 'jewellery-rings':
+    case 'watches':
+    case 'eyewear':
+      return 'Beauty model with clean, luminous skin — product worn naturally as the focal point, understated elegance, editorial beauty standard.';
     case 'beauty-skincare':
     case 'makeup-lipsticks':
       return 'Beauty model with flawless, luminous skin — close-up ready, soft natural expression, editorial beauty standard.';
@@ -413,22 +536,42 @@ function categoryOutfitDefaults(category?: string, gender?: string): OutfitPiece
   const isMale = gender === 'male';
   switch (category) {
     case 'garments':
+    case 'dresses':
+    case 'hoodies':
+    case 'streetwear':
+    case 'jeans':
+    case 'jackets':
       return isMale
         ? { top: 'plain white crew-neck tee', bottom: 'slim navy cotton chinos', shoes: 'white leather sneakers', accessories: 'none' }
         : { top: 'fitted white t-shirt', bottom: 'slim-fit light beige cotton trousers', shoes: 'minimal white sneakers', accessories: 'none' };
     case 'lingerie':
     case 'swimwear':
     case 'activewear':
+    case 'kidswear':
       // Product IS the outfit — no support clothing
       return { top: '', bottom: '', shoes: '', accessories: 'none' };
     case 'bags-accessories':
+    case 'backpacks':
+    case 'wallets-cardholders':
+    case 'belts':
+    case 'scarves':
+    case 'hats-small':
       return isMale
         ? { top: 'fitted black crew-neck sweater', bottom: 'slim dark navy trousers', shoes: 'black leather boots', accessories: 'none' }
         : { top: 'fitted black turtleneck', bottom: 'slim dark navy trousers', shoes: 'black ankle boots', accessories: 'none' };
     case 'shoes':
+    case 'sneakers':
+    case 'boots':
+    case 'high-heels':
       return isMale
         ? { top: 'plain white tee', bottom: 'slim dark wash denim', shoes: '', accessories: 'none' }
         : { top: 'plain white tee', bottom: 'cropped slim dark denim', shoes: '', accessories: 'none' };
+    case 'jewellery-necklaces':
+    case 'jewellery-earrings':
+    case 'jewellery-bracelets':
+    case 'jewellery-rings':
+    case 'watches':
+    case 'eyewear':
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
@@ -469,7 +612,7 @@ export function buildStructuredOutfitString(config: OutfitConfig): string {
 // ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
 function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string): string {
   // For categories where the product IS the outfit, enforce no additional clothing
-  if (category === 'lingerie' || category === 'swimwear' || category === 'activewear') {
+  if (category === 'lingerie' || category === 'swimwear' || category === 'activewear' || category === 'kidswear') {
     return 'OUTFIT LOCK — The product IS the outfit. Model wears ONLY the product — no additional clothing, no layering, no cover-ups. Show the product as-is on the body. Do NOT add any t-shirt, trousers, jacket, or other garment over or under the product.';
   }
 
