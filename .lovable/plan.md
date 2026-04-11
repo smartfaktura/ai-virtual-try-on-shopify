@@ -1,47 +1,64 @@
 
 
-# Fix: Recommended Categories Not Showing in Step 2 (Shots)
+# Per-Product Scene Assignment in Product Visuals
 
-## Root Cause
+## Problem
+Currently, scene selection is a **single shared pool** — every selected scene is applied to every product during generation. If a user selects shoes + a dress, both get "Sole Detail" and "Full Length Flow" scenes, producing nonsensical images.
 
-When a product has a stale or invalid `analysis_json.category` (e.g. `"accessories"` instead of `"bags-accessories"`, or `"food-beverage"` instead of `"food"`), the `detectRelevantCategories` function:
+## Solution: Per-Product Scene Picker (Tab-Based)
 
-1. Reads the invalid category from `analysis_json`
-2. Tries to refine it via `SPECIFICITY_OVERRIDES` — but those only handle known parent categories like `bags-accessories`, `garments`, `shoes`
-3. Adds the invalid category (e.g. `"accessories"`) to the matched set
-4. Marks the product as analyzed, so keyword fallback never runs
-5. The invalid category doesn't match any `category_collection` in the database
-6. Result: `unifiedRecommended` is empty, so no recommended section shows
+When multiple products from **different categories** are selected, Step 2 (Shots) switches to a **tabbed layout** where each product (or category group) has its own scene selection. When all products share the same category, the current shared picker remains.
 
-The same issue can happen when the async `analyzeProducts` returns a category that doesn't exist in the DB.
+### Data Model Change
 
-## Fix (single file: `ProductImagesStep2Scenes.tsx`)
+Replace the flat `selectedSceneIds: Set<string>` with a per-product map:
 
-1. **Add a validation step in `detectRelevantCategories`**: After getting a category from any source (productAnalyses, analysis_json), validate it against `ACTIVE_CATEGORY_COLLECTIONS` IDs. If invalid, fall through to keyword detection instead of accepting the bad value.
+```text
+// New state shape
+perProductScenes: Map<string, Set<string>>
+// key = product ID, value = selected scene IDs for that product
 
-2. **Add a normalization map** for common AI mismatches (e.g. `"accessories" → "bags-accessories"`, `"food-beverage" → "food"`).
-
-3. **Simplify the 3-tier cascade**: Instead of checking `productAnalyses` → `analysis_json` → keywords separately with an `analyzedIds` tracker, merge the first two checks and always validate the result against valid collection IDs before accepting.
-
-## Implementation Detail
-
+// Backward compat: derive flat set for steps 3-5
+allSelectedSceneIds = union of all per-product sets
 ```
-CATEGORY_ALIASES: Record<string, string> = {
-  "accessories": "bags-accessories",
-  "food-beverage": "food",
-  "food-beverages": "food",
-  "jewelry": "jewellery-necklaces",  // generic fallback
-  "jewellery": "jewellery-necklaces",
-  ...
+
+### UI Changes (Step 2 — `ProductImagesStep2Scenes.tsx`)
+
+1. **Single category**: Keep current shared picker (no change).
+2. **Multiple categories**: Show product tabs at the top (thumbnail + name). Each tab shows only the recommended category for that product, plus "Explore more" for other categories.
+3. A summary bar below tabs shows: `"Product A → 4 shots · Product B → 6 shots"`.
+
+### Generation Changes (`ProductImages.tsx`)
+
+The generation loop (lines 405-543) already iterates `for (const product of selectedProducts)` then `for (const scene of selectedScenes)`. Change the inner loop to use only the scenes assigned to that specific product:
+
+```text
+for (const product of selectedProducts) {
+  const productScenes = perProductScenes.get(product.id) || allSelectedSceneIds;
+  const scenesForProduct = selectedScenes.filter(s => productScenes.has(s.id));
+  for (const scene of scenesForProduct) { ... }
 }
 ```
 
-In `detectRelevantCategories`:
-- Get category from analyses or analysis_json
-- Run through `refineCategory` (existing specificity overrides)
-- Run through `CATEGORY_ALIASES` normalization
-- **Validate** against the set of valid category_collection IDs (passed as param or derived from `CATEGORY_KEYWORDS` keys)
-- If still invalid → fall through to keyword detection for that product
+### Credit Calculation (`sceneVariations.ts`)
 
-This ensures any AI-returned garbage category gracefully degrades to keyword matching.
+Update `computeTotalImages` to accept the per-product map and sum per-product scene counts instead of `products.length × scenes.length`.
+
+### Affected Files
+
+| File | Change |
+|------|--------|
+| `src/pages/ProductImages.tsx` | Replace `selectedSceneIds` state with `perProductScenes` map; derive flat set for downstream; update generation loop and credit calc call |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Add tabbed UI for multi-category; accept `perProductScenes` prop; emit per-product changes |
+| `src/components/app/product-images/ProductImagesStickyBar.tsx` | Update scene count display to show per-product summary when in multi-category mode |
+| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Show per-product scene breakdown in review |
+| `src/lib/sceneVariations.ts` | Update `computeTotalImages` to accept per-product scene map |
+| `src/components/app/product-images/types.ts` | No change needed — `SceneSelection` type already exists but we'll use the simpler Map approach |
+
+### UX Details
+
+- **Tab design**: Horizontal scroll strip with product thumbnails (40×40 rounded) + product name + badge showing selected count
+- **"Apply to all" shortcut**: Button to copy current product's scene selection to all other products
+- **Smart defaults**: When switching to multi-category mode, auto-assign recommended scenes per product category
+- **Single category shortcut**: If all products share the same category, skip tabs entirely — use current shared picker
 
