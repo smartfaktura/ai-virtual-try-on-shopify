@@ -1218,8 +1218,9 @@ export default function ProductImages() {
                 hasMultipleCategories={hasMultipleCategories}
                 forcedActiveCategoryId={forcedActiveCategoryId}
                 onForcedActiveCategoryIdConsumed={() => setForcedActiveCategoryId(null)}
-              />
-            )}
+              );
+              })()}
+
 
             {step === 3 && (
               <div>
