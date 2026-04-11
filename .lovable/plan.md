@@ -1,15 +1,17 @@
 
 
-# Make "New" Card Clearer About Image Upload
+# Make "New" Card Clear About Upload Action
 
-## Change — `src/components/app/product-images/ProductImagesStep1Products.tsx`
+## Problem
+The "New" card in the product grid (line 1091-1098 of `ProductImages.tsx`) shows a generic Package icon and just says "New" — unclear what it does.
 
-Update the "New" card content to visually communicate "upload an image":
+## Fix — `src/pages/ProductImages.tsx` (lines 1091-1098)
 
-1. **Replace `Plus` icon with `Upload` icon** (from lucide-react) — immediately signals "upload" action
-2. **Change label** from "New" → "Upload Image"
-3. **Change subtitle** from "Upload or import" → "or paste / import URL"
-4. **Add a subtle cloud-upload visual cue** — small dashed inner border or upload arrow to reinforce the action
+Replace the current card content:
+- **Icon**: Change `Package` → `Upload` (already imported)
+- **Label**: "New" → **"Upload Image"**
+- **Subtitle**: Add small text below: **"or paste / import URL"**
+- **Visual**: Add a dashed inner border box inside the aspect-square to create a recognizable "drop zone" look, matching the pattern already used in `ProductImagesStep1Products.tsx`
 
-This is a ~5 line text/icon swap, no structural changes needed.
+The card structure stays the same (aspect-square button, opens `AddProductModal`). Only the icon, text, and inner styling change — ~10 lines.
 
