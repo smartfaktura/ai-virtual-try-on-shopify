@@ -354,6 +354,38 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
     }
   };
 
+  const handleSaveBrandModel = async () => {
+    if (!pendingMeta || !variations[selectedVariation]) return;
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-user-model', {
+        body: {
+          action: 'save-brand-model',
+          selectedUrl: variations[selectedVariation],
+          metadata: pendingMeta.metadata,
+          name: pendingMeta.name,
+          sourceImageUrl: pendingMeta.sourceImageUrl || 'generator',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Brand model saved successfully!');
+      refreshBalance();
+      queryClient.invalidateQueries({ queryKey: ['user-models'] });
+      setVariations([]);
+      setPendingMeta(null);
+      setModelName('');
+      setPreviewUrl(null);
+      setUploadedUrl(null);
+      setTermsAccepted(false);
+      onSuccess();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save model');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const handleCancelVariations = () => {
     setVariations([]);
     setPendingMeta(null);
