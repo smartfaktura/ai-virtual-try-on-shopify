@@ -206,10 +206,10 @@ export function AppShell({ children }: AppShellProps) {
               'w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
               isCollapsed ? 'px-2 py-3 text-xs' : 'px-3 py-3 text-sm'
             )}
-            title={isCollapsed ? 'Create Visuals' : undefined}
+            title={isCollapsed ? 'Visual Studio' : undefined}
           >
             <Sparkles className="w-4 h-4 flex-shrink-0" />
-            {!isCollapsed && 'Create Visuals'}
+            {!isCollapsed && 'Visual Studio'}
           </button>
         </div>
 
