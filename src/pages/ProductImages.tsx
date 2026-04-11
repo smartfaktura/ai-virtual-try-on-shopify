@@ -157,26 +157,42 @@ export default function ProductImages() {
     return undefined;
   }, [selectedProducts, analyses]);
 
+  // Compute categoryGroups: Map<categoryId, productId[]>
+  const categoryGroups = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    for (const p of selectedProducts) {
+      let cat = 'other';
+      const liveAnalysis = analyses[p.id];
+      if (liveAnalysis?.category) { cat = liveAnalysis.category; }
+      else {
+        const analysis = p.analysis_json as any;
+        if (analysis?.category) { cat = analysis.category; }
+        else {
+          const combined = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
+          for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+            if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) { cat = catId; break; }
+          }
+        }
+      }
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat)!.push(p.id);
+    }
+    return groups;
+  }, [selectedProducts, analyses]);
+
   // Memoize hasMultipleCategories
   const hasMultipleCategories = useMemo(() => {
-    const cats = new Set<string>();
-    for (const p of selectedProducts) {
-      // Check live analyses first
-      const liveAnalysis = analyses[p.id];
-      if (liveAnalysis?.category) { cats.add(liveAnalysis.category); continue; }
-      // Then cached analysis_json
-      const analysis = p.analysis_json as any;
-      if (analysis?.category) { cats.add(analysis.category); continue; }
-      // Keyword fallback to resolve raw product_type to category ID
-      const combined = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
-      let resolved = 'other';
-      for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-        if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) { resolved = catId; break; }
-      }
-      cats.add(resolved);
+    return categoryGroups.size > 1;
+  }, [categoryGroups]);
+
+  // Category product counts for credit calculation
+  const categoryProductCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const [catId, productIds] of categoryGroups) {
+      counts.set(catId, productIds.length);
     }
-    return cats.size > 1;
-  }, [selectedProducts, analyses]);
+    return counts;
+  }, [categoryGroups]);
 
   // Check for last-used settings when entering Refine step
   useEffect(() => {
