@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ── Detect actual image format from magic bytes ──────────────────────────
 function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
   if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { ext: 'jpg', contentType: 'image/jpeg' };
   if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57 && bytes[9] === 0x45) return { ext: 'webp', contentType: 'image/webp' };
@@ -16,26 +15,19 @@ function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: strin
 function buildPromptFromDescription(d: any): string {
   const genderWord = d.gender || "Female";
   const ageVal = d.age || 28;
-
   const parts: string[] = [
     `Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens.`,
     `${genderWord}, ${ageVal} years old, ${d.ethnicity || "Caucasian"} ethnicity, ${d.morphology || "average"} build.`,
   ];
-
   if (d.skinTone) parts.push(`${d.skinTone} skin tone.`);
   if (d.faceShape) parts.push(`${d.faceShape} face shape.`);
   if (d.eyeColor) parts.push(`${d.eyeColor} eyes.`);
-  if (d.hairStyle && d.hairColor) {
-    parts.push(`${d.hairColor} ${d.hairStyle.toLowerCase()} hair.`);
-  } else if (d.hairStyle) {
-    parts.push(`${d.hairStyle} hair.`);
-  } else if (d.hairColor) {
-    parts.push(`${d.hairColor} hair.`);
-  }
+  if (d.hairStyle && d.hairColor) parts.push(`${d.hairColor} ${d.hairStyle.toLowerCase()} hair.`);
+  else if (d.hairStyle) parts.push(`${d.hairStyle} hair.`);
+  else if (d.hairColor) parts.push(`${d.hairColor} hair.`);
   if (d.facialHair && d.facialHair !== "None") parts.push(`${d.facialHair} facial hair.`);
   if (d.expression) parts.push(`${d.expression} expression.`);
   if (d.distinctive) parts.push(`Distinctive feature: ${d.distinctive}.`);
-
   parts.push(
     "Light grey (#E8E8E8) seamless paper studio background.",
     "Soft diffused three-point Profoto lighting setup, subtle catch light in eyes,",
@@ -44,7 +36,6 @@ function buildPromptFromDescription(d: any): string {
     "Editorial fashion photography, waist-up framing, subject centered,",
     "looking directly at camera. Color-accurate, neutral white balance. 8K resolution."
   );
-
   return parts.join(" ");
 }
 
@@ -60,35 +51,98 @@ function extractMetadata(d: any) {
   };
 }
 
+// ── Fetch a URL and return base64 + mimeType for Gemini inlineData ──
+async function urlToInlineData(url: string): Promise<{ mimeType: string; data: string }> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch reference image");
+  const buf = new Uint8Array(await res.arrayBuffer());
+  const fmt = detectImageFormat(buf);
+  let b64 = "";
+  const CHUNK = 8192;
+  for (let i = 0; i < buf.length; i += CHUNK) {
+    b64 += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+  }
+  return { mimeType: fmt.contentType, data: btoa(b64) };
+}
+
+// ── Generate image via native Gemini generateContent ──
 async function generateSingleImage(
   prompt: string,
-  referenceContent: any[] | undefined,
+  referenceInlineData: { mimeType: string; data: string } | undefined,
   apiKey: string
 ): Promise<string> {
-  const messageContent: any[] = [{ type: "text", text: prompt }];
-  if (referenceContent) messageContent.push(...referenceContent);
+  const parts: any[] = [];
+  // Place reference image before text for maximum adherence
+  if (referenceInlineData) {
+    parts.push({ inlineData: referenceInlineData });
+  }
+  parts.push({ text: prompt });
 
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "gemini-3-pro-image-preview",
-      messages: [{ role: "user", content: messageContent }],
-      modalities: ["image", "text"],
-    }),
-  });
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent`,
+    {
+      method: "POST",
+      headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts }],
+        generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+      }),
+    }
+  );
 
   if (!res.ok) {
     const status = res.status;
+    const errText = await res.text().catch(() => "");
+    console.error("Gemini image gen error:", status, errText);
     if (status === 429) throw new Error("RATE_LIMIT");
     if (status === 402) throw new Error("AI_CREDITS_EXHAUSTED");
     throw new Error("Failed to generate model image");
   }
 
   const data = await res.json();
-  const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-  if (!imageUrl) throw new Error("No image was generated");
-  return imageUrl;
+  const parts2 = data.candidates?.[0]?.content?.parts || [];
+  const imagePart = parts2.find((p: any) => p.inlineData?.data);
+  if (!imagePart) throw new Error("No image was generated");
+
+  const mime = imagePart.inlineData.mimeType || "image/png";
+  return `data:${mime};base64,${imagePart.inlineData.data}`;
+}
+
+// ── Analyze reference image via Lovable AI gateway ──
+async function analyzeReferenceImage(imageUrl: string, lovableKey: string): Promise<any> {
+  const analyzeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `Analyze this image of a person for use as a virtual model reference in fashion photography. Return a JSON object with these fields:
+- "name": A realistic first name for this model
+- "gender": One of: male, female
+- "body_type": One of: slim, athletic, average, plus-size
+- "ethnicity": A brief description (e.g. "Caucasian", "East Asian", "Black", "South Asian", "Hispanic", "Middle Eastern", "Mixed")
+- "age_range": One of: young-adult, adult, mature
+- "appearance_description": A detailed 2-3 sentence description of the person's physical appearance including hair color/style, skin tone, facial features, and overall look. This will be used to generate a studio portrait.
+
+Return ONLY the JSON object, no markdown or explanation.`,
+          },
+          { type: "image_url", image_url: { url: imageUrl } },
+        ],
+      }],
+    }),
+  });
+
+  if (!analyzeRes.ok) throw new Error("Failed to analyze reference image");
+
+  const analyzeData = await analyzeRes.json();
+  const analyzeContent = analyzeData.choices?.[0]?.message?.content || "";
+  const jsonMatch = analyzeContent.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("Could not parse AI analysis");
+  return JSON.parse(jsonMatch[0]);
 }
 
 async function uploadBase64Image(
@@ -136,7 +190,7 @@ serve(async (req) => {
 
     const body = await req.json();
 
-    // ─── Action: publish-public (admin selects a variation and publishes) ───
+    // ─── Action: publish-public ───
     if (body.action === "publish-public") {
       const { data: adminCheck } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
       if (!adminCheck) {
@@ -197,57 +251,27 @@ serve(async (req) => {
       }
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("GEMINI_API_KEY not configured");
+    const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_KEY) throw new Error("GEMINI_API_KEY not configured");
+    const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     let metadata: any;
     let generatePrompt: string;
     let sourceImageUrl: string;
-    let referenceContent: any[] | undefined;
+    let referenceInlineData: { mimeType: string; data: string } | undefined;
 
     if (mode === "reference") {
       const imageUrl = body.imageUrl;
       if (!imageUrl) throw new Error("imageUrl is required");
 
       console.log("Analyzing reference image...");
-      const analyzeRes = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "gemini-2.5-flash",
-          messages: [{
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `Analyze this image of a person for use as a virtual model reference in fashion photography. Return a JSON object with these fields:
-- "name": A realistic first name for this model
-- "gender": One of: male, female
-- "body_type": One of: slim, athletic, average, plus-size
-- "ethnicity": A brief description (e.g. "Caucasian", "East Asian", "Black", "South Asian", "Hispanic", "Middle Eastern", "Mixed")
-- "age_range": One of: young-adult, adult, mature
-- "appearance_description": A detailed 2-3 sentence description of the person's physical appearance including hair color/style, skin tone, facial features, and overall look. This will be used to generate a studio portrait.
-
-Return ONLY the JSON object, no markdown or explanation.`,
-              },
-              { type: "image_url", image_url: { url: imageUrl } },
-            ],
-          }],
-        }),
-      });
-
-      if (!analyzeRes.ok) throw new Error("Failed to analyze reference image");
-
-      const analyzeData = await analyzeRes.json();
-      const analyzeContent = analyzeData.choices?.[0]?.message?.content || "";
-      const jsonMatch = analyzeContent.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("Could not parse AI analysis");
-      metadata = JSON.parse(jsonMatch[0]);
+      metadata = await analyzeReferenceImage(imageUrl, LOVABLE_KEY);
 
       const genderWord = metadata.gender === "male" ? "male" : "female";
       generatePrompt = `Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens. ${genderWord} model. ${metadata.appearance_description}. Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance. Light grey (#E8E8E8) seamless paper studio background, soft diffused three-point Profoto lighting setup, subtle catch light in eyes, sharp focus on facial features at f/2.8, natural skin texture with visible pores, no retouching, no airbrushing, no AI artifacts, no uncanny valley. Editorial fashion photography, waist-up framing, subject centered, looking at camera with a natural confident expression. Color-accurate, neutral white balance. 8K resolution.`;
       sourceImageUrl = imageUrl;
-      referenceContent = [{ type: "image_url", image_url: { url: imageUrl } }];
+      referenceInlineData = await urlToInlineData(imageUrl);
 
     } else if (mode === "combined") {
       const d = body.description;
@@ -258,7 +282,7 @@ Return ONLY the JSON object, no markdown or explanation.`,
       if (imageUrl) {
         generatePrompt += " Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance while applying the described attributes.";
         sourceImageUrl = imageUrl;
-        referenceContent = [{ type: "image_url", image_url: { url: imageUrl } }];
+        referenceInlineData = await urlToInlineData(imageUrl);
       } else {
         sourceImageUrl = "generator";
       }
@@ -270,14 +294,13 @@ Return ONLY the JSON object, no markdown or explanation.`,
       sourceImageUrl = "generator";
     }
 
-    // ─── Admin public: generate 3 variations, return URLs without inserting ───
+    // ─── Admin public: generate 3 variations ───
     if (makePublic) {
       console.log("Generating 3 public model variations in parallel...");
-      const variationCount = 3;
       const results = await Promise.allSettled(
-        Array.from({ length: variationCount }, () =>
-          generateSingleImage(generatePrompt, referenceContent, LOVABLE_API_KEY)
-            .then((base64Url) => uploadBase64Image(supabaseAdmin, user.id, base64Url))
+        Array.from({ length: 3 }, () =>
+          generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY)
+            .then((b64) => uploadBase64Image(supabaseAdmin, user.id, b64))
         )
       );
 
@@ -285,29 +308,22 @@ Return ONLY the JSON object, no markdown or explanation.`,
         .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
         .map((r) => r.value);
 
-      if (variations.length === 0) {
-        throw new Error("All 3 generation attempts failed. Please try again.");
-      }
+      if (variations.length === 0) throw new Error("All 3 generation attempts failed. Please try again.");
 
-      return new Response(JSON.stringify({
-        variations,
-        metadata,
-        name: body.name || metadata.name,
-      }), {
+      return new Response(JSON.stringify({ variations, metadata, name: body.name || metadata.name }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // ─── Regular user: generate 1, deduct credits, insert ───
+    // ─── Regular user: generate 1 ───
     console.log("Generating model portrait...");
-    const generatedImageUrl = await generateSingleImage(generatePrompt, referenceContent, LOVABLE_API_KEY);
+    const generatedImageUrl = await generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY);
 
     const { data: bal, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
       p_user_id: user.id,
       p_amount: 20,
     });
     if (deductError) throw new Error("Failed to deduct credits");
-    const newBalance = bal;
 
     const finalImageUrl = await uploadBase64Image(supabaseAdmin, user.id, generatedImageUrl);
 
@@ -330,7 +346,7 @@ Return ONLY the JSON object, no markdown or explanation.`,
 
     if (insertError) throw new Error("Failed to save model");
 
-    return new Response(JSON.stringify({ model: data, new_balance: newBalance, target: "private" }), {
+    return new Response(JSON.stringify({ model: data, new_balance: bal, target: "private" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
