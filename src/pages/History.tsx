@@ -1,22 +1,22 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, Clock, Sparkles, Wand2 } from 'lucide-react';
+import { Eye, Clock, Sparkles, Wand2, CreditCard, Images } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { toSignedUrls } from '@/lib/signedUrl';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { quality: 50 });
@@ -39,75 +39,102 @@ function pickAvatar(id: string, pool: typeof WORKFLOW_AVATARS) {
   return pool[hash % pool.length];
 }
 
-interface HistoryItem {
+interface HistoryJob {
   id: string;
-  imageUrl: string;
+  source: 'generation' | 'freestyle';
   label: string;
   subtitle?: string;
-  date: string;
+  imageCount: number;
+  creditsUsed: number;
+  status: string;
   rawDate: string;
-  source: 'generation' | 'freestyle';
-  prompt?: string;
-  aspectRatio?: string;
-  quality?: string;
-  providerUsed?: string | null;
+  relativeTime: string;
+  thumbnailUrls: string[];
   avatarSrc: string;
   avatarName: string;
+  // For opening detail modal
+  libraryItems: LibraryItem[];
 }
 
-const PAGE_SIZE = 40;
+const PAGE_SIZE = 30;
 
-function useHistoryItems(source: 'all' | 'generation' | 'freestyle') {
+function useHistoryJobs(source: 'all' | 'generation' | 'freestyle') {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
 
   const query = useQuery({
-    queryKey: ['history', user?.id, source],
+    queryKey: ['history-jobs', user?.id, source],
     queryFn: async () => {
-      const items: HistoryItem[] = [];
+      const jobs: HistoryJob[] = [];
       const limit = 200;
-
       const fetchJobs = source !== 'freestyle';
       const fetchFreestyle = source !== 'generation';
-
       const promises: Promise<void>[] = [];
+      const allImageUrls: string[] = [];
+      const urlIndexMap: { jobIdx: number; imgIdx: number }[] = [];
 
       if (fetchJobs) {
         promises.push(
           (async () => {
             const { data, error } = await supabase
               .from('generation_jobs')
-              .select('id, results, created_at, workflow_slug, scene_name, model_name, product_name, product_image_url, prompt_final, ratio, quality')
-              .eq('status', 'completed')
+              .select('id, results, created_at, workflow_slug, scene_name, model_name, product_name, product_image_url, prompt_final, ratio, quality, credits_used, requested_count, status')
               .order('created_at', { ascending: false })
               .limit(limit);
             if (error || !data) return;
+
             for (const job of data) {
               const results = job.results as any;
-              if (!Array.isArray(results)) continue;
-              for (let i = 0; i < results.length; i++) {
-                const r = results[i];
-                const url = typeof r === 'string' ? r : r?.url || r?.image_url;
-                if (!url) continue;
-                const isTryOn = url.includes('tryon-images');
-                const label = isTryOn ? 'Virtual Try-On' : (job.workflow_slug || 'Product Shot');
-                const avatar = pickAvatar(job.id, WORKFLOW_AVATARS);
-                items.push({
-                  id: `${job.id}-${i}`,
-                  imageUrl: url,
-                  label,
-                  subtitle: job.product_name || job.scene_name || undefined,
-                  date: new Date(job.created_at).toLocaleDateString(),
-                  rawDate: job.created_at,
-                  source: 'generation',
-                  prompt: job.prompt_final || undefined,
-                  aspectRatio: job.ratio,
-                  quality: job.quality,
-                  providerUsed: null,
-                  avatarSrc: teamAvatar(avatar.file),
-                  avatarName: avatar.name,
-                });
+              const images: string[] = [];
+              if (Array.isArray(results)) {
+                for (const r of results) {
+                  const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+                  if (url) images.push(url);
+                }
               }
+
+              const isTryOn = images.some(u => u.includes('tryon-images'));
+              const label = isTryOn ? 'Virtual Try-On' : (job.workflow_slug || 'Product Shot');
+              const avatar = pickAvatar(job.id, WORKFLOW_AVATARS);
+
+              const jobIdx = jobs.length;
+              const thumbs = images.slice(0, 4);
+              thumbs.forEach((url, imgIdx) => {
+                allImageUrls.push(url);
+                urlIndexMap.push({ jobIdx, imgIdx });
+              });
+
+              const libraryItems: LibraryItem[] = images.map((url, i) => ({
+                id: `${job.id}-${i}`,
+                imageUrl: url,
+                source: 'generation' as const,
+                label,
+                prompt: job.prompt_final || undefined,
+                date: new Date(job.created_at).toLocaleDateString(),
+                createdAt: job.created_at,
+                aspectRatio: job.ratio,
+                quality: job.quality,
+                sceneName: job.scene_name || undefined,
+                modelName: job.model_name || undefined,
+                productName: job.product_name || undefined,
+                workflowSlug: job.workflow_slug || undefined,
+              }));
+
+              jobs.push({
+                id: job.id,
+                source: 'generation',
+                label,
+                subtitle: job.product_name || job.scene_name || undefined,
+                imageCount: images.length,
+                creditsUsed: job.credits_used || 0,
+                status: job.status || 'completed',
+                rawDate: job.created_at,
+                relativeTime: formatDistanceToNow(new Date(job.created_at), { addSuffix: true }),
+                thumbnailUrls: thumbs,
+                avatarSrc: teamAvatar(avatar.file),
+                avatarName: avatar.name,
+                libraryItems,
+              });
             }
           })()
         );
@@ -122,24 +149,41 @@ function useHistoryItems(source: 'all' | 'generation' | 'freestyle') {
               .order('created_at', { ascending: false })
               .limit(limit);
             if (error || !data) return;
+
             for (const f of data) {
               const isUpscaled = f.quality?.startsWith('upscaled_');
               const resolution = f.quality?.includes('4k') ? '4K' : '2K';
               const avatar = pickAvatar(f.id, FREESTYLE_AVATARS);
-              items.push({
+              const jobIdx = jobs.length;
+
+              allImageUrls.push(f.image_url);
+              urlIndexMap.push({ jobIdx, imgIdx: 0 });
+
+              jobs.push({
                 id: f.id,
-                imageUrl: f.image_url,
+                source: 'freestyle',
                 label: isUpscaled ? 'Enhanced' : 'Freestyle',
                 subtitle: isUpscaled ? `${resolution} Upscale` : undefined,
-                date: new Date(f.created_at).toLocaleDateString(),
+                imageCount: 1,
+                creditsUsed: isUpscaled ? 3 : 1,
+                status: 'completed',
                 rawDate: f.created_at,
-                source: 'freestyle',
-                prompt: f.prompt,
-                aspectRatio: f.aspect_ratio,
-                quality: f.quality,
-                providerUsed: (f as any).provider_used || null,
+                relativeTime: formatDistanceToNow(new Date(f.created_at), { addSuffix: true }),
+                thumbnailUrls: [f.image_url],
                 avatarSrc: teamAvatar(avatar.file),
                 avatarName: avatar.name,
+                libraryItems: [{
+                  id: f.id,
+                  imageUrl: f.image_url,
+                  source: 'freestyle' as const,
+                  label: isUpscaled ? 'Enhanced' : 'Freestyle',
+                  prompt: f.prompt,
+                  date: new Date(f.created_at).toLocaleDateString(),
+                  createdAt: f.created_at,
+                  aspectRatio: f.aspect_ratio,
+                  quality: f.quality,
+                  providerUsed: (f as any).provider_used || null,
+                }],
               });
             }
           })()
@@ -147,91 +191,82 @@ function useHistoryItems(source: 'all' | 'generation' | 'freestyle') {
       }
 
       await Promise.all(promises);
-      items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
+      jobs.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
 
-      // Sign URLs
-      const rawUrls = items.map(i => i.imageUrl);
-      const signedUrls = await toSignedUrls(rawUrls);
-      for (let i = 0; i < items.length; i++) {
-        items[i].imageUrl = signedUrls[i];
+      // Sign all thumbnail URLs
+      if (allImageUrls.length > 0) {
+        const signed = await toSignedUrls(allImageUrls);
+        for (let i = 0; i < signed.length; i++) {
+          const { jobIdx, imgIdx } = urlIndexMap[i];
+          if (jobs[jobIdx]) {
+            jobs[jobIdx].thumbnailUrls[imgIdx] = signed[i];
+            // Also update corresponding library item
+            if (jobs[jobIdx].libraryItems[imgIdx]) {
+              jobs[jobIdx].libraryItems[imgIdx].imageUrl = signed[i];
+            }
+          }
+        }
       }
 
-      return items;
+      return jobs;
     },
     enabled: !!user,
     staleTime: 2 * 60 * 1000,
   });
 
-  const items = query.data ?? [];
-  const visibleItems = items.slice(0, page * PAGE_SIZE);
-  const hasMore = visibleItems.length < items.length;
+  const jobs = query.data ?? [];
+  const visibleJobs = jobs.slice(0, page * PAGE_SIZE);
+  const hasMore = visibleJobs.length < jobs.length;
 
   return {
-    items: visibleItems,
-    allCount: items.length,
+    jobs: visibleJobs,
+    allCount: jobs.length,
     isLoading: query.isLoading,
     hasMore,
     loadMore: () => setPage(p => p + 1),
   };
 }
 
-function HistoryGrid({ items, isLoading, hasMore, loadMore, allCount }: {
-  items: HistoryItem[];
+function statusColor(status: string) {
+  switch (status) {
+    case 'completed': return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+    case 'generating': return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 animate-pulse';
+    case 'failed': return 'bg-destructive/10 text-destructive';
+    default: return 'bg-muted text-muted-foreground';
+  }
+}
+
+function HistoryJobList({ jobs, isLoading, hasMore, loadMore, allCount }: {
+  jobs: HistoryJob[];
   isLoading: boolean;
   hasMore: boolean;
   loadMore: () => void;
   allCount: number;
 }) {
-  const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdmin();
-  const [activeItemId, setActiveItemId] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<LibraryItem[] | null>(null);
 
-  const openItem = useCallback((item: HistoryItem) => {
-    const libraryItem: LibraryItem = {
-      id: item.id,
-      imageUrl: item.imageUrl,
-      source: item.source,
-      label: item.label,
-      prompt: item.prompt,
-      date: item.date,
-      createdAt: item.rawDate,
-      aspectRatio: item.aspectRatio,
-      quality: item.quality,
-      providerUsed: item.providerUsed,
-    };
-    setSelectedItem(libraryItem);
-    setActiveItemId(null);
-  }, []);
-
-  const handleCardClick = useCallback((item: HistoryItem) => {
-    if (isMobile) {
-      if (activeItemId === item.id) {
-        openItem(item);
-      } else {
-        setActiveItemId(item.id);
-      }
-    } else {
-      openItem(item);
+  const openJob = useCallback((job: HistoryJob) => {
+    if (job.libraryItems.length > 0) {
+      setSelectedItems(job.libraryItems);
     }
-  }, [isMobile, activeItemId, openItem]);
+  }, []);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
+      <div className="space-y-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 rounded-xl" />
         ))}
       </div>
     );
   }
 
-  if (items.length === 0) {
+  if (jobs.length === 0) {
     return (
       <EmptyStateCard
         heading="No creations yet"
-        description="Start creating visuals and they'll appear here as your complete history."
+        description="Start creating visuals and your completed jobs will appear here."
         action={{ content: 'Create Visuals', onAction: () => navigate('/app/workflows') }}
         icon={<Clock className="w-8 h-8 text-muted-foreground" />}
       />
@@ -240,59 +275,68 @@ function HistoryGrid({ items, isLoading, hasMore, loadMore, allCount }: {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        {items.map((item) => {
-          const isActive = isMobile && activeItemId === item.id;
-          return (
-            <div
-              key={item.id}
-              className="group cursor-pointer"
-              onClick={() => handleCardClick(item)}
-            >
-              <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border relative shadow-sm bg-muted">
-                {isAdmin && item.providerUsed && (
-                  <div className="absolute top-2 left-2 z-10">
-                    <Badge variant="secondary" className="bg-black/60 text-white text-[9px] px-1.5 py-0 font-bold shadow-md border-0">
-                      {item.providerUsed.includes('seedream') ? 'SDR' : item.providerUsed.includes('pro') ? 'PRO' : 'FLASH'}
-                    </Badge>
-                  </div>
-                )}
-                <ShimmerImage
-                  src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
-                  alt={item.label}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                  aspectRatio="3/4"
-                  onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
-                />
-                <div
-                  className={`absolute inset-0 flex flex-col items-center justify-center bg-black/30 transition-opacity duration-200 ${
-                    isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                  }`}
-                >
-                  <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
-                    <Eye className="w-3.5 h-3.5" /> View
-                  </span>
-                </div>
+      <div className="space-y-2">
+        {jobs.map((job) => (
+          <div
+            key={job.id}
+            onClick={() => openJob(job)}
+            className="group flex items-center gap-4 p-3 rounded-xl border border-border bg-card hover:bg-accent/50 cursor-pointer transition-colors duration-150"
+          >
+            {/* Avatar */}
+            <Avatar className="h-9 w-9 shrink-0 border border-border">
+              <AvatarImage src={job.avatarSrc} alt={job.avatarName} />
+              <AvatarFallback className="text-xs">{job.avatarName[0]}</AvatarFallback>
+            </Avatar>
 
-                {/* Bottom metadata strip */}
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2.5 pt-6">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={item.avatarSrc}
-                      alt={item.avatarName}
-                      className="w-5 h-5 rounded-full border border-white/30 object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-medium text-white truncate leading-tight">{item.label}</p>
-                      <p className="text-[10px] text-white/70 truncate leading-tight">{item.date}</p>
-                    </div>
-                  </div>
-                </div>
+            {/* Info */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-foreground truncate">{job.label}</span>
+                <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${statusColor(job.status)}`}>
+                  {job.status === 'completed' ? 'Completed' : job.status}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                {job.subtitle && <span className="truncate max-w-[160px]">{job.subtitle}</span>}
+                <span className="flex items-center gap-1">
+                  <Images className="w-3 h-3" />
+                  {job.imageCount} {job.imageCount === 1 ? 'image' : 'images'}
+                </span>
+                <span className="flex items-center gap-1">
+                  <CreditCard className="w-3 h-3" />
+                  {job.creditsUsed} cr
+                </span>
+                <span className="hidden sm:inline">{job.relativeTime}</span>
               </div>
             </div>
-          );
-        })}
+
+            {/* Thumbnail strip */}
+            <div className="hidden md:flex items-center gap-1.5 shrink-0">
+              {job.thumbnailUrls.slice(0, 3).map((url, i) => (
+                <div key={i} className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted">
+                  <ShimmerImage
+                    src={getOptimizedUrl(url, { quality: 40 })}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    aspectRatio="1/1"
+                    onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
+                  />
+                </div>
+              ))}
+              {job.imageCount > 3 && (
+                <div className="w-12 h-12 rounded-lg border border-border bg-muted flex items-center justify-center">
+                  <span className="text-[10px] font-semibold text-muted-foreground">+{job.imageCount - 3}</span>
+                </div>
+              )}
+            </div>
+
+            {/* View action */}
+            <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Eye className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </div>
+        ))}
       </div>
 
       {hasMore && (
@@ -304,9 +348,10 @@ function HistoryGrid({ items, isLoading, hasMore, loadMore, allCount }: {
       )}
 
       <LibraryDetailModal
-        item={selectedItem}
-        open={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
+        item={selectedItems?.[0] ?? null}
+        open={!!selectedItems}
+        onClose={() => setSelectedItems(null)}
+        items={selectedItems ?? undefined}
       />
     </>
   );
@@ -314,12 +359,12 @@ function HistoryGrid({ items, isLoading, hasMore, loadMore, allCount }: {
 
 export default function History() {
   const [tab, setTab] = useState<'all' | 'generation' | 'freestyle'>('all');
-  const { items, isLoading, hasMore, loadMore, allCount } = useHistoryItems(tab);
+  const { jobs, isLoading, hasMore, loadMore, allCount } = useHistoryJobs(tab);
 
   return (
     <PageHeader
       title="History"
-      subtitle="Browse all your generated visuals in one place."
+      subtitle="Browse all your completed generation jobs in one place."
     >
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
         <TabsList className="mb-4">
@@ -341,8 +386,8 @@ export default function History() {
         </TabsList>
 
         <TabsContent value={tab} className="mt-0">
-          <HistoryGrid
-            items={items}
+          <HistoryJobList
+            jobs={jobs}
             isLoading={isLoading}
             hasMore={hasMore}
             loadMore={loadMore}
