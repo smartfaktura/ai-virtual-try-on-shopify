@@ -1758,7 +1758,7 @@ export function ProductImagesStep3Refine({
             <div className="mt-1.5">
               {extraRefUrl ? (
                 <div className="relative group rounded-md overflow-hidden border border-border">
-                  <img src={extraRefUrl} alt="Extra reference" className="w-full aspect-square object-contain bg-muted/30" />
+                  <img src={extraRefUrl} alt="Extra reference" className="w-full aspect-[3/4] object-contain object-center bg-muted/30" />
                   <button
                     type="button"
                     onClick={() => removeExtraRef(scene.id)}
@@ -1870,7 +1870,7 @@ export function ProductImagesStep3Refine({
                       </div>
                     </div>
                     {refUrl ? (
-                      <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted/30">
+                      <div className="relative group w-24 aspect-[3/4] rounded-lg overflow-hidden border border-border bg-muted/30">
                         <img src={refUrl} alt={trigger.label} className="w-full h-full object-contain" />
                         <button type="button" onClick={() => { if (trigger.key === 'packagingDetails') update({ packagingReferenceUrl: undefined }); else if (trigger.key === 'backView') update({ backReferenceUrl: undefined }); removeRefTrigger(trigger.key); }} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"><X className="w-3 h-3 text-white" /></button>
                       </div>
@@ -1914,15 +1914,17 @@ export function ProductImagesStep3Refine({
                       const isUploading = uploadingRefTrigger === refKey;
                       return (
                         <div key={product.id} className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border/60 bg-card">
-                          <ProductThumbnail imageUrl={product.image_url} alt={product.title} size="md" fit="contain" />
+                          <div className="w-12 aspect-[3/4] rounded-lg overflow-hidden border border-border/40 bg-muted/30 flex-shrink-0">
+                            <img src={product.image_url} alt={product.title} className="w-full h-full object-contain object-center" />
+                          </div>
                           <span className="text-[10px] font-medium text-foreground truncate w-full text-center max-w-[80px]">{product.title}</span>
                           {productRefUrl ? (
-                            <div className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted/30">
+                            <div className="relative group w-16 aspect-[3/4] rounded-lg overflow-hidden border border-border bg-muted/30">
                               <img src={productRefUrl} alt={`${trigger.label} for ${product.title}`} className="w-full h-full object-contain" />
                               <button type="button" onClick={() => removeRefTrigger(trigger.key, product.id)} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"><X className="w-2.5 h-2.5 text-white" /></button>
                             </div>
                           ) : (
-                            <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: product.id }; perProductInputRef.current?.click(); }} disabled={isUploading} className="w-16 h-16 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer flex flex-col items-center justify-center gap-0.5">
+                            <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: product.id }; perProductInputRef.current?.click(); }} disabled={isUploading} className="w-16 aspect-[3/4] rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer flex flex-col items-center justify-center gap-0.5">
                               {isUploading ? <span className="text-[9px] text-primary font-medium animate-pulse">…</span> : <><Upload className="w-3.5 h-3.5 text-primary/50" /><span className="text-[8px] text-primary/60 font-medium">Upload</span></>}
                             </button>
                           )}
