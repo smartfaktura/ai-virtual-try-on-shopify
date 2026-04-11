@@ -103,13 +103,13 @@ const LOADING_TIPS = [
 
 const LOADING_AVATARS = TEAM_MEMBERS.slice(0, 6);
 
-function BrandedLoadingState({ isPublicMode = false }: { isPublicMode?: boolean }) {
+function BrandedLoadingState() {
   const [tipIndex, setTipIndex] = useState(0);
   const [activeAvatar, setActiveAvatar] = useState(0);
   const [elapsed, setElapsed] = useState(0);
 
-  const estimateSeconds = isPublicMode ? 90 : 40;
-  const estimateLabel = isPublicMode ? '~1-2 min' : '~30-50 sec';
+  const estimateSeconds = 90;
+  const estimateLabel = '~1-2 min';
   const ratio = elapsed / estimateSeconds;
   const progress = ratio <= 1 ? Math.min(ratio * 90, 90) : Math.min(90 + (ratio - 1) * 5, 95);
 
@@ -163,7 +163,7 @@ function BrandedLoadingState({ isPublicMode = false }: { isPublicMode?: boolean 
 
       <div className="text-center space-y-2">
         <p className="text-sm font-semibold text-foreground">
-          {isPublicMode ? 'Generating 3 model variations…' : 'Creating your brand model...'}
+          Generating 3 model variations…
         </p>
         <p className="text-xs text-muted-foreground h-4 transition-all duration-300">{overtimeMsg || LOADING_TIPS[tipIndex]}</p>
       </div>
@@ -232,7 +232,7 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
   const [variations, setVariations] = useState<string[]>([]);
-  const [pendingMeta, setPendingMeta] = useState<{ metadata: any; name: string } | null>(null);
+  const [pendingMeta, setPendingMeta] = useState<{ metadata: any; name: string; sourceImageUrl?: string } | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
   const [publishing, setPublishing] = useState(false);
   const { balance, refreshBalance } = useCredits();
@@ -300,12 +300,12 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Admin public: show variation picker
-      if (makePublic && data?.variations) {
+      // Show variation picker for all flows
+      if (data?.variations) {
         setVariations(data.variations);
-        setPendingMeta({ metadata: data.metadata, name: data.name || finalName });
+        setPendingMeta({ metadata: data.metadata, name: data.name || finalName, sourceImageUrl: data.sourceImageUrl });
         setSelectedVariation(0);
-        return; // stay on page, show picker
+        return;
       }
 
       toast.success('Model generated successfully!');
@@ -349,6 +349,38 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
       onSuccess();
     } catch (err: any) {
       toast.error(err.message || 'Failed to publish model');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleSaveBrandModel = async () => {
+    if (!pendingMeta || !variations[selectedVariation]) return;
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-user-model', {
+        body: {
+          action: 'save-brand-model',
+          selectedUrl: variations[selectedVariation],
+          metadata: pendingMeta.metadata,
+          name: pendingMeta.name,
+          sourceImageUrl: pendingMeta.sourceImageUrl || 'generator',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Brand model saved successfully!');
+      refreshBalance();
+      queryClient.invalidateQueries({ queryKey: ['user-models'] });
+      setVariations([]);
+      setPendingMeta(null);
+      setModelName('');
+      setPreviewUrl(null);
+      setUploadedUrl(null);
+      setTermsAccepted(false);
+      onSuccess();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save model');
     } finally {
       setPublishing(false);
     }
@@ -409,21 +441,32 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
           >
             Cancel
           </Button>
-          <Button
-            className="flex-1 gap-2"
-            onClick={handlePublishVariation}
-            disabled={publishing}
-          >
-            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
-            Publish as Public Model
-          </Button>
+          {makePublic ? (
+            <Button
+              className="flex-1 gap-2"
+              onClick={handlePublishVariation}
+              disabled={publishing}
+            >
+              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+              Publish as Public Model
+            </Button>
+          ) : (
+            <Button
+              className="flex-1 gap-2"
+              onClick={handleSaveBrandModel}
+              disabled={publishing}
+            >
+              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Save as Brand Model (20 credits)
+            </Button>
+          )}
         </div>
       </div>
     );
   }
 
   if (generating) {
-    return <BrandedLoadingState isPublicMode={makePublic} />;
+    return <BrandedLoadingState />;
   }
 
   return (
