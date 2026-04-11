@@ -92,6 +92,113 @@ export default function ProductImages() {
   const [visibleCount, setVisibleCount] = useState(25);
   const MAX_PRODUCTS = 20;
 
+  // Quick upload state
+  const [quickUploading, setQuickUploading] = useState(false);
+  const [quickUploadProgress, setQuickUploadProgress] = useState('');
+  const quickUploadInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleQuickUpload = useCallback(async (file: File) => {
+    if (!user) { toast.error('Please sign in to upload'); return; }
+    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error('Image must be under 20MB'); return; }
+
+    setQuickUploading(true);
+    setQuickUploadProgress('Uploading…');
+
+    try {
+      // 1. Upload to storage
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user.id}/${timestamp}-${randomId}.${extension}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('product-uploads')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { data: urlData } = supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(uploadData.path);
+
+      const imageUrl = urlData.publicUrl;
+
+      // 2. Analyze product image
+      setQuickUploadProgress('Analyzing…');
+      let title = 'Untitled Product';
+      let productType = '';
+      let description = '';
+
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+        if (token) {
+          const { data: analysisData } = await supabase.functions.invoke('analyze-product-image', {
+            body: { imageUrl },
+          });
+          if (analysisData?.title) title = analysisData.title;
+          if (analysisData?.productType) productType = analysisData.productType;
+          if (analysisData?.description) description = analysisData.description;
+        }
+      } catch {
+        // Analysis failed — proceed with defaults
+      }
+
+      // 3. Insert product
+      setQuickUploadProgress('Creating product…');
+      const { data: newProduct, error: insertError } = await supabase
+        .from('user_products')
+        .insert({
+          user_id: user.id,
+          title,
+          product_type: productType,
+          description,
+          image_url: imageUrl,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw new Error(insertError.message);
+
+      // 4. Invalidate and auto-select
+      await queryClient.invalidateQueries({ queryKey: ['user-products'] });
+      setSelectedProductIds(prev => {
+        const next = new Set(prev);
+        next.add(newProduct.id);
+        return next;
+      });
+
+      toast.success('Product created — select shots next');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Upload failed';
+      toast.error(msg);
+    } finally {
+      setQuickUploading(false);
+      setQuickUploadProgress('');
+    }
+  }, [user, queryClient]);
+
+  // Paste listener for Step 1
+  useEffect(() => {
+    if (step !== 1) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) handleQuickUpload(file);
+          return;
+        }
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [step, handleQuickUpload]);
+
 
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
