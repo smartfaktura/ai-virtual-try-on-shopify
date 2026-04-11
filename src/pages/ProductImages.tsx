@@ -1063,6 +1063,50 @@ export default function ProductImages() {
                 return (
                   <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                      {/* Quick Upload Card */}
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => !quickUploading && quickUploadInputRef.current?.click()}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); quickUploadInputRef.current?.click(); }}}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(false);
+                          const file = e.dataTransfer.files[0];
+                          if (file) handleQuickUpload(file);
+                        }}
+                        className={cn(
+                          'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all aspect-square cursor-pointer',
+                          isDragOver ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-primary/40 hover:border-primary hover:bg-primary/5',
+                          quickUploading && 'pointer-events-none opacity-70'
+                        )}
+                      >
+                        <input
+                          ref={quickUploadInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleQuickUpload(file);
+                            e.target.value = '';
+                          }}
+                        />
+                        {quickUploading ? (
+                          <>
+                            <Loader2 className="w-6 h-6 animate-spin text-primary mb-1" />
+                            <span className="text-[10px] font-medium text-primary">{quickUploadProgress}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-6 h-6 text-primary mb-1" />
+                            <span className="text-[10px] font-medium text-primary">Upload Image</span>
+                            <span className="text-[9px] text-muted-foreground mt-0.5">or paste (Ctrl+V)</span>
+                          </>
+                        )}
+                      </div>
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
