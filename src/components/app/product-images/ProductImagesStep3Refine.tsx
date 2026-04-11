@@ -1333,13 +1333,14 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
 }
 
 /** Piece fields portion of OutfitLockPanel — shown in collapsible */
-function OutfitPieceFields({ details, update, primaryCategory, modelGender, analyses, selectedProductIds }: {
+function OutfitPieceFields({ details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
   primaryCategory?: string;
   modelGender?: string;
   analyses?: Record<string, ProductAnalysis>;
   selectedProductIds?: Set<string>;
+  allProducts?: UserProduct[];
 }) {
   const cat = primaryCategory || 'garments';
   const isMale = modelGender === 'male';
