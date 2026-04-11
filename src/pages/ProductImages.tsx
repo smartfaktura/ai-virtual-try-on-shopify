@@ -1087,55 +1087,15 @@ export default function ProductImages() {
                 return (
                   <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                      {/* Quick Upload Card — matches product card structure */}
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => !quickUploading && quickUploadInputRef.current?.click()}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); quickUploadInputRef.current?.click(); }}}
-                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                        onDragLeave={() => setIsDragOver(false)}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          setIsDragOver(false);
-                          const file = e.dataTransfer.files[0];
-                          if (file) handleQuickUpload(file);
-                        }}
-                        className={cn(
-                          'group relative flex flex-col rounded-lg overflow-hidden border-2 border-dashed transition-all text-left cursor-pointer',
-                          isDragOver ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border hover:border-primary/40',
-                          quickUploading && 'pointer-events-none opacity-70'
-                        )}
+                      {/* Add Product Card — opens full AddProductModal */}
+                      <button
+                        type="button"
+                        onClick={() => setAddProductOpen(true)}
+                        className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground"
                       >
-                        <input
-                          ref={quickUploadInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleQuickUpload(file);
-                            e.target.value = '';
-                          }}
-                        />
-                        <div className="w-full aspect-square flex flex-col items-center justify-center bg-muted/30">
-                          {quickUploading ? (
-                            <>
-                              <Loader2 className="w-7 h-7 animate-spin text-primary mb-1" />
-                              <span className="text-[10px] font-medium text-primary">{quickUploadProgress}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="w-7 h-7 text-muted-foreground group-hover:text-primary mb-1.5 transition-colors" />
-                              <span className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">Upload</span>
-                            </>
-                          )}
-                        </div>
-                        <div className="px-1.5 py-1.5 bg-card">
-                          <p className="text-[10px] font-medium text-foreground leading-tight">Create from Product Image</p>
-                          <p className="text-[9px] text-muted-foreground mt-0.5">Upload, drop, click or paste</p>
-                        </div>
-                      </div>
+                        <Package className="w-6 h-6 mb-1 opacity-50" />
+                        <span className="text-[10px] font-medium">New</span>
+                      </button>
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
@@ -1166,10 +1126,6 @@ export default function ProductImages() {
                           </div>
                         );
                       })}
-                      <button type="button" onClick={() => setAddProductOpen(true)} className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground">
-                        <Package className="w-6 h-6 mb-1 opacity-50" />
-                        <span className="text-[10px] font-medium">Add New</span>
-                      </button>
                     </div>
                     {loadMoreBtn}
                   </>
