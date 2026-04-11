@@ -1,32 +1,49 @@
 
 
-# Fix Model Generation — Switch to Native Gemini API
+# Add Quick Upload Option to Product Visuals Step 1
 
 ## Problem
-The `generate-user-model` edge function uses the **OpenAI-compatible Gemini endpoint** (`/v1beta/openai/chat/completions`) for image generation. This endpoint doesn't properly support `modalities: ["image", "text"]`, so every generation attempt fails silently. The response parsing (`data.choices[0].message.images[0].image_url.url`) also doesn't match the actual response format.
+Currently, users can only select from previously saved products. There's no way to quickly upload/paste an image and go straight into the generation flow without first creating a product entry.
 
-Meanwhile, the working `generate-freestyle` function uses the **native Gemini endpoint** (`/v1beta/models/${model}:generateContent`) which correctly returns images via `candidates[0].content.parts[].inlineData`.
+## Solution
+Add a prominent "Upload Image" card alongside the existing product grid in Step 1. When used, it creates a temporary product entry in the database (via the existing `AddProductModal` flow) but with a streamlined, faster path — or better yet, add a **quick-upload drop zone** directly in Step 1 that:
 
-## Fix
+1. Accepts drag-and-drop or click-to-upload
+2. Auto-uploads the image to storage
+3. Creates a product record with AI-analyzed title and type (using the existing `analyze-product-image` edge function)
+4. Auto-selects the newly created product
 
-### File: `supabase/functions/generate-user-model/index.ts`
+### Changes
 
-**`generateSingleImage` function** — rewrite to use the native Gemini API:
+**File: `src/pages/ProductImages.tsx`**
+- Add a `QuickUploadCard` component rendered as the **first item** in the product grid (before the existing "Add New" dashed card)
+- This card shows a large upload icon, "Upload Image" label, and accepts file input + drag-and-drop
+- On file drop/select:
+  1. Upload image to `product-images` storage bucket
+  2. Call `analyze-product-image` to get title/type
+  3. Insert into `user_products` table
+  4. Invalidate products query and auto-select the new product ID
+  5. Show a brief toast: "Product created — select shots next"
+- Also support **paste from clipboard** (Ctrl+V) — listen for paste events on the page during Step 1, extract image from clipboard, and trigger the same flow
+- The quick-upload card should be visually distinct: slightly larger than product cards, with a gradient border and upload icon, clearly communicating "start from an image"
 
-1. **Endpoint**: Change from `/v1beta/openai/chat/completions` to `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent`
-2. **Auth header**: Change from `Authorization: Bearer` to `x-goog-api-key: ${apiKey}`
-3. **Request body**: Change from OpenAI format to native Gemini format:
-   - `contents: [{ role: "user", parts: [...] }]` instead of `messages`
-   - `generationConfig: { responseModalities: ["IMAGE", "TEXT"] }` instead of `modalities`
-   - Text parts as `{ text: "..." }` instead of `{ type: "text", text: "..." }`
-   - Image parts as `{ inlineData: { mimeType, data } }` or `{ fileData: { fileUri } }` instead of `{ type: "image_url", ... }`
-4. **Response parsing**: Extract image from `candidates[0].content.parts[].inlineData` (same pattern as `generate-freestyle`)
-5. **Reference images**: Convert image URLs to inline base64 data for the native API, or use `fileData` with the URL
+**File: `src/pages/ProductImages.tsx` (sticky bar area)**
+- Update the sticky bar CTA: when a quick-uploaded product is the only selection, show "Next: Choose Shots →" as usual (no change needed, just works)
 
-**Also fix the analysis call** (line 213) — this one uses the OpenAI-compatible endpoint for text-only analysis with `gemini-2.5-flash`. This should work but for consistency, switch to the Lovable AI gateway (`ai.gateway.lovable.dev/v1`) with `LOVABLE_API_KEY` for the analysis step, keeping `GEMINI_API_KEY` only for image generation.
+### Visual Layout (Step 1 grid)
+```text
+┌──────────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│  📤 Upload   │  │ Product1 │  │ Product2 │  │ + Add New│
+│  Image       │  │          │  │          │  │  (modal) │
+│  Drop or     │  │          │  │          │  │          │
+│  click here  │  │          │  │          │  │          │
+└──────────────┘  └──────────┘  └──────────┘  └──────────┘
+```
 
-### No other files need changes.
+### Upload Flow Details
+- Show a small spinner overlay on the card while uploading + analyzing
+- After creation, the card reverts to its default state and the new product appears in the grid (already selected)
+- If the user has no products at all, the empty state gets an additional "or upload an image" button alongside the existing "Add Your First Product"
 
-## Summary
-The root cause is using the wrong API endpoint format. The fix aligns `generate-user-model` with the same native Gemini API pattern already used successfully by `generate-freestyle` and other working edge functions.
+### No new files needed — all changes in `src/pages/ProductImages.tsx`
 
