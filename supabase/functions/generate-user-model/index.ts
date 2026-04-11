@@ -35,7 +35,7 @@ function buildPromptFromDescription(d: any): string {
     "Soft diffused three-point Profoto lighting setup, subtle catch light in eyes,",
     "sharp focus on facial features at f/2.8, natural skin texture with visible pores,",
     "no retouching, no airbrushing, no AI artifacts, no uncanny valley.",
-    "Editorial fashion photography, waist-up framing, subject centered,",
+    "Editorial fashion photography, close-up head-and-shoulders framing, face fills most of frame, subject centered,",
     "looking directly at camera. Color-accurate, neutral white balance. 8K resolution."
   );
   return parts.join(" ");
@@ -322,7 +322,7 @@ serve(async (req) => {
 
       const genderWord = metadata.gender === "male" ? "male" : "female";
       const refClothing = genderWord === 'male' ? 'simple white t-shirt' : 'simple white cami top';
-      generatePrompt = `Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens. ${genderWord} model. Wearing a ${refClothing}. ${metadata.appearance_description}. Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance. Light grey (#E8E8E8) seamless paper studio background, soft diffused three-point Profoto lighting setup, subtle catch light in eyes, sharp focus on facial features at f/2.8, natural skin texture with visible pores, no retouching, no airbrushing, no AI artifacts, no uncanny valley. Editorial fashion photography, waist-up framing, subject centered, looking at camera with a natural confident expression. Color-accurate, neutral white balance. 8K resolution.`;
+      generatePrompt = `Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens. ${genderWord} model. Wearing a ${refClothing}. ${metadata.appearance_description}. Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance. Light grey (#E8E8E8) seamless paper studio background, soft diffused three-point Profoto lighting setup, subtle catch light in eyes, sharp focus on facial features at f/2.8, natural skin texture with visible pores, no retouching, no airbrushing, no AI artifacts, no uncanny valley. Editorial fashion photography, close-up head-and-shoulders framing, face fills most of frame, subject centered, looking at camera with a natural confident expression. Color-accurate, neutral white balance. 8K resolution.`;
       sourceImageUrl = imageUrl;
       referenceInlineData = await urlToInlineData(imageUrl);
 
