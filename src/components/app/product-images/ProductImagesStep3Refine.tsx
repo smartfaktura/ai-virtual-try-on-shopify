@@ -2037,6 +2037,12 @@ export function ProductImagesStep3Refine({
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
+                  {hasMultipleCategories && (
+                    <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 mt-2 flex items-center gap-1.5">
+                      <Info className="w-3 h-3 flex-shrink-0 text-primary" />
+                      Mixed categories — outfit slots are auto-adjusted per product at generation time (e.g., Bottom is skipped for skirt products).
+                    </p>
+                  )}
                 </div>
 
                 <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
