@@ -221,6 +221,56 @@ serve(async (req) => {
       });
     }
 
+    // ─── Action: save-brand-model ───
+    if (body.action === "save-brand-model") {
+      const { selectedUrl, metadata, name } = body;
+      if (!selectedUrl || !metadata) throw new Error("selectedUrl and metadata are required");
+
+      // Verify plan
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("plan, credits_balance")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!prof || !["growth", "pro", "enterprise"].includes(prof.plan)) {
+        return new Response(JSON.stringify({ error: "Growth or Pro plan required", code: "PLAN_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (prof.credits_balance < 20) {
+        return new Response(JSON.stringify({ error: "Insufficient credits", code: "INSUFFICIENT_CREDITS" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Deduct credits
+      const { data: bal, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
+        p_user_id: user.id,
+        p_amount: 20,
+      });
+      if (deductError) throw new Error("Failed to deduct credits");
+
+      const modelName = name || metadata.name || "My Model";
+      const { data, error: insertError } = await supabaseAdmin
+        .from("user_models")
+        .insert({
+          user_id: user.id,
+          name: modelName,
+          gender: metadata.gender || "female",
+          body_type: metadata.body_type || "average",
+          ethnicity: metadata.ethnicity || "",
+          age_range: metadata.age_range || "adult",
+          image_url: selectedUrl,
+          source_image_url: body.sourceImageUrl || "generator",
+          credits_used: 20,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw new Error("Failed to save model");
+
+      return new Response(JSON.stringify({ model: data, new_balance: bal, target: "private" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ─── Standard generation flow ───
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
