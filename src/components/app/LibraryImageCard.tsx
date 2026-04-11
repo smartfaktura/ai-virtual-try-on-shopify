@@ -110,14 +110,6 @@ export function LibraryImageCard({
         </div>
       )}
 
-      {/* Persistent favorite indicator */}
-      {isFavorited && !selectMode && (
-        <div className="absolute top-3 right-3 z-10 pointer-events-none">
-          {!item.quality?.startsWith('upscaled_') && (
-            <Heart className="w-4 h-4 text-rose-500 fill-rose-500 drop-shadow-md" />
-          )}
-        </div>
-      )}
 
       {/* Select mode checkbox */}
       {selectMode && (
