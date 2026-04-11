@@ -1,16 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, Clock, Sparkles, Wand2, CreditCard, Images } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Eye, Clock, Sparkles, Wand2, ImageIcon } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { toSignedUrls } from '@/lib/signedUrl';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
@@ -19,90 +16,57 @@ import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
-const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { quality: 50 });
+/* ── helpers ── */
 
-const WORKFLOW_AVATARS = [
-  { file: 'avatar-sophia.jpg', name: 'Sophia' },
-  { file: 'avatar-max.jpg', name: 'Max' },
-  { file: 'avatar-sienna.jpg', name: 'Sienna' },
-];
-
-const FREESTYLE_AVATARS = [
-  { file: 'avatar-yuki.jpg', name: 'Yuki' },
-  { file: 'avatar-luna.jpg', name: 'Luna' },
-  { file: 'avatar-amara.jpg', name: 'Amara' },
-  { file: 'avatar-kenji.jpg', name: 'Kenji' },
-];
-
-function pickAvatar(id: string, pool: typeof WORKFLOW_AVATARS) {
-  const hash = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return pool[hash % pool.length];
+function extractImageUrls(results: unknown): string[] {
+  if (!Array.isArray(results)) return [];
+  return results
+    .map((r) => (typeof r === 'string' ? r : r?.url || r?.image_url))
+    .filter(Boolean) as string[];
 }
+
+/* ── types ── */
 
 interface HistoryJob {
   id: string;
   source: 'generation' | 'freestyle';
   label: string;
-  subtitle?: string;
-  imageCount: number;
-  creditsUsed: number;
-  status: string;
-  rawDate: string;
-  relativeTime: string;
-  thumbnailUrls: string[];
-  avatarSrc: string;
-  avatarName: string;
-  // For opening detail modal
+  createdAt: string;
+  imageUrls: string[];       // raw urls
+  signedUrls?: string[];     // populated after signing
   libraryItems: LibraryItem[];
 }
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 40;
+
+/* ── data hook ── */
 
 function useHistoryJobs(source: 'all' | 'generation' | 'freestyle') {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
 
   const query = useQuery({
-    queryKey: ['history-jobs', user?.id, source],
+    queryKey: ['history-jobs-v2', user?.id, source],
     queryFn: async () => {
       const jobs: HistoryJob[] = [];
-      const limit = 200;
       const fetchJobs = source !== 'freestyle';
       const fetchFreestyle = source !== 'generation';
       const promises: Promise<void>[] = [];
-      const allImageUrls: string[] = [];
-      const urlIndexMap: { jobIdx: number; imgIdx: number }[] = [];
 
       if (fetchJobs) {
         promises.push(
           (async () => {
-            const { data, error } = await supabase
+            const { data } = await supabase
               .from('generation_jobs')
-              .select('id, results, created_at, workflow_slug, scene_name, model_name, product_name, product_image_url, prompt_final, ratio, quality, credits_used, requested_count, status')
+              .select('id, results, created_at, workflow_slug, scene_name, model_name, product_name, prompt_final, ratio, quality, status')
               .order('created_at', { ascending: false })
-              .limit(limit);
-            if (error || !data) return;
-
+              .limit(200);
+            if (!data) return;
             for (const job of data) {
-              const results = job.results as any;
-              const images: string[] = [];
-              if (Array.isArray(results)) {
-                for (const r of results) {
-                  const url = typeof r === 'string' ? r : r?.url || r?.image_url;
-                  if (url) images.push(url);
-                }
-              }
-
+              const images = extractImageUrls(job.results);
+              if (images.length === 0) continue;
               const isTryOn = images.some(u => u.includes('tryon-images'));
               const label = isTryOn ? 'Virtual Try-On' : (job.workflow_slug || 'Product Shot');
-              const avatar = pickAvatar(job.id, WORKFLOW_AVATARS);
-
-              const jobIdx = jobs.length;
-              const thumbs = images.slice(0, 4);
-              thumbs.forEach((url, imgIdx) => {
-                allImageUrls.push(url);
-                urlIndexMap.push({ jobIdx, imgIdx });
-              });
 
               const libraryItems: LibraryItem[] = images.map((url, i) => ({
                 id: `${job.id}-${i}`,
@@ -120,21 +84,7 @@ function useHistoryJobs(source: 'all' | 'generation' | 'freestyle') {
                 workflowSlug: job.workflow_slug || undefined,
               }));
 
-              jobs.push({
-                id: job.id,
-                source: 'generation',
-                label,
-                subtitle: job.product_name || job.scene_name || undefined,
-                imageCount: images.length,
-                creditsUsed: job.credits_used || 0,
-                status: job.status || 'completed',
-                rawDate: job.created_at,
-                relativeTime: formatDistanceToNow(new Date(job.created_at), { addSuffix: true }),
-                thumbnailUrls: thumbs,
-                avatarSrc: teamAvatar(avatar.file),
-                avatarName: avatar.name,
-                libraryItems,
-              });
+              jobs.push({ id: job.id, source: 'generation', label, createdAt: job.created_at, imageUrls: images, libraryItems });
             }
           })()
         );
@@ -143,40 +93,26 @@ function useHistoryJobs(source: 'all' | 'generation' | 'freestyle') {
       if (fetchFreestyle) {
         promises.push(
           (async () => {
-            const { data, error } = await supabase
+            const { data } = await supabase
               .from('freestyle_generations')
               .select('id, image_url, prompt, quality, aspect_ratio, created_at, provider_used')
               .order('created_at', { ascending: false })
-              .limit(limit);
-            if (error || !data) return;
-
+              .limit(200);
+            if (!data) return;
             for (const f of data) {
               const isUpscaled = f.quality?.startsWith('upscaled_');
-              const resolution = f.quality?.includes('4k') ? '4K' : '2K';
-              const avatar = pickAvatar(f.id, FREESTYLE_AVATARS);
-              const jobIdx = jobs.length;
-
-              allImageUrls.push(f.image_url);
-              urlIndexMap.push({ jobIdx, imgIdx: 0 });
-
+              const label = isUpscaled ? 'Enhanced' : 'Freestyle';
               jobs.push({
                 id: f.id,
                 source: 'freestyle',
-                label: isUpscaled ? 'Enhanced' : 'Freestyle',
-                subtitle: isUpscaled ? `${resolution} Upscale` : undefined,
-                imageCount: 1,
-                creditsUsed: isUpscaled ? 3 : 1,
-                status: 'completed',
-                rawDate: f.created_at,
-                relativeTime: formatDistanceToNow(new Date(f.created_at), { addSuffix: true }),
-                thumbnailUrls: [f.image_url],
-                avatarSrc: teamAvatar(avatar.file),
-                avatarName: avatar.name,
+                label,
+                createdAt: f.created_at,
+                imageUrls: [f.image_url],
                 libraryItems: [{
                   id: f.id,
                   imageUrl: f.image_url,
                   source: 'freestyle' as const,
-                  label: isUpscaled ? 'Enhanced' : 'Freestyle',
+                  label,
                   prompt: f.prompt,
                   date: new Date(f.created_at).toLocaleDateString(),
                   createdAt: f.created_at,
@@ -191,21 +127,27 @@ function useHistoryJobs(source: 'all' | 'generation' | 'freestyle') {
       }
 
       await Promise.all(promises);
-      jobs.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
+      jobs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-      // Sign all thumbnail URLs
-      if (allImageUrls.length > 0) {
-        const signed = await toSignedUrls(allImageUrls);
-        for (let i = 0; i < signed.length; i++) {
-          const { jobIdx, imgIdx } = urlIndexMap[i];
-          if (jobs[jobIdx]) {
-            jobs[jobIdx].thumbnailUrls[imgIdx] = signed[i];
-            // Also update corresponding library item
-            if (jobs[jobIdx].libraryItems[imgIdx]) {
-              jobs[jobIdx].libraryItems[imgIdx].imageUrl = signed[i];
+      // Batch-sign all URLs
+      const allUrls: string[] = [];
+      const indexMap: { jobIdx: number; start: number; count: number }[] = [];
+      jobs.forEach((job, jobIdx) => {
+        indexMap.push({ jobIdx, start: allUrls.length, count: job.imageUrls.length });
+        allUrls.push(...job.imageUrls);
+      });
+
+      if (allUrls.length > 0) {
+        const signed = await toSignedUrls(allUrls);
+        indexMap.forEach(({ jobIdx, start, count }) => {
+          const signedSlice = signed.slice(start, start + count);
+          jobs[jobIdx].signedUrls = signedSlice;
+          signedSlice.forEach((url, i) => {
+            if (jobs[jobIdx].libraryItems[i]) {
+              jobs[jobIdx].libraryItems[i].imageUrl = url;
             }
-          }
-        }
+          });
+        });
       }
 
       return jobs;
@@ -218,45 +160,133 @@ function useHistoryJobs(source: 'all' | 'generation' | 'freestyle') {
   const visibleJobs = jobs.slice(0, page * PAGE_SIZE);
   const hasMore = visibleJobs.length < jobs.length;
 
-  return {
-    jobs: visibleJobs,
-    allCount: jobs.length,
-    isLoading: query.isLoading,
-    hasMore,
-    loadMore: () => setPage(p => p + 1),
+  return { jobs: visibleJobs, allCount: jobs.length, isLoading: query.isLoading, hasMore, loadMore: () => setPage(p => p + 1) };
+}
+
+/* ── card component ── */
+
+const MAX_MINI = 3;
+const SWIPE_THRESHOLD = 8;
+
+function HistoryCard({ job, onSelect }: { job: HistoryJob; onSelect: (job: HistoryJob, idx: number) => void }) {
+  const [errored, setErrored] = useState(false);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+
+  const urls = job.signedUrls ?? job.imageUrls;
+  const mainUrl = urls[0] ? getOptimizedUrl(urls[0], { quality: 60 }) : null;
+  const hasMultiple = urls.length > 1;
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStart.current = { x: e.clientX, y: e.clientY };
   };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (pointerStart.current) {
+      const dx = Math.abs(e.clientX - pointerStart.current.x);
+      const dy = Math.abs(e.clientY - pointerStart.current.y);
+      if (dx > SWIPE_THRESHOLD || dy > SWIPE_THRESHOLD) { e.preventDefault(); return; }
+    }
+    onSelect(job, 0);
+  };
+
+  return (
+    <div className="group/thumb flex flex-col gap-1.5">
+      <button onPointerDown={handlePointerDown} onClick={handleClick} className="w-full text-left">
+        <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md">
+          {errored || !mainUrl ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+              <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+            </div>
+          ) : (
+            <ShimmerImage src={mainUrl} alt="" aspectRatio="1/1" className="w-full h-full object-cover" onError={() => setErrored(true)} />
+          )}
+
+          {/* Desktop hover */}
+          <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 transition-colors duration-200 hidden md:flex items-center justify-center">
+            <div className="flex items-center gap-1.5 opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-200">
+              <Eye className="w-4 h-4 text-white" />
+              <span className="text-xs font-medium text-white">View</span>
+            </div>
+          </div>
+
+          {/* Mobile eye badge */}
+          <div className="absolute bottom-1.5 left-1.5 bg-background/70 backdrop-blur rounded-full p-1 md:hidden">
+            <Eye className="w-3 h-3 text-foreground/60" />
+          </div>
+
+          {/* Count badge for single-image cards */}
+          {!hasMultiple && (
+            <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur text-[10px] font-semibold px-1.5 py-0.5 rounded">
+              {urls.length} img
+            </span>
+          )}
+        </div>
+      </button>
+
+      {/* Mini-thumbnail strip */}
+      {hasMultiple && (
+        <div className="flex gap-1 px-0.5">
+          {urls.slice(0, MAX_MINI).map((url, i) => (
+            <button
+              key={i}
+              onClick={(e) => { e.stopPropagation(); onSelect(job, i); }}
+              className="w-6 h-6 rounded-sm border border-border overflow-hidden hover:ring-1 hover:ring-primary transition-all shrink-0"
+            >
+              <img src={getOptimizedUrl(url, { quality: 40 })} alt="" className="w-full h-full object-cover" loading="lazy" />
+            </button>
+          ))}
+          {urls.length > MAX_MINI && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSelect(job, MAX_MINI); }}
+              className="w-6 h-6 rounded-sm border border-border bg-muted flex items-center justify-center shrink-0 hover:bg-accent transition-colors"
+            >
+              <span className="text-[9px] font-semibold text-muted-foreground">+{urls.length - MAX_MINI}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="space-y-0.5 px-0.5">
+        <p className="text-xs font-medium truncate">{job.label}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
+        </p>
+      </div>
+    </div>
+  );
 }
 
-function statusColor(status: string) {
-  switch (status) {
-    case 'completed': return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
-    case 'generating': return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 animate-pulse';
-    case 'failed': return 'bg-destructive/10 text-destructive';
-    default: return 'bg-muted text-muted-foreground';
-  }
-}
+/* ── grid ── */
 
-function HistoryJobList({ jobs, isLoading, hasMore, loadMore, allCount }: {
+function HistoryGrid({ jobs, isLoading, hasMore, loadMore }: {
   jobs: HistoryJob[];
   isLoading: boolean;
   hasMore: boolean;
   loadMore: () => void;
-  allCount: number;
 }) {
   const navigate = useNavigate();
   const [selectedItems, setSelectedItems] = useState<LibraryItem[] | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const openJob = useCallback((job: HistoryJob) => {
-    if (job.libraryItems.length > 0) {
-      setSelectedItems(job.libraryItems);
-    }
+  const handleSelect = useCallback((job: HistoryJob, idx: number) => {
+    if (job.libraryItems.length === 0) return;
+    setSelectedItems(job.libraryItems);
+    setSelectedIndex(idx);
   }, []);
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-2">
+            <div className="aspect-square rounded-lg bg-muted border border-border">
+              <div className="w-full h-full bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer rounded-lg" />
+            </div>
+            <div className="space-y-1 px-0.5">
+              <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+              <div className="h-2.5 w-14 rounded bg-muted/60 animate-pulse" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -275,97 +305,37 @@ function HistoryJobList({ jobs, isLoading, hasMore, loadMore, allCount }: {
 
   return (
     <>
-      <div className="space-y-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {jobs.map((job) => (
-          <div
-            key={job.id}
-            onClick={() => openJob(job)}
-            className="group flex items-center gap-4 p-3 rounded-xl border border-border bg-card hover:bg-accent/50 cursor-pointer transition-colors duration-150"
-          >
-            {/* Avatar */}
-            <Avatar className="h-9 w-9 shrink-0 border border-border">
-              <AvatarImage src={job.avatarSrc} alt={job.avatarName} />
-              <AvatarFallback className="text-xs">{job.avatarName[0]}</AvatarFallback>
-            </Avatar>
-
-            {/* Info */}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold text-foreground truncate">{job.label}</span>
-                <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${statusColor(job.status)}`}>
-                  {job.status === 'completed' ? 'Completed' : job.status}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                {job.subtitle && <span className="truncate max-w-[160px]">{job.subtitle}</span>}
-                <span className="flex items-center gap-1">
-                  <Images className="w-3 h-3" />
-                  {job.imageCount} {job.imageCount === 1 ? 'image' : 'images'}
-                </span>
-                <span className="flex items-center gap-1">
-                  <CreditCard className="w-3 h-3" />
-                  {job.creditsUsed} cr
-                </span>
-                <span className="hidden sm:inline">{job.relativeTime}</span>
-              </div>
-            </div>
-
-            {/* Thumbnail strip */}
-            <div className="hidden md:flex items-center gap-1.5 shrink-0">
-              {job.thumbnailUrls.slice(0, 3).map((url, i) => (
-                <div key={i} className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted">
-                  <ShimmerImage
-                    src={getOptimizedUrl(url, { quality: 40 })}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    aspectRatio="1/1"
-                    onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
-                  />
-                </div>
-              ))}
-              {job.imageCount > 3 && (
-                <div className="w-12 h-12 rounded-lg border border-border bg-muted flex items-center justify-center">
-                  <span className="text-[10px] font-semibold text-muted-foreground">+{job.imageCount - 3}</span>
-                </div>
-              )}
-            </div>
-
-            {/* View action */}
-            <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Eye className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
+          <HistoryCard key={job.id} job={job} onSelect={handleSelect} />
         ))}
       </div>
 
       {hasMore && (
-        <div className="flex justify-center pt-4">
-          <Button variant="outline" onClick={loadMore} className="rounded-full px-8">
-            Load More
-          </Button>
+        <div className="flex justify-center pt-6">
+          <Button variant="outline" onClick={loadMore} className="rounded-full px-8">Load More</Button>
         </div>
       )}
 
       <LibraryDetailModal
-        item={selectedItems?.[0] ?? null}
+        item={selectedItems?.[selectedIndex] ?? null}
         open={!!selectedItems}
         onClose={() => setSelectedItems(null)}
         items={selectedItems ?? undefined}
+        initialIndex={selectedIndex}
       />
     </>
   );
 }
+
+/* ── page ── */
 
 export default function History() {
   const [tab, setTab] = useState<'all' | 'generation' | 'freestyle'>('all');
   const { jobs, isLoading, hasMore, loadMore, allCount } = useHistoryJobs(tab);
 
   return (
-    <PageHeader
-      title="History"
-      subtitle="Browse all your completed generation jobs in one place."
-    >
+    <PageHeader title="History" subtitle="Browse all your completed generation jobs in one place.">
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="all" className="gap-1.5">
@@ -386,13 +356,7 @@ export default function History() {
         </TabsList>
 
         <TabsContent value={tab} className="mt-0">
-          <HistoryJobList
-            jobs={jobs}
-            isLoading={isLoading}
-            hasMore={hasMore}
-            loadMore={loadMore}
-            allCount={allCount}
-          />
+          <HistoryGrid jobs={jobs} isLoading={isLoading} hasMore={hasMore} loadMore={loadMore} />
         </TabsContent>
       </Tabs>
     </PageHeader>
