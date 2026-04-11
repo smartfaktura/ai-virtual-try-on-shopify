@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Sparkles, Download, Check, Heart, MoreHorizontal, Shield, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -86,6 +87,7 @@ export function LibraryImageCard({
   onSetStatus,
 }: LibraryImageCardProps) {
   const statusInfo = STATUS_PILL[assetStatus];
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div
@@ -153,12 +155,12 @@ export function LibraryImageCard({
 
       {/* Hover overlay — hidden in select mode */}
       {!selectMode && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex">
+        <div className={cn("absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex", isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
           {/* Top: three-dot menu + favorite */}
           <div className="flex justify-between">
             <div>
               {onSetStatus && (
-                <DropdownMenu>
+                <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                   <DropdownMenuTrigger asChild>
                     <button
                       onClick={(e) => e.stopPropagation()}
