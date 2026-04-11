@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
+  Sparkles, SquareTerminal, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
   TrendingUp, BookOpen, Clock,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -59,7 +59,7 @@ const navGroups = [
     label: 'Create',
     items: [
       { label: 'Visual Studio', icon: Layers, path: '/app/workflows' },
-      { label: 'Create with Prompt', icon: Wand2, path: '/app/freestyle' },
+      { label: 'Create with Prompt', icon: SquareTerminal, path: '/app/freestyle' },
       { label: 'Video', icon: Film, path: '/app/video' },
     ],
   },
