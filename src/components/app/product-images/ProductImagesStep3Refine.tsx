@@ -1337,11 +1337,13 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
 }
 
 /** Piece fields portion of OutfitLockPanel — shown in collapsible */
-function OutfitPieceFields({ details, update, primaryCategory, modelGender }: {
+function OutfitPieceFields({ details, update, primaryCategory, modelGender, analyses, selectedProductIds }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
   primaryCategory?: string;
   modelGender?: string;
+  analyses?: Record<string, ProductAnalysis>;
+  selectedProductIds?: Set<string>;
 }) {
   const cat = primaryCategory || 'garments';
   const isMale = modelGender === 'male';
@@ -1356,11 +1358,47 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender }: {
     update({ outfitConfig: { ...currentConfig, ...partial } });
   }, [currentConfig, update]);
 
+  // Compute conflicting slots across all selected products
+  const slotConflicts = useMemo(() => {
+    const conflicts: Record<OutfitSlot, string[]> = { top: [], bottom: [], shoes: [] };
+    if (!analyses || !selectedProductIds) return conflicts;
+    for (const pid of selectedProductIds) {
+      const a = analyses[pid];
+      if (!a?.garmentType) continue;
+      const conflicting = getConflictingSlots(a.garmentType);
+      for (const slot of conflicting) {
+        conflicts[slot].push(a.garmentType);
+      }
+    }
+    return conflicts;
+  }, [analyses, selectedProductIds]);
+
+  const slotBadge = (slot: OutfitSlot) => {
+    const types = slotConflicts[slot];
+    if (types.length === 0) return null;
+    const unique = [...new Set(types)];
+    const label = unique.length <= 2 ? unique.join(', ') : `${unique.length} products`;
+    return (
+      <span className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-1.5 py-0.5 rounded-full ml-1.5 font-medium whitespace-nowrap">
+        Auto-skipped for {label}
+      </span>
+    );
+  };
+
   return (
     <>
-      <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
-      <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />
-      <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />
+      <div className="flex items-center gap-1">
+        <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
+        {slotBadge('top')}
+      </div>
+      <div className="flex items-center gap-1">
+        <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />
+        {slotBadge('bottom')}
+      </div>
+      <div className="flex items-center gap-1">
+        <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />
+        {slotBadge('shoes')}
+      </div>
     </>
   );
 }
