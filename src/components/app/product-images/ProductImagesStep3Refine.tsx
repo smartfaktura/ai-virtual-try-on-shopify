@@ -1758,7 +1758,7 @@ export function ProductImagesStep3Refine({
             <div className="mt-1.5">
               {extraRefUrl ? (
                 <div className="relative group rounded-md overflow-hidden border border-border">
-                  <img src={extraRefUrl} alt="Extra reference" className="w-full aspect-square object-cover" />
+                  <img src={extraRefUrl} alt="Extra reference" className="w-full aspect-square object-contain bg-muted/30" />
                   <button
                     type="button"
                     onClick={() => removeExtraRef(scene.id)}

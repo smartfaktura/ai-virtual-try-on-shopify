@@ -6,6 +6,7 @@ interface ProductThumbnailProps {
   imageUrl: string;
   alt: string;
   size?: 'sm' | 'md' | 'lg';
+  fit?: 'cover' | 'contain';
   className?: string;
 }
 
