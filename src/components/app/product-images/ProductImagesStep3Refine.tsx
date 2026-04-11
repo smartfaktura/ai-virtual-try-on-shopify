@@ -2080,7 +2080,7 @@ export function ProductImagesStep3Refine({
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="space-y-2 pt-2 pb-1 pl-6">
-                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} analyses={analyses} selectedProductIds={selectedProductIds} />
+                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} analyses={analyses} selectedProductIds={selectedProductIds} allProducts={allProducts} />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
