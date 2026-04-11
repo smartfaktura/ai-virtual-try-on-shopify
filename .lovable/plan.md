@@ -1,42 +1,55 @@
 
 
-# Strengthen Product Isolation in Generation Engine (Prompt-Only Fix)
+# Fix Library Item Naming Structure
 
-## Root Cause
-The `BACKGROUND ISOLATION` directive (line 565) assumes the product image has a clean background ("shows the product ONLY"), which is false for non-white backgrounds. The AI sees strong visual context (stone, water, etc.) and reproduces it. Additionally, the image label on line 712 says "reproduce this EXACTLY" — which the AI interprets as reproducing the entire image including background.
+## Problem
+The library detail modal shows inconsistent, generic labels like "Generation" for the category and the workflow name as the heading. There's no clear mapping from the source workflow to a meaningful category label. The `workflowSlug` field is available on items but never used for display.
 
-## Changes — `supabase/functions/generate-workflow/index.ts`
+**Current behavior** (from your screenshot):
+- Small label: "Generation"
+- Heading: "Product Visuals"
+- No product name visible
 
-### 1. Fix image label to explicitly scope reproduction to the product object only (line 712)
-Change:
-```
-'[PRODUCT IMAGE] Primary product reference — reproduce this EXACTLY:'
-```
-To:
-```
-'[PRODUCT IMAGE] Product reference — reproduce ONLY the product object (shape, colors, labels, materials). IGNORE all background, surfaces, and environment in this image:'
-```
+**Expected**: Clear category + meaningful heading per workflow type.
 
-### 2. Strengthen BACKGROUND ISOLATION directive (line 565)
-Change:
+## Changes
+
+### 1. `src/hooks/useLibraryItems.ts` — Improve label structure in `jobsToRawItems`
+
+Change the label construction (line 66) to use a ` — ` separator format when both workflow name and product title exist:
 ```
-7. BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] shows the product ONLY. You MUST completely IGNORE the background...
-```
-To:
-```
-7. BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the variation instruction above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.
+label = workflowName && productTitle
+  ? `${workflowName} — ${productTitle}`
+  : workflowName || productTitle || 'Generated';
 ```
 
-### 3. Add negative prompt reinforcement
-After the existing negatives line (line 568), append background-bleed prevention terms:
-```
-"reference background, original background, source image background"
-```
-This adds these as negative prompt terms to actively suppress background reproduction.
+This ensures the detail modal can split the label into category + heading.
 
-### 4. Strengthen the client-side `REFERENCE_ISOLATION` constant (`src/lib/productImagePromptBuilder.ts`, line 235)
-Update to match the same stronger language for the Product Images flow.
+### 2. `src/components/app/LibraryDetailModal.tsx` — Use `workflowSlug` for category mapping
 
-## Why This Should Work
-The current directives contradict reality ("shows the product ONLY" when it doesn't). By acknowledging the background exists and explicitly commanding the AI to strip it mentally, the instruction aligns with what the model actually sees. Combined with negative prompt terms and scoped image labels, this creates multiple reinforcement layers without needing preprocessing.
+Replace the fragile ` — ` split logic (lines 200-203) with a proper mapping function:
+
+| `workflowSlug` | Small label |
+|---|---|
+| `product-images` | `PRODUCT VISUALS` |
+| `virtual-try-on-set` / `virtual-tryon` | `VIRTUAL TRY-ON` |
+| `catalog-studio` | `CATALOG STUDIO` |
+| `text-to-product` | `TEXT TO PRODUCT` |
+| Any other slug | Slug formatted as title |
+| No slug + source `freestyle` | `FREESTYLE` |
+| No slug + source `generation` | `GENERATION` |
+
+For the **heading**:
+- If product name exists → use product name
+- Else if model + scene names → "Model · Scene"
+- Else if label has ` — ` → use part after separator
+- Else → use full label
+
+This uses the already-available `workflowSlug`, `productName`, `modelName`, `sceneName` fields on `LibraryItem` — no new data needed.
+
+### 3. `src/components/app/LibraryImageCard.tsx` — No changes needed
+The card itself doesn't display the label prominently, so no work here.
+
+## Result
+Every library item will show a clean, recognizable category (e.g., "PRODUCT VISUALS", "FREESTYLE", "VIRTUAL TRY-ON") with the product/model name as the heading underneath.
 
