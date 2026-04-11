@@ -860,13 +860,13 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'personDirective': {
       const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender);
+      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender) : '';
+      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
