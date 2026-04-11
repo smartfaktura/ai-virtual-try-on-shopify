@@ -1,30 +1,25 @@
 
 
-# Fix: Background Always Injected
+# Audit: Are there other guards with the same flaw?
 
-## Problem
-Scenes whose templates **lack** a `{{background}}` token never get the user's background choice because line 1159 checks `!prompt.toLowerCase().includes('background')` — and many resolved prompts already contain the word "background" from default descriptions.
+## What caused the background bug
+The guard `!prompt.toLowerCase().includes('background')` failed because "background" is a **common word** that appears naturally in many scene templates — so the check almost always evaluated to `false`, silently skipping the user's choice.
 
-Scenes that **do** have `{{background}}` in their template work correctly (the token is resolved on line 1141).
+## Are there other instances?
 
-## Fix
+**No — the background guard was the only active instance of this anti-pattern.** Here's the full audit:
 
-**File:** `src/lib/productImagePromptBuilder.ts`, line 1159
+| Line | Guard | Risk |
+|------|-------|------|
+| 1149 | `!prompt.toLowerCase().includes(keyword)` | **Dead code** — `injectIfMissing` is defined but never called anywhere. No impact. |
+| 1176 | `!prompt.includes('8K commercial quality')` | Safe — exact unique phrase, won't appear by accident |
+| 1182 | `!prompt.includes('lens at')` | Safe — specific technical phrase |
+| 1196 | `!prompt.includes(details.customNote)` | Safe — matches the user's exact text to prevent duplication |
 
-Remove the broken guard so the user's explicit background choice is always appended when the template didn't include the token:
+## One cleanup opportunity
 
-```ts
-// Before (line 1159):
-if (bgResolved && !prompt.toLowerCase().includes('background')) {
+The `injectIfMissing` helper (lines 1146-1151) is **dead code** — it was the old auto-injection mechanism before you switched to the template-led approach. It still carries the same flawed `.includes(keyword)` pattern. If it's ever re-enabled, it would cause the same class of bug.
 
-// After:
-if (bgResolved) {
-```
-
-**1 condition removed, 1 line, 1 file.** No other changes needed.
-
-## Why this is safe
-- Templates WITH `{{background}}` are unaffected (the `hasBgToken` check on line 1156 skips this block entirely)
-- Templates WITHOUT the token now always get the user's choice appended — which is correct behavior since the user explicitly picked a non-auto background
-- Worst case: a prompt might mention "background" twice, but the user's explicit choice at the end takes priority for the AI model
+### Recommendation
+Delete the unused `injectIfMissing` function (lines 1146-1152) to prevent future confusion. **3 lines removed, no behavior change.**
 
