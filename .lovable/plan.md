@@ -1,21 +1,44 @@
 
+Fix: The thin “strip” is caused by the wrapper boxes, not the image itself.
 
-# Fix: Reference Preview Images — Full Image, No Crop
+Cause
+- We switched these previews to `object-contain`, but kept the containers square:
+  - product chip at the top of each per-product card (`ProductThumbnail`, `w-14 h-14`)
+  - uploaded reference preview (`w-16 h-16` / `w-24 h-24`)
+  - generic extra-reference preview (`aspect-square`)
+- For tall apparel like jeans, `contain` inside a square box makes the image very narrow. So it looks like a strip.
+- This is not the upload being “re-cropped” again; it’s the portrait image being forced into a square frame.
 
-## Problem
-Three places still use `object-cover` which crops tall items like jeans:
-1. **Line 1761** — generic extra-reference preview: `object-cover`
-2. **ProductThumbnail component** — always uses `object-cover` via ShimmerImage
+Plan
+1. Replace square reference frames with portrait-friendly frames in `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+   - generic extra-reference preview
+   - single-product reference preview
+   - per-product uploaded reference preview
+   - per-product product identity preview above the upload area
 
-Lines 1874 and 1921 already use `object-contain` ✓
+2. Stop using the current square `ProductThumbnail` shape in this reference UI
+   - simplest fix: render a local portrait preview block directly in `ProductImagesStep3Refine.tsx`
+   - keep `object-contain object-center`, but give it a taller frame like `aspect-[3/4]` or `aspect-[4/5]`
 
-## Changes
+3. Keep the UI clean and readable
+   - subtle neutral background
+   - a little inner padding
+   - same upload/status UX, just better proportions so garments fill more of the frame naturally
 
-| File | Line(s) | Change |
-|------|---------|--------|
-| `ProductImagesStep3Refine.tsx` | 1761 | `object-cover` → `object-contain` on the extra-reference `<img>` |
-| `ProductThumbnail.tsx` | 27 | Add `object-contain` support via optional `fit` prop; default stays `cover` |
-| `ProductImagesStep3Refine.tsx` | 1917 | Pass `fit="contain"` to `ProductThumbnail` in per-product reference cards |
+Files
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+- optional cleanup only if needed: `src/components/app/product-images/ProductThumbnail.tsx`
 
-Three one-line changes total.
+Technical details
+```text
+Current:
+square frame + object-contain = tall product becomes a thin strip
 
+Fix:
+portrait frame + object-contain = full garment visible, centered, no crop, no zoom
+```
+
+Expected result
+- Back view / side view / texture / other reference previews will show the full garment naturally
+- The top product preview in each card will no longer look like a vertical strip
+- No backend/data changes needed; this is a UI-only fix
