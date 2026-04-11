@@ -574,6 +574,10 @@ export default function Jobs() {
                           e.stopPropagation();
                           toggleFavorite.mutate(item.id);
                         }}
+                        onSetStatus={(status) => {
+                          setStatus.mutate({ imageId: item.id, status });
+                          toast.success(status === 'brand_ready' ? 'Marked as Brand Ready' : 'Marked as Ready to Publish');
+                        }}
                         onClick={() => {
                           if (selectMode) {
                             toggleSelect(item.id);
@@ -622,31 +626,6 @@ export default function Jobs() {
             Favorite
           </Button>
 
-          <Button
-            size="sm"
-            variant="secondary"
-            className="text-xs"
-            onClick={() => {
-              setStatusMany.mutate({ imageIds: Array.from(selectedIds), status: 'brand_ready' });
-              toast.success('Marked as Brand Ready');
-            }}
-          >
-            <Shield className="w-3.5 h-3.5 mr-1.5" />
-            Brand Ready
-          </Button>
-
-          <Button
-            size="sm"
-            variant="secondary"
-            className="text-xs"
-            onClick={() => {
-              setStatusMany.mutate({ imageIds: Array.from(selectedIds), status: 'ready_to_publish' });
-              toast.success('Marked as Ready to Publish');
-            }}
-          >
-            <Send className="w-3.5 h-3.5 mr-1.5" />
-            Publish Ready
-          </Button>
 
           <div className="w-px h-5 bg-background/20 mx-1" />
 

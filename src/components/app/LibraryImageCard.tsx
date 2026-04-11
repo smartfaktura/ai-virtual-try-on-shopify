@@ -1,10 +1,11 @@
-import { Sparkles, Download, Check, Heart } from 'lucide-react';
+import { Sparkles, Download, Check, Heart, MoreHorizontal, Shield, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import type { AssetStatus } from '@/hooks/useLibraryAssetStatus';
 
@@ -42,6 +43,7 @@ interface LibraryImageCardProps {
   selected?: boolean;
   isUpscaling?: boolean;
   isAdmin?: boolean;
+  onSetStatus?: (status: AssetStatus) => void;
 }
 
 async function downloadImage(url: string, filename: string) {
@@ -81,6 +83,7 @@ export function LibraryImageCard({
   selected,
   isUpscaling,
   isAdmin,
+  onSetStatus,
 }: LibraryImageCardProps) {
   const statusInfo = STATUS_PILL[assetStatus];
 
@@ -151,8 +154,32 @@ export function LibraryImageCard({
       {/* Hover overlay — hidden in select mode */}
       {!selectMode && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex">
-          {/* Top: favorite */}
-          <div className="flex justify-end">
+          {/* Top: three-dot menu + favorite */}
+          <div className="flex justify-between">
+            <div>
+              {onSetStatus && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[160px]" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem onClick={() => onSetStatus('brand_ready')}>
+                      <Shield className="w-3.5 h-3.5 mr-2" />
+                      Brand Ready
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onSetStatus('ready_to_publish')}>
+                      <Send className="w-3.5 h-3.5 mr-2" />
+                      Ready to Publish
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
             {onToggleFavorite && (
               <button
                 onClick={(e) => {
