@@ -1,24 +1,18 @@
 
 
-# Move Earn Credits, Brand Profiles & Settings into User Menu
+# Two Small Sidebar Tweaks
 
-## What Changes
+## 1. Replace "MAIN" header with a thin separator line
+**File: `src/components/app/AppShell.tsx`** (line ~202-204)
 
-**File: `src/components/app/AppShell.tsx`**
+Replace the `<p>Main</p>` label with a simple `<div>` separator line (thin `h-px bg-white/[0.06]` with small vertical margin), or remove it entirely since the "Create Visuals" button already visually separates the logo from the nav list.
 
-1. **Remove from sidebar nav:**
-   - Remove `{ label: 'Earn Credits', icon: Gift, path: '#earn-credits' }` from `navItems`
-   - Remove the entire `configItems` array and its "Configuration" header + render block (lines ~64-67, ~215-221)
+## 2. Show "YOUR PLAN: X" next to the plan name in CreditIndicator
+**File: `src/components/app/CreditIndicator.tsx`** (line ~22-23)
 
-2. **Add to user dropdown menu** (the popup that appears when clicking the user avatar at the bottom):
-   - Add "Brand Profiles" button (Palette icon) → navigates to `/app/brand-profiles`
-   - Add "Earn Credits" button (Gift icon) → opens `earnCreditsOpen` modal
-   - Keep existing "Account settings" button (already there)
-   - Order: Account settings → Brand Profiles → Earn Credits → (admin items) → Sign out
-
-This keeps all three features one click away via the person menu, while shortening the sidebar by 3 items + 1 section header.
+Change the plan label from `{planConfig.name} Plan` to `Your plan: {planConfig.name}` (keeping the same uppercase styling).
 
 ## Files Changed
-
-1. **`src/components/app/AppShell.tsx`** — remove items from sidebar, add buttons to user dropdown
+1. `src/components/app/AppShell.tsx` — remove "MAIN" text, replace with separator or nothing
+2. `src/components/app/CreditIndicator.tsx` — change plan label to "Your plan: X"
 
