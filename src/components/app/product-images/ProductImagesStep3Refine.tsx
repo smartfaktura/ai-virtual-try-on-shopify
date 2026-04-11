@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ColorPickerDialog } from '@/components/app/product-images/ColorPickerDialog';
+import { ProductThumbnail } from '@/components/app/product-images/ProductThumbnail';
 import { useUserSavedColors } from '@/hooks/useUserSavedColors';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -1569,9 +1570,18 @@ export function ProductImagesStep3Refine({
   const refTriggerInputRef = useRef<HTMLInputElement>(null);
   const pendingRefTriggerRef = useRef<string | null>(null);
 
-  const handleRefTriggerUpload = useCallback(async (triggerKey: string, file: File) => {
+  // Selected products for per-product reference UI
+  const selectedProductsList = useMemo(
+    () => allProducts.filter(p => selectedProductIds.has(p.id)),
+    [allProducts, selectedProductIds],
+  );
+  const isMultiProduct = selectedProductsList.length > 1;
+
+  // Per-product reference upload handler — stores as trigger:{type}:{productId}
+  const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
     if (!onSceneExtraRefsChange) return;
-    setUploadingRefTrigger(triggerKey);
+    const refKey = isMultiProduct ? `trigger:${triggerKey}:${productId}` : `trigger:${triggerKey}`;
+    setUploadingRefTrigger(refKey);
     try {
       const ts = Date.now();
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -1583,44 +1593,51 @@ export function ProductImagesStep3Refine({
       const { data: urlData } = (await import('@/integrations/supabase/client')).supabase.storage
         .from('product-uploads')
         .getPublicUrl(data.path);
-      onSceneExtraRefsChange({ ...sceneExtraRefs, [`trigger:${triggerKey}`]: urlData.publicUrl });
+      onSceneExtraRefsChange({ ...sceneExtraRefs, [refKey]: urlData.publicUrl });
     } catch (e: any) {
       const { toast } = await import('@/lib/brandedToast');
       toast.error(e.message || 'Upload failed');
     } finally {
       setUploadingRefTrigger(null);
     }
-  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+  }, [sceneExtraRefs, onSceneExtraRefsChange, isMultiProduct]);
 
-  const removeRefTrigger = useCallback((triggerKey: string) => {
+  const handleRefTriggerUpload = useCallback(async (triggerKey: string, file: File) => {
+    // For single product, use global key; for multi, this shouldn't be called directly
+    handlePerProductRefUpload(triggerKey, selectedProductsList[0]?.id || '', file);
+  }, [handlePerProductRefUpload, selectedProductsList]);
+
+  const removeRefTrigger = useCallback((triggerKey: string, productId?: string) => {
     if (!onSceneExtraRefsChange) return;
     const next = { ...sceneExtraRefs };
-    delete next[`trigger:${triggerKey}`];
-    onSceneExtraRefsChange(next);
-  }, [sceneExtraRefs, onSceneExtraRefsChange]);
-
-  const handleBackRefUpload = useCallback(async (file: File) => {
-    setUploadingBackRef(true);
-    try {
-      const ts = Date.now();
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `back-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.storage
-        .from('product-uploads')
-        .upload(path, file, { cacheControl: '3600', upsert: false });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage
-        .from('product-uploads')
-        .getPublicUrl(data.path);
-      update({ backReferenceUrl: urlData.publicUrl });
-    } catch (e: any) {
-      const { toast } = await import('@/lib/brandedToast');
-      toast.error(e.message || 'Upload failed');
-    } finally {
-      setUploadingBackRef(false);
+    if (productId && isMultiProduct) {
+      delete next[`trigger:${triggerKey}:${productId}`];
+    } else {
+      delete next[`trigger:${triggerKey}`];
     }
-  }, [update]);
+    onSceneExtraRefsChange(next);
+  }, [sceneExtraRefs, onSceneExtraRefsChange, isMultiProduct]);
+
+  // Get ref URL for a trigger — checks per-product key first, then global
+  const getRefUrl = useCallback((triggerKey: string, productId?: string): string | undefined => {
+    if (productId) {
+      return sceneExtraRefs[`trigger:${triggerKey}:${productId}`] || sceneExtraRefs[`trigger:${triggerKey}`];
+    }
+    return sceneExtraRefs[`trigger:${triggerKey}`];
+  }, [sceneExtraRefs]);
+
+  const handleBackRefUpload = useCallback(async (file: File, productId?: string) => {
+    // Route through unified per-product handler
+    handlePerProductRefUpload('backView', productId || selectedProductsList[0]?.id || '', file);
+  }, [handlePerProductRefUpload, selectedProductsList]);
+
+  const handlePackagingRefUploadForProduct = useCallback(async (file: File, productId?: string) => {
+    handlePerProductRefUpload('packagingDetails', productId || selectedProductsList[0]?.id || '', file);
+  }, [handlePerProductRefUpload, selectedProductsList]);
+
+  // Per-product file input ref & pending state
+  const perProductInputRef = useRef<HTMLInputElement>(null);
+  const pendingPerProductRef = useRef<{ triggerKey: string; productId: string } | null>(null);
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
@@ -1793,278 +1810,21 @@ export function ProductImagesStep3Refine({
           pendingSceneIdRef.current = null;
         }}
       />
-      {/* Hidden file input for packaging reference uploads */}
+      {/* Hidden file input for per-product reference uploads */}
       <input
-        ref={packagingRefInputRef}
+        ref={perProductInputRef}
         type="file"
         accept="image/*"
         className="hidden"
         onChange={e => {
           const f = e.target.files?.[0];
-          if (f) handlePackagingRefUpload(f);
+          const pending = pendingPerProductRef.current;
+          if (f && pending) handlePerProductRefUpload(pending.triggerKey, pending.productId, f);
           e.target.value = '';
+          pendingPerProductRef.current = null;
         }}
       />
-      {/* Hidden file input for back reference uploads */}
-      <input
-        ref={backRefInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => {
-          const f = e.target.files?.[0];
-          if (f) handleBackRefUpload(f);
-          e.target.value = '';
-        }}
-      />
-      {/* ── HEADER ── */}
-      <div className="space-y-3">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Setup your shots</h2>
-          <p className="text-sm text-muted-foreground mt-1">AI recommended settings are already applied for realistic, high-quality results.</p>
-        </div>
-
-        {/* Summary stats */}
-        <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-muted text-xs font-medium text-foreground">
-            {selectedScenes.length} shots selected
-          </span>
-          {bgScenes.length > 0 && (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-muted text-xs font-medium text-foreground">
-              {bgScenes.length} use custom background
-            </span>
-          )}
-          {scenesNeedingModel.length > 0 && (
-            <span className={cn(
-              'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-              needsModel ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted text-foreground',
-            )}>
-              {scenesNeedingModel.length} need a model
-            </span>
-          )}
-        </div>
-
-        <Separator />
-      </div>
-
-      {/* ── SELECTED SHOTS ── */}
-      {selectedScenes.length > 0 && (
-        <div className="space-y-3">
-          <div>
-            <span className="text-sm font-semibold">Selected shots</span>
-            <p className="text-xs text-muted-foreground mt-0.5">A quick overview of the shots you chose.</p>
-          </div>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
-            {visibleScenes.map(scene => renderShotCard(scene))}
-          </div>
-
-          {/* Expanded action panel (if any) */}
-          {expandedSceneId && (() => {
-            const activeScene = selectedScenes.find(s => s.id === expandedSceneId);
-            if (!activeScene || !sceneHasActionControls(activeScene)) return null;
-            return (
-              <div className="rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in fade-in duration-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                    {activeScene.previewUrl ? <img src={activeScene.previewUrl} alt={activeScene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
-                  </div>
-                  <span className="text-sm font-semibold flex-1">{activeScene.title}</span>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setExpandedSceneId(null)}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-                <BlockFields blockKey="actionDetails" details={details} update={update} sceneIds={allSceneIds} />
-              </div>
-            );
-          })()}
-
-          {hasMoreShots && (
-            <button
-              type="button"
-              onClick={() => setShowAllShots(!showAllShots)}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-            >
-              {showAllShots ? <><EyeOff className="w-3.5 h-3.5" />Collapse</> : <><Eye className="w-3.5 h-3.5" />View all {selectedScenes.length} shots</>}
-            </button>
-          )}
-
-          <Separator />
-        </div>
-      )}
-
-      {/* ── PACKAGING REFERENCE ── */}
-      {hasPackagingScenes && (
-        <div className="space-y-3">
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <PackagePlus className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold">Packaging reference</span>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Some of your selected scenes include packaging. Upload a photo of your packaging for more accurate results — otherwise, the AI will interpret packaging design on its own.
-                  </p>
-                </div>
-              </div>
-
-              {details.packagingReferenceUrl ? (
-                <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
-                  <img src={details.packagingReferenceUrl} alt="Packaging reference" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => update({ packagingReferenceUrl: undefined })}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => packagingRefInputRef.current?.click()}
-                  disabled={uploadingPackagingRef}
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
-                >
-                  {uploadingPackagingRef ? (
-                    <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 text-primary/60" />
-                      <span className="text-xs text-primary/80 font-medium">Upload packaging photo</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* ── BACK VIEW REFERENCE ── */}
-      {hasBackViewScenes && (
-        <div className="space-y-3">
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <RotateCcw className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold">Back view reference</span>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Some of your selected scenes show the back of your product. Upload a photo of the back for accurate results — otherwise, the AI will interpret the back design on its own.
-                  </p>
-                </div>
-              </div>
-
-              {details.backReferenceUrl ? (
-                <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
-                  <img src={details.backReferenceUrl} alt="Back view reference" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => update({ backReferenceUrl: undefined })}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => backRefInputRef.current?.click()}
-                  disabled={uploadingBackRef}
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
-                >
-                  {uploadingBackRef ? (
-                    <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 text-primary/60" />
-                      <span className="text-xs text-primary/80 font-medium">Upload back view photo</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* ── REFERENCE TRIGGER UPLOADS (atomizer, open bottle, cap, etc.) ── */}
-      {activeReferenceTriggers.map(triggerKey => {
-        const def = REFERENCE_TRIGGERS[triggerKey];
-        if (!def) return null;
-        const refUrl = sceneExtraRefs[`trigger:${triggerKey}`];
-        const isUploading = uploadingRefTrigger === triggerKey;
-        return (
-          <div key={triggerKey} className="space-y-3">
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Camera className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold">{def.label}</span>
-                    <p className="text-xs text-muted-foreground mt-0.5">{def.description}</p>
-                  </div>
-                </div>
-
-              {refUrl ? (
-                  <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
-                    <img src={refUrl} alt={def.label} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeRefTrigger(triggerKey)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <X className="w-3 h-3 text-white" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      pendingRefTriggerRef.current = triggerKey;
-                      refTriggerInputRef.current?.click();
-                    }}
-                    disabled={isUploading}
-                    className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer"
-                  >
-                    {isUploading ? (
-                      <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 text-primary/60" />
-                        <span className="text-xs text-primary/80 font-medium">{def.label}</span>
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {/* Brand logo overlay: additional text input */}
-                {triggerKey === 'brandLogoOverlay' && (
-                  <div className="pt-1">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Text / brand name to display</label>
-                    <input
-                      type="text"
-                      value={details.brandLogoText || ''}
-                      onChange={e => onDetailsChange({ ...details, brandLogoText: e.target.value })}
-                      placeholder="e.g. BOTTEGA VENETA"
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    />
-                    <p className="text-[11px] text-muted-foreground mt-1">Optional — if left empty, AI uses branding visible on the product</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        );
-      })}
-      {/* Hidden file input for reference trigger uploads */}
+      {/* Hidden file input for reference trigger uploads (single product fallback) */}
       <input
         ref={refTriggerInputRef}
         type="file"
@@ -2079,6 +1839,111 @@ export function ProductImagesStep3Refine({
         }}
       />
 
+      {/* ── PRODUCT-SPECIFIC REFERENCE UPLOADS ── */}
+      {(() => {
+        const productSpecificTriggers: { key: string; label: string; description: string; icon: React.ReactNode }[] = [];
+        if (hasPackagingScenes) productSpecificTriggers.push({ key: 'packagingDetails', label: 'Packaging reference', description: 'Upload a photo of your packaging for more accurate results.', icon: <PackagePlus className="w-4 h-4 text-primary" /> });
+        if (hasBackViewScenes) productSpecificTriggers.push({ key: 'backView', label: 'Back view reference', description: 'Upload a photo of the back for accurate results.', icon: <RotateCcw className="w-4 h-4 text-primary" /> });
+        for (const tk of activeReferenceTriggers) {
+          const def = REFERENCE_TRIGGERS[tk];
+          if (def) productSpecificTriggers.push({ key: tk, label: def.label, description: def.description, icon: <Camera className="w-4 h-4 text-primary" /> });
+        }
+        if (productSpecificTriggers.length === 0) return null;
+
+        return productSpecificTriggers.map(trigger => {
+          if (!isMultiProduct) {
+            const refUrl = trigger.key === 'packagingDetails'
+              ? (details.packagingReferenceUrl || getRefUrl(trigger.key))
+              : trigger.key === 'backView'
+              ? (details.backReferenceUrl || getRefUrl(trigger.key))
+              : getRefUrl(trigger.key);
+            const isUploading = uploadingRefTrigger === `trigger:${trigger.key}` || uploadingRefTrigger === trigger.key;
+            return (
+              <div key={trigger.key} className="space-y-3">
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">{trigger.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-semibold">{trigger.label}</span>
+                        <p className="text-xs text-muted-foreground mt-0.5">{trigger.description}</p>
+                      </div>
+                    </div>
+                    {refUrl ? (
+                      <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-border">
+                        <img src={refUrl} alt={trigger.label} className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => { if (trigger.key === 'packagingDetails') update({ packagingReferenceUrl: undefined }); else if (trigger.key === 'backView') update({ backReferenceUrl: undefined }); removeRefTrigger(trigger.key); }} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"><X className="w-3 h-3 text-white" /></button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: selectedProductsList[0]?.id || '' }; perProductInputRef.current?.click(); }} disabled={isUploading} className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer">
+                        {isUploading ? <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span> : <><Upload className="w-4 h-4 text-primary/60" /><span className="text-xs text-primary/80 font-medium">{trigger.label}</span></>}
+                      </button>
+                    )}
+                    {trigger.key === 'brandLogoOverlay' && (
+                      <div className="pt-1">
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Text / brand name to display</label>
+                        <input type="text" value={details.brandLogoText || ''} onChange={e => onDetailsChange({ ...details, brandLogoText: e.target.value })} placeholder="e.g. BOTTEGA VENETA" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
+                        <p className="text-[11px] text-muted-foreground mt-1">Optional — if left empty, AI uses branding visible on the product</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          }
+
+          const uploadedCount = selectedProductsList.filter(p => getRefUrl(trigger.key, p.id)).length;
+          return (
+            <div key={trigger.key} className="space-y-3">
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">{trigger.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold">{trigger.label}</span>
+                        <Badge variant="secondary" className="text-[9px] h-4 px-1.5">{uploadedCount} of {selectedProductsList.length}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">Upload for each product — each product needs its own reference.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                    {selectedProductsList.map(product => {
+                      const productRefUrl = getRefUrl(trigger.key, product.id);
+                      const refKey = `trigger:${trigger.key}:${product.id}`;
+                      const isUploading = uploadingRefTrigger === refKey;
+                      return (
+                        <div key={product.id} className="flex flex-col items-center gap-1.5">
+                          <ProductThumbnail imageUrl={product.image_url} alt={product.title} size="md" />
+                          <span className="text-[10px] font-medium text-foreground truncate w-full text-center max-w-[80px]">{product.title}</span>
+                          {productRefUrl ? (
+                            <div className="relative group w-14 h-14 rounded-lg overflow-hidden border border-border">
+                              <img src={productRefUrl} alt={`${trigger.label} for ${product.title}`} className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => removeRefTrigger(trigger.key, product.id)} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"><X className="w-2.5 h-2.5 text-white" /></button>
+                              <div className="absolute bottom-0.5 left-0.5"><div className="w-3.5 h-3.5 rounded-full bg-green-500 flex items-center justify-center"><Check className="w-2 h-2 text-white" /></div></div>
+                            </div>
+                          ) : (
+                            <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: product.id }; perProductInputRef.current?.click(); }} disabled={isUploading} className="w-14 h-14 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer flex items-center justify-center">
+                              {isUploading ? <span className="text-[9px] text-primary font-medium animate-pulse">…</span> : <Upload className="w-3.5 h-3.5 text-primary/50" />}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {trigger.key === 'brandLogoOverlay' && (
+                    <div className="pt-1">
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Text / brand name to display</label>
+                      <input type="text" value={details.brandLogoText || ''} onChange={e => onDetailsChange({ ...details, brandLogoText: e.target.value })} placeholder="e.g. BOTTEGA VENETA" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
+                      <p className="text-[11px] text-muted-foreground mt-1">Optional — if left empty, AI uses branding visible on the product</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          );
+        });
+      })()}
 
       {(scenesNeedingModel.length > 0 || bgScenes.length > 0) && (
         <div className="space-y-3">
