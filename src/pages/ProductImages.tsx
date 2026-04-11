@@ -969,22 +969,18 @@ export default function ProductImages() {
         {step === 1 && (
           <>
             <div className="space-y-3">
-              {/* Section header */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Your Products{userProducts.length > 0 && ` (${userProducts.length})`}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Select from your catalog or upload a new image <span className="hidden sm:inline">· Tip: drag &amp; drop or paste (⌘V)</span></p>
-              </div>
               {/* Toolbar */}
               <div className="flex gap-2 items-center">
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Search products..."
+                    placeholder={userProducts.length > 0 ? `Search ${userProducts.length} products…` : 'Search products…'}
                     value={productSearch}
                     onChange={e => setProductSearch(e.target.value)}
                     className="h-8 text-xs pl-8"
                   />
                 </div>
+                <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground font-mono shrink-0">⌘V</kbd>
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
                   const filtered = userProducts.filter(p =>
                     p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
