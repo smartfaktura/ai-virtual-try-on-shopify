@@ -1,23 +1,24 @@
 
 
-# Fix Favorite Overlay on Library Cards
+# Add Status Actions to Card Hover Menu, Remove from Select Bar
 
-## Problem
-Two separate favorite indicators overlap at `top-3 right-3`:
-1. A **persistent heart** (always visible when favorited) — small, no background
-2. A **hover heart button** (visible on hover) — larger, with circular `bg-black/40` background
+## Changes
 
-They stack on top of each other on hover, creating the messy look from the screenshot.
+### 1. `src/components/app/LibraryImageCard.tsx`
+- Add new prop: `onSetStatus?: (status: AssetStatus) => void`
+- Add a **three-dot menu** (MoreHorizontal icon) to the hover overlay, positioned top-left
+- Clicking it opens a small `DropdownMenu` with two items:
+  - "Brand Ready" (Shield icon) — calls `onSetStatus('brand_ready')`
+  - "Ready to Publish" (Send icon) — calls `onSetStatus('ready_to_publish')`
+- Keep existing hover actions (heart top-right, download bottom-right, status pill bottom-left)
 
-## Fix
-**Remove the persistent favorite indicator entirely** (lines 113-120). The hover overlay heart already shows the filled/unfilled state. When not hovering, favorited items don't need a persistent badge — the Favorites smart view tab handles filtering.
+### 2. `src/pages/Jobs.tsx`
+- **Remove** the "Brand Ready" and "Publish Ready" buttons from the floating select bar (lines ~625-649)
+- **Pass** a new `onSetStatus` callback to each `LibraryImageCard` that calls `setStatus.mutate({ imageId, status })` with a toast
+- The select bar keeps: `{n} selected`, Favorite, Enhance, Download, Delete, Close — much cleaner
 
-If we want a subtle always-visible indicator for favorited items, move it to a **different position** (e.g., bottom-left as a small dot or glow) so it never collides with the hover button. But the cleaner approach is: heart button on hover only, filled red when favorited.
-
-## Changes — single file
-
-### `src/components/app/LibraryImageCard.tsx`
-- **Remove** the persistent favorite indicator block (lines 113-120)
-- The hover overlay heart button (lines 163-174) already handles both states (filled rose when favorited, outline when not)
-- No other changes needed
+## Result
+- Individual cards get a clean three-dot menu on hover for status actions
+- Select bar is shorter and less crowded
+- Status actions are always one click away on any card without entering select mode
 
