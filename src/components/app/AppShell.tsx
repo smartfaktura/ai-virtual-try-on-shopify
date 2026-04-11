@@ -58,12 +58,6 @@ const navItems = [
   { label: 'My Library', icon: Image, path: '/app/library' },
   
   { label: 'Brand Models', icon: Users, path: '/app/models' },
-  { label: 'Earn Credits', icon: Gift, path: '#earn-credits' },
-];
-
-const configItems = [
-  { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
-  { label: 'Settings', icon: Settings, path: '/app/settings' },
 ];
 
 const STORAGE_KEY = 'sidebar-collapsed';
@@ -212,14 +206,6 @@ export function AppShell({ children }: AppShellProps) {
             <NavItemButton key={item.path} item={item} />
           ))}
 
-          <div className="pt-6">
-            {!isCollapsed && (
-              <p className="px-3 py-2 mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30">Configuration</p>
-            )}
-            {configItems.map((item) => (
-              <NavItemButton key={item.path} item={item} />
-            ))}
-          </div>
         </nav>
 
 
@@ -298,6 +284,20 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <Settings className="w-4 h-4" />
                   Account settings
+                </button>
+                <button
+                  onClick={() => { navigate('/app/brand-profiles'); setUserMenuOpen(false); }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <Palette className="w-4 h-4" />
+                  Brand Profiles
+                </button>
+                <button
+                  onClick={() => { setEarnCreditsOpen(true); setUserMenuOpen(false); }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <Gift className="w-4 h-4" />
+                  Earn Credits
                 </button>
                 {isRealAdmin && (
                   <>
