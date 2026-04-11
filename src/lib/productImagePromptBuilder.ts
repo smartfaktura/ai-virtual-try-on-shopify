@@ -74,11 +74,11 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   // Scene-specific backgroundTone chip values
   'white': 'clean white color palette with pure, bright tones',
   'light-gray': 'soft light-gray color palette with neutral, understated tones',
-  'gradient': 'smooth gradient background fading from white to deep navy blue',
+  'gradient': 'smooth gradient background fading from #FFFFFF to #123668',
   // Gradient presets (also used as backgroundTone values)
-  'gradient-warm': 'warm gradient background fading from rich terracotta brown to soft peach cream',
-  'gradient-cool': 'cool gradient background fading from deep forest green to soft mint cream',
-  'gradient-sunset': 'warm sunset-toned gradient background fading from soft peach to blush pink',
+  'gradient-warm': 'warm gradient background fading from #984D1B to #FBEFE9',
+  'gradient-cool': 'cool gradient background fading from #0F570F to #EAFBE9',
+  'gradient-sunset': 'warm gradient background fading from #B62020 to #FBE9E9',
 };
 
 // ── Styling density map ──
@@ -790,6 +790,13 @@ function resolveToken(token: string, ctx: TokenContext): string {
         if (/^#[0-9A-Fa-f]{6}$/.test(from) && /^#[0-9A-Fa-f]{6}$/.test(to)) {
           return `smooth gradient background from ${from} to ${to}, no texture, no pattern`;
         }
+      }
+      // Named gradient preset — direct background, not a modifier
+      if (colorWorld && colorWorld.startsWith('gradient-') && COLOR_WORLD_MAP[colorWorld]) {
+        return `${COLOR_WORLD_MAP[colorWorld]}, no texture, no pattern`;
+      }
+      if (colorWorld === 'gradient' && COLOR_WORLD_MAP['gradient']) {
+        return `${COLOR_WORLD_MAP['gradient']}, no texture, no pattern`;
       }
       // Check if backgroundTone is a direct swatch value in BG_MAP (e.g. sage, blush, white)
       const swatchResolved = (!isAuto(colorWorld) && BG_MAP[colorWorld!]) ? BG_MAP[colorWorld!] : null;
