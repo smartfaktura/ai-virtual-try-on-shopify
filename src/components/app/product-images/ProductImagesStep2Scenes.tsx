@@ -291,7 +291,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   return (
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold tracking-tight">Select scenes</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Select shots</h2>
         <div className="flex items-center gap-2">
           {selectedSceneIds.size > 0 && (
             <>
