@@ -1369,32 +1369,51 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender, anal
     return conflicts;
   }, [analyses, selectedProductIds]);
 
-  const slotBadge = (slot: OutfitSlot) => {
-    const types = slotConflicts[slot];
-    if (types.length === 0) return null;
-    const unique = [...new Set(types)];
-    const label = unique.length <= 2 ? unique.join(', ') : `${unique.length} products`;
+  const totalProducts = selectedProductIds?.size || 0;
+
+  // Check if ALL products are full-body (both top+bottom conflicted)
+  const isFullBodyMode = totalProducts > 0 && slotConflicts.top.length === totalProducts && slotConflicts.bottom.length === totalProducts;
+
+  const renderSlot = (slot: OutfitSlot, label: string, icon: string, piece: OutfitPiece | undefined, onChange: (p: OutfitPiece) => void) => {
+    const conflictCount = slotConflicts[slot].length;
+    const allConflict = totalProducts > 0 && conflictCount === totalProducts;
+    const someConflict = conflictCount > 0 && !allConflict;
+    const uniqueTypes = [...new Set(slotConflicts[slot])];
+    const typeLabel = uniqueTypes.length <= 2 ? uniqueTypes.join(', ') : `${uniqueTypes.length} products`;
+
+    if (allConflict) {
+      return (
+        <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-muted/50 border border-border/50">
+          <Lock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
+          <span className="text-xs text-muted-foreground/70 ml-auto">Filled by your {typeLabel}</span>
+        </div>
+      );
+    }
+
     return (
-      <span className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-1.5 py-0.5 rounded-full ml-1.5 font-medium whitespace-nowrap">
-        Auto-skipped for {label}
-      </span>
+      <div className="relative">
+        <PieceField label={label} piece={piece} onChange={onChange} pieceType={slot} />
+        {someConflict && (
+          <p className="text-[10px] text-muted-foreground/60 mt-0.5 pl-1 italic">
+            Applied only to non-{typeLabel} products
+          </p>
+        )}
+      </div>
     );
   };
 
   return (
     <>
-      <div className="flex items-center gap-1">
-        <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
-        {slotBadge('top')}
-      </div>
-      <div className="flex items-center gap-1">
-        <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />
-        {slotBadge('bottom')}
-      </div>
-      <div className="flex items-center gap-1">
-        <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />
-        {slotBadge('shoes')}
-      </div>
+      {isFullBodyMode && (
+        <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-primary/5 border border-primary/10 mb-1">
+          <Shirt className="h-3.5 w-3.5 text-primary/60" />
+          <span className="text-xs text-primary/80 font-medium">Full-body garment — only shoes &amp; accessories apply</span>
+        </div>
+      )}
+      {renderSlot('top', 'Top', '👕', currentConfig.top, p => updateConfig({ top: p }))}
+      {renderSlot('bottom', 'Bottom', '👖', currentConfig.bottom, p => updateConfig({ bottom: p }))}
+      {renderSlot('shoes', 'Shoes', '👟', currentConfig.shoes, p => updateConfig({ shoes: p }))}
     </>
   );
 }
