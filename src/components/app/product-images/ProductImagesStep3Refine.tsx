@@ -27,7 +27,7 @@ import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset, ProductAnalysis } from './types';
 import type { ModelProfile } from '@/types';
-import { getConflictingSlots, type OutfitSlot } from '@/lib/productImagePromptBuilder';
+import { getConflictingSlots, resolveGarmentType, type OutfitSlot } from '@/lib/productImagePromptBuilder';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
@@ -1333,13 +1333,14 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
 }
 
 /** Piece fields portion of OutfitLockPanel — shown in collapsible */
-function OutfitPieceFields({ details, update, primaryCategory, modelGender, analyses, selectedProductIds }: {
+function OutfitPieceFields({ details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
   primaryCategory?: string;
   modelGender?: string;
   analyses?: Record<string, ProductAnalysis>;
   selectedProductIds?: Set<string>;
+  allProducts?: UserProduct[];
 }) {
   const cat = primaryCategory || 'garments';
   const isMale = modelGender === 'male';
@@ -1357,17 +1358,19 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender, anal
   // Compute conflicting slots across all selected products
   const slotConflicts = useMemo(() => {
     const conflicts: Record<OutfitSlot, string[]> = { top: [], bottom: [], shoes: [] };
-    if (!analyses || !selectedProductIds) return conflicts;
+    if (!selectedProductIds) return conflicts;
     for (const pid of selectedProductIds) {
-      const a = analyses[pid];
-      if (!a?.garmentType) continue;
-      const conflicting = getConflictingSlots(a.garmentType);
+      const a = analyses?.[pid];
+      const product = allProducts?.find(p => p.id === pid);
+      const resolved = resolveGarmentType(a, product);
+      if (!resolved) continue;
+      const conflicting = getConflictingSlots(resolved);
       for (const slot of conflicting) {
-        conflicts[slot].push(a.garmentType);
+        conflicts[slot].push(resolved);
       }
     }
     return conflicts;
-  }, [analyses, selectedProductIds]);
+  }, [analyses, selectedProductIds, allProducts]);
 
   const totalProducts = selectedProductIds?.size || 0;
 
@@ -2077,7 +2080,7 @@ export function ProductImagesStep3Refine({
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="space-y-2 pt-2 pb-1 pl-6">
-                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} analyses={analyses} selectedProductIds={selectedProductIds} />
+                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} analyses={analyses} selectedProductIds={selectedProductIds} allProducts={allProducts} />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
