@@ -1914,7 +1914,7 @@ export function ProductImagesStep3Refine({
                       const isUploading = uploadingRefTrigger === refKey;
                       return (
                         <div key={product.id} className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border/60 bg-card">
-                          <ProductThumbnail imageUrl={product.image_url} alt={product.title} size="md" />
+                          <ProductThumbnail imageUrl={product.image_url} alt={product.title} size="md" fit="contain" />
                           <span className="text-[10px] font-medium text-foreground truncate w-full text-center max-w-[80px]">{product.title}</span>
                           {productRefUrl ? (
                             <div className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted/30">
