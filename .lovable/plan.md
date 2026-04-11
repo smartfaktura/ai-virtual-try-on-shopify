@@ -1,15 +1,21 @@
 
 
-# Fix Three-Dot Menu Disappearing on Click
+# Two Fixes: Remove Catalog Studio from Sidebar + Add "Reset to Draft" Option
 
-## Problem
-The hover overlay uses `group-hover:opacity-100` — when the dropdown menu opens and the mouse moves to the menu popover (which renders outside the card via a portal), the card loses hover state, the overlay fades to `opacity-0`, and the menu disappears.
+## 1. Remove Catalog Studio from sidebar menu
 
-## Fix — `src/components/app/LibraryImageCard.tsx`
-- Add `useState` to track whether the dropdown is open
-- Add `onOpenChange` to the `DropdownMenu` to set this state
-- When dropdown is open, force the overlay to `opacity-100` regardless of hover (add the state class alongside `group-hover:opacity-100`)
-- This keeps the overlay visible while interacting with the menu
+**File**: `src/components/app/AppShell.tsx`
+- Remove the `{ label: 'Catalog Studio', icon: LayoutTemplate, path: '/app/catalog' }` entry from the nav items array (line 60)
+- Remove the BETA badge rendering logic for Catalog Studio (lines 161-164)
+- Clean up unused `LayoutTemplate` import if no longer referenced
 
-Single file change, ~5 lines added.
+## 2. Add "Reset to Draft" option in the three-dot menu
+
+**File**: `src/components/app/LibraryImageCard.tsx`
+- Show menu items conditionally based on current `assetStatus`:
+  - When `draft`: show "Brand Ready" and "Ready to Publish"
+  - When `brand_ready`: show "Ready to Publish" and **"Reset to Draft"**
+  - When `ready_to_publish`: show "Brand Ready" and **"Reset to Draft"**
+- Add a "Reset to Draft" `DropdownMenuItem` with an `Undo2` (or `RotateCcw`) icon that calls `onSetStatus('draft')`
+- This lets users unmark items from any status back to draft
 
