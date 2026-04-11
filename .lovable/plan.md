@@ -1,43 +1,24 @@
 
 
-# Fix: Map All Subcategories to Prompt Builder Logic
+# Fix Product Grid: Consistent Card Heights + Simplified "New" Card
 
 ## Problem
-The `analyze-product-category` backend returns ~35 categories, but `productImagePromptBuilder.ts` switch statements only handle ~10. Subcategories like `dresses`, `hoodies`, `sneakers`, `boots`, `kidswear`, `eyewear`, `watches`, and all jewellery types fall to `default` — which applies wrong outfit/model/framing logic.
+1. The "Add Product" button uses `min-h-[200px]` while product cards use `aspect-square` + variable text — causing misaligned grid rows
+2. Product titles wrap differently (1 vs 2 lines), and `product_type` may be absent — different card heights
+3. User wants the "Add Product" card to be clearer about what it does
 
-## Fix — `src/lib/productImagePromptBuilder.ts`
+## Fix — `src/components/app/product-images/ProductImagesStep1Products.tsx`
 
-Update **all 7 category-aware switch functions** to map subcategories to their parent logic:
+### Grid gap fix
+- **"New" card**: Remove `min-h-[200px]`. Add an `aspect-square` top section (matching product cards) + a fixed-height text block below. Label it "New" with subtitle "Upload or import"
+- **Product card text area**: Fix height to `h-[52px]` with `line-clamp-1` on title. Always render the `product_type` line (use `&nbsp;` placeholder if empty) so all cards have identical height
+- **Image padding**: Reduce from `p-3` to `p-2`
 
-### Clothing subcategories → `garments` treatment
-Add `case 'dresses': case 'hoodies': case 'streetwear': case 'jeans': case 'jackets':` alongside `case 'garments':` in:
-- `resolveBodyFramingDirective` — full-body shot
-- `defaultBackground` — warm white studio
-- `defaultShadow` — soft diffused shadow
-- `defaultStyling` — clean commercial
-- `defaultLighting` — soft directional
-- `defaultPersonDirective` — fashion model
-- `categoryOutfitDefaults` — standard support clothing
+### Simplified "New" card content
+Instead of just a "+" icon with "Add Product", show:
+- Upload icon + "New" label
+- Small subtitle: "Upload or import"
+- This makes it clear users can upload an image or add a product from various sources
 
-### Footwear subcategories → `shoes` treatment
-Add `case 'sneakers': case 'boots': case 'high-heels':` alongside `case 'shoes':` in all 7 functions.
-
-### Accessory subcategories → `bags-accessories` treatment
-Add `case 'backpacks': case 'wallets-cardholders': case 'belts': case 'scarves': case 'hats-small':` alongside `case 'bags-accessories':` in all 7 functions.
-
-### Jewellery/watches/eyewear → beauty-adjacent treatment
-Add `case 'jewellery-necklaces': case 'jewellery-earrings': case 'jewellery-bracelets': case 'jewellery-rings': case 'watches': case 'eyewear':` — treat like `bags-accessories` for outfit/framing (close-up/three-quarter with product focus), but with beauty-clean lighting and styling.
-
-### Kidswear → special handling
-Add `case 'kidswear':` with:
-- `defaultPersonDirective`: child model directive (age-appropriate, playful)
-- `categoryOutfitDefaults`: child-appropriate outfit defaults
-- `defaultOutfitDirective`: add kidswear to the "product IS the outfit" check
-- `resolveBodyFramingDirective`: full-body for children's clothing
-
-### Also update `ProductCategory` type — `src/components/app/product-images/types.ts`
-Add all missing categories to align with the backend: `lingerie`, `swimwear`, `activewear`, `kidswear`, `dresses`, `hoodies`, `streetwear`, `jeans`, `jackets`, `sneakers`, `boots`, `high-heels`, `backpacks`, `wallets-cardholders`, `belts`, `scarves`, `eyewear`, `watches`, `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets`, `jewellery-rings`
-
-## Result
-Every category the backend can return now has proper prompt handling — no more falling through to generic defaults that add wrong clothing or framing.
+The `AddProductModal` already handles all import methods (Upload, URL, CSV, Mobile, Shopify) — no changes needed there.
 
