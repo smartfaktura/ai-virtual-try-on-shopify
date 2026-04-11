@@ -54,7 +54,7 @@ const navItems = [
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Explore', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
-  { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
+  { label: 'Create with Promt', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
   
   { label: 'Catalog Studio', icon: LayoutTemplate, path: '/app/catalog' },
