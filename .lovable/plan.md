@@ -1,14 +1,10 @@
 
 
-# Add Spacing After CTA Button
+# Change "Create with Prompt" Icon to Terminal-Style
 
 ## Change
-In `src/components/app/AppShell.tsx`, increase the bottom padding of the CTA wrapper from `pb-1` to `pb-3` (line 202). This adds ~8px more breathing room between the "Create Visuals" button and the first section label.
+Replace `Wand2` with `SquareTerminal` — a terminal/code prompt icon that directly evokes "type a command/prompt." It's clean, modern, and distinct from the other nav icons.
 
-| Element | Current | New |
-|---------|---------|-----|
-| CTA wrapper padding | `pt-4 pb-1` | `pt-4 pb-3` |
-
-## File Changed
-`src/components/app/AppShell.tsx` — line 202, single class change
+## File
+`src/components/app/AppShell.tsx` — swap `Wand2` import to `SquareTerminal`, update the icon reference in navGroups.
 
