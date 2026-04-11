@@ -1102,8 +1102,8 @@ export default function ProductImages() {
                           if (file) handleQuickUpload(file);
                         }}
                         className={cn(
-                          'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left cursor-pointer',
-                          isDragOver ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-primary/30 hover:border-primary hover:bg-primary/5',
+                          'group relative flex flex-col rounded-lg overflow-hidden border-2 border-dashed transition-all text-left cursor-pointer',
+                          isDragOver ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border hover:border-primary/40',
                           quickUploading && 'pointer-events-none opacity-70'
                         )}
                       >
@@ -1118,7 +1118,7 @@ export default function ProductImages() {
                             e.target.value = '';
                           }}
                         />
-                        <div className="w-full aspect-square flex flex-col items-center justify-center bg-primary/5">
+                        <div className="w-full aspect-square flex flex-col items-center justify-center bg-muted/30">
                           {quickUploading ? (
                             <>
                               <Loader2 className="w-7 h-7 animate-spin text-primary mb-1" />
@@ -1126,14 +1126,14 @@ export default function ProductImages() {
                             </>
                           ) : (
                             <>
-                              <Upload className="w-7 h-7 text-primary mb-1.5" />
-                              <span className="text-[10px] font-medium text-primary">Upload</span>
+                              <Upload className="w-7 h-7 text-muted-foreground group-hover:text-primary mb-1.5 transition-colors" />
+                              <span className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">Upload</span>
                             </>
                           )}
                         </div>
                         <div className="px-1.5 py-1.5 bg-card">
-                          <p className="text-[10px] font-medium text-primary leading-tight">Upload product image</p>
-                          <p className="text-[9px] text-muted-foreground mt-0.5">Drop, click, or paste</p>
+                          <p className="text-[10px] font-medium text-foreground leading-tight">Create from Product Image</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5">Upload, drop, click or paste</p>
                         </div>
                       </div>
                       {visible.map(up => {
