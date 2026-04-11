@@ -183,7 +183,7 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Create Visuals CTA */}
-        <div className={cn('pt-5 pb-2', isCollapsed ? 'px-2' : 'px-4')}>
+        <div className={cn('pt-4 pb-1', isCollapsed ? 'px-2' : 'px-4')}>
           <button
             onClick={() => handleNav('/app/workflows')}
             className={cn(
@@ -198,8 +198,8 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Main Nav */}
-        <nav className={cn('flex-1 py-4 space-y-1 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
-          <div className="h-px bg-white/[0.06] mx-3 mb-2" />
+        <nav className={cn('flex-1 pt-3 pb-4 space-y-1 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
+          <div className="h-px bg-white/[0.06] mx-3 mb-1" />
           {navItems.map((item) => (
             <NavItemButton key={item.path} item={item} />
           ))}
