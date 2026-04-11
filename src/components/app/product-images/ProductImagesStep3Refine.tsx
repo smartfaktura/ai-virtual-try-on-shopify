@@ -679,7 +679,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
             </div>
           )}
           <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
-            <p className="text-[9px] font-medium text-white leading-tight">Custom</p>
+            <p className="text-[9px] font-medium text-white leading-tight">Custom Color</p>
           </div>
         </button>
 
@@ -712,7 +712,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
             </div>
           )}
           <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
-            <p className="text-[9px] font-medium text-white leading-tight">Custom</p>
+            <p className="text-[9px] font-medium text-white leading-tight">Custom Gradient</p>
           </div>
         </button>
       </div>
