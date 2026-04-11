@@ -580,8 +580,35 @@ function categoryOutfitDefaults(category?: string, gender?: string): OutfitPiece
   }
 }
 
+// ── Slot nullification based on product garmentType ──
+export type OutfitSlot = 'top' | 'bottom' | 'shoes';
+
+/** Returns outfit slots that conflict with the product's garmentType.
+ *  These slots should be omitted from the outfit prompt so the product fills them. */
+export function getConflictingSlots(garmentType?: string): Set<OutfitSlot> {
+  if (!garmentType) return new Set();
+  const gt = garmentType.toLowerCase();
+  // Full-body garments — product IS top AND bottom
+  if (['dress', 'jumpsuit', 'romper', 'bodysuit', 'one-piece', 'overalls', 'coverall'].some(k => gt.includes(k))) {
+    return new Set(['top', 'bottom']);
+  }
+  // Bottom garments
+  if (['skirt', 'shorts', 'trousers', 'pants', 'leggings', 'jeans', 'wide-leg', 'culottes', 'joggers', 'sweatpants'].some(k => gt.includes(k))) {
+    return new Set(['bottom']);
+  }
+  // Top garments
+  if (['crop top', 'blouse', 'shirt', 'hoodie', 'sweater', 'cardigan', 'tank top', 'vest', 'jacket', 'blazer', 'coat', 'parka', 'bomber'].some(k => gt.includes(k))) {
+    return new Set(['top']);
+  }
+  // Footwear
+  if (['sneaker', 'boot', 'heel', 'sandal', 'loafer', 'mule', 'slipper', 'clog', 'flat', 'oxford', 'derby', 'trainer', 'shoe'].some(k => gt.includes(k))) {
+    return new Set(['shoes']);
+  }
+  return new Set();
+}
+
 // ── Build structured outfit string from OutfitConfig ──
-export function buildStructuredOutfitString(config: OutfitConfig): string {
+export function buildStructuredOutfitString(config: OutfitConfig, skipSlots?: Set<OutfitSlot>): string {
   const describePiece = (piece?: OutfitPiece): string => {
     if (!piece || !piece.garment) return '';
     const parts: string[] = [];
@@ -593,12 +620,18 @@ export function buildStructuredOutfitString(config: OutfitConfig): string {
   };
 
   const segments: string[] = [];
-  const top = describePiece(config.top);
-  if (top) segments.push(`Top: ${top}`);
-  const bottom = describePiece(config.bottom);
-  if (bottom) segments.push(`Bottom: ${bottom}`);
-  const shoes = describePiece(config.shoes);
-  if (shoes) segments.push(`Shoes: ${shoes}`);
+  if (!skipSlots?.has('top')) {
+    const top = describePiece(config.top);
+    if (top) segments.push(`Top: ${top}`);
+  }
+  if (!skipSlots?.has('bottom')) {
+    const bottom = describePiece(config.bottom);
+    if (bottom) segments.push(`Bottom: ${bottom}`);
+  }
+  if (!skipSlots?.has('shoes')) {
+    const shoes = describePiece(config.shoes);
+    if (shoes) segments.push(`Shoes: ${shoes}`);
+  }
 
   if (segments.length === 0) return '';
   const outfitStr = segments.join('; ');
@@ -607,22 +640,25 @@ export function buildStructuredOutfitString(config: OutfitConfig): string {
 }
 
 // ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
-function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string): string {
+function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string, garmentType?: string): string {
   // For categories where the product IS the outfit, enforce no additional clothing
   if (category === 'lingerie' || category === 'swimwear' || category === 'activewear' || category === 'kidswear') {
     return 'OUTFIT LOCK — The product IS the outfit. Model wears ONLY the product — no additional clothing, no layering, no cover-ups. Show the product as-is on the body. Do NOT add any t-shirt, trousers, jacket, or other garment over or under the product.';
   }
 
+  // Compute which slots to skip based on the product's garment type
+  const skipSlots = getConflictingSlots(garmentType);
+
   // Prefer structured config if available
   if (details?.outfitConfig) {
-    const structured = buildStructuredOutfitString(details.outfitConfig);
+    const structured = buildStructuredOutfitString(details.outfitConfig, skipSlots);
     if (structured) return structured;
   }
 
   const defaults = categoryOutfitDefaults(category, gender);
-  const top = details?.outfitTop || defaults.top;
-  const bottom = details?.outfitBottom || defaults.bottom;
-  const shoes = details?.outfitShoes || defaults.shoes;
+  const top = skipSlots.has('top') ? '' : (details?.outfitTop || defaults.top);
+  const bottom = skipSlots.has('bottom') ? '' : (details?.outfitBottom || defaults.bottom);
+  const shoes = skipSlots.has('shoes') ? '' : (details?.outfitShoes || defaults.shoes);
   const acc = details?.outfitAccessories || defaults.accessories;
 
   const parts: string[] = [];
