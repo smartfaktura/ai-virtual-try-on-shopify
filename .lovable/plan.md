@@ -1,24 +1,15 @@
 
 
-# Add Status Actions to Card Hover Menu, Remove from Select Bar
+# Fix Three-Dot Menu Disappearing on Click
 
-## Changes
+## Problem
+The hover overlay uses `group-hover:opacity-100` — when the dropdown menu opens and the mouse moves to the menu popover (which renders outside the card via a portal), the card loses hover state, the overlay fades to `opacity-0`, and the menu disappears.
 
-### 1. `src/components/app/LibraryImageCard.tsx`
-- Add new prop: `onSetStatus?: (status: AssetStatus) => void`
-- Add a **three-dot menu** (MoreHorizontal icon) to the hover overlay, positioned top-left
-- Clicking it opens a small `DropdownMenu` with two items:
-  - "Brand Ready" (Shield icon) — calls `onSetStatus('brand_ready')`
-  - "Ready to Publish" (Send icon) — calls `onSetStatus('ready_to_publish')`
-- Keep existing hover actions (heart top-right, download bottom-right, status pill bottom-left)
+## Fix — `src/components/app/LibraryImageCard.tsx`
+- Add `useState` to track whether the dropdown is open
+- Add `onOpenChange` to the `DropdownMenu` to set this state
+- When dropdown is open, force the overlay to `opacity-100` regardless of hover (add the state class alongside `group-hover:opacity-100`)
+- This keeps the overlay visible while interacting with the menu
 
-### 2. `src/pages/Jobs.tsx`
-- **Remove** the "Brand Ready" and "Publish Ready" buttons from the floating select bar (lines ~625-649)
-- **Pass** a new `onSetStatus` callback to each `LibraryImageCard` that calls `setStatus.mutate({ imageId, status })` with a toast
-- The select bar keeps: `{n} selected`, Favorite, Enhance, Download, Delete, Close — much cleaner
-
-## Result
-- Individual cards get a clean three-dot menu on hover for status actions
-- Select bar is shorter and less crowded
-- Status actions are always one click away on any card without entering select mode
+Single file change, ~5 lines added.
 
