@@ -48,16 +48,38 @@ const prefetchRoute = (path: string) => {
   if (fn) { prefetched.add(path); fn(); }
 };
 
-const navItems = [
-  { label: 'Dashboard', icon: Home, path: '/app' },
-  { label: 'Visual Studio', icon: Layers, path: '/app/workflows', divider: true },
-  { label: 'Create with Prompt', icon: Wand2, path: '/app/freestyle' },
-  { label: 'Products', icon: Package, path: '/app/products', divider: true },
-  { label: 'Brand Models', icon: Users, path: '/app/models' },
-  { label: 'Explore', icon: Compass, path: '/app/discover' },
-  { label: 'Library', icon: Image, path: '/app/library', divider: true },
-  { label: 'Video', icon: Film, path: '/app/video' },
+const navGroups = [
+  {
+    label: 'Workspace',
+    items: [
+      { label: 'Dashboard', icon: Home, path: '/app' },
+    ],
+  },
+  {
+    label: 'Create',
+    items: [
+      { label: 'Visual Studio', icon: Layers, path: '/app/workflows' },
+      { label: 'Create with Prompt', icon: Wand2, path: '/app/freestyle' },
+    ],
+  },
+  {
+    label: 'Assets',
+    items: [
+      { label: 'Products', icon: Package, path: '/app/products' },
+      { label: 'Brand Models', icon: Users, path: '/app/models' },
+      { label: 'Explore', icon: Compass, path: '/app/discover' },
+    ],
+  },
+  {
+    label: 'Media',
+    items: [
+      { label: 'Library', icon: Image, path: '/app/library' },
+      { label: 'Video', icon: Film, path: '/app/video' },
+    ],
+  },
 ];
+
+type NavItem = { label: string; icon: typeof Home; path: string };
 
 const STORAGE_KEY = 'sidebar-collapsed';
 
@@ -105,7 +127,7 @@ export function AppShell({ children }: AppShellProps) {
     setSidebarOpen(false);
   };
 
-  const NavItemButton = ({ item }: { item: typeof navItems[0] }) => {
+  const NavItemButton = ({ item }: { item: NavItem }) => {
     const isComingSoon = false;
     const isEarnCredits = item.path === '#earn-credits';
 
@@ -127,7 +149,7 @@ export function AppShell({ children }: AppShellProps) {
         onMouseEnter={() => prefetchRoute(item.path)}
         className={cn(
           'w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative group',
-          collapsed ? 'justify-center px-0 py-3' : 'px-3 py-3',
+          collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
           isComingSoon
             ? 'text-white/30 cursor-default'
             : isEarnCredits
@@ -197,13 +219,21 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Main Nav */}
-        <nav className={cn('flex-1 pt-3 pb-4 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
-          {navItems.map((item) => (
-            <div key={item.path} className={item.divider ? 'mt-3' : ''}>
-              <NavItemButton item={item} />
+        <nav className={cn('flex-1 pt-2 pb-4 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
+          {navGroups.map((group, gi) => (
+            <div key={group.label} className={gi > 0 ? 'mt-4' : ''}>
+              {isCollapsed ? (
+                gi > 0 && <div className="h-px bg-white/[0.06] mx-2 mb-2" />
+              ) : (
+                <p className="px-3 mb-1 text-[10px] uppercase tracking-widest font-semibold text-white/25 select-none">
+                  {group.label}
+                </p>
+              )}
+              {group.items.map((item) => (
+                <NavItemButton key={item.path} item={item} />
+              ))}
             </div>
           ))}
-
         </nav>
 
 
