@@ -35,7 +35,13 @@ export type ProductCategory =
   | 'fragrance' | 'beauty-skincare' | 'makeup-lipsticks'
   | 'bags-accessories' | 'hats-small' | 'shoes'
   | 'garments' | 'home-decor' | 'tech-devices'
-  | 'food' | 'beverages' | 'supplements-wellness' | 'other';
+  | 'food' | 'beverages' | 'supplements-wellness' | 'other'
+  | 'lingerie' | 'swimwear' | 'activewear' | 'kidswear'
+  | 'dresses' | 'hoodies' | 'streetwear' | 'jeans' | 'jackets'
+  | 'sneakers' | 'boots' | 'high-heels'
+  | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'eyewear'
+  | 'watches' | 'jewellery-necklaces' | 'jewellery-earrings'
+  | 'jewellery-bracelets' | 'jewellery-rings';
 
 export interface ProductAnalysis {
   /** Schema version — used to invalidate stale analyses */
