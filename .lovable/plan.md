@@ -1,44 +1,58 @@
 
 
-# Sidebar Navigation Grouping
+# Apple-Style Sidebar Navigation
 
-## The Problem
-All 8 nav items sit in a single flat list after the CTA button. There's no visual rhythm — your eye has to scan every label linearly. "Brand Models" at the bottom feels disconnected from "Products" even though they're related.
+## Inspiration
+Apple's sidebar navigation uses **tiny uppercase section labels** (like "Discover", "Library", "Store") to group items — not spacing gaps or dividers. Items are compact with minimal padding, and section labels act as quiet visual anchors that make scanning instant.
+
+## Current Problem
+The sidebar uses `mt-3` spacer gaps between groups with no labels. This creates ambiguous whitespace — your brain has to figure out *why* there's a gap. It reads as "broken" rather than "organized."
 
 ## The Fix
-Group items with subtle spacing (no headers, no labels — just breathing room between logical clusters):
+
+Replace divider spacing with small uppercase section labels:
 
 ```text
 [Create Visuals]  ← CTA button
-─────────────────
-Dashboard
 
-Visual Studio
-Create with Prompt
+  WORKSPACE
+  Dashboard
 
-Products
-Brand Models
-Explore
+  CREATE
+  Visual Studio
+  Create with Prompt
 
-Library
-Video
+  ASSETS
+  Products
+  Brand Models
+  Explore
+
+  MEDIA
+  Library
+  Video
 ```
 
-**Three changes in `src/components/app/AppShell.tsx`:**
+## Changes in `src/components/app/AppShell.tsx`
 
-1. **Reorder `navItems`** to group related items:
-   - Dashboard (solo — primary landing)
-   - Visual Studio + Create with Prompt (creation tools)
-   - Products + Brand Models + Explore (assets & browse)
-   - Library + Video (output & media)
+1. **Replace flat `navItems` array** with a grouped structure:
+   ```ts
+   const navGroups = [
+     { label: 'Workspace', items: [Dashboard] },
+     { label: 'Create', items: [Visual Studio, Create with Prompt] },
+     { label: 'Assets', items: [Products, Brand Models, Explore] },
+     { label: 'Media', items: [Library, Video] },
+   ];
+   ```
 
-2. **Add group breaks** using a `divider` flag on certain items. Before rendering, insert a small `mt-3` spacer when `item.divider` is true — no text, no line, just 12px of air between clusters.
+2. **Render section labels** — tiny `text-[10px] uppercase tracking-widest text-white/25 font-semibold` labels above each group. When sidebar is collapsed, labels are hidden and a subtle `h-px bg-white/[0.06]` separator replaces them.
 
-3. **Remove the separator line** (`h-px bg-white/[0.06]`) that currently sits between the CTA and Dashboard — the grouping spacing replaces it.
+3. **Tighten item padding** — reduce from `py-3` to `py-2.5` for a denser, Apple-like feel. Each group gets `mt-4` spacing (first group `mt-0`).
+
+4. **Remove the `divider` property** from individual items — grouping is now structural.
 
 ## Result
-The menu will feel structured and scannable without adding any visual clutter like section headers.
+Clean, scannable sidebar where section labels guide the eye like Apple's macOS Finder sidebar — minimal but structured.
 
 ## Files Changed
-1. `src/components/app/AppShell.tsx` — reorder navItems, add divider spacing between groups, remove old separator
+1. `src/components/app/AppShell.tsx` — restructure navItems into navGroups, render section labels, tighten padding
 
