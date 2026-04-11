@@ -199,7 +199,7 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Create Visuals CTA */}
-        <div className={cn('pt-4 pb-1', isCollapsed ? 'px-2' : 'px-4')}>
+        <div className={cn('pt-4 pb-3', isCollapsed ? 'px-2' : 'px-4')}>
           <button
             onClick={() => handleNav('/app/workflows')}
             className={cn(
