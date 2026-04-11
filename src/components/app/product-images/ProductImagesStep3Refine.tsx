@@ -1475,6 +1475,7 @@ interface Step3RefineProps {
   primaryCategory?: string;
   sceneExtraRefs?: Record<string, string>;
   onSceneExtraRefsChange?: (refs: Record<string, string>) => void;
+  analyses?: Record<string, import('./types').ProductAnalysis>;
 }
 
 /* ══════════════════════════════════════════════
@@ -1495,6 +1496,7 @@ export function ProductImagesStep3Refine({
   primaryCategory,
   sceneExtraRefs = {},
   onSceneExtraRefsChange,
+  analyses = {},
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const [uploadingSceneId, setUploadingSceneId] = useState<string | null>(null);
