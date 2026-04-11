@@ -384,8 +384,8 @@ export default function ProductImages() {
     if (!canAfford) { openBuyModal(); return; }
 
     const imgCount = parseInt(details.imageCount || '1', 10);
-    const totalExpected = (perProductScenes.size > 0 && hasMultipleCategories)
-      ? computeTotalImagesPerProduct(perProductScenes, allScenes, imgCount, details)
+    const totalExpected = (perCategoryScenes.size > 0 && hasMultipleCategories)
+      ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imgCount, details)
       : computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details);
     setExpectedJobCount(totalExpected);
     setEnqueuedCount(0);
@@ -433,9 +433,16 @@ export default function ProductImages() {
 
       // Each scene gets its own job (1 image per job for reliability)
       // Multi-select fields expand into separate variation jobs
-      const productSceneIds = perProductScenes.get(product.id);
-      const scenesForProduct = productSceneIds
-        ? selectedScenes.filter(s => productSceneIds.has(s.id))
+      // Look up the product's category to get its assigned scenes
+      const productCategory = (() => {
+        for (const [catId, pids] of categoryGroups) {
+          if (pids.includes(product.id)) return catId;
+        }
+        return null;
+      })();
+      const categorySceneIds = productCategory ? perCategoryScenes.get(productCategory) : null;
+      const scenesForProduct = categorySceneIds
+        ? selectedScenes.filter(s => categorySceneIds.has(s.id))
         : selectedScenes;
       for (let sceneIdx = 0; sceneIdx < scenesForProduct.length; sceneIdx++) {
         const scene = scenesForProduct[sceneIdx];
