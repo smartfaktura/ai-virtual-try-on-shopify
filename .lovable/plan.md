@@ -1,33 +1,22 @@
 
 
-# Fix Upload Card & Product Grid in Step 1
+# Add Delete Confirmation Dialog to Products Page
 
-## Problems
-1. **Upload card is smaller/different style** than product cards — looks out of place in the grid
-2. **Grid has inconsistent gaps** between cards
-3. **Upload card text is unclear** — "Upload Image / or paste (Ctrl+V)" doesn't explain what these products are or where they come from
-4. **No context** about what the product grid represents (your uploaded products)
+## Problem
+Delete buttons on the Products page (`/app/products`) fire immediately on click — no confirmation. Easy to accidentally delete a product, especially on mobile where the trash icon is always visible.
 
-## Changes
+## Solution
+Add an `AlertDialog` confirmation step before deleting. When the user clicks the trash icon, store the product ID in state and open the dialog. Only proceed with deletion when they confirm.
 
-### File: `src/pages/ProductImages.tsx`
+### Changes — Single file: `src/pages/Products.tsx`
 
-**1. Fix Upload Card to match product card style (lines 1086-1128)**
-- Make it the same structure as product cards: `aspect-square` image area + text area below
-- Use a solid border (not dashed) with primary tint, matching the rounded-lg and overflow-hidden pattern of product cards
-- Content: large Upload icon centered in the square area, then below it a text area with "Upload product image" as title and "Drop, click, or paste" as subtitle — matching the same `px-1.5 py-1.5` text layout of other cards
-
-**2. Fix grid gap consistency (line 1084)**
-- Change `gap-3` to `gap-2` to tighten spacing and match visual density
-- Ensure all cards use identical border-radius and overflow classes
-
-**3. Add section context (lines 952-953)**
-- Add a small label above the toolbar: "Your Products" as a section header with a subtitle "Select from your catalog or upload a new image"
-- This clarifies where the products come from
-
-**4. Improve empty state wording (lines 994-995)**
-- Change to: "Upload a product image to get started" — clearer call to action
-
-### Summary
-Single file edit. Upload card gets identical dimensions/structure to product cards, grid gaps are tightened, and section labels clarify the source of products.
+1. **Import `AlertDialog` components** from `@/components/ui/alert-dialog`
+2. **Add state**: `const [deleteTarget, setDeleteTarget] = useState<string | null>(null)`
+3. **Replace direct delete calls** (lines 289, 368): change `onClick={() => deleteMutation.mutate(product.id)}` to `onClick={() => setDeleteTarget(product.id)}`
+4. **Add AlertDialog at bottom of JSX**:
+   - Title: "Delete this product?"
+   - Description: "This will permanently remove the product and cannot be undone."
+   - Cancel button + destructive "Delete" confirm button
+   - On confirm: call `deleteMutation.mutate(deleteTarget)` and reset state
+   - Open state tied to `deleteTarget !== null`
 
