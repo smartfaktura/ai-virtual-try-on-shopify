@@ -9,7 +9,7 @@ import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 import { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './ProductImagesStep3Refine';
-import { computeTotalImages } from '@/lib/sceneVariations';
+import { computeTotalImages, computeTotalImagesPerProduct } from '@/lib/sceneVariations';
 import type { UserProduct, DetailSettings, ProductImageScene } from './types';
 
 /* ── Chip Selector (local) ── */
@@ -45,6 +45,7 @@ interface Step4Props {
   onDetailsChange?: (d: DetailSettings) => void;
   allProducts?: UserProduct[];
   selectedProductIds?: Set<string>;
+  perProductScenes?: Map<string, Set<string>>;
 }
 
 const AESTHETIC_LABELS: Record<string, string> = {
@@ -71,7 +72,7 @@ function friendlyLabel(val: string | undefined): string {
   return AESTHETIC_LABELS[val] || val.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
-export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep, onDetailsChange, allProducts = [], selectedProductIds = new Set() }: Step4Props) {
+export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep, onDetailsChange, allProducts = [], selectedProductIds = new Set(), perProductScenes }: Step4Props) {
   const { allScenes: dbScenes } = useProductImageScenes();
   const selectedScenes = dbScenes.filter(s => selectedSceneIds.has(s.id));
   const update = useCallback((partial: Partial<DetailSettings>) => {
@@ -79,7 +80,9 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   }, [details, onDetailsChange]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
-  const totalImages = computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
+  const totalImages = (perProductScenes && perProductScenes.size > 0)
+    ? computeTotalImagesPerProduct(perProductScenes, dbScenes, imageCount, details)
+    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const costPerImage = 6;
   const totalCredits = totalImages * costPerImage;
   const canAfford = balance >= totalCredits;
@@ -352,11 +355,31 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               )}
             </div>
             <div className="flex flex-wrap gap-1">
-              {selectedScenes.slice(0, 12).map(s => (
-                <Badge key={s.id} variant="outline" className="text-[10px]">{s.title}</Badge>
-              ))}
-              {selectedScenes.length > 12 && (
-                <Badge variant="secondary" className="text-[10px]">+{selectedScenes.length - 12} more</Badge>
+              {perProductScenes && perProductScenes.size > 0 ? (
+                selectedProducts.map(p => {
+                  const pScenes = dbScenes.filter(s => perProductScenes.get(p.id)?.has(s.id));
+                  if (pScenes.length === 0) return null;
+                  return (
+                    <div key={p.id} className="w-full space-y-1">
+                      <span className="text-[10px] font-medium text-muted-foreground">{p.title}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {pScenes.slice(0, 8).map(s => (
+                          <Badge key={s.id} variant="outline" className="text-[10px]">{s.title}</Badge>
+                        ))}
+                        {pScenes.length > 8 && <Badge variant="secondary" className="text-[10px]">+{pScenes.length - 8}</Badge>}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  {selectedScenes.slice(0, 12).map(s => (
+                    <Badge key={s.id} variant="outline" className="text-[10px]">{s.title}</Badge>
+                  ))}
+                  {selectedScenes.length > 12 && (
+                    <Badge variant="secondary" className="text-[10px]">+{selectedScenes.length - 12} more</Badge>
+                  )}
+                </>
               )}
             </div>
           </CardContent>
