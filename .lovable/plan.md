@@ -1,49 +1,33 @@
 
 
-# Fix IntersectionObserver — Safe Plan
+# Recommendation: Parallel Chunk Enqueuing
 
-## What's wrong (simple version)
-The "load more products" watcher runs its setup code on **every single screen update** because the `useEffect` has no dependency list. It works but wastes effort — like re-hiring a guard every second instead of once.
+## What changes
 
-## The fix
+**One file:** `src/pages/ProductImages.tsx` (~30 lines modified)
 
-**File:** `src/pages/ProductImages.tsx`
+Replace the current sequential loop (where each job waits for the previous one to finish) with a chunked parallel approach:
 
-**Step 1 — Use `useState` instead of `useRef` for the sentinel element** (line 93)
+1. **Build all job payloads first** — collect every product/scene/variant/ratio combination into an array without making any network calls
+2. **Send in chunks of 4** — use `Promise.allSettled` to fire 4 requests simultaneously, then move to the next chunk
+3. **One pacing delay per chunk** (300ms between chunks, not between individual jobs)
+4. **Keep all existing safety** — each request still has its own retry/backoff logic, `skipWake` is already used, and a single `sendWake` fires at the end
 
-Replace `const sentinelRef = useRef<HTMLDivElement>(null)` with:
-```ts
-const [sentinelEl, setSentinelEl] = useState<HTMLDivElement | null>(null);
-```
-This lets React notify us when the element actually appears or disappears from the page.
+## Expected improvement
 
-**Step 2 — Update the `useEffect` dependency** (lines 370-378)
+| Scenes | Current time | After fix |
+|--------|-------------|-----------|
+| 36     | ~22s        | ~6s       |
+| 12     | ~7s         | ~2.5s     |
 
-Replace the current effect with:
-```ts
-useEffect(() => {
-  if (!sentinelEl) return;
-  const obs = new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) setVisibleCount(v => v + 25);
-  }, { rootMargin: '200px' });
-  obs.observe(sentinelEl);
-  return () => obs.disconnect();
-}, [sentinelEl]);
-```
-Now it only re-runs when the element mounts/unmounts — not on every render.
+## Why this is safe for your setup
 
-**Step 3 — Update the ref in JSX** (line 1054)
+- The backend locks credits **per user row** (`FOR UPDATE`), so parallel requests from the same user are serialized at the database level — no double-spending
+- Burst limits are generous (40–200 per 60s depending on plan) — 4 concurrent requests won't trigger them
+- If one request in a chunk fails (e.g. credits run out), the others return clean errors — no side effects
+- At 10,000 users: each user's requests only contend with their own row lock, not other users'
 
-Change `ref={sentinelRef}` → `ref={setSentinelEl}`
+## No backend changes needed
 
-**Step 4 — Clean up imports**
-
-Remove `useRef` from imports if no longer used elsewhere; confirm first.
-
-## Why this is safe
-- The sentinel div is conditionally rendered (`hasMore && ...`), so a `useRef` with `[]` deps would miss it. `useState` as a ref callback is the React-recommended pattern for conditional elements.
-- Exactly one observer exists at any time; cleanup disconnects it properly.
-- No change to user-facing behavior — products still auto-load on scroll.
-
-**~6 lines changed, single file.**
+The `enqueue-generation` edge function and `enqueue_generation` database function already handle concurrent requests correctly. This is purely a client-side optimization.
 
