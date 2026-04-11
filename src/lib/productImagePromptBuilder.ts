@@ -606,19 +606,19 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const colorWorld = details.backgroundTone;
       // Custom hex background
       if (colorWorld === 'custom' && details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex)) {
-        return `solid background in color ${details.backgroundCustomHex}`;
+        return `flat solid ${details.backgroundCustomHex} color background, no texture, no pattern`;
       }
       // Custom gradient background
       if (colorWorld === 'gradient-custom' && details.backgroundCustomGradient) {
         const { from, to } = details.backgroundCustomGradient;
         if (/^#[0-9A-Fa-f]{6}$/.test(from) && /^#[0-9A-Fa-f]{6}$/.test(to)) {
-          return `smooth gradient background transitioning from ${from} to ${to}`;
+          return `smooth gradient background from ${from} to ${to}, no texture, no pattern`;
         }
       }
       // Check if backgroundTone is a direct swatch value in BG_MAP (e.g. sage, blush, white)
       const swatchResolved = (!isAuto(colorWorld) && BG_MAP[colorWorld!]) ? BG_MAP[colorWorld!] : null;
       if (swatchResolved) {
-        return `${swatchResolved} seamless background`;
+        return `${swatchResolved} seamless studio background, no texture, no pattern`;
       }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
