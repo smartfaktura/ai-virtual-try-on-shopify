@@ -980,6 +980,7 @@ export default function ProductImages() {
                     className="h-8 text-xs pl-8"
                   />
                 </div>
+                <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground font-mono shrink-0">⌘V</kbd>
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
                   const filtered = userProducts.filter(p =>
                     p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
