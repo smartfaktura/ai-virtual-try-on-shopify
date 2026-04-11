@@ -127,7 +127,7 @@ export function AppShell({ children }: AppShellProps) {
     setSidebarOpen(false);
   };
 
-  const NavItemButton = ({ item }: { item: typeof navItems[0] }) => {
+  const NavItemButton = ({ item }: { item: NavItem }) => {
     const isComingSoon = false;
     const isEarnCredits = item.path === '#earn-credits';
 
@@ -219,13 +219,21 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Main Nav */}
-        <nav className={cn('flex-1 pt-3 pb-4 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
-          {navItems.map((item) => (
-            <div key={item.path} className={item.divider ? 'mt-3' : ''}>
-              <NavItemButton item={item} />
+        <nav className={cn('flex-1 pt-2 pb-4 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
+          {navGroups.map((group, gi) => (
+            <div key={group.label} className={gi > 0 ? 'mt-4' : ''}>
+              {isCollapsed ? (
+                gi > 0 && <div className="h-px bg-white/[0.06] mx-2 mb-2" />
+              ) : (
+                <p className="px-3 mb-1 text-[10px] uppercase tracking-widest font-semibold text-white/25 select-none">
+                  {group.label}
+                </p>
+              )}
+              {group.items.map((item) => (
+                <NavItemButton key={item.path} item={item} />
+              ))}
             </div>
           ))}
-
         </nav>
 
 
