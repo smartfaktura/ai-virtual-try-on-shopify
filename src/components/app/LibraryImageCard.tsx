@@ -1,4 +1,4 @@
-import { Sparkles, Camera, Download, Check, Trash2 } from 'lucide-react';
+import { Sparkles, Download, Check, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
@@ -6,17 +6,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TEAM_MEMBERS } from '@/data/teamData';
-
-function getAspectClass(ratio?: string) {
-  switch (ratio) {
-    case '1:1': return 'aspect-square';
-    case '3:4': return 'aspect-[3/4]';
-    case '4:5': return 'aspect-[4/5]';
-    case '9:16': return 'aspect-[9/16]';
-    case '16:9': return 'aspect-video';
-    default: return 'aspect-[3/4]';
-  }
-}
+import type { AssetStatus } from '@/hooks/useLibraryAssetStatus';
 
 export interface LibraryItem {
   id: string;
@@ -45,7 +35,9 @@ export interface LibraryItem {
 interface LibraryImageCardProps {
   item: LibraryItem;
   onClick?: () => void;
-  onDelete?: () => void;
+  onToggleFavorite?: (e: React.MouseEvent) => void;
+  isFavorited?: boolean;
+  assetStatus?: AssetStatus;
   selectMode?: boolean;
   selected?: boolean;
   isUpscaling?: boolean;
@@ -73,11 +65,29 @@ function getProviderLabel(provider: string): string {
   return provider.slice(0, 5).toUpperCase();
 }
 
-export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected, isUpscaling, isAdmin }: LibraryImageCardProps) {
+const STATUS_PILL: Record<AssetStatus, { label: string; className: string }> = {
+  draft: { label: 'Draft', className: 'bg-muted/80 text-muted-foreground' },
+  brand_ready: { label: 'Brand Ready', className: 'bg-amber-500/90 text-white' },
+  ready_to_publish: { label: 'Ready to Publish', className: 'bg-emerald-500/90 text-white' },
+};
+
+export function LibraryImageCard({
+  item,
+  onClick,
+  onToggleFavorite,
+  isFavorited,
+  assetStatus = 'draft',
+  selectMode,
+  selected,
+  isUpscaling,
+  isAdmin,
+}: LibraryImageCardProps) {
+  const statusInfo = STATUS_PILL[assetStatus];
+
   return (
     <div
       className={cn(
-        "group relative rounded-lg overflow-hidden cursor-pointer bg-muted transition-all",
+        "group relative rounded-xl overflow-hidden cursor-pointer bg-muted transition-all",
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
       )}
       onClick={onClick}
@@ -100,6 +110,15 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
         </div>
       )}
 
+      {/* Persistent favorite indicator */}
+      {isFavorited && !selectMode && (
+        <div className="absolute top-3 right-3 z-10 pointer-events-none">
+          {!item.quality?.startsWith('upscaled_') && (
+            <Heart className="w-4 h-4 text-rose-500 fill-rose-500 drop-shadow-md" />
+          )}
+        </div>
+      )}
+
       {/* Select mode checkbox */}
       {selectMode && (
         <div className="absolute top-3 left-3 z-10">
@@ -115,7 +134,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       <ShimmerImage
         src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
         alt={item.label}
-        className="w-full h-full object-cover block group-hover:scale-[1.03] transition-all duration-500"
+        className="w-full h-full object-cover block group-hover:scale-[1.02] transition-all duration-500"
         loading="lazy"
         aspectRatio={item.aspectRatio === '1:1' ? '1/1' : item.aspectRatio === '9:16' ? '9/16' : item.aspectRatio === '16:9' ? '16/9' : item.aspectRatio === '4:5' ? '4/5' : item.aspectRatio === '5:4' ? '5/4' : '3/4'}
       />
@@ -139,31 +158,38 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
 
       {/* Hover overlay — hidden in select mode */}
       {!selectMode && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex">
-          <div />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex">
+          {/* Top: favorite */}
+          <div className="flex justify-end">
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(e);
+                }}
+                className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+              >
+                <Heart className={cn("w-4 h-4", isFavorited && "fill-rose-500 text-rose-500")} />
+              </button>
+            )}
+          </div>
 
-          {/* Bottom: date + delete on left, download on right */}
+          {/* Bottom: status pill + download */}
           <div className="flex justify-between items-end">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-white/60">{item.date}</span>
-              {onDelete && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                  }}
-                  className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-red-500/70 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              {assetStatus !== 'draft' && (
+                <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full", statusInfo.className)}>
+                  {statusInfo.label}
+                </span>
               )}
+              <span className="text-[10px] text-white/50">{item.date}</span>
             </div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 downloadImage(item.imageUrl, `${item.label}-${item.id.slice(0, 8)}.png`);
               }}
-              className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors"
             >
               <Download className="w-4 h-4" />
             </button>
