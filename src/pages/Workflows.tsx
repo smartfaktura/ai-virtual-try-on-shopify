@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
 import { WorkflowActivityCard } from '@/components/app/WorkflowActivityCard';
+import { FreestylePromptCard } from '@/components/app/FreestylePromptCard';
 import { WorkflowRecentRow } from '@/components/app/WorkflowRecentRow';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowRight, LayoutList, Grid2X2, Grid3X3 } from 'lucide-react';
@@ -564,6 +565,7 @@ export default function Workflows() {
               beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
             />
           ))}
+          <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
           <WorkflowRequestBanner />
         </div>
       ) : (
@@ -578,6 +580,10 @@ export default function Workflows() {
               beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
             />
           ))}
+          <FreestylePromptCard
+            onSelect={() => navigate('/app/freestyle')}
+            mobileCompact={isMobile && effectiveLayout === '2col'}
+          />
           <WorkflowRequestBanner />
         </div>
       )}
