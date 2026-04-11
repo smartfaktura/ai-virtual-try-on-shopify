@@ -972,7 +972,7 @@ export default function ProductImages() {
                     p.product_type.toLowerCase().includes(productSearch.toLowerCase())
                   );
                   setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
-                }}>Select All</Button>
+                }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
                 <div className="flex border border-border rounded-md overflow-hidden">
                   <button onClick={() => setProductViewMode('grid')} className={cn('p-1.5 transition-colors', productViewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}>
@@ -1086,23 +1086,42 @@ export default function ProductImages() {
 
                 return (
                   <>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    <div className="relative grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                      {/* Drag-and-drop overlay */}
+                      {isDragOver && (
+                        <div className="absolute inset-0 z-20 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
+                          <Upload className="w-8 h-8 text-primary animate-bounce" />
+                          <p className="text-sm font-medium text-primary">Drop image to add product</p>
+                        </div>
+                      )}
+
                       {/* Add Product Card — opens full AddProductModal */}
                       <button
                         type="button"
                         onClick={() => setAddProductOpen(true)}
                         className="group flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all cursor-pointer overflow-hidden"
                       >
-                        <div className="aspect-square flex flex-col items-center justify-center bg-muted/30">
-                          <div className="flex flex-col items-center justify-center w-3/4 h-3/4 rounded-lg border-2 border-dashed border-muted-foreground/30 group-hover:border-primary/40 transition-colors">
-                            <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                          </div>
+                        <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/30">
+                          <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">Upload Image</p>
                         </div>
-                        <div className="flex flex-col justify-center px-2 py-1.5">
-                          <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary">Upload Image</p>
-                          <p className="text-[9px] text-muted-foreground/70 mt-0.5">or paste / import URL</p>
+                        <div className="h-[44px] flex flex-col justify-center px-1.5 py-1">
+                          <p className="text-[9px] text-muted-foreground/70">drop, paste, or import</p>
                         </div>
                       </button>
+
+                      {/* Upload progress skeleton */}
+                      {quickUploading && (
+                        <div className="flex flex-col rounded-lg border-2 border-border overflow-hidden animate-pulse">
+                          <div className="aspect-square bg-muted/50 flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                          </div>
+                          <div className="h-[44px] flex flex-col justify-center px-1.5 py-1">
+                            <p className="text-[9px] text-muted-foreground">{quickUploadProgress || 'Uploading…'}</p>
+                          </div>
+                        </div>
+                      )}
+
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
@@ -1126,9 +1145,9 @@ export default function ProductImages() {
                               {isSelected && <Check className="w-3 h-3" />}
                             </div>
                             <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
-                            <div className="px-1.5 py-1.5 bg-card">
-                              <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
-                              {up.product_type && <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>}
+                            <div className="h-[44px] px-1.5 py-1 bg-card flex flex-col justify-center">
+                              <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-1">{up.title}</p>
+                              <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type || '\u00A0'}</p>
                             </div>
                           </div>
                         );
