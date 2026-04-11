@@ -1,64 +1,38 @@
 
 
-# Per-Product Scene Assignment in Product Visuals
+# Auto-Navigate to Unfinished Product Tabs on Continue
 
 ## Problem
-Currently, scene selection is a **single shared pool** — every selected scene is applied to every product during generation. If a user selects shoes + a dress, both get "Sole Detail" and "Full Length Flow" scenes, producing nonsensical images.
+In multi-category mode, users can click Continue even if some products have 0 shots selected. There's no validation or guidance to complete all products.
 
-## Solution: Per-Product Scene Picker (Tab-Based)
+## Solution
 
-When multiple products from **different categories** are selected, Step 2 (Shots) switches to a **tabbed layout** where each product (or category group) has its own scene selection. When all products share the same category, the current shared picker remains.
+### 1. Validate all products have shots (ProductImages.tsx)
+Update `canProceed` for step 2: in multi-category mode, check that **every** selected product has at least 1 scene in `perProductScenes`.
 
-### Data Model Change
+### 2. Smart Continue behavior (ProductImages.tsx)
+In `handleNext` for step 2: instead of immediately going to step 3, find the first product with 0 shots. If found:
+- Switch the active product tab to that product
+- Show a toast: "Please select at least one shot for [product name]"
+- Don't advance the step
 
-Replace the flat `selectedSceneIds: Set<string>` with a per-product map:
+This requires exposing a way to set the active product tab from the parent. Add a new prop `activeProductId` / `onActiveProductIdChange` to Step2, or use a ref.
 
-```text
-// New state shape
-perProductScenes: Map<string, Set<string>>
-// key = product ID, value = selected scene IDs for that product
+### 3. Visual indicator for missing products (ProductImagesStep2Scenes.tsx)
+On product tabs with 0 shots selected, show a subtle warning indicator:
+- Red/orange dot or outline instead of the count badge
+- The summary strip already shows "→ 0 shots" which is good, but make it visually stand out (e.g. text-destructive color)
 
-// Backward compat: derive flat set for steps 3-5
-allSelectedSceneIds = union of all per-product sets
-```
-
-### UI Changes (Step 2 — `ProductImagesStep2Scenes.tsx`)
-
-1. **Single category**: Keep current shared picker (no change).
-2. **Multiple categories**: Show product tabs at the top (thumbnail + name). Each tab shows only the recommended category for that product, plus "Explore more" for other categories.
-3. A summary bar below tabs shows: `"Product A → 4 shots · Product B → 6 shots"`.
-
-### Generation Changes (`ProductImages.tsx`)
-
-The generation loop (lines 405-543) already iterates `for (const product of selectedProducts)` then `for (const scene of selectedScenes)`. Change the inner loop to use only the scenes assigned to that specific product:
-
-```text
-for (const product of selectedProducts) {
-  const productScenes = perProductScenes.get(product.id) || allSelectedSceneIds;
-  const scenesForProduct = selectedScenes.filter(s => productScenes.has(s.id));
-  for (const scene of scenesForProduct) { ... }
-}
-```
-
-### Credit Calculation (`sceneVariations.ts`)
-
-Update `computeTotalImages` to accept the per-product map and sum per-product scene counts instead of `products.length × scenes.length`.
-
-### Affected Files
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/pages/ProductImages.tsx` | Replace `selectedSceneIds` state with `perProductScenes` map; derive flat set for downstream; update generation loop and credit calc call |
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Add tabbed UI for multi-category; accept `perProductScenes` prop; emit per-product changes |
-| `src/components/app/product-images/ProductImagesStickyBar.tsx` | Update scene count display to show per-product summary when in multi-category mode |
-| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Show per-product scene breakdown in review |
-| `src/lib/sceneVariations.ts` | Update `computeTotalImages` to accept per-product scene map |
-| `src/components/app/product-images/types.ts` | No change needed — `SceneSelection` type already exists but we'll use the simpler Map approach |
+| `src/pages/ProductImages.tsx` | Update `canProceed` for step 2 to check all products have scenes; update `handleNext` step 2 to auto-navigate to empty product tab with toast |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Accept `activeProductId`/`onActiveProductIdChange` props; add warning styling on tabs with 0 shots |
 
-### UX Details
-
-- **Tab design**: Horizontal scroll strip with product thumbnails (40×40 rounded) + product name + badge showing selected count
-- **"Apply to all" shortcut**: Button to copy current product's scene selection to all other products
-- **Smart defaults**: When switching to multi-category mode, auto-assign recommended scenes per product category
-- **Single category shortcut**: If all products share the same category, skip tabs entirely — use current shared picker
+## Key Details
+- **Single-category mode**: No change — `selectedSceneIds.size > 0` remains sufficient since all products share the same scenes.
+- **Multi-category mode**: `canProceed` becomes `selectedProducts.every(p => (perProductScenes.get(p.id)?.size || 0) > 0)`.
+- Product tabs with 0 shots get a `border-destructive/50` style and a small "needs shots" indicator.
+- On clicking Continue with incomplete products, the first incomplete product tab auto-activates and a toast fires.
 
