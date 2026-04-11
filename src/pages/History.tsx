@@ -74,75 +74,75 @@ function useHistoryItems(source: 'all' | 'generation' | 'freestyle') {
 
       if (fetchJobs) {
         promises.push(
-          supabase
-            .from('generation_jobs')
-            .select('id, results, created_at, workflow_slug, scene_name, model_name, product_name, product_image_url, prompt_final, ratio, quality')
-            .eq('status', 'completed')
-            .order('created_at', { ascending: false })
-            .limit(limit)
-            .then(({ data, error }) => {
-              if (error || !data) return;
-              for (const job of data) {
-                const results = job.results as any;
-                if (!Array.isArray(results)) continue;
-                for (let i = 0; i < results.length; i++) {
-                  const r = results[i];
-                  const url = typeof r === 'string' ? r : r?.url || r?.image_url;
-                  if (!url) continue;
-                  const isTryOn = url.includes('tryon-images');
-                  const label = isTryOn ? 'Virtual Try-On' : (job.workflow_slug || 'Product Shot');
-                  const avatar = pickAvatar(job.id, WORKFLOW_AVATARS);
-                  items.push({
-                    id: `${job.id}-${i}`,
-                    imageUrl: url,
-                    label,
-                    subtitle: job.product_name || job.scene_name || undefined,
-                    date: new Date(job.created_at).toLocaleDateString(),
-                    rawDate: job.created_at,
-                    source: 'generation',
-                    prompt: job.prompt_final || undefined,
-                    aspectRatio: job.ratio,
-                    quality: job.quality,
-                    providerUsed: null,
-                    avatarSrc: teamAvatar(avatar.file),
-                    avatarName: avatar.name,
-                  });
-                }
+          (async () => {
+            const { data, error } = await supabase
+              .from('generation_jobs')
+              .select('id, results, created_at, workflow_slug, scene_name, model_name, product_name, product_image_url, prompt_final, ratio, quality')
+              .eq('status', 'completed')
+              .order('created_at', { ascending: false })
+              .limit(limit);
+            if (error || !data) return;
+            for (const job of data) {
+              const results = job.results as any;
+              if (!Array.isArray(results)) continue;
+              for (let i = 0; i < results.length; i++) {
+                const r = results[i];
+                const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+                if (!url) continue;
+                const isTryOn = url.includes('tryon-images');
+                const label = isTryOn ? 'Virtual Try-On' : (job.workflow_slug || 'Product Shot');
+                const avatar = pickAvatar(job.id, WORKFLOW_AVATARS);
+                items.push({
+                  id: `${job.id}-${i}`,
+                  imageUrl: url,
+                  label,
+                  subtitle: job.product_name || job.scene_name || undefined,
+                  date: new Date(job.created_at).toLocaleDateString(),
+                  rawDate: job.created_at,
+                  source: 'generation',
+                  prompt: job.prompt_final || undefined,
+                  aspectRatio: job.ratio,
+                  quality: job.quality,
+                  providerUsed: null,
+                  avatarSrc: teamAvatar(avatar.file),
+                  avatarName: avatar.name,
+                });
               }
-            })
+            }
+          })()
         );
       }
 
       if (fetchFreestyle) {
         promises.push(
-          supabase
-            .from('freestyle_generations')
-            .select('id, image_url, prompt, quality, aspect_ratio, created_at, provider_used')
-            .order('created_at', { ascending: false })
-            .limit(limit)
-            .then(({ data, error }) => {
-              if (error || !data) return;
-              for (const f of data) {
-                const isUpscaled = f.quality?.startsWith('upscaled_');
-                const resolution = f.quality?.includes('4k') ? '4K' : '2K';
-                const avatar = pickAvatar(f.id, FREESTYLE_AVATARS);
-                items.push({
-                  id: f.id,
-                  imageUrl: f.image_url,
-                  label: isUpscaled ? 'Enhanced' : 'Freestyle',
-                  subtitle: isUpscaled ? `${resolution} Upscale` : undefined,
-                  date: new Date(f.created_at).toLocaleDateString(),
-                  rawDate: f.created_at,
-                  source: 'freestyle',
-                  prompt: f.prompt,
-                  aspectRatio: f.aspect_ratio,
-                  quality: f.quality,
-                  providerUsed: (f as any).provider_used || null,
-                  avatarSrc: teamAvatar(avatar.file),
-                  avatarName: avatar.name,
-                });
-              }
-            })
+          (async () => {
+            const { data, error } = await supabase
+              .from('freestyle_generations')
+              .select('id, image_url, prompt, quality, aspect_ratio, created_at, provider_used')
+              .order('created_at', { ascending: false })
+              .limit(limit);
+            if (error || !data) return;
+            for (const f of data) {
+              const isUpscaled = f.quality?.startsWith('upscaled_');
+              const resolution = f.quality?.includes('4k') ? '4K' : '2K';
+              const avatar = pickAvatar(f.id, FREESTYLE_AVATARS);
+              items.push({
+                id: f.id,
+                imageUrl: f.image_url,
+                label: isUpscaled ? 'Enhanced' : 'Freestyle',
+                subtitle: isUpscaled ? `${resolution} Upscale` : undefined,
+                date: new Date(f.created_at).toLocaleDateString(),
+                rawDate: f.created_at,
+                source: 'freestyle',
+                prompt: f.prompt,
+                aspectRatio: f.aspect_ratio,
+                quality: f.quality,
+                providerUsed: (f as any).provider_used || null,
+                avatarSrc: teamAvatar(avatar.file),
+                avatarName: avatar.name,
+              });
+            }
+          })()
         );
       }
 
