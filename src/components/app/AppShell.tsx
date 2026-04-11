@@ -55,7 +55,7 @@ const navItems = [
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Explore', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
-  { label: 'My Library', icon: Image, path: '/app/library' },
+  { label: 'Library', icon: Image, path: '/app/library' },
   
   { label: 'Brand Models', icon: Users, path: '/app/models' },
 ];
