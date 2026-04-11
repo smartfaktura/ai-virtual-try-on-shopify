@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Sparkles, Download, Check, Heart, MoreHorizontal, Shield, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
