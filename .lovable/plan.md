@@ -1,49 +1,50 @@
 
 
-# Add Quick Upload Option to Product Visuals Step 1
+# Improve Mobile Layout for Category Tabs & Summary Strip
 
-## Problem
-Currently, users can only select from previously saved products. There's no way to quickly upload/paste an image and go straight into the generation flow without first creating a product entry.
+## Problems
+1. **Category tabs** are horizontally scrollable cards with thumbnails + text — too wide on mobile, hard to scan
+2. **Summary strip** ("Bags & Accessories → 2 shots · accessories → needs shots · Earrings → needs shots · Jeans → needs shots") gets very long with many categories — too much text, wraps awkwardly on mobile
+3. User explicitly said: no carousels
 
 ## Solution
-Add a prominent "Upload Image" card alongside the existing product grid in Step 1. When used, it creates a temporary product entry in the database (via the existing `AddProductModal` flow) but with a streamlined, faster path — or better yet, add a **quick-upload drop zone** directly in Step 1 that:
 
-1. Accepts drag-and-drop or click-to-upload
-2. Auto-uploads the image to storage
-3. Creates a product record with AI-analyzed title and type (using the existing `analyze-product-image` edge function)
-4. Auto-selects the newly created product
+### Category Tabs — Stack Vertically on Mobile
+- On mobile (`< sm`): render tabs as a **vertical stack** of compact rows instead of horizontal scroll
+- Each row: thumbnails (smaller, 24px) + short label + shot count badge or "Select →" indicator
+- On desktop (`sm+`): keep current horizontal layout but use `flex-wrap` instead of `overflow-x-auto` so all tabs are visible without scrolling
 
-### Changes
+### Summary Strip — Replace with Compact Dot Indicators
+- Remove the verbose text summary strip entirely
+- Replace with a **compact inline status row**: each category shown as a small colored dot/chip
+  - Green dot + count = has shots
+  - Red dot = needs shots
+  - Clicking a dot switches to that category tab
+- On mobile this takes one line max; on desktop it's a subtle secondary indicator
 
-**File: `src/pages/ProductImages.tsx`**
-- Add a `QuickUploadCard` component rendered as the **first item** in the product grid (before the existing "Add New" dashed card)
-- This card shows a large upload icon, "Upload Image" label, and accepts file input + drag-and-drop
-- On file drop/select:
-  1. Upload image to `product-images` storage bucket
-  2. Call `analyze-product-image` to get title/type
-  3. Insert into `user_products` table
-  4. Invalidate products query and auto-select the new product ID
-  5. Show a brief toast: "Product created — select shots next"
-- Also support **paste from clipboard** (Ctrl+V) — listen for paste events on the page during Step 1, extract image from clipboard, and trigger the same flow
-- The quick-upload card should be visually distinct: slightly larger than product cards, with a gradient border and upload icon, clearly communicating "start from an image"
+### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-**File: `src/pages/ProductImages.tsx` (sticky bar area)**
-- Update the sticky bar CTA: when a quick-uploaded product is the only selection, show "Next: Choose Shots →" as usual (no change needed, just works)
+**Tab container (line 795):**
+- Change from `flex gap-2 overflow-x-auto` to `flex flex-col sm:flex-row sm:flex-wrap gap-2`
+- Mobile tabs: full-width rows, more compact padding (`px-3 py-2`)
+- Desktop tabs: keep current sizing with `flex-wrap`
 
-### Visual Layout (Step 1 grid)
-```text
-┌──────────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
-│  📤 Upload   │  │ Product1 │  │ Product2 │  │ + Add New│
-│  Image       │  │          │  │          │  │  (modal) │
-│  Drop or     │  │          │  │          │  │          │
-│  click here  │  │          │  │          │  │          │
-└──────────────┘  └──────────┘  └──────────┘  └──────────┘
-```
+**Tab content (lines 803-838):**
+- Mobile: hide "X products" subtext, show only label + badge/indicator
+- Thumbnails: `w-6 h-6` on mobile, `w-7 h-7` on desktop
 
-### Upload Flow Details
-- Show a small spinner overlay on the card while uploading + analyzing
-- After creation, the card reverts to its default state and the new product appears in the grid (already selected)
-- If the user has no products at all, the empty state gets an additional "or upload an image" button alongside the existing "Add Your First Product"
+**Summary strip (lines 843-860):**
+- Replace verbose text with compact chips: `<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-[10px]">Bags ✓ 2</span>` or `<span className="... bg-destructive/10 text-destructive">Earrings 0</span>`
+- "Apply to all" button stays, moves to its own row on mobile
+- Each chip is clickable to switch category
 
-### No new files needed — all changes in `src/pages/ProductImages.tsx`
+### Changes Summary
+| Area | Before | After |
+|------|--------|-------|
+| Tabs on mobile | Horizontal scroll, large cards | Vertical stack, compact rows |
+| Tabs on desktop | Horizontal scroll | Flex-wrap, no scroll |
+| Summary strip | "Label → N shots" repeated text | Small clickable status chips |
+| "Apply to all" | Inline with summary | Own row on mobile |
+
+Single file change: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
