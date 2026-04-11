@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError, sendWake, paceDelay } from '@/lib/enqueueGeneration';
-import { computeTotalImages, expandMultiSelects } from '@/lib/sceneVariations';
+import { computeTotalImages, expandMultiSelects, computeTotalImagesPerProduct } from '@/lib/sceneVariations';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
@@ -69,6 +69,7 @@ export default function ProductImages() {
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
+  const [perProductScenes, setPerProductScenes] = useState<Map<string, Set<string>>>(new Map());
   const [sceneExtraRefs, setSceneExtraRefs] = useState<Record<string, string>>({});
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
   const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
@@ -216,7 +217,9 @@ export default function ProductImages() {
 
   const imageCount = parseInt(details.imageCount || '1', 10);
   const creditsPerImage = 6;
-  const totalImages = computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
+  const totalImages = (perProductScenes.size > 0 && hasMultipleCategories)
+    ? computeTotalImagesPerProduct(perProductScenes, allScenes, imageCount, details)
+    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
 
@@ -243,6 +246,7 @@ export default function ProductImages() {
     const key = Array.from(selectedProductIds).sort().join(',');
     if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
       setSelectedSceneIds(new Set());
+      setPerProductScenes(new Map());
       setSceneExtraRefs({});
       setDetails(INITIAL_DETAILS);
       if (step > 1) setStep(1);
@@ -363,7 +367,9 @@ export default function ProductImages() {
     if (!canAfford) { openBuyModal(); return; }
 
     const imgCount = parseInt(details.imageCount || '1', 10);
-    const totalExpected = computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details);
+    const totalExpected = (perProductScenes.size > 0 && hasMultipleCategories)
+      ? computeTotalImagesPerProduct(perProductScenes, allScenes, imgCount, details)
+      : computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details);
     setExpectedJobCount(totalExpected);
     setEnqueuedCount(0);
     setCompletedJobs(0);
@@ -410,8 +416,12 @@ export default function ProductImages() {
 
       // Each scene gets its own job (1 image per job for reliability)
       // Multi-select fields expand into separate variation jobs
-      for (let sceneIdx = 0; sceneIdx < selectedScenes.length; sceneIdx++) {
-        const scene = selectedScenes[sceneIdx];
+      const productSceneIds = perProductScenes.get(product.id);
+      const scenesForProduct = productSceneIds
+        ? selectedScenes.filter(s => productSceneIds.has(s.id))
+        : selectedScenes;
+      for (let sceneIdx = 0; sceneIdx < scenesForProduct.length; sceneIdx++) {
+        const scene = scenesForProduct[sceneIdx];
         const variations = expandMultiSelects(scene, details);
 
         for (let vIdx = 0; vIdx < variations.length; vIdx++) {
@@ -503,7 +513,7 @@ export default function ProductImages() {
                 batch_id: batchId,
                 scene_name: scene.title,
                 batch_outfit_lock: true,
-                batch_size: selectedScenes.length,
+                batch_size: scenesForProduct.length,
               };
 
               await paceDelay(newJobMap.size);
@@ -962,6 +972,9 @@ export default function ProductImages() {
                 onSelectionChange={setSelectedSceneIds}
                 selectedProducts={selectedProducts}
                 productAnalyses={analyses}
+                perProductScenes={perProductScenes}
+                onPerProductScenesChange={setPerProductScenes}
+                hasMultipleCategories={hasMultipleCategories}
               />
             )}
 
