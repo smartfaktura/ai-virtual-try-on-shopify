@@ -792,7 +792,8 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
   return (
     <div className="space-y-4">
       {/* Category group tabs */}
-      <div ref={tabsRef} className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      {/* Category group tabs — vertical on mobile, flex-wrap on desktop */}
+      <div ref={tabsRef} className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-2">
         {categoryIds.map(catId => {
           const isActive = catId === activeCategory;
           const count = perCategoryScenes.get(catId)?.size || 0;
@@ -805,7 +806,8 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
               key={catId}
               onClick={() => setActiveCategoryId(catId)}
               className={cn(
-                'flex items-center gap-2.5 px-4 py-2.5 rounded-xl border-2 transition-all whitespace-nowrap flex-shrink-0 cursor-pointer',
+                'flex items-center gap-2 sm:gap-2.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl border-2 transition-all whitespace-nowrap cursor-pointer',
+                'w-full sm:w-auto',
                 isActive
                   ? needsShots
                     ? 'border-destructive/60 bg-destructive/[0.05] shadow-sm'
@@ -818,43 +820,51 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
               {/* Mini product thumbnails */}
               <div className="flex -space-x-1.5">
                 {catProducts.slice(0, 3).map(p => (
-                  <img key={p.id} src={p.image_url} alt={p.title} className="w-7 h-7 rounded-md object-cover flex-shrink-0 border-2 border-background" />
+                  <img key={p.id} src={p.image_url} alt={p.title} className="w-6 h-6 sm:w-7 sm:h-7 rounded-md object-cover flex-shrink-0 border-2 border-background" />
                 ))}
                 {catProducts.length > 3 && (
-                  <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground border-2 border-background">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground border-2 border-background">
                     +{catProducts.length - 3}
                   </div>
                 )}
               </div>
-              <div className="flex flex-col items-start">
-                <span className="text-xs font-semibold">{label}</span>
-                <span className="text-[10px] text-muted-foreground">{productIds.length} product{productIds.length !== 1 ? 's' : ''}</span>
-              </div>
-              {count > 0 && <Badge variant="default" className="text-[10px] h-5 px-1.5">{count}</Badge>}
+              <span className="text-xs font-semibold">{label}</span>
+              {count > 0 && <Badge variant="default" className="text-[10px] h-5 px-1.5 ml-auto sm:ml-0">{count}</Badge>}
               {needsShots && (
-                <span className="text-[10px] font-medium text-destructive animate-pulse">Select shots →</span>
+                <span className="text-[10px] font-medium text-destructive animate-pulse ml-auto sm:ml-0">Select →</span>
               )}
             </button>
           );
         })}
       </div>
 
-      {/* Per-category summary strip */}
-      <div className="flex items-center gap-3 flex-wrap text-xs">
-        {categoryIds.map(catId => {
-          const count = perCategoryScenes.get(catId)?.size || 0;
-          const needsShots = count === 0;
-          const label = CATEGORY_LABELS[catId] || catId;
-          return (
-            <span key={catId} className={cn("text-muted-foreground", needsShots && "text-destructive")}>
-              <span className={cn("font-medium", needsShots ? "text-destructive" : "text-foreground")}>{label}</span>
-              {' → '}{needsShots ? 'needs shots' : `${count} shot${count !== 1 ? 's' : ''}`}
-            </span>
-          );
-        })}
+      {/* Compact status chips + apply-all */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {categoryIds.map(catId => {
+            const count = perCategoryScenes.get(catId)?.size || 0;
+            const needsShots = count === 0;
+            const label = CATEGORY_LABELS[catId] || catId;
+            return (
+              <button
+                key={catId}
+                onClick={() => setActiveCategoryId(catId)}
+                className={cn(
+                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors cursor-pointer border',
+                  needsShots
+                    ? 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
+                    : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
+                )}
+              >
+                <span className={cn('w-1.5 h-1.5 rounded-full', needsShots ? 'bg-destructive' : 'bg-primary')} />
+                {label} {count > 0 ? `✓ ${count}` : '0'}
+              </button>
+            );
+          })}
+        </div>
         {activeIds.size > 0 && (
-          <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 ml-auto" onClick={handleApplyToAll}>
-            <Copy className="w-3 h-3" />Apply to all categories
+          <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 sm:ml-auto w-full sm:w-auto" onClick={handleApplyToAll}>
+            <Copy className="w-3 h-3" />Apply to all
           </Button>
         )}
       </div>
