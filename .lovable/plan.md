@@ -1,29 +1,26 @@
 
 
-# Add Default Clothing Rule to Model Generation Prompts
+# Fix Product Grid Spacing, Upload Card Style & Behavior
 
-## Problem
-Generated models have no clothing directive, so the AI picks arbitrary outfits. The user wants a clean, consistent look: **white cami top** for female models, **white t-shirt** for male models.
+## Problems Identified
+1. **Grey background on upload card**: The upload card's image area uses `bg-muted/30`, creating a visible grey square that looks inconsistent with other cards.
+2. **"Create from Product Image" opens file picker directly** instead of the AddProductModal (which has Upload, URL, CSV, Mobile, Shopify tabs). User wants it to match the "New" button behavior.
+3. **Minor spacing inconsistency**: The upload card and product cards have slightly different visual weight due to the grey fill vs transparent product cards.
 
-## Changes — `supabase/functions/generate-user-model/index.ts`
+## Changes — `src/pages/ProductImages.tsx`
 
-### 1. `buildPromptFromDescription` (line 31)
-Insert a gender-conditional clothing line before the background/lighting block:
+### 1. Replace Quick Upload card with simple "Add Product" card that opens modal
+Replace the entire Quick Upload card (lines 1091-1138) with a simple button card matching the existing "Add New" card style (line 1169), but positioned first in the grid. It opens the existing `AddProductModal` (already wired at line 1180).
 
-```
-Wearing a simple white cami top.   // if female
-Wearing a simple white t-shirt.    // if male
-```
+- Remove the quick upload logic (file input, drag/drop, `handleQuickUpload` call)
+- Replace with a clean dashed-border card: Plus icon + "New" label + subtitle "Add product"
+- On click: `setAddProductOpen(true)` — opens the full AddProductModal
 
-### 2. Reference mode prompt (line 322)
-Add the same clothing rule into the inline prompt string, after `${genderWord} model.`:
+### 2. Remove the duplicate "Add New" button at end of grid
+Since the upload card at the start now opens the modal, remove the duplicate "Add New" button at line 1169-1172 to avoid redundancy.
 
-```
-Wearing a ${genderWord === 'male' ? 'simple white t-shirt' : 'simple white cami top'}.
-```
+### 3. Remove unused quick upload state/refs
+Clean up `quickUploadInputRef`, `quickUploading`, `quickUploadProgress`, `isDragOver`, `handleQuickUpload` if they become unused (or keep if used elsewhere — will verify).
 
-### 3. Combined mode (line 330)
-`buildPromptFromDescription` already handles it via change #1. No extra work needed.
-
-This ensures all three generation modes (generator, reference, combined) produce models with the correct default garment. Requires redeploying the `generate-user-model` edge function.
+This gives a consistent look: one clean "New" card at the start of the grid that opens the full-featured AddProductModal with all import options.
 
