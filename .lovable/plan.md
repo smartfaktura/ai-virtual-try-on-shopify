@@ -1,22 +1,31 @@
 
 
-# Improve Background Prompt Precision & Custom Labels
+# Fix: Limit to 1 Recommended Category Per Product
 
-## UI Label Fix
-**File:** `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-- Line 682: `"Custom"` → `"Custom Color"`
-- Line 715: `"Custom"` → `"Custom Gradient"`
+## Problem
+When a single product is selected, multiple category collections can appear as "Recommended," leading to duplicate scene names (e.g., two "Angle View" entries). This happens because the detection logic can match multiple categories from different sources (AI analysis, `analysis_json` cache, keyword fallback).
 
-## Prompt Text Refinements
-**File:** `src/lib/productImagePromptBuilder.ts` (lines 604–626)
+## Solution
+Change `detectRelevantCategories` to enforce a **one-category-per-product** rule using a priority cascade:
 
-Minor wording improvements — same structure, same dynamic hex codes, just tighter language:
+1. If `productAnalyses[product.id]` has a category → use it, skip all other sources
+2. Else if `analysis_json.category` exists → use it, skip keyword fallback  
+3. Else run keyword fallback but **stop at the first match** (specific-first ordering already exists in `CATEGORY_KEYWORDS`)
 
-| Line | Current | Improved |
-|------|---------|----------|
-| 609 | `solid background in color ${hex}` | `flat solid ${hex} color background, no texture, no pattern` |
-| 615 | `smooth gradient background transitioning from ${from} to ${to}` | `smooth gradient background from ${from} to ${to}, no texture, no pattern` |
-| 621 | `${swatchResolved} seamless background` | `${swatchResolved} seamless studio background, no texture, no pattern` |
+## File Changed
+**`src/components/app/product-images/ProductImagesStep2Scenes.tsx`** — `detectRelevantCategories` function (lines 78–110)
 
-No logic changes — only the returned string text is adjusted to add explicit negative constraints while keeping the dynamic color values in place.
+### Logic Change
+```
+For each product:
+  1. Check productAnalyses → if found, add category, mark done
+  2. Check analysis_json → if found, add category, mark done  
+  3. If still unanalyzed, scan CATEGORY_KEYWORDS but BREAK after first match
+```
+
+The key difference from current code:
+- **Keyword fallback** currently combines ALL unanalyzed products into one string and matches ALL categories. New logic processes each unanalyzed product individually and stops at the first keyword match per product.
+- This ensures each product contributes at most 1 category to the recommended set.
+
+No other files change. No database changes.
 
