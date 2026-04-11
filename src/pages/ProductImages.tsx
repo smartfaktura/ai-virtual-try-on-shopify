@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List, History, RefreshCw, Loader2 } from 'lucide-react';
+import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List, History, RefreshCw, Loader2, Upload } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,6 +91,113 @@ export default function ProductImages() {
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(25);
   const MAX_PRODUCTS = 20;
+
+  // Quick upload state
+  const [quickUploading, setQuickUploading] = useState(false);
+  const [quickUploadProgress, setQuickUploadProgress] = useState('');
+  const quickUploadInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleQuickUpload = useCallback(async (file: File) => {
+    if (!user) { toast.error('Please sign in to upload'); return; }
+    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error('Image must be under 20MB'); return; }
+
+    setQuickUploading(true);
+    setQuickUploadProgress('Uploading…');
+
+    try {
+      // 1. Upload to storage
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user.id}/${timestamp}-${randomId}.${extension}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('product-uploads')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { data: urlData } = supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(uploadData.path);
+
+      const imageUrl = urlData.publicUrl;
+
+      // 2. Analyze product image
+      setQuickUploadProgress('Analyzing…');
+      let title = 'Untitled Product';
+      let productType = '';
+      let description = '';
+
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+        if (token) {
+          const { data: analysisData } = await supabase.functions.invoke('analyze-product-image', {
+            body: { imageUrl },
+          });
+          if (analysisData?.title) title = analysisData.title;
+          if (analysisData?.productType) productType = analysisData.productType;
+          if (analysisData?.description) description = analysisData.description;
+        }
+      } catch {
+        // Analysis failed — proceed with defaults
+      }
+
+      // 3. Insert product
+      setQuickUploadProgress('Creating product…');
+      const { data: newProduct, error: insertError } = await supabase
+        .from('user_products')
+        .insert({
+          user_id: user.id,
+          title,
+          product_type: productType,
+          description,
+          image_url: imageUrl,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw new Error(insertError.message);
+
+      // 4. Invalidate and auto-select
+      await queryClient.invalidateQueries({ queryKey: ['user-products'] });
+      setSelectedProductIds(prev => {
+        const next = new Set(prev);
+        next.add(newProduct.id);
+        return next;
+      });
+
+      toast.success('Product created — select shots next');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Upload failed';
+      toast.error(msg);
+    } finally {
+      setQuickUploading(false);
+      setQuickUploadProgress('');
+    }
+  }, [user, queryClient]);
+
+  // Paste listener for Step 1
+  useEffect(() => {
+    if (step !== 1) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) handleQuickUpload(file);
+          return;
+        }
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [step, handleQuickUpload]);
 
 
   // Generation state
@@ -887,9 +994,28 @@ export default function ProductImages() {
                     <p className="text-sm font-semibold text-foreground">No products yet</p>
                     <p className="text-xs text-muted-foreground max-w-xs">Add your first product to start generating professional visuals across multiple scenes.</p>
                   </div>
-                  <Button size="sm" onClick={() => setAddProductOpen(true)} className="gap-1.5">
-                    <Package className="w-3.5 h-3.5" />Add Your First Product
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => {
+                      quickUploadInputRef.current?.click();
+                    }} className="gap-1.5">
+                      <Upload className="w-3.5 h-3.5" />Upload Image
+                    </Button>
+                    <Button size="sm" onClick={() => setAddProductOpen(true)} className="gap-1.5">
+                      <Package className="w-3.5 h-3.5" />Add Product
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">or paste an image (Ctrl+V)</p>
+                  <input
+                    ref={quickUploadInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleQuickUpload(file);
+                      e.target.value = '';
+                    }}
+                  />
                 </div>
               ) : (
               (() => {
@@ -956,6 +1082,50 @@ export default function ProductImages() {
                 return (
                   <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                      {/* Quick Upload Card */}
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => !quickUploading && quickUploadInputRef.current?.click()}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); quickUploadInputRef.current?.click(); }}}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(false);
+                          const file = e.dataTransfer.files[0];
+                          if (file) handleQuickUpload(file);
+                        }}
+                        className={cn(
+                          'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all aspect-square cursor-pointer',
+                          isDragOver ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-primary/40 hover:border-primary hover:bg-primary/5',
+                          quickUploading && 'pointer-events-none opacity-70'
+                        )}
+                      >
+                        <input
+                          ref={quickUploadInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleQuickUpload(file);
+                            e.target.value = '';
+                          }}
+                        />
+                        {quickUploading ? (
+                          <>
+                            <Loader2 className="w-6 h-6 animate-spin text-primary mb-1" />
+                            <span className="text-[10px] font-medium text-primary">{quickUploadProgress}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-6 h-6 text-primary mb-1" />
+                            <span className="text-[10px] font-medium text-primary">Upload Image</span>
+                            <span className="text-[9px] text-muted-foreground mt-0.5">or paste (Ctrl+V)</span>
+                          </>
+                        )}
+                      </div>
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
