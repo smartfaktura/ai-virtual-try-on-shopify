@@ -1,52 +1,29 @@
 
 
-# Generate 3 Brand Model Variations for User Selection
+# Fix FreestylePromptCard Hover & Reduce Repetition
 
-## Current Behavior
-- **Admin (makePublic=true)**: Generates 3 variations → user picks best → publishes to public library ✅
-- **Regular user**: Generates 1 image → immediately saves & deducts 20 credits → no choice ❌
+## Problems
+1. **Hover mismatch**: FreestylePromptCard uses `hover:-translate-y-0.5` (lifts up), while `WorkflowCardCompact` only uses `hover:shadow-lg` (shadow only, no translate). This makes the freestyle card visually "jump" compared to siblings.
+2. **"Create with Prompt" appears 3 times** — badge, title, and button all say the same text.
+3. **Tagline is plain text** — "Any Product · Any Model · Any Scene · Any Lighting" could be styled as subtle pills for visual interest.
 
-## Goal
-Regular brand model users should also get 3 variations, pick the best one, then confirm before saving/deducting credits.
+## Changes — `src/components/app/FreestylePromptCard.tsx`
 
-## Changes
+### 1. Fix hover (line 65)
+Remove `hover:-translate-y-0.5` to match WorkflowCardCompact behavior (shadow-only hover).
 
-### 1. Edge Function — `supabase/functions/generate-user-model/index.ts`
+### 2. Restyle tagline as pills (lines 89-92)
+Replace the plain `<p>` tagline with four small pill badges:
+```
+Product · Models · Scenes · Lighting
+```
+Each as a tiny `rounded-full bg-foreground/[0.05] text-foreground/50 px-2 py-0.5 text-[9px]` chip in a flex row with small gap.
 
-**Add new action: `save-brand-model`** (similar to `publish-public` but saves to `user_models` instead of `custom_models`):
-- Accepts `selectedUrl`, `metadata`, `name`
-- Deducts 20 credits
-- Inserts into `user_models`
-- Returns the saved model + new balance
+### 3. Reduce repetition — differentiate copy
+- **Badge** (line 84-87): Keep as `✦ Freestyle Studio` (brand name, not action)
+- **Title** (line 123): Change to `Freestyle Studio`
+- **Subtitle** (line 126): Keep `Describe any shot, scene, or style you want.`
+- **Button** (line 138): Keep `Create with Prompt →` (the only action CTA)
 
-**Modify regular user flow** (lines 318-350):
-- Instead of generating 1 image, generate 3 in parallel (same as admin flow)
-- Do NOT deduct credits yet
-- Do NOT save to `user_models` yet
-- Return `{ variations, metadata, name }` — same shape as admin flow
-
-### 2. Frontend — `src/pages/BrandModels.tsx`
-
-**Modify `handleGenerate`** (line 303-309):
-- Remove the `makePublic` condition — always show variation picker when `data?.variations` is returned
-
-**Modify variation picker UI** (lines 364-422):
-- When NOT in public mode, show "Save as Brand Model" button instead of "Publish as Public Model"
-- Add a confirm step before saving
-
-**Add `handleSaveBrandModel`**:
-- Calls edge function with `action: 'save-brand-model'`
-- Passes `selectedUrl`, `metadata`, `name`
-- On success: refresh balance, invalidate queries, reset form
-
-### 3. Loading State
-- Update `BrandedLoadingState` — remove `isPublicMode` distinction since both flows now generate 3 variations
-- Update estimate to ~1-2 min for all users
-
-## Summary of Flow (After)
-1. User fills out generator form → clicks Generate (20 credits shown)
-2. Edge function generates 3 variations in parallel, returns all 3 URLs (no credits deducted yet)
-3. User sees variation picker, selects favorite
-4. User clicks "Save as Brand Model" → edge function deducts credits + saves to `user_models`
-5. Model appears in their brand models list
+This way "Freestyle Studio" names the feature, and "Create with Prompt" is the action — no triple repetition.
 
