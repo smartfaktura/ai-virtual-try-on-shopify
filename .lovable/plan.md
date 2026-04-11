@@ -1,10 +1,10 @@
 
 
-# Change "Create with Prompt" Icon to Terminal-Style
+# Change "Create with Prompt" Icon to Command
 
 ## Change
-Replace `Wand2` with `SquareTerminal` — a terminal/code prompt icon that directly evokes "type a command/prompt." It's clean, modern, and distinct from the other nav icons.
+Replace `SquareTerminal` with `Command` (⌘ symbol) — sleek, techy, and instantly recognizable.
 
 ## File
-`src/components/app/AppShell.tsx` — swap `Wand2` import to `SquareTerminal`, update the icon reference in navGroups.
+`src/components/app/AppShell.tsx` — swap `SquareTerminal` import to `Command`, update the icon reference in navGroups.
 
