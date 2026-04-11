@@ -1016,6 +1016,7 @@ export default function ProductImages() {
                 onDetailsChange={setDetails}
                 allProducts={userProducts}
                 selectedProductIds={selectedProductIds}
+                perProductScenes={perProductScenes}
               />
             )}
 
