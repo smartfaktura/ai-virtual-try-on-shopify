@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
-  LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
+  Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
   TrendingUp, BookOpen, Clock,
 } from 'lucide-react';
@@ -57,7 +57,6 @@ const navItems = [
   { label: 'Video', icon: Film, path: '/app/video' },
   { label: 'Library', icon: Image, path: '/app/library' },
   
-  { label: 'Catalog Studio', icon: LayoutTemplate, path: '/app/catalog' },
   { label: 'Brand Models', icon: Users, path: '/app/models' },
   { label: 'Earn Credits', icon: Gift, path: '#earn-credits' },
 ];
@@ -156,11 +155,6 @@ export function AppShell({ children }: AppShellProps) {
             {isComingSoon && (
               <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-white/[0.08] text-white/40">
                 Soon
-              </span>
-            )}
-            {item.label === 'Catalog Studio' && !isComingSoon && (
-              <span className="text-[9px] font-semibold uppercase tracking-wide bg-white/[0.08] text-white/40 px-1.5 py-0.5 rounded">
-                BETA
               </span>
             )}
           </span>

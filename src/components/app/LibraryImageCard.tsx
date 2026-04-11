@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Download, Check, Heart, MoreHorizontal, Shield, Send } from 'lucide-react';
+import { Sparkles, Download, Check, Heart, MoreHorizontal, Shield, Send, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
@@ -170,14 +170,24 @@ export function LibraryImageCard({
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="min-w-[160px]" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenuItem onClick={() => onSetStatus('brand_ready')}>
-                      <Shield className="w-3.5 h-3.5 mr-2" />
-                      Brand Ready
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onSetStatus('ready_to_publish')}>
-                      <Send className="w-3.5 h-3.5 mr-2" />
-                      Ready to Publish
-                    </DropdownMenuItem>
+                    {assetStatus !== 'brand_ready' && (
+                      <DropdownMenuItem onClick={() => onSetStatus('brand_ready')}>
+                        <Shield className="w-3.5 h-3.5 mr-2" />
+                        Brand Ready
+                      </DropdownMenuItem>
+                    )}
+                    {assetStatus !== 'ready_to_publish' && (
+                      <DropdownMenuItem onClick={() => onSetStatus('ready_to_publish')}>
+                        <Send className="w-3.5 h-3.5 mr-2" />
+                        Ready to Publish
+                      </DropdownMenuItem>
+                    )}
+                    {assetStatus !== 'draft' && (
+                      <DropdownMenuItem onClick={() => onSetStatus('draft')}>
+                        <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                        Reset to Draft
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
