@@ -48,16 +48,38 @@ const prefetchRoute = (path: string) => {
   if (fn) { prefetched.add(path); fn(); }
 };
 
-const navItems = [
-  { label: 'Dashboard', icon: Home, path: '/app' },
-  { label: 'Visual Studio', icon: Layers, path: '/app/workflows', divider: true },
-  { label: 'Create with Prompt', icon: Wand2, path: '/app/freestyle' },
-  { label: 'Products', icon: Package, path: '/app/products', divider: true },
-  { label: 'Brand Models', icon: Users, path: '/app/models' },
-  { label: 'Explore', icon: Compass, path: '/app/discover' },
-  { label: 'Library', icon: Image, path: '/app/library', divider: true },
-  { label: 'Video', icon: Film, path: '/app/video' },
+const navGroups = [
+  {
+    label: 'Workspace',
+    items: [
+      { label: 'Dashboard', icon: Home, path: '/app' },
+    ],
+  },
+  {
+    label: 'Create',
+    items: [
+      { label: 'Visual Studio', icon: Layers, path: '/app/workflows' },
+      { label: 'Create with Prompt', icon: Wand2, path: '/app/freestyle' },
+    ],
+  },
+  {
+    label: 'Assets',
+    items: [
+      { label: 'Products', icon: Package, path: '/app/products' },
+      { label: 'Brand Models', icon: Users, path: '/app/models' },
+      { label: 'Explore', icon: Compass, path: '/app/discover' },
+    ],
+  },
+  {
+    label: 'Media',
+    items: [
+      { label: 'Library', icon: Image, path: '/app/library' },
+      { label: 'Video', icon: Film, path: '/app/video' },
+    ],
+  },
 ];
+
+type NavItem = { label: string; icon: typeof Home; path: string };
 
 const STORAGE_KEY = 'sidebar-collapsed';
 
