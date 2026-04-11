@@ -74,6 +74,27 @@ export function computeTotalImagesPerProduct(
   return total;
 }
 
+/** Compute total images using per-category scene assignments with product counts per category */
+export function computeTotalImagesPerCategory(
+  perCategoryScenes: Map<string, Set<string>>,
+  categoryProductCounts: Map<string, number>,
+  allScenes: { id: string; triggerBlocks?: string[] }[],
+  imageCountPerScene: number,
+  details: DetailSettings,
+): number {
+  const globalFormats = details.selectedAspectRatios || [details.aspectRatio || '1:1'];
+  let total = 0;
+  for (const [catId, sceneIds] of perCategoryScenes) {
+    const productCount = categoryProductCounts.get(catId) || 1;
+    const catScenes = allScenes.filter(s => sceneIds.has(s.id));
+    for (const scene of catScenes) {
+      const sceneFormats = details.sceneAspectOverrides?.[scene.id] || globalFormats;
+      total += getSceneMultiplier(scene as any, details) * imageCountPerScene * sceneFormats.length * productCount;
+    }
+  }
+  return total;
+}
+
 export interface VariationOverride {
   [key: string]: string;
 }
