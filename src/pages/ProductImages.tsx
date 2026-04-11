@@ -770,8 +770,8 @@ export default function ProductImages() {
     switch (step) {
       case 1: return selectedProductIds.size > 0;
       case 2: {
-        if (hasMultipleCategories && perProductScenes.size > 0) {
-          return selectedProducts.every(p => (perProductScenes.get(p.id)?.size || 0) > 0);
+        if (hasMultipleCategories && perCategoryScenes.size > 0) {
+          return Array.from(categoryGroups.keys()).every(catId => (perCategoryScenes.get(catId)?.size || 0) > 0);
         }
         return selectedSceneIds.size > 0;
       }
@@ -785,13 +785,12 @@ export default function ProductImages() {
     switch (step) {
       case 1: setStep(2); break;
       case 2: {
-        // In multi-category mode, check each product has at least 1 shot
-        if (hasMultipleCategories && perProductScenes.size > 0) {
-          const incomplete = selectedProducts.find(p => (perProductScenes.get(p.id)?.size || 0) === 0);
-          if (incomplete) {
-            setForcedActiveProductId(incomplete.id);
-            const name = incomplete.title?.split(' ').slice(0, 4).join(' ') || 'this product';
-            toast.warning(`Please select at least one shot for "${name}"`);
+        // In multi-category mode, check each category group has at least 1 shot
+        if (hasMultipleCategories && perCategoryScenes.size > 0) {
+          const incompleteCatId = Array.from(categoryGroups.keys()).find(catId => (perCategoryScenes.get(catId)?.size || 0) === 0);
+          if (incompleteCatId) {
+            setForcedActiveCategoryId(incompleteCatId);
+            toast.warning(`Please select at least one shot for this category`);
             return;
           }
         }
