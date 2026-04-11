@@ -1,22 +1,33 @@
 
 
-# Add Delete Confirmation Dialog to Products Page
+# Replace Status Chips with Helper Text & Move "Apply to All" Inline
 
 ## Problem
-Delete buttons on the Products page (`/app/products`) fire immediately on click — no confirmation. Easy to accidentally delete a product, especially on mobile where the trash icon is always visible.
+The status chips row (lines 841-870) duplicates information already shown in the category tabs. User wants helper text instead, and wants "Apply to all" near the category tabs, not off to the side.
 
-## Solution
-Add an `AlertDialog` confirmation step before deleting. When the user clicks the trash icon, store the product ID in state and open the dialog. Only proceed with deletion when they confirm.
+## Changes — `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-### Changes — Single file: `src/pages/Products.tsx`
+### 1. Delete the status chips block (lines 841-870)
+Remove the entire `<div className="flex flex-col sm:flex-row ...">` containing the colored status chips and the "Apply to all" button.
 
-1. **Import `AlertDialog` components** from `@/components/ui/alert-dialog`
-2. **Add state**: `const [deleteTarget, setDeleteTarget] = useState<string | null>(null)`
-3. **Replace direct delete calls** (lines 289, 368): change `onClick={() => deleteMutation.mutate(product.id)}` to `onClick={() => setDeleteTarget(product.id)}`
-4. **Add AlertDialog at bottom of JSX**:
-   - Title: "Delete this product?"
-   - Description: "This will permanently remove the product and cannot be undone."
-   - Cancel button + destructive "Delete" confirm button
-   - On confirm: call `deleteMutation.mutate(deleteTarget)` and reset state
-   - Open state tied to `deleteTarget !== null`
+### 2. Move "Apply to all" into the category tabs container (line 796-839)
+Add the "Apply to all" button as the last element inside the `<div ref={tabsRef} ...>` flex container, after the `.map()` of category buttons. Style it as a small outline button matching the tab row aesthetic. Only show when the active category has shots selected.
+
+### 3. Add helper text below the tabs container
+After the tabs `<div>`, add:
+```
+<p className="text-xs text-muted-foreground">
+  Select shots for each category below. Use "Apply to all" to copy your selection across categories.
+</p>
+```
+
+### Result
+```text
+[accessories 3] [Earrings 3] [Hoodies 3] [⎘ Apply to all]
+Select shots for each category below.
+
+[scene grid...]
+```
+
+Single file edit.
 
