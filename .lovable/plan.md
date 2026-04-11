@@ -1,18 +1,26 @@
 
 
-# Two Small Sidebar Tweaks
+# Sidebar Spacing Refinements
 
-## 1. Replace "MAIN" header with a thin separator line
-**File: `src/components/app/AppShell.tsx`** (line ~202-204)
+Looking at the current sidebar layout against design best practices, here are the issues and fixes:
 
-Replace the `<p>Main</p>` label with a simple `<div>` separator line (thin `h-px bg-white/[0.06]` with small vertical margin), or remove it entirely since the "Create Visuals" button already visually separates the logo from the nav list.
+## Current Issues
 
-## 2. Show "YOUR PLAN: X" next to the plan name in CreditIndicator
-**File: `src/components/app/CreditIndicator.tsx`** (line ~22-23)
+1. **Too much top padding** above "Create Visuals" button (`pt-5`) — pushes content down unnecessarily
+2. **Separator line + nav top padding create double-spacing** — the nav has `py-4` plus the separator has `mb-2`, making the gap between the CTA button and "Dashboard" feel too loose
+3. **Nav item vertical spacing (`space-y-1`)** is fine but the overall nav section padding is generous — items could sit slightly tighter
+4. **Credit section and user profile** both have `border-t` separators with their own padding — this is good, no change needed
 
-Change the plan label from `{planConfig.name} Plan` to `Your plan: {planConfig.name}` (keeping the same uppercase styling).
+## Proposed Fixes (file: `src/components/app/AppShell.tsx`)
+
+| Area | Current | Proposed | Why |
+|------|---------|----------|-----|
+| CTA top padding | `pt-5 pb-2` | `pt-4 pb-1` | Tighten logo-to-CTA gap |
+| Nav section padding | `py-4` | `pt-3 pb-4` | Reduce CTA-to-nav gap |
+| Separator margin | `mb-2` | `mb-1` | Less dead space before first item |
+
+These are subtle 4-8px reductions that tighten the vertical rhythm without making it feel cramped, keeping the nav items closer to the action button and giving more room for the list itself.
 
 ## Files Changed
-1. `src/components/app/AppShell.tsx` — remove "MAIN" text, replace with separator or nothing
-2. `src/components/app/CreditIndicator.tsx` — change plan label to "Your plan: X"
+1. `src/components/app/AppShell.tsx` — adjust padding values on CTA wrapper, nav section, and separator
 
