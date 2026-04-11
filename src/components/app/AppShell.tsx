@@ -50,14 +50,13 @@ const prefetchRoute = (path: string) => {
 
 const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
-  { label: 'Visual Studio', icon: Layers, path: '/app/workflows' },
+  { label: 'Visual Studio', icon: Layers, path: '/app/workflows', divider: true },
   { label: 'Create with Prompt', icon: Wand2, path: '/app/freestyle' },
-  { label: 'Products', icon: Package, path: '/app/products' },
-  { label: 'Explore', icon: Compass, path: '/app/discover' },
-  { label: 'Video', icon: Film, path: '/app/video' },
-  { label: 'Library', icon: Image, path: '/app/library' },
-  
+  { label: 'Products', icon: Package, path: '/app/products', divider: true },
   { label: 'Brand Models', icon: Users, path: '/app/models' },
+  { label: 'Explore', icon: Compass, path: '/app/discover' },
+  { label: 'Library', icon: Image, path: '/app/library', divider: true },
+  { label: 'Video', icon: Film, path: '/app/video' },
 ];
 
 const STORAGE_KEY = 'sidebar-collapsed';
@@ -198,10 +197,10 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Main Nav */}
-        <nav className={cn('flex-1 pt-3 pb-4 space-y-1 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
-          <div className="h-px bg-white/[0.06] mx-3 mb-1" />
+        <nav className={cn('flex-1 pt-3 pb-4 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
           {navItems.map((item) => (
-            <NavItemButton key={item.path} item={item} />
+            <div key={item.path} className={item.divider ? 'mt-3' : ''}>
+              <NavItemButton item={item} />
           ))}
 
         </nav>
