@@ -1036,15 +1036,10 @@ export default function ProductImages() {
                 const visible = filtered.slice(0, visibleCount);
                 const remaining = filtered.length - visibleCount;
 
-                const loadMoreSentinel = remaining > 0 && (
-                  <div className="pt-4 flex justify-center" ref={(el) => {
-                    if (!el) return;
-                    const obs = new IntersectionObserver(([entry]) => {
-                      if (entry.isIntersecting) setVisibleCount(v => v + 25);
-                    }, { rootMargin: '200px' });
-                    obs.observe(el);
-                    return () => obs.disconnect();
-                  }}>
+                const hasMore = remaining > 0;
+
+                const loadMoreSentinel = hasMore && (
+                  <div className="pt-4 flex justify-center" ref={sentinelRef}>
                     <span className="text-xs text-muted-foreground">{remaining} more…</span>
                   </div>
                 );
