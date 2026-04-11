@@ -472,7 +472,7 @@ export default function Workflows() {
 
   return (
     <PageHeader
-      title="Create Visuals"
+      title="Visual Studio"
       subtitle="Turn one product photo into a full set of realistic brand visuals"
       actions={
         <ToggleGroup type="single" value={effectiveLayout} onValueChange={handleLayoutChange} className="gap-0.5">
