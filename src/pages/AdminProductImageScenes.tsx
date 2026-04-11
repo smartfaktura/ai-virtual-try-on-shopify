@@ -306,8 +306,8 @@ export default function AdminProductImageScenes() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Product Image Scenes</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage all scene definitions for the Product Images flow.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Product Visual Scenes</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage all scene definitions for the Product Visuals flow.</p>
         </div>
         <Button onClick={() => setAddingNew(true)} size="sm" className="gap-1.5">
           <Plus className="w-4 h-4" /> Add Scene

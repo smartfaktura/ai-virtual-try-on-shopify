@@ -2124,11 +2124,11 @@ export default function Generate() {
   const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' && !isSelfieUgc && !isMirrorSelfie ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
   const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
-  const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
+  const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Visuals';
 
   return (
     <PageHeader title={pageTitle} backAction={{ content: activeWorkflow ? 'Templates' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}>
-      <SEOHead title="Generate — VOVV AI" description="Generate AI product photography." noindex />
+      <SEOHead title="Generate — VOVV AI" description="Generate AI product visuals." noindex />
       <div className="space-y-6 overflow-x-hidden">
         <LowCreditsBanner />
 

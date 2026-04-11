@@ -34,8 +34,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <SEOHead
-        title="VOVV — AI Product Images & Videos for Ecommerce"
-        description="Turn one product photo into ready-to-use product images, ads, and videos. Create ecommerce visuals in minutes without booking another shoot."
+        title="VOVV — AI Product Visuals & Videos for Ecommerce"
+        description="Turn one product photo into ready-to-use product visuals, ads, and videos. Create ecommerce visuals in minutes without booking another shoot."
         canonical={`${SITE_URL}/home`}
         ogImage={DEFAULT_OG_IMAGE}
       />
