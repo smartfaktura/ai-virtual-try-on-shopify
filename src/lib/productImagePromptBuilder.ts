@@ -583,6 +583,21 @@ function categoryOutfitDefaults(category?: string, gender?: string): OutfitPiece
 // ── Slot nullification based on product garmentType ──
 export type OutfitSlot = 'top' | 'bottom' | 'shoes';
 
+/**
+ * Resolve the effective garment type from analysis + product metadata.
+ * Falls back through garmentType → productSubcategory → product_type → title.
+ */
+export function resolveGarmentType(
+  analysis?: { garmentType?: string; productSubcategory?: string } | null,
+  product?: { product_type?: string; title?: string } | null,
+): string | undefined {
+  if (analysis?.garmentType) return analysis.garmentType;
+  if (analysis?.productSubcategory) return analysis.productSubcategory;
+  if (product?.product_type) return product.product_type;
+  if (product?.title) return product.title;
+  return undefined;
+}
+
 /** Returns outfit slots that conflict with the product's garmentType.
  *  These slots should be omitted from the outfit prompt so the product fills them. */
 export function getConflictingSlots(garmentType?: string): Set<OutfitSlot> {

@@ -27,7 +27,7 @@ import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset, ProductAnalysis } from './types';
 import type { ModelProfile } from '@/types';
-import { getConflictingSlots, type OutfitSlot } from '@/lib/productImagePromptBuilder';
+import { getConflictingSlots, resolveGarmentType, type OutfitSlot } from '@/lib/productImagePromptBuilder';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
