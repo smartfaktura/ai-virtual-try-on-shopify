@@ -98,12 +98,13 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
   }
 
   const unanalyzed = products.filter(p => !analyzedIds.has(p.id));
-  if (unanalyzed.length > 0) {
-    const combined = unanalyzed.map(p =>
-      `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
-    ).join(' ');
+  for (const p of unanalyzed) {
+    const text = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
     for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-      if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) matched.add(catId);
+      if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(text))) {
+        matched.add(catId);
+        break; // one category per product
+      }
     }
   }
   return matched;
