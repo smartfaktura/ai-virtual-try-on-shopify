@@ -952,8 +952,8 @@ export default function ProductImages() {
             <div className="space-y-3">
               {/* Section header */}
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Your Products</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Select from your catalog or upload a new image</p>
+                <h3 className="text-sm font-semibold text-foreground">Your Products{userProducts.length > 0 && ` (${userProducts.length})`}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Select from your catalog or upload a new image <span className="hidden sm:inline">· Tip: drag &amp; drop or paste (⌘V)</span></p>
               </div>
               {/* Toolbar */}
               <div className="flex gap-2 items-center">
@@ -987,7 +987,7 @@ export default function ProductImages() {
               {selectedProductIds.size > 0 && (
                 <div className="flex gap-2 items-center">
                   <Badge variant={selectedProductIds.size >= 2 ? 'default' : 'secondary'}>{selectedProductIds.size} selected</Badge>
-                  <span className="text-xs text-muted-foreground">(max {MAX_PRODUCTS})</span>
+                  {selectedProductIds.size >= 10 && <span className="text-xs text-muted-foreground">(max {MAX_PRODUCTS})</span>}
                 </div>
               )}
 
@@ -1036,11 +1036,16 @@ export default function ProductImages() {
                 const visible = filtered.slice(0, visibleCount);
                 const remaining = filtered.length - visibleCount;
 
-                const loadMoreBtn = remaining > 0 && (
-                  <div className="flex justify-center pt-4">
-                    <Button variant="outline" size="sm" className="text-xs" onClick={() => setVisibleCount(v => v + 25)}>
-                      Show more ({remaining} remaining)
-                    </Button>
+                const loadMoreSentinel = remaining > 0 && (
+                  <div className="pt-4 flex justify-center" ref={(el) => {
+                    if (!el) return;
+                    const obs = new IntersectionObserver(([entry]) => {
+                      if (entry.isIntersecting) setVisibleCount(v => v + 25);
+                    }, { rootMargin: '200px' });
+                    obs.observe(el);
+                    return () => obs.disconnect();
+                  }}>
+                    <span className="text-xs text-muted-foreground">{remaining} more…</span>
                   </div>
                 );
 
@@ -1067,7 +1072,7 @@ export default function ProductImages() {
                               <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
-                                {up.product_type && <p className="text-[10px] text-muted-foreground truncate">{up.product_type}</p>}
+                                <p className="text-[10px] text-muted-foreground truncate">{up.product_type || '\u00A0'}</p>
                               </div>
                               <div className={cn(
                                 'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
@@ -1101,12 +1106,12 @@ export default function ProductImages() {
                         onClick={() => setAddProductOpen(true)}
                         className="group flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all cursor-pointer overflow-hidden"
                       >
-                        <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/30">
+                        <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/40">
                           <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                          <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">Upload Image</p>
                         </div>
                         <div className="h-[44px] flex flex-col justify-center px-1.5 py-1">
-                          <p className="text-[9px] text-muted-foreground/70">drop, paste, or import</p>
+                          <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">Upload Image</p>
+                          <p className="text-[9px] text-muted-foreground/70 mt-0.5">drop, paste, or import</p>
                         </div>
                       </button>
 
