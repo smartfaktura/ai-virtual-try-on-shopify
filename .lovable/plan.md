@@ -1,66 +1,37 @@
 
 
-# Fix: Collapse Conflicting Outfit Slots in UI
+# Fix: Outfit Slot Conflict Detection When garmentType is Missing
 
 ## The Problem
 
-The prompt builder correctly skips conflicting slots at generation time (sweater → skip top), but the **UI still renders the full PieceField** with all garment/color/fit/material options. The tiny amber badge is easy to miss. Users think their Top selection matters when it will be silently ignored.
-
-## Current Coverage Map
-
-The `getConflictingSlots` function already covers a comprehensive set:
-
-```text
-Full-body (skip top + bottom):
-  dress, jumpsuit, romper, bodysuit, one-piece, overalls, coverall
-
-Bottom (skip bottom):
-  skirt, shorts, trousers, pants, leggings, jeans, wide-leg,
-  culottes, joggers, sweatpants
-
-Top (skip top):
-  crop top, blouse, shirt, hoodie, sweater, cardigan, tank top,
-  vest, jacket, blazer, coat, parka, bomber
-
-Footwear (skip shoes):
-  sneaker, boot, heel, sandal, loafer, mule, slipper, clog,
-  flat, oxford, derby, trainer, shoe
-```
-
-**Missing types to add**: `polo`, `tunic`, `cape`, `poncho`, `turtleneck`, `henley`, `pullover`, `windbreaker`, `anorak`, `gilet` (tops); `bermuda`, `chinos`, `cargo pants`, `palazzo` (bottoms); `espadrille`, `wedge`, `pump`, `brogue` (shoes); `kimono`, `kaftan`, `saree`, `gown`, `maxi dress`, `mini dress`, `co-ord set`, `suit` (full-body).
+The slot-collapse logic in Step 3 depends on `analysis.garmentType`, but this field is only returned by the AI for fashion-category products — and even then, not always reliably. For cached analyses or when the AI omits it, `garmentType` is `undefined`, so `getConflictingSlots()` returns an empty set and the TOP/BOTTOM/SHOES fields remain fully visible even for sweaters, skirts, etc.
 
 ## The Fix
 
-### Part A: Collapse conflicting slots in UI (~15 lines)
+Add a fallback chain in `getConflictingSlots` so it works even without `garmentType`:
 
-**File: `ProductImagesStep3Refine.tsx`**
+**File: `src/lib/productImagePromptBuilder.ts`** (~15 lines)
 
-In `OutfitPieceFields`, when a slot has conflicts:
-- **Replace the full PieceField** with a collapsed single-line row showing a lock icon + explanation: "👕 TOP — Filled by your sweater" (using the actual garmentType)
-- For mixed batches (some products conflict, some don't): show the PieceField but **dimmed with an overlay note**: "Applied only to non-sweater products"
-- Remove the current tiny badge approach
+1. Change `getConflictingSlots` signature to accept the full analysis object (or at least `garmentType`, `category`, `productSubcategory`, and `productType`/`title` as fallbacks)
+2. If `garmentType` is present, use it (current behavior)
+3. If not, try `productSubcategory` (e.g. "Sweater", "Skirt") — run the same keyword matching
+4. If still nothing, try the product's `product_type` or `title` from the product record as a last resort
+5. Export a helper `resolveGarmentType(analysis, product?)` that returns the best guess
 
-Logic:
-```text
-allConflict (every selected product conflicts) → collapse to label
-someConflict (mixed batch) → show field + dim overlay note
-noConflict → show field normally
-```
+**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`** (~5 lines)
 
-### Part B: Expand garment type coverage (~10 lines)
+Update `OutfitPieceFields` to pass more context to `getConflictingSlots`:
+- Instead of just `a.garmentType`, pass the full analysis + the product's `product_type` / `title` as fallback
+- This ensures even older cached analyses trigger correct slot collapsing
 
-**File: `productImagePromptBuilder.ts`**
+**File: `src/pages/ProductImages.tsx`** — no changes needed, `allProducts` and `selectedProductIds` are already passed
 
-Add missing garment types to each category array in `getConflictingSlots`.
+## How It Works After the Fix
 
-### Part C: Full-body mode for dresses
-
-When ALL products are full-body garments (dress/jumpsuit), collapse both Top and Bottom to labels, leaving only Shoes visible. Add a header: "Full-body garment — only shoes & accessories apply."
+User adds a sweater → analysis has `category: "garments"`, `productSubcategory: "Sweater"` but `garmentType` might be missing → fallback reads `productSubcategory` → matches "sweater" → TOP slot collapses with "Filled by your sweater"
 
 ## Files Changed
 
-1. **`src/lib/productImagePromptBuilder.ts`** — expand `getConflictingSlots` arrays with ~20 missing types
-2. **`src/components/app/product-images/ProductImagesStep3Refine.tsx`** — replace badge approach with collapsed slot rendering; add full-body mode header
-
-No database changes.
+1. `src/lib/productImagePromptBuilder.ts` — add `resolveGarmentType` fallback helper, update `getConflictingSlots` to use it
+2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — pass full analysis + product info to conflict detection
 
