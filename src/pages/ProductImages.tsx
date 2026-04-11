@@ -972,7 +972,7 @@ export default function ProductImages() {
                     p.product_type.toLowerCase().includes(productSearch.toLowerCase())
                   );
                   setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
-                }}>Select All</Button>
+                }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
                 <div className="flex border border-border rounded-md overflow-hidden">
                   <button onClick={() => setProductViewMode('grid')} className={cn('p-1.5 transition-colors', productViewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}>
