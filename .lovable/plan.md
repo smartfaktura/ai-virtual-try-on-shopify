@@ -1,25 +1,43 @@
 
 
-# Fix: Lingerie/Intimates Products Getting Covered by Support Clothing
+# Fix: Map All Subcategories to Prompt Builder Logic
 
 ## Problem
-The "Nude Seamless Bra and Shorts Set" is classified as `lingerie` (matched by "bra" keyword), but the prompt builder has **no handling for `lingerie` category**. It falls through to default outfit logic which instructs the AI to dress the model in "clean neutral top, understated trousers" — literally covering the product with additional clothing. The screenshots confirm this: a t-shirt appears layered over the bra set.
-
-## Root Cause
-The `catalogEngine.ts` handles swimwear by nullifying all support wardrobe slots, but **lingerie has no equivalent treatment** in `productImagePromptBuilder.ts`. The prompt builder's `defaultPersonDirective()`, `defaultOutfitDirective()`, `categoryOutfitDefaults()`, `resolveBodyFramingDirective()`, and other category-aware functions don't have `lingerie` cases.
+The `analyze-product-category` backend returns ~35 categories, but `productImagePromptBuilder.ts` switch statements only handle ~10. Subcategories like `dresses`, `hoodies`, `sneakers`, `boots`, `kidswear`, `eyewear`, `watches`, and all jewellery types fall to `default` — which applies wrong outfit/model/framing logic.
 
 ## Fix — `src/lib/productImagePromptBuilder.ts`
 
-Add `lingerie` handling alongside `swimwear` in all category-aware functions:
+Update **all 7 category-aware switch functions** to map subcategories to their parent logic:
 
-1. **`categoryOutfitDefaults()`** — Add `case 'lingerie':` returning all-empty slots (no support clothing), same as swimwear should
-2. **`defaultOutfitDirective()`** — For `lingerie` category, return a directive like: "OUTFIT LOCK — The product IS the outfit. Model wears ONLY the product — no additional clothing, no layering. Show the lingerie/intimates as-is."
-3. **`defaultPersonDirective()`** — Add `case 'lingerie':` with appropriate model description for intimates photography
-4. **`resolveBodyFramingDirective()`** — Add `case 'lingerie':` for full-body framing
-5. **`defaultBackground()`**, **`defaultLighting()`**, **`defaultShadow()`**, **`defaultStyling()`** — Add `lingerie` cases with soft, beauty-oriented defaults
+### Clothing subcategories → `garments` treatment
+Add `case 'dresses': case 'hoodies': case 'streetwear': case 'jeans': case 'jackets':` alongside `case 'garments':` in:
+- `resolveBodyFramingDirective` — full-body shot
+- `defaultBackground` — warm white studio
+- `defaultShadow` — soft diffused shadow
+- `defaultStyling` — clean commercial
+- `defaultLighting` — soft directional
+- `defaultPersonDirective` — fashion model
+- `categoryOutfitDefaults` — standard support clothing
 
-Also add same treatment for `activewear` and `swimwear` in `categoryOutfitDefaults()` since those categories also represent products that ARE the outfit.
+### Footwear subcategories → `shoes` treatment
+Add `case 'sneakers': case 'boots': case 'high-heels':` alongside `case 'shoes':` in all 7 functions.
 
-## Technical Detail
-All changes in a single file. The key insight: when the product IS what the model wears (lingerie, swimwear, activewear), the outfit directive must explicitly state "no additional clothing" instead of suggesting support garments.
+### Accessory subcategories → `bags-accessories` treatment
+Add `case 'backpacks': case 'wallets-cardholders': case 'belts': case 'scarves': case 'hats-small':` alongside `case 'bags-accessories':` in all 7 functions.
+
+### Jewellery/watches/eyewear → beauty-adjacent treatment
+Add `case 'jewellery-necklaces': case 'jewellery-earrings': case 'jewellery-bracelets': case 'jewellery-rings': case 'watches': case 'eyewear':` — treat like `bags-accessories` for outfit/framing (close-up/three-quarter with product focus), but with beauty-clean lighting and styling.
+
+### Kidswear → special handling
+Add `case 'kidswear':` with:
+- `defaultPersonDirective`: child model directive (age-appropriate, playful)
+- `categoryOutfitDefaults`: child-appropriate outfit defaults
+- `defaultOutfitDirective`: add kidswear to the "product IS the outfit" check
+- `resolveBodyFramingDirective`: full-body for children's clothing
+
+### Also update `ProductCategory` type — `src/components/app/product-images/types.ts`
+Add all missing categories to align with the backend: `lingerie`, `swimwear`, `activewear`, `kidswear`, `dresses`, `hoodies`, `streetwear`, `jeans`, `jackets`, `sneakers`, `boots`, `high-heels`, `backpacks`, `wallets-cardholders`, `belts`, `scarves`, `eyewear`, `watches`, `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets`, `jewellery-rings`
+
+## Result
+Every category the backend can return now has proper prompt handling — no more falling through to generic defaults that add wrong clothing or framing.
 
