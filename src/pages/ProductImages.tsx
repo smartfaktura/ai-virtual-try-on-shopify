@@ -70,6 +70,7 @@ export default function ProductImages() {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
   const [perProductScenes, setPerProductScenes] = useState<Map<string, Set<string>>>(new Map());
+  const [forcedActiveProductId, setForcedActiveProductId] = useState<string | null>(null);
   const [sceneExtraRefs, setSceneExtraRefs] = useState<Record<string, string>>({});
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
   const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
@@ -745,7 +746,12 @@ export default function ProductImages() {
   const canProceed = (() => {
     switch (step) {
       case 1: return selectedProductIds.size > 0;
-      case 2: return selectedSceneIds.size > 0;
+      case 2: {
+        if (hasMultipleCategories && perProductScenes.size > 0) {
+          return selectedProducts.every(p => (perProductScenes.get(p.id)?.size || 0) > 0);
+        }
+        return selectedSceneIds.size > 0;
+      }
       case 3: return true;
       case 4: return canAfford && totalImages > 0;
       default: return false;
@@ -755,7 +761,20 @@ export default function ProductImages() {
   const handleNext = () => {
     switch (step) {
       case 1: setStep(2); break;
-      case 2: setStep(3); break;
+      case 2: {
+        // In multi-category mode, check each product has at least 1 shot
+        if (hasMultipleCategories && perProductScenes.size > 0) {
+          const incomplete = selectedProducts.find(p => (perProductScenes.get(p.id)?.size || 0) === 0);
+          if (incomplete) {
+            setForcedActiveProductId(incomplete.id);
+            const name = incomplete.title?.split(' ').slice(0, 4).join(' ') || 'this product';
+            toast.warning(`Please select at least one shot for "${name}"`);
+            return;
+          }
+        }
+        setStep(3);
+        break;
+      }
       case 3: {
         // Auto-select model if on-model scenes exist but no model is selected
         const hasOnModelScenes = selectedScenes.some(s =>
@@ -975,6 +994,8 @@ export default function ProductImages() {
                 perProductScenes={perProductScenes}
                 onPerProductScenesChange={setPerProductScenes}
                 hasMultipleCategories={hasMultipleCategories}
+                forcedActiveProductId={forcedActiveProductId}
+                onForcedActiveProductIdConsumed={() => setForcedActiveProductId(null)}
               />
             )}
 

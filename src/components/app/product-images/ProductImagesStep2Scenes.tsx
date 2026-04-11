@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Camera, Copy } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Camera, Copy, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
@@ -15,6 +15,8 @@ interface Step2Props {
   perProductScenes?: Map<string, Set<string>>;
   onPerProductScenesChange?: (map: Map<string, Set<string>>) => void;
   hasMultipleCategories?: boolean;
+  forcedActiveProductId?: string | null;
+  onForcedActiveProductIdConsumed?: () => void;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -722,10 +724,23 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
 }
 
 export function ProductImagesStep2Scenes(props: Step2Props) {
-  const { hasMultipleCategories, perProductScenes, onPerProductScenesChange, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses } = props;
+  const { hasMultipleCategories, perProductScenes, onPerProductScenesChange, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveProductId, onForcedActiveProductIdConsumed } = props;
   const [activeProductId, setActiveProductId] = useState<string | null>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const isMultiCategory = !!hasMultipleCategories && !!perProductScenes && !!onPerProductScenesChange && selectedProducts.length > 1;
+
+  // Handle forced tab switch from parent (validation)
+  useEffect(() => {
+    if (forcedActiveProductId && isMultiCategory) {
+      setActiveProductId(forcedActiveProductId);
+      onForcedActiveProductIdConsumed?.();
+      // Scroll tabs into view
+      setTimeout(() => {
+        tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+  }, [forcedActiveProductId, isMultiCategory, onForcedActiveProductIdConsumed]);
 
   if (!isMultiCategory) {
     return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} />;
@@ -757,10 +772,11 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
   return (
     <div className="space-y-4">
       {/* Product tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div ref={tabsRef} className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {selectedProducts.map(p => {
           const isActive = p.id === activeProduct.id;
           const count = perProductScenes.get(p.id)?.size || 0;
+          const needsShots = count === 0;
           return (
             <button
               key={p.id}
@@ -768,13 +784,18 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
               className={cn(
                 'flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all whitespace-nowrap flex-shrink-0 cursor-pointer',
                 isActive
-                  ? 'border-primary bg-primary/[0.05] shadow-sm'
-                  : 'border-border hover:border-primary/30 hover:bg-muted/30'
+                  ? needsShots
+                    ? 'border-destructive/60 bg-destructive/[0.05] shadow-sm'
+                    : 'border-primary bg-primary/[0.05] shadow-sm'
+                  : needsShots
+                    ? 'border-destructive/30 hover:border-destructive/50 hover:bg-destructive/[0.03]'
+                    : 'border-border hover:border-primary/30 hover:bg-muted/30'
               )}
             >
               <img src={p.image_url} alt={p.title} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
               <span className="text-xs font-medium truncate max-w-[100px]">{p.title}</span>
               {count > 0 && <Badge variant="default" className="text-[10px] h-5 px-1.5">{count}</Badge>}
+              {needsShots && <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />}
             </button>
           );
         })}
@@ -784,10 +805,11 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
       <div className="flex items-center gap-3 flex-wrap text-xs">
         {selectedProducts.map(p => {
           const count = perProductScenes.get(p.id)?.size || 0;
+          const needsShots = count === 0;
           return (
-            <span key={p.id} className="text-muted-foreground">
-              <span className="font-medium text-foreground">{p.title?.split(' ').slice(0, 3).join(' ')}</span>
-              {' → '}{count} shot{count !== 1 ? 's' : ''}
+            <span key={p.id} className={cn("text-muted-foreground", needsShots && "text-destructive")}>
+              <span className={cn("font-medium", needsShots ? "text-destructive" : "text-foreground")}>{p.title?.split(' ').slice(0, 3).join(' ')}</span>
+              {' → '}{needsShots ? 'needs shots' : `${count} shot${count !== 1 ? 's' : ''}`}
             </span>
           );
         })}
