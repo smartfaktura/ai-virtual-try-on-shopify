@@ -365,18 +365,20 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               )}
             </div>
             <div className="flex flex-wrap gap-1">
-              {perProductScenes && perProductScenes.size > 0 ? (
-                selectedProducts.map(p => {
-                  const pScenes = dbScenes.filter(s => perProductScenes.get(p.id)?.has(s.id));
-                  if (pScenes.length === 0) return null;
+              {perCategoryScenes && perCategoryScenes.size > 0 && categoryGroups ? (
+                Array.from(categoryGroups.entries()).map(([catId, productIds]) => {
+                  const catSceneIds = perCategoryScenes.get(catId);
+                  if (!catSceneIds || catSceneIds.size === 0) return null;
+                  const catScenes = dbScenes.filter(s => catSceneIds.has(s.id));
+                  const catLabel = catId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                   return (
-                    <div key={p.id} className="w-full space-y-1">
-                      <span className="text-[10px] font-medium text-muted-foreground">{p.title}</span>
+                    <div key={catId} className="w-full space-y-1">
+                      <span className="text-[10px] font-medium text-muted-foreground">{catLabel} ({productIds.length} product{productIds.length !== 1 ? 's' : ''})</span>
                       <div className="flex flex-wrap gap-1">
-                        {pScenes.slice(0, 8).map(s => (
+                        {catScenes.slice(0, 8).map(s => (
                           <Badge key={s.id} variant="outline" className="text-[10px]">{s.title}</Badge>
                         ))}
-                        {pScenes.length > 8 && <Badge variant="secondary" className="text-[10px]">+{pScenes.length - 8}</Badge>}
+                        {catScenes.length > 8 && <Badge variant="secondary" className="text-[10px]">+{catScenes.length - 8}</Badge>}
                       </div>
                     </div>
                   );
