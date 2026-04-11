@@ -468,23 +468,28 @@ export default function ProductImages() {
                 ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
                 ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
                 ...(() => {
-                  // Check for reference trigger uploads first (e.g. atomizerDetail, openBottle)
+                  // Check for reference trigger uploads — per-product keyed first, then global fallback
                   const triggerBlocks = scene.triggerBlocks || [];
                   const refs: Record<string, string> = {};
+                  const isMulti = selectedProducts.length > 1;
                   for (const tb of triggerBlocks) {
-                    const refUrl = sceneExtraRefs[`trigger:${tb}`];
+                    // Per-product key first, then global
+                    const perProductKey = `trigger:${tb}:${product.id}`;
+                    const globalKey = `trigger:${tb}`;
+                    const refUrl = sceneExtraRefs[perProductKey] || sceneExtraRefs[globalKey];
                     if (refUrl && REFERENCE_TRIGGERS[tb]) {
                       refs.extra_reference_image_url = refUrl;
                       refs.extra_reference_label = REFERENCE_TRIGGERS[tb].promptLabel;
                       break;
                     }
                   }
-                  // Fall back to per-scene extra ref or back view ref
+                  // Fall back to per-scene extra ref or back view ref (per-product keyed)
                   if (!refs.extra_reference_image_url) {
                     if (sceneExtraRefs[scene.id]) {
                       refs.extra_reference_image_url = sceneExtraRefs[scene.id];
-                    } else if (details.backReferenceUrl && triggerBlocks.includes('backView')) {
-                      refs.extra_reference_image_url = details.backReferenceUrl;
+                    } else if (triggerBlocks.includes('backView')) {
+                      const backRef = sceneExtraRefs[`trigger:backView:${product.id}`] || sceneExtraRefs['trigger:backView'] || details.backReferenceUrl;
+                      if (backRef) refs.extra_reference_image_url = backRef;
                     }
                   }
                   // Pass brand logo text if present
