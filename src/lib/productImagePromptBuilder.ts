@@ -589,19 +589,19 @@ export function getConflictingSlots(garmentType?: string): Set<OutfitSlot> {
   if (!garmentType) return new Set();
   const gt = garmentType.toLowerCase();
   // Full-body garments — product IS top AND bottom
-  if (['dress', 'jumpsuit', 'romper', 'bodysuit', 'one-piece', 'overalls', 'coverall'].some(k => gt.includes(k))) {
+  if (['dress', 'jumpsuit', 'romper', 'bodysuit', 'one-piece', 'overalls', 'coverall', 'kimono', 'kaftan', 'saree', 'gown', 'maxi dress', 'mini dress', 'co-ord set', 'suit'].some(k => gt.includes(k))) {
     return new Set(['top', 'bottom']);
   }
   // Bottom garments
-  if (['skirt', 'shorts', 'trousers', 'pants', 'leggings', 'jeans', 'wide-leg', 'culottes', 'joggers', 'sweatpants'].some(k => gt.includes(k))) {
+  if (['skirt', 'shorts', 'trousers', 'pants', 'leggings', 'jeans', 'wide-leg', 'culottes', 'joggers', 'sweatpants', 'bermuda', 'chinos', 'cargo pants', 'palazzo'].some(k => gt.includes(k))) {
     return new Set(['bottom']);
   }
   // Top garments
-  if (['crop top', 'blouse', 'shirt', 'hoodie', 'sweater', 'cardigan', 'tank top', 'vest', 'jacket', 'blazer', 'coat', 'parka', 'bomber'].some(k => gt.includes(k))) {
+  if (['crop top', 'blouse', 'shirt', 'hoodie', 'sweater', 'cardigan', 'tank top', 'vest', 'jacket', 'blazer', 'coat', 'parka', 'bomber', 'polo', 'tunic', 'cape', 'poncho', 'turtleneck', 'henley', 'pullover', 'windbreaker', 'anorak', 'gilet'].some(k => gt.includes(k))) {
     return new Set(['top']);
   }
   // Footwear
-  if (['sneaker', 'boot', 'heel', 'sandal', 'loafer', 'mule', 'slipper', 'clog', 'flat', 'oxford', 'derby', 'trainer', 'shoe'].some(k => gt.includes(k))) {
+  if (['sneaker', 'boot', 'heel', 'sandal', 'loafer', 'mule', 'slipper', 'clog', 'flat', 'oxford', 'derby', 'trainer', 'shoe', 'espadrille', 'wedge', 'pump', 'brogue'].some(k => gt.includes(k))) {
     return new Set(['shoes']);
   }
   return new Set();
