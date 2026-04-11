@@ -50,7 +50,7 @@ const prefetchRoute = (path: string) => {
 
 const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
-  { label: 'Create Visuals', icon: Layers, path: '/app/workflows' },
+  { label: 'Visuals Studio', icon: Layers, path: '/app/workflows' },
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Explore', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
@@ -193,18 +193,18 @@ export function AppShell({ children }: AppShellProps) {
           )}
         </div>
 
-        {/* Generate CTA */}
+        {/* Create Visuals CTA */}
         <div className={cn('pt-5 pb-2', isCollapsed ? 'px-2' : 'px-4')}>
           <button
-            onClick={() => handleNav('/app/freestyle')}
+            onClick={() => handleNav('/app/workflows')}
             className={cn(
               'w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
               isCollapsed ? 'px-2 py-3 text-xs' : 'px-3 py-3 text-sm'
             )}
-            title={isCollapsed ? 'Generate' : undefined}
+            title={isCollapsed ? 'Create Visuals' : undefined}
           >
             <Sparkles className="w-4 h-4 flex-shrink-0" />
-            {!isCollapsed && 'Generate'}
+            {!isCollapsed && 'Create Visuals'}
           </button>
         </div>
 
