@@ -29,7 +29,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
   const ctaLabel = (() => {
     switch (step) {
       case 1: return 'Next: Choose Shots';
-      case 2: return 'Setup';
+      case 2: return 'Continue';
       case 3: return 'Review';
       case 4: return `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`;
       default: return 'Continue';
