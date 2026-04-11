@@ -354,7 +354,7 @@ export function DiscoverDetailModal({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-muted-foreground/60">Discover Categories</p>
+                  <p className="text-[10px] font-medium text-muted-foreground/60">Explore Categories</p>
                   <div className="flex flex-wrap gap-1">
                     {DISCOVER_CATEGORY_OPTIONS.map(cat => {
                       const isSelected = editCategories.includes(cat.id);
