@@ -673,7 +673,7 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 }
 
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string): string {
   const parts: string[] = [];
   // When a specific model is selected, skip user-set person details (age, skin, expression etc.)
   // — those fields are hidden in the UI and shouldn't leak into the prompt
@@ -690,7 +690,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     // No person details set — use smart defaults if scene requires a person
     if (sceneNeedsPerson) {
       let directive = defaultPersonDirective(category);
-      directive += ` ${defaultOutfitDirective(category, d, gender)}`;
+      directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
       directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return directive;
     }
@@ -701,7 +701,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
 
   // Append outfit using structured config or smart default for on-model scenes
   if (sceneNeedsPerson) {
-    directive += ` ${defaultOutfitDirective(category, d, gender)}`;
+    directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
   }
 
   // Append model reference if present
