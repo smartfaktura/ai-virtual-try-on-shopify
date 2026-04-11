@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Sparkles, ArrowRight, Package, User, Mountain, RatioIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,65 +51,6 @@ function useTypingAnimation() {
   return { text, showCursor };
 }
 
-/* ── Cycling chip ── */
-const CHIP_DATA: { icon: typeof Package; labels: string[] }[] = [
-  { icon: Package, labels: ['Skincare', 'Sneakers', 'Leather Bag', 'Perfume'] },
-  { icon: User, labels: ['Model A', 'Model B', 'Model C'] },
-  { icon: Mountain, labels: ['Beach Sunset', 'Studio Light', 'Marble Surface', 'Botanical'] },
-];
-
-function CyclingChip({ icon: Icon, labels, delay, hovered }: { icon: typeof Package; labels: string[]; delay: number; hovered: boolean }) {
-  const [idx, setIdx] = useState(0);
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    const iv = setInterval(() => {
-      setFading(true);
-      setTimeout(() => { setIdx(i => (i + 1) % labels.length); setFading(false); }, 200);
-    }, 2500);
-    return () => clearInterval(iv);
-  }, [labels.length]);
-
-  return (
-    <div
-      className={cn(
-        'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[9px] font-medium border transition-all duration-300',
-        hovered
-          ? 'border-primary/30 bg-primary/[0.08] text-primary/80'
-          : 'border-border/50 bg-muted/40 text-foreground/50',
-      )}
-      style={{ animationDelay: `${delay}s` }}
-    >
-      <Icon className="w-2.5 h-2.5 shrink-0" />
-      <span className={cn('transition-opacity duration-200 w-[60px] truncate', fading ? 'opacity-0' : 'opacity-100')}>
-        {labels[idx]}
-      </span>
-    </div>
-  );
-}
-
-/* ── Model avatars ── */
-function MiniAvatars({ hovered }: { hovered: boolean }) {
-  return (
-    <div className={cn(
-      'inline-flex items-center gap-0.5 h-6 px-2 rounded-full border transition-all duration-300',
-      hovered ? 'border-primary/30 bg-primary/[0.08]' : 'border-border/50 bg-muted/40',
-    )}>
-      {[0, 1, 2].map(i => (
-        <div
-          key={i}
-          className={cn(
-            'w-3.5 h-3.5 rounded-full bg-foreground/[0.08] border border-background transition-all',
-            hovered && 'bg-foreground/[0.12]',
-          )}
-          style={{ marginLeft: i > 0 ? '-3px' : 0 }}
-        />
-      ))}
-      <span className={cn('text-[9px] font-medium ml-1 transition-colors', hovered ? 'text-primary/70' : 'text-foreground/40')}>Models</span>
-    </div>
-  );
-}
-
 /* ── Main card ── */
 interface Props { onSelect: () => void; mobileCompact?: boolean; }
 
@@ -138,26 +79,17 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           backgroundSize: '20px 20px',
         }} />
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-3 sm:px-5 gap-2.5">
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-3 sm:px-5 gap-3">
           {/* Badge */}
           <Badge variant="secondary" className="text-[9px] font-semibold tracking-wider uppercase bg-foreground/[0.06] text-foreground/60 border-0 backdrop-blur-sm px-2.5 py-0.5">
             <Sparkles className="w-2.5 h-2.5 mr-1 opacity-70" />
-            Create with Promt
+            Create with Prompt
           </Badge>
 
-          {/* Animated feature chips */}
-          <div className="flex flex-nowrap items-center justify-center gap-1.5 max-w-[280px] overflow-hidden">
-            <CyclingChip icon={CHIP_DATA[0].icon} labels={CHIP_DATA[0].labels} delay={0} hovered={hovered} />
-            <MiniAvatars hovered={hovered} />
-            <CyclingChip icon={CHIP_DATA[2].icon} labels={CHIP_DATA[2].labels} delay={0.8} hovered={hovered} />
-            <div className={cn(
-              'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[9px] font-medium border transition-all duration-300',
-              hovered ? 'border-primary/30 bg-primary/[0.08] text-primary/70' : 'border-border/50 bg-muted/40 text-foreground/40',
-            )}>
-              <RatioIcon className="w-2.5 h-2.5" />
-              <span>1:1</span>
-            </div>
-          </div>
+          {/* Static tagline */}
+          <p className="text-[10px] text-foreground/45 tracking-wide font-medium text-center">
+            Any Product · Any Model · Any Scene · Any Lighting
+          </p>
 
           {/* Prompt composer */}
           <div className={cn(
@@ -176,7 +108,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
               </p>
             </div>
             <div className="border-t border-border/40 px-3 py-1.5 flex items-center justify-between">
-              <span className="text-[9px] text-muted-foreground/50 font-medium">Describe anything</span>
+              <span className="text-[9px] text-muted-foreground/50 font-medium">Describe any visual you want</span>
               <div className={cn('w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center transition-colors', hovered && 'bg-primary/20')}>
                 <Sparkles className="w-2.5 h-2.5 text-primary/60" />
               </div>
@@ -188,10 +120,10 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
       {/* ── Content area ── */}
       <div className={cn('flex flex-col gap-1 flex-1', mobileCompact ? 'p-2' : 'p-4')}>
         <h3 className={cn('font-bold tracking-tight leading-tight', mobileCompact ? 'text-[11px]' : 'text-sm')}>
-          Create with Promt
+          Create with Prompt
         </h3>
         {!mobileCompact && (
-          <p className="text-xs text-muted-foreground leading-relaxed">Describe any product shot you imagine</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">Describe any shot, scene, or style you want.</p>
         )}
         <div className="pt-1 mt-auto">
           <Button
@@ -203,7 +135,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
             )}
             onClick={(e) => { e.stopPropagation(); onSelect(); }}
           >
-            Start Creating
+            Create with Prompt
             <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
