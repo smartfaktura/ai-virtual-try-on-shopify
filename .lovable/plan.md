@@ -1,66 +1,31 @@
 
 
-# Fix: Product-Aware Outfit System for Mixed Categories
+# Streamline Step 1 Product Selection Header
 
 ## The Problem
 
-When you select products from different categories (e.g., a skirt + a jacket + sneakers), the outfit panel in Step 3 uses only the **first product's category** (`primaryCategory`). This means:
+There are **two stacked headers** before the product grid:
+1. `PageHeader`: "Product Visuals" / "Select one or multiple products to create visuals for"
+2. Section header: "Your Products (317)" / "Select from your catalog or upload a new image · Tip: drag & drop or paste (⌘V)"
 
-- If a skirt comes first → outfit defaults to "garments" → shows a `Bottom: trousers` slot that **conflicts** with the skirt
-- If sneakers come first → outfit defaults to "shoes" → shows a `Shoes: sneakers` slot that conflicts with the product
-- The prompt builder already receives per-product analysis at generation time, but the **UI gives no hint** that certain slots will be auto-nullified for specific products
+Both say "select products" — redundant. The section header wastes ~60px of vertical space repeating what the page title already communicates.
 
-## Two-Part Fix
+## The Fix
 
-### Part A: Prompt Builder — Auto-Null Conflicting Slots at Generation Time
+**Merge useful info into the toolbar row, remove the section header entirely.**
 
-**File: `src/lib/productImagePromptBuilder.ts`** (~25 lines)
+The count "(317)" and the tip are useful — but they don't need their own heading block. Instead:
 
-Add a `getConflictingSlots(garmentType)` helper that returns which outfit slots should be nullified based on the product's `garmentType` from analysis:
+- **Remove** the "Your Products (317)" / subtitle `<div>` block entirely (lines 972-976)
+- **Move the count** into the search bar placeholder: `"Search 317 products…"` — always visible, zero extra space
+- **Move the tip** into a subtle inline hint next to the search bar (only on desktop): a small `Cmd+V` keyboard shortcut badge
+- The `PageHeader` subtitle already tells users what to do, so no information is lost
 
-```text
-Product garmentType        → Null slots
-───────────────────────────────────────
-skirt, shorts, trousers    → bottom
-dress, jumpsuit, romper    → bottom + top
-crop top, blouse, hoodie   → top
-sneakers, boots, heels     → shoes
-```
+### Result
 
-Update `defaultOutfitDirective()` to check the product's `garmentType` (from `analysis`) and skip conflicting slots from the outfit string. This way, even if the UI sends `bottom: trousers`, the prompt for a skirt product will omit it.
+The grid moves up ~60px. The search bar shows the count contextually. The drag-and-drop tip appears as a keyboard shortcut hint rather than a sentence.
 
-Update `buildStructuredOutfitString()` to accept an optional `skipSlots` parameter.
+## Files Changed
 
-### Part B: UI — Show Per-Category Awareness in Step 3
-
-**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`** (~40 lines)
-
-1. **Multi-category info banner**: When `hasMultipleCategories` is true, show a small info note above the outfit panel: "Outfit applies to on-model scenes. Conflicting slots are auto-adjusted per product (e.g., Bottom is skipped for skirt products)."
-
-2. **Compute hidden slots from all selected products**: Scan all selected products' `garmentType` values to determine which slots have conflicts. If ANY product is a skirt, show a subtle badge on the Bottom field: "Skipped for skirt products".
-
-3. **Fix the forced fallback useEffect** (lines 1094-1100): Currently forces `bottom = trousers` and `shoes = sneakers` even when the category intentionally omits them (e.g., fragrance has no bottom/shoes). Change to only add fallbacks when the slot isn't intentionally empty for that category.
-
-4. **Dress/jumpsuit mode**: When all selected products are full-body garments, collapse the outfit panel to show only Shoes, with a label: "Full-body garment — only shoes apply."
-
-### How It Works for Mixed Batches
-
-Example: User selects a skirt (dresses) + a jacket (jackets) + sneakers (shoes)
-
-**UI shows**: All 3 slots (Top, Bottom, Shoes) with badges:
-- Top: "Skipped for jacket" 
-- Bottom: "Skipped for skirt"
-- Shoes: "Skipped for sneaker products"
-
-**At generation time** (per-product):
-- Skirt job → outfit = "Top: white t-shirt; Shoes: white sneakers" (bottom nulled)
-- Jacket job → outfit = "Bottom: beige trousers; Shoes: white sneakers" (top nulled)  
-- Sneakers job → outfit = "Top: white t-shirt; Bottom: beige trousers" (shoes nulled)
-
-### Files Changed
-1. `src/lib/productImagePromptBuilder.ts` — add `getConflictingSlots`, update `defaultOutfitDirective` and `buildStructuredOutfitString`
-2. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — multi-category banner, slot badges, fix forced fallback
-3. `src/pages/ProductImages.tsx` — pass `analyses` map to Step 3 (already available, just needs threading)
-
-No database changes needed — uses existing `garmentType` from product analysis.
+1. **`src/pages/ProductImages.tsx`** (~10 lines) — Remove the section header div (lines 972-976), update search placeholder to include product count, add a small `⌘V` hint badge next to the search input
 
