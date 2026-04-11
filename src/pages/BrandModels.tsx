@@ -232,7 +232,7 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
   const [variations, setVariations] = useState<string[]>([]);
-  const [pendingMeta, setPendingMeta] = useState<{ metadata: any; name: string } | null>(null);
+  const [pendingMeta, setPendingMeta] = useState<{ metadata: any; name: string; sourceImageUrl?: string } | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
   const [publishing, setPublishing] = useState(false);
   const { balance, refreshBalance } = useCredits();
@@ -300,12 +300,12 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Admin public: show variation picker
-      if (makePublic && data?.variations) {
+      // Show variation picker for all flows
+      if (data?.variations) {
         setVariations(data.variations);
-        setPendingMeta({ metadata: data.metadata, name: data.name || finalName });
+        setPendingMeta({ metadata: data.metadata, name: data.name || finalName, sourceImageUrl: data.sourceImageUrl });
         setSelectedVariation(0);
-        return; // stay on page, show picker
+        return;
       }
 
       toast.success('Model generated successfully!');
