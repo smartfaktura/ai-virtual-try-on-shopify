@@ -950,6 +950,11 @@ export default function ProductImages() {
         {step === 1 && (
           <>
             <div className="space-y-3">
+              {/* Section header */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Your Products</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Select from your catalog or upload a new image</p>
+              </div>
               {/* Toolbar */}
               <div className="flex gap-2 items-center">
                 <div className="relative flex-1">
@@ -992,7 +997,7 @@ export default function ProductImages() {
                   <Package className="w-10 h-10 text-muted-foreground/40" />
                   <div className="text-center space-y-1">
                     <p className="text-sm font-semibold text-foreground">No products yet</p>
-                    <p className="text-xs text-muted-foreground max-w-xs">Add your first product to start generating professional visuals across multiple scenes.</p>
+                    <p className="text-xs text-muted-foreground max-w-xs">Upload a product image to get started with professional visuals.</p>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => {
@@ -1081,8 +1086,8 @@ export default function ProductImages() {
 
                 return (
                   <>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                      {/* Quick Upload Card */}
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                      {/* Quick Upload Card — matches product card structure */}
                       <div
                         role="button"
                         tabIndex={0}
@@ -1097,8 +1102,8 @@ export default function ProductImages() {
                           if (file) handleQuickUpload(file);
                         }}
                         className={cn(
-                          'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all aspect-square cursor-pointer',
-                          isDragOver ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-primary/40 hover:border-primary hover:bg-primary/5',
+                          'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left cursor-pointer',
+                          isDragOver ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-primary/30 hover:border-primary hover:bg-primary/5',
                           quickUploading && 'pointer-events-none opacity-70'
                         )}
                       >
@@ -1113,18 +1118,23 @@ export default function ProductImages() {
                             e.target.value = '';
                           }}
                         />
-                        {quickUploading ? (
-                          <>
-                            <Loader2 className="w-6 h-6 animate-spin text-primary mb-1" />
-                            <span className="text-[10px] font-medium text-primary">{quickUploadProgress}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-6 h-6 text-primary mb-1" />
-                            <span className="text-[10px] font-medium text-primary">Upload Image</span>
-                            <span className="text-[9px] text-muted-foreground mt-0.5">or paste (Ctrl+V)</span>
-                          </>
-                        )}
+                        <div className="w-full aspect-square flex flex-col items-center justify-center bg-primary/5">
+                          {quickUploading ? (
+                            <>
+                              <Loader2 className="w-7 h-7 animate-spin text-primary mb-1" />
+                              <span className="text-[10px] font-medium text-primary">{quickUploadProgress}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-7 h-7 text-primary mb-1.5" />
+                              <span className="text-[10px] font-medium text-primary">Upload</span>
+                            </>
+                          )}
+                        </div>
+                        <div className="px-1.5 py-1.5 bg-card">
+                          <p className="text-[10px] font-medium text-primary leading-tight">Upload product image</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5">Drop, click, or paste</p>
+                        </div>
                       </div>
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
