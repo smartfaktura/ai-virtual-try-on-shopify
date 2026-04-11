@@ -1,68 +1,61 @@
 
 
-# Improve Freestyle Prompt Card — Show Full Feature Set
+# Simplify Multi-Product Scene Selection
 
-## Problem
-The current card only shows a typing prompt animation, making it look like a text-only tool. Freestyle actually supports **product selection, model/avatar selection, scene selection, and brand profiles** — the card should communicate this visually.
+## Problems
+1. **Same-category products get separate tabs unnecessarily** — if you select 3 clothing items, each gets its own tab even though they'd all use the same scenes. This is redundant and confusing.
+2. **Product tabs aren't obviously clickable** — users don't realize they can switch between products to assign scenes.
+3. **Continue button behavior is unclear** — it's not obvious that Continue will jump to the next incomplete product instead of advancing.
 
-## Changes
+## Solution: Group by Category, Not by Product
 
-### 1. Replace abstract floating frames with feature-representative chips
-Instead of empty gradient `FloatingFrame` boxes, show animated **mini chip strips** that cycle through the freestyle features:
+### Core Change
+Instead of one tab per product, group products by their detected category. Products sharing the same category share one scene selection. Only products in **different** categories get separate tabs.
 
-- **Product chip**: Small pill with a package icon + "Select Product" that animates to show "Skincare Bottle", "Leather Bag", etc.
-- **Model chip**: Small pill with 2-3 tiny circular avatar placeholders (styled like the model selector) + "Add Model"
-- **Scene chip**: Small pill with a landscape icon + "Beach Sunset", "Studio Light", etc. cycling
+**Example with 6 products:**
+- 2 dresses + 1 scarf + 3 jeans → 3 groups: "Dresses (2)", "Scarves (1)", "Jeans (3)"
+- Each group gets one scene selection that applies to all products in that group
+- 3 clothing items all in "garments" → single shared picker (no tabs at all)
 
-These chips sit **above** the prompt composer, arranged horizontally, mimicking the real FreestyleSettingsChips layout but miniaturized. They should fade/cycle with a staggered animation to feel alive.
+### Data Model
+Replace `perProductScenes: Map<productId, Set<sceneId>>` with `perCategoryScenes: Map<categoryId, Set<sceneId>>`. During generation, each product uses the scenes assigned to its category group.
 
-### 2. Update the prompt composer area
-Keep the typing animation but add a thin row of mini icons below the prompt text (before the "Describe anything" bar) showing: Product icon, Model avatar circle, Scene icon, Aspect ratio icon — like a miniature version of the real chip bar. These appear subtly on hover.
+### UI Changes (ProductImagesStep2Scenes.tsx)
 
-### 3. CTA change
-Replace "Open Prompt" with **"Open Studio"** — short, premium, and communicates it's a full creative workspace, not just a prompt box.
+1. **Category group tabs** instead of product tabs:
+   - Tab shows category name + product count + thumbnails: `"Dresses (2)" [👗👗]`
+   - Badge shows selected shot count per group
+   - Warning indicator if group has 0 shots
 
-### 4. Badge update
-Change "Custom Prompt" badge to **"Freestyle Studio"** to reinforce the full-feature nature.
+2. **Continue button behavior**:
+   - If current group has shots selected but next group doesn't → auto-switch to next incomplete group with toast
+   - If all groups have shots → advance to Step 3
+   - Summary strip: `"Dresses → 4 shots · Scarves → 0 shots (needs shots)"`
 
-## Files to Change
+3. **Single category = no tabs**: If all products resolve to the same category, use the existing shared picker with zero changes.
+
+### ProductImages.tsx Changes
+- Compute `categoryGroups: Map<categoryId, productId[]>` from product analyses
+- Replace `perProductScenes` with `perCategoryScenes: Map<categoryId, Set<sceneId>>`
+- Update `hasMultipleCategories` to use category groups
+- Generation loop: look up each product's category → get scenes for that category
+- Credit calc: sum per-category (scenes × products-in-category × imageCount)
+- `canProceed` step 2: every category group has ≥1 scene
+- `handleNext` step 2: find first empty category group, switch to it
+
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/FreestylePromptCard.tsx` | Replace FloatingFrames with animated feature chips; add mini settings row; update CTA to "Open Studio"; update badge text |
+| `src/pages/ProductImages.tsx` | Replace `perProductScenes` with `perCategoryScenes`; compute `categoryGroups`; update generation loop, credit calc, validation |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Replace product tabs with category-group tabs showing grouped thumbnails; update props; clearer tab styling with "Select shots for this group" header |
+| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Update review breakdown to show per-category-group instead of per-product |
+| `src/lib/sceneVariations.ts` | Update `computeTotalImagesPerProduct` → `computeTotalImagesPerCategory` accepting category groups |
 
-## Visual Layout (inside the card visual area)
-
-```text
-┌─────────────────────────────┐
-│  ✧ FREESTYLE STUDIO         │ ← badge
-│                              │
-│  [📦 Product] [👤 Model]    │ ← mini animated chips
-│  [🏔 Scene]   [1:1]         │   (cycle through options)
-│                              │
-│  ┌─────────────────────┐    │
-│  │ A luxury skincare... │    │ ← typing prompt
-│  │                      │    │
-│  │ Describe anything  ✧│    │
-│  └─────────────────────┘    │
-│                              │
-├─────────────────────────────┤
-│  Freestyle Studio            │
-│  Prompt + product + model    │
-│  [     Open Studio  →    ]   │
-└─────────────────────────────┘
-```
-
-## Animation Details
-- Chips cycle labels every ~2.5s with a fade transition (e.g., Product chip shows "Skincare" → "Sneakers" → "Leather Bag")
-- Model chip shows 2-3 small gray avatar circles that pulse subtly
-- On hover: chips become slightly more opaque, prompt box gets glow
-- Keep existing typing animation for the prompt text
-
-## CTA Rationale
-"Open Studio" is chosen because:
-- Short (2 words)
-- Communicates a workspace, not just a text box
-- Premium feel
-- Matches the product's "Freestyle Studio" terminology
+### Tab Design
+- Larger, more button-like tabs with clear active state
+- Each tab: category icon + "Dresses" + "(2 products)" + shot count badge
+- Small product thumbnail row inside each tab
+- Active tab has strong primary border + subtle background
+- Empty tab has pulsing "Select shots →" label instead of just a warning icon
 
