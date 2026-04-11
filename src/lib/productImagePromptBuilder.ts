@@ -1135,7 +1135,7 @@ export function buildDynamicPrompt(
     if (details.focusArea && !isAuto(details.focusArea)) parts.push(`Focus: ${details.focusArea}.`);
     if (details.customNote) parts.push(details.customNote);
     parts.push(resolveCameraDirective(scene));
-    parts.push(QUALITY_SUFFIX);
+    // QUALITY_SUFFIX removed — edge function handles this
     const negatives = buildNegativePrompt(scene);
     parts.push(negatives);
     return cleanupPrompt(parts.filter(Boolean).join(' '));
