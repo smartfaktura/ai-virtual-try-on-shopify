@@ -62,7 +62,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
     <Card
       className={cn(
         'group relative overflow-hidden border transition-all duration-300 flex flex-col cursor-pointer',
-        'hover:shadow-xl hover:-translate-y-0.5',
+        'hover:shadow-lg',
       )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -83,13 +83,15 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           {/* Badge */}
           <Badge variant="secondary" className="text-[9px] font-semibold tracking-wider uppercase bg-foreground/[0.06] text-foreground/60 border-0 backdrop-blur-sm px-2.5 py-0.5">
             <Sparkles className="w-2.5 h-2.5 mr-1 opacity-70" />
-            Create with Prompt
+            Freestyle Studio
           </Badge>
 
-          {/* Static tagline */}
-          <p className="text-[10px] text-foreground/45 tracking-wide font-medium text-center">
-            Any Product · Any Model · Any Scene · Any Lighting
-          </p>
+          {/* Pill tags */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {['Products', 'Models', 'Scenes', 'Lighting'].map((tag) => (
+              <span key={tag} className="text-[9px] px-2 py-0.5 rounded-full bg-foreground/[0.05] text-foreground/50 font-medium">{tag}</span>
+            ))}
+          </div>
 
           {/* Prompt composer */}
           <div className={cn(
@@ -120,7 +122,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
       {/* ── Content area ── */}
       <div className={cn('flex flex-col gap-1 flex-1', mobileCompact ? 'p-2' : 'p-4')}>
         <h3 className={cn('font-bold tracking-tight leading-tight', mobileCompact ? 'text-[11px]' : 'text-sm')}>
-          Create with Prompt
+          Freestyle Studio
         </h3>
         {!mobileCompact && (
           <p className="text-xs text-muted-foreground leading-relaxed">Describe any shot, scene, or style you want.</p>
