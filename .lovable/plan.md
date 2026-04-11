@@ -1,26 +1,44 @@
 
 
-# Sidebar Spacing Refinements
+# Sidebar Navigation Grouping
 
-Looking at the current sidebar layout against design best practices, here are the issues and fixes:
+## The Problem
+All 8 nav items sit in a single flat list after the CTA button. There's no visual rhythm — your eye has to scan every label linearly. "Brand Models" at the bottom feels disconnected from "Products" even though they're related.
 
-## Current Issues
+## The Fix
+Group items with subtle spacing (no headers, no labels — just breathing room between logical clusters):
 
-1. **Too much top padding** above "Create Visuals" button (`pt-5`) — pushes content down unnecessarily
-2. **Separator line + nav top padding create double-spacing** — the nav has `py-4` plus the separator has `mb-2`, making the gap between the CTA button and "Dashboard" feel too loose
-3. **Nav item vertical spacing (`space-y-1`)** is fine but the overall nav section padding is generous — items could sit slightly tighter
-4. **Credit section and user profile** both have `border-t` separators with their own padding — this is good, no change needed
+```text
+[Create Visuals]  ← CTA button
+─────────────────
+Dashboard
 
-## Proposed Fixes (file: `src/components/app/AppShell.tsx`)
+Visual Studio
+Create with Prompt
 
-| Area | Current | Proposed | Why |
-|------|---------|----------|-----|
-| CTA top padding | `pt-5 pb-2` | `pt-4 pb-1` | Tighten logo-to-CTA gap |
-| Nav section padding | `py-4` | `pt-3 pb-4` | Reduce CTA-to-nav gap |
-| Separator margin | `mb-2` | `mb-1` | Less dead space before first item |
+Products
+Brand Models
+Explore
 
-These are subtle 4-8px reductions that tighten the vertical rhythm without making it feel cramped, keeping the nav items closer to the action button and giving more room for the list itself.
+Library
+Video
+```
+
+**Three changes in `src/components/app/AppShell.tsx`:**
+
+1. **Reorder `navItems`** to group related items:
+   - Dashboard (solo — primary landing)
+   - Visual Studio + Create with Prompt (creation tools)
+   - Products + Brand Models + Explore (assets & browse)
+   - Library + Video (output & media)
+
+2. **Add group breaks** using a `divider` flag on certain items. Before rendering, insert a small `mt-3` spacer when `item.divider` is true — no text, no line, just 12px of air between clusters.
+
+3. **Remove the separator line** (`h-px bg-white/[0.06]`) that currently sits between the CTA and Dashboard — the grouping spacing replaces it.
+
+## Result
+The menu will feel structured and scannable without adding any visual clutter like section headers.
 
 ## Files Changed
-1. `src/components/app/AppShell.tsx` — adjust padding values on CTA wrapper, nav section, and separator
+1. `src/components/app/AppShell.tsx` — reorder navItems, add divider spacing between groups, remove old separator
 
