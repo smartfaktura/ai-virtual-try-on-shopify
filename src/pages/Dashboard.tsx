@@ -4,7 +4,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Euro, Clock, Play, Palette } from 'lucide-react';
+import { Image, Wallet, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Euro, Clock, Play, Palette, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
@@ -529,6 +529,10 @@ export default function Dashboard() {
         <div className="flex flex-col gap-3 mt-5">
           <div className="relative">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:overflow-visible sm:flex-wrap sm:[mask-image:none]">
+              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/freestyle')}>
+                <Wand2 className="w-3.5 h-3.5" />
+                Create with Promt
+              </Button>
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
                 <Layers className="w-3.5 h-3.5" />
                 Browse Templates
