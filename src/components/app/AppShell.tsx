@@ -201,6 +201,7 @@ export function AppShell({ children }: AppShellProps) {
           {navItems.map((item) => (
             <div key={item.path} className={item.divider ? 'mt-3' : ''}>
               <NavItemButton item={item} />
+            </div>
           ))}
 
         </nav>
