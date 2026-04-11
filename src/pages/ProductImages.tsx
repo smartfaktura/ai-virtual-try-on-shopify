@@ -90,7 +90,7 @@ export default function ProductImages() {
   const [productSearch, setProductSearch] = useState('');
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(25);
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [sentinelEl, setSentinelEl] = useState<HTMLDivElement | null>(null);
   const MAX_PRODUCTS = 20;
 
   // Quick upload state
@@ -368,14 +368,13 @@ export default function ProductImages() {
 
   // Infinite scroll observer with proper cleanup
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+    if (!sentinelEl) return;
     const obs = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) setVisibleCount(v => v + 25);
     }, { rootMargin: '200px' });
-    obs.observe(el);
+    obs.observe(sentinelEl);
     return () => obs.disconnect();
-  });
+  }, [sentinelEl]);
 
   // Reset downstream state when product selection changes
   useEffect(() => {
@@ -1051,7 +1050,7 @@ export default function ProductImages() {
                 const hasMore = remaining > 0;
 
                 const loadMoreSentinel = hasMore && (
-                  <div className="pt-4 flex justify-center" ref={sentinelRef}>
+                  <div className="pt-4 flex justify-center" ref={setSentinelEl}>
                     <span className="text-xs text-muted-foreground">{remaining} more…</span>
                   </div>
                 );
