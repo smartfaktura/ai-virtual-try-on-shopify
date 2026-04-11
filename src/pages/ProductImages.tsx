@@ -542,16 +542,20 @@ export default function ProductImages() {
     const selectedRatios = details.selectedAspectRatios || [aspectRatio];
     // imgCount already declared above
 
-    let aborted = false;
+    // Phase 1: Build all job descriptors without network calls
+    interface JobDescriptor {
+      key: string;
+      payload: Record<string, unknown>;
+      productTitle: string;
+      hasModel: boolean;
+      batchId: string;
+    }
+    const allJobs: JobDescriptor[] = [];
+
     for (const product of selectedProducts) {
-      if (aborted) break;
       const base64Image = await convertImageToBase64(product.image_url);
       const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
 
-
-      // Each scene gets its own job (1 image per job for reliability)
-      // Multi-select fields expand into separate variation jobs
-      // Look up the product's category to get its assigned scenes
       const productCategory = (() => {
         for (const [catId, pids] of categoryGroups) {
           if (pids.includes(product.id)) return catId;
@@ -562,21 +566,19 @@ export default function ProductImages() {
       const scenesForProduct = categorySceneIds
         ? selectedScenes.filter(s => categorySceneIds.has(s.id))
         : selectedScenes;
+
       for (let sceneIdx = 0; sceneIdx < scenesForProduct.length; sceneIdx++) {
         const scene = scenesForProduct[sceneIdx];
         const variations = expandMultiSelects(scene, details);
 
         for (let vIdx = 0; vIdx < variations.length; vIdx++) {
           const variationOverride = variations[vIdx];
-          // Build a merged details copy with single values for this variation
           const variationDetails: DetailSettings = { ...details, ...variationOverride };
           const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, selectedModelGender);
 
-          // Resolve per-scene ratios: override array or global selection
           const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
           for (const ratioForJob of sceneRatios) {
             for (let i = 0; i < imgCount; i++) {
-              // Resolve prop products for this scene
               const propProductIds = details.sceneProps?.[scene.id] || [];
               const propProducts = propProductIds
                 .map(pid => userProducts.find(p => p.id === pid))
@@ -620,12 +622,9 @@ export default function ProductImages() {
                 ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
                 ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
                 ...(() => {
-                  // Check for reference trigger uploads — per-product keyed first, then global fallback
                   const triggerBlocks = scene.triggerBlocks || [];
                   const refs: Record<string, string> = {};
-                  const isMulti = selectedProducts.length > 1;
                   for (const tb of triggerBlocks) {
-                    // Per-product key first, then global
                     const perProductKey = `trigger:${tb}:${product.id}`;
                     const globalKey = `trigger:${tb}`;
                     const refUrl = sceneExtraRefs[perProductKey] || sceneExtraRefs[globalKey];
@@ -635,7 +634,6 @@ export default function ProductImages() {
                       break;
                     }
                   }
-                  // Fall back to per-scene extra ref or back view ref (per-product keyed)
                   if (!refs.extra_reference_image_url) {
                     if (sceneExtraRefs[scene.id]) {
                       refs.extra_reference_image_url = sceneExtraRefs[scene.id];
@@ -644,7 +642,6 @@ export default function ProductImages() {
                       if (backRef) refs.extra_reference_image_url = backRef;
                     }
                   }
-                  // Pass brand logo text if present
                   if (details.brandLogoText && triggerBlocks.includes('brandLogoOverlay')) {
                     refs.brand_logo_text = details.brandLogoText;
                   }
@@ -658,42 +655,53 @@ export default function ProductImages() {
                 batch_size: scenesForProduct.length,
               };
 
-              await paceDelay(newJobMap.size);
-
-              const result = await enqueueWithRetry(
-                { jobType: 'workflow', payload, imageCount: 1, quality: 'high', hasModel: !!modelRef, hasScene: false, skipWake: true },
-                token,
-              );
-
-              if (!isEnqueueError(result)) {
-                const key = `${product.id}_${scene.id}_v${vIdx}_r${ratioForJob}_${i}`;
-                newJobMap.set(key, result.jobId);
-                lastBalance = result.newBalance;
-                setJobMap(new Map(newJobMap));
-                setEnqueuedCount(newJobMap.size);
-                injectActiveJob(queryClient, {
-                  jobId: result.jobId,
-                  workflow_name: 'Product Images',
-                  workflow_slug: 'product-images',
-                  product_name: product.title,
-                  job_type: 'workflow',
-                  quality: 'high',
-                  imageCount: 1,
-                  batch_id: batchId,
-                });
-              } else if (result.type === 'insufficient_credits') {
-                toast.error(result.message);
-                aborted = true;
-                break;
-              }
+              const key = `${product.id}_${scene.id}_v${vIdx}_r${ratioForJob}_${i}`;
+              allJobs.push({ key, payload, productTitle: product.title, hasModel: !!modelRef, batchId });
             }
-            if (aborted) break;
           }
-          if (aborted) break;
         }
-        if (aborted) break;
       }
-      if (aborted) break;
+    }
+
+    // Phase 2: Send in parallel chunks of 4
+    const CONCURRENCY = 4;
+    let aborted = false;
+    for (let chunkStart = 0; chunkStart < allJobs.length && !aborted; chunkStart += CONCURRENCY) {
+      const chunk = allJobs.slice(chunkStart, chunkStart + CONCURRENCY);
+      if (chunkStart > 0) await paceDelay(1); // one delay per chunk
+
+      const results = await Promise.allSettled(
+        chunk.map(job =>
+          enqueueWithRetry(
+            { jobType: 'workflow', payload: job.payload, imageCount: 1, quality: 'high', hasModel: job.hasModel, hasScene: false, skipWake: true },
+            token,
+          ).then(result => ({ ...job, result }))
+        )
+      );
+
+      for (const settled of results) {
+        if (settled.status !== 'fulfilled') continue;
+        const { key, result, productTitle, batchId: bid } = settled.value;
+        if (!isEnqueueError(result)) {
+          newJobMap.set(key, result.jobId);
+          lastBalance = result.newBalance;
+          injectActiveJob(queryClient, {
+            jobId: result.jobId,
+            workflow_name: 'Product Images',
+            workflow_slug: 'product-images',
+            product_name: productTitle,
+            job_type: 'workflow',
+            quality: 'high',
+            imageCount: 1,
+            batch_id: bid,
+          });
+        } else if (result.type === 'insufficient_credits') {
+          toast.error(result.message);
+          aborted = true;
+        }
+      }
+      setJobMap(new Map(newJobMap));
+      setEnqueuedCount(newJobMap.size);
     }
 
     if (newJobMap.size === 0) {
