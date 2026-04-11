@@ -234,8 +234,8 @@ export default function ProductImages() {
 
   const imageCount = parseInt(details.imageCount || '1', 10);
   const creditsPerImage = 6;
-  const totalImages = (perProductScenes.size > 0 && hasMultipleCategories)
-    ? computeTotalImagesPerProduct(perProductScenes, allScenes, imageCount, details)
+  const totalImages = (perCategoryScenes.size > 0 && hasMultipleCategories)
+    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imageCount, details)
     : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
@@ -263,7 +263,7 @@ export default function ProductImages() {
     const key = Array.from(selectedProductIds).sort().join(',');
     if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
       setSelectedSceneIds(new Set());
-      setPerProductScenes(new Map());
+      setPerCategoryScenes(new Map());
       setSceneExtraRefs({});
       setDetails(INITIAL_DETAILS);
       if (step > 1) setStep(1);
