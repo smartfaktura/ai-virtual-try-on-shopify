@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CheckCircle, Plus, Package, Search } from 'lucide-react';
+import { Loader2, CheckCircle, Upload, Package, Search, Plus } from 'lucide-react';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -111,11 +111,13 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
             className="group flex flex-col rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors cursor-pointer overflow-hidden"
           >
             <div className="aspect-square flex flex-col items-center justify-center bg-muted/30">
-              <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div className="flex flex-col items-center justify-center w-3/4 h-3/4 rounded-lg border-2 border-dashed border-muted-foreground/30 group-hover:border-primary/40 transition-colors">
+                <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
             </div>
             <div className="h-[52px] flex flex-col justify-center px-2.5">
-              <p className="text-xs font-medium text-muted-foreground group-hover:text-primary">New</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Upload or import</p>
+              <p className="text-xs font-medium text-muted-foreground group-hover:text-primary">Upload Image</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">or paste / import URL</p>
             </div>
           </button>
 
