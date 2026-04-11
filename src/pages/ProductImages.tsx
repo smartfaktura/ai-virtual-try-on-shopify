@@ -90,6 +90,7 @@ export default function ProductImages() {
   const [productSearch, setProductSearch] = useState('');
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(25);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const MAX_PRODUCTS = 20;
 
   // Quick upload state
@@ -364,6 +365,17 @@ export default function ProductImages() {
   useEffect(() => {
     setVisibleCount(25);
   }, [productSearch]);
+
+  // Infinite scroll observer with proper cleanup
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setVisibleCount(v => v + 25);
+    }, { rootMargin: '200px' });
+    obs.observe(el);
+    return () => obs.disconnect();
+  });
 
   // Reset downstream state when product selection changes
   useEffect(() => {
