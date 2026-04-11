@@ -1,10 +1,13 @@
 
 
-# Change "Create with Prompt" Icon to Command
+# Change "Create with Prompt" Icon to Sparkles
+
+ChatGPT/OpenAI uses a sparkle-style icon. The closest Lucide equivalent is `Sparkles` — a multi-point star burst that conveys AI-powered generation.
 
 ## Change
-Replace `SquareTerminal` with `Command` (⌘ symbol) — sleek, techy, and instantly recognizable.
+In `src/components/app/AppShell.tsx`:
+- Replace `Command` import with `Sparkles`
+- Update the icon reference in the navGroups array
 
-## File
-`src/components/app/AppShell.tsx` — swap `SquareTerminal` import to `Command`, update the icon reference in navGroups.
+Single import swap + one line in the nav config.
 
