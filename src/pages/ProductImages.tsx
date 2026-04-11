@@ -994,9 +994,28 @@ export default function ProductImages() {
                     <p className="text-sm font-semibold text-foreground">No products yet</p>
                     <p className="text-xs text-muted-foreground max-w-xs">Add your first product to start generating professional visuals across multiple scenes.</p>
                   </div>
-                  <Button size="sm" onClick={() => setAddProductOpen(true)} className="gap-1.5">
-                    <Package className="w-3.5 h-3.5" />Add Your First Product
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => {
+                      quickUploadInputRef.current?.click();
+                    }} className="gap-1.5">
+                      <Upload className="w-3.5 h-3.5" />Upload Image
+                    </Button>
+                    <Button size="sm" onClick={() => setAddProductOpen(true)} className="gap-1.5">
+                      <Package className="w-3.5 h-3.5" />Add Product
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">or paste an image (Ctrl+V)</p>
+                  <input
+                    ref={quickUploadInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleQuickUpload(file);
+                      e.target.value = '';
+                    }}
+                  />
                 </div>
               ) : (
               (() => {
