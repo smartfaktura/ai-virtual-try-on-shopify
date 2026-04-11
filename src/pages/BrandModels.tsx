@@ -423,7 +423,7 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
   }
 
   if (generating) {
-    return <BrandedLoadingState isPublicMode={makePublic} />;
+    return <BrandedLoadingState />;
   }
 
   return (
