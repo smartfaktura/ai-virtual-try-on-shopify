@@ -1,16 +1,20 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Camera } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Camera, Copy } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
+import { cn } from '@/lib/utils';
 
 interface Step2Props {
   selectedSceneIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
   selectedProducts: UserProduct[];
   productAnalyses?: Record<string, { category: string }>;
+  perProductScenes?: Map<string, Set<string>>;
+  onPerProductScenesChange?: (map: Map<string, Set<string>>) => void;
+  hasMultipleCategories?: boolean;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -250,7 +254,7 @@ interface UnifiedCategorySectionProps {
 
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
-export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
+function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses'>) {
   const { categoryCollections: hookCategoryCollections } = useProductImageScenes();
   const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
 
@@ -713,6 +717,94 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
           <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
         ))}
       </div>
+    </div>
+  );
+}
+
+export function ProductImagesStep2Scenes(props: Step2Props) {
+  const { hasMultipleCategories, perProductScenes, onPerProductScenesChange, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses } = props;
+  const [activeProductId, setActiveProductId] = useState<string | null>(null);
+
+  const isMultiCategory = !!hasMultipleCategories && !!perProductScenes && !!onPerProductScenesChange && selectedProducts.length > 1;
+
+  if (!isMultiCategory) {
+    return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} />;
+  }
+
+  const activeProduct = selectedProducts.find(p => p.id === activeProductId) || selectedProducts[0];
+  const activeIds = perProductScenes.get(activeProduct.id) || new Set<string>();
+
+  const handleChange = (ids: Set<string>) => {
+    const next = new Map(perProductScenes);
+    next.set(activeProduct.id, ids);
+    onPerProductScenesChange(next);
+    const union = new Set<string>();
+    for (const s of next.values()) s.forEach(id => union.add(id));
+    onSelectionChange(union);
+  };
+
+  const handleApplyToAll = () => {
+    const next = new Map(perProductScenes);
+    for (const p of selectedProducts) {
+      next.set(p.id, new Set(activeIds));
+    }
+    onPerProductScenesChange(next);
+    const union = new Set<string>();
+    for (const s of next.values()) s.forEach(id => union.add(id));
+    onSelectionChange(union);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Product tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {selectedProducts.map(p => {
+          const isActive = p.id === activeProduct.id;
+          const count = perProductScenes.get(p.id)?.size || 0;
+          return (
+            <button
+              key={p.id}
+              onClick={() => setActiveProductId(p.id)}
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all whitespace-nowrap flex-shrink-0 cursor-pointer',
+                isActive
+                  ? 'border-primary bg-primary/[0.05] shadow-sm'
+                  : 'border-border hover:border-primary/30 hover:bg-muted/30'
+              )}
+            >
+              <img src={p.image_url} alt={p.title} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+              <span className="text-xs font-medium truncate max-w-[100px]">{p.title}</span>
+              {count > 0 && <Badge variant="default" className="text-[10px] h-5 px-1.5">{count}</Badge>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Per-product summary strip */}
+      <div className="flex items-center gap-3 flex-wrap text-xs">
+        {selectedProducts.map(p => {
+          const count = perProductScenes.get(p.id)?.size || 0;
+          return (
+            <span key={p.id} className="text-muted-foreground">
+              <span className="font-medium text-foreground">{p.title?.split(' ').slice(0, 3).join(' ')}</span>
+              {' → '}{count} shot{count !== 1 ? 's' : ''}
+            </span>
+          );
+        })}
+        {activeIds.size > 0 && (
+          <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 ml-auto" onClick={handleApplyToAll}>
+            <Copy className="w-3 h-3" />Apply to all
+          </Button>
+        )}
+      </div>
+
+      {/* Scene picker for active product */}
+      <SharedScenePicker
+        selectedSceneIds={activeIds}
+        onSelectionChange={handleChange}
+        selectedProducts={[activeProduct]}
+        productAnalyses={productAnalyses}
+      />
     </div>
   );
 }
