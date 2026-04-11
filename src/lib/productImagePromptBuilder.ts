@@ -1156,7 +1156,7 @@ export function buildDynamicPrompt(
   const hasBgToken = (template || '').includes('{{background}}');
   if (!hasBgToken && !isAuto(bgTone)) {
     const bgResolved = resolveToken('background', ctx);
-    if (bgResolved && !prompt.toLowerCase().includes('background')) {
+    if (bgResolved) {
       prompt += ` Background: ${bgResolved}.`;
     }
   }
