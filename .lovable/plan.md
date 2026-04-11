@@ -1,18 +1,22 @@
 
 
-# Fix: Remove Confusing "Outdated" Badge from Product Selection
+# Improve Background Prompt Precision & Custom Labels
 
-## Problem
-Every product shows an "Outdated" badge because their stored `analysis_json` was created before the `version: 2` stamp was added. This is alarming but harmless — re-analysis already runs automatically when you move to Step 2 (Scenes).
+## UI Label Fix
+**File:** `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+- Line 682: `"Custom"` → `"Custom Color"`
+- Line 715: `"Custom"` → `"Custom Gradient"`
 
-## Solution
-Remove the "Outdated" badge and refresh button from Step 1 entirely. Since re-analysis is already triggered automatically at Step 2, showing a stale-data warning on the selection screen adds confusion without value.
+## Prompt Text Refinements
+**File:** `src/lib/productImagePromptBuilder.ts` (lines 604–626)
 
-## Changes
+Minor wording improvements — same structure, same dynamic hex codes, just tighter language:
 
-| File | What |
-|------|------|
-| `src/pages/ProductImages.tsx` | Remove the two `isStaleAnalysis` badge blocks (list view ~line 880 and grid view ~line 935). Remove the `isStaleAnalysis` callback (~line 94-99). |
+| Line | Current | Improved |
+|------|---------|----------|
+| 609 | `solid background in color ${hex}` | `flat solid ${hex} color background, no texture, no pattern` |
+| 615 | `smooth gradient background transitioning from ${from} to ${to}` | `smooth gradient background from ${from} to ${to}, no texture, no pattern` |
+| 621 | `${swatchResolved} seamless background` | `${swatchResolved} seamless studio background, no texture, no pattern` |
 
-This is purely a UI cleanup — no backend or analysis logic changes needed.
+No logic changes — only the returned string text is adjusted to add explicit negative constraints while keeping the dynamic color values in place.
 
