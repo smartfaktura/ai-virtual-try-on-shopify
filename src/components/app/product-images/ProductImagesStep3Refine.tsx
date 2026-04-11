@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ColorPickerDialog } from '@/components/app/product-images/ColorPickerDialog';
+import { ProductThumbnail } from '@/components/app/product-images/ProductThumbnail';
 import { useUserSavedColors } from '@/hooks/useUserSavedColors';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -1569,9 +1570,18 @@ export function ProductImagesStep3Refine({
   const refTriggerInputRef = useRef<HTMLInputElement>(null);
   const pendingRefTriggerRef = useRef<string | null>(null);
 
-  const handleRefTriggerUpload = useCallback(async (triggerKey: string, file: File) => {
+  // Selected products for per-product reference UI
+  const selectedProductsList = useMemo(
+    () => allProducts.filter(p => selectedProductIds.has(p.id)),
+    [allProducts, selectedProductIds],
+  );
+  const isMultiProduct = selectedProductsList.length > 1;
+
+  // Per-product reference upload handler — stores as trigger:{type}:{productId}
+  const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
     if (!onSceneExtraRefsChange) return;
-    setUploadingRefTrigger(triggerKey);
+    const refKey = isMultiProduct ? `trigger:${triggerKey}:${productId}` : `trigger:${triggerKey}`;
+    setUploadingRefTrigger(refKey);
     try {
       const ts = Date.now();
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -1583,44 +1593,51 @@ export function ProductImagesStep3Refine({
       const { data: urlData } = (await import('@/integrations/supabase/client')).supabase.storage
         .from('product-uploads')
         .getPublicUrl(data.path);
-      onSceneExtraRefsChange({ ...sceneExtraRefs, [`trigger:${triggerKey}`]: urlData.publicUrl });
+      onSceneExtraRefsChange({ ...sceneExtraRefs, [refKey]: urlData.publicUrl });
     } catch (e: any) {
       const { toast } = await import('@/lib/brandedToast');
       toast.error(e.message || 'Upload failed');
     } finally {
       setUploadingRefTrigger(null);
     }
-  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+  }, [sceneExtraRefs, onSceneExtraRefsChange, isMultiProduct]);
 
-  const removeRefTrigger = useCallback((triggerKey: string) => {
+  const handleRefTriggerUpload = useCallback(async (triggerKey: string, file: File) => {
+    // For single product, use global key; for multi, this shouldn't be called directly
+    handlePerProductRefUpload(triggerKey, selectedProductsList[0]?.id || '', file);
+  }, [handlePerProductRefUpload, selectedProductsList]);
+
+  const removeRefTrigger = useCallback((triggerKey: string, productId?: string) => {
     if (!onSceneExtraRefsChange) return;
     const next = { ...sceneExtraRefs };
-    delete next[`trigger:${triggerKey}`];
-    onSceneExtraRefsChange(next);
-  }, [sceneExtraRefs, onSceneExtraRefsChange]);
-
-  const handleBackRefUpload = useCallback(async (file: File) => {
-    setUploadingBackRef(true);
-    try {
-      const ts = Date.now();
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `back-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.storage
-        .from('product-uploads')
-        .upload(path, file, { cacheControl: '3600', upsert: false });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage
-        .from('product-uploads')
-        .getPublicUrl(data.path);
-      update({ backReferenceUrl: urlData.publicUrl });
-    } catch (e: any) {
-      const { toast } = await import('@/lib/brandedToast');
-      toast.error(e.message || 'Upload failed');
-    } finally {
-      setUploadingBackRef(false);
+    if (productId && isMultiProduct) {
+      delete next[`trigger:${triggerKey}:${productId}`];
+    } else {
+      delete next[`trigger:${triggerKey}`];
     }
-  }, [update]);
+    onSceneExtraRefsChange(next);
+  }, [sceneExtraRefs, onSceneExtraRefsChange, isMultiProduct]);
+
+  // Get ref URL for a trigger — checks per-product key first, then global
+  const getRefUrl = useCallback((triggerKey: string, productId?: string): string | undefined => {
+    if (productId) {
+      return sceneExtraRefs[`trigger:${triggerKey}:${productId}`] || sceneExtraRefs[`trigger:${triggerKey}`];
+    }
+    return sceneExtraRefs[`trigger:${triggerKey}`];
+  }, [sceneExtraRefs]);
+
+  const handleBackRefUpload = useCallback(async (file: File, productId?: string) => {
+    // Route through unified per-product handler
+    handlePerProductRefUpload('backView', productId || selectedProductsList[0]?.id || '', file);
+  }, [handlePerProductRefUpload, selectedProductsList]);
+
+  const handlePackagingRefUploadForProduct = useCallback(async (file: File, productId?: string) => {
+    handlePerProductRefUpload('packagingDetails', productId || selectedProductsList[0]?.id || '', file);
+  }, [handlePerProductRefUpload, selectedProductsList]);
+
+  // Per-product file input ref & pending state
+  const perProductInputRef = useRef<HTMLInputElement>(null);
+  const pendingPerProductRef = useRef<{ triggerKey: string; productId: string } | null>(null);
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
