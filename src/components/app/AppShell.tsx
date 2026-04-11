@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
-  LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
+  Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
   TrendingUp, BookOpen, Clock,
 } from 'lucide-react';
