@@ -108,10 +108,15 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <button
             onClick={() => setShowAdd(true)}
-            className="group flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors min-h-[200px] cursor-pointer"
+            className="group flex flex-col rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors cursor-pointer overflow-hidden"
           >
-            <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-            <span className="text-xs text-muted-foreground mt-2 group-hover:text-primary">Add Product</span>
+            <div className="aspect-square flex flex-col items-center justify-center bg-muted/30">
+              <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+            <div className="h-[52px] flex flex-col justify-center px-2.5">
+              <p className="text-xs font-medium text-muted-foreground group-hover:text-primary">New</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Upload or import</p>
+            </div>
           </button>
 
           {filtered.map((p) => {
@@ -126,18 +131,18 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
                     : 'border-border hover:border-primary/30'
                 }`}
               >
-                <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-3">
+                <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
                   <ShimmerImage
                     src={getOptimizedUrl(p.image_url, { width: 280, quality: 70 })}
                     alt={p.title}
                     className="max-w-full max-h-full object-contain"
                   />
                 </div>
-                <div className="p-2.5">
-                  <p className="text-xs font-medium truncate">{p.title}</p>
-                  {p.product_type && (
-                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{p.product_type}</p>
-                  )}
+                <div className="h-[52px] flex flex-col justify-center px-2.5">
+                  <p className="text-xs font-medium truncate leading-tight">{p.title}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">
+                    {p.product_type || '\u00A0'}
+                  </p>
                 </div>
                 {selected && (
                   <div className="absolute top-2 right-2">
