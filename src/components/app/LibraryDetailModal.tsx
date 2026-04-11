@@ -197,10 +197,40 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
             <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
               {/* Source + label */}
               <div className="space-y-2">
-                {(() => {
-                  const hasSeparator = activeItem.label.includes(' — ');
-                  const smallLabel = isUpscaled ? 'Enhanced' : activeItem.source === 'freestyle' ? 'Freestyle Generation' : hasSeparator ? activeItem.label.split(' — ')[0] : 'Generation';
-                  const heading = isUpscaled ? 'Enhanced' : hasSeparator ? activeItem.label.split(' — ')[1] : activeItem.label;
+              {(() => {
+                  const slugCategoryMap: Record<string, string> = {
+                    'product-images': 'PRODUCT VISUALS',
+                    'virtual-try-on-set': 'VIRTUAL TRY-ON',
+                    'virtual-tryon': 'VIRTUAL TRY-ON',
+                    'catalog-studio': 'CATALOG STUDIO',
+                    'text-to-product': 'TEXT TO PRODUCT',
+                  };
+
+                  let smallLabel: string;
+                  let heading: string;
+
+                  if (isUpscaled) {
+                    smallLabel = 'Enhanced';
+                    heading = 'Enhanced';
+                  } else if (activeItem.workflowSlug && slugCategoryMap[activeItem.workflowSlug]) {
+                    smallLabel = slugCategoryMap[activeItem.workflowSlug];
+                    heading = activeItem.productName
+                      || (activeItem.modelName && activeItem.sceneName ? `${activeItem.modelName} · ${activeItem.sceneName}` : '')
+                      || activeItem.modelName
+                      || (activeItem.label.includes(' — ') ? activeItem.label.split(' — ')[1] : activeItem.label);
+                  } else if (activeItem.workflowSlug) {
+                    smallLabel = activeItem.workflowSlug.replace(/-/g, ' ').toUpperCase();
+                    heading = activeItem.productName || activeItem.label;
+                  } else if (activeItem.source === 'freestyle') {
+                    smallLabel = 'FREESTYLE';
+                    heading = activeItem.modelName && activeItem.sceneName
+                      ? `${activeItem.modelName} · ${activeItem.sceneName}`
+                      : activeItem.modelName || activeItem.label;
+                  } else {
+                    const hasSeparator = activeItem.label.includes(' — ');
+                    smallLabel = hasSeparator ? activeItem.label.split(' — ')[0].toUpperCase() : 'GENERATION';
+                    heading = hasSeparator ? activeItem.label.split(' — ')[1] : activeItem.label;
+                  }
                   return (
                     <>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
