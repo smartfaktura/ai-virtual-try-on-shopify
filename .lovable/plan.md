@@ -1,30 +1,14 @@
 
 
-# Move Video to Create, Library to Assets
+# Add Spacing After CTA Button
 
 ## Change
-Reorder two nav items in `src/components/app/AppShell.tsx`:
+In `src/components/app/AppShell.tsx`, increase the bottom padding of the CTA wrapper from `pb-1` to `pb-3` (line 202). This adds ~8px more breathing room between the "Create Visuals" button and the first section label.
 
-```text
-Before:                          After:
-CREATE                           CREATE
-  Visual Studio                    Visual Studio
-  Create with Prompt               Create with Prompt
-                                   Video
-ASSETS
-  Products                       ASSETS
-  Brand Models                     Products
-  Explore                          Brand Models
-                                   Explore
-MEDIA                              Library
-  Library
-  Video
-```
-
-- Move `Video` from Media → Create (3rd item)
-- Move `Library` from Media → Assets (4th item, after Explore)
-- Remove the now-empty `Media` group entirely
+| Element | Current | New |
+|---------|---------|-----|
+| CTA wrapper padding | `pt-4 pb-1` | `pt-4 pb-3` |
 
 ## File Changed
-`src/components/app/AppShell.tsx` — update `navGroups` array (lines 51–80)
+`src/components/app/AppShell.tsx` — line 202, single class change
 
