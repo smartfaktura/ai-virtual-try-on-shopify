@@ -12,7 +12,7 @@ import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { OnboardingChecklist } from '@/components/app/OnboardingChecklist';
-import { UpcomingDropsCard } from '@/components/app/UpcomingDropsCard';
+
 
 import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
 import { DashboardDiscoverSection } from '@/components/app/DashboardDiscoverSection';
@@ -776,8 +776,6 @@ export default function Dashboard() {
       {/* Activity Feed */}
       <ActivityFeed />
 
-      {/* Upcoming Drops */}
-      <UpcomingDropsCard />
 
       {/* Feedback Banner */}
       <FeedbackBanner />
