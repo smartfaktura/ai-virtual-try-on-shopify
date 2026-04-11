@@ -231,10 +231,7 @@ const BASE_NEGATIVES = 'No watermarks, no text overlays, no chromatic aberration
 const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.';
 const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment.';
 
-// ── Reference isolation instruction ──
-const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the scene described above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.';
-
-const PRODUCT_FIDELITY = 'PRODUCT FIDELITY (NON-NEGOTIABLE): Reproduce the product from [PRODUCT IMAGE] with 100% accuracy — exact shape, exact colors, exact labels, exact textures, exact branding, exact proportions. Do NOT invent, alter, or simplify any detail. If the product has text, logos, or patterns, they must be pixel-accurate. Any deviation from the reference product is a generation failure.';
+// PRODUCT_FIDELITY and REFERENCE_ISOLATION removed — covered by edge function CRITICAL REQUIREMENTS #2 and #7
 
 // ── Body framing map by category + scene type ──
 function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
@@ -1074,7 +1071,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
   }
 }
 
-const QUALITY_SUFFIX = 'Professional product photography, ultra-sharp focus, hyper-realistic textures and materials, accurate white balance, true-to-life color reproduction, 8K commercial quality, photorealistic rendering.';
+// QUALITY_SUFFIX removed — covered by edge function CRITICAL REQUIREMENT #4
 
 // ── Post-resolution cleanup ──
 function cleanupPrompt(raw: string): string {
@@ -1138,7 +1135,7 @@ export function buildDynamicPrompt(
     if (details.focusArea && !isAuto(details.focusArea)) parts.push(`Focus: ${details.focusArea}.`);
     if (details.customNote) parts.push(details.customNote);
     parts.push(resolveCameraDirective(scene));
-    parts.push(QUALITY_SUFFIX);
+    // QUALITY_SUFFIX removed — edge function handles this
     const negatives = buildNegativePrompt(scene);
     parts.push(negatives);
     return cleanupPrompt(parts.filter(Boolean).join(' '));
@@ -1165,16 +1162,11 @@ export function buildDynamicPrompt(
   // explicitly where needed. No auto-injection — prevents conflicts with scene intent
   // (e.g. forcing full-body framing onto a close-up hand scene).
 
-  // Prepend reference isolation instruction BEFORE cleanup so it appears early
-  prompt = PRODUCT_FIDELITY + ' ' + REFERENCE_ISOLATION + ' ' + prompt;
+  // PRODUCT_FIDELITY + REFERENCE_ISOLATION removed — edge function handles these
+  // QUALITY_SUFFIX removed — edge function handles this
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
-
-  // Append quality suffix if not already present
-  if (!prompt.includes('8K commercial quality')) {
-    prompt += ' ' + QUALITY_SUFFIX;
-  }
 
   // Append camera directive
   const camera = resolveCameraDirective(scene);
