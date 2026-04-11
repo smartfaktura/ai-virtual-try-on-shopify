@@ -1093,12 +1093,8 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
     prevCatRef.current = cat;
     if (!details.outfitConfig || categoryChanged) {
       const config = { ...defaultConfig };
-      if (!config.bottom) {
-        config.bottom = { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' };
-      }
-      if (!config.shoes) {
-        config.shoes = { garment: 'sneakers', color: 'white', material: 'leather' };
-      }
+      // Don't force bottom/shoes — respect categories that intentionally omit them
+      // (e.g., fragrance, beauty). The prompt builder handles per-product slot nullification.
       update({ outfitConfig: config });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
