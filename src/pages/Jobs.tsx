@@ -337,7 +337,7 @@ export default function Jobs() {
       <div className="px-4 sm:px-6 py-8 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">My Library</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             All your visuals, organized for review, selection, and publishing.
           </p>
