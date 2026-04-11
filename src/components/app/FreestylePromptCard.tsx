@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Sparkles, ArrowRight, Package, User, Mountain, RatioIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Sparkles, ArrowRight, Package, Mountain, RatioIcon, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { TEAM_MEMBERS } from '@/data/teamData';
 
 /* ── Typing animation ── */
 const PROMPT_TEXTS = [
@@ -51,61 +52,168 @@ function useTypingAnimation() {
   return { text, showCursor };
 }
 
-/* ── Cycling chip ── */
+/* ── Cycling chip with select animation ── */
 const CHIP_DATA: { icon: typeof Package; labels: string[] }[] = [
   { icon: Package, labels: ['Skincare', 'Sneakers', 'Leather Bag', 'Perfume'] },
-  { icon: User, labels: ['Model A', 'Model B', 'Model C'] },
   { icon: Mountain, labels: ['Beach Sunset', 'Studio Light', 'Marble Surface', 'Botanical'] },
+];
+
+const RATIO_VALUES = ['1:1', '3:4', '9:16', '16:9'];
+
+const SCENE_COLORS = [
+  'linear-gradient(135deg, hsl(35 80% 55%), hsl(25 70% 40%))',
+  'linear-gradient(135deg, hsl(210 60% 55%), hsl(220 50% 40%))',
+  'linear-gradient(135deg, hsl(140 40% 50%), hsl(160 35% 38%))',
+  'linear-gradient(135deg, hsl(280 40% 55%), hsl(300 35% 42%))',
 ];
 
 function CyclingChip({ icon: Icon, labels, delay, hovered }: { icon: typeof Package; labels: string[]; delay: number; hovered: boolean }) {
   const [idx, setIdx] = useState(0);
-  const [fading, setFading] = useState(false);
+  const [selecting, setSelecting] = useState(false);
 
   useEffect(() => {
     const iv = setInterval(() => {
-      setFading(true);
-      setTimeout(() => { setIdx(i => (i + 1) % labels.length); setFading(false); }, 200);
-    }, 2500);
+      setSelecting(true);
+      setTimeout(() => {
+        setIdx(i => (i + 1) % labels.length);
+        setTimeout(() => setSelecting(false), 300);
+      }, 150);
+    }, 2500 + delay * 400);
     return () => clearInterval(iv);
-  }, [labels.length]);
+  }, [labels.length, delay]);
 
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[9px] font-medium border transition-all duration-300',
-        hovered
-          ? 'border-primary/30 bg-primary/[0.08] text-primary/80'
-          : 'border-border/50 bg-muted/40 text-foreground/50',
+        'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[9px] font-medium border transition-all duration-200',
+        selecting
+          ? 'border-primary/50 bg-primary/[0.12] text-primary scale-105 shadow-[0_0_8px_-2px_hsl(var(--primary)/0.3)]'
+          : hovered
+            ? 'border-primary/30 bg-primary/[0.08] text-primary/80'
+            : 'border-border/50 bg-muted/40 text-foreground/50',
       )}
-      style={{ animationDelay: `${delay}s` }}
     >
-      <Icon className="w-2.5 h-2.5 shrink-0" />
-      <span className={cn('transition-opacity duration-200 truncate max-w-[60px]', fading ? 'opacity-0' : 'opacity-100')}>
+      {selecting ? (
+        <Check className="w-2.5 h-2.5 shrink-0 text-primary" />
+      ) : (
+        <Icon className="w-2.5 h-2.5 shrink-0" />
+      )}
+      <span className={cn('transition-opacity duration-150 truncate max-w-[60px]', selecting ? 'opacity-0' : 'opacity-100')}>
         {labels[idx]}
       </span>
     </div>
   );
 }
 
-/* ── Model avatars ── */
+/* ── Model avatars with real faces ── */
+const AVATAR_MEMBERS = [
+  TEAM_MEMBERS.find(m => m.name === 'Sophia')!,
+  TEAM_MEMBERS.find(m => m.name === 'Amara')!,
+  TEAM_MEMBERS.find(m => m.name === 'Luna')!,
+];
+
 function MiniAvatars({ hovered }: { hovered: boolean }) {
+  const [selecting, setSelecting] = useState(false);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setSelecting(true);
+      setTimeout(() => setSelecting(false), 400);
+    }, 3200);
+    return () => clearInterval(iv);
+  }, []);
+
   return (
     <div className={cn(
-      'inline-flex items-center gap-0.5 h-6 px-2 rounded-full border transition-all duration-300',
-      hovered ? 'border-primary/30 bg-primary/[0.08]' : 'border-border/50 bg-muted/40',
+      'inline-flex items-center gap-0.5 h-6 px-2 rounded-full border transition-all duration-200',
+      selecting
+        ? 'border-primary/50 bg-primary/[0.12] scale-105 shadow-[0_0_8px_-2px_hsl(var(--primary)/0.3)]'
+        : hovered ? 'border-primary/30 bg-primary/[0.08]' : 'border-border/50 bg-muted/40',
     )}>
-      {[0, 1, 2].map(i => (
+      {AVATAR_MEMBERS.map((member, i) => (
+        <img
+          key={member.name}
+          src={member.avatar}
+          alt={member.name}
+          className={cn(
+            'w-3.5 h-3.5 rounded-full object-cover border border-background transition-all',
+            selecting && i === 1 && 'ring-1 ring-primary/60',
+          )}
+          style={{ marginLeft: i > 0 ? '-3px' : 0 }}
+        />
+      ))}
+      <span className={cn('text-[9px] font-medium ml-1 transition-colors', selecting ? 'text-primary' : hovered ? 'text-primary/70' : 'text-foreground/40')}>
+        {selecting ? <Check className="w-2.5 h-2.5 text-primary" /> : 'Models'}
+      </span>
+    </div>
+  );
+}
+
+/* ── Scene mini thumbnails ── */
+function SceneThumbnails({ hovered }: { hovered: boolean }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [selecting, setSelecting] = useState(false);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setSelecting(true);
+      setTimeout(() => {
+        setActiveIdx(i => (i + 1) % SCENE_COLORS.length);
+        setTimeout(() => setSelecting(false), 300);
+      }, 150);
+    }, 2800);
+    return () => clearInterval(iv);
+  }, []);
+
+  return (
+    <div className={cn(
+      'inline-flex items-center gap-1 h-6 px-2 rounded-full border transition-all duration-200',
+      selecting
+        ? 'border-primary/50 bg-primary/[0.12] scale-105'
+        : hovered ? 'border-primary/30 bg-primary/[0.08]' : 'border-border/50 bg-muted/40',
+    )}>
+      {SCENE_COLORS.slice(0, 3).map((bg, i) => (
         <div
           key={i}
           className={cn(
-            'w-3.5 h-3.5 rounded-full bg-foreground/[0.08] border border-background transition-all',
-            hovered && 'bg-foreground/[0.12]',
+            'w-3 h-3 rounded-sm transition-all duration-200',
+            i === activeIdx && selecting && 'ring-1 ring-primary/60 scale-110',
           )}
-          style={{ marginLeft: i > 0 ? '-3px' : 0, animation: `pulse 2.5s ease-in-out ${i * 0.4}s infinite` }}
+          style={{ background: bg }}
         />
       ))}
-      <span className={cn('text-[9px] font-medium ml-1 transition-colors', hovered ? 'text-primary/70' : 'text-foreground/40')}>Models</span>
+      <span className={cn('text-[9px] font-medium ml-0.5 transition-colors', hovered ? 'text-primary/70' : 'text-foreground/40')}>
+        Scenes
+      </span>
+    </div>
+  );
+}
+
+/* ── Cycling ratio chip ── */
+function RatioChip({ hovered }: { hovered: boolean }) {
+  const [idx, setIdx] = useState(0);
+  const [selecting, setSelecting] = useState(false);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setSelecting(true);
+      setTimeout(() => {
+        setIdx(i => (i + 1) % RATIO_VALUES.length);
+        setTimeout(() => setSelecting(false), 300);
+      }, 150);
+    }, 3600);
+    return () => clearInterval(iv);
+  }, []);
+
+  return (
+    <div className={cn(
+      'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[9px] font-medium border transition-all duration-200',
+      selecting
+        ? 'border-primary/50 bg-primary/[0.12] text-primary scale-105'
+        : hovered ? 'border-primary/30 bg-primary/[0.08] text-primary/70' : 'border-border/50 bg-muted/40 text-foreground/40',
+    )}>
+      {selecting ? <Check className="w-2.5 h-2.5" /> : <RatioIcon className="w-2.5 h-2.5" />}
+      <span>{RATIO_VALUES[idx]}</span>
     </div>
   );
 }
@@ -132,34 +240,24 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
         'relative w-full overflow-hidden bg-gradient-to-br from-foreground/[0.03] via-muted/60 to-primary/[0.04]',
         mobileCompact ? 'aspect-[2/3]' : 'aspect-[3/4]',
       )}>
-        {/* Grid pattern */}
         <div className="absolute inset-0 opacity-[0.035]" style={{
           backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 0.5px, transparent 0.5px)',
           backgroundSize: '20px 20px',
         }} />
 
         <div className="absolute inset-0 flex flex-col items-center justify-center px-3 sm:px-5 gap-2.5">
-          {/* Badge */}
           <Badge variant="secondary" className="text-[9px] font-semibold tracking-wider uppercase bg-foreground/[0.06] text-foreground/60 border-0 backdrop-blur-sm px-2.5 py-0.5">
             <Sparkles className="w-2.5 h-2.5 mr-1 opacity-70" />
             Freestyle Studio
           </Badge>
 
-          {/* Animated feature chips */}
           <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-[280px]">
             <CyclingChip icon={CHIP_DATA[0].icon} labels={CHIP_DATA[0].labels} delay={0} hovered={hovered} />
             <MiniAvatars hovered={hovered} />
-            <CyclingChip icon={CHIP_DATA[2].icon} labels={CHIP_DATA[2].labels} delay={0.8} hovered={hovered} />
-            <div className={cn(
-              'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[9px] font-medium border transition-all duration-300',
-              hovered ? 'border-primary/30 bg-primary/[0.08] text-primary/70' : 'border-border/50 bg-muted/40 text-foreground/40',
-            )}>
-              <RatioIcon className="w-2.5 h-2.5" />
-              <span>1:1</span>
-            </div>
+            <SceneThumbnails hovered={hovered} />
+            <RatioChip hovered={hovered} />
           </div>
 
-          {/* Prompt composer */}
           <div className={cn(
             'w-full max-w-[260px] rounded-xl border backdrop-blur-md transition-all duration-300',
             hovered
@@ -191,7 +289,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           Freestyle Studio
         </h3>
         {!mobileCompact && (
-          <p className="text-xs text-muted-foreground leading-relaxed">Prompt + product + model + scene</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">Create any visual you imagine</p>
         )}
         <div className="pt-1 mt-auto">
           <Button
