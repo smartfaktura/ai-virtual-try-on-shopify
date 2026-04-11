@@ -1,42 +1,32 @@
 
 
-# Fix: resolveGarmentType Returns Wrong Candidate
+# Fix: Flash of Incorrect Category on Step 2
 
 ## The Problem
 
-`resolveGarmentType` returns the **first non-empty** value from the chain (`garmentType` → `productSubcategory` → `product_type` → `title`), but that value might not match any keyword in `getConflictingSlots`.
-
-Example: A sweater product where:
-- `garmentType` = undefined
-- `productSubcategory` = "Knitwear" ← returned first, but "knitwear" doesn't match any keyword
-- `product_type` = "Tops" ← never tried
-- `title` = "Cashmere V-Neck Sweater" ← contains "sweater", would match, but never reached
-
-Result: `getConflictingSlots("Knitwear")` → empty set → TOP slot stays open.
+When moving from Step 1 to Step 2, `analyzeProducts()` is triggered asynchronously. The Step 2 scene grid renders immediately using whatever partial data is available — if `analysis_json` is empty and the keyword fallback matches the wrong category, the user sees incorrect scenes for 1-2 seconds until the AI analysis completes and the correct category appears.
 
 ## The Fix
 
-**File: `src/lib/productImagePromptBuilder.ts`** (~10 lines)
+**File: `src/pages/ProductImages.tsx`** (~5 lines)
 
-Change `resolveGarmentType` to try **all candidates** and return the first one that actually produces a non-empty conflict set. If none match, fall back to returning the first non-empty value (for display purposes).
+When `isAnalyzing` is true on Step 2, show a skeleton/loading state instead of immediately rendering the scene grid with potentially wrong data. This prevents the flash of incorrect content:
 
 ```text
-function resolveGarmentType(analysis, product):
-  candidates = [garmentType, productSubcategory, product_type, title]
-  
-  // First pass: find a candidate that actually matches a slot
-  for each candidate:
-    if getConflictingSlots(candidate).size > 0 → return candidate
-  
-  // Second pass: return first non-empty (for display, even if no slot match)
-  return first non-empty candidate
+step === 2 && isAnalyzing && selectedProducts have no cached analysis
+  → show skeleton placeholder ("Analyzing your product…")
+step === 2 && !isAnalyzing (or all products have cached analyses)
+  → show scene grid normally
 ```
 
-Also add common synonyms to `getConflictingSlots` that the AI might return as subcategories: `knitwear`, `outerwear`, `tops`, `bottoms`, `footwear`, `denim`.
+Specifically:
+- Before the `<ProductImagesStep2Scenes>` render, check if any selected product is still in `pendingIds` AND has no `analysis_json` cached
+- If so, render a branded loading state: product thumbnail + "Analyzing product…" spinner + skeleton grid
+- Once analysis completes, the component re-renders with correct category data
+
+This is a minimal change — just wrap the Step 2 render with a loading guard.
 
 ## Files Changed
 
-1. **`src/lib/productImagePromptBuilder.ts`** — rewrite `resolveGarmentType` to prefer conflict-matching candidates; add synonym keywords to `getConflictingSlots`
-
-No other files need changes — the UI code in Step3Refine already calls these functions correctly.
+1. **`src/pages/ProductImages.tsx`** — add loading guard before Step 2 scene grid when analysis is pending for uncached products
 
