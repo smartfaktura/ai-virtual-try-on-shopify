@@ -1,46 +1,52 @@
 
 
-# Redesign FreestylePromptCard — Clean, Premium Layout
+# Generate 3 Brand Model Variations for User Selection
 
-## Problem
-The current card is cluttered with cycling chips, mini avatars, and a ratio badge that overflow on smaller viewports. The user wants a cleaner, more premium design matching the reference copy.
+## Current Behavior
+- **Admin (makePublic=true)**: Generates 3 variations → user picks best → publishes to public library ✅
+- **Regular user**: Generates 1 image → immediately saves & deducts 20 credits → no choice ❌
 
-## New Design
+## Goal
+Regular brand model users should also get 3 variations, pick the best one, then confirm before saving/deducting credits.
 
-The card visual area will have:
-1. **Top badge**: "CREATE WITH PROMPT" (uppercase, small)
-2. **Tagline**: "Any Product · Any Model · Any Scene · Any Lighting" — a single static line replacing all the animated chips
-3. **Typing prompt composer**: Keep the existing typing animation but in a cleaner box
-4. **Bottom hint**: "Describe any visual you want" below the prompt box
+## Changes
 
-The content area below keeps:
-- Title: "Create with Prompt"
-- Subtitle: "Describe any shot, scene, or style you want."
-- Button: "Create with Prompt" with arrow
+### 1. Edge Function — `supabase/functions/generate-user-model/index.ts`
 
-## Changes — `src/components/app/FreestylePromptCard.tsx`
+**Add new action: `save-brand-model`** (similar to `publish-public` but saves to `user_models` instead of `custom_models`):
+- Accepts `selectedUrl`, `metadata`, `name`
+- Deducts 20 credits
+- Inserts into `user_models`
+- Returns the saved model + new balance
 
-### Remove
-- `CyclingChip` component and `CHIP_DATA` constant
-- `MiniAvatars` component
-- The entire animated chips row (lines 149-160) and the ratio chip
-- Imports: `Package`, `User`, `Mountain`, `RatioIcon`
+**Modify regular user flow** (lines 318-350):
+- Instead of generating 1 image, generate 3 in parallel (same as admin flow)
+- Do NOT deduct credits yet
+- Do NOT save to `user_models` yet
+- Return `{ variations, metadata, name }` — same shape as admin flow
 
-### Replace visual area content (lines 141-185)
-Replace with a simpler stack:
-1. Badge: `CREATE WITH PROMPT` (keep existing style)
-2. Static tagline: `Any Product · Any Model · Any Scene · Any Lighting` — `text-[10px] text-foreground/50 tracking-wide`
-3. Prompt composer box (keep typing animation, same style)
-4. Hint text: `Describe any visual you want` — small muted text below the box
+### 2. Frontend — `src/pages/BrandModels.tsx`
 
-### Update content area (lines 189-209)
-- Title: "Create with Prompt" (fix typo "Promt")
-- Subtitle: "Describe any shot, scene, or style you want."
-- Button label: "Create with Prompt"
+**Modify `handleGenerate`** (line 303-309):
+- Remove the `makePublic` condition — always show variation picker when `data?.variations` is returned
 
-### Also fix the typo in Dashboard
-- Line 538: "Create with Promt" → "Create with Prompt"
-- Line 145 badge: same fix
+**Modify variation picker UI** (lines 364-422):
+- When NOT in public mode, show "Save as Brand Model" button instead of "Publish as Public Model"
+- Add a confirm step before saving
 
-Single file primary edit + typo fix in Dashboard.
+**Add `handleSaveBrandModel`**:
+- Calls edge function with `action: 'save-brand-model'`
+- Passes `selectedUrl`, `metadata`, `name`
+- On success: refresh balance, invalidate queries, reset form
+
+### 3. Loading State
+- Update `BrandedLoadingState` — remove `isPublicMode` distinction since both flows now generate 3 variations
+- Update estimate to ~1-2 min for all users
+
+## Summary of Flow (After)
+1. User fills out generator form → clicks Generate (20 credits shown)
+2. Edge function generates 3 variations in parallel, returns all 3 URLs (no credits deducted yet)
+3. User sees variation picker, selects favorite
+4. User clicks "Save as Brand Model" → edge function deducts credits + saves to `user_models`
+5. Model appears in their brand models list
 
