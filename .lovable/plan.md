@@ -1,32 +1,24 @@
 
 
-# Fix: Flash of Incorrect Category on Step 2
+# Move Earn Credits, Brand Profiles & Settings into User Menu
 
-## The Problem
+## What Changes
 
-When moving from Step 1 to Step 2, `analyzeProducts()` is triggered asynchronously. The Step 2 scene grid renders immediately using whatever partial data is available — if `analysis_json` is empty and the keyword fallback matches the wrong category, the user sees incorrect scenes for 1-2 seconds until the AI analysis completes and the correct category appears.
+**File: `src/components/app/AppShell.tsx`**
 
-## The Fix
+1. **Remove from sidebar nav:**
+   - Remove `{ label: 'Earn Credits', icon: Gift, path: '#earn-credits' }` from `navItems`
+   - Remove the entire `configItems` array and its "Configuration" header + render block (lines ~64-67, ~215-221)
 
-**File: `src/pages/ProductImages.tsx`** (~5 lines)
+2. **Add to user dropdown menu** (the popup that appears when clicking the user avatar at the bottom):
+   - Add "Brand Profiles" button (Palette icon) → navigates to `/app/brand-profiles`
+   - Add "Earn Credits" button (Gift icon) → opens `earnCreditsOpen` modal
+   - Keep existing "Account settings" button (already there)
+   - Order: Account settings → Brand Profiles → Earn Credits → (admin items) → Sign out
 
-When `isAnalyzing` is true on Step 2, show a skeleton/loading state instead of immediately rendering the scene grid with potentially wrong data. This prevents the flash of incorrect content:
-
-```text
-step === 2 && isAnalyzing && selectedProducts have no cached analysis
-  → show skeleton placeholder ("Analyzing your product…")
-step === 2 && !isAnalyzing (or all products have cached analyses)
-  → show scene grid normally
-```
-
-Specifically:
-- Before the `<ProductImagesStep2Scenes>` render, check if any selected product is still in `pendingIds` AND has no `analysis_json` cached
-- If so, render a branded loading state: product thumbnail + "Analyzing product…" spinner + skeleton grid
-- Once analysis completes, the component re-renders with correct category data
-
-This is a minimal change — just wrap the Step 2 render with a loading guard.
+This keeps all three features one click away via the person menu, while shortening the sidebar by 3 items + 1 section header.
 
 ## Files Changed
 
-1. **`src/pages/ProductImages.tsx`** — add loading guard before Step 2 scene grid when analysis is pending for uncached products
+1. **`src/components/app/AppShell.tsx`** — remove items from sidebar, add buttons to user dropdown
 
