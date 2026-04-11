@@ -1013,11 +1013,12 @@ export default function ProductImages() {
                 onSelectionChange={setSelectedSceneIds}
                 selectedProducts={selectedProducts}
                 productAnalyses={analyses}
-                perProductScenes={perProductScenes}
-                onPerProductScenesChange={setPerProductScenes}
+                perCategoryScenes={perCategoryScenes}
+                onPerCategoryScenesChange={setPerCategoryScenes}
+                categoryGroups={categoryGroups}
                 hasMultipleCategories={hasMultipleCategories}
-                forcedActiveProductId={forcedActiveProductId}
-                onForcedActiveProductIdConsumed={() => setForcedActiveProductId(null)}
+                forcedActiveCategoryId={forcedActiveCategoryId}
+                onForcedActiveCategoryIdConsumed={() => setForcedActiveCategoryId(null)}
               />
             )}
 
@@ -1059,7 +1060,8 @@ export default function ProductImages() {
                 onDetailsChange={setDetails}
                 allProducts={userProducts}
                 selectedProductIds={selectedProductIds}
-                perProductScenes={perProductScenes}
+                perCategoryScenes={perCategoryScenes}
+                categoryGroups={categoryGroups}
               />
             )}
 
