@@ -81,7 +81,7 @@ function CyclingChip({ icon: Icon, labels, delay, hovered }: { icon: typeof Pack
       style={{ animationDelay: `${delay}s` }}
     >
       <Icon className="w-2.5 h-2.5 shrink-0" />
-      <span className={cn('transition-opacity duration-200 truncate max-w-[60px]', fading ? 'opacity-0' : 'opacity-100')}>
+      <span className={cn('transition-opacity duration-200 w-[60px] truncate', fading ? 'opacity-0' : 'opacity-100')}>
         {labels[idx]}
       </span>
     </div>
@@ -102,7 +102,7 @@ function MiniAvatars({ hovered }: { hovered: boolean }) {
             'w-3.5 h-3.5 rounded-full bg-foreground/[0.08] border border-background transition-all',
             hovered && 'bg-foreground/[0.12]',
           )}
-          style={{ marginLeft: i > 0 ? '-3px' : 0, animation: `pulse 2.5s ease-in-out ${i * 0.4}s infinite` }}
+          style={{ marginLeft: i > 0 ? '-3px' : 0 }}
         />
       ))}
       <span className={cn('text-[9px] font-medium ml-1 transition-colors', hovered ? 'text-primary/70' : 'text-foreground/40')}>Models</span>
@@ -142,11 +142,11 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           {/* Badge */}
           <Badge variant="secondary" className="text-[9px] font-semibold tracking-wider uppercase bg-foreground/[0.06] text-foreground/60 border-0 backdrop-blur-sm px-2.5 py-0.5">
             <Sparkles className="w-2.5 h-2.5 mr-1 opacity-70" />
-            Freestyle Studio
+            Create with Promt
           </Badge>
 
           {/* Animated feature chips */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-[280px]">
+          <div className="flex flex-nowrap items-center justify-center gap-1.5 max-w-[280px] overflow-hidden">
             <CyclingChip icon={CHIP_DATA[0].icon} labels={CHIP_DATA[0].labels} delay={0} hovered={hovered} />
             <MiniAvatars hovered={hovered} />
             <CyclingChip icon={CHIP_DATA[2].icon} labels={CHIP_DATA[2].labels} delay={0.8} hovered={hovered} />
@@ -188,10 +188,10 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
       {/* ── Content area ── */}
       <div className={cn('flex flex-col gap-1 flex-1', mobileCompact ? 'p-2' : 'p-4')}>
         <h3 className={cn('font-bold tracking-tight leading-tight', mobileCompact ? 'text-[11px]' : 'text-sm')}>
-          Freestyle Studio
+          Create with Promt
         </h3>
         {!mobileCompact && (
-          <p className="text-xs text-muted-foreground leading-relaxed">Prompt + product + model + scene</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">Describe any product shot you imagine</p>
         )}
         <div className="pt-1 mt-auto">
           <Button
@@ -203,7 +203,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
             )}
             onClick={(e) => { e.stopPropagation(); onSelect(); }}
           >
-            Open Studio
+            Start Creating
             <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
