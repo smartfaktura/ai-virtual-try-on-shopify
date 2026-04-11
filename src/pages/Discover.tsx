@@ -429,7 +429,7 @@ export default function Discover() {
 
   return (
     <PageHeader
-      title="Discover"
+      title="Explore"
       subtitle="Every image here was created by AI. Yours can be next."
     >
       {isAdmin && adminPendingCount > 0 && (

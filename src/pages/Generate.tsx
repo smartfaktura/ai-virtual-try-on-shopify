@@ -2154,7 +2154,7 @@ export default function Generate() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
                   <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-muted-foreground">Recreating look from Discover</span>
+                  <span className="text-muted-foreground">Recreating look from Explore</span>
                   {recreateSource.modelName && (
                     <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
                       {recreateSource.modelImageUrl && (
