@@ -1091,10 +1091,17 @@ export default function ProductImages() {
                       <button
                         type="button"
                         onClick={() => setAddProductOpen(true)}
-                        className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground"
+                        className="group flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all cursor-pointer overflow-hidden"
                       >
-                        <Package className="w-6 h-6 mb-1 opacity-50" />
-                        <span className="text-[10px] font-medium">New</span>
+                        <div className="aspect-square flex flex-col items-center justify-center bg-muted/30">
+                          <div className="flex flex-col items-center justify-center w-3/4 h-3/4 rounded-lg border-2 border-dashed border-muted-foreground/30 group-hover:border-primary/40 transition-colors">
+                            <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                        </div>
+                        <div className="flex flex-col justify-center px-2 py-1.5">
+                          <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary">Upload Image</p>
+                          <p className="text-[9px] text-muted-foreground/70 mt-0.5">or paste / import URL</p>
+                        </div>
                       </button>
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
