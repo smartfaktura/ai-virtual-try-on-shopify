@@ -757,10 +757,10 @@ export default function Dashboard() {
           ) : (
             <EmptyStateCard
               heading="No jobs yet"
-              description="Generate your first product images to see them here."
+              description="Generate your first product visuals to see them here."
               showCollage
               action={{
-                content: 'Generate images',
+                content: 'Generate visuals',
                 onAction: () => navigate('/app/generate'),
               }}
             />
