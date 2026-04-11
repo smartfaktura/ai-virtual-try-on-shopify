@@ -198,7 +198,7 @@ export function AppShell({ children }: AppShellProps) {
           )}
         </div>
 
-        {/* Visual Studio CTA */}
+        {/* Create Visuals CTA */}
         <div className={cn('pt-4 pb-3', isCollapsed ? 'px-2' : 'px-4')}>
           <button
             onClick={() => handleNav('/app/workflows')}
@@ -206,10 +206,10 @@ export function AppShell({ children }: AppShellProps) {
               'w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
               isCollapsed ? 'px-2 py-3 text-xs' : 'px-3 py-3 text-sm'
             )}
-            title={isCollapsed ? 'Visual Studio' : undefined}
+            title={isCollapsed ? 'Create Visuals' : undefined}
           >
             <Sparkles className="w-4 h-4 flex-shrink-0" />
-            {!isCollapsed && 'Visual Studio'}
+            {!isCollapsed && 'Create Visuals'}
           </button>
         </div>
 
