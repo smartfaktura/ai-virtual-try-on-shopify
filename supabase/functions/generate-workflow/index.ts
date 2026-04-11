@@ -562,10 +562,10 @@ CRITICAL REQUIREMENTS:
 4. Ultra high resolution, professional quality, no AI artifacts.
 5. This specific variation must clearly match the "${variation.label}" direction described above.
 ${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
-7. BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] shows the product ONLY. You MUST completely IGNORE the background, environment, and lighting visible in [PRODUCT IMAGE]. Generate ONLY the new background/environment described in the variation instruction above. The product's original photo background must NOT appear in the output.
+7. BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the variation instruction above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.
 ${batchOutfitLock ? `8. OUTFIT CONSISTENCY (CRITICAL): If a person/model appears, they MUST wear the EXACT same outfit described in the variation instruction. Do NOT deviate — same colors, same garment types, same shoes. This is a multi-image batch and visual consistency across all shots is mandatory.` : ""}
 
-${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
+${allNegatives ? `AVOID: ${allNegatives}, reference background, original background, source image background` : "AVOID: reference background, original background, source image background"}`;
   })();
 
   return prompt;
@@ -709,7 +709,7 @@ async function generateImage(
 
   // Build content array: text prompt + labeled reference images
   const IMAGE_LABEL_MAP: Record<string, string> = {
-    product: '[PRODUCT IMAGE] Primary product reference — reproduce this EXACTLY:',
+    product: '[PRODUCT IMAGE] Product reference — reproduce ONLY the product object (shape, colors, labels, materials). IGNORE all background, surfaces, and environment in this image:',
     product_2: '[PRODUCT IMAGE 2] Additional product reference:',
     product_3: '[PRODUCT IMAGE 3] Additional product reference:',
     product_4: '[PRODUCT IMAGE 4] Additional product reference:',

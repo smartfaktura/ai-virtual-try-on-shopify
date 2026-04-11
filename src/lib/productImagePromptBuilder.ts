@@ -232,7 +232,7 @@ const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural ha
 const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment.';
 
 // ── Reference isolation instruction ──
-const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] is a reference for the product ONLY. Completely IGNORE its background, lighting, and environment. Generate the product in the new scene/background described above.';
+const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the scene described above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.';
 
 const PRODUCT_FIDELITY = 'PRODUCT FIDELITY (NON-NEGOTIABLE): Reproduce the product from [PRODUCT IMAGE] with 100% accuracy — exact shape, exact colors, exact labels, exact textures, exact branding, exact proportions. Do NOT invent, alter, or simplify any detail. If the product has text, logos, or patterns, they must be pixel-accurate. Any deviation from the reference product is a generation failure.';
 
