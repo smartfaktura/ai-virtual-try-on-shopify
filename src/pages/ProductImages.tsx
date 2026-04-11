@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError, sendWake, paceDelay } from '@/lib/enqueueGeneration';
-import { computeTotalImages, expandMultiSelects, computeTotalImagesPerProduct } from '@/lib/sceneVariations';
+import { computeTotalImages, expandMultiSelects, computeTotalImagesPerProduct, computeTotalImagesPerCategory } from '@/lib/sceneVariations';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
@@ -69,8 +69,8 @@ export default function ProductImages() {
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
-  const [perProductScenes, setPerProductScenes] = useState<Map<string, Set<string>>>(new Map());
-  const [forcedActiveProductId, setForcedActiveProductId] = useState<string | null>(null);
+  const [perCategoryScenes, setPerCategoryScenes] = useState<Map<string, Set<string>>>(new Map());
+  const [forcedActiveCategoryId, setForcedActiveCategoryId] = useState<string | null>(null);
   const [sceneExtraRefs, setSceneExtraRefs] = useState<Record<string, string>>({});
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
   const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
@@ -157,26 +157,42 @@ export default function ProductImages() {
     return undefined;
   }, [selectedProducts, analyses]);
 
+  // Compute categoryGroups: Map<categoryId, productId[]>
+  const categoryGroups = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    for (const p of selectedProducts) {
+      let cat = 'other';
+      const liveAnalysis = analyses[p.id];
+      if (liveAnalysis?.category) { cat = liveAnalysis.category; }
+      else {
+        const analysis = p.analysis_json as any;
+        if (analysis?.category) { cat = analysis.category; }
+        else {
+          const combined = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
+          for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+            if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) { cat = catId; break; }
+          }
+        }
+      }
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat)!.push(p.id);
+    }
+    return groups;
+  }, [selectedProducts, analyses]);
+
   // Memoize hasMultipleCategories
   const hasMultipleCategories = useMemo(() => {
-    const cats = new Set<string>();
-    for (const p of selectedProducts) {
-      // Check live analyses first
-      const liveAnalysis = analyses[p.id];
-      if (liveAnalysis?.category) { cats.add(liveAnalysis.category); continue; }
-      // Then cached analysis_json
-      const analysis = p.analysis_json as any;
-      if (analysis?.category) { cats.add(analysis.category); continue; }
-      // Keyword fallback to resolve raw product_type to category ID
-      const combined = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
-      let resolved = 'other';
-      for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-        if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) { resolved = catId; break; }
-      }
-      cats.add(resolved);
+    return categoryGroups.size > 1;
+  }, [categoryGroups]);
+
+  // Category product counts for credit calculation
+  const categoryProductCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const [catId, productIds] of categoryGroups) {
+      counts.set(catId, productIds.length);
     }
-    return cats.size > 1;
-  }, [selectedProducts, analyses]);
+    return counts;
+  }, [categoryGroups]);
 
   // Check for last-used settings when entering Refine step
   useEffect(() => {
@@ -218,8 +234,8 @@ export default function ProductImages() {
 
   const imageCount = parseInt(details.imageCount || '1', 10);
   const creditsPerImage = 6;
-  const totalImages = (perProductScenes.size > 0 && hasMultipleCategories)
-    ? computeTotalImagesPerProduct(perProductScenes, allScenes, imageCount, details)
+  const totalImages = (perCategoryScenes.size > 0 && hasMultipleCategories)
+    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imageCount, details)
     : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
@@ -247,7 +263,7 @@ export default function ProductImages() {
     const key = Array.from(selectedProductIds).sort().join(',');
     if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
       setSelectedSceneIds(new Set());
-      setPerProductScenes(new Map());
+      setPerCategoryScenes(new Map());
       setSceneExtraRefs({});
       setDetails(INITIAL_DETAILS);
       if (step > 1) setStep(1);
@@ -368,8 +384,8 @@ export default function ProductImages() {
     if (!canAfford) { openBuyModal(); return; }
 
     const imgCount = parseInt(details.imageCount || '1', 10);
-    const totalExpected = (perProductScenes.size > 0 && hasMultipleCategories)
-      ? computeTotalImagesPerProduct(perProductScenes, allScenes, imgCount, details)
+    const totalExpected = (perCategoryScenes.size > 0 && hasMultipleCategories)
+      ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imgCount, details)
       : computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details);
     setExpectedJobCount(totalExpected);
     setEnqueuedCount(0);
@@ -417,9 +433,16 @@ export default function ProductImages() {
 
       // Each scene gets its own job (1 image per job for reliability)
       // Multi-select fields expand into separate variation jobs
-      const productSceneIds = perProductScenes.get(product.id);
-      const scenesForProduct = productSceneIds
-        ? selectedScenes.filter(s => productSceneIds.has(s.id))
+      // Look up the product's category to get its assigned scenes
+      const productCategory = (() => {
+        for (const [catId, pids] of categoryGroups) {
+          if (pids.includes(product.id)) return catId;
+        }
+        return null;
+      })();
+      const categorySceneIds = productCategory ? perCategoryScenes.get(productCategory) : null;
+      const scenesForProduct = categorySceneIds
+        ? selectedScenes.filter(s => categorySceneIds.has(s.id))
         : selectedScenes;
       for (let sceneIdx = 0; sceneIdx < scenesForProduct.length; sceneIdx++) {
         const scene = scenesForProduct[sceneIdx];
@@ -747,8 +770,8 @@ export default function ProductImages() {
     switch (step) {
       case 1: return selectedProductIds.size > 0;
       case 2: {
-        if (hasMultipleCategories && perProductScenes.size > 0) {
-          return selectedProducts.every(p => (perProductScenes.get(p.id)?.size || 0) > 0);
+        if (hasMultipleCategories && perCategoryScenes.size > 0) {
+          return Array.from(categoryGroups.keys()).every(catId => (perCategoryScenes.get(catId)?.size || 0) > 0);
         }
         return selectedSceneIds.size > 0;
       }
@@ -762,13 +785,12 @@ export default function ProductImages() {
     switch (step) {
       case 1: setStep(2); break;
       case 2: {
-        // In multi-category mode, check each product has at least 1 shot
-        if (hasMultipleCategories && perProductScenes.size > 0) {
-          const incomplete = selectedProducts.find(p => (perProductScenes.get(p.id)?.size || 0) === 0);
-          if (incomplete) {
-            setForcedActiveProductId(incomplete.id);
-            const name = incomplete.title?.split(' ').slice(0, 4).join(' ') || 'this product';
-            toast.warning(`Please select at least one shot for "${name}"`);
+        // In multi-category mode, check each category group has at least 1 shot
+        if (hasMultipleCategories && perCategoryScenes.size > 0) {
+          const incompleteCatId = Array.from(categoryGroups.keys()).find(catId => (perCategoryScenes.get(catId)?.size || 0) === 0);
+          if (incompleteCatId) {
+            setForcedActiveCategoryId(incompleteCatId);
+            toast.warning(`Please select at least one shot for this category`);
             return;
           }
         }
@@ -991,11 +1013,12 @@ export default function ProductImages() {
                 onSelectionChange={setSelectedSceneIds}
                 selectedProducts={selectedProducts}
                 productAnalyses={analyses}
-                perProductScenes={perProductScenes}
-                onPerProductScenesChange={setPerProductScenes}
+                perCategoryScenes={perCategoryScenes}
+                onPerCategoryScenesChange={setPerCategoryScenes}
+                categoryGroups={categoryGroups}
                 hasMultipleCategories={hasMultipleCategories}
-                forcedActiveProductId={forcedActiveProductId}
-                onForcedActiveProductIdConsumed={() => setForcedActiveProductId(null)}
+                forcedActiveCategoryId={forcedActiveCategoryId}
+                onForcedActiveCategoryIdConsumed={() => setForcedActiveCategoryId(null)}
               />
             )}
 
@@ -1037,7 +1060,8 @@ export default function ProductImages() {
                 onDetailsChange={setDetails}
                 allProducts={userProducts}
                 selectedProductIds={selectedProductIds}
-                perProductScenes={perProductScenes}
+                perCategoryScenes={perCategoryScenes}
+                categoryGroups={categoryGroups}
               />
             )}
 
