@@ -1,38 +1,23 @@
 
 
-# Library Redesign — Scope Clarification
+# Fix Favorite Overlay on Library Cards
 
-## What stays the same (no changes)
-- `useLibraryItems` hook — all data fetching, pagination, sorting, search logic untouched
-- Delete logic (single + bulk) — identical
-- Bulk download ZIP — identical
-- Upscale flow — identical
-- `LibraryDetailModal` — no structural changes
-- Column layout system — same masonry approach
+## Problem
+Two separate favorite indicators overlap at `top-3 right-3`:
+1. A **persistent heart** (always visible when favorited) — small, no background
+2. A **hover heart button** (visible on hover) — larger, with circular `bg-black/40` background
 
-## What changes — purely UI + two small additions
+They stack on top of each other on hover, creating the messy look from the screenshot.
 
-### 1. UI-only changes in `src/pages/Jobs.tsx`
-- **Header text**: "Library" → "My Library" + new subtitle
-- **Smart view tabs** (All / Favorites / Brand Ready / Ready to Publish) replace current source filter pills — these are client-side filters on top of existing data
-- **Search placeholder** updated
-- **Filter popover** reorganized (Product, Type, Status, Source)
-- **Grid gap** widened from `gap-1` to `gap-2`
-- **Loading overlay** removed (the opacity dim)
-- **Floating bar** gets 2 new buttons (Favorite, Mark Status) alongside existing Download/Delete/Enhance
+## Fix
+**Remove the persistent favorite indicator entirely** (lines 113-120). The hover overlay heart already shows the filled/unfilled state. When not hovering, favorited items don't need a persistent badge — the Favorites smart view tab handles filtering.
 
-### 2. UI-only changes in `src/components/app/LibraryImageCard.tsx`
-- Add heart icon on hover (top-right)
-- Add small status pill on hover (bottom-left)
-- Move delete button from card hover → detail modal only
+If we want a subtle always-visible indicator for favorited items, move it to a **different position** (e.g., bottom-left as a small dot or glow) so it never collides with the hover button. But the cleaner approach is: heart button on hover only, filled red when favorited.
 
-### 3. Two new DB tables (small)
-- `library_favorites` — just `user_id + image_id`, enables the Favorites tab
-- `library_asset_status` — `user_id + image_id + status`, enables Brand Ready / Ready to Publish tabs
+## Changes — single file
 
-### 4. Two small hooks
-- `useLibraryFavorites` — fetches favorite IDs as a Set, toggle function
-- `useLibraryAssetStatus` — fetches status map, set/bulk-set function
-
-**Bottom line**: The main data engine is untouched. This is a visual redesign + two lightweight state tables for favorites/status.
+### `src/components/app/LibraryImageCard.tsx`
+- **Remove** the persistent favorite indicator block (lines 113-120)
+- The hover overlay heart button (lines 163-174) already handles both states (filled rose when favorited, outline when not)
+- No other changes needed
 
