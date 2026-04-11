@@ -4,7 +4,7 @@ import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
-  TrendingUp, BookOpen,
+  TrendingUp, BookOpen, Clock,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
@@ -56,6 +56,7 @@ const navItems = [
   { label: 'Video', icon: Film, path: '/app/video' },
   { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
+  { label: 'History', icon: Clock, path: '/app/history' },
   { label: 'Catalog Studio', icon: LayoutTemplate, path: '/app/catalog' },
   { label: 'Brand Models', icon: Users, path: '/app/models' },
   { label: 'Earn Credits', icon: Gift, path: '#earn-credits' },
