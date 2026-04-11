@@ -836,38 +836,15 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
             </button>
           );
         })}
-      </div>
-
-      {/* Compact status chips + apply-all */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {categoryIds.map(catId => {
-            const count = perCategoryScenes.get(catId)?.size || 0;
-            const needsShots = count === 0;
-            const label = CATEGORY_LABELS[catId] || catId;
-            return (
-              <button
-                key={catId}
-                onClick={() => setActiveCategoryId(catId)}
-                className={cn(
-                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors cursor-pointer border',
-                  needsShots
-                    ? 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
-                    : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
-                )}
-              >
-                <span className={cn('w-1.5 h-1.5 rounded-full', needsShots ? 'bg-destructive' : 'bg-primary')} />
-                {label} {count > 0 ? `✓ ${count}` : '0'}
-              </button>
-            );
-          })}
-        </div>
         {activeIds.size > 0 && (
-          <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 sm:ml-auto w-full sm:w-auto" onClick={handleApplyToAll}>
-            <Copy className="w-3 h-3" />Apply to all
+          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 w-full sm:w-auto" onClick={handleApplyToAll}>
+            <Copy className="w-3.5 h-3.5" />Apply to all categories
           </Button>
         )}
       </div>
+      <p className="text-xs text-muted-foreground">
+        Select shots for each category below. Use "Apply to all" to copy your selection across categories.
+      </p>
 
       {/* Scene picker for active category */}
       <SharedScenePicker
