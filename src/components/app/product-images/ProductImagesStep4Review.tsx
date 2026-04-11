@@ -9,7 +9,7 @@ import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 import { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './ProductImagesStep3Refine';
-import { computeTotalImages, computeTotalImagesPerProduct } from '@/lib/sceneVariations';
+import { computeTotalImages, computeTotalImagesPerCategory } from '@/lib/sceneVariations';
 import type { UserProduct, DetailSettings, ProductImageScene } from './types';
 
 /* ── Chip Selector (local) ── */
@@ -45,7 +45,8 @@ interface Step4Props {
   onDetailsChange?: (d: DetailSettings) => void;
   allProducts?: UserProduct[];
   selectedProductIds?: Set<string>;
-  perProductScenes?: Map<string, Set<string>>;
+  perCategoryScenes?: Map<string, Set<string>>;
+  categoryGroups?: Map<string, string[]>;
 }
 
 const AESTHETIC_LABELS: Record<string, string> = {
@@ -72,7 +73,7 @@ function friendlyLabel(val: string | undefined): string {
   return AESTHETIC_LABELS[val] || val.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
-export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep, onDetailsChange, allProducts = [], selectedProductIds = new Set(), perProductScenes }: Step4Props) {
+export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep, onDetailsChange, allProducts = [], selectedProductIds = new Set(), perCategoryScenes, categoryGroups }: Step4Props) {
   const { allScenes: dbScenes } = useProductImageScenes();
   const selectedScenes = dbScenes.filter(s => selectedSceneIds.has(s.id));
   const update = useCallback((partial: Partial<DetailSettings>) => {
@@ -80,8 +81,17 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   }, [details, onDetailsChange]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
-  const totalImages = (perProductScenes && perProductScenes.size > 0)
-    ? computeTotalImagesPerProduct(perProductScenes, dbScenes, imageCount, details)
+  const categoryProductCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    if (categoryGroups) {
+      for (const [catId, productIds] of categoryGroups) {
+        counts.set(catId, productIds.length);
+      }
+    }
+    return counts;
+  }, [categoryGroups]);
+  const totalImages = (perCategoryScenes && perCategoryScenes.size > 0)
+    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, dbScenes, imageCount, details)
     : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const costPerImage = 6;
   const totalCredits = totalImages * costPerImage;
