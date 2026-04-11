@@ -1084,7 +1084,7 @@ export default function ProductImages() {
                           );
                         })}
                       </div>
-                      {loadMoreBtn}
+                      {loadMoreSentinel}
                     </div>
                   );
                 }
@@ -1158,7 +1158,7 @@ export default function ProductImages() {
                         );
                       })}
                     </div>
-                    {loadMoreBtn}
+                    {loadMoreSentinel}
                   </>
                 );
               })()
