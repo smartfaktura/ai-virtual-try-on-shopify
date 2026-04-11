@@ -749,7 +749,7 @@ async function generateImage(
 
       const generationConfig: Record<string, unknown> = {
         responseModalities: ["IMAGE", "TEXT"],
-        temperature: 1.0,
+        temperature: 0.8,
         imageConfig: {
           ...(aspectRatio ? { aspectRatio } : {}),
           imageSize: "2K",
