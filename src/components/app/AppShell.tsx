@@ -50,7 +50,7 @@ const prefetchRoute = (path: string) => {
 
 const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
-  { label: 'Visuals Studio', icon: Layers, path: '/app/workflows' },
+  { label: 'Visual Studio', icon: Layers, path: '/app/workflows' },
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Explore', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
