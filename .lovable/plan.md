@@ -1,61 +1,32 @@
 
 
-# Simplify Multi-Product Scene Selection
+# Fix Model Generation — Switch to Native Gemini API
 
-## Problems
-1. **Same-category products get separate tabs unnecessarily** — if you select 3 clothing items, each gets its own tab even though they'd all use the same scenes. This is redundant and confusing.
-2. **Product tabs aren't obviously clickable** — users don't realize they can switch between products to assign scenes.
-3. **Continue button behavior is unclear** — it's not obvious that Continue will jump to the next incomplete product instead of advancing.
+## Problem
+The `generate-user-model` edge function uses the **OpenAI-compatible Gemini endpoint** (`/v1beta/openai/chat/completions`) for image generation. This endpoint doesn't properly support `modalities: ["image", "text"]`, so every generation attempt fails silently. The response parsing (`data.choices[0].message.images[0].image_url.url`) also doesn't match the actual response format.
 
-## Solution: Group by Category, Not by Product
+Meanwhile, the working `generate-freestyle` function uses the **native Gemini endpoint** (`/v1beta/models/${model}:generateContent`) which correctly returns images via `candidates[0].content.parts[].inlineData`.
 
-### Core Change
-Instead of one tab per product, group products by their detected category. Products sharing the same category share one scene selection. Only products in **different** categories get separate tabs.
+## Fix
 
-**Example with 6 products:**
-- 2 dresses + 1 scarf + 3 jeans → 3 groups: "Dresses (2)", "Scarves (1)", "Jeans (3)"
-- Each group gets one scene selection that applies to all products in that group
-- 3 clothing items all in "garments" → single shared picker (no tabs at all)
+### File: `supabase/functions/generate-user-model/index.ts`
 
-### Data Model
-Replace `perProductScenes: Map<productId, Set<sceneId>>` with `perCategoryScenes: Map<categoryId, Set<sceneId>>`. During generation, each product uses the scenes assigned to its category group.
+**`generateSingleImage` function** — rewrite to use the native Gemini API:
 
-### UI Changes (ProductImagesStep2Scenes.tsx)
+1. **Endpoint**: Change from `/v1beta/openai/chat/completions` to `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent`
+2. **Auth header**: Change from `Authorization: Bearer` to `x-goog-api-key: ${apiKey}`
+3. **Request body**: Change from OpenAI format to native Gemini format:
+   - `contents: [{ role: "user", parts: [...] }]` instead of `messages`
+   - `generationConfig: { responseModalities: ["IMAGE", "TEXT"] }` instead of `modalities`
+   - Text parts as `{ text: "..." }` instead of `{ type: "text", text: "..." }`
+   - Image parts as `{ inlineData: { mimeType, data } }` or `{ fileData: { fileUri } }` instead of `{ type: "image_url", ... }`
+4. **Response parsing**: Extract image from `candidates[0].content.parts[].inlineData` (same pattern as `generate-freestyle`)
+5. **Reference images**: Convert image URLs to inline base64 data for the native API, or use `fileData` with the URL
 
-1. **Category group tabs** instead of product tabs:
-   - Tab shows category name + product count + thumbnails: `"Dresses (2)" [👗👗]`
-   - Badge shows selected shot count per group
-   - Warning indicator if group has 0 shots
+**Also fix the analysis call** (line 213) — this one uses the OpenAI-compatible endpoint for text-only analysis with `gemini-2.5-flash`. This should work but for consistency, switch to the Lovable AI gateway (`ai.gateway.lovable.dev/v1`) with `LOVABLE_API_KEY` for the analysis step, keeping `GEMINI_API_KEY` only for image generation.
 
-2. **Continue button behavior**:
-   - If current group has shots selected but next group doesn't → auto-switch to next incomplete group with toast
-   - If all groups have shots → advance to Step 3
-   - Summary strip: `"Dresses → 4 shots · Scarves → 0 shots (needs shots)"`
+### No other files need changes.
 
-3. **Single category = no tabs**: If all products resolve to the same category, use the existing shared picker with zero changes.
-
-### ProductImages.tsx Changes
-- Compute `categoryGroups: Map<categoryId, productId[]>` from product analyses
-- Replace `perProductScenes` with `perCategoryScenes: Map<categoryId, Set<sceneId>>`
-- Update `hasMultipleCategories` to use category groups
-- Generation loop: look up each product's category → get scenes for that category
-- Credit calc: sum per-category (scenes × products-in-category × imageCount)
-- `canProceed` step 2: every category group has ≥1 scene
-- `handleNext` step 2: find first empty category group, switch to it
-
-### Files to Change
-
-| File | Change |
-|------|--------|
-| `src/pages/ProductImages.tsx` | Replace `perProductScenes` with `perCategoryScenes`; compute `categoryGroups`; update generation loop, credit calc, validation |
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Replace product tabs with category-group tabs showing grouped thumbnails; update props; clearer tab styling with "Select shots for this group" header |
-| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Update review breakdown to show per-category-group instead of per-product |
-| `src/lib/sceneVariations.ts` | Update `computeTotalImagesPerProduct` → `computeTotalImagesPerCategory` accepting category groups |
-
-### Tab Design
-- Larger, more button-like tabs with clear active state
-- Each tab: category icon + "Dresses" + "(2 products)" + shot count badge
-- Small product thumbnail row inside each tab
-- Active tab has strong primary border + subtle background
-- Empty tab has pulsing "Select shots →" label instead of just a warning icon
+## Summary
+The root cause is using the wrong API endpoint format. The fix aligns `generate-user-model` with the same native Gemini API pattern already used successfully by `generate-freestyle` and other working edge functions.
 
