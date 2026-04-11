@@ -90,6 +90,32 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["shoes", /high heel|stiletto|pump/i, "high-heels"],
 ];
 
+/** Normalize common AI mismatches to valid category_collection IDs */
+const CATEGORY_ALIASES: Record<string, string> = {
+  "accessories": "bags-accessories",
+  "food-beverage": "food",
+  "food-beverages": "food",
+  "jewelry": "jewellery-necklaces",
+  "jewellery": "jewellery-necklaces",
+  "fashion": "garments",
+  "beauty": "beauty-skincare",
+  "skincare": "beauty-skincare",
+  "makeup": "makeup-lipsticks",
+  "cosmetics": "makeup-lipsticks",
+  "electronics": "tech-devices",
+  "technology": "tech-devices",
+  "supplements": "supplements-wellness",
+  "health": "supplements-wellness",
+  "wellness": "supplements-wellness",
+  "home": "home-decor",
+  "decor": "home-decor",
+  "footwear": "shoes",
+  "sports": "activewear",
+  "fitness": "activewear",
+  "drink": "beverages",
+  "drinks": "beverages",
+};
+
 function refineCategory(cat: string, title: string): string {
   for (const [parent, pattern, child] of SPECIFICITY_OVERRIDES) {
     if (cat === parent && pattern.test(title)) return child;
@@ -97,35 +123,43 @@ function refineCategory(cat: string, title: string): string {
   return cat;
 }
 
+/** Valid category_collection IDs (built from CATEGORY_KEYWORDS keys) */
+const VALID_CATEGORY_IDS = new Set(Object.keys(CATEGORY_KEYWORDS));
+
+function normalizeAndValidateCategory(raw: string, title: string): string | null {
+  let cat = refineCategory(raw, title);
+  if (VALID_CATEGORY_IDS.has(cat)) return cat;
+  // Try alias
+  const aliased = CATEGORY_ALIASES[cat.toLowerCase()];
+  if (aliased) {
+    cat = refineCategory(aliased, title);
+    if (VALID_CATEGORY_IDS.has(cat)) return cat;
+  }
+  return null; // invalid — fall through to keyword detection
+}
+
 function detectRelevantCategories(products: UserProduct[], productAnalyses?: Record<string, { category: string }>): Set<string> {
   const matched = new Set<string>();
-  const analyzedIds = new Set<string>();
 
-  if (productAnalyses) {
-    for (const p of products) {
-      const cat = productAnalyses[p.id]?.category;
-      if (cat) {
-        matched.add(refineCategory(cat, p.title || ''));
-        analyzedIds.add(p.id);
+  for (const p of products) {
+    // Try AI analysis first, then cached analysis_json
+    const rawCat = productAnalyses?.[p.id]?.category
+      || ((p as any).analysis_json as { category?: string } | null)?.category;
+
+    if (rawCat) {
+      const valid = normalizeAndValidateCategory(rawCat, p.title || '');
+      if (valid) {
+        matched.add(valid);
+        continue; // resolved — skip keyword fallback
       }
     }
-  }
-  for (const p of products) {
-    if (analyzedIds.has(p.id)) continue;
-    const aj = (p as any).analysis_json as { category?: string } | null;
-    if (aj?.category) {
-      matched.add(refineCategory(aj.category, p.title || ''));
-      analyzedIds.add(p.id);
-    }
-  }
 
-  const unanalyzed = products.filter(p => !analyzedIds.has(p.id));
-  for (const p of unanalyzed) {
+    // Keyword fallback
     const text = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
     for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
       if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(text))) {
         matched.add(catId);
-        break; // one category per product
+        break;
       }
     }
   }
