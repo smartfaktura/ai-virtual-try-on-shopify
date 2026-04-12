@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Check, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy, Import,
+  Eye, EyeOff, Pencil, Save, X, Check, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy, Import, Palette,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -758,6 +758,68 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
           })}
         </div>
       </div>
+
+      {/* Curator's Picks — only visible when aestheticColor trigger is active */}
+      {(draft.trigger_blocks || []).includes('aestheticColor') && (
+        <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border/40">
+          <Label className="text-xs font-semibold flex items-center gap-1.5">
+            <Palette className="w-3.5 h-3.5" />
+            Curator's Picks (Suggested Colors)
+          </Label>
+          <p className="text-[11px] text-muted-foreground">Recommended colors shown to users above generic presets for this scene.</p>
+          {((draft as any).suggested_colors || []).map((pick: {hex: string; label: string}, idx: number) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded border border-border flex-shrink-0" style={{ backgroundColor: pick.hex }} />
+              <Input
+                value={pick.hex}
+                onChange={e => {
+                  const arr = [...((draft as any).suggested_colors || [])];
+                  arr[idx] = { ...arr[idx], hex: e.target.value };
+                  set('suggested_colors' as any, arr);
+                }}
+                className="w-24 text-xs font-mono h-8"
+                placeholder="#5F8A8B"
+              />
+              <Input
+                value={pick.label}
+                onChange={e => {
+                  const arr = [...((draft as any).suggested_colors || [])];
+                  arr[idx] = { ...arr[idx], label: e.target.value };
+                  set('suggested_colors' as any, arr);
+                }}
+                className="flex-1 text-xs h-8"
+                placeholder="Color name"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => {
+                  const arr = [...((draft as any).suggested_colors || [])];
+                  arr.splice(idx, 1);
+                  set('suggested_colors' as any, arr.length ? arr : null);
+                }}
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1.5"
+            onClick={() => {
+              const arr = [...((draft as any).suggested_colors || [])];
+              arr.push({ hex: '#888888', label: '' });
+              set('suggested_colors' as any, arr);
+            }}
+          >
+            <Plus className="w-3.5 h-3.5" /> Add color
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <Label className="text-xs">Prompt Template</Label>

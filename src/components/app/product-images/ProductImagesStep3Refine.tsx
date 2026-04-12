@@ -2162,7 +2162,7 @@ export function ProductImagesStep3Refine({
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    One consistent color for doors, chairs, surfaces & props across {aestheticColorScenes.length} shot{aestheticColorScenes.length !== 1 ? 's' : ''}.
+                    Set a signature color that carries across doors, chairs, surfaces & props in {aestheticColorScenes.length} shot{aestheticColorScenes.length !== 1 ? 's' : ''} — creating a cohesive visual story.
                   </p>
                 </div>
                 {!details.aestheticColorHex && (
@@ -2182,62 +2182,100 @@ export function ProductImagesStep3Refine({
                     { hex: '#2D5F3E', label: 'Forest' },
                     { hex: '#3D3D3D', label: 'Charcoal' },
                   ] as const;
-                  const presetHexes = AESTHETIC_PRESETS.map(p => p.hex as string);
-                  const isCustomActive = !!details.aestheticColorHex && !presetHexes.includes(details.aestheticColorHex);
+
+                  // Collect curator picks from selected aesthetic-color scenes
+                  const curatorPicks: Array<{hex: string; label: string}> = [];
+                  const seenHex = new Set<string>();
+                  for (const scene of aestheticColorScenes) {
+                    for (const pick of scene.suggestedColors || []) {
+                      const normHex = pick.hex.toLowerCase();
+                      if (!seenHex.has(normHex)) {
+                        seenHex.add(normHex);
+                        curatorPicks.push(pick);
+                      }
+                    }
+                  }
+
+                  const allPresetHexes = [...AESTHETIC_PRESETS.map(p => p.hex as string), ...curatorPicks.map(p => p.hex)];
+                  const isCustomActive = !!details.aestheticColorHex && !allPresetHexes.includes(details.aestheticColorHex);
+
+                  const isDark = (hex: string) => { const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); if (!m) return false; return (parseInt(m[1],16)*299+parseInt(m[2],16)*587+parseInt(m[3],16)*114)/1000 < 140; };
+
+                  const renderSwatch = (swatch: {hex: string; label: string}) => {
+                    const selected = details.aestheticColorHex === swatch.hex;
+                    const dark = isDark(swatch.hex);
+                    return (
+                      <button
+                        key={swatch.hex}
+                        type="button"
+                        onClick={() => update({ aestheticColorHex: selected ? undefined : swatch.hex })}
+                        className={cn(
+                          'relative aspect-square rounded-xl overflow-hidden transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                          selected
+                            ? 'ring-2 ring-primary shadow-md scale-[1.04]'
+                            : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm'
+                        )}
+                      >
+                        <div className="absolute inset-0" style={{ backgroundColor: swatch.hex }} />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent pt-4 pb-1 px-1">
+                          <span className="text-[9px] font-medium text-white leading-none block text-center truncate">{swatch.label}</span>
+                        </div>
+                        {selected && (
+                          <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                            <Check className={cn('w-2.5 h-2.5', dark ? 'text-white' : 'text-primary-foreground')} />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  };
+
                   return (
                     <>
-                      <div className="grid grid-cols-4 sm:grid-cols-9 gap-1.5">
-                        {AESTHETIC_PRESETS.map(swatch => {
-                          const selected = details.aestheticColorHex === swatch.hex;
-                          const dark = (() => { const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(swatch.hex); if (!m) return false; return (parseInt(m[1],16)*299+parseInt(m[2],16)*587+parseInt(m[3],16)*114)/1000 < 140; })();
-                          return (
-                            <button
-                              key={swatch.hex}
-                              type="button"
-                              onClick={() => update({ aestheticColorHex: selected ? undefined : swatch.hex })}
-                              className={cn(
-                                'relative aspect-square rounded-xl overflow-hidden transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                                selected
-                                  ? 'ring-2 ring-primary shadow-md scale-[1.04]'
-                                  : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm'
-                              )}
-                            >
-                              <div className="absolute inset-0" style={{ backgroundColor: swatch.hex }} />
-                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent pt-4 pb-1 px-1">
-                                <span className="text-[9px] font-medium text-white leading-none block text-center truncate">{swatch.label}</span>
-                              </div>
-                              {selected && (
-                                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                  <Check className={cn('w-2.5 h-2.5', dark ? 'text-white' : 'text-primary-foreground')} />
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                        {/* Custom color card */}
-                        <button
-                          type="button"
-                          onClick={() => setAestheticPickerOpen(true)}
-                          className={cn(
-                            'relative aspect-square rounded-xl overflow-hidden transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                            isCustomActive
-                              ? 'ring-2 ring-primary shadow-md scale-[1.04]'
-                              : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm'
-                          )}
-                        >
-                          <div className="absolute inset-0" style={{ backgroundColor: isCustomActive ? details.aestheticColorHex : undefined }}>
-                            {!isCustomActive && <div className="w-full h-full bg-muted/30" />}
+                      {curatorPicks.length > 0 && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3 text-primary/70" />
+                            <span className="text-[11px] font-semibold text-primary/80">Recommended for your shots</span>
                           </div>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-                            <Plus className={cn('w-4 h-4', isCustomActive ? 'text-white drop-shadow-sm' : 'text-muted-foreground')} />
-                            <span className={cn('text-[9px] font-medium', isCustomActive ? 'text-white drop-shadow-sm' : 'text-muted-foreground')}>Custom</span>
-                          </div>
-                          {isCustomActive && (
-                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                          <div className="p-2 rounded-lg bg-primary/5 border border-primary/10">
+                            <div className="grid grid-cols-4 sm:grid-cols-9 gap-1.5">
+                              {curatorPicks.map(renderSwatch)}
                             </div>
-                          )}
-                        </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-1.5">
+                        {curatorPicks.length > 0 && (
+                          <span className="text-[11px] font-medium text-muted-foreground">More colors</span>
+                        )}
+                        <div className="grid grid-cols-4 sm:grid-cols-9 gap-1.5">
+                          {AESTHETIC_PRESETS.map(renderSwatch)}
+                          {/* Custom color card */}
+                          <button
+                            type="button"
+                            onClick={() => setAestheticPickerOpen(true)}
+                            className={cn(
+                              'relative aspect-square rounded-xl overflow-hidden transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                              isCustomActive
+                                ? 'ring-2 ring-primary shadow-md scale-[1.04]'
+                                : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm'
+                            )}
+                          >
+                            <div className="absolute inset-0" style={{ backgroundColor: isCustomActive ? details.aestheticColorHex : undefined }}>
+                              {!isCustomActive && <div className="w-full h-full bg-muted/30" />}
+                            </div>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+                              <Plus className={cn('w-4 h-4', isCustomActive ? 'text-white drop-shadow-sm' : 'text-muted-foreground')} />
+                              <span className={cn('text-[9px] font-medium', isCustomActive ? 'text-white drop-shadow-sm' : 'text-muted-foreground')}>Custom</span>
+                            </div>
+                            {isCustomActive && (
+                              <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                              </div>
+                            )}
+                          </button>
+                        </div>
                       </div>
                       <ColorPickerDialog
                         open={aestheticPickerOpen}
