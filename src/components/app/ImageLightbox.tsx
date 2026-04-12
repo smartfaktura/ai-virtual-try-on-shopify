@@ -126,8 +126,8 @@ export function ImageLightbox({
 
       {/* Main image + actions */}
       <div className={cn(
-        'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200 overflow-hidden',
-        isMobile ? 'max-w-[94vw] max-h-[90vh] px-1' : 'max-w-[90vw] max-h-[90vh]'
+        'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200 overflow-hidden pt-14',
+        isMobile ? 'max-w-[94vw] max-h-[90vh] px-1' : 'max-w-[90vw] max-h-[85vh]'
       )}>
         <ShimmerImage
           key={currentIndex}
@@ -135,11 +135,11 @@ export function ImageLightbox({
           alt={`Generated image ${currentIndex + 1}`}
           className={cn(
             'max-w-full object-contain rounded-xl shadow-2xl shadow-black/40',
-            isMobile ? 'max-h-[60vh]' : 'max-h-[80vh]'
+            isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]'
           )}
           wrapperClassName={cn(
             'flex items-center justify-center max-w-full',
-            isMobile ? 'max-h-[60vh]' : 'max-h-[80vh]'
+            isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]'
           )}
         />
 
