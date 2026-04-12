@@ -1,25 +1,24 @@
 
 
-# Fix: Product Images page reloading during generation
+# Move Uncategorized Fragrance Scenes to Editorial
 
-## Problem
-The `versionCheck.ts` auto-reload guard only excludes `/app/catalog` from forced page reloads on new builds. When a new version deploys while a user is on `/app/generate/product-images` (especially during Step 5 generation), the page reloads, losing all in-memory wizard state and dropping back to Step 1.
+## What
+25 fragrance scenes currently have no `sub_category` (showing as "Uncategorized"). Move them all to the "Editorial" sub-category and remove the `background` trigger block from each.
 
-The session restore logic exists (persists job IDs to `sessionStorage`) but it cannot restore the full wizard context (selected products, scenes, detail settings, etc.) — only enough to resume polling. This means even if polling resumes, the user experience is broken.
+## Scenes affected
+Gradient Blue Studio, Shadow Play Studio, Earthy Driftwood Display, Warm Neutral Studio, Natural Woodscape, Frozen Surface Product, Red Gradient Embrace, Frozen Aura, Earthy Bubble Wrap, Dynamic Studio Background, Dramatic Rock Texture, Prism Glow Showcase, Dynamic Water Splash, Earthy Glow Stage, Earthy Woodland Product, Amber Glow Studio, Moody Wet Concrete, Aquatic Reflection, Botanical Oasis, Crimson Spotlight, Earthy Botanicals Plinth, Natural Light Backdrop, Sunny Shadows, Elegant Vanity Setup, Dark Elegance
 
-## Solution
-Extend the version check to also skip reloads on the product-images route, matching the existing catalog guard pattern.
+## Implementation
+Single data update via the insert tool:
 
-## File Changed
-
-### `src/lib/versionCheck.ts`
-Add `/app/generate/product-images` to the reload exclusion list alongside `/app/catalog`:
-
-```ts
-// Don't reload while user is on catalog or product-images page
-if (window.location.pathname.startsWith('/app/catalog')) return;
-if (window.location.pathname.startsWith('/app/generate/product-images')) return;
+```sql
+UPDATE product_image_scenes
+SET sub_category = 'Editorial',
+    trigger_blocks = '{}',
+    updated_at = now()
+WHERE category_collection = 'fragrance'
+  AND (sub_category IS NULL OR sub_category = '');
 ```
 
-One line addition. No other changes needed.
+No code changes needed — the frontend reads these fields dynamically.
 
