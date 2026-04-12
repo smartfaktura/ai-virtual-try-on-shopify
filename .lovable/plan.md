@@ -1,12 +1,16 @@
 
 
-# Use Zap Icon for Buy Credits Button
+# Change Zap Button to Navigate to Settings/Subscription
+
+## Problem
+The Zap icon button currently opens the "Buy Credits" modal, but the user wants it to relate to upgrading/subscriptions instead.
 
 ## Change
-**`src/components/app/CreditIndicator.tsx`**:
-- Replace the text `+` character with `<Zap className="w-3.5 h-3.5" />` from `lucide-react`
-- Add `Zap` to the import statement
-- Keep all existing button container styling (`w-8 h-8 rounded-full bg-white/10 ...`)
+**`src/components/app/CreditIndicator.tsx`** — one edit:
 
-One-line swap — no other changes needed.
+- Change the Zap button's `onClick` from `openBuyModal` to `() => navigate('/app/settings')` — the same destination as the "Upgrade" link
+- Update the `title` attribute from `"Buy credits"` to `"Manage plan"`
+- This makes the Zap button a quick shortcut to the subscription/plan settings page, which is where users upgrade, manage billing, and buy credit packs
+
+No other files need changes. The "Upgrade" text link and the Zap button will both go to settings, giving users two intuitive tap targets for plan management.
 
