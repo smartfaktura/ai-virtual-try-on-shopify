@@ -821,8 +821,25 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
         </div>
       )}
 
-      <div className="space-y-1.5">
-        <Label className="text-xs">Prompt Template</Label>
+      {/* Scene Outfit Direction — visible when personDetails or actionDetails triggers are active */}
+      {((draft.trigger_blocks || []).includes('personDetails') || (draft.trigger_blocks || []).includes('actionDetails')) && (
+        <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border/40">
+          <Label className="text-xs font-semibold flex items-center gap-1.5">
+            <Shirt className="w-3.5 h-3.5" />
+            Scene Outfit Direction
+          </Label>
+          <p className="text-[11px] text-muted-foreground">
+            Override the standard outfit lock for this scene. Supports dynamic tokens: <code className="bg-muted px-1 rounded text-[10px]">{'{{aestheticColor}}'}</code>, <code className="bg-muted px-1 rounded text-[10px]">{'{{productName}}'}</code>. Leave empty to use the default outfit system.
+          </p>
+          <Textarea
+            value={(draft as any).outfit_hint || ''}
+            onChange={e => set('outfit_hint' as any, e.target.value || null)}
+            className="font-mono text-xs min-h-[80px]"
+            placeholder="e.g. coordinated sportswear in {{aestheticColor}} tones, clean minimal styling, no distracting graphics"
+          />
+        </div>
+      )}
+
         <Textarea
           value={draft.prompt_template || ''}
           onChange={e => set('prompt_template', e.target.value)}
