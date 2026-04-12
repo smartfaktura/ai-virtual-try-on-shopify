@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Check, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy, Import,
+  Eye, EyeOff, Pencil, Save, X, Check, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy, Import, Palette,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
