@@ -1,4 +1,4 @@
-import { Sparkles, ArrowUpRight, Zap } from 'lucide-react';
+import { Sparkles, ArrowUpRight, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
@@ -51,11 +51,11 @@ export function CreditIndicator() {
           </div>
         </div>
         <button
-          onClick={() => navigate('/app/settings')}
-          className="w-8 h-8 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-base font-medium text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
-          title="Manage plan"
+          onClick={openBuyModal}
+          className="w-6 h-6 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
+          title="Buy credits"
         >
-          <Zap className="w-3.5 h-3.5" />
+          <Plus className="w-3 h-3" />
         </button>
       </div>
 
