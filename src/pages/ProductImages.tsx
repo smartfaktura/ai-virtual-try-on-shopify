@@ -576,98 +576,105 @@ export default function ProductImages() {
 
       for (let sceneIdx = 0; sceneIdx < scenesForProduct.length; sceneIdx++) {
         const scene = scenesForProduct[sceneIdx];
-        const variations = expandMultiSelects(scene, details);
+        const needsModel = scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails');
+        // For scenes needing a model, iterate over all selected models; otherwise just once with no model
+        const modelsForScene = needsModel && modelRefs.length > 0 ? modelRefs : [undefined];
 
-        for (let vIdx = 0; vIdx < variations.length; vIdx++) {
-          const variationOverride = variations[vIdx];
-          const variationDetails: DetailSettings = { ...details, ...variationOverride };
-          const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, selectedModelGender);
+        for (let mIdx = 0; mIdx < modelsForScene.length; mIdx++) {
+          const currentModelRef = modelsForScene[mIdx];
+          const variations = expandMultiSelects(scene, details);
 
-          const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
-          for (const ratioForJob of sceneRatios) {
-            for (let i = 0; i < imgCount; i++) {
-              const propProductIds = details.sceneProps?.[scene.id] || [];
-              const propProducts = propProductIds
-                .map(pid => userProducts.find(p => p.id === pid))
-                .filter(Boolean)
-                .map(p => p!);
-              const additionalProducts = propProducts.length > 0
-                ? await Promise.all(propProducts.map(async pp => ({
-                    title: pp.title,
-                    productType: pp.product_type,
-                    description: pp.description,
-                    imageUrl: await convertImageToBase64(pp.image_url),
-                  })))
-                : undefined;
+          for (let vIdx = 0; vIdx < variations.length; vIdx++) {
+            const variationOverride = variations[vIdx];
+            const variationDetails: DetailSettings = { ...details, ...variationOverride };
+            const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
 
-              const variationEntry = {
-                label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (sceneRatios.length > 1 ? ` [${ratioForJob}]` : ''),
-                instruction: variationInstruction,
-                aspect_ratio: ratioForJob,
-                ...(scene.useSceneReference && scene.previewUrl ? {
-                  use_scene_reference: true,
-                  preview_url: scene.previewUrl,
-                } : {}),
-              };
+            const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
+            for (const ratioForJob of sceneRatios) {
+              for (let i = 0; i < imgCount; i++) {
+                const propProductIds = details.sceneProps?.[scene.id] || [];
+                const propProducts = propProductIds
+                  .map(pid => userProducts.find(p => p.id === pid))
+                  .filter(Boolean)
+                  .map(p => p!);
+                const additionalProducts = propProducts.length > 0
+                  ? await Promise.all(propProducts.map(async pp => ({
+                      title: pp.title,
+                      productType: pp.product_type,
+                      description: pp.description,
+                      imageUrl: await convertImageToBase64(pp.image_url),
+                    })))
+                  : undefined;
 
-              const payload: Record<string, unknown> = {
-                workflow_id: WORKFLOW_ID,
-                workflow_name: 'Product Images',
-                workflow_slug: 'product-images',
-                product: {
-                  title: product.title,
-                  productType: productAnalysis?.category || product.product_type,
-                  description: product.description,
-                  dimensions: product.dimensions || undefined,
-                  weight: (product as any).weight || undefined,
-                  materials: (product as any).materials || undefined,
-                  color: (product as any).color || undefined,
-                  imageUrl: base64Image,
-                  analysis: productAnalysis || undefined,
-                },
-                product_name: product.title,
-                product_image_url: product.image_url,
-                extra_variations: [variationEntry],
-                selected_variations: [0],
-                ...(additionalProducts ? { additional_products: additionalProducts } : {}),
-                ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
-                ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-                ...(() => {
-                  const triggerBlocks = scene.triggerBlocks || [];
-                  const refs: Record<string, string> = {};
-                  for (const tb of triggerBlocks) {
-                    const perProductKey = `trigger:${tb}:${product.id}`;
-                    const globalKey = `trigger:${tb}`;
-                    const refUrl = sceneExtraRefs[perProductKey] || sceneExtraRefs[globalKey];
-                    if (refUrl && REFERENCE_TRIGGERS[tb]) {
-                      refs.extra_reference_image_url = refUrl;
-                      refs.extra_reference_label = REFERENCE_TRIGGERS[tb].promptLabel;
-                      break;
+                const variationEntry = {
+                  label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (sceneRatios.length > 1 ? ` [${ratioForJob}]` : '') + (modelsForScene.length > 1 && currentModelRef ? ` — ${currentModelRef.name}` : ''),
+                  instruction: variationInstruction,
+                  aspect_ratio: ratioForJob,
+                  ...(scene.useSceneReference && scene.previewUrl ? {
+                    use_scene_reference: true,
+                    preview_url: scene.previewUrl,
+                  } : {}),
+                };
+
+                const payload: Record<string, unknown> = {
+                  workflow_id: WORKFLOW_ID,
+                  workflow_name: 'Product Images',
+                  workflow_slug: 'product-images',
+                  product: {
+                    title: product.title,
+                    productType: productAnalysis?.category || product.product_type,
+                    description: product.description,
+                    dimensions: product.dimensions || undefined,
+                    weight: (product as any).weight || undefined,
+                    materials: (product as any).materials || undefined,
+                    color: (product as any).color || undefined,
+                    imageUrl: base64Image,
+                    analysis: productAnalysis || undefined,
+                  },
+                  product_name: product.title,
+                  product_image_url: product.image_url,
+                  extra_variations: [variationEntry],
+                  selected_variations: [0],
+                  ...(additionalProducts ? { additional_products: additionalProducts } : {}),
+                  ...(currentModelRef ? { model: currentModelRef } : {}),
+                  ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
+                  ...(() => {
+                    const triggerBlocks = scene.triggerBlocks || [];
+                    const refs: Record<string, string> = {};
+                    for (const tb of triggerBlocks) {
+                      const perProductKey = `trigger:${tb}:${product.id}`;
+                      const globalKey = `trigger:${tb}`;
+                      const refUrl = sceneExtraRefs[perProductKey] || sceneExtraRefs[globalKey];
+                      if (refUrl && REFERENCE_TRIGGERS[tb]) {
+                        refs.extra_reference_image_url = refUrl;
+                        refs.extra_reference_label = REFERENCE_TRIGGERS[tb].promptLabel;
+                        break;
+                      }
                     }
-                  }
-                  if (!refs.extra_reference_image_url) {
-                    if (sceneExtraRefs[scene.id]) {
-                      refs.extra_reference_image_url = sceneExtraRefs[scene.id];
-                    } else if (triggerBlocks.includes('backView')) {
-                      const backRef = sceneExtraRefs[`trigger:backView:${product.id}`] || sceneExtraRefs['trigger:backView'] || details.backReferenceUrl;
-                      if (backRef) refs.extra_reference_image_url = backRef;
+                    if (!refs.extra_reference_image_url) {
+                      if (sceneExtraRefs[scene.id]) {
+                        refs.extra_reference_image_url = sceneExtraRefs[scene.id];
+                      } else if (triggerBlocks.includes('backView')) {
+                        const backRef = sceneExtraRefs[`trigger:backView:${product.id}`] || sceneExtraRefs['trigger:backView'] || details.backReferenceUrl;
+                        if (backRef) refs.extra_reference_image_url = backRef;
+                      }
                     }
-                  }
-                  if (details.brandLogoText && triggerBlocks.includes('brandLogoOverlay')) {
-                    refs.brand_logo_text = details.brandLogoText;
-                  }
-                  return refs;
-                })(),
-                quality: 'high',
-                aspectRatio: ratioForJob,
-                batch_id: batchId,
-                scene_name: scene.title,
-                batch_outfit_lock: true,
-                batch_size: scenesForProduct.length,
-              };
+                    if (details.brandLogoText && triggerBlocks.includes('brandLogoOverlay')) {
+                      refs.brand_logo_text = details.brandLogoText;
+                    }
+                    return refs;
+                  })(),
+                  quality: 'high',
+                  aspectRatio: ratioForJob,
+                  batch_id: batchId,
+                  scene_name: scene.title,
+                  batch_outfit_lock: true,
+                  batch_size: scenesForProduct.length,
+                };
 
-              const key = `${product.id}_${scene.id}_v${vIdx}_r${ratioForJob}_${i}`;
-              allJobs.push({ key, payload, productTitle: product.title, hasModel: !!modelRef, batchId });
+                const key = `${product.id}_${scene.id}_m${mIdx}_v${vIdx}_r${ratioForJob}_${i}`;
+                allJobs.push({ key, payload, productTitle: product.title, hasModel: !!currentModelRef, batchId });
+              }
             }
           }
         }
