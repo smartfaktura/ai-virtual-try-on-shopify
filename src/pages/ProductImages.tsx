@@ -411,11 +411,14 @@ export default function ProductImages() {
   }, [selectedSceneIds, selectedProducts.length]);
 
   // Trigger product analysis when moving from step 1 to step 2
+  // Use a serialised ID string as dep to avoid re-triggering on array reference changes
+  const selectedProductIdString = selectedProducts.map(p => p.id).sort().join(',');
   useEffect(() => {
     if (step === 2 && selectedProducts.length > 0) {
       analyzeProducts(selectedProducts);
     }
-  }, [step, selectedProducts, analyzeProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, selectedProductIdString, analyzeProducts]);
 
   // Track which refs were auto-filled from product data vs manually uploaded
   const [autoFilledRefs, setAutoFilledRefs] = useState<Set<string>>(new Set());
