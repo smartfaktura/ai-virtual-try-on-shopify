@@ -279,17 +279,43 @@ export default function AdminProductImageScenes() {
 
   const handleMove = async (scene: DbScene, direction: 'up' | 'down') => {
     const key = scene.category_collection || 'other';
-    const group = grouped.get(key) || [];
-    const idx = group.findIndex(s => s.id === scene.id);
+    const allInCategory = grouped.get(key) || [];
+    // Filter to same sub_category only
+    const subKey = scene.sub_category || '';
+    const subGroup = allInCategory
+      .filter(s => (s.sub_category || '') === subKey)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+    const idx = subGroup.findIndex(s => s.id === scene.id);
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= group.length) return;
-    
-    const a = group[idx];
-    const b = group[swapIdx];
+    if (swapIdx < 0 || swapIdx >= subGroup.length) return;
+
+    const a = subGroup[idx];
+    const b = subGroup[swapIdx];
+
+    // If sort_order values are equal, normalize the entire sub-group first
+    let orderA = b.sort_order;
+    let orderB = a.sort_order;
+    if (a.sort_order === b.sort_order) {
+      // Re-index sequentially then swap
+      const baseOrder = Math.min(...subGroup.map(s => s.sort_order ?? 0));
+      const updates: Promise<any>[] = [];
+      subGroup.forEach((s, i) => {
+        const newOrder = baseOrder + i;
+        if (s.sort_order !== newOrder) {
+          updates.push(updateScene.mutateAsync({ id: s.id, updates: { sort_order: newOrder } }));
+        }
+      });
+      if (updates.length > 0) await Promise.all(updates);
+      // After normalization, recalculate swap values
+      orderA = baseOrder + swapIdx;
+      orderB = baseOrder + idx;
+    }
+
     try {
       await Promise.all([
-        updateScene.mutateAsync({ id: a.id, updates: { sort_order: b.sort_order } }),
-        updateScene.mutateAsync({ id: b.id, updates: { sort_order: a.sort_order } }),
+        updateScene.mutateAsync({ id: a.id, updates: { sort_order: orderA } }),
+        updateScene.mutateAsync({ id: b.id, updates: { sort_order: orderB } }),
       ]);
     } catch (e: any) {
       toast.error(e.message);
