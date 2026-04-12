@@ -1,15 +1,20 @@
 
 
-# Make the Plus (Buy Credits) Button Bigger
+# Premium "Add Credits" Button — Apple Style
 
 ## Problem
-The `PlusCircle` button in the credit indicator is too small (`p-1.5`, icon `w-4 h-4`) — hard to tap on mobile.
+The current `PlusCircle` Lucide icon renders as a thin-stroke SVG that looks blurry at small sizes in the dark sidebar. It lacks visual weight and premium feel.
+
+## Solution
+Replace the hollow `PlusCircle` icon with a solid, pill-shaped mini button inspired by Apple's UI — a filled rounded container with a crisp `+` symbol inside.
 
 ## Change
-**`src/components/app/CreditIndicator.tsx`** — increase the button's tap target and icon size:
-- Button padding: `p-1.5` → `p-2`
-- Icon size: `w-4 h-4` → `w-5 h-5`
-- Add `min-w-[36px] min-h-[36px]` for a reliable 36px mobile tap target
+**`src/components/app/CreditIndicator.tsx`** — replace the icon button with a styled solid pill:
 
-Single-line edit around line 55.
+- Remove `PlusCircle` import
+- Replace the `<button>` with a solid `w-8 h-8` rounded-full button using `bg-white/10` fill, `border border-white/[0.08]`, and a bold `+` text character instead of an SVG icon
+- Add `backdrop-blur-sm`, `hover:bg-white/20`, and `active:scale-95` for tactile feedback
+- The `+` uses `text-base font-medium text-sidebar-foreground/70` for a crisp, non-blurry glyph
+
+This gives a solid, always-sharp tap target that matches Apple's capsule button aesthetic — no SVG blur at any resolution.
 
