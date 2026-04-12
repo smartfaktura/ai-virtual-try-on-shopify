@@ -855,13 +855,29 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
 
       <div className="space-y-1.5">
         <Label className="text-xs">Preview Image</Label>
-        <div className="flex items-start gap-4">
-          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted border border-border/40 flex items-center justify-center flex-shrink-0">
+        <div
+          className="flex items-start gap-4"
+          onPaste={e => {
+            const item = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
+            if (item) {
+              e.preventDefault();
+              const file = item.getAsFile();
+              if (file) handleImageUpload(file);
+            }
+          }}
+        >
+          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted border border-border/40 flex items-center justify-center flex-shrink-0 relative group cursor-pointer"
+            tabIndex={0}
+            title="Click here and paste (⌘V) to upload a screenshot"
+          >
             {draft.preview_image_url ? (
               <img src={draft.preview_image_url} alt="Preview" className="w-full h-full object-cover" />
             ) : (
               <Camera className="w-6 h-6 text-muted-foreground/30" />
             )}
+            <div className="absolute inset-0 bg-background/60 opacity-0 group-focus:opacity-100 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span className="text-[9px] font-medium text-muted-foreground">⌘V paste</span>
+            </div>
           </div>
           <div className="flex-1 space-y-2">
             <div className="flex gap-2">
