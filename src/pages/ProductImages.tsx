@@ -343,9 +343,10 @@ export default function ProductImages() {
 
   const imageCount = parseInt(details.imageCount || '1', 10);
   const creditsPerImage = 6;
+  const modelCount = (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) || 1;
   const totalImages = (perCategoryScenes.size > 0 && hasMultipleCategories)
-    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imageCount, details)
-    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
+    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imageCount, details, modelCount)
+    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details, modelCount);
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
 
