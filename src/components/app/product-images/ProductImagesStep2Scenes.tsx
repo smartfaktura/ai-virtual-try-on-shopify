@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Camera, Copy, AlertCircle, Paintbrush } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Camera, Copy, AlertCircle, Paintbrush } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
@@ -195,8 +195,8 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
           <Camera className="w-6 h-6 text-muted-foreground/30" />
         )}
         {selected && (
-          <div className="absolute top-1.5 right-1.5">
-            <CheckCircle className="w-5 h-5 text-primary fill-primary/20 drop-shadow-sm" />
+          <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
+            <Check className="w-3.5 h-3.5 text-white" />
           </div>
         )}
       </div>
