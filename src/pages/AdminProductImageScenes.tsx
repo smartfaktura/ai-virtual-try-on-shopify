@@ -259,6 +259,8 @@ export default function AdminProductImageScenes() {
         requires_extra_reference: scene.requires_extra_reference,
         sub_category_sort_order: scene.sub_category_sort_order,
         use_scene_reference: scene.use_scene_reference ?? false,
+        suggested_colors: scene.suggested_colors,
+        outfit_hint: scene.outfit_hint,
       });
       toast.success(`Duplicated as ${newId}`);
     } catch (e: any) {
