@@ -1,33 +1,32 @@
 
 
-# Fix: Multi-Product Analysis Loading UI and Duplicate Calls
+# Improve Aesthetic Color Picker UI — Square Swatch Grid
 
-## Problems Found
+## What changes
+Replace the flat pill-chip layout (lines 2173-2217) with a square-card swatch grid matching the `BackgroundSwatchSelector` visual pattern.
 
-1. **Duplicate API calls**: The `useEffect` on line 414 depends on `selectedProducts` (array reference). When `userProducts` refetches (e.g., after the fire-and-forget `analysis_json` DB update triggers a query invalidation), `selectedProducts` gets a new reference, re-triggering `analyzeProducts`. The second run hits the AI gateway again because the DB persist may not have completed yet.
+## Implementation — `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-2. **Loading UI shows only 1 product**: The analysis loading state (line 1191-1206) shows only `selectedProducts[0]`'s thumbnail and says "Analyzing your product..." (singular), regardless of how many products are being analyzed.
+### Replace lines 2173-2217 with:
 
-## Fix Plan
+1. **Add state** for a `ColorPickerDialog` instance dedicated to aesthetic color (pickerOpen boolean, near existing aesthetic color state)
 
-### 1. Prevent duplicate analysis calls
-**`src/hooks/useProductAnalysis.ts`**
-- Add an in-memory `Set` (via `useRef`) tracking product IDs that have already been analyzed or are currently in-flight during this session
-- Before calling the edge function for a product, check this set — skip if already analyzed
-- This prevents the second call entirely, even if `selectedProducts` changes reference
+2. **Grid layout** — `grid grid-cols-4 sm:grid-cols-8 gap-1.5`
 
-### 2. Improve multi-product loading UI
-**`src/pages/ProductImages.tsx`** (lines ~1189-1207)
-- Show a scrolling row of ALL selected product thumbnails with individual status indicators (checkmark when done, spinner when pending)
-- Change text to "Analyzing your products..." (plural when > 1) with count: "Analyzing 3 of 4 products..."
-- Show a small progress indicator (e.g., "2/4 complete")
+3. **Preset swatch cards** — same 8 presets (Teal, Terracotta, Sage, etc.), each rendered as:
+   - `<button>` with `relative rounded-xl overflow-hidden`
+   - `aspect-square w-full` div with `backgroundColor: swatch.hex`
+   - Bottom gradient overlay with label: `bg-gradient-to-t from-black/40 to-transparent`, `text-[9px] font-medium text-white`
+   - Selected: `ring-2 ring-primary shadow-md` + checkmark badge (top-right, `w-4 h-4 rounded-full bg-primary`) + X button (top-left, `bg-black/60 hover:bg-destructive`)
+   - Unselected: `ring-1 ring-border hover:ring-primary/30 hover:shadow-sm`
+   - Click toggles selection via `update({ aestheticColorHex: ... })`
 
-### 3. Stabilize the useEffect dependency
-**`src/pages/ProductImages.tsx`** (line 414-418)
-- Change the dependency from `selectedProducts` to `selectedProductIds` (which is a stable `Set` reference) plus `step`
-- Pass `selectedProducts` inside the callback but don't use it as a dependency trigger
+4. **Custom color card** — last grid item with `bg-muted/30` fill, centered `Plus` icon + "Custom" label, opens `ColorPickerDialog` in solid-only mode (`mode="solid"`). When a custom color is active and not matching any preset, this card shows the custom hex fill with the same selected styling.
 
-## Files Changed
-1. `src/hooks/useProductAnalysis.ts` — add in-flight dedup guard
-2. `src/pages/ProductImages.tsx` — fix useEffect dependency + improve loading UI
+5. **Keep existing clear link** below the grid (`✕ Clear aesthetic color`)
+
+6. **ColorPickerDialog** instance — reuse the existing component, wired to apply via `update({ aestheticColorHex: hex })`. No save-to-palette needed here (pass `canSave={false}`).
+
+### Files changed
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — ~45 lines replaced in the aesthetic color section
 
