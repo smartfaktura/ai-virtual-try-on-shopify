@@ -140,7 +140,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
         {filteredUser.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {filteredUser.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+              <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
             ))}
           </div>
         ) : (
@@ -167,7 +167,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {inlineModels.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+              <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
             ))}
           </div>
           {filteredGlobal.length > INLINE_LIMIT && (
@@ -189,7 +189,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
       <Dialog open={showAllModal} onOpenChange={setShowAllModal}>
         <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base"><User className="w-4 h-4 text-primary" />Select a Model</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-base"><User className="w-4 h-4 text-primary" />Select Models</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -215,7 +215,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                   {modalFilteredUser.map(m => (
-                    <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => handleModalSelect(m.modelId)} />
+                    <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
                 </div>
               </div>
@@ -226,7 +226,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                   {modalFilteredGlobal.map(m => (
-                    <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => handleModalSelect(m.modelId)} />
+                    <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
                 </div>
               </div>
