@@ -1727,6 +1727,7 @@ export function ProductImagesStep3Refine({
 
   // Scene categorization
   const bgScenes = useMemo(() => selectedScenes.filter(s => s.triggerBlocks?.includes('background')), [selectedScenes]);
+  const aestheticColorScenes = useMemo(() => selectedScenes.filter(s => s.triggerBlocks?.includes('aestheticColor')), [selectedScenes]);
   const productShots = useMemo(() => selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
   const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
 
