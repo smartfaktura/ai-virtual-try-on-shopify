@@ -1,45 +1,48 @@
 
 
-# Fix Background Color Drift for Swatch Presets
+# Add Hex Codes to All Background Swatch Entries
 
 ## Problem
-When a user picks a swatch preset (e.g. "sage"), the prompt resolves to descriptive text like:
-```
-soft sage green (#E8EDE6) seamless studio background, no texture, no pattern
-```
-The AI model focuses on "soft sage green" (subjective) and may interpret the hue differently per scene. Meanwhile, custom hex picks resolve to:
-```
-flat solid #E8EDE6 color background, no texture, no pattern
-```
-…which is precise and consistent. The swatch path needs to match this precision.
+The fix we applied earlier (extracting hex from swatch strings) only works when the resolved string contains a `#hex` code. Several `BG_MAP` entries — including `off-white`, `warm-beige`, `soft-white`, `cool-gray`, `black`, `taupe`, `stone` — have no hex code embedded. They resolve to vague descriptive text like `"off-white / ivory"`, which the AI interprets inconsistently across scenes (some get yellowish, others stay neutral).
+
+The user's last generation used the `off-white` swatch, which resolved to `"off-white / ivory seamless studio background"` — the word "ivory" introduces a warm/yellow bias that varies per scene.
 
 ## Fix
 
-**File:** `src/lib/productImagePromptBuilder.ts` (line 872-873)
+**File:** `src/lib/productImagePromptBuilder.ts` (lines 44-66)
 
-Change the swatch resolution path to use the same assertive hex-first format as custom hex:
+Add explicit hex codes to every `BG_MAP` entry that currently lacks one:
 
 ```ts
-// Before (line 872-873):
-if (swatchResolved) {
-  return `${swatchResolved} seamless studio background, no texture, no pattern`;
-}
-
-// After:
-if (swatchResolved) {
-  // Extract hex if present in the resolved string, otherwise use descriptive fallback
-  const hexMatch = swatchResolved.match(/#[0-9A-Fa-f]{6}/);
-  if (hexMatch) {
-    return `flat solid ${hexMatch[0]} color background, no texture, no pattern`;
-  }
-  return `${swatchResolved} seamless studio background, no texture, no pattern`;
-}
+const BG_MAP: Record<string, string> = {
+  'pure-white': 'pure seamless white (#FFFFFF)',
+  'warm-beige': 'warm beige (#F5F0EB)',
+  'light-gray': 'soft neutral light gray (#E8E8E8)',
+  'light-grey': 'soft neutral light gray (#E8E8E8)',
+  'soft-white': 'soft warm white (#FAFAFA)',
+  'cool-gray': 'cool mid-gray (#D0D4D8)',
+  'off-white': 'off-white (#F8F8F5)',
+  'black': 'deep matte black (#1A1A1A)',
+  'gradient': 'subtle gradient',
+  'colored': 'solid colored',
+  'taupe': 'warm taupe (#C4B7A6)',
+  'stone': 'natural stone gray (#B8B0A8)',
+  // Swatch values (already have hex)
+  'sage': 'soft sage green (#E8EDE6)',
+  'blush': 'soft blush pink (#F8ECE8)',
+  'white': 'pure seamless white (#FFFFFF)',
+  'warm-neutral': 'warm beige (#F5F0EB)',
+  'cool-neutral': 'cool gray (#EDF0F4)',
+  'ivory': 'warm ivory (#FFFFF0)',
+  'charcoal': 'deep charcoal gray (#36454F)',
+  'navy': 'deep navy (#2B3A4E)',
+};
 ```
 
-This ensures every swatch with a hex code (sage `#E8EDE6`, blush `#F8ECE8`, white `#FFFFFF`, etc.) resolves to the exact same format as a custom hex pick — making the AI treat them identically and eliminating hue drift between scenes.
+Key change: removed "ivory" from the `off-white` entry and gave it a neutral hex `#F8F8F5`. Now the regex in our previous fix will extract the hex and produce `"flat solid #F8F8F5 color background, no texture, no pattern"` — identical format across all scenes, eliminating yellowish drift.
 
-Swatches without embedded hex codes (like `taupe`, `stone`) fall back to the current descriptive behavior.
+`gradient` and `colored` are left as-is since they're handled by separate code paths.
 
 ## Files changed
-1. `src/lib/productImagePromptBuilder.ts` — use hex-first format for swatch backgrounds
+1. `src/lib/productImagePromptBuilder.ts` — add hex codes to all BG_MAP entries missing them
 
