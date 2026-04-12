@@ -706,10 +706,10 @@ function UnifiedCategorySectionWithSelectAll({
 
 /** Animated color cycling dot */
 function CuratorColorHint({ baseHex }: { baseHex: string }) {
-  const palette = React.useMemo(() => [baseHex, '#1a1a1a', '#D4C5B2', '#8B9E7E'], [baseHex]);
-  const [idx, setIdx] = React.useState(0);
+  const palette = useMemo(() => [baseHex, '#1a1a1a', '#D4C5B2', '#8B9E7E'], [baseHex]);
+  const [idx, setIdx] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setInterval(() => setIdx(i => (i + 1) % palette.length), 2000);
     return () => clearInterval(timer);
   }, [palette]);
