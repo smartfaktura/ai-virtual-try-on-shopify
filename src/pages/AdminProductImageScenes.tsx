@@ -152,19 +152,47 @@ export default function AdminProductImageScenes() {
     return scenes;
   }, [rawScenes, showHidden, search, previewCategory]);
 
-  // Group by category
-  const grouped = useMemo(() => {
+  // Group by category, sorted by most recently edited
+  const groupedEntries = useMemo(() => {
     const map = new Map<string, DbScene[]>();
     for (const s of filtered) {
       const key = s.category_collection || 'other';
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(s);
     }
-    for (const [, arr] of map) {
-      arr.sort((a, b) => new Date(b.updated_at ?? b.created_at).getTime() - new Date(a.updated_at ?? a.created_at).getTime());
+
+    return Array.from(map.entries())
+      .map(([key, scenes]) => {
+        const sortedScenes = [...scenes].sort(
+          (a, b) =>
+            new Date(b.updated_at ?? b.created_at).getTime() -
+            new Date(a.updated_at ?? a.created_at).getTime()
+        );
+        return {
+          key,
+          scenes: sortedScenes,
+          latestUpdatedAt: Math.max(
+            ...sortedScenes.map(s => new Date(s.updated_at ?? s.created_at).getTime())
+          ),
+          categorySortOrder: Math.min(
+            ...sortedScenes.map(s => s.category_sort_order ?? 0)
+          ),
+        };
+      })
+      .sort((a, b) =>
+        b.latestUpdatedAt - a.latestUpdatedAt ||
+        a.categorySortOrder - b.categorySortOrder
+      );
+  }, [filtered]);
+
+  // Keep a Map reference for move/reorder helpers
+  const grouped = useMemo(() => {
+    const map = new Map<string, DbScene[]>();
+    for (const entry of groupedEntries) {
+      map.set(entry.key, entry.scenes);
     }
     return map;
-  }, [filtered]);
+  }, [groupedEntries]);
 
   const toggleSection = (id: string) => {
     const next = new Set(expandedSections);
@@ -374,7 +402,7 @@ export default function AdminProductImageScenes() {
         <div className="py-12 text-center text-muted-foreground">Loading scenes...</div>
       ) : (
         <div className="space-y-3">
-          {Array.from(grouped.entries()).map(([key, scenes]) => {
+          {groupedEntries.map(({ key, scenes, categorySortOrder }) => {
             const subGroups = groupBySubCategory(scenes);
             const hasMultipleSubGroups = subGroups.length > 1 || (subGroups.length === 1 && subGroups[0].label !== 'Uncategorized');
             const summary = subCategorySummary(scenes);
@@ -401,7 +429,7 @@ export default function AdminProductImageScenes() {
                     className="h-8 gap-1 text-xs shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setImportTarget({ category: key, label: catLabel(key), sortOrder: scenes[0]?.category_sort_order ?? 0 });
+                      setImportTarget({ category: key, label: catLabel(key), sortOrder: categorySortOrder });
                     }}
                   >
                     <Import className="w-3.5 h-3.5" /> Import
@@ -412,7 +440,7 @@ export default function AdminProductImageScenes() {
                     className="h-8 gap-1 text-xs shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleAddNewForCategory(key, scenes[0]?.category_sort_order ?? 0);
+                      handleAddNewForCategory(key, categorySortOrder);
                     }}
                   >
                     <Plus className="w-3.5 h-3.5" /> New
