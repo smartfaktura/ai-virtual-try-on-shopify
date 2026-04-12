@@ -23,6 +23,7 @@ export interface DbScene {
   sub_category_sort_order: number;
   suggested_colors: Array<{hex: string; label: string}> | null;
   outfit_hint: string | null;
+  use_scene_reference: boolean;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
@@ -39,6 +40,7 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     requiresExtraReference: d.requires_extra_reference ?? false,
     suggestedColors: d.suggested_colors ?? undefined,
     outfitHint: d.outfit_hint ?? undefined,
+    useSceneReference: d.use_scene_reference ?? false,
   };
 }
 

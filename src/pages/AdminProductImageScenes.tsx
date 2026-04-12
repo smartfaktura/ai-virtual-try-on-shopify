@@ -66,6 +66,7 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     category_sort_order: 0,
     requires_extra_reference: false,
     sub_category_sort_order: 0,
+    use_scene_reference: false,
   };
 }
 
@@ -231,6 +232,7 @@ export default function AdminProductImageScenes() {
         category_sort_order: scene.category_sort_order,
         requires_extra_reference: scene.requires_extra_reference,
         sub_category_sort_order: scene.sub_category_sort_order,
+        use_scene_reference: scene.use_scene_reference ?? false,
       });
       toast.success(`Duplicated as ${newId}`);
     } catch (e: any) {
@@ -547,6 +549,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
             <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
             {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
             {(scene as any).requires_extra_reference && <Badge variant="outline" className="text-[10px] gap-0.5"><Camera className="w-2.5 h-2.5" />Extra ref</Badge>}
+            {(scene as any).use_scene_reference && <Badge variant="outline" className="text-[10px] gap-0.5 border-primary/40 text-primary">🖼 Scene ref</Badge>}
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
             Triggers: {scene.trigger_blocks.join(', ')}
@@ -914,6 +917,21 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
         <div>
           <Label htmlFor="extra-ref-toggle" className="text-xs font-medium cursor-pointer">Requires extra reference image</Label>
           <p className="text-[10px] text-muted-foreground mt-0.5">When selected, users will be asked to upload an additional product photo (e.g. back/side view) for this scene</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 pt-1">
+        <Checkbox
+          checked={(draft as any).use_scene_reference ?? false}
+          onCheckedChange={(v) => set('use_scene_reference' as any, !!v)}
+          id="scene-ref-toggle"
+        />
+        <div>
+          <Label htmlFor="scene-ref-toggle" className="text-xs font-medium cursor-pointer">Use preview as generation reference</Label>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            The scene's preview image will be sent as a visual composition guide during generation — the AI will replicate the framing, lighting, and environment while swapping the product.
+            {!draft.preview_image_url && <span className="text-destructive font-medium ml-1">⚠ Upload a preview image first</span>}
+          </p>
         </div>
       </div>
     </div>

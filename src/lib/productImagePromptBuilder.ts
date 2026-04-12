@@ -1293,6 +1293,11 @@ export function buildDynamicPrompt(
     prompt += ` BRAND TEXT DIRECTIVE: Display the following brand text prominently and legibly in the scene: "${details.brandLogoText}". Render it with accurate typography matching luxury/premium brand standards.`;
   }
 
+  // Scene reference directive — when active, instruct AI to replicate the reference composition
+  if (scene.useSceneReference && scene.previewUrl) {
+    prompt += ` SCENE REFERENCE — Replicate the exact composition, camera angle, lighting setup, and environment from the provided scene reference image. Replace only the product with ${product.title} (${analysis?.category || 'product'}). Maintain identical framing, perspective, and overall styling.`;
+  }
+
   // Append custom note at the end
   if (details.customNote && !prompt.includes(details.customNote)) {
     prompt += ' ' + details.customNote;

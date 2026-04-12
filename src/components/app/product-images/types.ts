@@ -250,6 +250,7 @@ export interface ProductImageScene {
   requiresExtraReference?: boolean;
   suggestedColors?: Array<{hex: string; label: string}>;
   outfitHint?: string;
+  useSceneReference?: boolean;
 }
 
 export interface SubGroup {
