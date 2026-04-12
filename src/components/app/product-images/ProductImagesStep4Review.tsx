@@ -338,21 +338,30 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 </Button>
               )}
             </div>
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-              {selectedProducts.slice(0, 12).map(p => (
-                <div key={p.id} className="space-y-1">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40 p-1">
-                    <ShimmerImage src={p.image_url} alt={p.title} className="w-full h-full object-contain" />
+            {selectedProducts.length === 1 ? (
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white border border-border/40 p-1 flex-shrink-0">
+                  <ShimmerImage src={selectedProducts[0].image_url} alt={selectedProducts[0].title} className="w-full h-full object-contain" />
+                </div>
+                <p className="text-xs text-muted-foreground truncate">{selectedProducts[0].title}</p>
+              </div>
+            ) : (
+              <div className={`grid gap-2 ${selectedProducts.length <= 3 ? `grid-cols-${selectedProducts.length}` : 'grid-cols-4 sm:grid-cols-6'}`}>
+                {selectedProducts.slice(0, 12).map(p => (
+                  <div key={p.id} className="space-y-1">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40 p-1">
+                      <ShimmerImage src={p.image_url} alt={p.title} className="w-full h-full object-contain" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">{p.title}</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate">{p.title}</p>
-                </div>
-              ))}
-              {selectedProducts.length > 12 && (
-                <div className="aspect-square rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-                  +{selectedProducts.length - 12}
-                </div>
-              )}
-            </div>
+                ))}
+                {selectedProducts.length > 12 && (
+                  <div className="aspect-square rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+                    +{selectedProducts.length - 12}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
