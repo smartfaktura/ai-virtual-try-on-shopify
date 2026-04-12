@@ -2324,7 +2324,7 @@ export function ProductImagesStep3Refine({
                         initialGradientFrom="#F8F8F8"
                         initialGradientTo="#EEEEEE"
                         canSave={false}
-                        onApplySolid={(hex) => update({ aestheticColorHex: hex })}
+                        onApplySolid={(hex) => update({ aestheticColorHex: hex, aestheticColorLabel: hex })}
                         onApplyGradient={() => {}}
                         onSaveColor={() => {}}
                         onSaveGradient={() => {}}
@@ -2335,7 +2335,7 @@ export function ProductImagesStep3Refine({
                 {details.aestheticColorHex && (
                   <button
                     type="button"
-                    onClick={() => update({ aestheticColorHex: undefined })}
+                    onClick={() => update({ aestheticColorHex: undefined, aestheticColorLabel: undefined })}
                     className="text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     ✕ Clear aesthetic color
