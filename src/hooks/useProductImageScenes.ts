@@ -36,6 +36,7 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     previewUrl: d.preview_image_url ?? undefined,
     subCategory: d.sub_category ?? undefined,
     requiresExtraReference: d.requires_extra_reference ?? false,
+    suggestedColors: d.suggested_colors ?? undefined,
   };
 }
 
