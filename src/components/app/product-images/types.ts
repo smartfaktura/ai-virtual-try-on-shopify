@@ -383,6 +383,9 @@ export interface DetailSettings {
   // Aesthetic color hex (used when aestheticColor trigger is active — consistent color across scenes)
   aestheticColorHex?: string;
 
+  // Human-readable label for the aesthetic color (e.g. "Dusty Blue") — improves prompt fidelity
+  aestheticColorLabel?: string;
+
   // Custom outfit styling note (used when scenes have outfit_hint — user can append extra direction)
   customOutfitNote?: string;
 }
