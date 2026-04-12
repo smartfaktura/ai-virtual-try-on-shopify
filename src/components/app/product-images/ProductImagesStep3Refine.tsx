@@ -2007,7 +2007,7 @@ export function ProductImagesStep3Refine({
         });
       })()}
 
-      {(scenesNeedingModel.length > 0 || bgScenes.length > 0) && (
+      {(scenesNeedingModel.length > 0 || bgScenes.length > 0 || aestheticColorScenes.length > 0) && (
         <div className="space-y-3">
           <div>
             <span className="text-sm font-semibold">Complete setup</span>
