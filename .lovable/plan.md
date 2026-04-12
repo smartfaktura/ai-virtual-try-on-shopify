@@ -1,36 +1,33 @@
 
 
-# Insert 6 More Fragrance "Conceptual Editorial" Scenes
+# Insert 6 More Fragrance "Conceptual Editorial" Scenes (Solar Amber)
 
 ## What
-Insert 6 new scenes into `product_image_scenes` under the existing `Conceptual Editorial` sub-category in `fragrance`, using the uploaded file data. These continue the numbering from the previous 6.
+Insert 6 new still-life scenes into `product_image_scenes` under `fragrance` / `Conceptual Editorial`, continuing from sort_order 182–187. All use the "Solar Amber" curator color.
 
-## Scenes to Insert
+## Scenes
 
 | # | scene_id | title | sort_order |
 |---|----------|-------|------------|
-| 1 | steel-sink-portrait-fragrance | Steel Sink | 176 |
-| 2 | velvet-stair-pose-fragrance | Velvet Stair | 177 |
-| 3 | flash-car-glance-fragrance | Car Glance | 178 |
-| 4 | chrome-trough-still-fragrance | Chrome Trough | 179 |
-| 5 | wet-stone-reflection-fragrance | Wet Stone | 180 |
-| 6 | smoked-glass-table-fragrance | Smoked Table | 181 |
+| 1 | canyon-orb-fragrance | Canyon Orb | 182 |
+| 2 | eclipse-shadow-fragrance | Eclipse Shadow | 183 |
+| 3 | orchard-mirror-fragrance | Orchard Mirror | 184 |
+| 4 | desert-portal-fragrance | Desert Portal | 185 |
+| 5 | halo-caustic-fragrance | Halo Caustic | 186 |
+| 6 | monolith-bloom-fragrance | Monolith Bloom | 187 |
 
 ## Shared Settings
 - `category_collection`: `fragrance`
 - `sub_category`: `Conceptual Editorial`
-- `category_sort_order`: 23
+- `category_sort_order`: 24
 - `scene_type`: `editorial`
 - `is_active`: true
-- `suggested_colors`: `[{"hex":"#4F6666","label":"Petrol Teal"}]`
+- `suggested_colors`: `[{"hex":"#C97A24","label":"Solar Amber"}]`
 - `requires_extra_reference`: false
 - `use_scene_reference`: false
-
-## Per-Scene Details
-- Scenes 1–3: `trigger_blocks` include `personDetails`, `outfit_hint` populated from file
-- Scenes 4–6: still-life, `outfit_hint` null, trigger blocks include `layout` instead of `personDetails`
-- Full prompt templates from the uploaded file
+- `trigger_blocks`: `{aestheticColor,sceneEnvironment,layout,visualDirection}`
+- `outfit_hint`: null (all 6 are still-life)
 
 ## How
-Use the database insert tool to run 6 `INSERT INTO product_image_scenes (...)` statements.
+Use the database insert tool to run 6 `INSERT INTO product_image_scenes (...)` statements with full prompt templates from the file.
 
