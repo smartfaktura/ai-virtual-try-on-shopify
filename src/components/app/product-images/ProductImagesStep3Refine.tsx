@@ -2123,25 +2123,27 @@ export function ProductImagesStep3Refine({
                           </div>
                         </CollapsibleContent>
                       </Collapsible>
+                    </div>
+                  </>
+                )}
 
-                  <Collapsible>
-                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
-                      <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="pt-2 pb-1 pl-6">
-                        <InlinePersonDetails
-                          details={details}
-                          update={update}
-                          outfitAccessories={details.outfitConfig?.accessories}
-                          onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                        />
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
+                <Collapsible>
+                  <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
+                    <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
+                    <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="pt-2 pb-1 pl-6">
+                      <InlinePersonDetails
+                        details={details}
+                        update={update}
+                        outfitAccessories={details.outfitConfig?.accessories}
+                        onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </CardContent>
             </Card>
           )}
