@@ -369,6 +369,9 @@ export interface DetailSettings {
   // Model selection (replaces generic person details when set)
   selectedModelId?: string;
 
+  // Multi-model selection (preferred over selectedModelId when set)
+  selectedModelIds?: string[];
+
   // Outfit locking (Catalog Studio-style per-piece control) — legacy flat strings
   outfitTop?: string;
   outfitBottom?: string;

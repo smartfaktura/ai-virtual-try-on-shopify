@@ -343,9 +343,10 @@ export default function ProductImages() {
 
   const imageCount = parseInt(details.imageCount || '1', 10);
   const creditsPerImage = 6;
+  const modelCount = (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) || 1;
   const totalImages = (perCategoryScenes.size > 0 && hasMultipleCategories)
-    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imageCount, details)
-    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
+    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imageCount, details, modelCount)
+    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details, modelCount);
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
 
@@ -506,9 +507,10 @@ export default function ProductImages() {
     if (!canAfford) { openBuyModal(); return; }
 
     const imgCount = parseInt(details.imageCount || '1', 10);
+    const mc = (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) || 1;
     const totalExpected = (perCategoryScenes.size > 0 && hasMultipleCategories)
-      ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imgCount, details)
-      : computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details);
+      ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imgCount, details, mc)
+      : computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details, mc);
     setExpectedJobCount(totalExpected);
     setEnqueuedCount(0);
     setCompletedJobs(0);
@@ -520,21 +522,22 @@ export default function ProductImages() {
     const token = session?.session?.access_token;
     if (!token) { toast.error('Authentication required'); setStep(4); return; }
 
-    // Resolve model image if selectedModelId is set
-    let modelRef: { name: string; gender: string; ethnicity: string; bodyType: string; ageRange: string; imageUrl: string } | undefined;
-    if (details.selectedModelId) {
-      const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
-      const found = allModels.find(m => m.modelId === details.selectedModelId);
+    // Resolve all selected models
+    const modelIds = details.selectedModelIds?.length ? details.selectedModelIds : (details.selectedModelId ? [details.selectedModelId] : []);
+    const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
+    const modelRefs: Array<{ name: string; gender: string; ethnicity: string; bodyType: string; ageRange: string; imageUrl: string }> = [];
+    for (const mid of modelIds) {
+      const found = allModels.find(m => m.modelId === mid);
       if (found) {
         const modelBase64 = await convertImageToBase64(found.sourceImageUrl || found.previewUrl);
-        modelRef = {
+        modelRefs.push({
           name: found.name,
           gender: found.gender || '',
           ethnicity: found.ethnicity || '',
           bodyType: found.bodyType || '',
           ageRange: found.ageRange || '',
           imageUrl: modelBase64,
-        };
+        });
       }
     }
 
@@ -573,98 +576,105 @@ export default function ProductImages() {
 
       for (let sceneIdx = 0; sceneIdx < scenesForProduct.length; sceneIdx++) {
         const scene = scenesForProduct[sceneIdx];
-        const variations = expandMultiSelects(scene, details);
+        const needsModel = scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails');
+        // For scenes needing a model, iterate over all selected models; otherwise just once with no model
+        const modelsForScene = needsModel && modelRefs.length > 0 ? modelRefs : [undefined];
 
-        for (let vIdx = 0; vIdx < variations.length; vIdx++) {
-          const variationOverride = variations[vIdx];
-          const variationDetails: DetailSettings = { ...details, ...variationOverride };
-          const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, selectedModelGender);
+        for (let mIdx = 0; mIdx < modelsForScene.length; mIdx++) {
+          const currentModelRef = modelsForScene[mIdx];
+          const variations = expandMultiSelects(scene, details);
 
-          const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
-          for (const ratioForJob of sceneRatios) {
-            for (let i = 0; i < imgCount; i++) {
-              const propProductIds = details.sceneProps?.[scene.id] || [];
-              const propProducts = propProductIds
-                .map(pid => userProducts.find(p => p.id === pid))
-                .filter(Boolean)
-                .map(p => p!);
-              const additionalProducts = propProducts.length > 0
-                ? await Promise.all(propProducts.map(async pp => ({
-                    title: pp.title,
-                    productType: pp.product_type,
-                    description: pp.description,
-                    imageUrl: await convertImageToBase64(pp.image_url),
-                  })))
-                : undefined;
+          for (let vIdx = 0; vIdx < variations.length; vIdx++) {
+            const variationOverride = variations[vIdx];
+            const variationDetails: DetailSettings = { ...details, ...variationOverride };
+            const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
 
-              const variationEntry = {
-                label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (sceneRatios.length > 1 ? ` [${ratioForJob}]` : ''),
-                instruction: variationInstruction,
-                aspect_ratio: ratioForJob,
-                ...(scene.useSceneReference && scene.previewUrl ? {
-                  use_scene_reference: true,
-                  preview_url: scene.previewUrl,
-                } : {}),
-              };
+            const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
+            for (const ratioForJob of sceneRatios) {
+              for (let i = 0; i < imgCount; i++) {
+                const propProductIds = details.sceneProps?.[scene.id] || [];
+                const propProducts = propProductIds
+                  .map(pid => userProducts.find(p => p.id === pid))
+                  .filter(Boolean)
+                  .map(p => p!);
+                const additionalProducts = propProducts.length > 0
+                  ? await Promise.all(propProducts.map(async pp => ({
+                      title: pp.title,
+                      productType: pp.product_type,
+                      description: pp.description,
+                      imageUrl: await convertImageToBase64(pp.image_url),
+                    })))
+                  : undefined;
 
-              const payload: Record<string, unknown> = {
-                workflow_id: WORKFLOW_ID,
-                workflow_name: 'Product Images',
-                workflow_slug: 'product-images',
-                product: {
-                  title: product.title,
-                  productType: productAnalysis?.category || product.product_type,
-                  description: product.description,
-                  dimensions: product.dimensions || undefined,
-                  weight: (product as any).weight || undefined,
-                  materials: (product as any).materials || undefined,
-                  color: (product as any).color || undefined,
-                  imageUrl: base64Image,
-                  analysis: productAnalysis || undefined,
-                },
-                product_name: product.title,
-                product_image_url: product.image_url,
-                extra_variations: [variationEntry],
-                selected_variations: [0],
-                ...(additionalProducts ? { additional_products: additionalProducts } : {}),
-                ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
-                ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-                ...(() => {
-                  const triggerBlocks = scene.triggerBlocks || [];
-                  const refs: Record<string, string> = {};
-                  for (const tb of triggerBlocks) {
-                    const perProductKey = `trigger:${tb}:${product.id}`;
-                    const globalKey = `trigger:${tb}`;
-                    const refUrl = sceneExtraRefs[perProductKey] || sceneExtraRefs[globalKey];
-                    if (refUrl && REFERENCE_TRIGGERS[tb]) {
-                      refs.extra_reference_image_url = refUrl;
-                      refs.extra_reference_label = REFERENCE_TRIGGERS[tb].promptLabel;
-                      break;
+                const variationEntry = {
+                  label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (sceneRatios.length > 1 ? ` [${ratioForJob}]` : '') + (modelsForScene.length > 1 && currentModelRef ? ` — ${currentModelRef.name}` : ''),
+                  instruction: variationInstruction,
+                  aspect_ratio: ratioForJob,
+                  ...(scene.useSceneReference && scene.previewUrl ? {
+                    use_scene_reference: true,
+                    preview_url: scene.previewUrl,
+                  } : {}),
+                };
+
+                const payload: Record<string, unknown> = {
+                  workflow_id: WORKFLOW_ID,
+                  workflow_name: 'Product Images',
+                  workflow_slug: 'product-images',
+                  product: {
+                    title: product.title,
+                    productType: productAnalysis?.category || product.product_type,
+                    description: product.description,
+                    dimensions: product.dimensions || undefined,
+                    weight: (product as any).weight || undefined,
+                    materials: (product as any).materials || undefined,
+                    color: (product as any).color || undefined,
+                    imageUrl: base64Image,
+                    analysis: productAnalysis || undefined,
+                  },
+                  product_name: product.title,
+                  product_image_url: product.image_url,
+                  extra_variations: [variationEntry],
+                  selected_variations: [0],
+                  ...(additionalProducts ? { additional_products: additionalProducts } : {}),
+                  ...(currentModelRef ? { model: currentModelRef } : {}),
+                  ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
+                  ...(() => {
+                    const triggerBlocks = scene.triggerBlocks || [];
+                    const refs: Record<string, string> = {};
+                    for (const tb of triggerBlocks) {
+                      const perProductKey = `trigger:${tb}:${product.id}`;
+                      const globalKey = `trigger:${tb}`;
+                      const refUrl = sceneExtraRefs[perProductKey] || sceneExtraRefs[globalKey];
+                      if (refUrl && REFERENCE_TRIGGERS[tb]) {
+                        refs.extra_reference_image_url = refUrl;
+                        refs.extra_reference_label = REFERENCE_TRIGGERS[tb].promptLabel;
+                        break;
+                      }
                     }
-                  }
-                  if (!refs.extra_reference_image_url) {
-                    if (sceneExtraRefs[scene.id]) {
-                      refs.extra_reference_image_url = sceneExtraRefs[scene.id];
-                    } else if (triggerBlocks.includes('backView')) {
-                      const backRef = sceneExtraRefs[`trigger:backView:${product.id}`] || sceneExtraRefs['trigger:backView'] || details.backReferenceUrl;
-                      if (backRef) refs.extra_reference_image_url = backRef;
+                    if (!refs.extra_reference_image_url) {
+                      if (sceneExtraRefs[scene.id]) {
+                        refs.extra_reference_image_url = sceneExtraRefs[scene.id];
+                      } else if (triggerBlocks.includes('backView')) {
+                        const backRef = sceneExtraRefs[`trigger:backView:${product.id}`] || sceneExtraRefs['trigger:backView'] || details.backReferenceUrl;
+                        if (backRef) refs.extra_reference_image_url = backRef;
+                      }
                     }
-                  }
-                  if (details.brandLogoText && triggerBlocks.includes('brandLogoOverlay')) {
-                    refs.brand_logo_text = details.brandLogoText;
-                  }
-                  return refs;
-                })(),
-                quality: 'high',
-                aspectRatio: ratioForJob,
-                batch_id: batchId,
-                scene_name: scene.title,
-                batch_outfit_lock: true,
-                batch_size: scenesForProduct.length,
-              };
+                    if (details.brandLogoText && triggerBlocks.includes('brandLogoOverlay')) {
+                      refs.brand_logo_text = details.brandLogoText;
+                    }
+                    return refs;
+                  })(),
+                  quality: 'high',
+                  aspectRatio: ratioForJob,
+                  batch_id: batchId,
+                  scene_name: scene.title,
+                  batch_outfit_lock: true,
+                  batch_size: scenesForProduct.length,
+                };
 
-              const key = `${product.id}_${scene.id}_v${vIdx}_r${ratioForJob}_${i}`;
-              allJobs.push({ key, payload, productTitle: product.title, hasModel: !!modelRef, batchId });
+                const key = `${product.id}_${scene.id}_m${mIdx}_v${vIdx}_r${ratioForJob}_${i}`;
+                allJobs.push({ key, payload, productTitle: product.title, hasModel: !!currentModelRef, batchId });
+              }
             }
           }
         }
@@ -936,8 +946,8 @@ export default function ProductImages() {
         const hasOnModelScenes = selectedScenes.some(s =>
           s.triggerBlocks?.some(b => b === 'personDetails' || b === 'actionDetails')
         );
-        if (hasOnModelScenes && !details.selectedModelId && globalModelProfiles.length > 0) {
-          setDetails(prev => ({ ...prev, selectedModelId: globalModelProfiles[0].modelId }));
+        if (hasOnModelScenes && !details.selectedModelId && !(details.selectedModelIds?.length) && globalModelProfiles.length > 0) {
+          setDetails(prev => ({ ...prev, selectedModelId: globalModelProfiles[0].modelId, selectedModelIds: [globalModelProfiles[0].modelId] }));
           toast.info('Smart defaults applied — we auto-selected a model and best settings for your scenes. You can go back to Refine to customize.');
         }
         setStep(4);

@@ -45,12 +45,16 @@ export function computeTotalImages(
   scenes: ProductImageScene[],
   imageCountPerScene: number,
   details: DetailSettings,
+  modelCount: number = 1,
 ): number {
   const globalFormats = details.selectedAspectRatios || [details.aspectRatio || '1:1'];
+  const effectiveModelCount = Math.max(1, modelCount);
   let total = 0;
   for (const scene of scenes) {
     const sceneFormats = details.sceneAspectOverrides?.[scene.id] || globalFormats;
-    total += getSceneMultiplier(scene, details) * imageCountPerScene * sceneFormats.length;
+    const needsModel = scene.triggerBlocks?.some(b => b === 'personDetails' || b === 'actionDetails');
+    const sceneModelCount = needsModel ? effectiveModelCount : 1;
+    total += getSceneMultiplier(scene, details) * imageCountPerScene * sceneFormats.length * sceneModelCount;
   }
   return productCount * total;
 }
@@ -81,15 +85,19 @@ export function computeTotalImagesPerCategory(
   allScenes: { id: string; triggerBlocks?: string[] }[],
   imageCountPerScene: number,
   details: DetailSettings,
+  modelCount: number = 1,
 ): number {
   const globalFormats = details.selectedAspectRatios || [details.aspectRatio || '1:1'];
+  const effectiveModelCount = Math.max(1, modelCount);
   let total = 0;
   for (const [catId, sceneIds] of perCategoryScenes) {
     const productCount = categoryProductCounts.get(catId) || 1;
     const catScenes = allScenes.filter(s => sceneIds.has(s.id));
     for (const scene of catScenes) {
       const sceneFormats = details.sceneAspectOverrides?.[scene.id] || globalFormats;
-      total += getSceneMultiplier(scene as any, details) * imageCountPerScene * sceneFormats.length * productCount;
+      const needsModel = scene.triggerBlocks?.some(b => b === 'personDetails' || b === 'actionDetails');
+      const sceneModelCount = needsModel ? effectiveModelCount : 1;
+      total += getSceneMultiplier(scene as any, details) * imageCountPerScene * sceneFormats.length * productCount * sceneModelCount;
     }
   }
   return total;

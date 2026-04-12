@@ -33,17 +33,36 @@ import { getConflictingSlots, resolveGarmentType, type OutfitSlot } from '@/lib/
    Model Picker with Brand / Library sections
    ══════════════════════════════════════════════ */
 
-function ModelPickerSections({ userModels, globalModels, selectedModelId, onSelect, previewImages }: {
+function ModelPickerSections({ userModels, globalModels, selectedModelId, selectedModelIds, onSelect, onMultiSelect, previewImages }: {
   userModels: ModelProfile[];
   globalModels: ModelProfile[];
   selectedModelId?: string;
+  selectedModelIds?: string[];
   onSelect: (id: string) => void;
+  onMultiSelect?: (ids: string[]) => void;
   previewImages?: string[];
 }) {
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
   const [showAllModal, setShowAllModal] = useState(false);
   const [modalGender, setModalGender] = useState<'all' | 'female' | 'male'>('all');
   const [modalSearch, setModalSearch] = useState('');
+
+  // Use multi-select IDs if available, fallback to single
+  const activeIds = useMemo(() => {
+    if (selectedModelIds && selectedModelIds.length > 0) return new Set(selectedModelIds);
+    if (selectedModelId) return new Set([selectedModelId]);
+    return new Set<string>();
+  }, [selectedModelIds, selectedModelId]);
+
+  const toggleModel = useCallback((id: string) => {
+    if (onMultiSelect) {
+      const next = new Set(activeIds);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      onMultiSelect(Array.from(next));
+    } else {
+      onSelect(id);
+    }
+  }, [activeIds, onMultiSelect, onSelect]);
 
   const filteredUser = useMemo(() =>
     genderFilter === 'all' ? userModels : userModels.filter(m => m.gender === genderFilter),
@@ -57,15 +76,17 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
 
   const inlineModels = useMemo(() => {
     const first6 = filteredGlobal.slice(0, INLINE_LIMIT);
-    if (selectedModelId && !first6.some(m => m.modelId === selectedModelId) && !filteredUser.some(m => m.modelId === selectedModelId)) {
-      const selectedModel = filteredGlobal.find(m => m.modelId === selectedModelId);
-      if (selectedModel) {
-        const rest = filteredGlobal.filter(m => m.modelId !== selectedModelId).slice(0, INLINE_LIMIT - 1);
-        return [selectedModel, ...rest];
-      }
+    // Ensure any active selection not in first6 is prepended
+    const activeInline = Array.from(activeIds)
+      .map(id => filteredGlobal.find(m => m.modelId === id))
+      .filter(Boolean)
+      .filter(m => !first6.some(f => f.modelId === m!.modelId) && !filteredUser.some(u => u.modelId === m!.modelId)) as ModelProfile[];
+    if (activeInline.length > 0) {
+      const rest = first6.filter(m => !activeIds.has(m.modelId)).slice(0, INLINE_LIMIT - activeInline.length);
+      return [...activeInline, ...rest];
     }
     return first6;
-  }, [filteredGlobal, filteredUser, selectedModelId]);
+  }, [filteredGlobal, filteredUser, activeIds]);
 
   const modalFilteredUser = useMemo(() =>
     modalGender === 'all' ? userModels : userModels.filter(m => m.gender === modalGender),
@@ -81,13 +102,12 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
   }, [globalModels, modalGender, modalSearch]);
 
   const handleModalSelect = (id: string) => {
-    onSelect(id);
-    setShowAllModal(false);
+    toggleModel(id);
   };
 
   return (
     <div className="space-y-5">
-      {/* Inline gender filter */}
+      {/* Inline gender filter + count badge */}
       <div className="flex items-center gap-3">
         {(['all', 'female', 'male'] as const).map(g => (
           <button
@@ -104,6 +124,11 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
             {g === 'all' ? 'All' : g === 'female' ? 'Women' : 'Men'}
           </button>
         ))}
+        {activeIds.size > 0 && (
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-bold ml-auto">
+            {activeIds.size} selected
+          </Badge>
+        )}
       </div>
 
       {/* Your Brand Models */}
@@ -115,7 +140,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
         {filteredUser.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {filteredUser.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+              <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
             ))}
           </div>
         ) : (
@@ -142,7 +167,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {inlineModels.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+              <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
             ))}
           </div>
           {filteredGlobal.length > INLINE_LIMIT && (
@@ -164,7 +189,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
       <Dialog open={showAllModal} onOpenChange={setShowAllModal}>
         <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base"><User className="w-4 h-4 text-primary" />Select a Model</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-base"><User className="w-4 h-4 text-primary" />Select Models</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -190,7 +215,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                   {modalFilteredUser.map(m => (
-                    <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => handleModalSelect(m.modelId)} />
+                    <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
                 </div>
               </div>
@@ -201,7 +226,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                   {modalFilteredGlobal.map(m => (
-                    <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => handleModalSelect(m.modelId)} />
+                    <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
                 </div>
               </div>
@@ -2070,7 +2095,9 @@ export function ProductImagesStep3Refine({
                   userModels={userModels}
                   globalModels={globalModels}
                   selectedModelId={details.selectedModelId}
+                  selectedModelIds={details.selectedModelIds}
                   onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
+                  onMultiSelect={(ids) => update({ selectedModelIds: ids, selectedModelId: ids[0] || undefined })}
                   previewImages={globalModels.slice(0, 3).map(m => m.previewUrl).filter(Boolean)}
                 />
               </CardContent>

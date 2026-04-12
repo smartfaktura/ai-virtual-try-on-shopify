@@ -81,6 +81,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   }, [details, onDetailsChange]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
+  const modelCount = (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) || 1;
   const categoryProductCounts = useMemo(() => {
     const counts = new Map<string, number>();
     if (categoryGroups) {
@@ -91,8 +92,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
     return counts;
   }, [categoryGroups]);
   const totalImages = (perCategoryScenes && perCategoryScenes.size > 0)
-    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, dbScenes, imageCount, details)
-    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
+    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, dbScenes, imageCount, details, modelCount)
+    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details, modelCount);
   const costPerImage = 6;
   const totalCredits = totalImages * costPerImage;
   const canAfford = balance >= totalCredits;
@@ -156,7 +157,9 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   if (details.consistency) aestheticEntries.push({ label: 'Consistency', value: friendlyLabel(details.consistency) });
 
   const personEntries: { label: string; value: string }[] = [];
-  if (details.selectedModelId) {
+  if (details.selectedModelIds && details.selectedModelIds.length > 0) {
+    personEntries.push({ label: 'Models', value: `${details.selectedModelIds.length} selected` });
+  } else if (details.selectedModelId) {
     personEntries.push({ label: 'Model', value: 'Selected' });
   } else {
     if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
@@ -420,6 +423,12 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <span className="text-muted-foreground">Images per scene</span>
                 <span className="font-medium">{imageCount}</span>
               </div>
+              {modelCount > 1 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Models</span>
+                  <span className="font-medium">×{modelCount}</span>
+                </div>
+              )}
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Total images</span>
                 <span className="font-medium">{totalImages}</span>
