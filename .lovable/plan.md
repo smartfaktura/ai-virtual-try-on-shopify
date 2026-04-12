@@ -1,36 +1,45 @@
 
 
-# Fix Background Inconsistency in 6 Sneaker Editorial Scenes
+# Fix Background Color Drift for Swatch Presets
 
 ## Problem
-Six sneaker editorial scenes (`elevator-mirror-shot`, `curtain-runway-shot`, `gallery-bench-shot`, `plinth-knee-shot`, `sun-steps-shot`, `shadow-plinth-shot`) have `background` listed in their `trigger_blocks` but their prompt templates do NOT contain `{{background}}`. 
-
-This means:
-1. The UI shows a background color picker for these scenes
-2. The user picks a color (e.g. sage)
-3. The prompt builder sees no `{{background}}` token in the template → falls through to the auto-inject path (line 1256)
-4. A generic `Background: sage seamless studio background...` gets appended at the end of the prompt
-5. This contradicts the scene's own environment (gallery, stairs, curtain runway, etc.)
-6. The AI model gets confused → some shots honor the scene environment, others honor the appended background → inconsistency
+When a user picks a swatch preset (e.g. "sage"), the prompt resolves to descriptive text like:
+```
+soft sage green (#E8EDE6) seamless studio background, no texture, no pattern
+```
+The AI model focuses on "soft sage green" (subjective) and may interpret the hue differently per scene. Meanwhile, custom hex picks resolve to:
+```
+flat solid #E8EDE6 color background, no texture, no pattern
+```
+…which is precise and consistent. The swatch path needs to match this precision.
 
 ## Fix
-**Remove `background` from `trigger_blocks`** for these 6 scenes. They are editorial scenes with defined environments — a studio background picker doesn't make sense for them. This is a data update, not a schema change.
 
-```sql
-UPDATE product_image_scenes 
-SET trigger_blocks = array_remove(trigger_blocks, 'background')
-WHERE scene_id IN (
-  'elevator-mirror-shot',
-  'curtain-runway-shot', 
-  'gallery-bench-shot',
-  'plinth-knee-shot',
-  'sun-steps-shot',
-  'shadow-plinth-shot'
-);
+**File:** `src/lib/productImagePromptBuilder.ts` (line 872-873)
+
+Change the swatch resolution path to use the same assertive hex-first format as custom hex:
+
+```ts
+// Before (line 872-873):
+if (swatchResolved) {
+  return `${swatchResolved} seamless studio background, no texture, no pattern`;
+}
+
+// After:
+if (swatchResolved) {
+  // Extract hex if present in the resolved string, otherwise use descriptive fallback
+  const hexMatch = swatchResolved.match(/#[0-9A-Fa-f]{6}/);
+  if (hexMatch) {
+    return `flat solid ${hexMatch[0]} color background, no texture, no pattern`;
+  }
+  return `${swatchResolved} seamless studio background, no texture, no pattern`;
+}
 ```
 
-This single update ensures these scenes no longer show a background picker in the UI and no conflicting background instruction gets injected into the prompt.
+This ensures every swatch with a hex code (sage `#E8EDE6`, blush `#F8ECE8`, white `#FFFFFF`, etc.) resolves to the exact same format as a custom hex pick — making the AI treat them identically and eliminating hue drift between scenes.
+
+Swatches without embedded hex codes (like `taupe`, `stone`) fall back to the current descriptive behavior.
 
 ## Files changed
-1. Database update — remove `background` from `trigger_blocks` on 6 editorial sneaker scenes
+1. `src/lib/productImagePromptBuilder.ts` — use hex-first format for swatch backgrounds
 
