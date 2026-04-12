@@ -1,26 +1,40 @@
 
 
-# Show Last-Edited Scene First in Admin Product Image Scenes
+# Fix: Product Logos Being Stripped During Generation
 
-## Problem
-The admin page at `/app/admin/product-image-scenes` sorts scenes by `sort_order` within each category group. There's no way to see which scene was most recently edited — it stays in its original position.
+## Root Cause
 
-## Solution
+The `BASE_NEGATIVES` string in `productImagePromptBuilder.ts` includes **"no text overlays"**, which the AI interprets broadly — including product branding, logos, and label text that are physically part of the product (like Nike swoosh text, brand names embossed on sneakers, etc.).
 
-### 1. Add `updated_at` column to `product_image_scenes` table
-- **DB migration**: Add `updated_at TIMESTAMPTZ DEFAULT now()` column
-- Add a trigger that auto-updates `updated_at` on every row update
+The freestyle edge function correctly instructs "replicate this item EXACTLY as shown" (line 538), but the negative prompt appended by the client-side prompt builder contradicts this by saying "no text overlays."
 
-### 2. Update `DbScene` interface
-- **File: `src/hooks/useProductImageScenes.ts`** — add `updated_at: string` to the `DbScene` interface
+```text
+Current BASE_NEGATIVES:
+"No watermarks, no text overlays, no chromatic aberration, no lens flare artifacts..."
+                 ^^^^^^^^^^^^^^^^
+                 This causes logo removal
+```
 
-### 3. Sort by `updated_at DESC` in admin page
-- **File: `src/pages/AdminProductImageScenes.tsx`** — change the sorting inside the `grouped` memo from `arr.sort((a, b) => a.sort_order - b.sort_order)` to `arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())` so the most recently edited scene appears first within each category group
+## Fix
 
-Note: The frontend-facing sort (in `useProductImageScenes` hook for the product images flow) stays sorted by `sort_order` — only the admin list changes.
+### 1. Refine `BASE_NEGATIVES` in `productImagePromptBuilder.ts`
+
+Change "no text overlays" to be more specific so it targets only **artificial** overlays, not product branding:
+
+```
+Before: "No watermarks, no text overlays, no chromatic aberration..."
+After:  "No watermarks, no artificial text overlays or watermark text, no chromatic aberration..."
+```
+
+### 2. Add explicit logo preservation to `PRODUCT_NEGATIVES`
+
+Append a positive reinforcement to the product negatives:
+
+```
+Before: "No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment."
+After:  "No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment. Preserve all original product branding, logos, and label text exactly as shown."
+```
 
 ### Files changed
-1. **DB migration** — add `updated_at` column + auto-update trigger
-2. `src/hooks/useProductImageScenes.ts` — add `updated_at` to `DbScene`
-3. `src/pages/AdminProductImageScenes.tsx` — sort by `updated_at DESC` in admin view
+1. `src/lib/productImagePromptBuilder.ts` — refine `BASE_NEGATIVES` and `PRODUCT_NEGATIVES` (lines 230-232)
 
