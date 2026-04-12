@@ -157,7 +157,9 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   if (details.consistency) aestheticEntries.push({ label: 'Consistency', value: friendlyLabel(details.consistency) });
 
   const personEntries: { label: string; value: string }[] = [];
-  if (details.selectedModelId) {
+  if (details.selectedModelIds && details.selectedModelIds.length > 0) {
+    personEntries.push({ label: 'Models', value: `${details.selectedModelIds.length} selected` });
+  } else if (details.selectedModelId) {
     personEntries.push({ label: 'Model', value: 'Selected' });
   } else {
     if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
