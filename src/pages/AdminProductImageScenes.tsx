@@ -724,7 +724,7 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
               <SelectTrigger className="text-xs"><SelectValue placeholder="Select sub-category..." /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">None</SelectItem>
-                {allSubCategories.map(sc => (
+                {[...allSubCategories, ...(draft.sub_category && !allSubCategories.includes(draft.sub_category) ? [draft.sub_category] : [])].map(sc => (
                   <SelectItem key={sc} value={sc}>{sc}</SelectItem>
                 ))}
                 <SelectItem value="__create_new__">＋ Create new...</SelectItem>
