@@ -259,6 +259,7 @@ export function ImageLightbox({
           </TooltipProvider>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
