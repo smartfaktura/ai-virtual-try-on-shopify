@@ -712,11 +712,10 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
   if (parts.length === 0) {
     // No person details set — use smart defaults if scene requires a person
     if (sceneNeedsPerson) {
-      // Skip outfit directive if scene controls its own outfit via outfitHint
-      // (the outfitHint will be resolved by the {{outfitDirective}} token in the template)
-      directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
-      directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
-      return directive;
+      let dir = defaultPersonDirective(category);
+      dir += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
+      dir += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
+      return dir;
     }
     return '';
   }
