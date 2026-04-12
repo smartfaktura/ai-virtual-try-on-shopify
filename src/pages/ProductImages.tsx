@@ -937,8 +937,8 @@ export default function ProductImages() {
         const hasOnModelScenes = selectedScenes.some(s =>
           s.triggerBlocks?.some(b => b === 'personDetails' || b === 'actionDetails')
         );
-        if (hasOnModelScenes && !details.selectedModelId && globalModelProfiles.length > 0) {
-          setDetails(prev => ({ ...prev, selectedModelId: globalModelProfiles[0].modelId }));
+        if (hasOnModelScenes && !details.selectedModelId && !(details.selectedModelIds?.length) && globalModelProfiles.length > 0) {
+          setDetails(prev => ({ ...prev, selectedModelId: globalModelProfiles[0].modelId, selectedModelIds: [globalModelProfiles[0].modelId] }));
           toast.info('Smart defaults applied — we auto-selected a model and best settings for your scenes. You can go back to Refine to customize.');
         }
         setStep(4);
