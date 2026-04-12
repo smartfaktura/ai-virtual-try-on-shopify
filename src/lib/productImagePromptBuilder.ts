@@ -1126,6 +1126,23 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productMaterials': return ctx.productMaterials || '';
     case 'productColor': return ctx.productColor || '';
 
+    // ── Aesthetic Color (consistent color across scenes) ──
+    case 'aestheticColor': {
+      const hex = details.aestheticColorHex;
+      if (hex && /^#[0-9A-Fa-f]{6}$/.test(hex)) return hex;
+      // Fallback: derive from product's dominant color
+      const fallback = analysis?.productMainHex;
+      if (fallback && /^#[0-9A-Fa-f]{6}$/.test(fallback)) return `complementary tone derived from the product's dominant color (${fallback})`;
+      return 'a cohesive accent tone complementary to the product';
+    }
+    case 'aestheticColorDirective': {
+      const hex = details.aestheticColorHex;
+      if (hex && /^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        return `The environment and props share a cohesive aesthetic color (${hex}) — doors, chairs, surfaces, and backgrounds should reflect this tone for visual consistency across the series.`;
+      }
+      return '';
+    }
+
     default: return '';
   }
 }

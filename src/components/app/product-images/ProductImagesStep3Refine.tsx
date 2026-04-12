@@ -1727,6 +1727,7 @@ export function ProductImagesStep3Refine({
 
   // Scene categorization
   const bgScenes = useMemo(() => selectedScenes.filter(s => s.triggerBlocks?.includes('background')), [selectedScenes]);
+  const aestheticColorScenes = useMemo(() => selectedScenes.filter(s => s.triggerBlocks?.includes('aestheticColor')), [selectedScenes]);
   const productShots = useMemo(() => selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
   const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
 
@@ -2006,7 +2007,7 @@ export function ProductImagesStep3Refine({
         });
       })()}
 
-      {(scenesNeedingModel.length > 0 || bgScenes.length > 0) && (
+      {(scenesNeedingModel.length > 0 || bgScenes.length > 0 || aestheticColorScenes.length > 0) && (
         <div className="space-y-3">
           <div>
             <span className="text-sm font-semibold">Complete setup</span>
@@ -2140,6 +2141,90 @@ export function ProductImagesStep3Refine({
                   onSaveGradient={(from, to) => saveGradient({ from, to })}
                   onDeleteSavedColor={deleteColor}
                 />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Aesthetic Color card */}
+          {aestheticColorScenes.length > 0 && (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold">Aesthetic color</span>
+                    {details.aestheticColorHex && (
+                      <span
+                        className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                        style={{ backgroundColor: details.aestheticColorHex }}
+                      />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    One consistent color for doors, chairs, surfaces & props across {aestheticColorScenes.length} shot{aestheticColorScenes.length !== 1 ? 's' : ''}.
+                  </p>
+                </div>
+                {!details.aestheticColorHex && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                    <Sparkles className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                    <span className="text-[11px] text-primary/60 font-medium">Pick a color to unify the environment across selected scenes</span>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {([
+                    { hex: '#5F8A8B', label: 'Teal' },
+                    { hex: '#C4704B', label: 'Terracotta' },
+                    { hex: '#8B9B76', label: 'Sage' },
+                    { hex: '#C4868B', label: 'Dusty Rose' },
+                    { hex: '#5C6B8A', label: 'Slate Blue' },
+                    { hex: '#C49B4B', label: 'Ochre' },
+                    { hex: '#2D5F3E', label: 'Forest' },
+                    { hex: '#3D3D3D', label: 'Charcoal' },
+                  ] as const).map(swatch => (
+                    <button
+                      key={swatch.hex}
+                      type="button"
+                      onClick={() => update({ aestheticColorHex: details.aestheticColorHex === swatch.hex ? undefined : swatch.hex })}
+                      className={cn(
+                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer',
+                        details.aestheticColorHex === swatch.hex
+                          ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
+                          : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                      )}
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full flex-shrink-0 border border-black/10" style={{ backgroundColor: swatch.hex }} />
+                      {swatch.label}
+                    </button>
+                  ))}
+                  {/* Custom hex input */}
+                  <label
+                    className={cn(
+                      'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer',
+                      details.aestheticColorHex && ![
+                        '#5F8A8B', '#C4704B', '#8B9B76', '#C4868B', '#5C6B8A', '#C49B4B', '#2D5F3E', '#3D3D3D'
+                      ].includes(details.aestheticColorHex)
+                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                    )}
+                  >
+                    <input
+                      type="color"
+                      value={details.aestheticColorHex || '#5F8A8B'}
+                      onChange={e => update({ aestheticColorHex: e.target.value })}
+                      className="w-4 h-4 rounded-full border-0 p-0 cursor-pointer [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
+                    />
+                    Custom
+                  </label>
+                </div>
+                {details.aestheticColorHex && (
+                  <button
+                    type="button"
+                    onClick={() => update({ aestheticColorHex: undefined })}
+                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    ✕ Clear aesthetic color
+                  </button>
+                )}
               </CardContent>
             </Card>
           )}
