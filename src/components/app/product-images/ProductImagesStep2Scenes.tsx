@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Camera, Copy, AlertCircle } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Camera, Copy, AlertCircle, Paintbrush } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
@@ -177,6 +177,7 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
 
 function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; selected: boolean; onToggle: () => void }) {
   const hasBackground = scene.promptTemplate?.includes('{{background}}');
+  const hasAestheticColor = scene.triggerBlocks?.includes('aestheticColor');
 
   return (
     <button
@@ -204,6 +205,21 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
             <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
             <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
             <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
+          </div>
+        )}
+        {hasAestheticColor && (
+          <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
+            <Paintbrush className="w-2.5 h-2.5 text-muted-foreground" />
+            {scene.suggestedColors && scene.suggestedColors.length > 0
+              ? scene.suggestedColors.slice(0, 4).map((c, i) => (
+                  <div key={i} className="w-2.5 h-2.5 rounded-full border border-white/40" style={{ backgroundColor: c.hex }} />
+                ))
+              : <>
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#5F8A8B]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#C4835B]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#8B9E7E]" />
+                </>
+            }
           </div>
         )}
       </div>
