@@ -411,11 +411,14 @@ export default function ProductImages() {
   }, [selectedSceneIds, selectedProducts.length]);
 
   // Trigger product analysis when moving from step 1 to step 2
+  // Use a serialised ID string as dep to avoid re-triggering on array reference changes
+  const selectedProductIdString = selectedProducts.map(p => p.id).sort().join(',');
   useEffect(() => {
     if (step === 2 && selectedProducts.length > 0) {
       analyzeProducts(selectedProducts);
     }
-  }, [step, selectedProducts, analyzeProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, selectedProductIdString, analyzeProducts]);
 
   // Track which refs were auto-filled from product data vs manually uploaded
   const [autoFilledRefs, setAutoFilledRefs] = useState<Set<string>>(new Set());
@@ -1190,14 +1193,40 @@ export default function ProductImages() {
                 return (
                   <div className="space-y-4 py-8 animate-fade-in">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-muted/30 border border-border/40 overflow-hidden flex-shrink-0">
-                        {selectedProducts[0]?.image_url && (
-                          <img src={selectedProducts[0].image_url} alt="" className="w-full h-full object-cover" />
-                        )}
+                      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                        {selectedProducts.map(p => {
+                          const done = !!analyses[p.id] && !pendingIds.has(p.id);
+                          return (
+                            <div key={p.id} className="relative w-10 h-10 rounded-lg bg-muted/30 border border-border/40 overflow-hidden flex-shrink-0">
+                              {p.image_url && (
+                                <img src={p.image_url} alt="" className={`w-full h-full object-cover transition-opacity ${done ? 'opacity-100' : 'opacity-50'}`} />
+                              )}
+                              {done ? (
+                                <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
+                                  <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Analyzing your product…</p>
-                        <p className="text-xs text-muted-foreground">Finding the best scenes for your product category</p>
+                        {(() => {
+                          const doneCount = selectedProducts.filter(p => !!analyses[p.id] && !pendingIds.has(p.id)).length;
+                          const total = selectedProducts.length;
+                          return (
+                            <>
+                              <p className="text-sm font-medium">
+                                {total === 1 ? 'Analyzing your product…' : `Analyzing your products… ${doneCount}/${total}`}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Finding the best scenes for {total === 1 ? 'your product category' : 'each product category'}</p>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProduct, ProductAnalysis } from '@/components/app/product-images/types';
 
@@ -18,6 +18,9 @@ export function useProductAnalysis() {
     isAnalyzing: false,
   });
 
+  // In-memory dedup: tracks product IDs already analyzed or in-flight this session
+  const analyzedOrInflight = useRef<Set<string>>(new Set());
+
   /**
    * Analyze products that don't yet have analysis_json.
    * Returns the full analyses map once done.
@@ -28,9 +31,19 @@ export function useProductAnalysis() {
     const needsAnalysis: UserProduct[] = [];
 
     for (const p of products) {
+      // Skip if already analyzed or in-flight this session
+      if (analyzedOrInflight.current.has(p.id)) {
+        const existing = (p as any).analysis_json as ProductAnalysis | null;
+        if (existing?.category) {
+          cached[p.id] = existing;
+        }
+        continue;
+      }
+
       const existing = (p as any).analysis_json as ProductAnalysis | null;
       if (existing?.category && existing?.version === 2) {
         cached[p.id] = existing;
+        analyzedOrInflight.current.add(p.id);
       } else {
         needsAnalysis.push(p);
       }
@@ -38,7 +51,12 @@ export function useProductAnalysis() {
 
     if (needsAnalysis.length === 0) {
       setState(prev => ({ ...prev, analyses: { ...prev.analyses, ...cached }, isAnalyzing: false }));
-      return cached;
+      return { ...cached, ...state.analyses };
+    }
+
+    // Mark all as in-flight immediately
+    for (const p of needsAnalysis) {
+      analyzedOrInflight.current.add(p.id);
     }
 
     // Mark as analyzing
@@ -73,7 +91,6 @@ export function useProductAnalysis() {
 
             if (error || !data?.analysis) {
               console.warn(`Analysis failed for ${product.id}:`, error);
-              // Fallback analysis
               newAnalyses[product.id] = {
                 category: 'other',
                 sizeClass: 'medium',
@@ -136,7 +153,9 @@ export function useProductAnalysis() {
 
   /** Re-analyze a single product (force fresh analysis regardless of version) */
   const reAnalyzeProduct = useCallback(async (product: UserProduct) => {
-    // Mark as pending
+    // Remove from dedup set so it can be re-analyzed
+    analyzedOrInflight.current.delete(product.id);
+
     setState(prev => {
       const nextPending = new Set(prev.pending);
       nextPending.add(product.id);
@@ -164,6 +183,8 @@ export function useProductAnalysis() {
             personCompatible: true,
           }
         : data.analysis;
+
+      analyzedOrInflight.current.add(product.id);
 
       // Persist to DB
       supabase
@@ -203,7 +224,6 @@ export function useProductAnalysis() {
       const existing = prev.analyses[productId];
       if (!existing) return prev;
       const updated = { ...existing, category };
-      // Persist override
       supabase
         .from('user_products')
         .update({ analysis_json: updated as any })
