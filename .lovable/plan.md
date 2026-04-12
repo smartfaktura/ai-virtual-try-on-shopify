@@ -1,24 +1,17 @@
 
 
-# Move Uncategorized Fragrance Scenes to Editorial
+# Fix Lightbox Not Covering Full Page
 
-## What
-25 fragrance scenes currently have no `sub_category` (showing as "Uncategorized"). Move them all to the "Editorial" sub-category and remove the `background` trigger block from each.
+## Problem
+The lightbox in the Results page renders inside the `<main>` content area, which is a child of the AppShell flex layout. The sidebar bleeds through on the left side because the lightbox's `fixed inset-0 z-50` is trapped in a stacking context created by the AppShell layout.
 
-## Scenes affected
-Gradient Blue Studio, Shadow Play Studio, Earthy Driftwood Display, Warm Neutral Studio, Natural Woodscape, Frozen Surface Product, Red Gradient Embrace, Frozen Aura, Earthy Bubble Wrap, Dynamic Studio Background, Dramatic Rock Texture, Prism Glow Showcase, Dynamic Water Splash, Earthy Glow Stage, Earthy Woodland Product, Amber Glow Studio, Moody Wet Concrete, Aquatic Reflection, Botanical Oasis, Crimson Spotlight, Earthy Botanicals Plinth, Natural Light Backdrop, Sunny Shadows, Elegant Vanity Setup, Dark Elegance
+## Solution
+Render the `ImageLightbox` component via a React **portal** to `document.body`, ensuring it sits above everything regardless of DOM nesting.
 
-## Implementation
-Single data update via the insert tool:
+## File: `src/components/app/ImageLightbox.tsx`
 
-```sql
-UPDATE product_image_scenes
-SET sub_category = 'Editorial',
-    trigger_blocks = '{}',
-    updated_at = now()
-WHERE category_collection = 'fragrance'
-  AND (sub_category IS NULL OR sub_category = '');
-```
+1. Import `createPortal` from `react-dom`
+2. Wrap the entire lightbox return in `createPortal(..., document.body)`
 
-No code changes needed — the frontend reads these fields dynamically.
+This is a 3-line change that fixes the issue globally for all pages using the lightbox (Results, Library, Freestyle, etc.).
 
