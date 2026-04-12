@@ -1,5 +1,6 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScenes';
+import ImportFromScenesModal from '@/components/app/ImportFromScenesModal';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
