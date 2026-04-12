@@ -1,30 +1,44 @@
 
 
-# Extract All Product Image Scene Prompts to .txt
+# Fix Scene Sorting Glitch in Admin Panel
 
-## What
-Run a database query to pull all active scenes from `product_image_scenes`, then format them into a structured `.txt` file organized by category collection and sub-category, showing each shot's title, scene_id, and full prompt template.
+## Problem
+The up/down sorting buttons are broken when scenes are grouped by sub-category. Two issues:
 
-## How
-1. Query `product_image_scenes` ordered by `category_sort_order`, `sub_category_sort_order`, `sort_order`
-2. Write a Python script that groups results by `category_collection` → `sub_category` and formats each entry as:
-   ```
-   ════════════════════════════════
-   CATEGORY: Fragrance
-   ════════════════════════════════
+1. **Wrong swap target**: The UI passes `idx` scoped to the sub-category group (e.g., position 2 of 5 within "Essential Shots"), but `handleMove` looks up the scene in the flat category-level array (all sub-categories combined). It finds the scene at a different index and swaps it with the wrong neighbor — often a scene from a different sub-category.
 
-   --- Essential Shots ---
+2. **Duplicate sort_order values**: If two scenes share the same `sort_order`, swapping their values produces no visible change, causing the "glitch" feel.
 
-   [1] Front View (clean-packshot-fragrance)
-   PROMPT:
-   {{productName}} photographed in a strict front view...
+## Solution
 
-   [2] Angle View (angle-view-fragrance)
-   PROMPT:
-   ...
-   ```
-3. Save to `/mnt/documents/product-image-scenes-prompts.txt`
+**File: `src/pages/AdminProductImageScenes.tsx`**
 
-## Output
-A single downloadable `.txt` file with all ~600+ scenes organized by category and sub-category.
+### 1. Make `handleMove` sub-category-aware
+
+Instead of searching the flat category array, filter to only scenes in the same sub-category before finding the swap partner:
+
+```
+handleMove(scene, direction):
+  - Get all scenes in the same category_collection
+  - Filter to only scenes with the same sub_category
+  - Sort by sort_order
+  - Find scene index within this filtered list
+  - Swap sort_order with the adjacent scene in the same sub-category
+```
+
+### 2. Handle equal sort_order values
+
+When swapping, if both scenes have the same `sort_order`, assign explicit sequential values instead of just swapping:
+
+```
+if a.sort_order === b.sort_order:
+  assign a = b.sort_order + (direction === 'up' ? -1 : +1)
+```
+
+### 3. Normalize sort_order on edge cases
+
+When sort_order values collide or scenes have been imported with all-zero sort orders, re-index the entire sub-group sequentially before performing the swap.
+
+## Result
+Up/down arrows will correctly move scenes within their sub-category group only, with no cross-sub-category glitches.
 
