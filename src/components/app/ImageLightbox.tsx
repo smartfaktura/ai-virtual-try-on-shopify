@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Trophy } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
@@ -77,7 +78,7 @@ export function ImageLightbox({
   const iconBtnClass = 'w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/80 hover:bg-white/20 hover:text-white transition-colors';
   const deleteBtnClass = 'w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors';
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
@@ -258,6 +259,7 @@ export function ImageLightbox({
           </TooltipProvider>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
