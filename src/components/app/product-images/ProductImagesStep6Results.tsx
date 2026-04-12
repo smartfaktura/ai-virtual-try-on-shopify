@@ -79,7 +79,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
       const dropImages: DropImage[] = [];
       for (const [, { images, productName }] of sortedResults.entries()) {
         for (const img of images) {
-          dropImages.push({ url: img.url, workflow_name: 'Product Images', product_title: productName });
+          dropImages.push({ url: img.url, workflow_name: 'Product Images', product_title: productName, scene_name: img.sceneName });
         }
       }
       await downloadDropAsZip(dropImages, 'Product_Images');
