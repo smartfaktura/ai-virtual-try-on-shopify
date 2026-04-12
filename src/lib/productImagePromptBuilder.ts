@@ -812,6 +812,17 @@ function buildNegativePrompt(scene: ProductImageScene): string {
   return parts.join(' ');
 }
 
+// ── Shared outfit hint resolver ──
+function resolveOutfitHintText(scene: ProductImageScene, details: DetailSettings, productName?: string): string | undefined {
+  if (!scene.outfitHint) return undefined;
+  const hex = details.aestheticColorHex;
+  const label = details.aestheticColorLabel;
+  const colorDesc = hex && /^#[0-9A-Fa-f]{6}$/.test(hex) ? (label ? `${label} (${hex})` : hex) : 'coordinated';
+  return scene.outfitHint
+    .replace(/\{\{aestheticColor\}\}/gi, colorDesc)
+    .replace(/\{\{productName\}\}/gi, productName || 'the product');
+}
+
 // ── Token resolution ──
 interface TokenContext {
   productName: string;
@@ -885,21 +896,16 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'personDirective': {
       const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      const resolvedHint = scene.outfitHint
-        ? scene.outfitHint
-            .replace(/\{\{aestheticColor\}\}/gi, details.aestheticColorHex || 'coordinated')
-            .replace(/\{\{productName\}\}/gi, ctx.productName || 'the product')
-        : undefined;
+      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
       return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
       // Scene-controlled outfit: use outfit_hint if present
-      if (scene.outfitHint) {
-        let hint = scene.outfitHint
-          .replace(/\{\{aestheticColor\}\}/gi, details.aestheticColorHex || 'coordinated')
-          .replace(/\{\{productName\}\}/gi, ctx.productName || 'the product');
+      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
+      if (resolvedHint) {
+        let hint = resolvedHint;
         if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
         return `OUTFIT DIRECTION — ${hint}`;
       }
@@ -1144,7 +1150,8 @@ function resolveToken(token: string, ctx: TokenContext): string {
     // ── Aesthetic Color (consistent color across scenes) ──
     case 'aestheticColor': {
       const hex = details.aestheticColorHex;
-      if (hex && /^#[0-9A-Fa-f]{6}$/.test(hex)) return hex;
+      const label = details.aestheticColorLabel;
+      if (hex && /^#[0-9A-Fa-f]{6}$/.test(hex)) return label ? `${label} (${hex})` : hex;
       // Fallback: derive from product's dominant color
       const fallback = analysis?.productMainHex;
       if (fallback && /^#[0-9A-Fa-f]{6}$/.test(fallback)) return `complementary tone derived from the product's dominant color (${fallback})`;
@@ -1152,8 +1159,10 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
     case 'aestheticColorDirective': {
       const hex = details.aestheticColorHex;
+      const label = details.aestheticColorLabel;
       if (hex && /^#[0-9A-Fa-f]{6}$/.test(hex)) {
-        return `The environment and props share a cohesive aesthetic color (${hex}) — doors, chairs, surfaces, and backgrounds should reflect this tone for visual consistency across the series.`;
+        const colorDesc = label ? `${label} (${hex})` : hex;
+        return `The environment and props share a cohesive aesthetic color (${colorDesc}) — doors, chairs, surfaces, and backgrounds should reflect this tone for visual consistency across the series.`;
       }
       return '';
     }
@@ -1263,6 +1272,16 @@ export function buildDynamicPrompt(
   const camera = resolveCameraDirective(scene);
   if (camera && !prompt.includes('lens at')) {
     prompt += ' ' + camera;
+  }
+
+  // Auto-inject outfit hint if scene defines one but template forgot {{outfitDirective}}
+  if (scene.outfitHint && !(template || '').includes('{{outfitDirective}}')) {
+    const resolvedHint = resolveOutfitHintText(scene, details, product.title);
+    if (resolvedHint && !prompt.includes(resolvedHint)) {
+      let hint = resolvedHint;
+      if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
+      prompt += ` OUTFIT DIRECTION — ${hint}`;
+    }
   }
 
   // Append negative prompt
