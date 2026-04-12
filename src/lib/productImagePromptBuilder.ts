@@ -1147,6 +1147,9 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productMaterials': return ctx.productMaterials || '';
     case 'productColor': return ctx.productColor || '';
 
+    // ── Brand Logo Text ──
+    case 'brandLogoText': return details.brandLogoText || '';
+
     // ── Aesthetic Color (consistent color across scenes) ──
     case 'aestheticColor': {
       const hex = details.aestheticColorHex;
@@ -1288,8 +1291,8 @@ export function buildDynamicPrompt(
   const negatives = buildNegativePrompt(scene);
   prompt += ' ' + negatives;
 
-  // Append brand logo text directive if present
-  if (details.brandLogoText && scene.triggerBlocks?.includes('brandLogoOverlay')) {
+  // Append brand logo text directive if present — skip if template already used {{brandLogoText}}
+  if (details.brandLogoText && scene.triggerBlocks?.includes('brandLogoOverlay') && !(template || '').includes('{{brandLogoText}}')) {
     prompt += ` BRAND TEXT DIRECTIVE: Display the following brand text prominently and legibly in the scene: "${details.brandLogoText}". Render it with accurate typography matching luxury/premium brand standards.`;
   }
 
