@@ -821,8 +821,8 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
         </div>
       )}
 
-      {/* Scene Outfit Direction — visible when personDetails or actionDetails triggers are active */}
-      {((draft.trigger_blocks || []).includes('personDetails') || (draft.trigger_blocks || []).includes('actionDetails')) && (
+      {/* Scene Outfit Direction — universal override, always visible */}
+      {(
         <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border/40">
           <Label className="text-xs font-semibold flex items-center gap-1.5">
             <Shirt className="w-3.5 h-3.5" />
