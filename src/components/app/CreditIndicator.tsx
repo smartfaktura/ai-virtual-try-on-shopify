@@ -52,10 +52,10 @@ export function CreditIndicator() {
         </div>
         <button
           onClick={openBuyModal}
-          className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors text-sidebar-foreground/40 hover:text-sidebar-foreground/70"
+          className="p-2 min-w-[36px] min-h-[36px] rounded-lg hover:bg-white/[0.06] transition-colors text-sidebar-foreground/40 hover:text-sidebar-foreground/70 flex items-center justify-center"
           title="Buy credits"
         >
-          <PlusCircle className="w-4 h-4" />
+          <PlusCircle className="w-5 h-5" />
         </button>
       </div>
 
