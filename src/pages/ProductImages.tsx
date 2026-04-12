@@ -507,9 +507,10 @@ export default function ProductImages() {
     if (!canAfford) { openBuyModal(); return; }
 
     const imgCount = parseInt(details.imageCount || '1', 10);
+    const mc = (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) || 1;
     const totalExpected = (perCategoryScenes.size > 0 && hasMultipleCategories)
-      ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imgCount, details)
-      : computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details);
+      ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, allScenes, imgCount, details, mc)
+      : computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details, mc);
     setExpectedJobCount(totalExpected);
     setEnqueuedCount(0);
     setCompletedJobs(0);
@@ -521,21 +522,22 @@ export default function ProductImages() {
     const token = session?.session?.access_token;
     if (!token) { toast.error('Authentication required'); setStep(4); return; }
 
-    // Resolve model image if selectedModelId is set
-    let modelRef: { name: string; gender: string; ethnicity: string; bodyType: string; ageRange: string; imageUrl: string } | undefined;
-    if (details.selectedModelId) {
-      const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
-      const found = allModels.find(m => m.modelId === details.selectedModelId);
+    // Resolve all selected models
+    const modelIds = details.selectedModelIds?.length ? details.selectedModelIds : (details.selectedModelId ? [details.selectedModelId] : []);
+    const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
+    const modelRefs: Array<{ name: string; gender: string; ethnicity: string; bodyType: string; ageRange: string; imageUrl: string }> = [];
+    for (const mid of modelIds) {
+      const found = allModels.find(m => m.modelId === mid);
       if (found) {
         const modelBase64 = await convertImageToBase64(found.sourceImageUrl || found.previewUrl);
-        modelRef = {
+        modelRefs.push({
           name: found.name,
           gender: found.gender || '',
           ethnicity: found.ethnicity || '',
           bodyType: found.bodyType || '',
           ageRange: found.ageRange || '',
           imageUrl: modelBase64,
-        };
+        });
       }
     }
 
