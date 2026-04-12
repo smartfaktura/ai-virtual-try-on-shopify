@@ -248,6 +248,7 @@ export interface ProductImageScene {
   sceneType?: SceneType;
   subCategory?: string;
   requiresExtraReference?: boolean;
+  suggestedColors?: Array<{hex: string; label: string}>;
 }
 
 export interface SubGroup {
