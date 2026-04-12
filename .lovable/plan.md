@@ -1,47 +1,36 @@
 
 
-# Import Product Image Scenes → Admin Scenes (Reverse Import)
+# Fix: Add Confirm Button for New Sub-Category Input
 
-## Overview
-Add an "Import from Product Visuals" button next to the existing "Add Scene" button on `/app/admin/scenes`. It opens a modal that lists all product image scenes, lets the admin select one or more, then maps them to the `custom_scenes` format and saves.
+## Problem
+When creating a new sub-category in the scene edit form, the text input only shows an **X** (cancel) button. There's no **✓** (confirm) button to accept the typed name and return to the normal select view. Users expect a way to "save" the new sub-category value.
 
-## Field Mapping (product_image_scenes → custom_scenes)
+## Fix
 
-| Product Image Scene | Custom Scene | Notes |
-|---|---|---|
-| `title` | `name` | Direct |
-| `description` | `description` | Direct |
-| `prompt_template` | `prompt_hint` | Direct |
-| `preview_image_url` | `image_url` | Direct (required, skip if missing) |
-| `preview_image_url` | `preview_image_url` | Same URL |
-| `scene_type` | `category` | Auto-mapped, editable dropdown |
-| — | `prompt_only` | Toggle, default false |
-| — | `discover_categories` | Optional multi-select |
-| — | `created_by` | Auto (current user) |
-| — | `is_active` | Default true |
+**`src/pages/AdminProductImageScenes.tsx`** — In the `SceneForm` component (~line 695-706), add a checkmark confirm button next to the X cancel button:
 
-## Implementation
+```tsx
+// Current: only X button
+<Button variant="ghost" size="sm" onClick={() => setCreatingSubCat(false)}>
+  <X className="w-3.5 h-3.5" />
+</Button>
 
-### 1. New component: `src/components/app/ImportProductScenesModal.tsx`
-- Two-step dialog (same pattern as `ImportFromScenesModal`):
-  - **Step 1 — Pick**: Searchable grid of product image scenes (from `useProductImageScenes`), grouped/badged by `category_collection`, multi-select
-  - **Step 2 — Configure**: Per-scene form with editable `name`, `category` (dropdown of all scene categories from `useSceneCategories`), `prompt_hint`, `prompt_only` toggle
-- On submit: calls `useAddCustomScene` mutation for each scene
-- Shows success toast
+// After: add ✓ confirm button before the X
+<Button 
+  variant="ghost" size="sm"
+  disabled={!draft.sub_category?.trim()}
+  onClick={() => setCreatingSubCat(false)}
+>
+  <Check className="w-3.5 h-3.5 text-green-600" />
+</Button>
+<Button variant="ghost" size="sm" onClick={() => { set('sub_category', null); setCreatingSubCat(false); }}>
+  <X className="w-3.5 h-3.5" />
+</Button>
+```
 
-### 2. Update `src/pages/AdminScenes.tsx`
-- Add "Import" button (with `Import` icon) next to the existing "Add Scene" button in the top action bar (~line 383-388)
-- Import the modal component and wire open/close state
-- Pass scene categories for the category dropdown
+- **Check button**: confirms the typed value and switches back to dropdown view (value already stored in draft)
+- **X button**: clears the value AND switches back to dropdown view (true cancel)
+- Add `Check` to the lucide-react import
 
-### 3. No database changes needed
-Both tables exist with proper admin RLS policies.
-
-## UX Flow
-1. Admin opens `/app/admin/scenes`
-2. Clicks "Import" button next to "Add Scene"
-3. Modal Step 1: sees all product image scenes, searches/filters, selects some
-4. Clicks "Next"
-5. Modal Step 2: reviews/adjusts name, category, prompt for each
-6. Clicks "Import All" — scenes saved as custom scenes, modal closes, list refreshes
+One file changed, ~5 lines modified.
 
