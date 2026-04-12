@@ -66,6 +66,7 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     category_sort_order: 0,
     requires_extra_reference: false,
     sub_category_sort_order: 0,
+    use_scene_reference: false,
   };
 }
 
@@ -231,6 +232,7 @@ export default function AdminProductImageScenes() {
         category_sort_order: scene.category_sort_order,
         requires_extra_reference: scene.requires_extra_reference,
         sub_category_sort_order: scene.sub_category_sort_order,
+        use_scene_reference: scene.use_scene_reference ?? false,
       });
       toast.success(`Duplicated as ${newId}`);
     } catch (e: any) {
