@@ -107,6 +107,7 @@ export default function AdminProductImageScenes() {
   const [editDraft, setEditDraft] = useState<Partial<DbScene>>({});
   const [addingNew, setAddingNew] = useState(false);
   const [newDraft, setNewDraft] = useState(emptyScene());
+  const [importTarget, setImportTarget] = useState<{ category: string; label: string; sortOrder: number } | null>(null);
 
   // Derive sub-categories grouped by category_collection
   const subCategoriesByCategory = useMemo(() => {
