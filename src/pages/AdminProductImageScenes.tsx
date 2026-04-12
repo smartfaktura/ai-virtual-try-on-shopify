@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScenes';
+import ImportFromScenesModal from '@/components/app/ImportFromScenesModal';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy, Import,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -106,6 +107,7 @@ export default function AdminProductImageScenes() {
   const [editDraft, setEditDraft] = useState<Partial<DbScene>>({});
   const [addingNew, setAddingNew] = useState(false);
   const [newDraft, setNewDraft] = useState(emptyScene());
+  const [importTarget, setImportTarget] = useState<{ category: string; label: string; sortOrder: number } | null>(null);
 
   // Derive sub-categories grouped by category_collection
   const subCategoriesByCategory = useMemo(() => {
@@ -397,6 +399,17 @@ export default function AdminProductImageScenes() {
                     className="h-8 gap-1 text-xs shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setImportTarget({ category: key, label: catLabel(key), sortOrder: scenes[0]?.category_sort_order ?? 0 });
+                    }}
+                  >
+                    <Import className="w-3.5 h-3.5" /> Import
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1 text-xs shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleAddNewForCategory(key, scenes[0]?.category_sort_order ?? 0);
                     }}
                   >
@@ -476,6 +489,18 @@ export default function AdminProductImageScenes() {
             );
           })}
         </div>
+      )}
+
+      {importTarget && (
+        <ImportFromScenesModal
+          open={!!importTarget}
+          onOpenChange={(open) => { if (!open) setImportTarget(null); }}
+          targetCategory={importTarget.category}
+          targetCategoryLabel={importTarget.label}
+          categorySortOrder={importTarget.sortOrder}
+          existingSubCategories={subCategoriesByCategory.get(importTarget.category) || []}
+          existingSceneIds={rawScenes.map(s => s.scene_id)}
+        />
       )}
     </div>
   );
