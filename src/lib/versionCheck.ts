@@ -10,6 +10,7 @@ export async function checkAppVersion() {
       if (sessionStorage.getItem('v_reloaded')) return;
       // Don't reload while user is on catalog page — preserves in-memory generation results
       if (window.location.pathname.startsWith('/app/catalog')) return;
+      if (window.location.pathname.startsWith('/app/generate/product-images')) return;
       sessionStorage.setItem('v_reloaded', '1');
       window.location.reload();
     } else {
