@@ -2247,7 +2247,7 @@ export function ProductImagesStep3Refine({
                       <button
                         key={swatch.hex}
                         type="button"
-                        onClick={() => update({ aestheticColorHex: selected ? undefined : swatch.hex })}
+                        onClick={() => update({ aestheticColorHex: selected ? undefined : swatch.hex, aestheticColorLabel: selected ? undefined : swatch.label })}
                         className={cn(
                           'relative aspect-square rounded-xl overflow-hidden transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                           selected
