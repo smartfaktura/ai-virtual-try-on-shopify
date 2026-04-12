@@ -64,6 +64,7 @@ export default function ProductImages() {
     backgroundTone: 'auto', negativeSpace: 'auto', surfaceType: 'auto',
     lightingStyle: 'soft-diffused', shadowStyle: 'natural', mood: 'auto',
     brandingVisibility: 'product-accent',
+    selectedAspectRatios: [],
   };
 
   const [step, setStep] = useState<PIStep>(1);
@@ -905,7 +906,7 @@ export default function ProductImages() {
         return selectedSceneIds.size > 0;
       }
       case 3: return true;
-      case 4: return canAfford && totalImages > 0;
+      case 4: return canAfford && totalImages > 0 && (details.selectedAspectRatios?.length || 0) > 0;
       default: return false;
     }
   })();
