@@ -1,26 +1,36 @@
 
 
-# Fix ZIP Download Naming to Match Single-Image Downloads
+# Fix Background Inconsistency in 6 Sneaker Editorial Scenes
 
 ## Problem
-When downloading a single image, files are named `{ProductName}_{SceneName}.ext`. But when downloading as ZIP, `scene_name` is not passed to the download function, so files get generic names like `image_1.png` inside a "Product Images" folder.
+Six sneaker editorial scenes (`elevator-mirror-shot`, `curtain-runway-shot`, `gallery-bench-shot`, `plinth-knee-shot`, `sun-steps-shot`, `shadow-plinth-shot`) have `background` listed in their `trigger_blocks` but their prompt templates do NOT contain `{{background}}`. 
+
+This means:
+1. The UI shows a background color picker for these scenes
+2. The user picks a color (e.g. sage)
+3. The prompt builder sees no `{{background}}` token in the template → falls through to the auto-inject path (line 1256)
+4. A generic `Background: sage seamless studio background...` gets appended at the end of the prompt
+5. This contradicts the scene's own environment (gallery, stairs, curtain runway, etc.)
+6. The AI model gets confused → some shots honor the scene environment, others honor the appended background → inconsistency
 
 ## Fix
+**Remove `background` from `trigger_blocks`** for these 6 scenes. They are editorial scenes with defined environments — a studio background picker doesn't make sense for them. This is a data update, not a schema change.
 
-### File: `src/components/app/product-images/ProductImagesStep6Results.tsx` (lines 79-84)
-Pass `scene_name` from each image into the `DropImage` object:
-
-```ts
-dropImages.push({
-  url: img.url,
-  workflow_name: 'Product Images',
-  product_title: productName,
-  scene_name: img.sceneName,
-});
+```sql
+UPDATE product_image_scenes 
+SET trigger_blocks = array_remove(trigger_blocks, 'background')
+WHERE scene_id IN (
+  'elevator-mirror-shot',
+  'curtain-runway-shot', 
+  'gallery-bench-shot',
+  'plinth-knee-shot',
+  'sun-steps-shot',
+  'shadow-plinth-shot'
+);
 ```
 
-This single change makes the ZIP use the existing branch in `dropDownload.ts` (line 41-44) that formats filenames as `{Product}_{Scene}_{index}.ext`, which closely matches the single-download naming.
+This single update ensures these scenes no longer show a background picker in the UI and no conflicting background instruction gets injected into the prompt.
 
-### Files changed
-1. `src/components/app/product-images/ProductImagesStep6Results.tsx` — add `scene_name` to ZIP download payload
+## Files changed
+1. Database update — remove `background` from `trigger_blocks` on 6 editorial sneaker scenes
 
