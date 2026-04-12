@@ -812,6 +812,17 @@ function buildNegativePrompt(scene: ProductImageScene): string {
   return parts.join(' ');
 }
 
+// ── Shared outfit hint resolver ──
+function resolveOutfitHintText(scene: ProductImageScene, details: DetailSettings, productName?: string): string | undefined {
+  if (!scene.outfitHint) return undefined;
+  const hex = details.aestheticColorHex;
+  const label = details.aestheticColorLabel;
+  const colorDesc = hex && /^#[0-9A-Fa-f]{6}$/.test(hex) ? (label ? `${label} (${hex})` : hex) : 'coordinated';
+  return scene.outfitHint
+    .replace(/\{\{aestheticColor\}\}/gi, colorDesc)
+    .replace(/\{\{productName\}\}/gi, productName || 'the product');
+}
+
 // ── Token resolution ──
 interface TokenContext {
   productName: string;
