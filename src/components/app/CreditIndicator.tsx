@@ -1,4 +1,4 @@
-import { Sparkles, PlusCircle, ArrowUpRight } from 'lucide-react';
+import { Sparkles, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
@@ -52,10 +52,10 @@ export function CreditIndicator() {
         </div>
         <button
           onClick={openBuyModal}
-          className="p-2 min-w-[36px] min-h-[36px] rounded-lg hover:bg-white/[0.06] transition-colors text-sidebar-foreground/40 hover:text-sidebar-foreground/70 flex items-center justify-center"
+          className="w-8 h-8 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-base font-medium text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
           title="Buy credits"
         >
-          <PlusCircle className="w-5 h-5" />
+          +
         </button>
       </div>
 
