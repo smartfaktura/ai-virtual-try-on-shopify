@@ -51,9 +51,9 @@ export function CreditIndicator() {
           </div>
         </div>
         <button
-          onClick={openBuyModal}
+          onClick={() => navigate('/app/settings')}
           className="w-8 h-8 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-base font-medium text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
-          title="Buy credits"
+          title="Manage plan"
         >
           <Zap className="w-3.5 h-3.5" />
         </button>
