@@ -1227,12 +1227,18 @@ export function buildDynamicPrompt(
     scene,
   };
 
+  // Detect if background resolves to a solid hex (for preamble + negatives)
+  const bgResolved = resolveToken('background', ctx);
+  const bgHexForReinforcement = bgResolved.match(/flat solid exact (#[0-9A-Fa-f]{6})/)?.[1] || null;
+
   if (!template) {
     // Fallback: old-style concatenation but enriched
-    const parts: string[] = [scene.description];
+    const parts: string[] = [];
+    if (bgHexForReinforcement) parts.push(`CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation.`);
+    parts.push(scene.description);
     parts.push(`Product: ${product.title}.`);
     if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish, product.description)}.`);
-    parts.push(`Background: ${resolveToken('background', ctx)}.`);
+    parts.push(`Background: ${bgResolved}.`);
     parts.push(resolveToken('lightingDirective', ctx));
     const styling = resolveToken('stylingDirective', ctx);
     if (styling) parts.push(styling);
@@ -1244,14 +1250,18 @@ export function buildDynamicPrompt(
     if (details.focusArea && !isAuto(details.focusArea)) parts.push(`Focus: ${details.focusArea}.`);
     if (details.customNote) parts.push(details.customNote);
     parts.push(resolveCameraDirective(scene));
-    // QUALITY_SUFFIX removed — edge function handles this
-    const negatives = buildNegativePrompt(scene);
+    const negatives = buildNegativePrompt(scene, !!bgHexForReinforcement);
     parts.push(negatives);
     return cleanupPrompt(parts.filter(Boolean).join(' '));
   }
 
   // Resolve all {{token}} placeholders
-  let prompt = template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
+  // Prepend preamble for solid hex backgrounds
+  let prompt = '';
+  if (bgHexForReinforcement) {
+    prompt = `CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation. `;
+  }
+  prompt += template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
   // Auto-inject key directives if template didn't include their tokens
   // For category-collection scenes, skip aesthetic overrides — let their templates drive the look
@@ -1294,7 +1304,7 @@ export function buildDynamicPrompt(
   }
 
   // Append negative prompt
-  const negatives = buildNegativePrompt(scene);
+  const negatives = buildNegativePrompt(scene, !!bgHexForReinforcement);
   prompt += ' ' + negatives;
 
   // Append brand logo text directive if present — skip if template already used {{brandLogoText}}
