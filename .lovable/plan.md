@@ -1,34 +1,15 @@
 
 
-# Rename to "Presets" Everywhere
+# Make the Plus (Buy Credits) Button Bigger
 
-## Rationale
-"Explore Presets" is two words where one suffices. "Share to Explore Presets" is clunky. A single word — **Presets** — is clean, scannable, and works in all contexts (nav label, modal title, tooltip, toast).
+## Problem
+The `PlusCircle` button in the credit indicator is too small (`p-1.5`, icon `w-4 h-4`) — hard to tap on mobile.
 
-## Changes
+## Change
+**`src/components/app/CreditIndicator.tsx`** — increase the button's tap target and icon size:
+- Button padding: `p-1.5` → `p-2`
+- Icon size: `w-4 h-4` → `w-5 h-5`
+- Add `min-w-[36px] min-h-[36px]` for a reliable 36px mobile tap target
 
-### 1. Sidebar nav label
-**`src/components/app/AppShell.tsx`** — change `'Explore Presets'` → `'Presets'`
-
-### 2. Page header
-**`src/pages/Discover.tsx`** — change PageHeader title `"Explore Presets"` → `"Presets"`
-
-### 3. Modal title + footer
-**`src/components/app/SubmitToDiscoverModal.tsx`**
-- Title: `"Share to Discover"` → `"Share to Presets"`
-- Footer: `"…before appearing in Discover"` → `"…before appearing in Presets"`
-
-### 4. Library share section
-**`src/components/app/LibraryDetailModal.tsx`** — heading `"Share to Discover"` → `"Share to Presets"`
-
-### 5. Freestyle tooltip
-**`src/components/app/freestyle/FreestyleGallery.tsx`** — tooltip `"Share to Discover"` → `"Share to Presets"`
-
-### 6. Toast message
-**`src/hooks/useDiscoverSubmissions.ts`** — `"…in Discover once approved"` → `"…in Presets once approved"`
-
-### 7. Studio chat prompt
-**`src/components/app/StudioChat.tsx`** — `"Submit to Discover"` → `"Submit to Presets"`
-
-Only user-facing strings change. No variable/function/file renames.
+Single-line edit around line 55.
 
