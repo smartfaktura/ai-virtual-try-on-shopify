@@ -1562,6 +1562,7 @@ export function ProductImagesStep3Refine({
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
+  const [aestheticPickerOpen, setAestheticPickerOpen] = useState(false);
   const { allScenes: dbScenes } = useProductImageScenes();
 
   // Scene-specific detail blocks
@@ -2170,8 +2171,8 @@ export function ProductImagesStep3Refine({
                     <span className="text-[11px] text-primary/60 font-medium">Pick a color to unify the environment across selected scenes</span>
                   </div>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  {([
+                {(() => {
+                  const AESTHETIC_PRESETS = [
                     { hex: '#5F8A8B', label: 'Teal' },
                     { hex: '#C4704B', label: 'Terracotta' },
                     { hex: '#8B9B76', label: 'Sage' },
@@ -2180,42 +2181,80 @@ export function ProductImagesStep3Refine({
                     { hex: '#C49B4B', label: 'Ochre' },
                     { hex: '#2D5F3E', label: 'Forest' },
                     { hex: '#3D3D3D', label: 'Charcoal' },
-                  ] as const).map(swatch => (
-                    <button
-                      key={swatch.hex}
-                      type="button"
-                      onClick={() => update({ aestheticColorHex: details.aestheticColorHex === swatch.hex ? undefined : swatch.hex })}
-                      className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer',
-                        details.aestheticColorHex === swatch.hex
-                          ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
-                          : 'border-border bg-card text-muted-foreground hover:border-primary/40'
-                      )}
-                    >
-                      <span className="w-3.5 h-3.5 rounded-full flex-shrink-0 border border-black/10" style={{ backgroundColor: swatch.hex }} />
-                      {swatch.label}
-                    </button>
-                  ))}
-                  {/* Custom hex input */}
-                  <label
-                    className={cn(
-                      'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer',
-                      details.aestheticColorHex && ![
-                        '#5F8A8B', '#C4704B', '#8B9B76', '#C4868B', '#5C6B8A', '#C49B4B', '#2D5F3E', '#3D3D3D'
-                      ].includes(details.aestheticColorHex)
-                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
-                        : 'border-border bg-card text-muted-foreground hover:border-primary/40'
-                    )}
-                  >
-                    <input
-                      type="color"
-                      value={details.aestheticColorHex || '#5F8A8B'}
-                      onChange={e => update({ aestheticColorHex: e.target.value })}
-                      className="w-4 h-4 rounded-full border-0 p-0 cursor-pointer [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
-                    />
-                    Custom
-                  </label>
-                </div>
+                  ] as const;
+                  const presetHexes = AESTHETIC_PRESETS.map(p => p.hex as string);
+                  const isCustomActive = !!details.aestheticColorHex && !presetHexes.includes(details.aestheticColorHex);
+                  return (
+                    <>
+                      <div className="grid grid-cols-4 sm:grid-cols-9 gap-1.5">
+                        {AESTHETIC_PRESETS.map(swatch => {
+                          const selected = details.aestheticColorHex === swatch.hex;
+                          const dark = (() => { const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(swatch.hex); if (!m) return false; return (parseInt(m[1],16)*299+parseInt(m[2],16)*587+parseInt(m[3],16)*114)/1000 < 140; })();
+                          return (
+                            <button
+                              key={swatch.hex}
+                              type="button"
+                              onClick={() => update({ aestheticColorHex: selected ? undefined : swatch.hex })}
+                              className={cn(
+                                'relative aspect-square rounded-xl overflow-hidden transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                                selected
+                                  ? 'ring-2 ring-primary shadow-md scale-[1.04]'
+                                  : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm'
+                              )}
+                            >
+                              <div className="absolute inset-0" style={{ backgroundColor: swatch.hex }} />
+                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent pt-4 pb-1 px-1">
+                                <span className="text-[9px] font-medium text-white leading-none block text-center truncate">{swatch.label}</span>
+                              </div>
+                              {selected && (
+                                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                  <Check className={cn('w-2.5 h-2.5', dark ? 'text-white' : 'text-primary-foreground')} />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                        {/* Custom color card */}
+                        <button
+                          type="button"
+                          onClick={() => setAestheticPickerOpen(true)}
+                          className={cn(
+                            'relative aspect-square rounded-xl overflow-hidden transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                            isCustomActive
+                              ? 'ring-2 ring-primary shadow-md scale-[1.04]'
+                              : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm'
+                          )}
+                        >
+                          <div className="absolute inset-0" style={{ backgroundColor: isCustomActive ? details.aestheticColorHex : undefined }}>
+                            {!isCustomActive && <div className="w-full h-full bg-muted/30" />}
+                          </div>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+                            <Plus className={cn('w-4 h-4', isCustomActive ? 'text-white drop-shadow-sm' : 'text-muted-foreground')} />
+                            <span className={cn('text-[9px] font-medium', isCustomActive ? 'text-white drop-shadow-sm' : 'text-muted-foreground')}>Custom</span>
+                          </div>
+                          {isCustomActive && (
+                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                      <ColorPickerDialog
+                        open={aestheticPickerOpen}
+                        onOpenChange={setAestheticPickerOpen}
+                        mode="solid"
+                        initialHex={details.aestheticColorHex || '#5F8A8B'}
+                        initialGradientFrom="#F8F8F8"
+                        initialGradientTo="#EEEEEE"
+                        canSave={false}
+                        onApplySolid={(hex) => update({ aestheticColorHex: hex })}
+                        onApplyGradient={() => {}}
+                        onSaveColor={() => {}}
+                        onSaveGradient={() => {}}
+                      />
+                    </>
+                  );
+                })()}
                 {details.aestheticColorHex && (
                   <button
                     type="button"
