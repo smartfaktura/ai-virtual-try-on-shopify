@@ -1,46 +1,44 @@
 
 
-# Add Curator's Picks for Aesthetic Color Scenes
+# Add Dynamic Aesthetic Color Badge to Scene Cards
 
-## Summary
-Add a `suggested_colors` JSON column to the `product_image_scenes` table so admins can define recommended aesthetic colors per scene. In Step 3, show these curator picks above the generic presets when aesthetic-color scenes are selected.
+## What it does
+Add a badge on the **bottom-left** of scene cards that have the `aestheticColor` trigger block — showing the scene's actual curator-picked colors (from `suggestedColors`) as mini swatches. If no curator picks exist, show 3 generic warm-tone dots as fallback. This mirrors the background palette badge (bottom-right) but with real data.
 
-## Changes
+## Implementation — `ProductImagesStep2Scenes.tsx`
 
-### 1. Database migration
-Add a `suggested_colors` column (jsonb, nullable, default null) to `product_image_scenes`:
-```sql
-ALTER TABLE public.product_image_scenes
-ADD COLUMN suggested_colors jsonb DEFAULT NULL;
+### In the `SceneCard` component (line 178):
+
+1. Add detection: `const hasAestheticColor = scene.triggerBlocks?.includes('aestheticColor');`
+
+2. After the `hasBackground` badge block (line 208), add a new badge at `bottom-1.5 left-1.5`:
+
+```tsx
+{hasAestheticColor && (
+  <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
+    <Paintbrush className="w-2.5 h-2.5 text-muted-foreground" />
+    {scene.suggestedColors && scene.suggestedColors.length > 0
+      ? scene.suggestedColors.slice(0, 4).map((c, i) => (
+          <div key={i} className="w-2.5 h-2.5 rounded-full border border-white/40" style={{ backgroundColor: c.hex }} />
+        ))
+      : <>
+          <div className="w-2.5 h-2.5 rounded-full bg-[#5F8A8B]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#C4835B]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#8B9E7E]" />
+        </>
+    }
+  </div>
+)}
 ```
-Format: `[{"hex": "#5F8A8B", "label": "Teal Door"}, ...]`
 
-### 2. `src/hooks/useProductImageScenes.ts`
-- Add `suggested_colors` to `DbScene` interface: `suggested_colors: Array<{hex: string; label: string}> | null`
-- Map it in `dbToFrontend` → add `suggestedColors` to `ProductImageScene`
+3. Add `Paintbrush` to the lucide-react import.
 
-### 3. `src/components/app/product-images/types.ts`
-- Add `suggestedColors?: Array<{hex: string; label: string}>` to `ProductImageScene`
+### Result
+- Scenes with curator picks show the **actual recommended colors** as dots — e.g. if admin set teal + terracotta + sage, those exact colors appear
+- Scenes without curator picks show 3 generic warm-tone dots as fallback
+- The `Paintbrush` icon differentiates this from the background palette badge (which has no icon)
+- Both badges can coexist: background on bottom-right, aesthetic color on bottom-left
 
-### 4. `src/pages/AdminProductImageScenes.tsx` — SceneForm
-After the Trigger Blocks section (~line 760), add a conditional block:
-- Only visible when `draft.trigger_blocks` includes `'aestheticColor'`
-- Shows a "Curator's Picks" label with a small color-swatch editor
-- Each pick has a hex input + label input + remove button
-- "Add color" button to append new picks
-- Stores as `suggested_colors` on the draft
-
-### 5. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — Step 3 UI
-In the aesthetic color card (~line 2174):
-- Collect `suggestedColors` from all selected aesthetic-color scenes, deduplicate by hex
-- If curator picks exist, render a "Recommended for your shots" section above the generic presets grid — same swatch card style but with a subtle `bg-primary/5` wrapper and a star/sparkle badge
-- Generic presets grid moves below with a "More colors" label
-- Improve the description text: "Set a signature color that carries across doors, chairs, surfaces and props in {N} shots — creating a cohesive visual story."
-
-## Files changed
-1. DB migration — add `suggested_colors` jsonb column
-2. `src/hooks/useProductImageScenes.ts` — type + mapping
-3. `src/components/app/product-images/types.ts` — add field
-4. `src/pages/AdminProductImageScenes.tsx` — curator picks editor in SceneForm
-5. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — show curator picks in Step 3
+### File changed
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — ~12 lines added
 
