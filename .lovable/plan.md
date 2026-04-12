@@ -1,26 +1,46 @@
 
 
-# Fix: No Pre-Selected Format + Validation Guard
+# Add Curator's Picks for Aesthetic Color Scenes
 
-## Problem
-1. Formats default to `['1:1']` via fallback `details.selectedAspectRatios || [details.aspectRatio || '1:1']`, making it look pre-selected
-2. No validation prevents generating with zero formats selected
-3. No clear instruction telling users they can pick multiple formats
+## Summary
+Add a `suggested_colors` JSON column to the `product_image_scenes` table so admins can define recommended aesthetic colors per scene. In Step 3, show these curator picks above the generic presets when aesthetic-color scenes are selected.
 
 ## Changes
 
-### 1. `src/pages/ProductImages.tsx`
-- Change `INITIAL_DETAILS` (line 62): set `selectedAspectRatios: []` explicitly (empty array = nothing pre-selected)
-- Update `canProceed` for step 4 (line 908): add `(details.selectedAspectRatios?.length || 0) > 0` to the condition
-- Update `handleGenerate` (line 545): keep the fallback but it won't matter since generate is blocked without selection
+### 1. Database migration
+Add a `suggested_colors` column (jsonb, nullable, default null) to `product_image_scenes`:
+```sql
+ALTER TABLE public.product_image_scenes
+ADD COLUMN suggested_colors jsonb DEFAULT NULL;
+```
+Format: `[{"hex": "#5F8A8B", "label": "Teal Door"}, ...]`
 
-### 2. `src/components/app/product-images/ProductImagesStep4Review.tsx`
-- Change `selectedRatios` derivation (line 101): use `details.selectedAspectRatios || []` instead of falling back to `[details.aspectRatio || '1:1']`
-- Update `toggleRatio` (line 112): remove the `if (selectedRatios.length <= 1) return` guard — allow deselecting the last format
-- Add helper text under the Format label: "Select one or more" in `text-[10px] text-muted-foreground`
-- When `selectedRatios.length === 0`, show a subtle warning badge or muted text: "No format selected"
+### 2. `src/hooks/useProductImageScenes.ts`
+- Add `suggested_colors` to `DbScene` interface: `suggested_colors: Array<{hex: string; label: string}> | null`
+- Map it in `dbToFrontend` → add `suggestedColors` to `ProductImageScene`
 
-### 3. Files changed
-- `src/pages/ProductImages.tsx` — 3 small edits
-- `src/components/app/product-images/ProductImagesStep4Review.tsx` — 4 small edits
+### 3. `src/components/app/product-images/types.ts`
+- Add `suggestedColors?: Array<{hex: string; label: string}>` to `ProductImageScene`
+
+### 4. `src/pages/AdminProductImageScenes.tsx` — SceneForm
+After the Trigger Blocks section (~line 760), add a conditional block:
+- Only visible when `draft.trigger_blocks` includes `'aestheticColor'`
+- Shows a "Curator's Picks" label with a small color-swatch editor
+- Each pick has a hex input + label input + remove button
+- "Add color" button to append new picks
+- Stores as `suggested_colors` on the draft
+
+### 5. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — Step 3 UI
+In the aesthetic color card (~line 2174):
+- Collect `suggestedColors` from all selected aesthetic-color scenes, deduplicate by hex
+- If curator picks exist, render a "Recommended for your shots" section above the generic presets grid — same swatch card style but with a subtle `bg-primary/5` wrapper and a star/sparkle badge
+- Generic presets grid moves below with a "More colors" label
+- Improve the description text: "Set a signature color that carries across doors, chairs, surfaces and props in {N} shots — creating a cohesive visual story."
+
+## Files changed
+1. DB migration — add `suggested_colors` jsonb column
+2. `src/hooks/useProductImageScenes.ts` — type + mapping
+3. `src/components/app/product-images/types.ts` — add field
+4. `src/pages/AdminProductImageScenes.tsx` — curator picks editor in SceneForm
+5. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — show curator picks in Step 3
 
