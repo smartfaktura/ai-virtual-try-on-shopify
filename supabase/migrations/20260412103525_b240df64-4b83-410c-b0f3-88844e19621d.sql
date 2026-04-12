@@ -1,0 +1,1 @@
+ALTER TABLE product_image_scenes ADD COLUMN use_scene_reference boolean NOT NULL DEFAULT false;
