@@ -6,7 +6,7 @@ export function DashboardTeamCarousel() {
     <div className="space-y-3">
       <div>
         <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Your AI Studio Team</h2>
-        <p className="text-base text-muted-foreground mt-1.5">10 specialists working on every visual you create.</p>
+        <p className="text-base text-muted-foreground mt-1.5">10 specialists working on every visual you create</p>
       </div>
 
       <div className="relative">

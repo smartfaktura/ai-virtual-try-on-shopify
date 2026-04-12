@@ -197,7 +197,7 @@ export function RecentCreationsGallery() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Creations</h2>
-          <p className="text-base text-muted-foreground mt-1.5">Your latest generated visuals.</p>
+          <p className="text-base text-muted-foreground mt-1.5">Your latest generated visuals</p>
         </div>
       </div>
 
