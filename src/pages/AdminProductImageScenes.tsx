@@ -341,9 +341,16 @@ export default function AdminProductImageScenes() {
           <h1 className="text-2xl font-bold tracking-tight">Product Visual Scenes</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all scene definitions for the Product Visuals flow.</p>
         </div>
-        <Button onClick={() => setAddingNew(true)} size="sm" className="gap-1.5">
-          <Plus className="w-4 h-4" /> Add Scene
-        </Button>
+        <div className="flex gap-2">
+          <Link to="/app/admin/bulk-preview-upload">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Camera className="w-4 h-4" /> Bulk Previews
+            </Button>
+          </Link>
+          <Button onClick={() => setAddingNew(true)} size="sm" className="gap-1.5">
+            <Plus className="w-4 h-4" /> Add Scene
+          </Button>
+        </div>
       </div>
 
       {/* Toolbar */}
