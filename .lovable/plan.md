@@ -1,44 +1,43 @@
 
 
-# Add Dynamic Aesthetic Color Badge to Scene Cards
+# Scene-Controlled Outfit: Universal `outfit_hint` Trigger
 
 ## What it does
-Add a badge on the **bottom-left** of scene cards that have the `aestheticColor` trigger block — showing the scene's actual curator-picked colors (from `suggestedColors`) as mini swatches. If no curator picks exist, show 3 generic warm-tone dots as fallback. This mirrors the background palette badge (bottom-right) but with real data.
+Any scene can define a custom styling prompt (`outfit_hint`) that **replaces the entire Outfit Lock panel** in Step 3. This is not tied to aesthetic color — it's a universal override. The hint can contain dynamic tokens like `{{aestheticColor}}`, `{{productName}}`, etc., which get resolved at generation time just like any other template token.
 
-## Implementation — `ProductImagesStep2Scenes.tsx`
+## Changes
 
-### In the `SceneCard` component (line 178):
+### 1. Database migration
+Add `outfit_hint text` column (nullable) to `product_image_scenes`.
 
-1. Add detection: `const hasAestheticColor = scene.triggerBlocks?.includes('aestheticColor');`
+### 2. Types & Hook
+- `ProductImageScene` in `types.ts`: add `outfitHint?: string`
+- `DbScene` in `useProductImageScenes.ts`: add `outfit_hint: string | null`, map in `dbToFrontend()`
 
-2. After the `hasBackground` badge block (line 208), add a new badge at `bottom-1.5 left-1.5`:
+### 3. Admin Panel (`AdminProductImageScenes.tsx`)
+Add a **"Scene Outfit Direction"** textarea in the scene form, visible when `personDetails` or `actionDetails` is in trigger blocks. Placeholder: `"e.g. coordinated sportswear in {{aestheticColor}} tones, clean minimal styling"`. Helper text explains dynamic tokens are supported.
 
-```tsx
-{hasAestheticColor && (
-  <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
-    <Paintbrush className="w-2.5 h-2.5 text-muted-foreground" />
-    {scene.suggestedColors && scene.suggestedColors.length > 0
-      ? scene.suggestedColors.slice(0, 4).map((c, i) => (
-          <div key={i} className="w-2.5 h-2.5 rounded-full border border-white/40" style={{ backgroundColor: c.hex }} />
-        ))
-      : <>
-          <div className="w-2.5 h-2.5 rounded-full bg-[#5F8A8B]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#C4835B]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#8B9E7E]" />
-        </>
-    }
-  </div>
-)}
-```
+### 4. Prompt Builder (`productImagePromptBuilder.ts`)
+In `resolveToken` case `'outfitDirective'` (line ~890): if `scene.outfitHint` exists, return the hint with `{{aestheticColor}}` replaced by `details.aestheticColorHex` (or `"coordinated"` fallback), and `{{productName}}` replaced by `ctx.productName`. Skip the standard `defaultOutfitDirective()` entirely.
 
-3. Add `Paintbrush` to the lucide-react import.
+Also in `buildPersonDirective` (line ~714-727): same check — when `scene.outfitHint` is present, use it instead of calling `defaultOutfitDirective()`.
 
-### Result
-- Scenes with curator picks show the **actual recommended colors** as dots — e.g. if admin set teal + terracotta + sage, those exact colors appear
-- Scenes without curator picks show 3 generic warm-tone dots as fallback
-- The `Paintbrush` icon differentiates this from the background palette badge (which has no icon)
-- Both badges can coexist: background on bottom-right, aesthetic color on bottom-left
+### 5. Step 3 UI (`ProductImagesStep3Refine.tsx`)
+Detect if **all** selected scenes with person/action triggers have `outfitHint` set. If so:
+- Hide the `OutfitPresetsOnly` + `OutfitPieceFields` sections
+- Show instead a read-only info card: *"Outfit is directed by the selected shots"* with a small editable textarea labeled **"Custom styling note (optional)"** that saves to `details.customOutfitNote`
+- The `customOutfitNote` gets appended to the scene's `outfitHint` at generation time if provided
 
-### File changed
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — ~12 lines added
+If only **some** scenes have `outfitHint`, show the normal outfit panel with a note: *"Some shots have their own styling direction — outfit settings apply to remaining shots only."*
+
+### 6. `DetailSettings` type update
+Add `customOutfitNote?: string` to `DetailSettings` in `types.ts`.
+
+## Files changed
+1. **DB migration** — add `outfit_hint text` column
+2. **`src/components/app/product-images/types.ts`** — add `outfitHint` to `ProductImageScene`, `customOutfitNote` to `DetailSettings`
+3. **`src/hooks/useProductImageScenes.ts`** — add to `DbScene` + mapping
+4. **`src/pages/AdminProductImageScenes.tsx`** — outfit hint textarea in scene form
+5. **`src/lib/productImagePromptBuilder.ts`** — use `outfitHint` with dynamic token replacement in `outfitDirective` resolver + `buildPersonDirective`
+6. **`src/components/app/product-images/ProductImagesStep3Refine.tsx`** — conditionally hide outfit panel, show scene-directed info + optional user note
 
