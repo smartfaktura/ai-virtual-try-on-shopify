@@ -870,6 +870,10 @@ function resolveToken(token: string, ctx: TokenContext): string {
       // Check if backgroundTone is a direct swatch value in BG_MAP (e.g. sage, blush, white)
       const swatchResolved = (!isAuto(colorWorld) && BG_MAP[colorWorld!]) ? BG_MAP[colorWorld!] : null;
       if (swatchResolved) {
+        const hexMatch = swatchResolved.match(/#[0-9A-Fa-f]{6}/);
+        if (hexMatch) {
+          return `flat solid ${hexMatch[0]} color background, no texture, no pattern`;
+        }
         return `${swatchResolved} seamless studio background, no texture, no pattern`;
       }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
