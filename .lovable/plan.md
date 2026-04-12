@@ -1,26 +1,38 @@
 
 
-# Fix: Outfit + Scene Reference Compatibility & Paste-to-Preview
+# Auto-preselect Recommended Aesthetic Color
 
-## Current State
+## Problem
+When a shot with `aestheticColor` trigger is selected, the user lands on Step 3 with no color pre-selected. The "Recommended for your shots" curator picks are visible but require manual selection.
 
-**Outfit hint + scene reference**: Both already work correctly together. The prompt builder injects `OUTFIT DIRECTION` (line 1283) **before** `SCENE REFERENCE` (line 1298), so clothing details are always included regardless of whether scene reference is active. No code change needed here — it's already set up correctly.
+## Solution
+Add a `useEffect` in `ProductImagesStep3Refine` that fires when aesthetic color scenes are present and `details.aestheticColorHex` is empty. It picks the first curator pick (`suggestedColors[0]`) from the selected scenes and auto-applies it.
 
-**Paste to preview image**: Currently the preview image field only supports file upload via button or manually typing/pasting a URL into the text input. There's no clipboard image paste (Ctrl+V / Cmd+V) support.
+## Change
 
-## Plan
+**`src/components/app/product-images/ProductImagesStep3Refine.tsx`** — add after the `aestheticColorScenes` memo (~line 1731):
 
-### 1. Add clipboard image paste to the Preview Image area
-In `src/pages/AdminProductImageScenes.tsx`, add an `onPaste` handler on the preview image container that:
-- Intercepts paste events containing image data from clipboard
-- Extracts the image blob from `clipboardData`
-- Reuses the existing `handleImageUpload` function to upload it
-- Shows a visual "paste zone" hint on the preview thumbnail
+```typescript
+// Auto-preselect first recommended aesthetic color when scenes need it
+useEffect(() => {
+  if (aestheticColorScenes.length > 0 && !details.aestheticColorHex) {
+    for (const scene of aestheticColorScenes) {
+      if (scene.suggestedColors && scene.suggestedColors.length > 0) {
+        const pick = scene.suggestedColors[0];
+        update({ aestheticColorHex: pick.hex, aestheticColorLabel: pick.label });
+        return;
+      }
+    }
+  }
+}, [aestheticColorScenes.length]); // Only on scene selection change
+```
 
-This lets you screenshot → Cmd+V directly into the preview area instead of saving the file first.
+This ensures:
+- First curator pick is auto-selected when entering Step 3
+- User can still change or clear it
+- No effect if no scenes have `suggestedColors`
+- Won't override if user already picked a color
 
-### Files to update
-1. `src/pages/AdminProductImageScenes.tsx` — add `onPaste` handler to the preview image section
-
-That's it — one small change. The outfit + scene reference prompt chain is already working correctly as-is.
+### Files changed
+1. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — add one `useEffect`
 
