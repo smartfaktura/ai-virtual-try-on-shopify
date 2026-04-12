@@ -1,37 +1,36 @@
 
 
-# Insert 6 New Fragrance "Conceptual Editorial" Scenes
+# Insert 6 More Fragrance "Conceptual Editorial" Scenes
 
 ## What
-Insert 6 new scenes into `product_image_scenes` under category `fragrance` with a new sub-category `Conceptual Editorial`, using the exact data from the uploaded `.txt` file.
+Insert 6 new scenes into `product_image_scenes` under the existing `Conceptual Editorial` sub-category in `fragrance`, using the uploaded file data. These continue the numbering from the previous 6.
 
 ## Scenes to Insert
 
 | # | scene_id | title | sort_order |
 |---|----------|-------|------------|
-| 1 | veil-portrait-fragrance | Veil Portrait | 170 |
-| 2 | mirror-vanity-fragrance | Mirror Vanity | 171 |
-| 3 | doorway-walk-fragrance | Doorway Walk | 172 |
-| 4 | resin-monolith-fragrance | Resin Monolith | 173 |
-| 5 | smoked-panels-fragrance | Smoked Panels | 174 |
-| 6 | satin-echo-fragrance | Satin Echo | 175 |
+| 1 | steel-sink-portrait-fragrance | Steel Sink | 176 |
+| 2 | velvet-stair-pose-fragrance | Velvet Stair | 177 |
+| 3 | flash-car-glance-fragrance | Car Glance | 178 |
+| 4 | chrome-trough-still-fragrance | Chrome Trough | 179 |
+| 5 | wet-stone-reflection-fragrance | Wet Stone | 180 |
+| 6 | smoked-glass-table-fragrance | Smoked Table | 181 |
 
-## Shared Settings for All 6
+## Shared Settings
 - `category_collection`: `fragrance`
 - `sub_category`: `Conceptual Editorial`
-- `category_sort_order`: 22
+- `category_sort_order`: 23
 - `scene_type`: `editorial`
 - `is_active`: true
-- `suggested_colors`: `[{"hex":"#7A556A","label":"Mulberry Smoke"}]`
+- `suggested_colors`: `[{"hex":"#4F6666","label":"Petrol Teal"}]`
 - `requires_extra_reference`: false
 - `use_scene_reference`: false
 
 ## Per-Scene Details
-- **trigger_blocks**: as specified per scene (scenes 1-3 include `personDetails`; scenes 4-6 are still-life)
-- **outfit_hint**: populated for scenes 1-3, null for scenes 4-6
-- **prompt_template**: full prompt text from the file
-- **description**: from the file
+- Scenes 1–3: `trigger_blocks` include `personDetails`, `outfit_hint` populated from file
+- Scenes 4–6: still-life, `outfit_hint` null, trigger blocks include `layout` instead of `personDetails`
+- Full prompt templates from the uploaded file
 
 ## How
-Use the database insert tool to run 6 `INSERT INTO product_image_scenes (...)` statements with all the values from the uploaded file.
+Use the database insert tool to run 6 `INSERT INTO product_image_scenes (...)` statements.
 
