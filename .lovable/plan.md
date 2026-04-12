@@ -1,38 +1,30 @@
 
 
-# Fix Scene Card Checkmark Visibility
+# Extract All Product Image Scene Prompts to .txt
 
-## Problem
-The checkmark on selected scene cards uses `text-primary fill-primary/20` which is dark and nearly invisible against dark preview images.
+## What
+Run a database query to pull all active scenes from `product_image_scenes`, then format them into a structured `.txt` file organized by category collection and sub-category, showing each shot's title, scene_id, and full prompt template.
 
-## Solution
-Replace the `CheckCircle` icon with a solid primary-colored circle containing a white check icon.
+## How
+1. Query `product_image_scenes` ordered by `category_sort_order`, `sub_category_sort_order`, `sort_order`
+2. Write a Python script that groups results by `category_collection` → `sub_category` and formats each entry as:
+   ```
+   ════════════════════════════════
+   CATEGORY: Fragrance
+   ════════════════════════════════
 
-## File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+   --- Essential Shots ---
 
-### Lines 197-201 — replace the checkmark rendering:
+   [1] Front View (clean-packshot-fragrance)
+   PROMPT:
+   {{productName}} photographed in a strict front view...
 
-**From:**
-```tsx
-{selected && (
-  <div className="absolute top-1.5 right-1.5">
-    <CheckCircle className="w-5 h-5 text-primary fill-primary/20 drop-shadow-sm" />
-  </div>
-)}
-```
+   [2] Angle View (angle-view-fragrance)
+   PROMPT:
+   ...
+   ```
+3. Save to `/mnt/documents/product-image-scenes-prompts.txt`
 
-**To:**
-```tsx
-{selected && (
-  <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
-    <Check className="w-3.5 h-3.5 text-white" />
-  </div>
-)}
-```
-
-- Solid `bg-primary` circle with `shadow-md` for contrast against any image
-- White `Check` icon inside (already imported from lucide-react)
-- Slightly larger (w-6 h-6) for better tap target and visibility
-
-Also update the import: replace `CheckCircle` with `Check` if `CheckCircle` is no longer used elsewhere in the file (or just add `Check` to existing imports).
+## Output
+A single downloadable `.txt` file with all ~600+ scenes organized by category and sub-category.
 
