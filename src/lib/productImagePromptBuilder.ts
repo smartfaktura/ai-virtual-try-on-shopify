@@ -696,7 +696,7 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 }
 
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string): string {
   const parts: string[] = [];
   // When a specific model is selected, skip user-set person details (age, skin, expression etc.)
   // — those fields are hidden in the UI and shouldn't leak into the prompt
@@ -713,7 +713,9 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     // No person details set — use smart defaults if scene requires a person
     if (sceneNeedsPerson) {
       let dir = defaultPersonDirective(category);
-      dir += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
+      if (!resolvedOutfitHint) {
+        dir += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
+      }
       dir += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return dir;
     }
@@ -723,7 +725,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
   let directive = `Model: ${parts.join(', ')}.`;
 
   // Append outfit using structured config or smart default for on-model scenes
-  if (sceneNeedsPerson) {
+  if (sceneNeedsPerson && !resolvedOutfitHint) {
     directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
   }
 
@@ -883,7 +885,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'personDirective': {
       const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType);
+      const resolvedHint = scene.outfitHint
+        ? scene.outfitHint
+            .replace(/\{\{aestheticColor\}\}/gi, details.aestheticColorHex || 'coordinated')
+            .replace(/\{\{productName\}\}/gi, ctx.productName || 'the product')
+        : undefined;
+      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
