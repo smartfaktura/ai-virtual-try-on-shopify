@@ -1,42 +1,26 @@
 
 
-# Fix Brand Logo System — Make It Actually Work End-to-End
+# Show Last-Edited Scene First in Admin Product Image Scenes
 
-## Problem Found
+## Problem
+The admin page at `/app/admin/product-image-scenes` sorts scenes by `sort_order` within each category group. There's no way to see which scene was most recently edited — it stays in its original position.
 
-The brand logo system has a gap between frontend and backend:
+## Solution
 
-1. **Logo image upload** ✅ Works — sent as `extra_reference_image_url` with a branded label, AI sees it as a reference image
-2. **Logo text** ❌ Broken — frontend sends `brand_logo_text` in payload but the **edge function never reads it**. The text only appears in the prompt via `BRAND TEXT DIRECTIVE` appended client-side by the prompt builder — which works, but admins can't control *where* the text goes using `{{brandLogoText}}` in templates
-3. **No `{{brandLogoText}}` token resolution** — if an admin writes `{{brandLogoText}}` in a `prompt_template`, it stays as literal text in the final prompt
+### 1. Add `updated_at` column to `product_image_scenes` table
+- **DB migration**: Add `updated_at TIMESTAMPTZ DEFAULT now()` column
+- Add a trigger that auto-updates `updated_at` on every row update
 
-## What This Plan Fixes
+### 2. Update `DbScene` interface
+- **File: `src/hooks/useProductImageScenes.ts`** — add `updated_at: string` to the `DbScene` interface
 
-### 1. Add `{{brandLogoText}}` token resolution in prompt builder
-**File: `src/lib/productImagePromptBuilder.ts`**
-- Add `.replace(/\{\{brandLogoText\}\}/gi, details.brandLogoText || '')` in the token replacement chain
-- Make the auto-appended `BRAND TEXT DIRECTIVE` conditional: skip if the template already used `{{brandLogoText}}`
+### 3. Sort by `updated_at DESC` in admin page
+- **File: `src/pages/AdminProductImageScenes.tsx`** — change the sorting inside the `grouped` memo from `arr.sort((a, b) => a.sort_order - b.sort_order)` to `arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())` so the most recently edited scene appears first within each category group
 
-### 2. Document the token in prompt reference
-**File: `src/data/promptTokenReference.ts`**
-- Add `brandLogoText` entry so admins can discover it on the tokens page
+Note: The frontend-facing sort (in `useProductImageScenes` hook for the product images flow) stays sorted by `sort_order` — only the admin list changes.
 
-## How Admins Use It
-
-**Option A — Auto mode (current behavior, no template change needed):**
-Scene template doesn't mention `{{brandLogoText}}` → system auto-appends `BRAND TEXT DIRECTIVE` at end of prompt. AI decides where to put it.
-
-**Option B — Precise placement (new):**
-Admin writes in `prompt_template`:
-```
-Luxury editorial of {{productName}} with "{{brandLogoText}}" engraved on marble backdrop
-```
-→ Token resolves to the user's input (e.g. "BOTTEGA VENETA"), and the generic directive is skipped.
-
-## About the logo image
-The uploaded logo image already works correctly — it's sent as a labeled reference image alongside the product photo. The AI uses it visually. No changes needed there.
-
-## Files changed
-1. `src/lib/productImagePromptBuilder.ts` — add token resolution + conditional directive
-2. `src/data/promptTokenReference.ts` — document new token
+### Files changed
+1. **DB migration** — add `updated_at` column + auto-update trigger
+2. `src/hooks/useProductImageScenes.ts` — add `updated_at` to `DbScene`
+3. `src/pages/AdminProductImageScenes.tsx` — sort by `updated_at DESC` in admin view
 
