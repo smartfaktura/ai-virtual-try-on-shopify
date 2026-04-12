@@ -61,7 +61,7 @@ const navGroups = [
       { label: 'Visual Studio', icon: Layers, path: '/app/workflows' },
       { label: 'Create with Prompt', icon: Sparkles, path: '/app/freestyle' },
       { label: 'Video', icon: Film, path: '/app/video' },
-      { label: 'Explore Presets', icon: Compass, path: '/app/discover' },
+      { label: 'Presets', icon: Compass, path: '/app/discover' },
     ],
   },
   {

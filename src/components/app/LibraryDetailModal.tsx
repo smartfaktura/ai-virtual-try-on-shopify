@@ -394,7 +394,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
               <div className="rounded-xl border border-border/40 bg-primary/5 p-5 space-y-3">
                 <div className="flex items-center gap-2.5">
                   <Trophy className="w-5 h-5 text-primary" />
-                  <h3 className="text-base font-semibold text-foreground">Share to Discover</h3>
+                  <h3 className="text-base font-semibold text-foreground">Share to Presets</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Submit your best work · Win up to 10,000 credits

@@ -82,7 +82,7 @@ export function useSubmitToDiscover() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Submitted for review! You\'ll see it in Discover once approved.');
+      toast.success('Submitted for review! You\'ll see it in Presets once approved.');
       qc.invalidateQueries({ queryKey: ['discover-submissions'] });
     },
     onError: (err: Error) => {

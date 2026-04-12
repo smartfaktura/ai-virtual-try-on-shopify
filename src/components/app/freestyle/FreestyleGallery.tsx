@@ -424,7 +424,7 @@ function ImageCard({
           <button
             onClick={(e) => { e.stopPropagation(); onShareToDiscover(img); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary/40 transition-colors"
-            title="Share to Discover"
+            title="Share to Presets"
           >
             <Send className="w-4 h-4" />
           </button>
