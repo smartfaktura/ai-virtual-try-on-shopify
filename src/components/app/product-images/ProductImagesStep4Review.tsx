@@ -81,6 +81,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   }, [details, onDetailsChange]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
+  const modelCount = (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) || 1;
   const categoryProductCounts = useMemo(() => {
     const counts = new Map<string, number>();
     if (categoryGroups) {
@@ -91,8 +92,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
     return counts;
   }, [categoryGroups]);
   const totalImages = (perCategoryScenes && perCategoryScenes.size > 0)
-    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, dbScenes, imageCount, details)
-    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
+    ? computeTotalImagesPerCategory(perCategoryScenes, categoryProductCounts, dbScenes, imageCount, details, modelCount)
+    : computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details, modelCount);
   const costPerImage = 6;
   const totalCredits = totalImages * costPerImage;
   const canAfford = balance >= totalCredits;
