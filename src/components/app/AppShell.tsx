@@ -68,7 +68,7 @@ const navGroups = [
     items: [
       { label: 'Products', icon: Package, path: '/app/products' },
       { label: 'Brand Models', icon: Users, path: '/app/models' },
-      { label: 'Explore', icon: Compass, path: '/app/discover' },
+      { label: 'Explore Presets', icon: Compass, path: '/app/discover' },
       { label: 'Library', icon: Image, path: '/app/library' },
     ],
   },
