@@ -199,33 +199,37 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
             <CheckCircle className="w-5 h-5 text-primary fill-primary/20 drop-shadow-sm" />
           </div>
         )}
-        {hasBackground && (
-          <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
-            <div className="w-2.5 h-2.5 rounded-full bg-white border border-gray-200" />
-            <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
-            <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
-            <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
-          </div>
-        )}
-        {hasAestheticColor && (
-          <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 shadow-sm rounded-full px-1.5 py-1">
-            <Paintbrush className="w-2.5 h-2.5 text-muted-foreground" />
-            {scene.suggestedColors && scene.suggestedColors.length > 0
-              ? scene.suggestedColors.slice(0, 4).map((c, i) => (
-                  <div key={i} className="w-2.5 h-2.5 rounded-full border border-white/40" style={{ backgroundColor: c.hex }} />
-                ))
-              : <>
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#5F8A8B]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#C4835B]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#8B9E7E]" />
-                </>
-            }
-          </div>
-        )}
       </div>
-      <div className="p-1.5">
-        <p className="text-[11px] font-semibold truncate">{scene.title}</p>
-        <p className="text-[10px] text-muted-foreground line-clamp-1">{scene.description}</p>
+      <div className="p-1.5 min-h-[44px] flex flex-col items-center justify-center gap-0.5">
+        <p className="text-[11px] font-semibold truncate text-center w-full">{scene.title}</p>
+        <div className="flex items-center justify-center gap-1 h-4">
+          {hasBackground && (
+            <>
+              <div className="w-2.5 h-2.5 rounded-full bg-white border border-border" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
+            </>
+          )}
+          {hasAestheticColor && (
+            <>
+              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/60" />
+              {scene.suggestedColors && scene.suggestedColors.length > 0
+                ? scene.suggestedColors.slice(0, 4).map((c, i) => (
+                    <div key={i} className="w-2.5 h-2.5 rounded-full border border-border/60" style={{ backgroundColor: c.hex }} />
+                  ))
+                : <>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#5F8A8B]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#C4835B]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#8B9E7E]" />
+                  </>
+              }
+            </>
+          )}
+          {!hasBackground && !hasAestheticColor && (
+            <Camera className="w-3 h-3 text-muted-foreground/30" />
+          )}
+        </div>
       </div>
     </button>
   );
