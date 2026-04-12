@@ -98,7 +98,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const canAfford = balance >= totalCredits;
   const isLargeBatch = totalImages > 20;
 
-  const selectedRatios = details.selectedAspectRatios || [details.aspectRatio || '1:1'];
+  const selectedRatios = details.selectedAspectRatios || [];
   const globalRatio = selectedRatios[0] || '1:1';
   const overrides = details.sceneAspectOverrides || {};
   const sceneProps = details.sceneProps || {};
@@ -109,9 +109,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
 
   const toggleRatio = (ratio: string) => {
     if (selectedRatios.includes(ratio)) {
-      if (selectedRatios.length <= 1) return;
       const next = selectedRatios.filter(r => r !== ratio);
-      update({ selectedAspectRatios: next, aspectRatio: next[0] });
+      update({ selectedAspectRatios: next, aspectRatio: next[0] || '1:1' });
     } else {
       const next = [...selectedRatios, ratio];
       update({ selectedAspectRatios: next, aspectRatio: next[0] });
@@ -208,6 +207,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <div className="flex items-center gap-2">
                   <RatioShape ratio={globalRatio} />
                   <span className="text-xs font-semibold">Format</span>
+                  <span className="text-[10px] text-muted-foreground">Select one or more</span>
                   {selectedRatios.length > 1 && (
                     <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">×{selectedRatios.length}</Badge>
                   )}
@@ -223,6 +223,9 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                     </button>
                   ))}
                 </div>
+                {selectedRatios.length === 0 && (
+                  <p className="text-[11px] text-destructive font-medium">Pick at least 1 format to continue</p>
+                )}
               </div>
 
               {/* Images per scene */}
