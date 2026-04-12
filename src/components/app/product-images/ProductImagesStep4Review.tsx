@@ -423,6 +423,12 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <span className="text-muted-foreground">Images per scene</span>
                 <span className="font-medium">{imageCount}</span>
               </div>
+              {modelCount > 1 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Models</span>
+                  <span className="font-medium">×{modelCount}</span>
+                </div>
+              )}
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Total images</span>
                 <span className="font-medium">{totalImages}</span>
