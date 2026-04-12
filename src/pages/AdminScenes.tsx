@@ -3,8 +3,9 @@ import { Navigate, Link } from 'react-router-dom';
 import {
   ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2, Plus,
   Search, Copy, Eye, EyeOff, ChevronDown, ChevronRight, Pencil, Check, X, Info,
-  ImageIcon, RotateCcw,
+  ImageIcon, RotateCcw, Import,
 } from 'lucide-react';
+import ImportProductScenesModal from '@/components/app/ImportProductScenesModal';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
