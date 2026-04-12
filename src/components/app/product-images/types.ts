@@ -377,6 +377,9 @@ export interface DetailSettings {
 
   // Brand logo overlay text (used when brandLogoOverlay trigger is active)
   brandLogoText?: string;
+
+  // Aesthetic color hex (used when aestheticColor trigger is active — consistent color across scenes)
+  aestheticColorHex?: string;
 }
 
 export interface GenerationPlan {

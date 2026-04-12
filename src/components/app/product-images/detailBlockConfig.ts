@@ -81,7 +81,7 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
 export const ALL_TRIGGER_KEYS = [
   ...['background', 'visualDirection', 'sceneEnvironment', 'personDetails',
     'actionDetails', 'detailFocus', 'angleSelection', 'packagingDetails',
-    'backView', 'productSize', 'branding', 'layout'],
+    'backView', 'productSize', 'branding', 'layout', 'aestheticColor'],
   ...Object.keys(REFERENCE_TRIGGERS),
 ];
 
@@ -105,6 +105,7 @@ export const BLOCK_FIELD_MAP: Record<string, string[]> = {
   branding: ['brandingVisibility'],
   layout: ['layoutSpace'],
   consistency: ['consistency'],
+  aestheticColor: ['aestheticColorHex'],
 };
 
 /** Get triggered blocks from a set of selected scene IDs */
