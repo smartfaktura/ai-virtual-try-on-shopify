@@ -704,6 +704,27 @@ function UnifiedCategorySectionWithSelectAll({
   );
 }
 
+/** Animated color cycling dot */
+function CuratorColorHint({ baseHex }: { baseHex: string }) {
+  const palette = useMemo(() => [baseHex, '#1a1a1a', '#D4C5B2', '#8B9E7E'], [baseHex]);
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setIdx(i => (i + 1) % palette.length), 2000);
+    return () => clearInterval(timer);
+  }, [palette]);
+
+  return (
+    <span className="flex items-center gap-1.5 shrink-0">
+      <div
+        className="w-2.5 h-2.5 rounded-full transition-colors duration-500"
+        style={{ backgroundColor: palette[idx] }}
+      />
+      <span className="text-[10px] text-muted-foreground/60 italic">Fit your brand aesthetic</span>
+    </span>
+  );
+}
+
 /** Per-sub-group section with Select All on left and label on right */
 function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSelected, onToggleAll, gridClass }: {
   label: string;
@@ -715,11 +736,13 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
   gridClass: string;
 }) {
   const selectedCount = scenes.filter(s => selectedSceneIds.has(s.id)).length;
+  const curatorColor = scenes.find(s => s.suggestedColors?.length)?.suggestedColors?.[0];
 
   return (
     <div className="pt-3 pl-2">
       <div className="flex items-center gap-2 mb-2">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
+        {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
         <div className="h-px flex-1 bg-border" />
         <Button
           variant="ghost"
