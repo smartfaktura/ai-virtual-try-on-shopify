@@ -1,43 +1,28 @@
 
 
-# Scene-Controlled Outfit: Universal `outfit_hint` Trigger
+# Fix: Show Scene Outfit Direction for All Scenes
 
-## What it does
-Any scene can define a custom styling prompt (`outfit_hint`) that **replaces the entire Outfit Lock panel** in Step 3. This is not tied to aesthetic color — it's a universal override. The hint can contain dynamic tokens like `{{aestheticColor}}`, `{{productName}}`, etc., which get resolved at generation time just like any other template token.
+## Problem
+The "Scene Outfit Direction" textarea in the admin panel is gated behind `personDetails` or `actionDetails` trigger blocks (line 825). But outfit hints should be available for **any** scene — the whole point is it's a universal override. Your scene only has `aestheticColor` checked, so the field doesn't appear.
 
-## Changes
+## Fix
 
-### 1. Database migration
-Add `outfit_hint text` column (nullable) to `product_image_scenes`.
+### `src/pages/AdminProductImageScenes.tsx` (line 825)
+Remove the trigger-block condition entirely. The outfit hint textarea should always be visible in the scene form — if an admin fills it in, the prompt builder uses it; if left empty, standard behavior applies.
 
-### 2. Types & Hook
-- `ProductImageScene` in `types.ts`: add `outfitHint?: string`
-- `DbScene` in `useProductImageScenes.ts`: add `outfit_hint: string | null`, map in `dbToFrontend()`
+**Before:**
+```tsx
+{((draft.trigger_blocks || []).includes('personDetails') || (draft.trigger_blocks || []).includes('actionDetails')) && (
+```
 
-### 3. Admin Panel (`AdminProductImageScenes.tsx`)
-Add a **"Scene Outfit Direction"** textarea in the scene form, visible when `personDetails` or `actionDetails` is in trigger blocks. Placeholder: `"e.g. coordinated sportswear in {{aestheticColor}} tones, clean minimal styling"`. Helper text explains dynamic tokens are supported.
+**After:**
+```tsx
+{/* Always visible — outfit hint is a universal override */}
+{true && (
+```
 
-### 4. Prompt Builder (`productImagePromptBuilder.ts`)
-In `resolveToken` case `'outfitDirective'` (line ~890): if `scene.outfitHint` exists, return the hint with `{{aestheticColor}}` replaced by `details.aestheticColorHex` (or `"coordinated"` fallback), and `{{productName}}` replaced by `ctx.productName`. Skip the standard `defaultOutfitDirective()` entirely.
+Or simply remove the conditional wrapper entirely and render the block unconditionally.
 
-Also in `buildPersonDirective` (line ~714-727): same check — when `scene.outfitHint` is present, use it instead of calling `defaultOutfitDirective()`.
-
-### 5. Step 3 UI (`ProductImagesStep3Refine.tsx`)
-Detect if **all** selected scenes with person/action triggers have `outfitHint` set. If so:
-- Hide the `OutfitPresetsOnly` + `OutfitPieceFields` sections
-- Show instead a read-only info card: *"Outfit is directed by the selected shots"* with a small editable textarea labeled **"Custom styling note (optional)"** that saves to `details.customOutfitNote`
-- The `customOutfitNote` gets appended to the scene's `outfitHint` at generation time if provided
-
-If only **some** scenes have `outfitHint`, show the normal outfit panel with a note: *"Some shots have their own styling direction — outfit settings apply to remaining shots only."*
-
-### 6. `DetailSettings` type update
-Add `customOutfitNote?: string` to `DetailSettings` in `types.ts`.
-
-## Files changed
-1. **DB migration** — add `outfit_hint text` column
-2. **`src/components/app/product-images/types.ts`** — add `outfitHint` to `ProductImageScene`, `customOutfitNote` to `DetailSettings`
-3. **`src/hooks/useProductImageScenes.ts`** — add to `DbScene` + mapping
-4. **`src/pages/AdminProductImageScenes.tsx`** — outfit hint textarea in scene form
-5. **`src/lib/productImagePromptBuilder.ts`** — use `outfitHint` with dynamic token replacement in `outfitDirective` resolver + `buildPersonDirective`
-6. **`src/components/app/product-images/ProductImagesStep3Refine.tsx`** — conditionally hide outfit panel, show scene-directed info + optional user note
+### File changed
+- `src/pages/AdminProductImageScenes.tsx` — remove condition on line 825, ~1 line change
 
