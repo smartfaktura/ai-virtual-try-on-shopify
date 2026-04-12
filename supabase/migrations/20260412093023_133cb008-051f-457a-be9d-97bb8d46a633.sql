@@ -1,0 +1,1 @@
+ALTER TABLE public.product_image_scenes ADD COLUMN outfit_hint text;
