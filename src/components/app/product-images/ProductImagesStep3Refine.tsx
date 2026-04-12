@@ -1732,6 +1732,16 @@ export function ProductImagesStep3Refine({
   const productShots = useMemo(() => selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
   const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
 
+  // Check if all person/action scenes have outfit_hint (scene-controlled outfit)
+  const allModelScenesHaveOutfitHint = useMemo(() => {
+    const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
+    return personScenes.length > 0 && personScenes.every(s => !!s.outfitHint);
+  }, [selectedScenes]);
+  const someModelScenesHaveOutfitHint = useMemo(() => {
+    const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
+    return personScenes.some(s => !!s.outfitHint) && !allModelScenesHaveOutfitHint;
+  }, [selectedScenes, allModelScenesHaveOutfitHint]);
+
   // Shot card collapse
   const SHOTS_LIMIT = 8;
   const [showAllShots, setShowAllShots] = useState(false);
