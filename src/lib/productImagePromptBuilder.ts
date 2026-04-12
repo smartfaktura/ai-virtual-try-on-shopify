@@ -712,10 +712,10 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
   if (parts.length === 0) {
     // No person details set — use smart defaults if scene requires a person
     if (sceneNeedsPerson) {
-      let directive = defaultPersonDirective(category);
-      directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
-      directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
-      return directive;
+      let dir = defaultPersonDirective(category);
+      dir += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
+      dir += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
+      return dir;
     }
     return '';
   }
@@ -888,6 +888,14 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
+      // Scene-controlled outfit: use outfit_hint if present
+      if (scene.outfitHint) {
+        let hint = scene.outfitHint
+          .replace(/\{\{aestheticColor\}\}/gi, details.aestheticColorHex || 'coordinated')
+          .replace(/\{\{productName\}\}/gi, ctx.productName || 'the product');
+        if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
+        return `OUTFIT DIRECTION — ${hint}`;
+      }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
       return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType) : '';
     }

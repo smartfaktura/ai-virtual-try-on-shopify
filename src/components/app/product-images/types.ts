@@ -249,6 +249,7 @@ export interface ProductImageScene {
   subCategory?: string;
   requiresExtraReference?: boolean;
   suggestedColors?: Array<{hex: string; label: string}>;
+  outfitHint?: string;
 }
 
 export interface SubGroup {
@@ -381,6 +382,9 @@ export interface DetailSettings {
 
   // Aesthetic color hex (used when aestheticColor trigger is active — consistent color across scenes)
   aestheticColorHex?: string;
+
+  // Custom outfit styling note (used when scenes have outfit_hint — user can append extra direction)
+  customOutfitNote?: string;
 }
 
 export interface GenerationPlan {

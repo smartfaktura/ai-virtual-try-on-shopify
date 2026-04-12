@@ -1143,6 +1143,7 @@ export type Database = {
           description: string
           id: string
           is_active: boolean
+          outfit_hint: string | null
           preview_image_url: string | null
           prompt_template: string
           requires_extra_reference: boolean
@@ -1162,6 +1163,7 @@ export type Database = {
           description?: string
           id?: string
           is_active?: boolean
+          outfit_hint?: string | null
           preview_image_url?: string | null
           prompt_template?: string
           requires_extra_reference?: boolean
@@ -1181,6 +1183,7 @@ export type Database = {
           description?: string
           id?: string
           is_active?: boolean
+          outfit_hint?: string | null
           preview_image_url?: string | null
           prompt_template?: string
           requires_extra_reference?: boolean
