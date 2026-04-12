@@ -1,28 +1,26 @@
 
 
-# Insert 18 Editorial Sneaker Scenes
+# Fix ZIP Download Naming to Match Single-Image Downloads
 
-## Overview
-Insert 18 new scenes into the `product_image_scenes` table via a database migration. These are organized into 3 sub-categories under the `sneakers` category collection:
-- **Editorial Series** (6 scenes, sort 136–141, category_sort_order 15)
-- **Flash Editorial** (6 scenes, sort 142–147, category_sort_order 16)
-- **Brutalist Concrete** (6 scenes, sort 148–153, category_sort_order 17)
+## Problem
+When downloading a single image, files are named `{ProductName}_{SceneName}.ext`. But when downloading as ZIP, `scene_name` is not passed to the download function, so files get generic names like `image_1.png` inside a "Product Images" folder.
 
-## What gets created
-Each scene will have:
-- All prompt templates and trigger blocks exactly as specified
-- `outfit_hint` field populated with the Scene Outfit Direction text
-- `suggested_colors` field with the strongest curator color as `[{hex, label}]`
-- `scene_type: 'editorial'`, `category_collection: 'sneakers'`
-- `is_active: true`, `requires_extra_reference: false`, `use_scene_reference: false`
+## Fix
 
-## Technical details
-- Single SQL migration with 18 `INSERT` statements into `product_image_scenes`
-- No schema changes needed — all columns already exist
-- `suggested_colors` stored as JSONB array, e.g. `'[{"hex":"#5C6B8A","label":"Slate Blue"}]'`
-- Uses `ON CONFLICT (scene_id) DO NOTHING` to prevent duplicates if re-run
-- Sub-category sort orders: Editorial Series = 0, Flash Editorial = 1, Brutalist Concrete = 2
+### File: `src/components/app/product-images/ProductImagesStep6Results.tsx` (lines 79-84)
+Pass `scene_name` from each image into the `DropImage` object:
 
-## Files changed
-1. New migration file — `INSERT` 18 rows into `product_image_scenes`
+```ts
+dropImages.push({
+  url: img.url,
+  workflow_name: 'Product Images',
+  product_title: productName,
+  scene_name: img.sceneName,
+});
+```
+
+This single change makes the ZIP use the existing branch in `dropDownload.ts` (line 41-44) that formats filenames as `{Product}_{Scene}_{index}.ext`, which closely matches the single-download naming.
+
+### Files changed
+1. `src/components/app/product-images/ProductImagesStep6Results.tsx` — add `scene_name` to ZIP download payload
 
