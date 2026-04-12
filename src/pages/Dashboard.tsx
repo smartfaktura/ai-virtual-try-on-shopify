@@ -523,7 +523,7 @@ export default function Dashboard() {
           Welcome back, {firstName} 👋
         </h1>
         <p className="text-lg text-muted-foreground mt-2 max-w-xl">
-          Your next visuals are just a click away.
+          Your next visuals are just a click away
         </p>
 
         <div className="flex flex-col gap-3 mt-5">
