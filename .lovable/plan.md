@@ -1,40 +1,113 @@
 
+# Fix Admin Scene Sorting So Last Edited Categories Actually Move to the Top
 
-# Fix: Product Logos Being Stripped During Generation
+## What I found
+The timestamp tracking is already working:
+- `product_image_scenes.updated_at` exists
+- recent rows in the database have fresh `updated_at` values
+- the admin page already sorts scenes **inside each category** by `updated_at DESC`
 
-## Root Cause
+The remaining bug is in the page rendering:
+- `/app/admin/product-image-scenes` is shown as **collapsed category sections**
+- those category sections are still rendered in the `Map` insertion order
+- that insertion order comes from `rawScenes`, which is fetched by `sort_order`
+- so even after editing a scene, the **category card** stays in its old place, making it look like sorting is broken
 
-The `BASE_NEGATIVES` string in `productImagePromptBuilder.ts` includes **"no text overlays"**, which the AI interprets broadly — including product branding, logos, and label text that are physically part of the product (like Nike swoosh text, brand names embossed on sneakers, etc.).
+## Plan
+### 1. Update the admin grouping logic
+In `src/pages/AdminProductImageScenes.tsx`:
+- replace the current `grouped` `Map`-only approach with a derived `groupedEntries` array
+- for each category, compute:
+  - `scenes` sorted by `updated_at DESC` (fallback `created_at`)
+  - `latestUpdatedAt` = newest timestamp among scenes in that category
+  - `categorySortOrder` = stable fallback for ties
 
-The freestyle edge function correctly instructs "replicate this item EXACTLY as shown" (line 538), but the negative prompt appended by the client-side prompt builder contradicts this by saying "no text overlays."
+### 2. Sort category sections by most recently edited scene
+Sort the category entries by:
+1. `latestUpdatedAt DESC`
+2. `categorySortOrder ASC`
+3. category label/name as final stable fallback
 
-```text
-Current BASE_NEGATIVES:
-"No watermarks, no text overlays, no chromatic aberration, no lens flare artifacts..."
-                 ^^^^^^^^^^^^^^^^
-                 This causes logo removal
+This will make the category containing the last edited/added scene jump to the top immediately.
+
+### 3. Render from the sorted category entries
+Change the JSX from:
+- `Array.from(grouped.entries()).map(...)`
+
+to:
+- `groupedEntries.map(...)`
+
+Also update the `Import` / `New` button helpers to use the computed category metadata instead of relying on `scenes[0]`.
+
+### 4. Keep the current per-scene sorting
+Do not change the product flow or the shared hook behavior.
+Only the admin page ordering should change:
+- category cards sorted by latest activity
+- scenes within each category still sorted by latest edit first
+
+## Technical details
+A clean shape for the derived data is:
+
+```ts
+type GroupedCategory = {
+  key: string;
+  scenes: DbScene[];
+  latestUpdatedAt: number;
+  categorySortOrder: number;
+};
 ```
 
-## Fix
+And the core logic should be:
 
-### 1. Refine `BASE_NEGATIVES` in `productImagePromptBuilder.ts`
+```ts
+const groupedEntries = useMemo(() => {
+  const map = new Map<string, DbScene[]>();
 
-Change "no text overlays" to be more specific so it targets only **artificial** overlays, not product branding:
+  for (const s of filtered) {
+    const key = s.category_collection || 'other';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(s);
+  }
 
+  return Array.from(map.entries())
+    .map(([key, scenes]) => {
+      const sortedScenes = [...scenes].sort(
+        (a, b) =>
+          new Date(b.updated_at ?? b.created_at).getTime() -
+          new Date(a.updated_at ?? a.created_at).getTime()
+      );
+
+      return {
+        key,
+        scenes: sortedScenes,
+        latestUpdatedAt: Math.max(
+          ...sortedScenes.map(s => new Date(s.updated_at ?? s.created_at).getTime())
+        ),
+        categorySortOrder: Math.min(
+          ...sortedScenes.map(s => s.category_sort_order ?? 0)
+        ),
+      };
+    })
+    .sort((a, b) =>
+      b.latestUpdatedAt - a.latestUpdatedAt ||
+      a.categorySortOrder - b.categorySortOrder
+    );
+}, [filtered]);
 ```
-Before: "No watermarks, no text overlays, no chromatic aberration..."
-After:  "No watermarks, no artificial text overlays or watermark text, no chromatic aberration..."
-```
 
-### 2. Add explicit logo preservation to `PRODUCT_NEGATIVES`
+## Files to change
+1. `src/pages/AdminProductImageScenes.tsx`
 
-Append a positive reinforcement to the product negatives:
+## Expected result
+After this change:
+- if you edit a sneakers scene, the **Sneakers** category moves to the top
+- inside Sneakers, the edited scene stays first in its subgroup
+- newly added scenes also surface correctly because `created_at` / `updated_at` are both recent
 
-```
-Before: "No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment."
-After:  "No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment. Preserve all original product branding, logos, and label text exactly as shown."
-```
-
-### Files changed
-1. `src/lib/productImagePromptBuilder.ts` — refine `BASE_NEGATIVES` and `PRODUCT_NEGATIVES` (lines 230-232)
-
+## Verification
+After implementation, test this exact flow:
+1. open `/app/admin/product-image-scenes`
+2. edit any scene in a lower category like Sneakers
+3. save
+4. confirm that category moves to the top
+5. expand it and confirm the edited scene is first
