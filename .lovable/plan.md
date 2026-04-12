@@ -1,56 +1,44 @@
 
+What I found
 
-# Fix: `buildPersonDirective` Ignores Scene Outfit Hint
+- Yes — your suspicion is correct for this scene.
+- The selected scene `Low-Angle Aesthetic Outfit Shot` does have an `outfit_hint`, but its saved `prompt_template` does not include `{{outfitDirective}}`.
+- The prompt builder is currently template-led, so if a template forgets `{{outfitDirective}}`, the scene outfit hint never gets injected.
+- I checked the latest queued Product Images prompt, and it contains only the hardcoded template sentence about the pants color — not the scene’s `OUTFIT DIRECTION` block. So the curated outfit prompt is being skipped for this scene.
+- I also found that Product Images is not saving the exact resolved prompt into `generation_jobs.prompt_final`, which makes this harder to inspect after generation.
 
-## Problem
-The outfit hint is only used in the `outfitDirective` token resolver (line 890-898), but `buildPersonDirective` (line 698) independently calls `defaultOutfitDirective()` on lines 716 and 727 — injecting the standard "OUTFIT LOCK" text into the person directive. This **contradicts** the scene's curated outfit hint because both directives end up in the final prompt: one saying "OUTFIT LOCK — Wearing exactly: white tee, dark trousers..." and the other saying "OUTFIT DIRECTION — Premium athletic sportswear in #5E7485...".
+Plan
 
-The scene object isn't even passed to `buildPersonDirective`, so it can't check for `outfitHint`.
+1. Fix prompt injection at the builder level
+- In `src/lib/productImagePromptBuilder.ts`, create one shared resolver for scene outfit hints.
+- Use that same resolved text everywhere outfit styling is referenced.
 
-## Fix
+2. Make scene outfit hints impossible to skip
+- In `buildDynamicPrompt`, if a scene has `outfitHint` but the template does not contain `{{outfitDirective}}`, auto-append the resolved outfit block.
+- This makes scene-controlled outfit truly universal instead of depending on every admin template being perfect.
 
-### `src/lib/productImagePromptBuilder.ts`
+3. Clean up the broken scene template
+- Update `Low-Angle Aesthetic Outfit Shot` so it uses `{{outfitDirective}}` instead of its own hardcoded outfit sentence.
+- Audit other scenes with `outfit_hint` for the same problem.
 
-**1. Update `buildPersonDirective` signature** (line 699) to accept an optional `outfitHint` parameter:
-```typescript
-function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string): string {
-```
+4. Improve color wording for the model
+- Add `aestheticColorLabel` next to `aestheticColorHex`.
+- Resolve `{{aestheticColor}}` as something like `Dusty Blue (#5E7485)` instead of only a hex/fallback phrase.
 
-**2. Lines 714-718** — when no person details are set and scene needs person, skip `defaultOutfitDirective()` if outfit hint exists:
-```typescript
-if (sceneNeedsPerson) {
-  let dir = defaultPersonDirective(category);
-  if (!resolvedOutfitHint) {
-    dir += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
-  }
-  dir += ' Hyper-realistic skin texture...';
-  return dir;
-}
-```
+5. Make future debugging visible
+- In `src/pages/ProductImages.tsx`, send the resolved prompt in the payload so `prompt_final` is actually saved.
+- Optionally show the resolved outfit/styling text in Review before generation.
 
-**3. Lines 726-728** — same for the explicit person details branch:
-```typescript
-if (sceneNeedsPerson && !resolvedOutfitHint) {
-  directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
-}
-```
+Files to update
 
-**4. Line 886** — pass the resolved outfit hint to `buildPersonDirective`:
-```typescript
-case 'personDirective': {
-  const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-  const resolvedHint = scene.outfitHint
-    ? scene.outfitHint
-        .replace(/\{\{aestheticColor\}\}/gi, details.aestheticColorHex || 'coordinated')
-        .replace(/\{\{productName\}\}/gi, ctx.productName || 'the product')
-    : undefined;
-  return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint);
-}
-```
+- `src/lib/productImagePromptBuilder.ts`
+- `src/components/app/product-images/types.ts`
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+- `src/pages/ProductImages.tsx`
+- the affected Product Images scene data row for `Low-Angle Aesthetic Outfit Shot`
 
-### Result
-When a scene has `outfit_hint`, the person directive no longer injects a conflicting "OUTFIT LOCK". The curated outfit direction from `outfitDirective` token is the sole outfit instruction in the prompt.
+Expected result
 
-### File changed
-- `src/lib/productImagePromptBuilder.ts` — 4 small edits (~10 lines changed)
-
+- The outfit direction will always be injected for scenes that define `outfit_hint`.
+- Dusty Blue will be described clearly enough for the model to follow.
+- We’ll be able to inspect the exact final prompt after each generation.
