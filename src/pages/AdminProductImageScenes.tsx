@@ -164,9 +164,7 @@ export default function AdminProductImageScenes() {
     return Array.from(map.entries())
       .map(([key, scenes]) => {
         const sortedScenes = [...scenes].sort(
-          (a, b) =>
-            new Date(b.updated_at ?? b.created_at).getTime() -
-            new Date(a.updated_at ?? a.created_at).getTime()
+          (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
         );
         return {
           key,
