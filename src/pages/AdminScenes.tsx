@@ -3,8 +3,9 @@ import { Navigate, Link } from 'react-router-dom';
 import {
   ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2, Plus,
   Search, Copy, Eye, EyeOff, ChevronDown, ChevronRight, Pencil, Check, X, Info,
-  ImageIcon, RotateCcw,
+  ImageIcon, RotateCcw, Import,
 } from 'lucide-react';
+import ImportProductScenesModal from '@/components/app/ImportProductScenesModal';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,6 +99,7 @@ export default function AdminScenes() {
   const [editingCatSlug, setEditingCatSlug] = useState<string | null>(null);
   const [editingCatLabel, setEditingCatLabel] = useState('');
 
+  const [importOpen, setImportOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showHidden, setShowHidden] = useState(false);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
@@ -380,6 +382,10 @@ export default function AdminScenes() {
               {saveSortOrder.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Save
             </Button>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setImportOpen(true)}>
+              <Import className="w-3.5 h-3.5" />
+              Import
+            </Button>
             <Link to="/app/admin/scene-upload">
               <Button variant="outline" size="sm" className="gap-1.5">
                 <Plus className="w-3.5 h-3.5" />
@@ -388,6 +394,8 @@ export default function AdminScenes() {
             </Link>
           </div>
         </div>
+
+        <ImportProductScenesModal open={importOpen} onOpenChange={setImportOpen} />
 
         {/* ── SEARCH BAR ── */}
         <div className="relative">
