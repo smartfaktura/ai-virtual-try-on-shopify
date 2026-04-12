@@ -102,13 +102,12 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   }, [globalModels, modalGender, modalSearch]);
 
   const handleModalSelect = (id: string) => {
-    onSelect(id);
-    setShowAllModal(false);
+    toggleModel(id);
   };
 
   return (
     <div className="space-y-5">
-      {/* Inline gender filter */}
+      {/* Inline gender filter + count badge */}
       <div className="flex items-center gap-3">
         {(['all', 'female', 'male'] as const).map(g => (
           <button
@@ -125,6 +124,11 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
             {g === 'all' ? 'All' : g === 'female' ? 'Women' : 'Men'}
           </button>
         ))}
+        {activeIds.size > 0 && (
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-bold ml-auto">
+            {activeIds.size} selected
+          </Badge>
+        )}
       </div>
 
       {/* Your Brand Models */}
