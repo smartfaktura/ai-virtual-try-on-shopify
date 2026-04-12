@@ -2196,27 +2196,25 @@ export function ProductImagesStep3Refine({
                       {swatch.label}
                     </button>
                   ))}
-                  {/* Custom hex button */}
-                  <ColorPickerDialog
-                    value={details.aestheticColorHex || '#5F8A8B'}
-                    onChange={(hex) => update({ aestheticColorHex: hex })}
-                    trigger={
-                      <button
-                        type="button"
-                        className={cn(
-                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer',
-                          details.aestheticColorHex && ![
-                            '#5F8A8B', '#C4704B', '#8B9B76', '#C4868B', '#5C6B8A', '#C49B4B', '#2D5F3E', '#3D3D3D'
-                          ].includes(details.aestheticColorHex)
-                            ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
-                            : 'border-border bg-card text-muted-foreground hover:border-primary/40'
-                        )}
-                      >
-                        <Plus className="w-3 h-3" />
-                        Custom
-                      </button>
-                    }
-                  />
+                  {/* Custom hex input */}
+                  <label
+                    className={cn(
+                      'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer',
+                      details.aestheticColorHex && ![
+                        '#5F8A8B', '#C4704B', '#8B9B76', '#C4868B', '#5C6B8A', '#C49B4B', '#2D5F3E', '#3D3D3D'
+                      ].includes(details.aestheticColorHex)
+                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                    )}
+                  >
+                    <input
+                      type="color"
+                      value={details.aestheticColorHex || '#5F8A8B'}
+                      onChange={e => update({ aestheticColorHex: e.target.value })}
+                      className="w-4 h-4 rounded-full border-0 p-0 cursor-pointer [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
+                    />
+                    Custom
+                  </label>
                 </div>
                 {details.aestheticColorHex && (
                   <button
