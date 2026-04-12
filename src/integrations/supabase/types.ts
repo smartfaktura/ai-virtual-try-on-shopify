@@ -1155,6 +1155,7 @@ export type Database = {
           suggested_colors: Json | null
           title: string
           trigger_blocks: string[]
+          updated_at: string
           use_scene_reference: boolean
         }
         Insert: {
@@ -1176,6 +1177,7 @@ export type Database = {
           suggested_colors?: Json | null
           title: string
           trigger_blocks?: string[]
+          updated_at?: string
           use_scene_reference?: boolean
         }
         Update: {
@@ -1197,6 +1199,7 @@ export type Database = {
           suggested_colors?: Json | null
           title?: string
           trigger_blocks?: string[]
+          updated_at?: string
           use_scene_reference?: boolean
         }
         Relationships: []
