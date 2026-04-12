@@ -2095,7 +2095,9 @@ export function ProductImagesStep3Refine({
                   userModels={userModels}
                   globalModels={globalModels}
                   selectedModelId={details.selectedModelId}
+                  selectedModelIds={details.selectedModelIds}
                   onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
+                  onMultiSelect={(ids) => update({ selectedModelIds: ids, selectedModelId: ids[0] || undefined })}
                   previewImages={globalModels.slice(0, 3).map(m => m.previewUrl).filter(Boolean)}
                 />
               </CardContent>
