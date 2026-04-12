@@ -47,6 +47,7 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       { name: 'categoryPackshotDirective', desc: 'Category-specific packshot rules', example: 'Bottle upright, cap on, label facing camera', usage: '{{categoryPackshotDirective}}. Standard e-commerce ready.' },
       { name: 'bodyFramingDirective', desc: 'Body framing for on-model', example: 'Mid-body crop from waist to chest', usage: '{{bodyFramingDirective}}, product held at chest height.' },
       { name: 'modelDirective', desc: 'Model reference directive', example: 'Use the selected AI model reference image', usage: '{{modelDirective}}. Consistent model across all shots.' },
+      { name: 'brandLogoText', desc: 'Brand name/text from the brandLogoOverlay trigger. If used in template, the auto-appended BRAND TEXT DIRECTIVE is skipped.', example: 'BOTTEGA VENETA', usage: 'Luxury editorial with "{{brandLogoText}}" engraved on marble backdrop behind {{productName}}' },
     ],
   },
   {
