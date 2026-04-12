@@ -142,7 +142,7 @@ export function SubmitToDiscoverModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-foreground">Share to Discover</h3>
+            <h3 className="text-lg font-semibold text-foreground">Share to Presets</h3>
             {aiLoading && (
               <span className="flex items-center gap-1 text-[10px] text-primary font-medium animate-pulse">
                 <Sparkles className="w-3 h-3" />
@@ -293,7 +293,7 @@ export function SubmitToDiscoverModal({
             {submitMutation.isPending ? 'Submitting...' : 'Submit for Review'}
           </Button>
           <p className="text-[10px] text-muted-foreground/50 text-center">
-            Your submission will be reviewed by our team before appearing in Discover
+            Your submission will be reviewed by our team before appearing in Presets
           </p>
         </div>
       </div>
