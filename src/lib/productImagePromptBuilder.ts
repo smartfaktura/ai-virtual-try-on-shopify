@@ -1274,6 +1274,16 @@ export function buildDynamicPrompt(
     prompt += ' ' + camera;
   }
 
+  // Auto-inject outfit hint if scene defines one but template forgot {{outfitDirective}}
+  if (scene.outfitHint && !(template || '').includes('{{outfitDirective}}')) {
+    const resolvedHint = resolveOutfitHintText(scene, details, product.title);
+    if (resolvedHint && !prompt.includes(resolvedHint)) {
+      let hint = resolvedHint;
+      if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
+      prompt += ` OUTFIT DIRECTION — ${hint}`;
+    }
+  }
+
   // Append negative prompt
   const negatives = buildNegativePrompt(scene);
   prompt += ' ' + negatives;
