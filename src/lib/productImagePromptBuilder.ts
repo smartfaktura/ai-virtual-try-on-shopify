@@ -1228,8 +1228,11 @@ export function buildDynamicPrompt(
   };
 
   // Detect if background resolves to a solid hex (for preamble + negatives)
+  const sceneHasBgTrigger = (scene.triggerBlocks || []).includes('background');
   const bgResolved = resolveToken('background', ctx);
-  const bgHexForReinforcement = bgResolved.match(/flat solid exact (#[0-9A-Fa-f]{6})/)?.[1] || null;
+  const bgHexForReinforcement = sceneHasBgTrigger
+    ? bgResolved.match(/flat solid exact (#[0-9A-Fa-f]{6})/)?.[1] || null
+    : null;
 
   if (!template) {
     // Fallback: old-style concatenation but enriched
@@ -1269,7 +1272,7 @@ export function buildDynamicPrompt(
   // Background is ALWAYS injected globally (user expects it to apply to all scenes)
   const bgTone = details.backgroundTone;
   const hasBgToken = (template || '').includes('{{background}}');
-  if (!hasBgToken && !isAuto(bgTone)) {
+  if (!hasBgToken && !isAuto(bgTone) && sceneHasBgTrigger) {
     const bgResolved = resolveToken('background', ctx);
     if (bgResolved) {
       prompt += ` Background: ${bgResolved}.`;
