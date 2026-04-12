@@ -33,17 +33,36 @@ import { getConflictingSlots, resolveGarmentType, type OutfitSlot } from '@/lib/
    Model Picker with Brand / Library sections
    ══════════════════════════════════════════════ */
 
-function ModelPickerSections({ userModels, globalModels, selectedModelId, onSelect, previewImages }: {
+function ModelPickerSections({ userModels, globalModels, selectedModelId, selectedModelIds, onSelect, onMultiSelect, previewImages }: {
   userModels: ModelProfile[];
   globalModels: ModelProfile[];
   selectedModelId?: string;
+  selectedModelIds?: string[];
   onSelect: (id: string) => void;
+  onMultiSelect?: (ids: string[]) => void;
   previewImages?: string[];
 }) {
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
   const [showAllModal, setShowAllModal] = useState(false);
   const [modalGender, setModalGender] = useState<'all' | 'female' | 'male'>('all');
   const [modalSearch, setModalSearch] = useState('');
+
+  // Use multi-select IDs if available, fallback to single
+  const activeIds = useMemo(() => {
+    if (selectedModelIds && selectedModelIds.length > 0) return new Set(selectedModelIds);
+    if (selectedModelId) return new Set([selectedModelId]);
+    return new Set<string>();
+  }, [selectedModelIds, selectedModelId]);
+
+  const toggleModel = useCallback((id: string) => {
+    if (onMultiSelect) {
+      const next = new Set(activeIds);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      onMultiSelect(Array.from(next));
+    } else {
+      onSelect(id);
+    }
+  }, [activeIds, onMultiSelect, onSelect]);
 
   const filteredUser = useMemo(() =>
     genderFilter === 'all' ? userModels : userModels.filter(m => m.gender === genderFilter),
@@ -57,15 +76,17 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
 
   const inlineModels = useMemo(() => {
     const first6 = filteredGlobal.slice(0, INLINE_LIMIT);
-    if (selectedModelId && !first6.some(m => m.modelId === selectedModelId) && !filteredUser.some(m => m.modelId === selectedModelId)) {
-      const selectedModel = filteredGlobal.find(m => m.modelId === selectedModelId);
-      if (selectedModel) {
-        const rest = filteredGlobal.filter(m => m.modelId !== selectedModelId).slice(0, INLINE_LIMIT - 1);
-        return [selectedModel, ...rest];
-      }
+    // Ensure any active selection not in first6 is prepended
+    const activeInline = Array.from(activeIds)
+      .map(id => filteredGlobal.find(m => m.modelId === id))
+      .filter(Boolean)
+      .filter(m => !first6.some(f => f.modelId === m!.modelId) && !filteredUser.some(u => u.modelId === m!.modelId)) as ModelProfile[];
+    if (activeInline.length > 0) {
+      const rest = first6.filter(m => !activeIds.has(m.modelId)).slice(0, INLINE_LIMIT - activeInline.length);
+      return [...activeInline, ...rest];
     }
     return first6;
-  }, [filteredGlobal, filteredUser, selectedModelId]);
+  }, [filteredGlobal, filteredUser, activeIds]);
 
   const modalFilteredUser = useMemo(() =>
     modalGender === 'all' ? userModels : userModels.filter(m => m.gender === modalGender),
