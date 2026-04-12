@@ -1,44 +1,94 @@
 
-What I found
 
-- Yes — your suspicion is correct for this scene.
-- The selected scene `Low-Angle Aesthetic Outfit Shot` does have an `outfit_hint`, but its saved `prompt_template` does not include `{{outfitDirective}}`.
-- The prompt builder is currently template-led, so if a template forgets `{{outfitDirective}}`, the scene outfit hint never gets injected.
-- I checked the latest queued Product Images prompt, and it contains only the hardcoded template sentence about the pants color — not the scene’s `OUTFIT DIRECTION` block. So the curated outfit prompt is being skipped for this scene.
-- I also found that Product Images is not saving the exact resolved prompt into `generation_jobs.prompt_final`, which makes this harder to inspect after generation.
+# Use `{{productName}}` and Scene Reference for Dynamic Prompts
 
-Plan
+## What you already have
 
-1. Fix prompt injection at the builder level
-- In `src/lib/productImagePromptBuilder.ts`, create one shared resolver for scene outfit hints.
-- Use that same resolved text everywhere outfit styling is referenced.
+Your prompt builder supports these product-related tokens in any `prompt_template`:
 
-2. Make scene outfit hints impossible to skip
-- In `buildDynamicPrompt`, if a scene has `outfitHint` but the template does not contain `{{outfitDirective}}`, auto-append the resolved outfit block.
-- This makes scene-controlled outfit truly universal instead of depending on every admin template being perfect.
+| Token | Resolves to | Example |
+|---|---|---|
+| `{{productName}}` | Product title | "Nike Air Max 90" |
+| `{{productType}}` | Category or product type | "sneakers" |
+| `{{materialTexture}}` | Material + finish description | "premium leather with matte finish" |
+| `{{colorFamily}}` | Dominant color family | "white / neutral tones" |
+| `{{productSize}}` | Size class | "medium" |
 
-3. Clean up the broken scene template
-- Update `Low-Angle Aesthetic Outfit Shot` so it uses `{{outfitDirective}}` instead of its own hardcoded outfit sentence.
-- Audit other scenes with `outfit_hint` for the same problem.
+Plus all the styling tokens: `{{background}}`, `{{lightingDirective}}`, `{{outfitDirective}}`, `{{personDirective}}`, `{{aestheticColor}}`, etc.
 
-4. Improve color wording for the model
-- Add `aestheticColorLabel` next to `aestheticColorHex`.
-- Resolve `{{aestheticColor}}` as something like `Dusty Blue (#5E7485)` instead of only a hex/fallback phrase.
+## How scene reference mode should work
 
-5. Make future debugging visible
-- In `src/pages/ProductImages.tsx`, send the resolved prompt in the payload so `prompt_final` is actually saved.
-- Optionally show the resolved outfit/styling text in Review before generation.
+When `use_scene_reference` is ON, the AI model receives **three images**: the product photo, the scene reference photo, and optionally a model photo. The scene reference image does the heavy lifting for composition/lighting/environment.
 
-Files to update
+So the `prompt_template` for reference-mode scenes can be **much simpler** — it just needs to say *what to swap*:
 
-- `src/lib/productImagePromptBuilder.ts`
-- `src/components/app/product-images/types.ts`
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-- `src/pages/ProductImages.tsx`
-- the affected Product Images scene data row for `Low-Angle Aesthetic Outfit Shot`
+```
+Recreate this exact scene composition. Replace the product with {{productName}} ({{productType}}, {{materialTexture}}, {{colorFamily}}). {{outfitDirective}} {{personDirective}}
+```
 
-Expected result
+vs. a non-reference scene that needs to describe everything from scratch:
 
-- The outfit direction will always be injected for scenes that define `outfit_hint`.
-- Dusty Blue will be described clearly enough for the model to follow.
-- We’ll be able to inspect the exact final prompt after each generation.
+```
+Professional editorial shot of {{productName}} on {{background}}, {{lightingDirective}}. {{surfaceDirective}}. {{personDirective}} {{outfitDirective}} {{compositionDirective}}
+```
+
+## Plan
+
+### 1. DB migration
+Add `use_scene_reference boolean NOT NULL DEFAULT false` to `product_image_scenes`.
+
+### 2. Data layer
+- `src/hooks/useProductImageScenes.ts` — map `use_scene_reference` → `useSceneReference`
+- `src/components/app/product-images/types.ts` — add `useSceneReference?: boolean` to `ProductImageScene`
+
+### 3. Admin UI toggle
+In `src/pages/AdminProductImageScenes.tsx`, add a checkbox: **"Use preview as generation reference"** with a note that the scene's preview image will be sent as a composition guide. Works for all categories.
+
+### 4. Pass reference in generation payload
+In `src/pages/ProductImages.tsx`, update the `variationEntry`:
+```typescript
+const variationEntry = {
+  label: ...,
+  instruction: variationInstruction,
+  aspect_ratio: ratioForJob,
+  ...(scene.useSceneReference && scene.previewUrl ? {
+    use_scene_reference: true,
+    preview_url: scene.previewUrl,
+  } : {}),
+};
+```
+
+### 5. Prompt builder: auto-append scene reference directive
+In `src/lib/productImagePromptBuilder.ts`, at the end of `buildDynamicPrompt`, when `scene.useSceneReference` is true:
+
+```typescript
+if (scene.useSceneReference && scene.previewUrl) {
+  prompt += ` SCENE REFERENCE — Replicate the exact composition, camera angle, lighting setup, and environment from the provided scene reference image. Replace only the product with {{productName}} ({{productType}}). Maintain identical framing, perspective, and overall styling.`;
+}
+```
+
+This is resolved through the same token system, so `{{productName}}` becomes e.g. "Nike Air Max 90".
+
+### What tokens to use in reference-mode templates
+
+For admins writing `prompt_template` on scenes with `use_scene_reference` ON, keep prompts lean — the image reference handles the environment. Focus on **what changes**:
+
+```
+Recreate the scene. Place {{productName}} — a {{productType}} in {{colorFamily}} with {{materialTexture}} finish. {{outfitDirective}} {{personDirective}}
+```
+
+The backend already handles image labeling:
+- `[PRODUCT IMAGE]` — the product photo
+- `[SCENE REFERENCE]` — the composition guide
+- `[MODEL IMAGE]` — identity reference (if applicable)
+
+No backend changes needed — the edge function already supports `use_scene_reference` + `preview_url`.
+
+### Files changed
+1. **DB migration** — add `use_scene_reference` column
+2. `src/components/app/product-images/types.ts` — add `useSceneReference`
+3. `src/hooks/useProductImageScenes.ts` — map new column
+4. `src/pages/AdminProductImageScenes.tsx` — add toggle
+5. `src/pages/ProductImages.tsx` — pass fields in variation entry
+6. `src/lib/productImagePromptBuilder.ts` — append reference directive with product tokens
+
