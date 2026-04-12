@@ -1729,6 +1729,19 @@ export function ProductImagesStep3Refine({
   // Scene categorization
   const bgScenes = useMemo(() => selectedScenes.filter(s => s.triggerBlocks?.includes('background')), [selectedScenes]);
   const aestheticColorScenes = useMemo(() => selectedScenes.filter(s => s.triggerBlocks?.includes('aestheticColor')), [selectedScenes]);
+
+  // Auto-preselect first recommended aesthetic color when scenes need it
+  useEffect(() => {
+    if (aestheticColorScenes.length > 0 && !details.aestheticColorHex) {
+      for (const scene of aestheticColorScenes) {
+        if (scene.suggestedColors && scene.suggestedColors.length > 0) {
+          const pick = scene.suggestedColors[0];
+          update({ aestheticColorHex: pick.hex, aestheticColorLabel: pick.label });
+          return;
+        }
+      }
+    }
+  }, [aestheticColorScenes.length]);
   const productShots = useMemo(() => selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
   const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
 
