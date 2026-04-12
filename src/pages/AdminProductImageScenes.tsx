@@ -161,7 +161,7 @@ export default function AdminProductImageScenes() {
       map.get(key)!.push(s);
     }
     for (const [, arr] of map) {
-      arr.sort((a, b) => a.sort_order - b.sort_order);
+      arr.sort((a, b) => new Date(b.updated_at ?? b.created_at).getTime() - new Date(a.updated_at ?? a.created_at).getTime());
     }
     return map;
   }, [filtered]);

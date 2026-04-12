@@ -24,6 +24,7 @@ export interface DbScene {
   suggested_colors: Array<{hex: string; label: string}> | null;
   outfit_hint: string | null;
   use_scene_reference: boolean;
+  updated_at: string;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
