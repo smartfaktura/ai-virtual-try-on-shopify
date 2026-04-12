@@ -549,6 +549,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
             <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
             {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
             {(scene as any).requires_extra_reference && <Badge variant="outline" className="text-[10px] gap-0.5"><Camera className="w-2.5 h-2.5" />Extra ref</Badge>}
+            {(scene as any).use_scene_reference && <Badge variant="outline" className="text-[10px] gap-0.5 border-primary/40 text-primary">🖼 Scene ref</Badge>}
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
             Triggers: {scene.trigger_blocks.join(', ')}
