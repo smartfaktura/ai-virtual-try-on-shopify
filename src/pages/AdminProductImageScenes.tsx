@@ -490,6 +490,18 @@ export default function AdminProductImageScenes() {
           })}
         </div>
       )}
+
+      {importTarget && (
+        <ImportFromScenesModal
+          open={!!importTarget}
+          onOpenChange={(open) => { if (!open) setImportTarget(null); }}
+          targetCategory={importTarget.category}
+          targetCategoryLabel={importTarget.label}
+          categorySortOrder={importTarget.sortOrder}
+          existingSubCategories={subCategoriesByCategory.get(importTarget.category) || []}
+          existingSceneIds={rawScenes.map(s => s.scene_id)}
+        />
+      )}
     </div>
   );
 }
