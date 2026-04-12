@@ -1,56 +1,38 @@
 
 
-# Redesign Scene Card: Move Color Pills Below Title, Remove Subtitle
+# Fix Scene Card Checkmark Visibility
 
 ## Problem
-Color dots (background & aesthetic) are overlaid on the preview image, cluttering the visual. The subtitle is truncated and adds no value. Cards without color pills look different from those with them, creating inconsistency.
+The checkmark on selected scene cards uses `text-primary fill-primary/20` which is dark and nearly invisible against dark preview images.
 
-## Design
-
-Move the bottom content area from:
-```
-Title
-Subtitle (truncated)
-```
-
-To:
-```
-     Title (centered)
-  [color pills row, centered]
-```
-
-- **Remove subtitle** entirely
-- **Center the title** text
-- **Move color pills below title** — background dots and/or aesthetic color dots render as a centered row of small circles under the title
-- **Cards without pills** get a subtle "Scene" type indicator (e.g., a small `Camera` icon or a neutral dot) so all cards have the same visual weight and height in the bottom area
-- Keep the overlay indicators (checkmark for selection) on the image itself
-- Remove the glassmorphic pill overlays from the image entirely
+## Solution
+Replace the `CheckCircle` icon with a solid primary-colored circle containing a white check icon.
 
 ## File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-### `SceneCard` component (lines 178–231)
+### Lines 197-201 — replace the checkmark rendering:
 
-1. **Remove** the two `absolute bottom-1.5` overlay divs for background and aesthetic color pills from inside the image area (lines 202–224)
-2. **Update bottom content area** (lines 226–229):
-   - Remove subtitle `<p>` line
-   - Center the title: `text-center`
-   - Add a new row below title for color indicators:
-     - If `hasBackground`: render background color dots (white, sage, blush, gradient) centered
-     - If `hasAestheticColor`: render aesthetic color dots (suggested or defaults) centered, with small paintbrush icon
-     - If neither: render a subtle neutral indicator (small `Camera` icon in muted color) to maintain consistent card height
-   - Fixed min-height on content area (`min-h-[48px]`) to keep all cards uniform
-
-### Visual result
-```
-┌──────────────┐
-│              │
-│  [preview]   │  ← clean image, only checkmark overlay
-│              │
-├──────────────┤
-│  Scene Title │  ← centered, semibold
-│   ● ● ● ●   │  ← color dots OR neutral icon
-└──────────────┘
+**From:**
+```tsx
+{selected && (
+  <div className="absolute top-1.5 right-1.5">
+    <CheckCircle className="w-5 h-5 text-primary fill-primary/20 drop-shadow-sm" />
+  </div>
+)}
 ```
 
-No other files need changes.
+**To:**
+```tsx
+{selected && (
+  <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
+    <Check className="w-3.5 h-3.5 text-white" />
+  </div>
+)}
+```
+
+- Solid `bg-primary` circle with `shadow-md` for contrast against any image
+- White `Check` icon inside (already imported from lucide-react)
+- Slightly larger (w-6 h-6) for better tap target and visibility
+
+Also update the import: replace `CheckCircle` with `Check` if `CheckCircle` is no longer used elsewhere in the file (or just add `Check` to existing imports).
 
