@@ -230,6 +230,7 @@ const STYLING_DIRECTION_MAP: Record<string, string> = {
 const BASE_NEGATIVES = 'No watermarks, no artificial text overlays or watermark text, no chromatic aberration, no lens flare artifacts, no color banding, no over-saturation.';
 const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.';
 const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment. Preserve all original product branding, logos, and label text exactly as shown.';
+const BG_COLOR_NEGATIVES = 'No warm tint on background, no yellow cast on background, no beige drift on background, no color contamination from product onto background, no background color variation, no uneven background tone.';
 
 // PRODUCT_FIDELITY and REFERENCE_ISOLATION removed — covered by edge function CRITICAL REQUIREMENTS #2 and #7
 
@@ -805,10 +806,11 @@ function resolveFocusArea(d: DetailSettings, scene: ProductImageScene): string {
 }
 
 // ── Negative prompt builder ──
-function buildNegativePrompt(scene: ProductImageScene): string {
+function buildNegativePrompt(scene: ProductImageScene, hasSolidHexBg = false): string {
   const parts = [BASE_NEGATIVES, PRODUCT_NEGATIVES];
   const hasPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
   if (hasPerson) parts.push(PERSON_NEGATIVES);
+  if (hasSolidHexBg) parts.push(BG_COLOR_NEGATIVES);
   return parts.join(' ');
 }
 
@@ -851,7 +853,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const colorWorld = details.backgroundTone;
       // Custom hex background
       if (colorWorld === 'custom' && details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex)) {
-        return `flat solid ${details.backgroundCustomHex} color background, no texture, no pattern`;
+        return `flat solid exact ${details.backgroundCustomHex} color background, uniform color, no texture, no pattern, no color variation across the background`;
       }
       // Custom gradient background
       if (colorWorld === 'gradient-custom' && details.backgroundCustomGradient) {
@@ -872,7 +874,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       if (swatchResolved) {
         const hexMatch = swatchResolved.match(/#[0-9A-Fa-f]{6}/);
         if (hexMatch) {
-          return `flat solid ${hexMatch[0]} color background, no texture, no pattern`;
+          return `flat solid exact ${hexMatch[0]} color background, uniform color, no texture, no pattern, no color variation across the background`;
         }
         return `${swatchResolved} seamless studio background, no texture, no pattern`;
       }
@@ -1225,12 +1227,18 @@ export function buildDynamicPrompt(
     scene,
   };
 
+  // Detect if background resolves to a solid hex (for preamble + negatives)
+  const bgResolved = resolveToken('background', ctx);
+  const bgHexForReinforcement = bgResolved.match(/flat solid exact (#[0-9A-Fa-f]{6})/)?.[1] || null;
+
   if (!template) {
     // Fallback: old-style concatenation but enriched
-    const parts: string[] = [scene.description];
+    const parts: string[] = [];
+    if (bgHexForReinforcement) parts.push(`CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation.`);
+    parts.push(scene.description);
     parts.push(`Product: ${product.title}.`);
     if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish, product.description)}.`);
-    parts.push(`Background: ${resolveToken('background', ctx)}.`);
+    parts.push(`Background: ${bgResolved}.`);
     parts.push(resolveToken('lightingDirective', ctx));
     const styling = resolveToken('stylingDirective', ctx);
     if (styling) parts.push(styling);
@@ -1242,14 +1250,18 @@ export function buildDynamicPrompt(
     if (details.focusArea && !isAuto(details.focusArea)) parts.push(`Focus: ${details.focusArea}.`);
     if (details.customNote) parts.push(details.customNote);
     parts.push(resolveCameraDirective(scene));
-    // QUALITY_SUFFIX removed — edge function handles this
-    const negatives = buildNegativePrompt(scene);
+    const negatives = buildNegativePrompt(scene, !!bgHexForReinforcement);
     parts.push(negatives);
     return cleanupPrompt(parts.filter(Boolean).join(' '));
   }
 
   // Resolve all {{token}} placeholders
-  let prompt = template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
+  // Prepend preamble for solid hex backgrounds
+  let prompt = '';
+  if (bgHexForReinforcement) {
+    prompt = `CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation. `;
+  }
+  prompt += template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
   // Auto-inject key directives if template didn't include their tokens
   // For category-collection scenes, skip aesthetic overrides — let their templates drive the look
@@ -1292,7 +1304,7 @@ export function buildDynamicPrompt(
   }
 
   // Append negative prompt
-  const negatives = buildNegativePrompt(scene);
+  const negatives = buildNegativePrompt(scene, !!bgHexForReinforcement);
   prompt += ' ' + negatives;
 
   // Append brand logo text directive if present — skip if template already used {{brandLogoText}}
