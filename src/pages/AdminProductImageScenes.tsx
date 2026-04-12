@@ -399,6 +399,17 @@ export default function AdminProductImageScenes() {
                     className="h-8 gap-1 text-xs shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setImportTarget({ category: key, label: catLabel(key), sortOrder: scenes[0]?.category_sort_order ?? 0 });
+                    }}
+                  >
+                    <Import className="w-3.5 h-3.5" /> Import
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1 text-xs shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleAddNewForCategory(key, scenes[0]?.category_sort_order ?? 0);
                     }}
                   >
