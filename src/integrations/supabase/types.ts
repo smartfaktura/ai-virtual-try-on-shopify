@@ -1151,6 +1151,7 @@ export type Database = {
           sort_order: number
           sub_category: string | null
           sub_category_sort_order: number
+          suggested_colors: Json | null
           title: string
           trigger_blocks: string[]
         }
@@ -1169,6 +1170,7 @@ export type Database = {
           sort_order?: number
           sub_category?: string | null
           sub_category_sort_order?: number
+          suggested_colors?: Json | null
           title: string
           trigger_blocks?: string[]
         }
@@ -1187,6 +1189,7 @@ export type Database = {
           sort_order?: number
           sub_category?: string | null
           sub_category_sort_order?: number
+          suggested_colors?: Json | null
           title?: string
           trigger_blocks?: string[]
         }
