@@ -601,6 +601,10 @@ export default function ProductImages() {
                 label: scene.title + (variations.length > 1 ? ` (${Object.values(variationOverride).join(', ')})` : '') + (sceneRatios.length > 1 ? ` [${ratioForJob}]` : ''),
                 instruction: variationInstruction,
                 aspect_ratio: ratioForJob,
+                ...(scene.useSceneReference && scene.previewUrl ? {
+                  use_scene_reference: true,
+                  preview_url: scene.previewUrl,
+                } : {}),
               };
 
               const payload: Record<string, unknown> = {

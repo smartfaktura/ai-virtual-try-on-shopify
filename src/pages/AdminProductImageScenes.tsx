@@ -916,6 +916,21 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
           <p className="text-[10px] text-muted-foreground mt-0.5">When selected, users will be asked to upload an additional product photo (e.g. back/side view) for this scene</p>
         </div>
       </div>
+
+      <div className="flex items-center gap-3 pt-1">
+        <Checkbox
+          checked={(draft as any).use_scene_reference ?? false}
+          onCheckedChange={(v) => set('use_scene_reference' as any, !!v)}
+          id="scene-ref-toggle"
+        />
+        <div>
+          <Label htmlFor="scene-ref-toggle" className="text-xs font-medium cursor-pointer">Use preview as generation reference</Label>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            The scene's preview image will be sent as a visual composition guide during generation — the AI will replicate the framing, lighting, and environment while swapping the product.
+            {!draft.preview_image_url && <span className="text-destructive font-medium ml-1">⚠ Upload a preview image first</span>}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
