@@ -1,27 +1,29 @@
 
 
-# Use Actual Model List on Landing Page
+# Apply Admin Model Overrides in Product Images Flow
 
 ## Problem
-`ModelShowcaseSection.tsx` has hardcoded model names and image file paths that are duplicated from `mockModels`. When admin changes a model's image or name via overrides, the landing page doesn't reflect those changes.
+`ProductImages.tsx` builds its model list from raw `mockModels` without applying the admin overrides (image replacements, name changes, hidden models). The label also says "Library Models" instead of "VOVV.AI MODELS".
 
 ## Solution
 
-### Update `ModelShowcaseSection.tsx`
-- Import `mockModels` from `src/data/mockData.ts` instead of hardcoding ROW_1/ROW_2
-- Split the mockModels array into two halves for the two marquee rows
-- Each model card uses `model.previewUrl` and `model.name` directly
-- This ensures model images/names always match the source of truth
+### 1. Update `src/pages/ProductImages.tsx` — apply overrides to globalModelProfiles
+- Import `useModelSortOrder` hook
+- Apply `sortModels`, `applyOverrides`, `applyNameOverrides`, and `filterHidden` to `mockModels` before merging with custom models
+- This ensures admin image/name changes and hidden models are respected
 
-### Apply admin overrides on public pages
-- The `useModelSortOrder` hook currently requires auth (`enabled: !!user`). For the public landing page, we need to either:
-  - Make it work without auth by adding a read-only RLS policy on `model_sort_order` for `anon` role
-  - Or fetch overrides separately in the component
-- **Approach**: Add an `anon` SELECT policy on `model_sort_order`, then use `useModelSortOrder` without the auth guard for read-only data. Update the hook's `enabled` to always be `true` for the query.
-- Apply `applyOverrides`, `applyNameOverrides`, `filterHidden`, and `sortModels` to the model list before rendering
+```typescript
+const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
+const globalModelProfiles = useMemo(
+  () => sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels, ...(customModelProfiles || [])])))),
+  [customModelProfiles, sortModels, applyOverrides, applyNameOverrides, filterHidden]
+);
+```
+
+### 2. Rename "Library Models" → "VOVV.AI MODELS" in `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+- Update the two instances of the label text (inline preview and modal) from "Library Models" to "VOVV.AI MODELS"
 
 ### Files changed
-- **Migration**: Add `anon` SELECT policy on `model_sort_order`
-- **`src/hooks/useModelSortOrder.ts`**: Remove `enabled: !!user` restriction (read-only query is safe for public)
-- **`src/components/landing/ModelShowcaseSection.tsx`**: Replace hardcoded arrays with `mockModels` + override helpers, split into two rows
+- `src/pages/ProductImages.tsx` — import and apply model override hooks
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — rename label (2 occurrences)
 
