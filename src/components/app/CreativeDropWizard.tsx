@@ -277,9 +277,9 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
   const { asPoses: customScenePoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
-  const { sortModels: sortModelsByOrder, applyOverrides } = useModelSortOrder();
+  const { sortModels: sortModelsByOrder, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
 
-  const allModelsSorted = sortModelsByOrder(applyOverrides(mockModels));
+  const allModelsSorted = sortModelsByOrder(filterHidden(applyNameOverrides(applyOverrides(mockModels))));
   const allModels = [
     ...allModelsSorted.map(m => ({
       id: m.modelId,

@@ -1057,26 +1057,44 @@ export type Database = {
       }
       model_sort_order: {
         Row: {
+          age_range_override: string | null
+          body_type_override: string | null
           created_at: string
+          ethnicity_override: string | null
+          gender_override: string | null
           id: string
           image_override_url: string | null
+          is_hidden: boolean
           model_id: string
+          name_override: string | null
           sort_order: number
           updated_by: string
         }
         Insert: {
+          age_range_override?: string | null
+          body_type_override?: string | null
           created_at?: string
+          ethnicity_override?: string | null
+          gender_override?: string | null
           id?: string
           image_override_url?: string | null
+          is_hidden?: boolean
           model_id: string
+          name_override?: string | null
           sort_order?: number
           updated_by: string
         }
         Update: {
+          age_range_override?: string | null
+          body_type_override?: string | null
           created_at?: string
+          ethnicity_override?: string | null
+          gender_override?: string | null
           id?: string
           image_override_url?: string | null
+          is_hidden?: boolean
           model_id?: string
+          name_override?: string | null
           sort_order?: number
           updated_by?: string
         }

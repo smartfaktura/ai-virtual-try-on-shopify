@@ -16,14 +16,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAllCustomModels, useUpdateCustomModel, useDeleteCustomModel } from '@/hooks/useCustomModels';
-import { useModelSortOrder, useSaveModelSortOrder, useSaveModelImageOverride } from '@/hooks/useModelSortOrder';
+import { useModelSortOrder, useSaveModelSortOrder, useSaveModelImageOverride, useSaveModelMetadataOverride, useToggleModelHidden, type ModelMetadataOverrides } from '@/hooks/useModelSortOrder';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import type { CustomModel } from '@/hooks/useCustomModels';
 import { mockModels } from '@/data/mockData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
-
+import { Switch } from '@/components/ui/switch';
 const GENDER_OPTIONS = ['female', 'male', 'non-binary'];
 const BODY_TYPE_OPTIONS = ['slim', 'average', 'athletic', 'curvy', 'plus-size'];
 const AGE_RANGE_OPTIONS = ['young-adult', 'adult', 'mature'];
@@ -51,18 +51,29 @@ interface UnifiedModel {
   customModel?: CustomModel;
 }
 
-function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, number>, imageOverrides: Map<string, string>): UnifiedModel[] {
-  const mockUnified: UnifiedModel[] = mockModels.map(m => ({
-    id: m.modelId,
-    name: m.name,
-    gender: m.gender,
-    bodyType: m.bodyType,
-    ethnicity: m.ethnicity || '',
-    ageRange: m.ageRange || '',
-    imageUrl: imageOverrides.get(m.modelId) || m.previewUrl,
-    isCustom: false,
-    isActive: true,
-  }));
+function buildUnifiedList(
+  customModels: CustomModel[],
+  sortMap: Map<string, number>,
+  imageOverrides: Map<string, string>,
+  metadataOverrides: Map<string, ModelMetadataOverrides>,
+  hiddenIds: Set<string>,
+  showHidden: boolean,
+): UnifiedModel[] {
+  const mockUnified: UnifiedModel[] = mockModels.map(m => {
+    const meta = metadataOverrides.get(m.modelId);
+    const isHidden = hiddenIds.has(m.modelId);
+    return {
+      id: m.modelId,
+      name: meta?.name_override || m.name,
+      gender: meta?.gender_override || m.gender,
+      bodyType: meta?.body_type_override || m.bodyType,
+      ethnicity: meta?.ethnicity_override || m.ethnicity || '',
+      ageRange: meta?.age_range_override || m.ageRange || '',
+      imageUrl: imageOverrides.get(m.modelId) || m.previewUrl,
+      isCustom: false,
+      isActive: !isHidden,
+    };
+  });
 
   const customUnified: UnifiedModel[] = customModels.map(m => ({
     id: `custom-${m.id}`,
@@ -77,7 +88,12 @@ function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, numb
     customModel: m,
   }));
 
-  const all = [...mockUnified, ...customUnified];
+  let all = [...mockUnified, ...customUnified];
+
+  // Filter hidden unless showHidden is on
+  if (!showHidden) {
+    all = all.filter(m => m.isActive || m.isCustom);
+  }
 
   if (sortMap.size > 0) {
     all.sort((a, b) => {
@@ -105,21 +121,24 @@ function useModelUsageStats() {
 export default function AdminModels() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { models: customModels, isLoading: modelsLoading } = useAllCustomModels();
-  const { sortMap, imageOverrides, isLoading: sortLoading } = useModelSortOrder();
+  const { sortMap, imageOverrides, metadataOverrides, hiddenIds, isLoading: sortLoading } = useModelSortOrder();
   const saveSortOrder = useSaveModelSortOrder();
   const saveImageOverride = useSaveModelImageOverride();
+  const saveMetadataOverride = useSaveModelMetadataOverride();
+  const toggleModelHidden = useToggleModelHidden();
   const updateModel = useUpdateCustomModel();
   const deleteModel = useDeleteCustomModel();
   const { data: usageStats } = useModelUsageStats();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingFields, setEditingFields] = useState<Partial<CustomModel>>({});
+  const [editingFields, setEditingFields] = useState<Record<string, string>>({});
   const [localOrder, setLocalOrder] = useState<UnifiedModel[] | null>(null);
   const [addModelOpen, setAddModelOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [jumpInputId, setJumpInputId] = useState<string | null>(null);
   const [jumpValue, setJumpValue] = useState('');
+  const [showHidden, setShowHidden] = useState(false);
 
   // Image replace state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -130,8 +149,8 @@ export default function AdminModels() {
   const [deleteTarget, setDeleteTarget] = useState<UnifiedModel | null>(null);
 
   const unifiedModels = useMemo(
-    () => buildUnifiedList(customModels, sortMap, imageOverrides),
-    [customModels, sortMap, imageOverrides]
+    () => buildUnifiedList(customModels, sortMap, imageOverrides, metadataOverrides, hiddenIds, showHidden),
+    [customModels, sortMap, imageOverrides, metadataOverrides, hiddenIds, showHidden]
   );
 
   useEffect(() => {
@@ -197,15 +216,24 @@ export default function AdminModels() {
   }, [localOrder, saveSortOrder]);
 
   const startEdit = (model: UnifiedModel) => {
-    if (!model.isCustom || !model.customModel) return;
     setEditingId(model.id);
-    setEditingFields({
-      name: model.customModel.name,
-      gender: model.customModel.gender,
-      body_type: model.customModel.body_type,
-      ethnicity: model.customModel.ethnicity,
-      age_range: model.customModel.age_range,
-    });
+    if (model.isCustom && model.customModel) {
+      setEditingFields({
+        name: model.customModel.name,
+        gender: model.customModel.gender,
+        body_type: model.customModel.body_type,
+        ethnicity: model.customModel.ethnicity,
+        age_range: model.customModel.age_range,
+      });
+    } else {
+      setEditingFields({
+        name: model.name,
+        gender: model.gender,
+        body_type: model.bodyType,
+        ethnicity: model.ethnicity,
+        age_range: model.ageRange,
+      });
+    }
   };
 
   const cancelEdit = () => {
@@ -214,9 +242,22 @@ export default function AdminModels() {
   };
 
   const saveEdit = async (model: UnifiedModel) => {
-    if (!model.customModel) return;
     try {
-      await updateModel.mutateAsync({ id: model.customModel.id, ...editingFields });
+      if (model.isCustom && model.customModel) {
+        await updateModel.mutateAsync({ id: model.customModel.id, ...editingFields });
+      } else {
+        // Built-in model: save as overrides
+        await saveMetadataOverride.mutateAsync({
+          modelId: model.id,
+          overrides: {
+            name_override: editingFields.name || null,
+            gender_override: editingFields.gender || null,
+            body_type_override: editingFields.body_type || null,
+            ethnicity_override: editingFields.ethnicity || null,
+            age_range_override: editingFields.age_range || null,
+          },
+        });
+      }
       toast.success('Model updated');
       setEditingId(null);
       setEditingFields({});
@@ -226,9 +267,12 @@ export default function AdminModels() {
   };
 
   const handleToggleActive = async (model: UnifiedModel) => {
-    if (!model.customModel) return;
     try {
-      await updateModel.mutateAsync({ id: model.customModel.id, is_active: !model.customModel.is_active });
+      if (model.isCustom && model.customModel) {
+        await updateModel.mutateAsync({ id: model.customModel.id, is_active: !model.customModel.is_active });
+      } else {
+        await toggleModelHidden.mutateAsync({ modelId: model.id, hidden: model.isActive });
+      }
       toast.success(model.isActive ? 'Model hidden' : 'Model visible');
     } catch (e: any) {
       toast.error('Failed to toggle', { description: e.message });
@@ -236,10 +280,16 @@ export default function AdminModels() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget?.customModel) return;
+    if (!deleteTarget) return;
     try {
-      await deleteModel.mutateAsync(deleteTarget.customModel.id);
-      toast.success('Model deleted');
+      if (deleteTarget.isCustom && deleteTarget.customModel) {
+        await deleteModel.mutateAsync(deleteTarget.customModel.id);
+        toast.success('Model deleted');
+      } else {
+        // Built-in: hide instead of delete
+        await toggleModelHidden.mutateAsync({ modelId: deleteTarget.id, hidden: true });
+        toast.success('Model hidden');
+      }
     } catch (e: any) {
       toast.error('Failed to delete', { description: e.message });
     } finally {
@@ -359,15 +409,21 @@ export default function AdminModels() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search models..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+        {/* Search + filters */}
+        <div className="flex items-center gap-4">
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search models..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+            <Switch checked={showHidden} onCheckedChange={setShowHidden} />
+            Show hidden
+          </label>
         </div>
 
         {/* Model grid */}
@@ -480,7 +536,7 @@ export default function AdminModels() {
 
                 {/* Fields */}
                 <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
-                  {isEditing && model.isCustom ? (
+                  {isEditing ? (
                     <>
                       <Input
                         value={editingFields.name ?? ''}
@@ -551,71 +607,60 @@ export default function AdminModels() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {model.isCustom ? (
-                    isEditing ? (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => saveEdit(model)} className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors">
-                              <Check className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Save</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={cancelEdit} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <X className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Cancel</TooltipContent>
-                        </Tooltip>
-                      </>
-                    ) : (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Camera className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Change photo</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => startEdit(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => handleToggleActive(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              {model.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>{model.isActive ? 'Hide' : 'Show'}</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => setDeleteTarget(model)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete</TooltipContent>
-                        </Tooltip>
-                      </>
-                    )
+                  {isEditing ? (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => saveEdit(model)} className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors">
+                            <Check className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Save</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={cancelEdit} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Cancel</TooltipContent>
+                      </Tooltip>
+                    </>
                   ) : (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                          <Camera className="w-4 h-4" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Change photo</TooltipContent>
-                    </Tooltip>
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <Camera className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Change photo</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => startEdit(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => handleToggleActive(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            {model.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>{model.isActive ? 'Hide' : 'Show'}</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => setDeleteTarget(model)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>{model.isCustom ? 'Delete' : 'Hide'}</TooltipContent>
+                      </Tooltip>
+                    </>
                   )}
                 </div>
               </div>
