@@ -1,29 +1,34 @@
 
 
-# Update 12 Existing Fragrance Scenes (Improved Prompts)
+# Add Image Variations (1–4) to Freestyle Generation
 
 ## What
-Update the 12 existing `Ingredient Editorial` scenes (sort_order 194–205) with improved prompt templates and descriptions from the uploaded file. The file also changes the sub-category name to `Scent Notes Editorial`.
+Add a "variations" selector (1–4 images) to the Freestyle prompt panel. When a user picks e.g. 3 variations, the system generates 3 images in one job, charging credits accordingly.
 
-## Changes Per Scene
+## Areas That Need Changes
 
-All 12 scenes get updated `description` and `prompt_template` fields. The `sub_category` changes from `Ingredient Editorial` to `Scent Notes Editorial` for all 12.
+### 1. `src/pages/Freestyle.tsx` — State & Logic
+- Add `variationCount` state (default 1, max 4)
+- Update `creditCost` calculation: multiply per-image cost by `variationCount`
+- Update `hasEnoughCredits` check to use total cost
+- Update `queuePayload.imageCount` from hardcoded `1` to `variationCount`
+- Update `enqueue()` call: pass `imageCount: variationCount`
+- Pass `variationCount` and `onVariationCountChange` to `FreestylePromptPanel`
 
-| # | scene_id | Updated description |
-|---|----------|-------------------|
-| 1 | crushed-citrus-fragrance | Cinematic citrus still life with fresh torn texture. |
-| 2 | orchard-spill-fragrance | Sunlit fruit composition with natural editorial chaos. |
-| 3 | stone-fruit-fragrance | Moody fruit still life with warm cinematic depth. |
-| 4 | pomegranate-night-fragrance | Dark glossy scene with dramatic seed reflections. |
-| 5 | fig-satin-fragrance | Soft fabric and fruit composition with elegant mood. |
-| 6 | pear-chrome-fragrance | Minimal reflective scene with modern editorial tension. |
-| 7 | rose-veil-fragrance | Soft floral atmosphere with cinematic diffusion. |
-| 8 | lily-shadow-fragrance | Minimal floral scene with strong shadow play. |
-| 9 | iris-smoke-fragrance | Dark floral scene with subtle haze. |
-| 10 | jasmine-flash-fragrance | Flash-lit floral scene with sharp contrast. |
-| 11 | tuberose-marble-fragrance | Luxury minimal floral scene with marble surface. |
-| 12 | peony-blur-fragrance | Selective focus floral scene with soft foreground blur. |
+### 2. `src/components/app/freestyle/FreestylePromptPanel.tsx` — UI
+- Accept new props: `variationCount`, `onVariationCountChange`
+- Add a compact variation picker (1–4 buttons) next to the Generate button in the bottom bar
+- Update credit cost display to show `creditCost` (which is already the total) and tooltip to say e.g. "6 × 3 = 18 credits"
 
-## How
-Use the database insert tool to run 12 `UPDATE` statements on `product_image_scenes`, matching by `scene_id`, updating `description`, `prompt_template`, and `sub_category` for each row.
+### 3. `supabase/functions/enqueue-generation/index.ts` — Credit Calculation (Already Correct)
+- The `calculateCreditCost` function already multiplies `perImage × imageCount` — no change needed here
+- The edge function already accepts `imageCount` up to 4 via `Math.min(body.imageCount || 1, 4)` — no change needed
+
+### 4. `supabase/functions/generate-freestyle/index.ts` — Already Supports Multiple Images
+- Already loops `for (let i = 0; i < effectiveImageCount; i++)` and handles batch consistency text — no change needed
+
+### 5. No Database Changes Required
+
+## Summary
+The backend already fully supports 1–4 images per freestyle job. The only changes are in the **frontend**: adding state for variation count, a UI picker, and updating the credit cost display to reflect the total.
 
