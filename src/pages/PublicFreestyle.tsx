@@ -453,6 +453,9 @@ export default function PublicFreestyle() {
               editIntent={editIntent}
               onEditIntentChange={setEditIntent}
               disabledChips={{ product: true, brand: true }}
+              variationCount={1}
+              onVariationCountChange={() => { if (!user) navigate('/auth?redirect=/app/freestyle'); }}
+              perImageCost={0}
               isCollapsed={isMobile ? isPromptCollapsed : undefined}
               onToggleCollapse={isMobile ? () => setIsPromptCollapsed(prev => !prev) : undefined}
               onReset={handleReset}
