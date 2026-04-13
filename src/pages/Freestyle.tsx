@@ -678,7 +678,7 @@ export default function Freestyle() {
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,
-      imageCount: variationCount,
+      imageCount: variationCountRef.current,
       quality,
       polishPrompt: true,
       modelContext,
@@ -706,10 +706,10 @@ export default function Freestyle() {
     const enqueueResult = await enqueue({
       jobType: 'freestyle',
       payload: queuePayload,
-      imageCount: variationCount,
+      imageCount: variationCountRef.current,
       quality,
     }, {
-      imageCount: variationCount,
+      imageCount: variationCountRef.current,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
@@ -722,7 +722,7 @@ export default function Freestyle() {
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride, variationCount]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
