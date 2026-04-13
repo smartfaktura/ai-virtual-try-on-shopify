@@ -122,7 +122,7 @@ export default function AdminModels() {
 
   // Image replace state
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [imageTargetModel, setImageTargetModel] = useState<UnifiedModel | null>(null);
+  const imageTargetModelRef = useRef<UnifiedModel | null>(null);
   const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
 
   // Delete confirmation state
