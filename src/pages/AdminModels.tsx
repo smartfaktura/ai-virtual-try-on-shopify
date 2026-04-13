@@ -530,7 +530,7 @@ export default function AdminModels() {
 
                 {/* Fields */}
                 <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
-                  {isEditing && model.isCustom ? (
+                  {isEditing ? (
                     <>
                       <Input
                         value={editingFields.name ?? ''}
@@ -601,71 +601,60 @@ export default function AdminModels() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {model.isCustom ? (
-                    isEditing ? (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => saveEdit(model)} className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors">
-                              <Check className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Save</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={cancelEdit} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <X className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Cancel</TooltipContent>
-                        </Tooltip>
-                      </>
-                    ) : (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Camera className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Change photo</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => startEdit(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => handleToggleActive(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              {model.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>{model.isActive ? 'Hide' : 'Show'}</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => setDeleteTarget(model)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete</TooltipContent>
-                        </Tooltip>
-                      </>
-                    )
+                  {isEditing ? (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => saveEdit(model)} className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors">
+                            <Check className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Save</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={cancelEdit} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Cancel</TooltipContent>
+                      </Tooltip>
+                    </>
                   ) : (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                          <Camera className="w-4 h-4" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Change photo</TooltipContent>
-                    </Tooltip>
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <Camera className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Change photo</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => startEdit(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => handleToggleActive(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            {model.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>{model.isActive ? 'Hide' : 'Show'}</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button onClick={() => setDeleteTarget(model)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>{model.isCustom ? 'Delete' : 'Hide'}</TooltipContent>
+                      </Tooltip>
+                    </>
                   )}
                 </div>
               </div>
