@@ -216,15 +216,24 @@ export default function AdminModels() {
   }, [localOrder, saveSortOrder]);
 
   const startEdit = (model: UnifiedModel) => {
-    if (!model.isCustom || !model.customModel) return;
     setEditingId(model.id);
-    setEditingFields({
-      name: model.customModel.name,
-      gender: model.customModel.gender,
-      body_type: model.customModel.body_type,
-      ethnicity: model.customModel.ethnicity,
-      age_range: model.customModel.age_range,
-    });
+    if (model.isCustom && model.customModel) {
+      setEditingFields({
+        name: model.customModel.name,
+        gender: model.customModel.gender,
+        body_type: model.customModel.body_type,
+        ethnicity: model.customModel.ethnicity,
+        age_range: model.customModel.age_range,
+      });
+    } else {
+      setEditingFields({
+        name: model.name,
+        gender: model.gender,
+        body_type: model.bodyType,
+        ethnicity: model.ethnicity,
+        age_range: model.ageRange,
+      });
+    }
   };
 
   const cancelEdit = () => {
@@ -233,9 +242,22 @@ export default function AdminModels() {
   };
 
   const saveEdit = async (model: UnifiedModel) => {
-    if (!model.customModel) return;
     try {
-      await updateModel.mutateAsync({ id: model.customModel.id, ...editingFields });
+      if (model.isCustom && model.customModel) {
+        await updateModel.mutateAsync({ id: model.customModel.id, ...editingFields });
+      } else {
+        // Built-in model: save as overrides
+        await saveMetadataOverride.mutateAsync({
+          modelId: model.id,
+          overrides: {
+            name_override: editingFields.name || null,
+            gender_override: editingFields.gender || null,
+            body_type_override: editingFields.body_type || null,
+            ethnicity_override: editingFields.ethnicity || null,
+            age_range_override: editingFields.age_range || null,
+          },
+        });
+      }
       toast.success('Model updated');
       setEditingId(null);
       setEditingFields({});
@@ -245,9 +267,12 @@ export default function AdminModels() {
   };
 
   const handleToggleActive = async (model: UnifiedModel) => {
-    if (!model.customModel) return;
     try {
-      await updateModel.mutateAsync({ id: model.customModel.id, is_active: !model.customModel.is_active });
+      if (model.isCustom && model.customModel) {
+        await updateModel.mutateAsync({ id: model.customModel.id, is_active: !model.customModel.is_active });
+      } else {
+        await toggleModelHidden.mutateAsync({ modelId: model.id, hidden: model.isActive });
+      }
       toast.success(model.isActive ? 'Model hidden' : 'Model visible');
     } catch (e: any) {
       toast.error('Failed to toggle', { description: e.message });
@@ -255,10 +280,16 @@ export default function AdminModels() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget?.customModel) return;
+    if (!deleteTarget) return;
     try {
-      await deleteModel.mutateAsync(deleteTarget.customModel.id);
-      toast.success('Model deleted');
+      if (deleteTarget.isCustom && deleteTarget.customModel) {
+        await deleteModel.mutateAsync(deleteTarget.customModel.id);
+        toast.success('Model deleted');
+      } else {
+        // Built-in: hide instead of delete
+        await toggleModelHidden.mutateAsync({ modelId: deleteTarget.id, hidden: true });
+        toast.success('Model hidden');
+      }
     } catch (e: any) {
       toast.error('Failed to delete', { description: e.message });
     } finally {
