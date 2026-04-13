@@ -1,69 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { mockModels } from '@/data/mockData';
+import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 
-interface ModelCard {
-  name: string;
-  image: string;
-}
-
-const m = (name: string, file: string): ModelCard => ({ name, image: getOptimizedUrl(getLandingAssetUrl(`models/${file}`), { quality: 60 }) });
-
-const ROW_1: ModelCard[] = [
-  m('Freya', 'model-female-average-nordic.jpg'),
-  m('Zara', 'model-female-athletic-mixed.jpg'),
-  m('Anders', 'model-male-slim-nordic.jpg'),
-  m('Sienna', 'model-female-average-irish.jpg'),
-  m('Jordan', 'model-051-jordan.jpg'),
-  m('Hannah', 'model-050-hannah.jpg'),
-  m('Kai', 'model-049-kai.jpg'),
-  m('Valeria', 'model-female-slim-american-latina.jpg'),
-  m('Fatima', 'model-female-plussize-middleeast.jpg'),
-  m('Akiko', 'model-female-plussize-japanese.jpg'),
-  m('Olivia', 'model-035-olivia.jpg'),
-  m('Marcus', 'model-male-athletic-black.jpg'),
-  m('Isabella', 'model-female-plussize-latina.jpg'),
-  m('Liam', 'model-male-athletic-european.jpg'),
-  m('Victoria', 'model-female-mature-european.jpg'),
-  m('Tyler', 'model-male-athletic-mixed.jpg'),
-  m('Nia', 'model-female-plussize-african.jpg'),
-  m('Omar', 'model-male-slim-middleeast.jpg'),
-  m('Priya', 'model-female-athletic-indian.jpg'),
-  m('Ethan', 'model-040-ethan.jpg'),
-  m('Natalie', 'model-054-natalie.jpg'),
-  m('Jin', 'model-male-average-asian.jpg'),
-];
-
-const ROW_2: ModelCard[] = [
-  m('Sofia', 'model-female-athletic-european.jpg'),
-  m('Ravi', 'model-male-slim-indian.jpg'),
-  m('Madison', 'model-female-slim-american-blonde.jpg'),
-  m('Rafael', 'model-male-athletic-latino.jpg'),
-  m('Charlotte', 'model-female-average-european.jpg'),
-  m('Rowan', 'model-male-athletic-scottish.jpg'),
-  m('Amara', 'model-female-athletic-black.jpg'),
-  m('Henrik', 'model-male-plussize-european.jpg'),
-  m('Aubrey', 'model-female-average-american-redhead.jpg'),
-  m('Kenji', 'model-male-athletic-japanese.jpg'),
-  m('Zoe', 'model-female-athletic-american-black.jpg'),
-  m('Mateo', 'model-male-plussize-latino.jpg'),
-  m('Daphne', 'model-046-daphne.jpg'),
-  m('Jamal', 'model-male-plussize-african.jpg'),
-  m('Mei', 'model-female-slim-chinese.jpg'),
-  m('Leo', 'model-047-leo.jpg'),
-  m('Maya', 'model-female-average-african.jpg'),
-  m('Diego', 'model-male-average-latino.jpg'),
-  m('Layla', 'model-female-average-middleeast.jpg'),
-  m('Soo-Min', 'model-female-petite-korean.jpg'),
-  m('Yuki', 'model-female-slim-asian.jpg'),
-  m('Emma', 'model-052-emma.jpg'),
-  m('Elena', 'model-female-athletic-latina.jpg'),
-  m('Chen Wei', 'model-male-average-chinese.jpg'),
-];
-
-function ModelCardItem({ model }: { model: ModelCard }) {
+function ModelCardItem({ model }: { model: { name: string; previewUrl: string } }) {
   const [hidden, setHidden] = useState(false);
 
   if (hidden) return null;
@@ -72,7 +13,7 @@ function ModelCardItem({ model }: { model: ModelCard }) {
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
       <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
         <ShimmerImage
-          src={model.image}
+          src={model.previewUrl}
           alt={model.name}
           loading="lazy"
           className="w-full h-full object-cover object-top"
@@ -85,7 +26,7 @@ function ModelCardItem({ model }: { model: ModelCard }) {
   );
 }
 
-function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
+function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: { name: string; previewUrl: string }[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
   const tripled = [...items, ...items, ...items];
 
   return (
@@ -110,12 +51,20 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
 }
 
 export function ModelShowcaseSection() {
+  const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
+
+  const { row1, row2 } = useMemo(() => {
+    const processed = sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels]))));
+    const mid = Math.ceil(processed.length / 2);
+    return { row1: processed.slice(0, mid), row2: processed.slice(mid) };
+  }, [sortModels, applyOverrides, applyNameOverrides, filterHidden]);
+
   return (
     <section className="py-20 lg:py-24 bg-muted/30 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
           <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-            49+ AI Models
+            {row1.length + row2.length}+ AI Models
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
             Professional Models. Every Look.
@@ -127,8 +76,8 @@ export function ModelShowcaseSection() {
       </div>
 
       <div className="flex flex-col gap-8">
-        <MarqueeRow items={ROW_1} direction="left" durationSeconds={120} />
-        <MarqueeRow items={ROW_2} direction="right" durationSeconds={130} />
+        <MarqueeRow items={row1} direction="left" durationSeconds={120} />
+        <MarqueeRow items={row2} direction="right" durationSeconds={130} />
       </div>
     </section>
   );

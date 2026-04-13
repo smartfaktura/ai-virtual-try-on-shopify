@@ -62,7 +62,7 @@ export function useModelSortOrder() {
       });
       return { sortMap, imageOverrides, metadataOverrides, hiddenIds };
     },
-    enabled: !!user,
+    enabled: true,
     staleTime: 2 * 60 * 1000,
   });
 
