@@ -249,19 +249,20 @@ export default function AdminModels() {
   // Image replacement
   const handleImageClick = (model: UnifiedModel) => {
     if (!model.isCustom || !model.customModel) return;
-    setImageTargetModel(model);
+    imageTargetModelRef.current = model;
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !imageTargetModel?.customModel) {
-      setImageTargetModel(null);
+    const target = imageTargetModelRef.current;
+    if (!file || !target?.customModel) {
+      imageTargetModelRef.current = null;
       return;
     }
 
-    const modelId = imageTargetModel.customModel.id;
-    setUploadingImageId(imageTargetModel.id);
+    const modelId = target.customModel.id;
+    setUploadingImageId(target.id);
 
     try {
       const timestamp = Date.now();
@@ -286,12 +287,12 @@ export default function AdminModels() {
         optimized_image_url: optimized,
       } as any);
 
-      toast.success('Model image updated');
+      toast.success(`Image updated for ${target.name}`);
     } catch (err: any) {
       toast.error('Failed to replace image', { description: err.message });
     } finally {
       setUploadingImageId(null);
-      setImageTargetModel(null);
+      imageTargetModelRef.current = null;
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
