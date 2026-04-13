@@ -1,26 +1,45 @@
 
 
-# Improve Admin Models Page
+# Insert 12 Skirts "City Mini Editorial" Scenes
 
-## What Changes
-1. **Add image replacement** — Make the model thumbnail clickable during edit mode (or always for custom models) to upload a new image. Clicking it opens a file picker, uploads to `scratch-uploads`, and updates the model's `image_url` and `optimized_image_url`.
+## Summary
+Insert 12 new scenes into `product_image_scenes` under a new `skirts` category collection with `City Mini Editorial` sub-category.
 
-2. **Improve delete UX** — Replace the browser `confirm()` dialog with a proper styled confirmation dialog using the existing AlertDialog component, showing the model name and image before confirming permanent deletion.
+## Scenes
 
-3. **Visual polish** — Add a camera/upload overlay icon on the image when hoverable for custom models, making it clear the image is changeable.
+| # | scene_id | title | sort_order |
+|---|----------|-------|------------|
+| 1 | cobblestone-walk-skirts | Stone Walk | 310 |
+| 2 | wall-lean-mini-skirts | Wall Lean | 311 |
+| 3 | sunlit-leg-kick-skirts | Leg Kick | 312 |
+| 4 | concrete-wall-halter-skirts | Concrete Halter | 313 |
+| 5 | cafe-chair-pause-skirts | Cafe Pause | 314 |
+| 6 | marble-step-editorial-skirts | Marble Step | 315 |
+| 7 | studio-minimal-mini-skirts | Studio Mini | 316 |
+| 8 | street-crossing-mini-skirts | Street Crossing | 317 |
+| 9 | sunglasses-blazer-mini-skirts | Blazer Mini | 318 |
+| 10 | pleated-white-summer-skirts | Summer Pleat | 319 |
+| 11 | graphic-tee-contrast-skirts | Tee Contrast | 320 |
+| 12 | neutral-wall-soft-editorial-skirts | Soft Neutral | 321 |
 
-## Technical Details
+## Shared Settings
+- **category_collection**: `skirts`
+- **sub_category**: `City Mini Editorial`
+- **category_sort_order**: 34
+- **sub_category_sort_order**: 0
+- **scene_type**: `editorial`
+- **is_active**: true
+- **suggested_colors**: null
+- **requires_extra_reference**: false
+- **use_scene_reference**: false
 
-### File: `src/pages/AdminModels.tsx`
-- Add a hidden `<input type="file">` ref for image upload
-- When the thumbnail of a custom model is clicked, trigger the file input
-- On file select: upload to `scratch-uploads/models/`, get public URL, call `updateModel.mutateAsync` with new `image_url` and computed `optimized_image_url`
-- Replace `confirm()` with an `AlertDialog` from `@/components/ui/alert-dialog` showing model name + thumbnail
-- Add hover overlay on custom model images with a camera icon
-- Show a loading spinner on the image while uploading
+## Per-Scene Details
+- **All 12 scenes have models** — all include `personDetails` in trigger_blocks and have outfit_hint populated
+- **Scenes with `background` trigger block (2, 7, 12)**: trigger_blocks include `background`
+- **Scene 7**: trigger_blocks `{personDetails,visualDirection,layout,background}` (no sceneEnvironment — studio scene)
+- **All others**: trigger_blocks `{personDetails,sceneEnvironment,visualDirection,layout}`
+- Full prompt templates and descriptions from the user message
 
-### No database or hook changes needed
-- `useUpdateCustomModel` already supports updating `image_url`
-- `useDeleteCustomModel` already does hard deletes
-- Storage bucket `scratch-uploads` is public and available
+## How
+Use the database insert tool to run 12 `INSERT INTO product_image_scenes (...)` statements.
 
