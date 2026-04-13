@@ -54,9 +54,17 @@ interface UseGenerationQueueOptions {
   onCreditRefresh?: () => Promise<void> | void;
 }
 
+export interface BatchProgress {
+  completed: number;
+  failed: number;
+  total: number;
+}
+
 interface UseGenerationQueueReturn {
   enqueue: (params: EnqueueParams, meta?: GenerationMeta) => Promise<EnqueueResult | null>;
+  enqueueBatch: (paramsList: EnqueueParams[], meta?: GenerationMeta, batchId?: string) => Promise<EnqueueResult[] | null>;
   activeJob: QueueJob | null;
+  batchProgress: BatchProgress | null;
   isEnqueuing: boolean;
   isProcessing: boolean;
   cancel: () => Promise<void>;
