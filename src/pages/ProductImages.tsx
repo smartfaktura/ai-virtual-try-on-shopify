@@ -36,6 +36,7 @@ const ProductImagesStep6Results = lazy(() => import('@/components/app/product-im
 
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';
+import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 import { mockModels } from '@/data/mockData';
 import { useProductAnalysis } from '@/hooks/useProductAnalysis';
 import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
@@ -82,9 +83,10 @@ export default function ProductImages() {
   // Defer model queries until Refine step
   const { asProfiles: userModelProfiles } = useUserModels({ enabled: step >= 3 });
   const { asProfiles: customModelProfiles } = useCustomModels({ enabled: step >= 3 });
+  const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
   const globalModelProfiles = useMemo(
-    () => [...mockModels, ...(customModelProfiles || [])],
-    [customModelProfiles]
+    () => sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels, ...(customModelProfiles || [])])))),
+    [customModelProfiles, sortModels, applyOverrides, applyNameOverrides, filterHidden]
   );
 
   const [addProductOpen, setAddProductOpen] = useState(false);

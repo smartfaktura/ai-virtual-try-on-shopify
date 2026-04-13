@@ -164,7 +164,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
       {/* Library Models — inline preview */}
       {filteredGlobal.length > 0 && (
         <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {inlineModels.map(m => (
               <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
@@ -223,7 +223,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
 
             {modalFilteredGlobal.length > 0 && (
               <div className="space-y-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                   {modalFilteredGlobal.map(m => (
                     <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
