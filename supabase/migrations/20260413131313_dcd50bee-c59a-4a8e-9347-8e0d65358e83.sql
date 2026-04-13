@@ -1,0 +1,1 @@
+ALTER TABLE public.model_sort_order ADD COLUMN image_override_url TEXT DEFAULT NULL;
