@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAllCustomModels, useUpdateCustomModel, useDeleteCustomModel } from '@/hooks/useCustomModels';
-import { useModelSortOrder, useSaveModelSortOrder, useSaveModelImageOverride } from '@/hooks/useModelSortOrder';
+import { useModelSortOrder, useSaveModelSortOrder, useSaveModelImageOverride, useSaveModelMetadataOverride, useToggleModelHidden, type ModelMetadataOverrides } from '@/hooks/useModelSortOrder';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import type { CustomModel } from '@/hooks/useCustomModels';
 import { mockModels } from '@/data/mockData';
