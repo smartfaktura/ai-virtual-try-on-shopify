@@ -686,7 +686,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     if (batchJobIdsRef.current.length > 1) {
       stopPolling();
       for (const jid of batchJobIdsRef.current) {
-        await supabase.rpc('cancel_queue_job', { p_job_id: jid }).catch(() => {});
+        try { await supabase.rpc('cancel_queue_job', { p_job_id: jid }); } catch {}
       }
       setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
       setBatchProgress(null);
