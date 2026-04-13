@@ -1,39 +1,29 @@
 
 
-# Insert 12 Fragrance "Ingredient Editorial" Scenes
+# Update 12 Existing Fragrance Scenes (Improved Prompts)
 
 ## What
-Insert 12 new still-life scenes into `product_image_scenes` under `fragrance` with a new sub-category `Ingredient Editorial` (overriding the file's split into Fruit/Floral). All are still-life editorial with no model.
+Update the 12 existing `Ingredient Editorial` scenes (sort_order 194–205) with improved prompt templates and descriptions from the uploaded file. The file also changes the sub-category name to `Scent Notes Editorial`.
 
-## Scenes
+## Changes Per Scene
 
-| # | scene_id | title | sort_order |
-|---|----------|-------|------------|
-| 1 | crushed-citrus-fragrance | Crushed Citrus | 194 |
-| 2 | orchard-spill-fragrance | Orchard Spill | 195 |
-| 3 | stone-fruit-fragrance | Stone Fruit | 196 |
-| 4 | pomegranate-night-fragrance | Pomegranate Night | 197 |
-| 5 | fig-satin-fragrance | Fig Satin | 198 |
-| 6 | pear-chrome-fragrance | Pear Chrome | 199 |
-| 7 | rose-veil-fragrance | Rose Veil | 200 |
-| 8 | lily-shadow-fragrance | Lily Shadow | 201 |
-| 9 | iris-smoke-fragrance | Iris Smoke | 202 |
-| 10 | jasmine-flash-fragrance | Jasmine Flash | 203 |
-| 11 | tuberose-marble-fragrance | Marble Tuberose | 204 |
-| 12 | peony-blur-fragrance | Peony Blur | 205 |
+All 12 scenes get updated `description` and `prompt_template` fields. The `sub_category` changes from `Ingredient Editorial` to `Scent Notes Editorial` for all 12.
 
-## Shared Settings
-- `category_collection`: `fragrance`
-- `sub_category`: `Ingredient Editorial`
-- `category_sort_order`: 26
-- `scene_type`: `editorial`
-- `is_active`: true
-- `suggested_colors`: none (null)
-- `requires_extra_reference`: false
-- `use_scene_reference`: false
-- `trigger_blocks`: `{sceneEnvironment,layout,visualDirection}`
-- `outfit_hint`: null (all 12 are still-life)
+| # | scene_id | Updated description |
+|---|----------|-------------------|
+| 1 | crushed-citrus-fragrance | Cinematic citrus still life with fresh torn texture. |
+| 2 | orchard-spill-fragrance | Sunlit fruit composition with natural editorial chaos. |
+| 3 | stone-fruit-fragrance | Moody fruit still life with warm cinematic depth. |
+| 4 | pomegranate-night-fragrance | Dark glossy scene with dramatic seed reflections. |
+| 5 | fig-satin-fragrance | Soft fabric and fruit composition with elegant mood. |
+| 6 | pear-chrome-fragrance | Minimal reflective scene with modern editorial tension. |
+| 7 | rose-veil-fragrance | Soft floral atmosphere with cinematic diffusion. |
+| 8 | lily-shadow-fragrance | Minimal floral scene with strong shadow play. |
+| 9 | iris-smoke-fragrance | Dark floral scene with subtle haze. |
+| 10 | jasmine-flash-fragrance | Flash-lit floral scene with sharp contrast. |
+| 11 | tuberose-marble-fragrance | Luxury minimal floral scene with marble surface. |
+| 12 | peony-blur-fragrance | Selective focus floral scene with soft foreground blur. |
 
 ## How
-Use the database insert tool to run 12 `INSERT INTO product_image_scenes (...)` statements with full prompt templates from the file.
+Use the database insert tool to run 12 `UPDATE` statements on `product_image_scenes`, matching by `scene_id`, updating `description`, `prompt_template`, and `sub_category` for each row.
 
