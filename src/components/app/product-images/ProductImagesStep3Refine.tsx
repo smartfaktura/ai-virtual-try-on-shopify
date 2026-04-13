@@ -236,6 +236,27 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
               <p className="text-center text-sm text-muted-foreground py-8">No models match your search.</p>
             )}
           </div>
+
+          {/* Modal footer */}
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                {activeIds.size} selected
+              </Badge>
+              {activeIds.size > 0 && (
+                <button
+                  type="button"
+                  onClick={() => { if (onMultiSelect) onMultiSelect([]); else onSelect(''); }}
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+            <Button size="sm" onClick={() => setShowAllModal(false)}>
+              Done
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -2082,10 +2103,19 @@ export function ProductImagesStep3Refine({
                         ))}
                       </div>
                       <span className="text-sm font-semibold">Choose model</span>
-                      {details.selectedModelId && (
+                      {(details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) > 0 && (
                         <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
-                          <Check className="w-2.5 h-2.5 mr-0.5" />selected
+                          <Check className="w-2.5 h-2.5 mr-0.5" />{details.selectedModelIds?.length || 1} selected
                         </Badge>
+                      )}
+                      {(details.selectedModelIds?.length || 0) > 0 && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); update({ selectedModelIds: [], selectedModelId: undefined }); }}
+                          className="text-[9px] text-muted-foreground hover:text-destructive transition-colors ml-1 cursor-pointer"
+                        >
+                          Clear all
+                        </button>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">Needed for {scenesNeedingModel.length} selected shot{scenesNeedingModel.length !== 1 ? 's' : ''}.</p>
@@ -2096,7 +2126,11 @@ export function ProductImagesStep3Refine({
                   globalModels={globalModels}
                   selectedModelId={details.selectedModelId}
                   selectedModelIds={details.selectedModelIds}
-                  onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
+                  onSelect={(id) => {
+                    const current = details.selectedModelIds || (details.selectedModelId ? [details.selectedModelId] : []);
+                    const next = current.includes(id) ? current.filter(x => x !== id) : [...current, id];
+                    update({ selectedModelIds: next, selectedModelId: next[0] || undefined });
+                  }}
                   onMultiSelect={(ids) => update({ selectedModelIds: ids, selectedModelId: ids[0] || undefined })}
                   previewImages={globalModels.slice(0, 3).map(m => m.previewUrl).filter(Boolean)}
                 />
