@@ -55,10 +55,15 @@ function formatEstimateRange(seconds: number): string {
   return `~${Math.round(low / 5) * 5}-${Math.round(high / 5) * 5} seconds`;
 }
 
-function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => void }) {
+function ProcessingState({ job, batchProgress, onCancel }: { job: QueueJob; batchProgress?: BatchProgress | null; onCancel?: () => void }) {
   useVisibilityTick(1000, true);
 
-  const estimatedSeconds = useMemo(
+  const isBatch = batchProgress && batchProgress.total > 1;
+  const perImageEstimate = useMemo(
+    () => estimateSeconds(job.generationMeta ? { ...job.generationMeta, imageCount: 1 } : undefined),
+    [job.generationMeta]
+  );
+  const estimatedSeconds = isBatch ? perImageEstimate : useMemo(
     () => estimateSeconds(job.generationMeta),
     [job.generationMeta]
   );
@@ -70,14 +75,17 @@ function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => vo
   const teamIndex = teamTick % TEAM_MEMBERS.length;
 
   const ratio = elapsed / estimatedSeconds;
-  const progress = ratio <= 1
-    ? Math.min(ratio * 90, 90)
-    : Math.min(90 + (ratio - 1) * 5, 95);
+  const batchRatio = isBatch ? batchProgress.completed / batchProgress.total : 0;
+  const progress = isBatch
+    ? Math.min(5 + batchRatio * 90, 95)
+    : ratio <= 1
+      ? Math.min(ratio * 90, 90)
+      : Math.min(90 + (ratio - 1) * 5, 95);
   const currentMember = TEAM_MEMBERS[teamIndex];
-  const overtimeMsg = getOvertimeMessage(ratio);
+  const overtimeMsg = isBatch ? null : getOvertimeMessage(ratio);
   const complexityHint = getComplexityHint(job.generationMeta);
   const proModelHint = getProModelHint(job.generationMeta);
-  const isStuck = elapsed > 300; // 5 minutes
+  const isStuck = elapsed > 300;
 
   return (
     <div className="flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/20">
