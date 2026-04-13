@@ -121,6 +121,7 @@ export default function Freestyle() {
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
   const [variationCount, setVariationCount] = useState(1);
+  const variationCountRef = useRef(variationCount);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
   const [providerOverride, setProviderOverride] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
@@ -677,7 +678,7 @@ export default function Freestyle() {
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,
-      imageCount: variationCount,
+      imageCount: variationCountRef.current,
       quality,
       polishPrompt: true,
       modelContext,
@@ -705,10 +706,10 @@ export default function Freestyle() {
     const enqueueResult = await enqueue({
       jobType: 'freestyle',
       payload: queuePayload,
-      imageCount: variationCount,
+      imageCount: variationCountRef.current,
       quality,
     }, {
-      imageCount: variationCount,
+      imageCount: variationCountRef.current,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
@@ -721,13 +722,14 @@ export default function Freestyle() {
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride, variationCount]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
   const refreshBalanceRef = useRef(refreshBalance);
   const resetQueueRef = useRef(resetQueue);
   useEffect(() => { promptRef.current = prompt; }, [prompt]);
+  useEffect(() => { variationCountRef.current = variationCount; }, [variationCount]);
   useEffect(() => { refreshImagesRef.current = refreshImages; }, [refreshImages]);
   useEffect(() => { refreshBalanceRef.current = refreshBalance; }, [refreshBalance]);
   useEffect(() => { resetQueueRef.current = resetQueue; }, [resetQueue]);
