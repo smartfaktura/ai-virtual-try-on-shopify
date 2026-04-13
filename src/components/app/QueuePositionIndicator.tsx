@@ -59,14 +59,15 @@ function ProcessingState({ job, batchProgress, onCancel }: { job: QueueJob; batc
   useVisibilityTick(1000, true);
 
   const isBatch = batchProgress && batchProgress.total > 1;
+  const fullEstimate = useMemo(
+    () => estimateSeconds(job.generationMeta),
+    [job.generationMeta]
+  );
   const perImageEstimate = useMemo(
     () => estimateSeconds(job.generationMeta ? { ...job.generationMeta, imageCount: 1 } : undefined),
     [job.generationMeta]
   );
-  const estimatedSeconds = isBatch ? perImageEstimate : useMemo(
-    () => estimateSeconds(job.generationMeta),
-    [job.generationMeta]
-  );
+  const estimatedSeconds = isBatch ? perImageEstimate : fullEstimate;
 
   const startTime = job.started_at || job.created_at;
   const elapsed = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
