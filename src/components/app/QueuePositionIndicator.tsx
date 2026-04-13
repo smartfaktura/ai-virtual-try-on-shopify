@@ -148,7 +148,7 @@ function ProcessingState({ job, batchProgress, onCancel }: { job: QueueJob; batc
   );
 }
 
-export function QueuePositionIndicator({ job, onCancel }: QueuePositionIndicatorProps) {
+export function QueuePositionIndicator({ job, batchProgress, onCancel }: QueuePositionIndicatorProps) {
   if (job.status === 'completed') {
     return (
       <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
