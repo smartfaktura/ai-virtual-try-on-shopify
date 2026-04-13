@@ -47,7 +47,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
   const { asProfiles: customModels } = useCustomModels();
   const { asProfiles: userModelProfiles } = useUserModels();
   const deleteUserModel = useDeleteUserModel();
-  const { sortModels } = useModelSortOrder();
+  const { sortModels, applyOverrides } = useModelSortOrder();
   const { plan } = useCredits();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
   // User model IDs for badge display
   const userModelIds = new Set(userModelProfiles.map(m => m.modelId));
 
-  const allModels = sortModels([...mockModels, ...customModels, ...userModelProfiles]);
+  const allModels = sortModels([...applyOverrides(mockModels), ...customModels, ...userModelProfiles]);
 
   const filtered = allModels.filter(m => {
     if (genderFilter !== 'all' && m.gender !== genderFilter) return false;
