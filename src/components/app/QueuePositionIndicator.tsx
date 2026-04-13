@@ -4,12 +4,13 @@ import { Loader2, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import type { QueueJob, GenerationMeta } from '@/hooks/useGenerationQueue';
+import type { QueueJob, GenerationMeta, BatchProgress } from '@/hooks/useGenerationQueue';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface QueuePositionIndicatorProps {
   job: QueueJob;
+  batchProgress?: BatchProgress | null;
   onCancel?: () => void;
 }
 
