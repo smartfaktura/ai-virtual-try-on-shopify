@@ -1059,6 +1059,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_override_url: string | null
           model_id: string
           sort_order: number
           updated_by: string
@@ -1066,6 +1067,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          image_override_url?: string | null
           model_id: string
           sort_order?: number
           updated_by: string
@@ -1073,6 +1075,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          image_override_url?: string | null
           model_id?: string
           sort_order?: number
           updated_by?: string
