@@ -419,6 +419,7 @@ export function FreestylePromptPanel({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                  </div>
                 </>
               );
             })()}
