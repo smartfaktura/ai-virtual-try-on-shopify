@@ -23,7 +23,7 @@ import { mockModels } from '@/data/mockData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
-
+import { Switch } from '@/components/ui/switch';
 const GENDER_OPTIONS = ['female', 'male', 'non-binary'];
 const BODY_TYPE_OPTIONS = ['slim', 'average', 'athletic', 'curvy', 'plus-size'];
 const AGE_RANGE_OPTIONS = ['young-adult', 'adult', 'mature'];
