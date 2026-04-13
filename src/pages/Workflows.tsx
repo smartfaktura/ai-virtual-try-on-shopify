@@ -503,15 +503,6 @@ export default function Workflows() {
               onDismiss={handleDismiss}
             />
           )}
-          <div className="flex items-center gap-3">
-            <span className="section-label shrink-0">Recent Creations</span>
-            <div className="flex-1 h-px bg-border" />
-            <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 shrink-0" onClick={() => navigate('/app/library')}>
-              View All
-              <ArrowRight className="w-3 h-3" />
-            </Button>
-          </div>
-          <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
 
           <div className="section-divider flex items-center gap-3">
             <span className="section-label">CHOOSE WHAT TO CREATE</span>
