@@ -1,44 +1,26 @@
 
 
-# Insert 12 Caps & Hats "Aesthetic Color Film Editorial" Scenes
+# Improve Admin Models Page
 
-## Summary
-Insert 12 new scenes into `product_image_scenes` under `hats-small` with a new `Aesthetic Color Film Editorial` sub-category.
+## What Changes
+1. **Add image replacement** — Make the model thumbnail clickable during edit mode (or always for custom models) to upload a new image. Clicking it opens a file picker, uploads to `scratch-uploads`, and updates the model's `image_url` and `optimized_image_url`.
 
-## Scenes
+2. **Improve delete UX** — Replace the browser `confirm()` dialog with a proper styled confirmation dialog using the existing AlertDialog component, showing the model name and image before confirming permanent deletion.
 
-| # | scene_id | title | sort_order | has model? |
-|---|----------|-------|------------|------------|
-| 1 | mirror-camera-peek-caps | Mirror Peek | 292 | Yes |
-| 2 | headphones-flatlay-caps | Audio Flatlay | 293 | No |
-| 3 | repeated-grid-still-caps | Grid Repeat | 294 | No |
-| 4 | shadow-face-crop-hats | Shadow Crop | 295 | Yes |
-| 5 | desert-lounge-widebrim-hats | Desert Lounge | 296 | Yes |
-| 6 | checker-sun-stairs-hats | Sun Stairs | 297 | Yes |
-| 7 | beach-portrait-crop-caps | Beach Crop | 298 | Yes |
-| 8 | lounge-knit-portrait-caps | Lounge Knit | 299 | Yes |
-| 9 | overhead-selfie-energy-caps | Overhead Selfie | 300 | Yes |
-| 10 | coffee-run-city-look-caps | City Coffee | 301 | Yes |
-| 11 | wall-shadow-brim-caps | Shadow Brim | 302 | Yes |
-| 12 | minimal-styled-tabletop-caps | Styled Tabletop | 303 | No |
+3. **Visual polish** — Add a camera/upload overlay icon on the image when hoverable for custom models, making it clear the image is changeable.
 
-## Shared Settings
-- **category_collection**: `hats-small`
-- **sub_category**: `Aesthetic Color Film Editorial`
-- **category_sort_order**: 33
-- **sub_category_sort_order**: 21
-- **scene_type**: `editorial`
-- **is_active**: true
-- **suggested_colors**: null
-- **requires_extra_reference**: false
-- **use_scene_reference**: false
+## Technical Details
 
-## Per-Scene Details
-- **Still-life scenes (2, 3, 12)**: trigger_blocks `{aestheticColor,sceneEnvironment,visualDirection,layout}`, no outfit_hint
-- **Model scenes (1, 4–11)**: trigger_blocks `{aestheticColor,personDetails,sceneEnvironment,visualDirection,layout}`, outfit_hint populated from provided text
-- All trigger_blocks include `aestheticColor` (key difference from the previous Lifestyle sub-category)
-- Full prompt templates and descriptions from the user message
+### File: `src/pages/AdminModels.tsx`
+- Add a hidden `<input type="file">` ref for image upload
+- When the thumbnail of a custom model is clicked, trigger the file input
+- On file select: upload to `scratch-uploads/models/`, get public URL, call `updateModel.mutateAsync` with new `image_url` and computed `optimized_image_url`
+- Replace `confirm()` with an `AlertDialog` from `@/components/ui/alert-dialog` showing model name + thumbnail
+- Add hover overlay on custom model images with a camera icon
+- Show a loading spinner on the image while uploading
 
-## How
-Use the database insert tool to run 12 `INSERT INTO product_image_scenes (...)` statements.
+### No database or hook changes needed
+- `useUpdateCustomModel` already supports updating `image_url`
+- `useDeleteCustomModel` already does hard deletes
+- Storage bucket `scratch-uploads` is public and available
 
