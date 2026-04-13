@@ -214,7 +214,7 @@ export function ProductImagesStep5Generating({
 
         {/* Slow warning */}
         {showSlowWarning && (
-          <div className="flex items-center gap-2 text-xs text-amber-500 font-medium bg-amber-500/5 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 text-xs font-medium rounded-lg px-3 py-2 text-[hsl(38,92%,50%)] bg-[hsl(38,92%,50%,0.05)]">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Taking longer than expected — still working on it</span>
           </div>
