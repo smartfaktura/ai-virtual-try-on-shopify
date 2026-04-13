@@ -75,17 +75,20 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   const INLINE_LIMIT = 6;
 
   const inlineModels = useMemo(() => {
-    const first6 = filteredGlobal.slice(0, INLINE_LIMIT);
-    // Ensure any active selection not in first6 is prepended
-    const activeInline = Array.from(activeIds)
+    // Always show selected models first, then fill with unselected
+    const selectedInGlobal = Array.from(activeIds)
       .map(id => filteredGlobal.find(m => m.modelId === id))
-      .filter(Boolean)
-      .filter(m => !first6.some(f => f.modelId === m!.modelId) && !filteredUser.some(u => u.modelId === m!.modelId)) as ModelProfile[];
-    if (activeInline.length > 0) {
-      const rest = first6.filter(m => !activeIds.has(m.modelId)).slice(0, INLINE_LIMIT - activeInline.length);
-      return [...activeInline, ...rest];
-    }
-    return first6;
+      .filter(Boolean) as ModelProfile[];
+    // Remove duplicates with user models
+    const selectedNotUser = selectedInGlobal.filter(
+      m => !filteredUser.some(u => u.modelId === m.modelId)
+    );
+    // Fill remaining slots with unselected models
+    const remaining = INLINE_LIMIT - selectedNotUser.length;
+    const unselected = filteredGlobal
+      .filter(m => !activeIds.has(m.modelId))
+      .slice(0, Math.max(0, remaining));
+    return [...selectedNotUser, ...unselected].slice(0, INLINE_LIMIT);
   }, [filteredGlobal, filteredUser, activeIds]);
 
   const modalFilteredUser = useMemo(() =>
@@ -2092,15 +2095,21 @@ export function ProductImagesStep3Refine({
                   <div>
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-2">
-                        {(globalModels.slice(0, 3).length > 0 ? globalModels.slice(0, 3) : [null, null, null]).map((m, i) => (
-                          <div key={i} className="w-6 h-6 rounded-full border-2 border-card overflow-hidden bg-muted flex-shrink-0">
-                            {m?.previewUrl ? (
-                              <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className={cn('w-full h-full', i === 0 ? 'bg-primary/20' : i === 1 ? 'bg-primary/15' : 'bg-primary/10')} />
-                            )}
-                          </div>
-                        ))}
+                        {(() => {
+                          const ids = details.selectedModelIds || (details.selectedModelId ? [details.selectedModelId] : []);
+                          const allModels = [...globalModels, ...userModels];
+                          const selected = ids.map(id => allModels.find(m => m.modelId === id)).filter(Boolean);
+                          const preview = selected.length > 0 ? selected.slice(0, 3) : globalModels.slice(0, 3);
+                          return (preview.length > 0 ? preview : [null, null, null]).map((m, i) => (
+                            <div key={i} className="w-6 h-6 rounded-full border-2 border-card overflow-hidden bg-muted flex-shrink-0">
+                              {m?.previewUrl ? (
+                                <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className={cn('w-full h-full', i === 0 ? 'bg-primary/20' : i === 1 ? 'bg-primary/15' : 'bg-primary/10')} />
+                              )}
+                            </div>
+                          ));
+                        })()}
                       </div>
                       <span className="text-sm font-semibold">Choose model</span>
                       {(details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) > 0 && (
