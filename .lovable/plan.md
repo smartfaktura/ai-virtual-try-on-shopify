@@ -1,37 +1,52 @@
 
+## What I found
 
-# Enable Image Replacement for ALL Models (Built-in + Custom)
+- I checked the current `/app/admin/models` image-replace flow.
+- The upload is failing before the model record is updated.
+- The failing request is the storage upload itself: it sends `x-upsert: true` and returns `new row violates row-level security policy`.
+- In `src/pages/AdminModels.tsx`, the upload uses `scratch-uploads` with `upsert: true`.
+- The current storage rules for that bucket allow authenticated inserts, but `upsert` needs extra permissions. Since the path is already unique, `upsert` is unnecessary.
+- I also confirmed that built-in image overrides are only being applied on the admin page right now. So even after the upload bug is fixed, the new image would not consistently show in the rest of the app unless the override is applied in shared model consumers too.
 
-## Problem
-The Camera/Change photo button only renders for custom models (`model.isCustom`). Since the user has 53 built-in models and 0 custom, no image change buttons are visible at all. Built-in model images come from `mockData.ts` and there's no storage for overrides.
+**Do I know what the issue is? Yes.**
 
-## Solution
+## Plan
 
-### 1. Add `image_override_url` column to `model_sort_order` table
-Run a migration to add an optional `image_override_url TEXT` column. This piggybacks on the existing table that already stores per-model admin preferences.
+### 1. Fix the actual upload bug in `src/pages/AdminModels.tsx`
+- Remove `upsert: true`
+- Reuse the safer upload pattern already used in `AddModelModal`
+- Keep unique filenames so uploads never need overwrite behavior
+- Add basic file validation and clearer error toasts
 
-### 2. Update `useModelSortOrder` hook
-- Fetch `image_override_url` alongside `model_id` and `sort_order`
-- Expose an `imageOverrides` map (`model_id → url`) so consumers can apply overrides
-- Update `useSaveModelSortOrder` to preserve `image_override_url` when re-saving order
+### 2. Keep the current persistence model, but make it reliable
+- **Built-in models:** keep saving the new image URL into `model_sort_order.image_override_url`
+- **Custom models:** keep updating `custom_models.image_url` and `optimized_image_url`
+- Also update `updated_by` when saving a built-in override
 
-### 3. Add a new `useSaveModelImageOverride` mutation
-A small mutation that does an upsert on `model_sort_order` for a single model's `image_override_url`, so image changes save immediately (no need to click "Save Order").
+### 3. Make the changed image show everywhere, not only in admin
+Extend `src/hooks/useModelSortOrder.ts` with a shared helper such as `applyImageOverrides(models)` and use it anywhere model lists are built from `mockModels`.
 
-### 4. Update `AdminModels.tsx`
-- Remove the `if (!model.isCustom)` guard from `handleImageClick` — allow it for all models
-- In `handleFileChange`, branch logic:
-  - **Custom models**: existing flow (update `custom_models` table)
-  - **Built-in models**: upload to `scratch-uploads/models/`, then upsert `image_override_url` in `model_sort_order`
-- Show the Camera button and thumbnail hover overlay for **all** models, not just custom ones
-- Replace the "read-only" label with action buttons (Camera + the existing reorder controls are already there)
-- Apply `imageOverrides` to built-in model display URLs so the replacement is visible immediately
+At minimum, patch:
+- `src/pages/AdminModels.tsx`
+- `src/pages/Generate.tsx`
+- `src/components/app/freestyle/ModelSelectorChip.tsx`
+- `src/components/app/CreativeDropWizard.tsx`
+- `src/pages/ProductImages.tsx`
 
-### 5. Apply overrides in consumer components
-Update `buildUnifiedList` in AdminModels to check the `imageOverrides` map and use the override URL when available, so the thumbnail reflects the replacement.
+Also audit remaining `mockModels` consumers and apply the same helper where model thumbnails are shown.
 
-## Files Changed
-- **Migration**: Add `image_override_url` column to `model_sort_order`
-- **`src/hooks/useModelSortOrder.ts`**: Fetch + expose image overrides, add upsert mutation
-- **`src/pages/AdminModels.tsx`**: Enable Camera button for all models, branch upload logic
+### 4. Clean the admin console warning while touching the page
+- Fix the `AlertDialog` markup in `src/pages/AdminModels.tsx` so the ref warning disappears
 
+### 5. QA
+After implementation, verify:
+- built-in model image replacement succeeds with no RLS error
+- replacing the same model image twice still works
+- the updated image appears immediately on `/app/admin/models`
+- the same updated image appears in the main model pickers and generation flows
+- custom model image replacement still works
+
+## Technical notes
+- No database migration is needed for this image-fix pass
+- The existing `model_sort_order.image_override_url` column is enough
+- Built-in **text/metadata** editing is still a separate feature; this fix is specifically for making model image replacement work end-to-end
