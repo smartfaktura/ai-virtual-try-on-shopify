@@ -1,8 +1,8 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
   ArrowUp, ArrowDown, Trash2, Save, Loader2, Plus,
-  Search, Pencil, Check, X, Eye, EyeOff, BarChart3,
+  Search, Pencil, Check, X, Eye, EyeOff, BarChart3, Camera,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAllCustomModels, useUpdateCustomModel, useDeleteCustomModel } from '@/hooks/useCustomModels';
 import { useModelSortOrder, useSaveModelSortOrder } from '@/hooks/useModelSortOrder';
@@ -23,6 +27,16 @@ import { toast } from '@/lib/brandedToast';
 const GENDER_OPTIONS = ['female', 'male', 'non-binary'];
 const BODY_TYPE_OPTIONS = ['slim', 'average', 'athletic', 'curvy', 'plus-size'];
 const AGE_RANGE_OPTIONS = ['young-adult', 'adult', 'mature'];
+
+const STORAGE_MARKER = '/storage/v1/object/';
+const RENDER_MARKER = '/storage/v1/render/image/';
+
+function buildOptimizedUrl(url: string): string | null {
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return null;
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
+}
 
 interface UnifiedModel {
   id: string;
@@ -105,6 +119,14 @@ export default function AdminModels() {
   const [isSaving, setIsSaving] = useState(false);
   const [jumpInputId, setJumpInputId] = useState<string | null>(null);
   const [jumpValue, setJumpValue] = useState('');
+
+  // Image replace state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageTargetModel, setImageTargetModel] = useState<UnifiedModel | null>(null);
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
+
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<UnifiedModel | null>(null);
 
   const unifiedModels = useMemo(
     () => buildUnifiedList(customModels, sortMap),
@@ -204,23 +226,72 @@ export default function AdminModels() {
     }
   };
 
-  const handleDelete = async (model: UnifiedModel) => {
-    if (!model.customModel) return;
-    if (!confirm(`Delete "${model.name}" permanently?`)) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget?.customModel) return;
     try {
-      await deleteModel.mutateAsync(model.customModel.id);
+      await deleteModel.mutateAsync(deleteTarget.customModel.id);
       toast.success('Model deleted');
     } catch (e: any) {
       toast.error('Failed to delete', { description: e.message });
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  // Image replacement
+  const handleImageClick = (model: UnifiedModel) => {
+    if (!model.isCustom || !model.customModel) return;
+    setImageTargetModel(model);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !imageTargetModel?.customModel) {
+      setImageTargetModel(null);
+      return;
+    }
+
+    const modelId = imageTargetModel.customModel.id;
+    setUploadingImageId(imageTargetModel.id);
+
+    try {
+      const timestamp = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `models/${modelId}-${timestamp}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('scratch-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('scratch-uploads')
+        .getPublicUrl(path);
+
+      const newUrl = urlData.publicUrl;
+      const optimized = buildOptimizedUrl(newUrl);
+
+      await updateModel.mutateAsync({
+        id: modelId,
+        image_url: newUrl,
+        optimized_image_url: optimized,
+      } as any);
+
+      toast.success('Model image updated');
+    } catch (err: any) {
+      toast.error('Failed to replace image', { description: err.message });
+    } finally {
+      setUploadingImageId(null);
+      setImageTargetModel(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const getUsageCount = (model: UnifiedModel): number => {
     if (!usageStats) return 0;
-    // Match by model id (freestyle) and model name (workflow jobs)
     const byId = (usageStats[model.id] as number) ?? 0;
     const byName = (usageStats[model.name] as number) ?? 0;
-    // Avoid double-counting if id === name
     return model.id === model.name ? byId : byId + byName;
   };
 
@@ -240,6 +311,15 @@ export default function AdminModels() {
   return (
     <TooltipProvider>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {/* Hidden file input for image replacement */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -281,6 +361,7 @@ export default function AdminModels() {
             const position = globalIndex + 1;
             const usage = getUsageCount(model);
             const isJumping = jumpInputId === model.id;
+            const isUploadingImage = uploadingImageId === model.id;
 
             return (
               <div
@@ -341,14 +422,35 @@ export default function AdminModels() {
                   </div>
                 </div>
 
-                {/* Preview image */}
-                <div className="w-14 h-18 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                  <img
-                    src={getOptimizedUrl(model.imageUrl, { quality: 60 })}
-                    alt={model.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                {/* Preview image — clickable for custom models */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => handleImageClick(model)}
+                      disabled={!model.isCustom}
+                      className={`relative w-14 h-18 rounded-lg overflow-hidden flex-shrink-0 bg-muted group ${
+                        model.isCustom ? 'cursor-pointer ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring' : 'cursor-default'
+                      }`}
+                    >
+                      <img
+                        src={getOptimizedUrl(model.imageUrl, { quality: 60 })}
+                        alt={model.name}
+                        className="w-full h-full object-cover"
+                      />
+                      {model.isCustom && !isUploadingImage && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                          <Camera className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      )}
+                      {isUploadingImage && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Loader2 className="w-4 h-4 text-white animate-spin" />
+                        </div>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  {model.isCustom && <TooltipContent>Click to replace image</TooltipContent>}
+                </Tooltip>
 
                 {/* Fields */}
                 <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
@@ -463,7 +565,7 @@ export default function AdminModels() {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <button onClick={() => handleDelete(model)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
+                            <button onClick={() => setDeleteTarget(model)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </TooltipTrigger>
@@ -487,6 +589,42 @@ export default function AdminModels() {
         </div>
 
         <AddModelModal open={addModelOpen} onClose={() => setAddModelOpen(false)} />
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete model permanently?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>
+                    This will permanently remove <strong>{deleteTarget?.name}</strong>. This action cannot be undone.
+                  </p>
+                  {deleteTarget && (
+                    <div className="flex justify-center">
+                      <div className="w-20 h-24 rounded-lg overflow-hidden bg-muted border border-border">
+                        <img
+                          src={getOptimizedUrl(deleteTarget.imageUrl, { quality: 50 })}
+                          alt={deleteTarget.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );
