@@ -189,7 +189,7 @@ export default function Freestyle() {
     }, ...prev]);
   }, []);
 
-  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
+  const { enqueue, enqueueBatch, activeJob, batchProgress, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     jobTypes: ['freestyle'],
     onContentBlocked: handleContentBlocked,
     onGenerationFailed: handleGenerationFailed,
