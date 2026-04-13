@@ -411,11 +411,13 @@ export function FreestylePromptPanel({
                           ? 'Sign up to generate'
                           : showInsufficientCredits
                             ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
-                            : selectedModel && selectedScene
-                              ? `${creditCost} credits: Model + Scene`
-                              : selectedModel
-                                ? `${creditCost} credits: Model reference`
-                                : `${creditCost} credits per image`}
+                            : variationCount > 1
+                              ? `${perImageCost} × ${variationCount} = ${creditCost} credits`
+                              : selectedModel && selectedScene
+                                ? `${creditCost} credits: Model + Scene`
+                                : selectedModel
+                                  ? `${creditCost} credits: Model reference`
+                                  : `${creditCost} credits per image`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
