@@ -121,21 +121,24 @@ function useModelUsageStats() {
 export default function AdminModels() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { models: customModels, isLoading: modelsLoading } = useAllCustomModels();
-  const { sortMap, imageOverrides, isLoading: sortLoading } = useModelSortOrder();
+  const { sortMap, imageOverrides, metadataOverrides, hiddenIds, isLoading: sortLoading } = useModelSortOrder();
   const saveSortOrder = useSaveModelSortOrder();
   const saveImageOverride = useSaveModelImageOverride();
+  const saveMetadataOverride = useSaveModelMetadataOverride();
+  const toggleModelHidden = useToggleModelHidden();
   const updateModel = useUpdateCustomModel();
   const deleteModel = useDeleteCustomModel();
   const { data: usageStats } = useModelUsageStats();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingFields, setEditingFields] = useState<Partial<CustomModel>>({});
+  const [editingFields, setEditingFields] = useState<Record<string, string>>({});
   const [localOrder, setLocalOrder] = useState<UnifiedModel[] | null>(null);
   const [addModelOpen, setAddModelOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [jumpInputId, setJumpInputId] = useState<string | null>(null);
   const [jumpValue, setJumpValue] = useState('');
+  const [showHidden, setShowHidden] = useState(false);
 
   // Image replace state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -146,8 +149,8 @@ export default function AdminModels() {
   const [deleteTarget, setDeleteTarget] = useState<UnifiedModel | null>(null);
 
   const unifiedModels = useMemo(
-    () => buildUnifiedList(customModels, sortMap, imageOverrides),
-    [customModels, sortMap, imageOverrides]
+    () => buildUnifiedList(customModels, sortMap, imageOverrides, metadataOverrides, hiddenIds, showHidden),
+    [customModels, sortMap, imageOverrides, metadataOverrides, hiddenIds, showHidden]
   );
 
   useEffect(() => {
