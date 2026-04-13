@@ -1,30 +1,39 @@
 
 
-# Improve Admin Models Page — Move to Top + Polish
+# Fix & Improve Model Image Replacement on Admin Models Page
 
-## Current State
-The page already has:
-- Image replacement (click thumbnail for custom models)
-- Delete with styled AlertDialog confirmation
-- Reorder with up/down arrows and jump-to-position
+## Problem
+The current image replacement uses a hidden `<input type="file">` with a ref that gets `.click()`-ed programmatically. This pattern is fragile — the state update (`setImageTargetModel`) and the `.click()` happen in the same synchronous call, so when `handleFileChange` fires, `imageTargetModel` may still be stale. Additionally, there's no visual "Change Image" button — users must know to click the tiny thumbnail, which isn't discoverable.
 
-## What to Add/Fix
+## Changes (single file: `src/pages/AdminModels.tsx`)
 
-### 1. "Move to Top" button
-Add a quick-action button (arrow-up-to-line icon or similar) next to the existing up/down arrows that instantly moves any model to position #1 in the list.
+### 1. Fix the file input race condition
+- Instead of a single shared `<input ref>`, generate the file input inline per-model OR store the target model ID in a ref (not state) so it's available immediately when `onChange` fires
+- Use `useRef` for `imageTargetModel` so the value is synchronously available in `handleFileChange`
 
-### 2. Polish existing flows
-- Ensure the "move to top" triggers unsaved-order state so the "Save Order" button appears
-- Verify the delete flow works for both custom models (hard delete) and that built-in models correctly show "read-only"
+### 2. Add an explicit "Change Image" button for custom models
+- Add a small `Camera` icon button in the actions area (next to Edit/Delete) that triggers the file picker
+- This makes the feature discoverable without relying on clicking the thumbnail
+- Keep the thumbnail click working too as a shortcut
 
-## Technical Details
+### 3. Allow image override for built-in models too
+- Built-in (mock) models currently show "read-only" — extend the system so admins can override a built-in model's display image
+- Store overrides in a new approach: upload the image and save a mapping in `model_sort_order` or a simple key-value approach
+- **Simpler approach**: Since built-in model images come from `mockData.ts`, we can store image overrides in a separate `model_image_overrides` table (model_id → image_url), or piggyback on the existing `model_sort_order` table by adding an `image_url` column
 
-### File: `src/pages/AdminModels.tsx`
-- Import `ArrowUpToLine` from lucide-react (or use `ChevronsUp`)
-- Add a `moveToTop` callback that splices the model from its current position and inserts it at index 0, then calls `setLocalOrder`
-- Add a button with tooltip "Move to top" in the reorder controls area (next to up/down arrows), disabled when already at position 1
-- The button triggers `moveToTop(globalIndex)` which reuses the same pattern as `moveModel` but always targets index 0
+### Actually — simplest approach
+Looking again, the user likely just wants the custom model image change to **work reliably**. The fix:
 
-### No database or backend changes needed
-All reorder logic is client-side until "Save Order" is clicked, which already handles arbitrary reordering.
+1. **Use a ref for target model** instead of state to avoid the async gap
+2. **Add a visible "Change photo" button** in the action buttons for custom models (Camera icon) 
+3. **Improve feedback** — show which model is being uploaded with a toast
+
+### Technical details
+
+**File: `src/pages/AdminModels.tsx`**
+- Replace `const [imageTargetModel, setImageTargetModel] = useState<UnifiedModel | null>(null)` with `const imageTargetModelRef = useRef<UnifiedModel | null>(null)` 
+- In `handleImageClick`: set the ref value, then trigger the file input click
+- In `handleFileChange`: read from `imageTargetModelRef.current` instead of state
+- Add a `Camera` button in the custom model actions row (next to Pencil, Eye, Trash2) that calls `handleImageClick`
+- Keep the thumbnail click-to-replace as a secondary path
 
