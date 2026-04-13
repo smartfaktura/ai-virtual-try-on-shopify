@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
-  ArrowUp, ArrowDown, Trash2, Save, Loader2, Plus,
+  ArrowUp, ArrowDown, ArrowUpToLine, Trash2, Save, Loader2, Plus,
   Search, Pencil, Check, X, Eye, EyeOff, BarChart3, Camera,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -156,6 +156,14 @@ export default function AdminModels() {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= list.length) return;
     [list[index], list[newIndex]] = [list[newIndex], list[index]];
+    setLocalOrder(list);
+  }, [localOrder, unifiedModels]);
+
+  const moveToTop = useCallback((index: number) => {
+    if (index <= 0) return;
+    const list = [...(localOrder ?? unifiedModels)];
+    const [item] = list.splice(index, 1);
+    list.unshift(item);
     setLocalOrder(list);
   }, [localOrder, unifiedModels]);
 
@@ -405,6 +413,18 @@ export default function AdminModels() {
                     </Tooltip>
                   )}
                   <div className="flex flex-col gap-0.5">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => moveToTop(globalIndex)}
+                          disabled={globalIndex === 0}
+                          className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                        >
+                          <ArrowUpToLine className="w-3 h-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Move to top</TooltipContent>
+                    </Tooltip>
                     <button
                       onClick={() => moveModel(globalIndex, 'up')}
                       disabled={globalIndex === 0}
