@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
-  ArrowUp, ArrowDown, Trash2, Save, Loader2, Plus,
+  ArrowUp, ArrowDown, ArrowUpToLine, Trash2, Save, Loader2, Plus,
   Search, Pencil, Check, X, Eye, EyeOff, BarChart3, Camera,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
