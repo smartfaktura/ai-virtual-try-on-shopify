@@ -270,7 +270,7 @@ export default function AdminModels() {
 
       const { error: uploadError } = await supabase.storage
         .from('scratch-uploads')
-        .upload(path, file, { cacheControl: '3600', upsert: true });
+        .upload(path, file, { cacheControl: '3600', upsert: false });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
@@ -636,24 +636,20 @@ export default function AdminModels() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete model permanently?</AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-3">
-                  <p>
-                    This will permanently remove <strong>{deleteTarget?.name}</strong>. This action cannot be undone.
-                  </p>
-                  {deleteTarget && (
-                    <div className="flex justify-center">
-                      <div className="w-20 h-24 rounded-lg overflow-hidden bg-muted border border-border">
-                        <img
-                          src={getOptimizedUrl(deleteTarget.imageUrl, { quality: 50 })}
-                          alt={deleteTarget.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <AlertDialogDescription>
+                This will permanently remove <strong>{deleteTarget?.name}</strong>. This action cannot be undone.
               </AlertDialogDescription>
+              {deleteTarget && (
+                <div className="flex justify-center">
+                  <div className="w-20 h-24 rounded-lg overflow-hidden bg-muted border border-border">
+                    <img
+                      src={getOptimizedUrl(deleteTarget.imageUrl, { quality: 50 })}
+                      alt={deleteTarget.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>

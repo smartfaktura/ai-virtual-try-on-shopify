@@ -50,7 +50,16 @@ export function useModelSortOrder() {
     });
   };
 
-  return { sortMap, imageOverrides, sortModels, isLoading };
+  /** Apply image overrides to any model list that has previewUrl */
+  const applyOverrides = <T extends { modelId: string; previewUrl: string }>(models: T[]): T[] => {
+    if (imageOverrides.size === 0) return models;
+    return models.map(m => {
+      const override = imageOverrides.get(m.modelId);
+      return override ? { ...m, previewUrl: override } : m;
+    });
+  };
+
+  return { sortMap, imageOverrides, sortModels, applyOverrides, isLoading };
 }
 
 export function useSaveModelSortOrder() {
