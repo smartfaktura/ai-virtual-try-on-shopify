@@ -121,6 +121,7 @@ export default function Freestyle() {
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
   const [variationCount, setVariationCount] = useState(1);
+  const variationCountRef = useRef(variationCount);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
   const [providerOverride, setProviderOverride] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
