@@ -120,7 +120,6 @@ export default function Freestyle() {
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
-  const [variationCount, setVariationCount] = useState(1);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
   const [providerOverride, setProviderOverride] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
@@ -461,8 +460,7 @@ export default function Freestyle() {
 
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
-  const perImageCost = (hasModel || hasScene || quality === 'high') ? 6 : 4;
-  const creditCost = perImageCost * variationCount;
+  const creditCost = (hasModel || hasScene || quality === 'high') ? 6 : 4;
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
@@ -677,7 +675,7 @@ export default function Freestyle() {
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,
-      imageCount: variationCount,
+      imageCount: 1,
       quality,
       polishPrompt: true,
       modelContext,
@@ -705,10 +703,10 @@ export default function Freestyle() {
     const enqueueResult = await enqueue({
       jobType: 'freestyle',
       payload: queuePayload,
-      imageCount: variationCount,
+      imageCount: 1,
       quality,
     }, {
-      imageCount: variationCount,
+      imageCount: 1,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
@@ -721,7 +719,7 @@ export default function Freestyle() {
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride, variationCount]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -920,9 +918,6 @@ export default function Freestyle() {
     },
     editIntent,
     onEditIntentChange: setEditIntent,
-    variationCount,
-    onVariationCountChange: setVariationCount,
-    perImageCost,
     disabledChips: sourceImagePreview ? {
       product: imageRole === 'product',
       model: imageRole === 'model',
