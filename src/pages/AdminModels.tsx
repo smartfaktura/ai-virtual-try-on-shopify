@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAllCustomModels, useUpdateCustomModel, useDeleteCustomModel } from '@/hooks/useCustomModels';
-import { useModelSortOrder, useSaveModelSortOrder } from '@/hooks/useModelSortOrder';
+import { useModelSortOrder, useSaveModelSortOrder, useSaveModelImageOverride } from '@/hooks/useModelSortOrder';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import type { CustomModel } from '@/hooks/useCustomModels';
 import { mockModels } from '@/data/mockData';
@@ -51,7 +51,7 @@ interface UnifiedModel {
   customModel?: CustomModel;
 }
 
-function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, number>): UnifiedModel[] {
+function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, number>, imageOverrides: Map<string, string>): UnifiedModel[] {
   const mockUnified: UnifiedModel[] = mockModels.map(m => ({
     id: m.modelId,
     name: m.name,
@@ -59,7 +59,7 @@ function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, numb
     bodyType: m.bodyType,
     ethnicity: m.ethnicity || '',
     ageRange: m.ageRange || '',
-    imageUrl: m.previewUrl,
+    imageUrl: imageOverrides.get(m.modelId) || m.previewUrl,
     isCustom: false,
     isActive: true,
   }));
@@ -105,8 +105,9 @@ function useModelUsageStats() {
 export default function AdminModels() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { models: customModels, isLoading: modelsLoading } = useAllCustomModels();
-  const { sortMap, isLoading: sortLoading } = useModelSortOrder();
+  const { sortMap, imageOverrides, isLoading: sortLoading } = useModelSortOrder();
   const saveSortOrder = useSaveModelSortOrder();
+  const saveImageOverride = useSaveModelImageOverride();
   const updateModel = useUpdateCustomModel();
   const deleteModel = useDeleteCustomModel();
   const { data: usageStats } = useModelUsageStats();
@@ -129,8 +130,8 @@ export default function AdminModels() {
   const [deleteTarget, setDeleteTarget] = useState<UnifiedModel | null>(null);
 
   const unifiedModels = useMemo(
-    () => buildUnifiedList(customModels, sortMap),
-    [customModels, sortMap]
+    () => buildUnifiedList(customModels, sortMap, imageOverrides),
+    [customModels, sortMap, imageOverrides]
   );
 
   useEffect(() => {
@@ -246,9 +247,8 @@ export default function AdminModels() {
     }
   };
 
-  // Image replacement
+  // Image replacement — works for ALL models (custom + built-in)
   const handleImageClick = (model: UnifiedModel) => {
-    if (!model.isCustom || !model.customModel) return;
     imageTargetModelRef.current = model;
     fileInputRef.current?.click();
   };
@@ -256,18 +256,17 @@ export default function AdminModels() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     const target = imageTargetModelRef.current;
-    if (!file || !target?.customModel) {
+    if (!file || !target) {
       imageTargetModelRef.current = null;
       return;
     }
 
-    const modelId = target.customModel.id;
     setUploadingImageId(target.id);
 
     try {
       const timestamp = Date.now();
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `models/${modelId}-${timestamp}.${ext}`;
+      const path = `models/${target.id.replace(/[^a-zA-Z0-9_-]/g, '_')}-${timestamp}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('scratch-uploads')
@@ -281,11 +280,20 @@ export default function AdminModels() {
       const newUrl = urlData.publicUrl;
       const optimized = buildOptimizedUrl(newUrl);
 
-      await updateModel.mutateAsync({
-        id: modelId,
-        image_url: newUrl,
-        optimized_image_url: optimized,
-      } as any);
+      if (target.isCustom && target.customModel) {
+        // Custom model: update custom_models table
+        await updateModel.mutateAsync({
+          id: target.customModel.id,
+          image_url: newUrl,
+          optimized_image_url: optimized,
+        } as any);
+      } else {
+        // Built-in model: save override in model_sort_order
+        await saveImageOverride.mutateAsync({
+          modelId: target.id,
+          imageUrl: newUrl,
+        });
+      }
 
       toast.success(`Image updated for ${target.name}`);
     } catch (err: any) {
@@ -443,22 +451,19 @@ export default function AdminModels() {
                   </div>
                 </div>
 
-                {/* Preview image — clickable for custom models */}
+                {/* Preview image — clickable for all models */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => handleImageClick(model)}
-                      disabled={!model.isCustom}
-                      className={`relative w-14 h-18 rounded-lg overflow-hidden flex-shrink-0 bg-muted group ${
-                        model.isCustom ? 'cursor-pointer ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring' : 'cursor-default'
-                      }`}
+                      className="relative w-14 h-18 rounded-lg overflow-hidden flex-shrink-0 bg-muted group cursor-pointer ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <img
                         src={getOptimizedUrl(model.imageUrl, { quality: 60 })}
                         alt={model.name}
                         className="w-full h-full object-cover"
                       />
-                      {model.isCustom && !isUploadingImage && (
+                      {!isUploadingImage && (
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                           <Camera className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
@@ -470,7 +475,7 @@ export default function AdminModels() {
                       )}
                     </button>
                   </TooltipTrigger>
-                  {model.isCustom && <TooltipContent>Click to replace image</TooltipContent>}
+                  <TooltipContent>Click to replace image</TooltipContent>
                 </Tooltip>
 
                 {/* Fields */}
@@ -603,7 +608,14 @@ export default function AdminModels() {
                       </>
                     )
                   ) : (
-                    <span className="text-[10px] text-muted-foreground/50 px-2">read-only</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                          <Camera className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Change photo</TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               </div>
