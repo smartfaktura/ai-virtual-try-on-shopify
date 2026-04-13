@@ -1,52 +1,42 @@
 
-## What I found
 
-- I checked the current `/app/admin/models` image-replace flow.
-- The upload is failing before the model record is updated.
-- The failing request is the storage upload itself: it sends `x-upsert: true` and returns `new row violates row-level security policy`.
-- In `src/pages/AdminModels.tsx`, the upload uses `scratch-uploads` with `upsert: true`.
-- The current storage rules for that bucket allow authenticated inserts, but `upsert` needs extra permissions. Since the path is already unique, `upsert` is unnecessary.
-- I also confirmed that built-in image overrides are only being applied on the admin page right now. So even after the upload bug is fixed, the new image would not consistently show in the rest of the app unless the override is applied in shared model consumers too.
+# Show Edit & Delete Buttons for ALL Models (Built-in + Custom)
 
-**Do I know what the issue is? Yes.**
+## Problem
+The actions column in AdminModels.tsx (lines 553-619) conditionally renders edit/delete buttons only when `model.isCustom` is true. Since all 53 models are built-in, only the Camera button appears.
 
-## Plan
+## Solution
 
-### 1. Fix the actual upload bug in `src/pages/AdminModels.tsx`
-- Remove `upsert: true`
-- Reuse the safer upload pattern already used in `AddModelModal`
-- Keep unique filenames so uploads never need overwrite behavior
-- Add basic file validation and clearer error toasts
+### Update `src/pages/AdminModels.tsx` — Actions section (lines 610-619)
+Replace the built-in model branch (currently only Camera) with the full set of action buttons:
+- **Camera** — change photo (already works for built-in via image_override_url)
+- **Pencil** — edit model info (for built-in models, this would need metadata override storage — but we can show the button and store overrides similarly to image overrides)
+- **Eye/EyeOff** — toggle visibility (for built-in models, use the `hidden_scenes` pattern or a new column in `model_sort_order`)
+- **Trash2** — hide/remove from the list (for built-in models, mark as hidden rather than truly deleting)
 
-### 2. Keep the current persistence model, but make it reliable
-- **Built-in models:** keep saving the new image URL into `model_sort_order.image_override_url`
-- **Custom models:** keep updating `custom_models.image_url` and `optimized_image_url`
-- Also update `updated_by` when saving a built-in override
+### Database migration
+Add two columns to `model_sort_order`:
+- `name_override TEXT` — overrides the display name
+- `is_hidden BOOLEAN DEFAULT false` — hides built-in models from the list
 
-### 3. Make the changed image show everywhere, not only in admin
-Extend `src/hooks/useModelSortOrder.ts` with a shared helper such as `applyImageOverrides(models)` and use it anywhere model lists are built from `mockModels`.
+### Update `src/hooks/useModelSortOrder.ts`
+- Fetch and expose `name_override` and `is_hidden` alongside existing fields
+- Add `applyNameOverrides()` helper
+- Add `useSaveModelMetadataOverride` mutation
+- Add `useToggleModelHidden` mutation
 
-At minimum, patch:
-- `src/pages/AdminModels.tsx`
-- `src/pages/Generate.tsx`
-- `src/components/app/freestyle/ModelSelectorChip.tsx`
-- `src/components/app/CreativeDropWizard.tsx`
-- `src/pages/ProductImages.tsx`
+### Update `src/pages/AdminModels.tsx`
+- Remove the `model.isCustom` guard around edit/delete buttons — show them for all models
+- For built-in model edit: save name/gender/body_type/ethnicity/age_range overrides to `model_sort_order`
+- For built-in model delete: set `is_hidden = true` in `model_sort_order` instead of actual deletion
+- Filter out hidden built-in models from the main list (with an "Show hidden" toggle)
+- Apply name overrides in `buildUnifiedList`
 
-Also audit remaining `mockModels` consumers and apply the same helper where model thumbnails are shown.
+### Update consumers
+Apply `applyNameOverrides` alongside `applyOverrides` in Generate.tsx, ModelSelectorChip.tsx, and CreativeDropWizard.tsx so renamed models display correctly everywhere.
 
-### 4. Clean the admin console warning while touching the page
-- Fix the `AlertDialog` markup in `src/pages/AdminModels.tsx` so the ref warning disappears
+## Files Changed
+- **Migration**: Add `name_override`, `gender_override`, `body_type_override`, `ethnicity_override`, `age_range_override`, `is_hidden` columns to `model_sort_order`
+- **`src/hooks/useModelSortOrder.ts`**: Fetch + expose metadata overrides and hidden state, add mutations
+- **`src/pages/AdminModels.tsx`**: Enable all action buttons for all models, branch save/delete logic
 
-### 5. QA
-After implementation, verify:
-- built-in model image replacement succeeds with no RLS error
-- replacing the same model image twice still works
-- the updated image appears immediately on `/app/admin/models`
-- the same updated image appears in the main model pickers and generation flows
-- custom model image replacement still works
-
-## Technical notes
-- No database migration is needed for this image-fix pass
-- The existing `model_sort_order.image_override_url` column is enough
-- Built-in **text/metadata** editing is still a separate feature; this fix is specifically for making model image replacement work end-to-end
