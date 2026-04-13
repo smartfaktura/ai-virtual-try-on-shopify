@@ -159,6 +159,14 @@ export default function AdminModels() {
     setLocalOrder(list);
   }, [localOrder, unifiedModels]);
 
+  const moveToTop = useCallback((index: number) => {
+    if (index <= 0) return;
+    const list = [...(localOrder ?? unifiedModels)];
+    const [item] = list.splice(index, 1);
+    list.unshift(item);
+    setLocalOrder(list);
+  }, [localOrder, unifiedModels]);
+
   const jumpToPosition = useCallback((modelId: string, targetPos: number) => {
     const list = [...(localOrder ?? unifiedModels)];
     const currentIndex = list.findIndex(m => m.id === modelId);
