@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { enqueueWithRetry, isEnqueueError } from '@/lib/enqueueGeneration';
+import { enqueueWithRetry, isEnqueueError, paceDelay } from '@/lib/enqueueGeneration';
 
 export type QueueJobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
 
@@ -87,6 +87,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
+  const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
 
   // Stable ref for onCreditRefresh to avoid stale closures in polling chains
   const onCreditRefreshRef = useRef(onCreditRefresh);
@@ -94,10 +95,11 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
   // Single-flight polling refs
   const jobIdRef = useRef<string | null>(null);
-  const pollVersionRef = useRef(0); // Incremented on each new poll session; stale responses are ignored
+  const batchJobIdsRef = useRef<string[]>([]);
+  const pollVersionRef = useRef(0);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCleanupTriggerRef = useRef(0);
-  const missCountRef = useRef(0); // Consecutive poll misses for self-healing
+  const missCountRef = useRef(0);
 
   // Cleanup on unmount
   useEffect(() => {
