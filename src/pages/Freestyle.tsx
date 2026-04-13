@@ -120,6 +120,7 @@ export default function Freestyle() {
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
+  const [variationCount, setVariationCount] = useState(1);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
   const [providerOverride, setProviderOverride] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
@@ -460,7 +461,8 @@ export default function Freestyle() {
 
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
-  const creditCost = (hasModel || hasScene || quality === 'high') ? 6 : 4;
+  const perImageCost = (hasModel || hasScene || quality === 'high') ? 6 : 4;
+  const creditCost = perImageCost * variationCount;
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
@@ -675,7 +677,7 @@ export default function Freestyle() {
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,
-      imageCount: 1,
+      imageCount: variationCount,
       quality,
       polishPrompt: true,
       modelContext,
@@ -703,10 +705,10 @@ export default function Freestyle() {
     const enqueueResult = await enqueue({
       jobType: 'freestyle',
       payload: queuePayload,
-      imageCount: 1,
+      imageCount: variationCount,
       quality,
     }, {
-      imageCount: 1,
+      imageCount: variationCount,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
@@ -918,6 +920,9 @@ export default function Freestyle() {
     },
     editIntent,
     onEditIntentChange: setEditIntent,
+    variationCount,
+    onVariationCountChange: setVariationCount,
+    perImageCost,
     disabledChips: sourceImagePreview ? {
       product: imageRole === 'product',
       model: imageRole === 'model',
