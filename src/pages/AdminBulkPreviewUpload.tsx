@@ -12,21 +12,43 @@ import { toast } from 'sonner';
 import { Upload, Check, X, ArrowLeft, ImageIcon, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const CATEGORIES = [
-  { value: 'fragrance', label: 'Fragrance' },
-  { value: 'beauty-skincare', label: 'Beauty & Skincare' },
-  { value: 'makeup-lipsticks', label: 'Makeup & Lipsticks' },
-  { value: 'bags-accessories', label: 'Bags & Accessories' },
-  { value: 'hats-small', label: 'Hats & Small Accessories' },
-  { value: 'shoes', label: 'Shoes' },
-  { value: 'garments', label: 'Clothing & Apparel' },
-  { value: 'home-decor', label: 'Home Decor' },
-  { value: 'tech-devices', label: 'Tech / Devices' },
-  { value: 'food', label: 'Food & Snacks' },
-  { value: 'beverages', label: 'Beverages' },
-  { value: 'supplements-wellness', label: 'Supplements & Wellness' },
-  { value: 'other', label: 'Other / Custom' },
-];
+const TITLE_MAP: Record<string, string> = {
+  fragrance: 'Fragrance',
+  'beauty-skincare': 'Beauty & Skincare',
+  'makeup-lipsticks': 'Makeup & Lipsticks',
+  'bags-accessories': 'Bags & Structured Accessories',
+  backpacks: 'Backpacks',
+  'wallets-cardholders': 'Wallets & Cardholders',
+  belts: 'Belts',
+  scarves: 'Scarves',
+  'hats-small': 'Hats & Headwear',
+  shoes: 'Shoes',
+  sneakers: 'Sneakers',
+  boots: 'Boots',
+  'high-heels': 'High Heels',
+  garments: 'Clothing & Apparel',
+  dresses: 'Dresses',
+  hoodies: 'Hoodies',
+  streetwear: 'Streetwear',
+  jeans: 'Jeans',
+  jackets: 'Jackets',
+  activewear: 'Activewear & Sportswear',
+  swimwear: 'Swimwear',
+  lingerie: 'Lingerie',
+  kidswear: 'Kidswear',
+  'jewellery-necklaces': 'Necklaces',
+  'jewellery-earrings': 'Earrings',
+  'jewellery-bracelets': 'Bracelets',
+  'jewellery-rings': 'Rings',
+  watches: 'Watches',
+  eyewear: 'Eyewear',
+  'home-decor': 'Home Decor / Furniture',
+  'tech-devices': 'Tech / Devices',
+  food: 'Food & Snacks',
+  beverages: 'Beverages',
+  'supplements-wellness': 'Supplements & Wellness',
+  other: 'Other / Custom',
+};
 
 interface MatchedFile {
   file: File;
