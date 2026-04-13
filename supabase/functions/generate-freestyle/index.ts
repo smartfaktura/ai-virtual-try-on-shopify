@@ -1204,7 +1204,7 @@ serve(async (req) => {
       body.sceneImage = undefined;
     }
 
-    const effectiveImageCount = Math.min(body.imageCount || 1, 4);
+    const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);
 
     // ── Perspective mode: skip all generic prompt logic ──────────────────
     const isPerspective = !!(body as Record<string, unknown>).isPerspective;
@@ -1466,9 +1466,9 @@ serve(async (req) => {
             }
             await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
 
-            // Early finalize only when ALL requested images are done
-            if (body.job_id && images.length >= effectiveImageCount) {
-              console.log(`[generate-freestyle] All ${effectiveImageCount} images done — completing queue job ${body.job_id}`);
+            // Early finalize: in queue mode (1 image), complete immediately after first success
+            if (body.job_id && images.length > 0) {
+              console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
               const elapsedMs = Math.round(performance.now() - requestStartTime);
               console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=${actualProvider}`);
               await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, actualProvider, elapsedMs);

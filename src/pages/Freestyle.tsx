@@ -121,7 +121,6 @@ export default function Freestyle() {
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
   const [variationCount, setVariationCount] = useState(1);
-  const variationCountRef = useRef(variationCount);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
   const [providerOverride, setProviderOverride] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
@@ -189,7 +188,7 @@ export default function Freestyle() {
     }, ...prev]);
   }, []);
 
-  const { enqueue, enqueueBatch, activeJob, batchProgress, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
+  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     jobTypes: ['freestyle'],
     onContentBlocked: handleContentBlocked,
     onGenerationFailed: handleGenerationFailed,
@@ -678,7 +677,7 @@ export default function Freestyle() {
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,
-      imageCount: variationCountRef.current,
+      imageCount: variationCount,
       quality,
       polishPrompt: true,
       modelContext,
@@ -702,53 +701,33 @@ export default function Freestyle() {
       queuePayload.providerOverride = providerOverride;
     }
 
-    const currentVariationCount = variationCountRef.current;
-    const generationMeta = {
-      imageCount: currentVariationCount,
+    // Enqueue via priority queue
+    const enqueueResult = await enqueue({
+      jobType: 'freestyle',
+      payload: queuePayload,
+      imageCount: variationCount,
+      quality,
+    }, {
+      imageCount: variationCount,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
-    };
+    });
 
-    if (currentVariationCount > 1) {
-      // Parallel batch: enqueue N separate 1-image jobs
-      const batchId = crypto.randomUUID();
-      const paramsList = Array.from({ length: currentVariationCount }, () => ({
-        jobType: 'freestyle' as const,
-        payload: { ...queuePayload, imageCount: 1 },
-        imageCount: 1,
-        quality,
-      }));
-
-      const batchResults = await enqueueBatch(paramsList, generationMeta, batchId);
-      if (batchResults && batchResults.length > 0) {
-        setBalanceFromServer(batchResults[batchResults.length - 1].newBalance);
-      }
-    } else {
-      // Single image: use standard enqueue
-      const enqueueResult = await enqueue({
-        jobType: 'freestyle',
-        payload: queuePayload,
-        imageCount: 1,
-        quality,
-      }, generationMeta);
-
-      if (enqueueResult) {
-        setBalanceFromServer(enqueueResult.newBalance);
-      }
+    if (enqueueResult) {
+      setBalanceFromServer(enqueueResult.newBalance);
     }
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, enqueueBatch, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride, variationCount]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
   const refreshBalanceRef = useRef(refreshBalance);
   const resetQueueRef = useRef(resetQueue);
   useEffect(() => { promptRef.current = prompt; }, [prompt]);
-  useEffect(() => { variationCountRef.current = variationCount; }, [variationCount]);
   useEffect(() => { refreshImagesRef.current = refreshImages; }, [refreshImages]);
   useEffect(() => { refreshBalanceRef.current = refreshBalance; }, [refreshBalance]);
   useEffect(() => { resetQueueRef.current = resetQueue; }, [resetQueue]);
@@ -1032,7 +1011,7 @@ export default function Freestyle() {
                     </div>
                   </div>
                 ) : (
-                  <QueuePositionIndicator job={activeJob} batchProgress={batchProgress} onCancel={() => cancelQueue()} />
+                  <QueuePositionIndicator job={activeJob} onCancel={() => cancelQueue()} />
                 )}
               </div>
             )}

@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { enqueueWithRetry, isEnqueueError, paceDelay } from '@/lib/enqueueGeneration';
+import { enqueueWithRetry, isEnqueueError } from '@/lib/enqueueGeneration';
 
 export type QueueJobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
 
@@ -54,17 +54,9 @@ interface UseGenerationQueueOptions {
   onCreditRefresh?: () => Promise<void> | void;
 }
 
-export interface BatchProgress {
-  completed: number;
-  failed: number;
-  total: number;
-}
-
 interface UseGenerationQueueReturn {
   enqueue: (params: EnqueueParams, meta?: GenerationMeta) => Promise<EnqueueResult | null>;
-  enqueueBatch: (paramsList: EnqueueParams[], meta?: GenerationMeta, batchId?: string) => Promise<EnqueueResult[] | null>;
   activeJob: QueueJob | null;
-  batchProgress: BatchProgress | null;
   isEnqueuing: boolean;
   isProcessing: boolean;
   cancel: () => Promise<void>;
@@ -87,7 +79,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
-  const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
 
   // Stable ref for onCreditRefresh to avoid stale closures in polling chains
   const onCreditRefreshRef = useRef(onCreditRefresh);
@@ -95,11 +86,10 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
   // Single-flight polling refs
   const jobIdRef = useRef<string | null>(null);
-  const batchJobIdsRef = useRef<string[]>([]);
-  const pollVersionRef = useRef(0);
+  const pollVersionRef = useRef(0); // Incremented on each new poll session; stale responses are ignored
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCleanupTriggerRef = useRef(0);
-  const missCountRef = useRef(0);
+  const missCountRef = useRef(0); // Consecutive poll misses for self-healing
 
   // Cleanup on unmount
   useEffect(() => {
@@ -498,204 +488,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     }
   }, [user, pollJobStatus, stopPolling]);
 
-  // --- Batch polling for parallel jobs ---
-  const pollBatchStatus = useCallback((jobIds: string[]) => {
-    stopPolling();
-    const sessionVersion = ++pollVersionRef.current;
-
-    const schedulePoll = (delayMs: number) => {
-      pollTimeoutRef.current = setTimeout(() => runPoll(), delayMs);
-    };
-
-    const runPoll = async () => {
-      if (sessionVersion !== pollVersionRef.current) return;
-      try {
-        const { SUPABASE_URL, SUPABASE_KEY, token } = await getRestHeaders();
-        if (sessionVersion !== pollVersionRef.current) return;
-
-        const idsFilter = jobIds.map(id => `"${id}"`).join(',');
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score,job_type`,
-          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
-        );
-        if (sessionVersion !== pollVersionRef.current) return;
-        if (!res.ok) { schedulePoll(5000); return; }
-
-        const rows = await res.json();
-        if (sessionVersion !== pollVersionRef.current) return;
-
-        const completed = rows.filter((r: any) => r.status === 'completed').length;
-        const failed = rows.filter((r: any) => r.status === 'failed').length;
-        const total = jobIds.length;
-
-        setBatchProgress({ completed, failed, total });
-
-        // Determine aggregate status
-        const allTerminal = completed + failed === total;
-        const anyProcessing = rows.some((r: any) => r.status === 'processing');
-        const anyQueued = rows.some((r: any) => r.status === 'queued');
-
-        // Build a synthetic activeJob representing the batch
-        const firstJob = rows[0];
-        const syntheticStatus: QueueJobStatus = allTerminal
-          ? (completed > 0 ? 'completed' : 'failed')
-          : anyProcessing ? 'processing' : 'queued';
-
-        setActiveJob(prev => ({
-          id: firstJob?.id || jobIds[0],
-          status: syntheticStatus,
-          position: 0,
-          priority: firstJob?.priority_score || 0,
-          result: null,
-          error_message: failed > 0 ? `${failed} of ${total} images failed` : null,
-          created_at: firstJob?.created_at || new Date().toISOString(),
-          started_at: firstJob?.started_at || null,
-          completed_at: allTerminal ? new Date().toISOString() : null,
-          generationMeta: prev?.generationMeta,
-        }));
-
-        if (allTerminal) {
-          stopPolling();
-          if (completed > 0) setLastCompletedAt(new Date().toISOString());
-
-          // Handle failures
-          if (failed > 0 && failed < total && onGenerationFailed) {
-            onGenerationFailed(jobIds[0], `${failed} of ${total} images failed`, 'generic');
-          } else if (failed === total && onGenerationFailed) {
-            const errMsg = rows.find((r: any) => r.error_message)?.error_message || 'All images failed';
-            onGenerationFailed(jobIds[0], errMsg, 'generic');
-          }
-
-          onCreditRefreshRef.current?.();
-          return;
-        }
-
-        // Stuck detection for batch: trigger retry-queue if any job queued > 30s
-        if (anyQueued) {
-          const oldestQueued = rows.find((r: any) => r.status === 'queued');
-          if (oldestQueued) {
-            const queuedDuration = Date.now() - new Date(oldestQueued.created_at).getTime();
-            if (queuedDuration > 30_000 && Date.now() - lastCleanupTriggerRef.current > 60_000) {
-              lastCleanupTriggerRef.current = Date.now();
-              fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ trigger: 'batch-stuck-retry' }),
-              }).catch(() => {});
-            }
-          }
-        }
-
-        schedulePoll(3000);
-      } catch (err) {
-        console.error('[queue] Batch poll error:', err);
-        if (sessionVersion !== pollVersionRef.current) return;
-        schedulePoll(5000);
-      }
-    };
-
-    runPoll();
-  }, [stopPolling, onGenerationFailed]);
-
-  // --- enqueueBatch: enqueue N parallel 1-image jobs ---
-  const enqueueBatch = useCallback(async (paramsList: EnqueueParams[], meta?: GenerationMeta, batchId?: string): Promise<EnqueueResult[] | null> => {
-    if (!user) {
-      toast.error('Please sign in to generate images');
-      return null;
-    }
-
-    setIsEnqueuing(true);
-    stopPolling();
-    setBatchProgress({ completed: 0, failed: 0, total: paramsList.length });
-
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
-      if (!token) { toast.error('Please sign in first'); return null; }
-
-      const results: EnqueueResult[] = [];
-      const jobIds: string[] = [];
-
-      for (let i = 0; i < paramsList.length; i++) {
-        await paceDelay(i);
-        const params = paramsList[i];
-        const body = {
-          jobType: params.jobType,
-          payload: { ...params.payload, batch_id: batchId },
-          imageCount: 1,
-          quality: params.quality,
-          additionalProductCount: params.additionalProductCount || 0,
-          hasModel: meta?.hasModel || false,
-          hasScene: meta?.hasScene || false,
-        };
-
-        const res = await enqueueWithRetry(body, token);
-
-        if (isEnqueueError(res)) {
-          if (res.type === 'insufficient_credits') {
-            toast.error(res.message || 'Insufficient credits');
-          } else if (res.type === 'rate_limit') {
-            toast.error('Rate limit — some images may not have been queued.');
-          } else {
-            toast.error(res.message || 'Failed to enqueue image ' + (i + 1));
-          }
-          // If we got at least some jobs through, continue with what we have
-          if (jobIds.length > 0) break;
-          return null;
-        }
-
-        const result = res as unknown as EnqueueResult;
-        results.push(result);
-        jobIds.push(result.jobId);
-      }
-
-      if (jobIds.length === 0) return null;
-
-      batchJobIdsRef.current = jobIds;
-      jobIdRef.current = jobIds[0];
-
-      // Set initial active job
-      setActiveJob({
-        id: jobIds[0],
-        status: 'queued',
-        position: 0,
-        priority: 0,
-        result: null,
-        error_message: null,
-        created_at: new Date().toISOString(),
-        started_at: null,
-        completed_at: null,
-        generationMeta: meta ? { ...meta, imageCount: jobIds.length } : undefined,
-      });
-
-      // Start batch polling
-      pollBatchStatus(jobIds);
-
-      return results;
-    } catch (err) {
-      console.error('Batch enqueue error:', err);
-      toast.error('Failed to start generation');
-      return null;
-    } finally {
-      setIsEnqueuing(false);
-    }
-  }, [user, stopPolling, pollBatchStatus]);
-
   const cancel = useCallback(async () => {
-    // Handle batch cancellation
-    if (batchJobIdsRef.current.length > 1) {
-      stopPolling();
-      for (const jid of batchJobIdsRef.current) {
-        try { await supabase.rpc('cancel_queue_job', { p_job_id: jid }); } catch {}
-      }
-      setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
-      setBatchProgress(null);
-      batchJobIdsRef.current = [];
-      toast.info('Cancelled — credits returned ✨');
-      onCreditRefreshRef.current?.();
-      return;
-    }
-
     if (!jobIdRef.current || !activeJob || (activeJob.status !== 'queued' && activeJob.status !== 'processing')) return;
 
     // Check current job status before attempting cancel
@@ -736,18 +529,14 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const reset = useCallback(() => {
     stopPolling();
     setActiveJob(null);
-    setBatchProgress(null);
     jobIdRef.current = null;
-    batchJobIdsRef.current = [];
   }, [stopPolling]);
 
   const isProcessing = !!activeJob && (activeJob.status === 'queued' || activeJob.status === 'processing');
 
   return {
     enqueue,
-    enqueueBatch,
     activeJob,
-    batchProgress,
     isEnqueuing,
     isProcessing,
     cancel,
