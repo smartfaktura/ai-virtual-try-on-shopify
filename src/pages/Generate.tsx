@@ -239,11 +239,11 @@ export default function Generate() {
   // Merge mock + custom + user models, sorted consistently
   const allModels = useMemo(() => {
     const deduped = new Map<string, typeof mockModels[0]>();
-    for (const m of applyOverrides(mockModels)) deduped.set(m.modelId, m);
+    for (const m of applyNameOverrides(applyOverrides(mockModels))) deduped.set(m.modelId, m);
     for (const m of customModelProfiles) deduped.set(m.modelId, m);
     for (const m of userModelProfiles) deduped.set(m.modelId, m);
-    return sortModels([...deduped.values()]);
-  }, [customModelProfiles, userModelProfiles, sortModels, applyOverrides]);
+    return sortModels(filterHidden([...deduped.values()]));
+  }, [customModelProfiles, userModelProfiles, sortModels, applyOverrides, applyNameOverrides, filterHidden]);
 
   const handleGenerateScenePreviews = async () => {
     if (!workflowId) return;
