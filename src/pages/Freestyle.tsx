@@ -702,27 +702,46 @@ export default function Freestyle() {
       queuePayload.providerOverride = providerOverride;
     }
 
-    // Enqueue via priority queue
-    const enqueueResult = await enqueue({
-      jobType: 'freestyle',
-      payload: queuePayload,
-      imageCount: variationCountRef.current,
-      quality,
-    }, {
-      imageCount: variationCountRef.current,
+    const currentVariationCount = variationCountRef.current;
+    const generationMeta = {
+      imageCount: currentVariationCount,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
-    });
+    };
 
-    if (enqueueResult) {
-      setBalanceFromServer(enqueueResult.newBalance);
+    if (currentVariationCount > 1) {
+      // Parallel batch: enqueue N separate 1-image jobs
+      const batchId = crypto.randomUUID();
+      const paramsList = Array.from({ length: currentVariationCount }, () => ({
+        jobType: 'freestyle' as const,
+        payload: { ...queuePayload, imageCount: 1 },
+        imageCount: 1,
+        quality,
+      }));
+
+      const batchResults = await enqueueBatch(paramsList, generationMeta, batchId);
+      if (batchResults && batchResults.length > 0) {
+        setBalanceFromServer(batchResults[batchResults.length - 1].newBalance);
+      }
+    } else {
+      // Single image: use standard enqueue
+      const enqueueResult = await enqueue({
+        jobType: 'freestyle',
+        payload: queuePayload,
+        imageCount: 1,
+        quality,
+      }, generationMeta);
+
+      if (enqueueResult) {
+        setBalanceFromServer(enqueueResult.newBalance);
+      }
     }
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, enqueueBatch, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
