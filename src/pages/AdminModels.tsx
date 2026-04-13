@@ -413,6 +413,18 @@ export default function AdminModels() {
                     </Tooltip>
                   )}
                   <div className="flex flex-col gap-0.5">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => moveToTop(globalIndex)}
+                          disabled={globalIndex === 0}
+                          className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                        >
+                          <ArrowUpToLine className="w-3 h-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Move to top</TooltipContent>
+                    </Tooltip>
                     <button
                       onClick={() => moveModel(globalIndex, 'up')}
                       disabled={globalIndex === 0}
