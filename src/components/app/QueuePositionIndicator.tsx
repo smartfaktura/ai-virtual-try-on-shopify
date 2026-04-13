@@ -4,12 +4,13 @@ import { Loader2, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import type { QueueJob, GenerationMeta } from '@/hooks/useGenerationQueue';
+import type { QueueJob, GenerationMeta, BatchProgress } from '@/hooks/useGenerationQueue';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface QueuePositionIndicatorProps {
   job: QueueJob;
+  batchProgress?: BatchProgress | null;
   onCancel?: () => void;
 }
 
@@ -54,13 +55,19 @@ function formatEstimateRange(seconds: number): string {
   return `~${Math.round(low / 5) * 5}-${Math.round(high / 5) * 5} seconds`;
 }
 
-function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => void }) {
+function ProcessingState({ job, batchProgress, onCancel }: { job: QueueJob; batchProgress?: BatchProgress | null; onCancel?: () => void }) {
   useVisibilityTick(1000, true);
 
-  const estimatedSeconds = useMemo(
+  const isBatch = batchProgress && batchProgress.total > 1;
+  const fullEstimate = useMemo(
     () => estimateSeconds(job.generationMeta),
     [job.generationMeta]
   );
+  const perImageEstimate = useMemo(
+    () => estimateSeconds(job.generationMeta ? { ...job.generationMeta, imageCount: 1 } : undefined),
+    [job.generationMeta]
+  );
+  const estimatedSeconds = isBatch ? perImageEstimate : fullEstimate;
 
   const startTime = job.started_at || job.created_at;
   const elapsed = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
@@ -69,14 +76,17 @@ function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => vo
   const teamIndex = teamTick % TEAM_MEMBERS.length;
 
   const ratio = elapsed / estimatedSeconds;
-  const progress = ratio <= 1
-    ? Math.min(ratio * 90, 90)
-    : Math.min(90 + (ratio - 1) * 5, 95);
+  const batchRatio = isBatch ? batchProgress.completed / batchProgress.total : 0;
+  const progress = isBatch
+    ? Math.min(5 + batchRatio * 90, 95)
+    : ratio <= 1
+      ? Math.min(ratio * 90, 90)
+      : Math.min(90 + (ratio - 1) * 5, 95);
   const currentMember = TEAM_MEMBERS[teamIndex];
-  const overtimeMsg = getOvertimeMessage(ratio);
+  const overtimeMsg = isBatch ? null : getOvertimeMessage(ratio);
   const complexityHint = getComplexityHint(job.generationMeta);
   const proModelHint = getProModelHint(job.generationMeta);
-  const isStuck = elapsed > 300; // 5 minutes
+  const isStuck = elapsed > 300;
 
   return (
     <div className="flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/20">
@@ -86,14 +96,25 @@ function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => vo
           <p className="text-sm font-medium text-foreground">
             {isStuck
               ? 'This is taking unusually long — retrying automatically…'
-              : (overtimeMsg || 'Generating your images…')}
+              : isBatch
+                ? `Generating image ${batchProgress.completed + 1} of ${batchProgress.total}…`
+                : (overtimeMsg || 'Generating your image…')}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs text-muted-foreground">
-              Est. {formatEstimateRange(estimatedSeconds)}
-            </span>
-            <span className="text-xs text-muted-foreground/60">·</span>
-            <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
+            {isBatch ? (
+              <span className="text-xs text-muted-foreground">
+                {batchProgress.completed} of {batchProgress.total} done
+                {batchProgress.failed > 0 ? ` · ${batchProgress.failed} failed` : ''}
+              </span>
+            ) : (
+              <>
+                <span className="text-xs text-muted-foreground">
+                  Est. {formatEstimateRange(estimatedSeconds)}
+                </span>
+                <span className="text-xs text-muted-foreground/60">·</span>
+                <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
+              </>
+            )}
           </div>
           {(complexityHint || proModelHint) && (
             <p className="hidden sm:block text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint || proModelHint}</p>
@@ -127,7 +148,7 @@ function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => vo
   );
 }
 
-export function QueuePositionIndicator({ job, onCancel }: QueuePositionIndicatorProps) {
+export function QueuePositionIndicator({ job, batchProgress, onCancel }: QueuePositionIndicatorProps) {
   if (job.status === 'completed') {
     return (
       <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
@@ -165,7 +186,7 @@ export function QueuePositionIndicator({ job, onCancel }: QueuePositionIndicator
   }
 
   if (job.status === 'processing') {
-    return <ProcessingState job={job} onCancel={onCancel} />;
+    return <ProcessingState job={job} batchProgress={batchProgress} onCancel={onCancel} />;
   }
 
   // Queued
