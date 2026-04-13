@@ -96,14 +96,25 @@ function ProcessingState({ job, batchProgress, onCancel }: { job: QueueJob; batc
           <p className="text-sm font-medium text-foreground">
             {isStuck
               ? 'This is taking unusually long — retrying automatically…'
-              : (overtimeMsg || 'Generating your images…')}
+              : isBatch
+                ? `Generating image ${batchProgress.completed + 1} of ${batchProgress.total}…`
+                : (overtimeMsg || 'Generating your image…')}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs text-muted-foreground">
-              Est. {formatEstimateRange(estimatedSeconds)}
-            </span>
-            <span className="text-xs text-muted-foreground/60">·</span>
-            <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
+            {isBatch ? (
+              <span className="text-xs text-muted-foreground">
+                {batchProgress.completed} of {batchProgress.total} done
+                {batchProgress.failed > 0 ? ` · ${batchProgress.failed} failed` : ''}
+              </span>
+            ) : (
+              <>
+                <span className="text-xs text-muted-foreground">
+                  Est. {formatEstimateRange(estimatedSeconds)}
+                </span>
+                <span className="text-xs text-muted-foreground/60">·</span>
+                <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
+              </>
+            )}
           </div>
           {(complexityHint || proModelHint) && (
             <p className="hidden sm:block text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint || proModelHint}</p>
