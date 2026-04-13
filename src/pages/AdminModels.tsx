@@ -570,6 +570,14 @@ export default function AdminModels() {
                       <>
                         <Tooltip>
                           <TooltipTrigger asChild>
+                            <button onClick={() => handleImageClick(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                              <Camera className="w-4 h-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Change photo</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <button onClick={() => startEdit(model)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                               <Pencil className="w-4 h-4" />
                             </button>
