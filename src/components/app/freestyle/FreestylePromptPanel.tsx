@@ -64,6 +64,10 @@ interface FreestylePromptPanelProps {
   onEditIntentChange: (intents: EditIntent[]) => void;
   disabledChips?: { product?: boolean; model?: boolean; scene?: boolean; brand?: boolean };
   hideCreditCost?: boolean;
+  // Variation count
+  variationCount: number;
+  onVariationCountChange: (count: number) => void;
+  perImageCost: number;
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -97,6 +101,9 @@ export function FreestylePromptPanel({
   editIntent,
   onEditIntentChange,
   disabledChips,
+  variationCount,
+  onVariationCountChange,
+  perImageCost,
   isCollapsed,
   onToggleCollapse,
   highlightedChip,
@@ -330,19 +337,40 @@ export function FreestylePromptPanel({
           <div className="border-t border-border/40 mx-3 sm:mx-5 hidden sm:block" />
 
           {/* Row 3 — Action Bar */}
-          <div className="px-3 sm:px-5 py-2 sm:py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <div className="px-3 sm:px-5 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             {(() => {
               const hasEnoughCredits = hideCreditCost || creditBalance === undefined || creditBalance >= creditCost;
               const showInsufficientCredits = !hideCreditCost && canGenerate && !hasEnoughCredits;
+              const COUNTS = [1, 2, 3, 4] as const;
 
               return (
                 <>
+                  {/* Variation count picker */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground mr-1 hidden sm:inline">Images</span>
+                    {COUNTS.map(n => (
+                      <button
+                        key={n}
+                        onClick={() => onVariationCountChange(n)}
+                        className={cn(
+                          "w-7 h-7 rounded-lg text-xs font-medium transition-colors",
+                          variationCount === n
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:gap-3 ml-auto">
                   {!canGenerate && !isLoading ? (
-                    <p className="text-xs text-muted-foreground mr-auto truncate hidden sm:block">
+                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
                       Type a prompt or add a reference to start
                     </p>
                    ) : showInsufficientCredits ? (
-                     <p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
+                     <p className="text-xs text-muted-foreground w-auto">
                        <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
                        <span className="sm:hidden">Need {creditCost - (creditBalance ?? 0)} more credits ({creditBalance ?? 0}/{creditCost})</span>
                      </p>
@@ -383,14 +411,17 @@ export function FreestylePromptPanel({
                           ? 'Sign up to generate'
                           : showInsufficientCredits
                             ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
-                            : selectedModel && selectedScene
-                              ? `${creditCost} credits: Model + Scene`
-                              : selectedModel
-                                ? `${creditCost} credits: Model reference`
-                                : `${creditCost} credits per image`}
+                            : variationCount > 1
+                              ? `${perImageCost} × ${variationCount} = ${creditCost} credits`
+                              : selectedModel && selectedScene
+                                ? `${creditCost} credits: Model + Scene`
+                                : selectedModel
+                                  ? `${creditCost} credits: Model reference`
+                                  : `${creditCost} credits per image`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                  </div>
                 </>
               );
             })()}
