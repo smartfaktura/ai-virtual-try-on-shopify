@@ -51,18 +51,29 @@ interface UnifiedModel {
   customModel?: CustomModel;
 }
 
-function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, number>, imageOverrides: Map<string, string>): UnifiedModel[] {
-  const mockUnified: UnifiedModel[] = mockModels.map(m => ({
-    id: m.modelId,
-    name: m.name,
-    gender: m.gender,
-    bodyType: m.bodyType,
-    ethnicity: m.ethnicity || '',
-    ageRange: m.ageRange || '',
-    imageUrl: imageOverrides.get(m.modelId) || m.previewUrl,
-    isCustom: false,
-    isActive: true,
-  }));
+function buildUnifiedList(
+  customModels: CustomModel[],
+  sortMap: Map<string, number>,
+  imageOverrides: Map<string, string>,
+  metadataOverrides: Map<string, ModelMetadataOverrides>,
+  hiddenIds: Set<string>,
+  showHidden: boolean,
+): UnifiedModel[] {
+  const mockUnified: UnifiedModel[] = mockModels.map(m => {
+    const meta = metadataOverrides.get(m.modelId);
+    const isHidden = hiddenIds.has(m.modelId);
+    return {
+      id: m.modelId,
+      name: meta?.name_override || m.name,
+      gender: meta?.gender_override || m.gender,
+      bodyType: meta?.body_type_override || m.bodyType,
+      ethnicity: meta?.ethnicity_override || m.ethnicity || '',
+      ageRange: meta?.age_range_override || m.ageRange || '',
+      imageUrl: imageOverrides.get(m.modelId) || m.previewUrl,
+      isCustom: false,
+      isActive: !isHidden,
+    };
+  });
 
   const customUnified: UnifiedModel[] = customModels.map(m => ({
     id: `custom-${m.id}`,
@@ -77,7 +88,12 @@ function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, numb
     customModel: m,
   }));
 
-  const all = [...mockUnified, ...customUnified];
+  let all = [...mockUnified, ...customUnified];
+
+  // Filter hidden unless showHidden is on
+  if (!showHidden) {
+    all = all.filter(m => m.isActive || m.isCustom);
+  }
 
   if (sortMap.size > 0) {
     all.sort((a, b) => {
