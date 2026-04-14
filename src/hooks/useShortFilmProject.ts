@@ -1059,6 +1059,10 @@ function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | un
     prompt += ', slow building tension with elegant resolution';
   } else if (hasHook) {
     prompt += ', dramatic opening with rising intensity';
+  }
+  if (roles) prompt += `, featuring ${roles} moments`;
+  prompt += ', no vocals, professional production quality';
+  return prompt;
 }
 
 /** Build contextual SFX prompt based on shot role and motion */
@@ -1084,7 +1088,6 @@ function buildContextualSfxPrompt(shot: ShotPlanItem): string {
 
   const baseSfx = ROLE_SFX[shot.role] || 'subtle cinematic ambient sound';
 
-  // Add camera motion context
   const motionSfx: Record<string, string> = {
     orbit: ', smooth rotational movement whoosh',
     push_in: ', gentle forward motion',
@@ -1101,29 +1104,22 @@ function buildContextualSfxPrompt(shot: ShotPlanItem): string {
 
 /** Fit voiceover text to shot duration with word-budget trimming and speed adjustment */
 function fitTextToDuration(scriptLine: string, durationSec: number): { text: string; speed: number } {
-  const WORDS_PER_SEC = 2.5; // natural speech rate
+  const WORDS_PER_SEC = 2.5;
   const MAX_SPEED = 1.2;
   const wordBudget = Math.floor(durationSec * WORDS_PER_SEC);
   const words = scriptLine.trim().split(/\s+/);
 
   if (words.length <= wordBudget) {
-    // Text fits at natural speed — calculate if we need a slight speedup
     const estimatedDuration = words.length / WORDS_PER_SEC;
     const speed = estimatedDuration > durationSec ? Math.min(MAX_SPEED, estimatedDuration / durationSec) : 1.0;
     return { text: scriptLine, speed: Math.round(speed * 100) / 100 };
   }
 
-  // Text too long — trim to budget and speed up slightly
   const trimmed = words.slice(0, wordBudget).join(' ');
-  // Ensure trimmed text ends cleanly (add period if missing)
   const cleanText = trimmed.endsWith('.') || trimmed.endsWith('!') || trimmed.endsWith('?')
     ? trimmed
     : trimmed + '.';
   return { text: cleanText, speed: Math.min(MAX_SPEED, 1.1) };
-}
-  if (roles) prompt += `, featuring ${roles} moments`;
-  prompt += ', no vocals, professional production quality';
-  return prompt;
 }
 
 /** Get the best source image for a specific shot based on its source_reference_id or role */
