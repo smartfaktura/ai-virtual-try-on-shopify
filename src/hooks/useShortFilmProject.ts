@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { generateShotPlan, FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
-import { buildShotPrompt, estimateShortFilmCredits, calculateTotalDuration, distributeShotDurations } from '@/lib/shortFilmPromptBuilder';
+import { buildShotPrompt, estimateShortFilmCredits, distributeShotDurations } from '@/lib/shortFilmPromptBuilder';
 import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
 import type {
   FilmType,
@@ -757,10 +757,10 @@ export function useShortFilmProject() {
       await supabase.from('video_shots').insert(shotRows);
 
       // ── Multi-shot: build single combined request ──
-      // Cap at 3 shots, always 5s each (Kling multi-shot hard limits)
-      const safeShots = shots.slice(0, 3);
-      const totalDuration = calculateTotalDuration(safeShots.length, '5');
-      const perShotDurations = distributeShotDurations(safeShots.length, totalDuration);
+      // Cap at 6 shots, use actual per-shot durations (Kling: 1-6 shots, 3-15s total)
+      const safeShots = shots.slice(0, 6);
+      const perShotDurations = distributeShotDurations(safeShots);
+      const totalDuration = perShotDurations.reduce((a, b) => a + b, 0);
 
       // Collect unique image URLs for Kling image_list
       const imageUrlSet = new Set<string>();
@@ -902,7 +902,7 @@ export function useShortFilmProject() {
         scene_type: 'product_closeup',
         camera_motion: 'slow_push',
         subject_motion: 'static',
-        duration_sec: Number(settings.shotDuration),
+        duration_sec: 3,
         product_visible: true,
         character_visible: false,
         preservation_strength: settings.preservationLevel,
@@ -991,15 +991,14 @@ function getSourceImageForShot(shot: ShotPlanItem, references: ReferenceAsset[])
 /** Generate shot plan from custom roles */
 function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): ShotPlanItem[] {
   // Import the generateShotPlan logic but with custom roles
-  const durationSec = Number(shotDuration);
-  return roles.map((role, index) => ({
+  return roles.slice(0, 6).map((role, index) => ({
     shot_index: index + 1,
     role,
     purpose: `Custom ${role.replace(/_/g, ' ')} shot`,
     scene_type: 'general',
     camera_motion: 'slow_push',
     subject_motion: 'minimal',
-    duration_sec: durationSec,
+    duration_sec: 3,
     product_visible: role.includes('product') || role.includes('detail') || role.includes('highlight'),
     character_visible: role.includes('human') || role.includes('lifestyle'),
     preservation_strength: role.includes('product') || role.includes('detail') ? 'high' : 'medium',

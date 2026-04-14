@@ -232,7 +232,8 @@ export function estimateShortFilmCredits(
   shotCount: number,
   settings: ShortFilmSettings,
 ): number {
-  const totalDuration = calculateTotalDuration(shotCount, settings.shotDuration);
+  // Estimate based on shot count * avg duration
+  const totalDuration = Math.min(shotCount * 3, 15);
   const videoCost = totalDuration <= 5 ? 10 : totalDuration <= 10 ? 18 : 25;
 
   const audioAdd = settings.audioMode === 'ambient' ? 0
@@ -245,25 +246,43 @@ export function estimateShortFilmCredits(
 }
 
 /**
- * Calculate total film duration, capped at 15s (Kling max for multi-shot).
- * Always uses 5s per shot; max 3 shots.
+ * Calculate total film duration from actual shot durations, capped at 15s.
  */
 export function calculateTotalDuration(
-  shotCount: number,
-  _shotDuration: '5' | '10' = '5',
+  shots: ShotPlanItem[],
 ): number {
-  const safeShotCount = Math.min(shotCount, 3);
-  return safeShotCount * 5;
+  const safeShots = shots.slice(0, 6);
+  const total = safeShots.reduce((sum, s) => sum + (s.duration_sec || 3), 0);
+  return Math.min(Math.max(total, 3), 15);
 }
 
 /**
- * Distribute total duration across shots.
- * Kling requires each shot to be exactly 5s or 10s — we always use 5s.
+ * Distribute total duration across shots using their actual durations.
+ * If total exceeds 15s, proportionally scale down.
  */
 export function distributeShotDurations(
-  shotCount: number,
-  _totalDuration: number,
+  shots: ShotPlanItem[],
 ): number[] {
-  const safeShotCount = Math.min(shotCount, 3);
-  return Array.from({ length: safeShotCount }, () => 5);
+  const safeShots = shots.slice(0, 6);
+  const rawTotal = safeShots.reduce((sum, s) => sum + (s.duration_sec || 3), 0);
+  
+  if (rawTotal <= 15) {
+    return safeShots.map(s => Math.max(1, s.duration_sec || 3));
+  }
+  
+  // Scale down proportionally, ensure each is at least 1s
+  const scale = 15 / rawTotal;
+  const scaled = safeShots.map(s => Math.max(1, Math.round((s.duration_sec || 3) * scale)));
+  
+  // Adjust to hit exactly 15s
+  let diff = 15 - scaled.reduce((a, b) => a + b, 0);
+  for (let i = 0; diff !== 0 && i < scaled.length; i++) {
+    const adj = diff > 0 ? 1 : -1;
+    if (scaled[i] + adj >= 1) {
+      scaled[i] += adj;
+      diff -= adj;
+    }
+  }
+  
+  return scaled;
 }
