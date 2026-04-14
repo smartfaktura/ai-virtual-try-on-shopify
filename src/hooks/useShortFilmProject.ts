@@ -11,6 +11,7 @@ import type {
   ShortFilmSettings,
   ShortFilmStep,
   ShotPlanItem,
+  AudioAssets,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 
@@ -55,6 +56,8 @@ export function useShortFilmProject() {
   const [customRoles, setCustomRoles] = useState<string[]>([]);
   const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
   const [settings, setSettings] = useState<ShortFilmSettings>(DEFAULT_SETTINGS);
+  const [audioAssets, setAudioAssets] = useState<AudioAssets>({ perShotAudio: [] });
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
 
   const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
@@ -230,6 +233,8 @@ export function useShortFilmProject() {
     setPlanMode('auto');
     setCustomRoles([]);
     setSettings(DEFAULT_SETTINGS);
+    setAudioAssets({ perShotAudio: [] });
+    setIsGeneratingAudio(false);
   }, []);
 
   // ─── Retry single failed shot ──────────────────────────────
@@ -299,6 +304,105 @@ export function useShortFilmProject() {
       toast.error(`Shot ${shotIndex} retry failed`);
     }
   }, [projectId, user, filmType, shots, settings, references]);
+
+  // ─── Audio generation ────────────────────────────────────────
+  const generateAudio = useCallback(async () => {
+    if (!user) return;
+    const mode = settings.audioMode;
+    if (mode === 'silent' || mode === 'ambient') return;
+
+    setIsGeneratingAudio(true);
+    const newAssets: AudioAssets = { perShotAudio: [] };
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const session = (await supabase.auth.getSession()).data.session;
+    const authToken = session?.access_token || apikey;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      apikey,
+      Authorization: `Bearer ${authToken}`,
+    };
+
+    try {
+      // Music track
+      if (mode === 'music' || mode === 'full_mix') {
+        const totalDuration = shots.reduce((sum, s) => sum + s.duration_sec, 0);
+        const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music for a ${filmType?.replace(/_/g, ' ')} film`;
+        try {
+          const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ prompt: musicPrompt, duration: Math.min(totalDuration, 120) }),
+          });
+          if (res.ok) {
+            const blob = await res.blob();
+            newAssets.backgroundTrackUrl = URL.createObjectURL(blob);
+          }
+        } catch (e) {
+          console.error('[ShortFilm] Music generation failed:', e);
+        }
+      }
+
+      // SFX per shot (full_mix only)
+      if (mode === 'full_mix') {
+        for (const shot of shots) {
+          try {
+            const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
+            const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
+            });
+            if (res.ok) {
+              const blob = await res.blob();
+              newAssets.perShotAudio.push({
+                shotIndex: shot.shot_index,
+                url: URL.createObjectURL(blob),
+                type: 'sfx',
+              });
+            }
+          } catch (e) {
+            console.error(`[ShortFilm] SFX shot ${shot.shot_index} failed:`, e);
+          }
+        }
+      }
+
+      // Voiceover per shot
+      if (mode === 'voiceover' || mode === 'full_mix') {
+        const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
+        for (const shot of shots) {
+          if (!shot.script_line) continue;
+          try {
+            const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ text: shot.script_line, voiceId }),
+            });
+            if (res.ok) {
+              const blob = await res.blob();
+              newAssets.perShotAudio.push({
+                shotIndex: shot.shot_index,
+                url: URL.createObjectURL(blob),
+                type: 'voiceover',
+              });
+            }
+          } catch (e) {
+            console.error(`[ShortFilm] TTS shot ${shot.shot_index} failed:`, e);
+          }
+        }
+      }
+
+      setAudioAssets(newAssets);
+      if (newAssets.backgroundTrackUrl || newAssets.perShotAudio.length > 0) {
+        toast.success('Audio layer generated');
+      }
+    } catch (err) {
+      console.error('[ShortFilm] Audio generation failed:', err);
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  }, [user, settings, shots, filmType]);
 
   // ─── Real generation pipeline ───────────────────────────────
 
@@ -477,13 +581,18 @@ export function useShortFilmProject() {
       toast.success('Short film generation complete!');
       refreshBalance();
 
+      // Generate audio layer if needed
+      if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
+        await generateAudio();
+      }
+
     } catch (err) {
       console.error('[ShortFilm] Generation failed:', err);
       toast.error(err instanceof Error ? err.message : 'Generation failed');
     } finally {
       setIsGenerating(false);
     }
-  }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId]);
+  }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId, generateAudio]);
 
   const updateShot = useCallback((index: number, updated: ShotPlanItem) => {
     setShots(prev => prev.map((s, i) => i === index ? updated : s));
@@ -561,6 +670,9 @@ export function useShortFilmProject() {
     loadDraft,
     customRoles,
     setCustomRoles,
+    audioAssets,
+    isGeneratingAudio,
+    generateAudio,
   };
 }
 

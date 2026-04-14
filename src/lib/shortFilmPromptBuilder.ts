@@ -107,6 +107,6 @@ export function estimateShortFilmCredits(
   settings: ShortFilmSettings,
 ): number {
   const perShot = settings.shotDuration === '10' ? 18 : 10;
-  const audioAdd = settings.audioMode === 'ambient' ? 4 : settings.audioMode === 'voice' ? 12 : 0;
+  const audioAdd = settings.audioMode === 'ambient' ? 4 : settings.audioMode === 'voiceover' ? 12 : settings.audioMode === 'music' ? 8 : settings.audioMode === 'full_mix' ? 16 : 0;
   return (perShot + audioAdd) * shotCount + 5; // 5 = planning fee
 }

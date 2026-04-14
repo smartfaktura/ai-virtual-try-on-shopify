@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download, Loader2, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -29,6 +29,7 @@ export default function ShortFilm() {
     planMode, setPlanMode, isAiPlanning,
     saveDraft, loadDraft,
     customRoles, setCustomRoles,
+    audioAssets, isGeneratingAudio,
   } = useShortFilmProject();
 
   const [showPreview, setShowPreview] = useState(false);
@@ -146,11 +147,22 @@ export default function ShortFilm() {
               onRetryShot={retryShotGeneration}
             />
 
+            {/* Audio generation indicator */}
+            {isGeneratingAudio && (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Generating audio layer...</p>
+                  <p className="text-xs text-muted-foreground">Creating music, sound effects, and voiceover</p>
+                </div>
+              </div>
+            )}
+
             {/* Sequential preview player */}
             {allDone && completedClips.length > 1 && (
               <>
                 {showPreview ? (
-                  <ShortFilmVideoPlayer clips={completedClips} />
+                  <ShortFilmVideoPlayer clips={completedClips} audioAssets={audioAssets} />
                 ) : (
                   <Button
                     variant="outline"
