@@ -147,6 +147,17 @@ export default function ShortFilm() {
               onRetryShot={retryShotGeneration}
             />
 
+            {/* Audio generation indicator */}
+            {isGeneratingAudio && (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Generating audio layer...</p>
+                  <p className="text-xs text-muted-foreground">Creating music, sound effects, and voiceover</p>
+                </div>
+              </div>
+            )}
+
             {/* Sequential preview player */}
             {allDone && completedClips.length > 1 && (
               <>
