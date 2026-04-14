@@ -218,7 +218,7 @@ export function ShotCard({
       </div>
 
       {editable && (
-        <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <div className="flex flex-col gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startEdit}>
             <Pencil className="h-3 w-3" />
           </Button>

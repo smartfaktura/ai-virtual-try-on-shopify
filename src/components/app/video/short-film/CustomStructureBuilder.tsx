@@ -64,7 +64,7 @@ export function CustomStructureBuilder({ roles, onChange }: CustomStructureBuild
               >
                 <span className="text-[10px] font-bold text-muted-foreground w-4 text-center">{i + 1}</span>
                 <span className="text-xs font-medium text-foreground flex-1">{formatRoleLabel(role)}</span>
-                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <button onClick={() => moveRole(i, i - 1)} disabled={i === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
                     <ChevronUp className="h-3.5 w-3.5" />
                   </button>

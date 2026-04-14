@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Clock, Film, Play, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface ProjectSummary {
@@ -61,7 +62,20 @@ export function ShortFilmProjectList({ onResumeDraft, onViewProject }: ShortFilm
     })();
   }, [user]);
 
-  if (loading || projects.length === 0) return null;
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-3/4" />
+      </div>
+    );
+  }
+
+  if (projects.length === 0) return null;
 
   const statusColor = (s: string) => {
     if (s === 'draft') return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
