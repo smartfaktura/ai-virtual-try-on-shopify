@@ -1,59 +1,97 @@
 
 
-# Fix Voiceover Duration & Music Prompt Precision
+# Precise Audio Timing & User Audio Control System
 
-## Problems
+## Core Problems
 
-1. **Voiceover too long for short shots**: The AI Director generates 5-15 word script lines regardless of shot duration. A 2-second hook gets "The silence before the sweat. Precision in every single stitch." (10 words = ~4 seconds of speech). `fitTextToDuration` trims post-hoc, but trimmed text loses meaning. The AI should generate duration-appropriate text from the start.
+1. **Audio timing is disconnected from video**: We know exact shot boundaries (cumulative `duration_sec`) but audio generation ignores this. Music, SFX, and VO are generated as isolated blobs with no timing metadata — the player just triggers them at shot boundaries using RAF, but there's no guarantee the audio content *matches* those boundaries.
 
-2. **Music prompt too generic**: `buildContextualMusicPrompt` produces vague prompts like "cinematic premium background music for a product launch film". ElevenLabs needs specific instrumentation, tempo, and arc descriptions to produce matching audio.
+2. **No user choice for audio layers**: `audioMode` is set in Settings (step 5), but the shot plan (step 4) always shows VO/SFX fields regardless. Users generate everything even if they only want music. No per-shot toggle for "this shot needs VO" vs "this shot is silent."
+
+3. **Lip-sync gap**: When `character_visible=true` and the shot has a `script_line`, the video prompt doesn't mention the character is speaking. Kling generates a silent-looking character, then VO is layered on top — lips don't move.
+
+4. **Music has no timing structure**: The music prompt says "15 seconds long" but doesn't describe what should happen at each shot boundary (drop at 3s, build at 7s, resolve at 12s).
 
 ## Solution
 
-### 1. Add word budget to AI Director prompt schema
-Tell the AI the exact word budget per shot so it writes script lines that fit naturally.
+### 1. Move audio preferences into Shot Plan step (before shots are generated)
+
+**File: `src/types/shortFilm.ts`**
+- Add `audioLayers` to `ShortFilmSettings`: `{ music: boolean; sfx: boolean; voiceover: boolean }` — replaces the 5-option `audioMode` enum
+- Add per-shot `vo_enabled?: boolean` and `sfx_enabled?: boolean` to `ShotPlanItem`
+
+**File: `src/components/app/video/short-film/ShotPlanEditor.tsx`**
+- Add an "Audio Layers" toolbar at the top of shot plan: three toggle chips — Music, SFX, Voiceover — so user picks what they want before editing shots
+- Only show the VO input row when voiceover is enabled globally AND the shot is >= 3s
+- Only show SFX input row when sfx is enabled globally
+- Add per-shot VO toggle (small checkbox) so user can disable VO on specific shots (e.g., atmospheric shots)
+- Show word budget indicator: `{wordCount}/{maxWords}w` with color warning when over budget
+
+**File: `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx`**
+- Remove the 5-option `audioMode` grid — audio is now configured in Shot Plan
+- Keep voice picker and music prompt in settings but only show if respective layer is enabled
+
+### 2. Build a timing manifest for audio generation
+
+**File: `src/hooks/useShortFilmProject.ts`**
+- Before calling ElevenLabs, compute a `TimingManifest`:
+```
+Shot 1: 0.0s–2.0s (hook) — SFX: "whoosh impact" @ 0.0s, VO: none
+Shot 2: 2.0s–6.0s (reveal) — SFX: "shimmer" @ 2.5s, VO: "Introducing the future." @ 2.0s
+Shot 3: 6.0s–9.0s (detail) — SFX: "click" @ 6.0s, VO: none
+Shot 4: 9.0s–12.0s (brand_finish) — SFX: "bass resolve" @ 9.0s, VO: "Your story begins." @ 9.0s
+```
+- Use this manifest to:
+  - Skip audio generation for shots where the layer is disabled
+  - Pass exact timing cues into the music prompt (e.g., "drop at 2.0s, build at 6.0s, resolve at 9.0s")
+  - Set correct `offset_sec` on `perShotAudio` entries for playback
+
+### 3. Inject timing cues into music prompt
+
+**File: `src/hooks/useShortFilmProject.ts` → `buildContextualMusicPrompt`**
+- Add shot boundary timestamps: "energy shift at 2.0s (reveal), peak at 6.0s (detail), soft resolve at 9.0s"
+- ElevenLabs music gen doesn't have a "cue" API, but descriptive timing in the prompt ("bass drop at 2 seconds, strings enter at 6 seconds") significantly improves alignment
+
+### 4. Add lip-sync awareness to video prompts
+
+**File: `src/lib/shortFilmPromptBuilder.ts`**
+- When `character_visible=true` AND `shot.script_line` AND `shot.vo_enabled !== false`:
+  - Append to prompt: `"character speaking dialogue, natural lip movement, conversational expression"`
+  - This tells Kling to animate the mouth, improving VO overlay quality
+
+### 5. Respect user's audio choices in generation
+
+**File: `src/hooks/useShortFilmProject.ts` → `generateAudio`**
+- Derive what to generate from `settings.audioLayers` instead of `audioMode`:
+  - `audioLayers.music` → generate music track
+  - `audioLayers.sfx` → generate SFX (only for shots with `sfx_enabled !== false`)
+  - `audioLayers.voiceover` → generate VO (only for shots with `vo_enabled !== false` and `script_line` exists and `duration_sec >= 3`)
+
+### 6. Pass audio layer choices to AI Director
 
 **File: `supabase/functions/ai-shot-planner/index.ts`**
-- Change the `script_line` instruction from "5-15 words" to a duration-aware rule:
-  - "script_line word count MUST match shot duration: ~2 words per second. A 2s shot = max 4 words. A 4s shot = max 8 words. A 3s shot = max 6 words."
-- Add a `music_direction` field to the AI output: a 1-sentence description of the musical feel for the overall film (tempo, instruments, energy arc)
-- For shots with `duration_sec <= 2`, instruct: "script_line should be 2-4 words maximum — a punchy tagline, not a sentence"
+- Accept `audioLayers: { music, sfx, voiceover }` in request body
+- When `voiceover=false`: don't generate `script_line` at all (set to empty)
+- When `sfx=false`: don't generate `sfx_prompt`
+- This prevents the AI from wasting effort on unwanted audio content
 
-### 2. Add `music_direction` to AI output and use it
-**File: `supabase/functions/ai-shot-planner/index.ts`**
-- Ask the AI to also return a top-level `music_direction` string alongside the shots array, describing specific instrumentation, BPM range, and energy arc (e.g., "Slow minimal piano with deep sub-bass, 70 BPM, building from sparse to layered strings at the resolve")
+### 7. Backward compatibility
 
-**File: `src/hooks/useShortFilmProject.ts`**
-- Store `music_direction` from AI response and use it as the music prompt (preferred over `buildContextualMusicPrompt`)
-- Update `buildContextualMusicPrompt` to include specific tempo/instrumentation guidance based on film type
-
-### 3. Improve `fitTextToDuration` as a safety net
-**File: `src/hooks/useShortFilmProject.ts`**
-- Reduce `WORDS_PER_SEC` from 2.5 to 2.0 (more realistic for cinematic pacing)
-- For shots ≤ 2s: skip voiceover entirely (return empty text) — 2 seconds is too short for natural speech
-- Add a `MIN_VO_DURATION = 3` constant — shots shorter than this get no voiceover
-
-### 4. Improve `buildContextualMusicPrompt` with specific details
-**File: `src/hooks/useShortFilmProject.ts`**
-- Add film-type-specific instrumentation defaults:
-  - `product_launch` → "cinematic orchestral with deep bass hits, 80-90 BPM"
-  - `luxury_mood` → "minimal piano with ambient pads, 60-70 BPM, no percussion"
-  - `sports_campaign` → "driving electronic beats with punchy drums, 120-140 BPM"
-  - etc.
-- Include total duration in the prompt so ElevenLabs can shape the arc
-- Add energy arc description based on shot roles (e.g., "starts sparse, builds to powerful at shot 3, resolves softly")
-
-### 5. Update preset planner to match
-**File: `src/lib/shortFilmPlanner.ts`**
-- Update `ROLE_DEFAULTS` script_lines to respect duration budgets (e.g., hook at 2s gets 3-4 words max)
-- Skip `script_line` for roles with duration ≤ 2s
+- Map old `audioMode` values to new `audioLayers` on load:
+  - `silent` → `{ music: false, sfx: false, voiceover: false }`
+  - `ambient` → `{ music: false, sfx: false, voiceover: false }` (Kling native)
+  - `music` → `{ music: true, sfx: true, voiceover: false }`
+  - `voiceover` → `{ music: false, sfx: false, voiceover: true }`
+  - `full_mix` → `{ music: true, sfx: true, voiceover: true }`
 
 ## Files to Change
 
 | File | Change |
 |------|--------|
-| `supabase/functions/ai-shot-planner/index.ts` | Duration-aware word budget rule for script_line; add `music_direction` output field |
-| `src/hooks/useShortFilmProject.ts` | Use AI's `music_direction`; improve `fitTextToDuration` with MIN_VO_DURATION=3; richer `buildContextualMusicPrompt` with instrumentation/BPM per film type |
-| `src/lib/shortFilmPlanner.ts` | Shorten preset script_lines to match role durations; skip VO for ≤2s shots |
-| `src/types/shortFilm.ts` | Add `music_direction?: string` to `ShortFilmProject` |
+| `src/types/shortFilm.ts` | Add `audioLayers` to settings, `vo_enabled`/`sfx_enabled` to `ShotPlanItem` |
+| `src/components/app/video/short-film/ShotPlanEditor.tsx` | Audio layer toggles toolbar, conditional VO/SFX rows, word budget indicator, per-shot VO toggle |
+| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Remove audioMode grid, keep voice/music prompt conditional on layers |
+| `src/hooks/useShortFilmProject.ts` | Timing manifest, layer-aware generation, music timing cues, backward compat migration |
+| `src/lib/shortFilmPromptBuilder.ts` | Lip-sync prompt injection for speaking characters |
+| `supabase/functions/ai-shot-planner/index.ts` | Accept `audioLayers`, skip script/sfx generation when disabled |
 
