@@ -221,7 +221,7 @@ export default function ShortFilm() {
         )}
 
         {step === 'settings' && (
-          <ShortFilmSettingsPanel settings={settings} onChange={setSettings} onPreviewAudio={previewAudio} />
+          <ShortFilmSettingsPanel settings={settings} onChange={setSettings} onPreviewAudio={previewAudio} filmType={filmType} musicDirection={shots.length > 0 ? settings.musicPrompt : undefined} />
         )}
 
         {step === 'review' && !isGenerating && shotStatuses.length === 0 && (

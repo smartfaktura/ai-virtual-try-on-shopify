@@ -304,9 +304,9 @@ export function useShortFilmProject() {
       if (error) throw new Error(error.message);
       if (data?.shots && Array.isArray(data.shots)) {
         setShots(data.shots);
-        // Store AI-generated music direction if present
+        // Store AI-generated music direction and pre-select AI Director preset
         if (data.music_direction) {
-          setSettings(prev => ({ ...prev, musicPrompt: data.music_direction }));
+          setSettings(prev => ({ ...prev, musicPrompt: data.music_direction, musicPresetKey: 'ai_director' }));
         }
         toast.success(`AI Director generated ${data.shots.length} shots`);
       } else {
@@ -543,9 +543,9 @@ export function useShortFilmProject() {
           `${t.role} at ${t.start_sec.toFixed(1)}s–${t.end_sec.toFixed(1)}s`
         ).join(', ');
 
-        const musicPrompt = settings.musicPrompt
-          || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse, references);
-        const enrichedMusicPrompt = `${musicPrompt}. Shot timing cues: ${timingCues}`;
+        // Resolve music prompt from preset key or custom input
+        const resolvedMusicPrompt = resolveMusicPrompt(settings, filmType, shotsToUse, references);
+        const enrichedMusicPrompt = `${resolvedMusicPrompt}. Shot timing cues: ${timingCues}`;
 
         try {
           console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', enrichedMusicPrompt, 'duration:', Math.min(totalDuration, 120));
@@ -1151,6 +1151,34 @@ const FILM_MUSIC_PRESETS: Record<string, string> = {
   lifestyle_teaser: 'warm acoustic guitar with soft ambient pads and gentle beats, 85-95 BPM, aspirational and inviting',
   custom: 'cinematic ambient background with subtle instrumentation, 80 BPM, professional production quality',
 };
+
+/** Resolve the final music prompt from preset key, AI direction, or custom input */
+function resolveMusicPrompt(
+  settings: ShortFilmSettings,
+  filmType: FilmType | null,
+  shots: ShotPlanItem[],
+  refs?: ReferenceAsset[],
+): string {
+  const key = settings.musicPresetKey;
+
+  // AI Director suggestion — use musicPrompt which was set from music_direction
+  if (key === 'ai_director' && settings.musicPrompt) {
+    return settings.musicPrompt;
+  }
+
+  // Custom — use the user's free-text input
+  if (key === 'custom' && settings.musicPrompt) {
+    return settings.musicPrompt;
+  }
+
+  // Named preset key — use FILM_MUSIC_PRESETS directly
+  if (key && FILM_MUSIC_PRESETS[key]) {
+    return FILM_MUSIC_PRESETS[key];
+  }
+
+  // Fallback: build contextual prompt from film type
+  return buildContextualMusicPrompt(filmType, settings.tone, shots, refs);
+}
 
 /** Build a rich music prompt from film context, incorporating style references and specific instrumentation */
 function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | undefined, shots: ShotPlanItem[], refs?: ReferenceAsset[]): string {

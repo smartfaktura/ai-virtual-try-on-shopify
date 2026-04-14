@@ -81,6 +81,7 @@ export interface ShortFilmSettings {
   quality: 'standard' | 'pro';
   tone?: string;
   musicPrompt?: string;
+  musicPresetKey?: string;
   voiceId?: string;
 }
 
