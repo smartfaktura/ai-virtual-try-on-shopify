@@ -161,7 +161,7 @@ export function ShortFilmStickyBar({
                 </Button>
                 {hasCompletedClips && (
                   <Button size="sm" className="gap-1.5" onClick={onDownloadAll}>
-                    <Download className="w-3.5 h-3.5" /> Download All
+                    <Download className="w-3.5 h-3.5" /> Download
                   </Button>
                 )}
               </>

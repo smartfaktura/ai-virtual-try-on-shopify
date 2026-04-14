@@ -100,10 +100,10 @@ const ROLE_CINEMATICS: Record<string, {
   },
   human: {
     directive:
-      'Human element — expression, gesture, interaction. Emotional connection with the viewer.',
+      'Human element — a real person with natural expression, gesture, and interaction. Emotional connection with the viewer.',
     lighting: 'Beauty lighting, soft diffused key, eye-catch reflection, warm skin tones.',
     lens: 'Portrait focal length 85-135mm, shallow DOF, intimate distance.',
-    negatives: ['distorted faces', 'unflattering angle', 'harsh shadows on face'],
+    negatives: ['distorted faces', 'unflattering angle', 'harsh shadows on face', 'mannequin', 'hanger', 'clothes rack', 'faceless figure'],
   },
   finish: {
     directive:
@@ -140,6 +140,20 @@ const ROLE_CINEMATICS: Record<string, {
     lens: 'Gentle pull-back or settle, widening composition, breathing room.',
     negatives: ['new tension', 'abrupt', 'dark ending'],
   },
+  hero: {
+    directive:
+      'Hero product reveal — the starring moment. Maximum visual impact, premium presentation.',
+    lighting: 'Sculpted three-point lighting, perfect product illumination, dramatic rim separation.',
+    lens: 'Medium telephoto, shallow DOF, smooth orbit or push-in, cinematic framing.',
+    negatives: ['cluttered', 'poor lighting', 'unflattering angle'],
+  },
+  transition: {
+    directive:
+      'Smooth visual transition connecting scenes. Elegant motion bridging two moments.',
+    lighting: 'Consistent transitional lighting, matching tone of adjacent shots.',
+    lens: 'Flowing camera movement, wipe or morph framing, seamless continuity.',
+    negatives: ['jarring cut', 'mismatched lighting', 'static'],
+  },
 };
 
 const DEFAULT_CINEMATIC = {
@@ -155,6 +169,13 @@ const BASE_NEGATIVES = [
   'distorted faces', 'unrealistic proportions', 'overexposed',
   'underexposed', 'noise', 'grain artifacts', 'compression artifacts',
   'amateur', 'shaky camera', 'lens distortion',
+];
+
+/* ─── Human-shot specific negatives ─── */
+const HUMAN_NEGATIVES = [
+  'mannequin', 'hanger', 'clothes rack', 'faceless', 'plastic figure',
+  'doll', 'ghost figure', 'invisible person', 'empty clothes',
+  'no person visible', 'product only without human',
 ];
 
 /**
@@ -174,6 +195,12 @@ export function buildShotPrompt(
   if (typeof imageIndex === 'number' && imageIndex >= 1) {
     p1.push(`Feature subject from <<<image_${imageIndex}>>>.`);
   }
+
+  // For character-visible shots, add strong human directives
+  if (shot.character_visible) {
+    p1.push('A real human person with natural skin, visible face, and authentic expression.');
+  }
+
   p1.push(roleCine.directive);
   p1.push(shot.purpose);
 
@@ -188,6 +215,13 @@ export function buildShotPrompt(
   if (shot.user_notes) {
     p2.push(shot.user_notes);
   }
+
+  // Inject scene type description for text-only scene presets
+  const sceneTypeLabel = shot.scene_type?.replace(/_/g, ' ');
+  if (sceneTypeLabel && sceneTypeLabel !== 'general') {
+    p2.push(`Scene style: ${sceneTypeLabel}.`);
+  }
+
   const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
   p2.push(`Cinematic 4K ${tonePreset}.`);
 
@@ -218,8 +252,11 @@ export function buildShotPrompt(
     prompt = prompt.slice(0, MAX_PROMPT_LENGTH).replace(/\s\S*$/, '');
   }
 
-  // Build negative prompt
+  // Build negative prompt — add human-specific negatives when character is visible
   const allNegatives = [...BASE_NEGATIVES, ...roleCine.negatives];
+  if (shot.character_visible) {
+    allNegatives.push(...HUMAN_NEGATIVES);
+  }
 
   return {
     prompt,
@@ -229,13 +266,11 @@ export function buildShotPrompt(
 
 /**
  * Estimate total credits for the entire short film.
- * Multi-shot generates ONE combined video, so credit cost is based on total duration.
  */
 export function estimateShortFilmCredits(
   shotCount: number,
   settings: ShortFilmSettings,
 ): number {
-  // Estimate based on shot count * avg duration
   const totalDuration = Math.min(shotCount * 3, 15);
   const videoCost = totalDuration <= 5 ? 10 : totalDuration <= 10 ? 18 : 25;
 
@@ -245,7 +280,7 @@ export function estimateShortFilmCredits(
     : settings.audioMode === 'full_mix' ? 16
     : 0;
 
-  return videoCost + audioAdd + 5; // 5 = planning fee
+  return videoCost + audioAdd + 5;
 }
 
 /**
@@ -273,11 +308,9 @@ export function distributeShotDurations(
     return safeShots.map(s => Math.max(1, s.duration_sec || 3));
   }
   
-  // Scale down proportionally, ensure each is at least 1s
   const scale = 15 / rawTotal;
   const scaled = safeShots.map(s => Math.max(1, Math.round((s.duration_sec || 3) * scale)));
   
-  // Adjust to hit exactly 15s
   let diff = 15 - scaled.reduce((a, b) => a + b, 0);
   for (let i = 0; diff !== 0 && i < scaled.length; i++) {
     const adj = diff > 0 ? 1 : -1;
