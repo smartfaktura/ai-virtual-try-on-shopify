@@ -1,31 +1,141 @@
-import { GripVertical, Eye, EyeOff, User, Package, Clock, Video } from 'lucide-react';
+import { useState } from 'react';
+import { GripVertical, User, Package, Clock, Video, Pencil, Check, X, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { formatRoleLabel, formatCameraMotion } from '@/lib/shortFilmPlanner';
 import type { ShotPlanItem } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ShotCardProps {
   shot: ShotPlanItem;
   isGenerating?: boolean;
   isComplete?: boolean;
   resultUrl?: string;
+  editable?: boolean;
+  onUpdate?: (updated: ShotPlanItem) => void;
+  onDelete?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
-export function ShotCard({ shot, isGenerating, isComplete, resultUrl }: ShotCardProps) {
+export function ShotCard({
+  shot, isGenerating, isComplete, resultUrl,
+  editable, onUpdate, onDelete, onMoveUp, onMoveDown, isFirst, isLast,
+}: ShotCardProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(shot);
+
+  const startEdit = () => {
+    setDraft({ ...shot });
+    setEditing(true);
+  };
+
+  const confirmEdit = () => {
+    onUpdate?.(draft);
+    setEditing(false);
+  };
+
+  const cancelEdit = () => setEditing(false);
+
+  if (editing && editable) {
+    return (
+      <div className="rounded-xl border border-primary/40 bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary" className="text-[10px] font-semibold uppercase tracking-wide">
+            Shot {shot.shot_index} — {formatRoleLabel(shot.role)}
+          </Badge>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={confirmEdit}>
+              <Check className="h-3.5 w-3.5 text-green-600" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={cancelEdit}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div>
+            <label className="text-[10px] font-medium text-muted-foreground">Purpose</label>
+            <Textarea
+              value={draft.purpose}
+              onChange={e => setDraft(d => ({ ...d, purpose: e.target.value }))}
+              className="text-xs min-h-[60px]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Camera Motion</label>
+              <Input
+                value={draft.camera_motion}
+                onChange={e => setDraft(d => ({ ...d, camera_motion: e.target.value }))}
+                className="text-xs h-8"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Duration (sec)</label>
+              <Input
+                type="number"
+                min={3}
+                max={10}
+                value={draft.duration_sec}
+                onChange={e => setDraft(d => ({ ...d, duration_sec: Number(e.target.value) }))}
+                className="text-xs h-8"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-medium text-muted-foreground">Script Line (optional)</label>
+            <Input
+              value={draft.script_line || ''}
+              onChange={e => setDraft(d => ({ ...d, script_line: e.target.value || undefined }))}
+              placeholder="Voiceover or narration..."
+              className="text-xs h-8"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-xl border p-4 transition-all',
+        'flex items-start gap-3 rounded-xl border p-4 transition-all group',
         isGenerating && 'border-primary/50 bg-primary/5 animate-pulse',
         isComplete && 'border-green-500/30 bg-green-500/5',
         !isGenerating && !isComplete && 'border-border bg-card'
       )}
     >
       <div className="flex flex-col items-center gap-1 pt-0.5">
-        <GripVertical className="h-4 w-4 text-muted-foreground/40" />
-        <span className="text-xs font-bold text-muted-foreground">
-          {shot.shot_index}
-        </span>
+        {editable ? (
+          <div className="flex flex-col gap-0.5">
+            <button
+              onClick={onMoveUp}
+              disabled={isFirst}
+              className="text-muted-foreground/60 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronUp className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-xs font-bold text-muted-foreground text-center">{shot.shot_index}</span>
+            <button
+              onClick={onMoveDown}
+              disabled={isLast}
+              className="text-muted-foreground/60 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <>
+            <GripVertical className="h-4 w-4 text-muted-foreground/40" />
+            <span className="text-xs font-bold text-muted-foreground">{shot.shot_index}</span>
+          </>
+        )}
       </div>
 
       <div className="flex-1 min-w-0 space-y-2">
@@ -72,6 +182,17 @@ export function ShotCard({ shot, isGenerating, isComplete, resultUrl }: ShotCard
           </p>
         )}
       </div>
+
+      {editable && (
+        <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startEdit}>
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={onDelete}>
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
 
       {resultUrl && (
         <div className="shrink-0">
