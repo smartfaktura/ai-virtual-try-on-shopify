@@ -279,6 +279,10 @@ export function useShortFilmProject() {
       if (error) throw new Error(error.message);
       if (data?.shots && Array.isArray(data.shots)) {
         setShots(data.shots);
+        // Store AI-generated music direction if present
+        if (data.music_direction) {
+          setSettings(prev => ({ ...prev, musicPrompt: data.music_direction }));
+        }
         toast.success(`AI Director generated ${data.shots.length} shots`);
       } else {
         throw new Error('Invalid AI response');
@@ -568,7 +572,7 @@ export function useShortFilmProject() {
         setAudioPhase('voiceover');
         const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
         for (const shot of shotsToUse) {
-          if (!shot.script_line) continue;
+          if (!shot.script_line || shot.duration_sec < 3) continue; // Skip VO for shots < 3s
           setAudioShotStatuses(prev =>
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
           );
@@ -1077,13 +1081,23 @@ export function useShortFilmProject() {
   };
 }
 
-/** Build a rich music prompt from film context, incorporating style references */
+/** Film-type-specific instrumentation & tempo defaults for ElevenLabs music generation */
+const FILM_MUSIC_PRESETS: Record<string, string> = {
+  product_launch: 'cinematic orchestral with deep bass hits and rising strings, 80-90 BPM, building from sparse tension to powerful reveal',
+  brand_story: 'warm cinematic piano with subtle strings and soft percussion, 75-85 BPM, gentle narrative arc',
+  fashion_campaign: 'minimal deep house with soft synth pads and clean percussion, 100-110 BPM, sleek editorial feel',
+  beauty_film: 'ethereal ambient with delicate harp and soft crystalline textures, 65-75 BPM, dreamy and luxurious',
+  luxury_mood: 'minimal piano with ambient pads and deep sub-bass, 60-70 BPM, no percussion, languid and atmospheric',
+  sports_campaign: 'driving electronic beats with punchy drums and aggressive synths, 120-140 BPM, high energy throughout',
+  lifestyle_teaser: 'warm acoustic guitar with soft ambient pads and gentle beats, 85-95 BPM, aspirational and inviting',
+  custom: 'cinematic ambient background with subtle instrumentation, 80 BPM, professional production quality',
+};
+
+/** Build a rich music prompt from film context, incorporating style references and specific instrumentation */
 function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | undefined, shots: ShotPlanItem[], refs?: ReferenceAsset[]): string {
-  const type = filmType?.replace(/_/g, ' ') || 'cinematic';
-  const mood = tone || 'ambient';
-  const roles = [...new Set(shots.map(s => s.role))].slice(0, 4).join(', ');
-  const hasHook = shots.some(s => s.role === 'hook' || s.role === 'tease');
-  const hasClosing = shots.some(s => s.role === 'closing' || s.role === 'resolve');
+  const totalDuration = shots.reduce((sum, s) => sum + s.duration_sec, 0);
+  const filmKey = filmType || 'custom';
+  const basePreset = FILM_MUSIC_PRESETS[filmKey] || FILM_MUSIC_PRESETS.custom;
 
   // Extract style keywords from selected style references
   const styleKeywords = (refs || [])
@@ -1099,24 +1113,35 @@ function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | un
     .filter(Boolean)
     .slice(0, 2);
 
-  let prompt = '';
-  if (styleKeywords.length > 0) {
-    prompt = `${styleKeywords.join(', ')} style background music for a ${type} film`;
-  } else {
-    prompt = `cinematic ${mood} background music for a ${type} film`;
+  // Build energy arc from shot roles
+  const roleNames = shots.map(s => s.role);
+  const hasHook = roleNames.some(r => r === 'hook' || r === 'tease');
+  const hasReveal = roleNames.some(r => r === 'product_reveal' || r === 'highlight');
+  const hasResolve = roleNames.some(r => r === 'resolve' || r === 'brand_finish' || r === 'end_frame');
+
+  let energyArc = '';
+  if (hasHook && hasReveal && hasResolve) {
+    energyArc = ', energy arc: starts sparse and mysterious, builds to powerful peak at the reveal, resolves softly';
+  } else if (hasHook && hasReveal) {
+    energyArc = ', energy arc: dramatic opening building to powerful reveal climax';
+  } else if (hasReveal && hasResolve) {
+    energyArc = ', energy arc: confident opening into hero moment then gentle resolution';
   }
 
+  let prompt = basePreset;
+
+  if (styleKeywords.length > 0) {
+    prompt += `, ${styleKeywords.join(', ')} visual mood`;
+  }
   if (sceneKeywords.length > 0) {
     prompt += `, set in ${sceneKeywords.join(' and ')} environment`;
   }
-
-  if (hasHook && hasClosing) {
-    prompt += ', slow building tension with elegant resolution';
-  } else if (hasHook) {
-    prompt += ', dramatic opening with rising intensity';
+  if (tone && !basePreset.includes(tone)) {
+    prompt += `, ${tone} tone`;
   }
-  if (roles) prompt += `, featuring ${roles} moments`;
-  prompt += ', no vocals, professional production quality';
+
+  prompt += energyArc;
+  prompt += `, exactly ${totalDuration} seconds long, no vocals, professional production quality`;
   return prompt;
 }
 
@@ -1166,12 +1191,21 @@ function buildContextualSfxPrompt(shot: ShotPlanItem, refs?: ReferenceAsset[]): 
   return `${baseSfx}${motionExtra}${sceneExtra}, ${shot.duration_sec} seconds, professional cinematic quality`;
 }
 
-/** Fit voiceover text to shot duration with word-budget trimming and speed adjustment */
+/** Fit voiceover text to shot duration with word-budget trimming and speed adjustment.
+ *  Shots shorter than MIN_VO_DURATION get no voiceover — too short for natural speech. */
 function fitTextToDuration(scriptLine: string, durationSec: number): { text: string; speed: number } {
-  const WORDS_PER_SEC = 2.5;
+  const MIN_VO_DURATION = 3; // seconds — skip VO for very short shots
+  const WORDS_PER_SEC = 2.0; // cinematic pace (~120 WPM)
   const MAX_SPEED = 1.2;
+
+  if (durationSec < MIN_VO_DURATION) {
+    return { text: '', speed: 1.0 };
+  }
+
   const wordBudget = Math.floor(durationSec * WORDS_PER_SEC);
-  const words = scriptLine.trim().split(/\s+/);
+  const words = scriptLine.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length === 0) return { text: '', speed: 1.0 };
 
   if (words.length <= wordBudget) {
     const estimatedDuration = words.length / WORDS_PER_SEC;

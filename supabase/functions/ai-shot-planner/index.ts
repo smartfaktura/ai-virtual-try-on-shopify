@@ -91,7 +91,13 @@ VALID SCENE TYPES: ${VALID_SCENE_TYPES.join(", ")}
 
 VALID CAMERA MOTIONS: ${VALID_CAMERA_MOTIONS.join(", ")}
 
-Return ONLY a valid JSON array of shot objects. Each shot object MUST have exactly these fields:
+Return ONLY valid JSON with this structure:
+{
+  "music_direction": "one sentence describing the ideal music: specific instruments, BPM range, and energy arc",
+  "shots": [array of shot objects]
+}
+
+Each shot object MUST have exactly these fields:
 - shot_index (number, 1-based)
 - role (string: MUST match the role from the provided sequence)
 - purpose (string: 1-sentence description of what this shot achieves)
@@ -102,14 +108,15 @@ Return ONLY a valid JSON array of shot objects. Each shot object MUST have exact
 - product_visible (boolean)
 - character_visible (boolean)
 - preservation_strength ("low" | "medium" | "high")
-- script_line (string: SHORT voiceover narration, 5-15 words, matching the shot mood)
+- script_line (string: voiceover narration — CRITICAL: word count MUST match duration. Budget is ~2 words per second. A 2s shot = max 3-4 words as a punchy tagline. A 3s shot = max 6 words. A 4s shot = max 8 words. A 5s shot = max 10 words. Shots ≤ 2s should be 2-4 words maximum — a punchy tagline, NOT a sentence.)
 - sfx_prompt (string: descriptive sound effect prompt, 5-20 words, matching scene environment and mood)
-- sfx_trigger_at (number: offset in seconds from shot start when SFX should trigger — 0 for immediate, 0.3-0.5 for reveals)
+- sfx_trigger_at (number: offset in seconds from shot start when SFX should trigger — 0 for impacts/hooks, 0.3-0.5 for reveals/transitions, 0 for ambient)
 
 The total of all duration_sec values MUST equal exactly 15 seconds.
 Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments.
 Vary camera motions and scene types for cinematic interest.
-Every shot MUST have a compelling script_line AND an sfx_prompt with matching atmospheric sound.`;
+
+MUSIC DIRECTION: The "music_direction" field should describe SPECIFIC instrumentation (e.g. "minimal piano with deep sub-bass"), a BPM range, and an energy arc (e.g. "builds from sparse to layered strings at resolve"). Be precise — this drives AI music generation.`;
 
     const userPrompt = `Film type: ${filmType}${filmDescription ? ` — ${filmDescription}` : ""}
 Story structure: ${storyStructure}
@@ -124,7 +131,8 @@ ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
 
 Generate exactly ${roleSequence.length} shots following the role sequence: ${roleSequence.join(", ")}.
 Each shot's "role" field MUST match the corresponding role in the sequence.
-Remember: cinematic pacing (NOT equal splits), script_line for voiceover, sfx_prompt for sound effects, and sfx_trigger_at for timing.`;
+CRITICAL: script_line word budget is ~2 words per second of shot duration. A 2s hook = "Feel the power." (3 words). A 4s reveal = "Something extraordinary, designed for you." (6 words). Do NOT write long sentences for short shots.
+Remember: cinematic pacing (NOT equal splits), sfx_prompt for sound effects, sfx_trigger_at for timing, and music_direction for the overall music track.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -161,14 +169,38 @@ Remember: cinematic pacing (NOT equal splits), script_line for voiceover, sfx_pr
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Extract JSON array from response (handle markdown code blocks)
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
+    // Try to parse as {music_direction, shots} object first, fall back to plain array
+    let shots: any[];
+    let musicDirection: string | undefined;
+
+    const objMatch = content.match(/\{[\s\S]*\}/);
+    const arrMatch = content.match(/\[[\s\S]*\]/);
+
+    if (objMatch) {
+      try {
+        const parsed = JSON.parse(objMatch[0]);
+        if (Array.isArray(parsed.shots)) {
+          shots = parsed.shots;
+          musicDirection = typeof parsed.music_direction === "string" ? parsed.music_direction : undefined;
+        } else if (Array.isArray(parsed)) {
+          shots = parsed;
+        } else {
+          throw new Error("No shots array found");
+        }
+      } catch {
+        if (arrMatch) {
+          shots = JSON.parse(arrMatch[0]);
+        } else {
+          console.error("Could not parse shot plan from AI response:", content);
+          throw new Error("Failed to parse AI response into shot plan");
+        }
+      }
+    } else if (arrMatch) {
+      shots = JSON.parse(arrMatch[0]);
+    } else {
       console.error("Could not parse shot plan from AI response:", content);
       throw new Error("Failed to parse AI response into shot plan");
     }
-
-    const shots = JSON.parse(jsonMatch[0]);
 
     // Validate and sanitize — snap roles to valid system roles
     const validShots = shots.map((s: any, i: number) => {
@@ -212,7 +244,7 @@ Remember: cinematic pacing (NOT equal splits), script_line for voiceover, sfx_pr
       }
     }
 
-    return new Response(JSON.stringify({ shots: validShots }), {
+    return new Response(JSON.stringify({ shots: validShots, ...(musicDirection ? { music_direction: musicDirection } : {}) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

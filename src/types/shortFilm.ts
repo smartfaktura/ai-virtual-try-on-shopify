@@ -43,6 +43,7 @@ export interface ShortFilmProject {
   script_mode: 'none' | 'manual' | 'generated';
   script_lines?: string[];
   tone: string;
+  music_direction?: string;
 }
 
 export interface FilmTypeOption {
