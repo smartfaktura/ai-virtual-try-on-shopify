@@ -247,12 +247,18 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                 <div className="flex flex-wrap gap-2">
                   {sectionRefs.map((ref) => (
                     <div key={ref.id} className="relative group">
-                      <img
-                        src={getOptimizedUrl(ref.url, { width: 128, quality: 60 })}
-                        alt={ref.name || section.label}
-                        className="h-16 w-16 rounded-lg object-contain bg-muted/30 border border-border"
-                        loading="lazy"
-                      />
+                      {ref.url ? (
+                        <img
+                          src={getOptimizedUrl(ref.url, { width: 128, quality: 60 })}
+                          alt={ref.name || section.label}
+                          className="h-16 w-16 rounded-lg object-cover bg-muted/30 border border-border"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-lg bg-muted/30 border border-border flex items-center justify-center">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
                       <button
                         onClick={() => removeRef(ref.id)}
                         className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:opacity-100"
@@ -408,25 +414,6 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         emptyText="No products yet. Add products in your product library first."
       />
     </div>
-  );
-}
-
-/* ─── Scene card used in grouped + search views ─── */
-function SceneCard({ scene, onPick }: { scene: { id: string; title: string; previewUrl?: string }; onPick: (s: { id: string; title: string; previewUrl?: string }) => void }) {
-  return (
-    <button
-      onClick={() => onPick(scene)}
-      className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-    >
-      <div className="aspect-square bg-muted/30 rounded-t-lg overflow-hidden">
-        <ShimmerImage
-          src={getOptimizedUrl(scene.previewUrl, { width: 200, quality: 60 })}
-          alt={scene.title}
-          className="w-full h-full object-contain"
-        />
-      </div>
-      <p className="text-xs font-medium text-foreground p-2 truncate">{scene.title}</p>
-    </button>
   );
 }
 
