@@ -180,9 +180,9 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   );
 
   const pickScene = useCallback(
-    (scene: { id: string; title: string; previewUrl?: string }) => {
-      if (!scene.previewUrl) return;
-      onChange([...references, { id: crypto.randomUUID(), url: scene.previewUrl, role: 'scene', name: scene.title }]);
+    (scene: { id: string; title: string; description?: string }) => {
+      // Text-described scenes don't have image URLs — store description as name
+      onChange([...references, { id: crypto.randomUUID(), url: '', role: 'scene', name: `${scene.title}: ${scene.description || ''}` }]);
       setScenePickerOpen(false);
     },
     [references, onChange]
