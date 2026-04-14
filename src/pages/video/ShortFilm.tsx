@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download, Loader2, Music, RotateCw } from 'lucide-react';
+import { Sparkles, Coins, ExternalLink, RotateCw, Play, Download, Loader2, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -10,6 +10,7 @@ import { ShortFilmSettingsPanel } from '@/components/app/video/short-film/ShortF
 import { ShortFilmProgressPanel } from '@/components/app/video/short-film/ShortFilmProgressPanel';
 import { ShortFilmReviewSummary } from '@/components/app/video/short-film/ShortFilmReviewSummary';
 import { ShortFilmStepper } from '@/components/app/video/short-film/ShortFilmStepper';
+import { ShortFilmStickyBar } from '@/components/app/video/short-film/ShortFilmStickyBar';
 import { ShortFilmVideoPlayer } from '@/components/app/video/short-film/ShortFilmVideoPlayer';
 import { ShortFilmProjectList } from '@/components/app/video/short-film/ShortFilmProjectList';
 import { useMemo, useState, useCallback } from 'react';
@@ -70,15 +71,29 @@ export default function ShortFilm() {
   }, [loadDraft]);
 
   const handleViewProject = useCallback((projectId: string) => {
-    // For now just navigate to video hub
     window.location.href = '/app/video';
   }, []);
 
+  const handleStepClick = useCallback((index: number) => {
+    // Navigate backward only
+    if (index < currentStepIndex) {
+      for (let i = currentStepIndex; i > index; i--) {
+        goBack();
+      }
+    }
+  }, [currentStepIndex, goBack]);
+
+  const canNavigateToStep = useCallback((index: number) => {
+    return index < currentStepIndex;
+  }, [currentStepIndex]);
+
+  const hideBar = step === 'review' && isGenerating;
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-24">
+    <div className="max-w-2xl mx-auto space-y-6 pb-6">
       <PageHeader
         title="Short Film"
-        subtitle="Plan and generate a premium multi-shot brand film."
+        subtitle="Plan and generate a premium multi-shot brand film"
       >
         {showCredits && (
           <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -88,10 +103,14 @@ export default function ShortFilm() {
         )}
       </PageHeader>
 
-      {/* Project History */}
       <ShortFilmProjectList onResumeDraft={handleResumeDraft} onViewProject={handleViewProject} />
 
-      <ShortFilmStepper steps={steps} currentStepIndex={currentStepIndex} />
+      <ShortFilmStepper
+        steps={steps}
+        currentStepIndex={currentStepIndex}
+        onStepClick={handleStepClick}
+        canNavigateTo={canNavigateToStep}
+      />
 
       {/* Step Content */}
       <div className="min-h-[300px]">
@@ -149,7 +168,6 @@ export default function ShortFilm() {
               onRetryShot={retryShotGeneration}
             />
 
-            {/* Audio generation indicator */}
             {isGeneratingAudio && (
               <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -181,7 +199,6 @@ export default function ShortFilm() {
               </div>
             )}
 
-            {/* Audio retry for failed shots */}
             {!isGeneratingAudio && audioShotStatuses.some(s => s.sfx === 'failed' || s.voiceover === 'failed') && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-2">
                 <p className="text-sm font-medium text-foreground">Some audio tracks failed</p>
@@ -202,7 +219,6 @@ export default function ShortFilm() {
               </div>
             )}
 
-            {/* Regenerate audio button */}
             {allDone && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (
               <Button
                 variant="outline"
@@ -215,7 +231,6 @@ export default function ShortFilm() {
               </Button>
             )}
 
-            {/* Sequential preview player */}
             {allDone && completedClips.length > 1 && (
               <>
                 {showPreview ? (
@@ -234,7 +249,6 @@ export default function ShortFilm() {
               </>
             )}
 
-            {/* Individual clips + export */}
             {allDone && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -285,68 +299,25 @@ export default function ShortFilm() {
         )}
       </div>
 
-      {/* Bottom navigation */}
-      {!(step === 'review' && isGenerating) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 z-40">
-          <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={goBack}
-                disabled={currentStepIndex === 0}
-                className="gap-1.5"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-              {currentStepIndex > 0 && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={resetProject}
-                    className="gap-1.5 text-muted-foreground"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    Start Over
-                  </Button>
-                  {currentStepIndex >= 1 && step !== 'review' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={saveDraft}
-                      className="gap-1.5 text-muted-foreground"
-                    >
-                      <Save className="h-3.5 w-3.5" />
-                      Save Draft
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
-
-            {step === 'review' && shotStatuses.length === 0 ? (
-              <Button
-                onClick={startGeneration}
-                disabled={isGenerating}
-                className="gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                Generate Short Film
-              </Button>
-            ) : step !== 'review' ? (
-              <Button
-                onClick={goNext}
-                disabled={!canAdvance}
-                className="gap-1.5"
-              >
-                Next
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            ) : null}
-          </div>
-        </div>
+      {/* Floating bottom bar */}
+      {!hideBar && (
+        <ShortFilmStickyBar
+          step={step}
+          steps={steps}
+          currentStepIndex={currentStepIndex}
+          totalCredits={totalCredits}
+          shotCount={shots.length}
+          canAdvance={canAdvance}
+          isGenerating={isGenerating}
+          allDone={allDone}
+          hasCompletedClips={completedClips.length > 0}
+          onNext={goNext}
+          onBack={goBack}
+          onGenerate={startGeneration}
+          onReset={resetProject}
+          onSaveDraft={saveDraft}
+          onDownloadAll={downloadAllClips}
+        />
       )}
     </div>
   );
