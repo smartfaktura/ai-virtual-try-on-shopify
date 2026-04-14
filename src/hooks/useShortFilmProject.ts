@@ -543,9 +543,9 @@ export function useShortFilmProject() {
           `${t.role} at ${t.start_sec.toFixed(1)}s–${t.end_sec.toFixed(1)}s`
         ).join(', ');
 
-        const musicPrompt = settings.musicPrompt
-          || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse, references);
-        const enrichedMusicPrompt = `${musicPrompt}. Shot timing cues: ${timingCues}`;
+        // Resolve music prompt from preset key or custom input
+        const resolvedMusicPrompt = resolveMusicPrompt(settings, filmType, shotsToUse, references);
+        const enrichedMusicPrompt = `${resolvedMusicPrompt}. Shot timing cues: ${timingCues}`;
 
         try {
           console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', enrichedMusicPrompt, 'duration:', Math.min(totalDuration, 120));

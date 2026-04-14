@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import type { ShortFilmSettings, AudioLayers } from '@/types/shortFilm';
+import type { ShortFilmSettings, AudioLayers, FilmType } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
 import { Monitor, Smartphone, Square, RectangleVertical, Play, Loader2, Square as StopIcon, Zap, Crown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ interface ShortFilmSettingsPanelProps {
   settings: ShortFilmSettings;
   onChange: (settings: ShortFilmSettings) => void;
   onPreviewAudio?: () => Promise<string | null>;
+  filmType?: FilmType | null;
+  musicDirection?: string;
 }
 
 const ASPECT_OPTIONS = [
@@ -38,14 +40,35 @@ const VOICE_OPTIONS = [
   { id: 'nPczCjzI2devNBz1zQrb', label: 'Brian — professional male' },
 ];
 
-export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: ShortFilmSettingsPanelProps) {
+const MUSIC_PRESETS: { key: string; label: string; forFilmType?: string }[] = [
+  { key: 'product_launch', label: 'Cinematic Orchestral', forFilmType: 'product_launch' },
+  { key: 'brand_story', label: 'Warm Piano & Strings', forFilmType: 'brand_story' },
+  { key: 'fashion_campaign', label: 'Minimal Deep House', forFilmType: 'fashion_campaign' },
+  { key: 'beauty_film', label: 'Ethereal Ambient', forFilmType: 'beauty_film' },
+  { key: 'luxury_mood', label: 'Minimal Piano & Pads', forFilmType: 'luxury_mood' },
+  { key: 'sports_campaign', label: 'Driving Electronic', forFilmType: 'sports_campaign' },
+  { key: 'lifestyle_teaser', label: 'Warm Acoustic', forFilmType: 'lifestyle_teaser' },
+];
+
+function getDefaultMusicPresetKey(filmType?: FilmType | null, musicDirection?: string): string {
+  if (musicDirection) return 'ai_director';
+  if (filmType) {
+    const match = MUSIC_PRESETS.find(p => p.forFilmType === filmType);
+    if (match) return match.key;
+  }
+  return 'product_launch';
+}
+
+export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio, filmType, musicDirection }: ShortFilmSettingsPanelProps) {
   const update = (partial: Partial<ShortFilmSettings>) =>
     onChange({ ...settings, ...partial });
 
   const layers: AudioLayers = settings.audioLayers || { music: true, sfx: true, voiceover: true };
-  const showMusicPrompt = layers.music;
+  const showMusicSection = layers.music;
   const showVoicePicker = layers.voiceover;
   const showPreview = (layers.music || layers.voiceover) && !!onPreviewAudio;
+
+  const currentPresetKey = settings.musicPresetKey || getDefaultMusicPresetKey(filmType, musicDirection);
 
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
@@ -139,19 +162,53 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
         </div>
       </div>
 
-      {/* Music Prompt */}
-      {showMusicPrompt && (
+      {/* Music Style Dropdown */}
+      {showMusicSection && (
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Music Style</p>
           <p className="text-xs text-muted-foreground">
-            Describe the mood and style of the background track.
+            Choose a preset or customize the background music mood.
           </p>
-          <Input
-            value={settings.musicPrompt || ''}
-            onChange={(e) => update({ musicPrompt: e.target.value })}
-            placeholder="e.g. cinematic ambient, warm piano, energetic electronic..."
-            className="text-sm"
-          />
+          <Select
+            value={currentPresetKey}
+            onValueChange={(val) => {
+              update({ musicPresetKey: val, musicPrompt: val === 'custom' ? (settings.musicPrompt || '') : undefined });
+            }}
+          >
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Select music style" />
+            </SelectTrigger>
+            <SelectContent>
+              {musicDirection && (
+                <SelectItem value="ai_director">
+                  🤖 AI Director Suggestion
+                </SelectItem>
+              )}
+              {MUSIC_PRESETS.map((p) => (
+                <SelectItem key={p.key} value={p.key}>
+                  {p.label}{filmType && p.forFilmType === filmType ? ' ★' : ''}
+                </SelectItem>
+              ))}
+              <SelectItem value="custom">✏️ Custom</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Show AI Director suggestion preview */}
+          {currentPresetKey === 'ai_director' && musicDirection && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-xs text-muted-foreground italic">
+              "{musicDirection}"
+            </div>
+          )}
+
+          {/* Custom text input */}
+          {currentPresetKey === 'custom' && (
+            <Input
+              value={settings.musicPrompt || ''}
+              onChange={(e) => update({ musicPrompt: e.target.value })}
+              placeholder="e.g. cinematic ambient, warm piano, energetic electronic..."
+              className="text-sm"
+            />
+          )}
         </div>
       )}
 
