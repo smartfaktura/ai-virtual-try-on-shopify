@@ -134,6 +134,7 @@ serve(async (req) => {
         ...payload,
         user_id: userId,
         job_id: jobId,
+        job_type: jobType,
         credits_reserved: creditsReserved,
       };
 
