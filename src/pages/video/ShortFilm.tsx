@@ -119,7 +119,6 @@ export default function ShortFilm() {
   }, [currentStepIndex]);
 
   const handleReset = useCallback(() => {
-    setShowPreview(false);
     resetProject();
   }, [resetProject]);
 
