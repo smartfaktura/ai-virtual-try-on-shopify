@@ -42,7 +42,8 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
 
   // Prefer preview_url (actual video frame) > source_image_url
   const rawThumb = video.preview_url || video.source_image_url;
-  const thumbnailUrl = getOptimizedUrl(rawThumb, { quality: 60 });
+  const hasThumbnail = !!rawThumb;
+  const thumbnailUrl = hasThumbnail ? getOptimizedUrl(rawThumb, { quality: 60 }) : undefined;
 
   // Determine aspect-ratio for the wrapper:
   // Use the video's stored aspect_ratio when available, otherwise default to 3/4
@@ -80,18 +81,27 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           </div>
         )}
 
-        <ShimmerImage
-          src={thumbnailUrl}
-          alt=""
-          aspectRatio={displayRatio}
-          className="w-full h-full object-cover"
-          onLoad={(e) => {
-            const img = e.currentTarget;
-            if (img.naturalWidth && img.naturalHeight) {
-              setNaturalRatio(`${img.naturalWidth}/${img.naturalHeight}`);
-            }
-          }}
-        />
+        {hasThumbnail ? (
+          <ShimmerImage
+            src={thumbnailUrl!}
+            alt=""
+            aspectRatio={displayRatio}
+            className="w-full h-full object-cover"
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              if (img.naturalWidth && img.naturalHeight) {
+                setNaturalRatio(`${img.naturalWidth}/${img.naturalHeight}`);
+              }
+            }}
+          />
+        ) : (
+          <div
+            className="w-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center"
+            style={{ aspectRatio: displayRatio }}
+          >
+            <Film className="h-8 w-8 text-muted-foreground/40" />
+          </div>
+        )}
 
         {showStatusBadge && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900 animate-pulse">

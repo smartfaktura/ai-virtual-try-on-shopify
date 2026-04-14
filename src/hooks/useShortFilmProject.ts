@@ -205,6 +205,23 @@ export function useShortFilmProject() {
         setDraftProjectId(data.id);
         setProjectId(data.id);
 
+        // ── Auto-recover stuck processing projects ──
+        if (data.status === 'processing') {
+          console.log('[ShortFilm] Project stuck in processing — triggering server-side recovery');
+          toast.info('Recovering interrupted generation…');
+          try {
+            const { data: recoverData } = await supabase.functions.invoke('generate-video', {
+              body: { action: 'recover' },
+            });
+            console.log('[ShortFilm] Recovery result:', recoverData);
+            if (recoverData?.recovered > 0) {
+              toast.success(`Recovered ${recoverData.recovered} video(s)`);
+            }
+          } catch (recoverErr) {
+            console.warn('[ShortFilm] Recovery call failed:', recoverErr);
+          }
+        }
+
         // Restore shot statuses (result_url) so playback/download works on reload
         {
           const { data: shotRows } = await supabase
@@ -238,8 +255,11 @@ export function useShortFilmProject() {
               setAudioPhase('done');
             } else {
               // Audio was expected but missing — set idle so user can trigger
-              if (restoredSettings.audioMode !== 'ambient') {
-                console.log('[ShortFilm] Audio missing on restored draft — setting phase to idle for retry');
+              const layers = getEffectiveLayers(restoredSettings);
+              const anyAudioOn = layers.music || layers.sfx || layers.voiceover;
+              const hasCompletedShots = restoredStatuses.some(s => s.status === 'complete');
+              if (anyAudioOn && hasCompletedShots) {
+                console.log('[ShortFilm] Audio missing on restored draft with completed video — setting phase to idle for retry');
                 setAudioPhase('idle');
               }
             }
