@@ -225,6 +225,14 @@ export function buildShotPrompt(
   const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
   p2.push(`Cinematic 4K ${tonePreset}.`);
 
+  // Inject style/mood preset keywords from references
+  const styleRef = context.references?.find(r => r.role === 'style' && !r.url && r.name);
+  if (styleRef?.name) {
+    // name format: "Title: keyword1, keyword2, ..."
+    const keywords = styleRef.name.includes(':') ? styleRef.name.split(':').slice(1).join(':').trim() : styleRef.name;
+    if (keywords) p2.push(`Visual style: ${keywords}.`);
+  }
+
   // Priority 3 — nice to have
   const p3: string[] = [];
   p3.push(roleCine.lighting);
