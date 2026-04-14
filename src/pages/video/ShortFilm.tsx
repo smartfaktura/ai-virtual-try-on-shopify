@@ -265,7 +265,7 @@ export default function ShortFilm() {
               </Button>
             )}
 
-            {allDone && completedClips.length > 1 && (
+            {allDone && completedClips.length > 0 && (
               <>
                 {showPreview ? (
                   <ShortFilmVideoPlayer clips={completedClips} audioAssets={audioAssets} />
