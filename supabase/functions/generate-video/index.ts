@@ -214,8 +214,68 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
     const withAudio = body.with_audio as boolean;
     const projectId = body.project_id as string | undefined;
     const imageUrls = (body.image_urls as string[]) || [];
+    const negativePrompt = (body.negative_prompt as string) || "";
 
     if (!shots || shots.length < 1) throw new Error("shots array is required");
+
+    // Kling multi-shot requires minimum 2 shots — fall back to single image2video for 1 shot
+    if (shots.length < 2) {
+      console.log(`[generate-video:multishot] Only 1 shot — falling back to standard image2video`);
+      const singleShot = shots[0];
+      const i2vBody: Record<string, unknown> = {
+        model_name: "kling-v2-master",
+        mode,
+        duration: String(singleShot.duration || totalDuration),
+        aspect_ratio: aspectRatio,
+        prompt: singleShot.prompt,
+      };
+      if (negativePrompt) i2vBody.negative_prompt = negativePrompt;
+      if (imageUrls.length > 0) {
+        i2vBody.image = imageUrls[0];
+        i2vBody.image_fidelity = 0.65;
+      }
+
+      console.log(`[generate-video:multishot→i2v] Kling request:`, JSON.stringify(i2vBody));
+
+      const endpoint = imageUrls.length > 0
+        ? `${KLING_API_BASE}/videos/image2video`
+        : `${KLING_API_BASE}/videos/text2video`;
+
+      const i2vRes = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(i2vBody),
+      });
+
+      const i2vResult = await i2vRes.json();
+      if (!i2vRes.ok || i2vResult.code !== 0) {
+        throw new Error(i2vResult.message || `Kling API error: ${i2vRes.status}`);
+      }
+
+      const taskId = i2vResult.data.task_id;
+      await serviceClient
+        .from("generation_queue")
+        .update({ result: { kling_task_id: taskId, status: "submitted", endpoint: "image2video" } })
+        .eq("id", jobId);
+
+      // Insert generated_videos row
+      const dbRow: Record<string, unknown> = {
+        user_id: userId,
+        source_image_url: imageUrls[0] || "",
+        prompt: singleShot.prompt,
+        kling_task_id: taskId,
+        model_name: "kling-v2-master",
+        duration: String(singleShot.duration || totalDuration),
+        aspect_ratio: aspectRatio,
+        negative_prompt: negativePrompt || null,
+        status: "processing",
+        workflow_type: "short_film",
+      };
+      if (projectId) dbRow.project_id = projectId;
+      await serviceClient.from("generated_videos").insert(dbRow);
+
+      return respond(200, { task_id: taskId, job_id: jobId, fallback: "image2video" });
+    }
 
     console.log(`[generate-video:multishot] Job ${jobId}, user ${userId}, shots=${shots.length}, duration=${totalDuration}s`);
 
@@ -238,11 +298,14 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
       sound: withAudio ? "on" : "off",
     };
 
+    // Add negative prompt if provided
+    if (negativePrompt) {
+      klingBody.negative_prompt = negativePrompt;
+    }
+
     // Add image references if provided
     if (imageUrls.length > 0) {
       klingBody.image_list = imageUrls.map(url => ({ image_url: url }));
-      // Reference images in prompts using <<<image_N>>> syntax
-      // The prompts should already contain these references if needed
     }
 
     console.log(`[generate-video:multishot] Kling omni-video request:`, JSON.stringify(klingBody));

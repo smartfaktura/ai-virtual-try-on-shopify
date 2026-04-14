@@ -776,14 +776,18 @@ export function useShortFilmProject() {
       const imageUrls = Array.from(imageUrlSet);
 
       // Build per-shot prompts with <<<image_N>>> references
+      let combinedNegativePrompt = '';
       const multishotPayload = shots.map((shot, i) => {
         const imageIdx = shotImageMap.get(shot.shot_index);
-        const { prompt } = buildShotPrompt(shot, {
+        const { prompt, negative_prompt } = buildShotPrompt(shot, {
           filmType,
           tone: settings.tone || '',
           settings,
           references,
         }, imageIdx);
+
+        // Capture negative prompt from first shot (base negatives are shared)
+        if (i === 0) combinedNegativePrompt = negative_prompt;
 
         return {
           index: i + 1,
@@ -800,6 +804,7 @@ export function useShortFilmProject() {
           jobType: 'video_multishot',
           payload: {
             shots: multishotPayload,
+            negative_prompt: combinedNegativePrompt,
             total_duration: totalDuration,
             aspect_ratio: settings.aspectRatio,
             mode: 'pro',
