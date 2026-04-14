@@ -8,10 +8,8 @@ import { StoryStructureSelector } from '@/components/app/video/short-film/StoryS
 import { ShotPlanEditor } from '@/components/app/video/short-film/ShotPlanEditor';
 import { ShortFilmSettingsPanel } from '@/components/app/video/short-film/ShortFilmSettingsPanel';
 import { ShortFilmProgressPanel } from '@/components/app/video/short-film/ShortFilmProgressPanel';
-import { ShotCard } from '@/components/app/video/short-film/ShotCard';
 import { ShortFilmReviewSummary } from '@/components/app/video/short-film/ShortFilmReviewSummary';
 import { ShortFilmStepper } from '@/components/app/video/short-film/ShortFilmStepper';
-import { cn } from '@/lib/utils';
 
 export default function ShortFilm() {
   const {
@@ -36,7 +34,13 @@ export default function ShortFilm() {
     startGeneration,
     projectId,
     totalCredits,
+    updateShot,
+    deleteShot,
+    addShot,
+    reorderShots,
   } = useShortFilmProject();
+
+  const showCredits = shots.length > 0 && step !== 'film_type' && step !== 'references';
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-24">
@@ -44,7 +48,12 @@ export default function ShortFilm() {
         title="Short Film"
         subtitle="Plan and generate a premium multi-shot brand film."
       >
-        <div />
+        {showCredits && (
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+            <Coins className="h-3.5 w-3.5" />
+            ~{totalCredits} credits
+          </div>
+        )}
       </PageHeader>
 
       <ShortFilmStepper steps={steps} currentStepIndex={currentStepIndex} />
@@ -64,7 +73,14 @@ export default function ShortFilm() {
         )}
 
         {step === 'shot_plan' && (
-          <ShotPlanEditor shots={shots} onRegenerate={regeneratePlan} />
+          <ShotPlanEditor
+            shots={shots}
+            onRegenerate={regeneratePlan}
+            onUpdateShot={updateShot}
+            onDeleteShot={deleteShot}
+            onAddShot={addShot}
+            onReorderShots={reorderShots}
+          />
         )}
 
         {step === 'settings' && (
