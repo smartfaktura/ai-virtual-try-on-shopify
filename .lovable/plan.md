@@ -1,103 +1,66 @@
 
 
-# Improve Style/Mood & Scene References — Kling-Optimized Presets with Inline Selection
+# Fix Short Film Audio Matching & Control
 
-## What Changes
+## Root Problem
 
-### 1. Replace Style/Mood presets with Kling 3.0 cinematography-optimized styles
+Audio feels random because:
+1. **Music prompt** ignores the user's selected Style/Mood presets — it builds a generic "cinematic ambient" prompt
+2. **SFX prompts** are hardcoded by shot role — no user control, no connection to selected scene/style presets
+3. **No per-shot SFX editing** — users can't customize what sound effect plays for each shot
+4. The music and SFX don't reflect the actual visual content the user configured
 
-Current presets are generic mood descriptions. Replace with Kling-specific directives that leverage the model's strengths: camera physics, texture descriptors, lighting direction, and temporal motion cues.
+## Solution
 
-**New Style/Mood presets (16 total, grouped by category):**
+### 1. Add `sfx_prompt` field to `ShotPlanItem` type
+Allow per-shot custom SFX text so users can control exactly what sound plays.
 
-**Cinematic Film Looks:**
-- Cinematic Noir — Deep blacks, chiaroscuro single key light, hard shadows on wet surfaces, film grain, desaturated palette
-- Golden Hour Epic — Warm amber backlight, long soft shadows, golden rim highlights, anamorphic lens flare, shallow DOF
-- Vintage Film Stock — Warm muted tones, analog 35mm grain, faded highlights, 70s Kodachrome color shift
-- Monochrome Fine Art — Black and white, Rembrandt lighting, rich tonal range, skin pores visible, fine art feel
+**File: `src/types/shortFilm.ts`**
+- Add `sfx_prompt?: string` to `ShotPlanItem`
 
-**Commercial / Product:**
-- Clean Luxury — Pristine whites, soft even lighting, premium minimalist feel, subtle caustic reflections, macro detail
-- Bold Editorial Pop — Vivid punchy saturated colors, strong contrast, hard flash, dynamic energy, fashion editorial
-- Soft Diffusion Glow — Pastel tones, soft diffusion filter, dreamy bokeh, luminous highlights, gentle haze
+### 2. Surface SFX prompt editing in ShotCard + ShotPlanEditor
+Next to the existing "Script Line" input, add a "Sound Effect" input per shot. Auto-filled by `buildContextualSfxPrompt` but fully editable.
 
-**Atmospheric / Mood:**
-- Neon Cyberpunk — Vibrant neon blues and magentas, wet reflective surfaces, dark environment, volumetric haze
-- Dramatic Chiaroscuro — Single directional key light, deep rich shadows, painterly contrast, condensation on surfaces
-- Ethereal Morning Mist — Cool diffused light, visible breath in cold air, soft fog, desaturated greens
-- Natural Documentary — Available handheld light, authentic grain, realistic color, raw unpolished, skin texture visible
+**Files: `src/components/app/video/short-film/ShotCard.tsx`, `ShotPlanEditor.tsx`**
+- Add SFX prompt input field in the shot editor (with the 🔊 icon)
+- Show current SFX prompt in collapsed card view
+- Auto-populate default SFX prompts when generating the shot plan
 
-**Motion-Specific (Kling strengths):**
-- Slow Motion Reveal — Time-stretched movement, fabric ripples, hair flowing, particles suspended, ultra-smooth 30fps
-- Dynamic FPV Energy — Fast-paced drone perspective, motion blur on background, subject in sharp focus, high contrast
-- Macro Texture Study — Extreme close-up, visible material fibers and pores, shallow DOF, studio ring light
-- Liquid & Reflections — Refractive caustics, water droplets, chrome reflections, glass surfaces, wet textures
-- Smoke & Atmosphere — Volumetric light rays through haze, floating particles, dramatic backlight, moody atmosphere
+### 3. Connect Style/Mood presets to music prompt generation
+Currently `buildContextualMusicPrompt` ignores the selected style presets. Feed the user's selected style keywords into the music prompt.
 
-### 2. Replace Scene presets with Kling-optimized environment directives
+**File: `src/hooks/useShortFilmProject.ts`**
+- Pass `references` to `buildContextualMusicPrompt` 
+- Extract selected style preset keywords from `references.filter(r => r.role === 'style')`
+- Inject style keywords into the music prompt (e.g., "cinematic noir, deep blacks, dramatic" → "dark cinematic noir ambient music with dramatic tension")
 
-Current scenes are static descriptions. New ones include temporal markers, texture details, and physics cues that Kling 3.0 responds well to.
+### 4. Use `sfx_prompt` in audio generation instead of hardcoded function
+When generating SFX, prefer `shot.sfx_prompt` if set, falling back to `buildContextualSfxPrompt`.
 
-**New Scene presets (16 total, grouped):**
+**File: `src/hooks/useShortFilmProject.ts`**
+- Change line ~497: `const sfxPrompt = shot.sfx_prompt || buildContextualSfxPrompt(shot);`
 
-**Studio:**
-- White Infinity Cove — Seamless white cyclorama, soft directional shadows, subtle gradient, clean product isolation
-- Dark Editorial Studio — Deep matte black, dramatic single side light, soft reflections on floor, negative space
-- Marble & Gold Surface — White marble with gold veining, soft overhead studio light, refractive caustics on surface
-- Colored Gel Studio — Smooth color gradient backdrop, dual-color gel lighting (specify colors), controlled shadows
+### 5. Auto-populate `sfx_prompt` in shot plan generation
+When the AI Director or preset planner creates shots, pre-fill `sfx_prompt` with the contextual default so users see what will be generated and can edit it.
 
-**Natural / Outdoor:**
-- Golden Hour Terrace — Warm sunset light on stone terrace, blurred cityscape beyond, long shadows, warm atmospheric haze
-- Coastal Morning — Sandy beach tones, soft pre-dawn blue light, gentle ocean movement, sea mist, driftwood textures
-- Misty Forest Floor — Morning mist between moss-covered trees, dappled cool light filtering through canopy, organic debris
-- Rooftop at Dusk — Urban skyline, last light fading, warm string lights, concrete and metal textures, city glow
+**File: `src/lib/shortFilmPlanner.ts`** — add `sfx_prompt` to generated shot plans
+**File: `supabase/functions/ai-shot-planner/index.ts`** — add `sfx_prompt` to the AI prompt schema
 
-**Interior:**
-- Modern Loft — Raw exposed brick, large industrial windows, natural side light, hardwood floors, warm ambient
-- Luxury Bathroom — Marble surfaces, soft warm vanity light, steam rising, chrome fixtures, water droplets
-- Cozy Warm Interior — Soft lamp light, wood textures, linen and wool fabrics, warm color temperature, intimate space
-- Minimalist Concrete — Raw concrete walls and floor, cool diffused light, industrial textures, brutalist geometry
+### 6. Connect scene presets to SFX context
+If scene presets are selected (e.g., "Neon Rain Street"), incorporate environment keywords into SFX prompts automatically.
 
-**Concept / Creative:**
-- Botanical Greenhouse — Lush tropical greenery, dappled sunlight through glass ceiling, humidity visible, organic textures
-- Neon Rain Street — Wet asphalt reflecting neon signage, magenta and cyan light pools, urban night, visible raindrops
-- Surreal Gradient Void — Smooth infinite color gradient, no visible ground plane, floating subject, dreamy atmosphere
-- Desert Golden Sands — Warm orange dunes, harsh directional sunlight, heat haze, textured sand ripples, vast scale
-
-### 3. Add inline quick-select chips (instant selection without Library dialog)
-
-For both Scene References and Style/Mood sections, add a scrollable row of chips directly in the card — users can tap to instantly add a preset without opening the Library dialog. The Library button remains for the full grid view.
-
-**UI structure per section:**
-```text
-┌──────────────────────────────────────────────┐
-│ 🎨 Style / Mood                    [Library] │
-│ Upload visual tone or mood references.       │
-│                                              │
-│ Quick pick:                                  │
-│ [Cinematic Noir] [Golden Hour] [Clean Luxury]│
-│ [Neon Cyberpunk] [Macro Texture] [→ more]    │
-│                                              │
-│ [Selected: Cinematic Noir ✕]                 │
-│                                              │
-│ ┌─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐ │
-│ │    Drop images or browse                 │ │
-│ └─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘ │
-└──────────────────────────────────────────────┘
-```
-
-- Show first 6 presets as horizontally scrollable chips
-- Clicking a chip instantly adds it as a reference (same as picking from Library)
-- Already-selected presets show as active/highlighted chips
-- Keep the Library button for the full searchable grid dialog
-
-### 4. Improve Library dialog layout
-
-Group presets by category with small section headers in the dialog grid for easier browsing.
+**File: `src/hooks/useShortFilmProject.ts`**
+- Update `buildContextualSfxPrompt` to accept `references` parameter
+- Extract scene preset names and blend into the SFX prompt
 
 ## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Replace `STYLE_MOOD_PRESETS` and `VIDEO_SCENE_PRESETS` arrays with Kling-optimized versions; add inline quick-pick chip row for scene and style sections; group presets by category in Library dialogs |
+| `src/types/shortFilm.ts` | Add `sfx_prompt?: string` to `ShotPlanItem` |
+| `src/components/app/video/short-film/ShotCard.tsx` | Add SFX prompt input in editor, show in collapsed view |
+| `src/components/app/video/short-film/ShotPlanEditor.tsx` | Add inline SFX prompt field next to script_line |
+| `src/hooks/useShortFilmProject.ts` | Use `shot.sfx_prompt` for SFX gen; pass style/scene refs into music & SFX prompt builders |
+| `src/lib/shortFilmPlanner.ts` | Pre-fill `sfx_prompt` on generated shots |
+| `supabase/functions/ai-shot-planner/index.ts` | Add `sfx_prompt` to AI schema |
 
