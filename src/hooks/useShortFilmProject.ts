@@ -1014,6 +1014,25 @@ export function useShortFilmProject() {
   };
 }
 
+/** Build a rich music prompt from film context */
+function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | undefined, shots: ShotPlanItem[]): string {
+  const type = filmType?.replace(/_/g, ' ') || 'cinematic';
+  const mood = tone || 'ambient';
+  const roles = [...new Set(shots.map(s => s.role))].slice(0, 4).join(', ');
+  const hasHook = shots.some(s => s.role === 'hook' || s.role === 'tease');
+  const hasClosing = shots.some(s => s.role === 'closing' || s.role === 'resolve');
+
+  let prompt = `cinematic ${mood} background music for a ${type} film`;
+  if (hasHook && hasClosing) {
+    prompt += ', slow building tension with elegant resolution';
+  } else if (hasHook) {
+    prompt += ', dramatic opening with rising intensity';
+  }
+  if (roles) prompt += `, featuring ${roles} moments`;
+  prompt += ', no vocals, professional production quality';
+  return prompt;
+}
+
 /** Get the best source image for a specific shot based on its source_reference_id or role */
 function getSourceImageForShot(shot: ShotPlanItem, references: ReferenceAsset[]): string {
   // Per-shot override

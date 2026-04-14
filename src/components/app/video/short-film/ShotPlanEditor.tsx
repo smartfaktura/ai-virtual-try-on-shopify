@@ -1,6 +1,7 @@
 import { ShotCard } from './ShotCard';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Sparkles, Cog, Loader2 } from 'lucide-react';
+import { Plus, RefreshCw, Sparkles, Cog, Loader2, Mic } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import type { ShotPlanItem } from '@/types/shortFilm';
 
 interface ReferenceOption {
