@@ -327,6 +327,24 @@ export function generateShotPlan(
 
   return roles.map((role, index) => {
     const defaults = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.hook;
+    const ROLE_SFX_DEFAULTS: Record<string, string> = {
+      hook: 'dramatic cinematic whoosh impact with bass hit',
+      tease: 'subtle mysterious tension riser, soft wind',
+      build: 'rising cinematic tension swells, building energy',
+      intro: 'soft ambient cinematic opening, gentle atmospheric pad',
+      atmosphere: 'deep ambient atmosphere, ethereal soundscape',
+      product_reveal: 'elegant reveal shimmer with subtle sparkle whoosh',
+      highlight: 'powerful cinematic impact with reverb tail',
+      product_moment: 'satisfying premium product sound, smooth mechanical',
+      detail_closeup: 'soft mechanical focus click, precision close-up sound',
+      product_focus: 'clean studio ambience with gentle product handling',
+      lifestyle_moment: 'warm natural ambient, gentle background life sounds',
+      human_interaction: 'soft fabric movement, gentle human presence',
+      brand_finish: 'deep cinematic bass hit with elegant resolve',
+      end_frame: 'soft logo resolve sound, gentle cinematic ending',
+      resolve: 'warm cinematic resolution, satisfying closing tone',
+      closing: 'gentle fade-out ambience, soft cinematic outro',
+    };
     return {
       shot_index: index + 1,
       role,
@@ -336,6 +354,7 @@ export function generateShotPlan(
       subject_motion: defaults.subject_motion || 'minimal',
       duration_sec: getDefaultDurationForRole(role),
       script_line: defaults.script_line,
+      sfx_prompt: ROLE_SFX_DEFAULTS[role] || 'subtle cinematic ambient sound',
       product_visible: defaults.product_visible ?? false,
       character_visible: defaults.character_visible ?? false,
       preservation_strength: defaults.preservation_strength || 'medium',

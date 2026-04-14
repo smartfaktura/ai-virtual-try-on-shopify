@@ -1,6 +1,6 @@
 import { ShotCard } from './ShotCard';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Sparkles, Cog, Loader2, Mic } from 'lucide-react';
+import { Plus, RefreshCw, Sparkles, Cog, Loader2, Mic, Volume2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import type { ShotPlanItem } from '@/types/shortFilm';
 
@@ -111,17 +111,28 @@ export function ShotPlanEditor({
                 availableReferences={availableReferences}
               />
               {editable && (
-                <div className="flex items-center gap-2 pl-10 pr-2">
-                  <Mic className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <Input
-                    value={shot.script_line || ''}
-                    onChange={e => onUpdateShot?.(idx, { ...shot, script_line: e.target.value || undefined })}
-                    placeholder="Voiceover narration for this shot..."
-                    className="text-xs h-7 bg-muted/30 border-muted"
-                  />
-                  <span className="text-[9px] text-muted-foreground shrink-0 w-8 text-right">
-                    {(shot.script_line || '').split(/\s+/).filter(Boolean).length}w
-                  </span>
+                <div className="space-y-1 pl-10 pr-2">
+                  <div className="flex items-center gap-2">
+                    <Mic className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <Input
+                      value={shot.script_line || ''}
+                      onChange={e => onUpdateShot?.(idx, { ...shot, script_line: e.target.value || undefined })}
+                      placeholder="Voiceover narration for this shot..."
+                      className="text-xs h-7 bg-muted/30 border-muted"
+                    />
+                    <span className="text-[9px] text-muted-foreground shrink-0 w-8 text-right">
+                      {(shot.script_line || '').split(/\s+/).filter(Boolean).length}w
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <Input
+                      value={shot.sfx_prompt || ''}
+                      onChange={e => onUpdateShot?.(idx, { ...shot, sfx_prompt: e.target.value || undefined })}
+                      placeholder="Sound effect description for this shot..."
+                      className="text-xs h-7 bg-muted/30 border-muted"
+                    />
+                  </div>
                 </div>
               )}
             </div>

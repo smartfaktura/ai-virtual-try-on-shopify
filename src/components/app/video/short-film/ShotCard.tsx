@@ -228,6 +228,15 @@ export function ShotCard({
             />
           </div>
           <div>
+            <label className="text-[10px] font-medium text-muted-foreground">Sound Effect</label>
+            <Input
+              value={draft.sfx_prompt || ''}
+              onChange={e => setDraft(d => ({ ...d, sfx_prompt: e.target.value || undefined }))}
+              placeholder="e.g. dramatic whoosh, soft ambient..."
+              className="text-xs h-8"
+            />
+          </div>
+          <div>
             <label className="text-[10px] font-medium text-muted-foreground">Custom Instructions (optional)</label>
             <Input
               value={draft.user_notes || ''}
@@ -318,6 +327,12 @@ export function ShotCard({
         {shot.script_line && (
           <p className="text-xs italic text-muted-foreground/80 border-l-2 border-primary/30 pl-2">
             "{shot.script_line}"
+          </p>
+        )}
+
+        {shot.sfx_prompt && (
+          <p className="text-[10px] text-muted-foreground/60 border-l-2 border-muted pl-2">
+            🔊 {shot.sfx_prompt}
           </p>
         )}
       </div>
