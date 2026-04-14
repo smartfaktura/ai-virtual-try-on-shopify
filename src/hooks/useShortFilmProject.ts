@@ -494,8 +494,8 @@ export function useShortFilmProject() {
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'generating' } : s)
           );
           try {
-            const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
-            console.log(`[ShortFilm Audio] Calling elevenlabs-sfx for shot ${shot.shot_index} — prompt:`, sfxPrompt);
+            const sfxPrompt = buildContextualSfxPrompt(shot);
+            console.log(`[ShortFilm Audio] Calling elevenlabs-sfx for shot ${shot.shot_index} — prompt:`, sfxPrompt, 'duration:', shot.duration_sec);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
               method: 'POST',
               headers,
@@ -532,7 +532,7 @@ export function useShortFilmProject() {
         }
       }
 
-      // Voiceover per shot
+      // Voiceover per shot — duration-aware
       if (mode === 'voiceover' || mode === 'full_mix') {
         setAudioPhase('voiceover');
         const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
@@ -542,11 +542,13 @@ export function useShortFilmProject() {
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
           );
           try {
-            console.log(`[ShortFilm Audio] Calling elevenlabs-tts for shot ${shot.shot_index} — text:`, shot.script_line);
+            // Duration-aware: trim text and calculate speed
+            const { text: fittedText, speed } = fitTextToDuration(shot.script_line, shot.duration_sec);
+            console.log(`[ShortFilm Audio] Calling elevenlabs-tts for shot ${shot.shot_index} — text: "${fittedText}" (orig: "${shot.script_line}"), speed: ${speed}, duration: ${shot.duration_sec}s`);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
               method: 'POST',
               headers,
-              body: JSON.stringify({ text: shot.script_line, voiceId }),
+              body: JSON.stringify({ text: fittedText, voiceId, speed }),
             });
             console.log(`[ShortFilm Audio] TTS shot ${shot.shot_index} response status:`, res.status);
             if (res.ok) {
@@ -631,7 +633,7 @@ export function useShortFilmProject() {
     try {
       let res: Response;
       if (type === 'sfx') {
-        const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
+        const sfxPrompt = buildContextualSfxPrompt(shot);
         res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
           method: 'POST', headers,
           body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
@@ -639,9 +641,10 @@ export function useShortFilmProject() {
       } else {
         if (!shot.script_line) return;
         const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
+        const { text: fittedText, speed } = fitTextToDuration(shot.script_line, shot.duration_sec);
         res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
           method: 'POST', headers,
-          body: JSON.stringify({ text: shot.script_line, voiceId }),
+          body: JSON.stringify({ text: fittedText, voiceId, speed }),
         });
       }
 
