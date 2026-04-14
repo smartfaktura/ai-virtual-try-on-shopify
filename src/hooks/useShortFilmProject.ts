@@ -846,9 +846,8 @@ export function useShortFilmProject() {
         setShotStatuses(prev => prev.map(s => ({ ...s, status: 'failed' as const })));
       }
 
-      const currentStatuses = shotStatuses;
-      const successCount = currentStatuses.filter(s => s.status === 'complete').length;
-      const projectStatus = successCount === shots.length ? 'complete' : successCount > 0 ? 'partial' : 'failed';
+      const allSucceeded = resultUrl !== null;
+      const projectStatus = allSucceeded ? 'complete' : 'failed';
 
       // Persist full draft state for reopening
       const draftState: DraftState = {
@@ -858,11 +857,11 @@ export function useShortFilmProject() {
         status: projectStatus,
         draft_state_json: JSON.parse(JSON.stringify(draftState)),
       }).eq('id', currentProjectId!);
-      
-      if (successCount > 0) {
-        toast.success(projectStatus === 'complete' ? 'Short film generation complete!' : `${successCount}/${shots.length} shots completed`);
+
+      if (allSucceeded) {
+        toast.success('Short film generation complete!');
       } else {
-        toast.error('All shots failed');
+        toast.error('Film generation failed');
       }
       refreshBalance();
 
