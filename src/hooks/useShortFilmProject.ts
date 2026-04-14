@@ -438,7 +438,7 @@ export function useShortFilmProject() {
           aspect_ratio: settings.aspectRatio,
           mode: 'pro',
           negative_prompt,
-          with_audio: false,
+          with_audio: true,
           project_id: projectId,
           workflow_type: 'short_film',
         },
@@ -1006,7 +1006,7 @@ export function useShortFilmProject() {
             mode: 'pro',
             cfg_scale: 0.5,
             preservation_strength: settings.preservationLevel || 'medium',
-            with_audio: false,
+            with_audio: true,
             project_id: currentProjectId,
             image_urls: imageUrls,
           },
@@ -1087,50 +1087,8 @@ export function useShortFilmProject() {
       }
     }
 
-    // Lip-sync post-processing — only for single-shot projects
-    // Multishot videos are a single combined clip; Kling lip-sync can't target
-    // individual shots within it, and the VO layer already provides narration.
-    if (generationSucceeded && audioLayers.voiceover && shots.length === 1) {
-      const shot = shots[0];
-      if (shot.character_visible && shot.script_line && shot.vo_enabled !== false && shot.duration_sec >= 3) {
-        console.log('[ShortFilm] Single-shot project — attempting lip-sync');
-        try {
-          const videoUrl = shotStatuses.find(s => s.result_url)?.result_url;
-          const voAsset = audioAssets.perShotAudio.find(
-            a => a.shotIndex === shot.shot_index && a.type === 'voiceover'
-          );
-          if (videoUrl && voAsset?.url) {
-            const { data: lipSyncData } = await supabase.functions.invoke('kling-lip-sync', {
-              body: { action: 'create', video_url: videoUrl, audio_url: voAsset.url },
-            });
-            if (lipSyncData?.task_id) {
-              console.log(`[ShortFilm] Lip-sync task created: ${lipSyncData.task_id}`);
-              for (let poll = 0; poll < 60; poll++) {
-                await new Promise(r => setTimeout(r, 10_000));
-                const { data: statusData } = await supabase.functions.invoke('kling-lip-sync', {
-                  body: { action: 'status', task_id: lipSyncData.task_id },
-                });
-                if (statusData?.status === 'succeed' && statusData?.video_url) {
-                  console.log('[ShortFilm] Lip-sync complete');
-                  const signedLipSync = await toSignedUrl(statusData.video_url);
-                  setShotStatuses(prev => prev.map(s => ({ ...s, result_url: signedLipSync })));
-                  toast.success('Lip-sync applied!');
-                  break;
-                }
-                if (statusData?.status === 'failed') {
-                  console.warn('[ShortFilm] Lip-sync failed');
-                  break;
-                }
-              }
-            }
-          }
-        } catch (lipSyncErr) {
-          console.error('[ShortFilm] Lip-sync failed:', lipSyncErr);
-        }
-      }
-    } else if (generationSucceeded && audioLayers.voiceover && shots.length > 1) {
-      console.log('[ShortFilm] Multishot project — skipping lip-sync, VO plays via audio layer');
-    }
+    // Lip-sync is handled natively by Kling (with_audio: true / sound: "on").
+    // No post-processing needed — dialog and SFX are baked into the video.
 
     setIsGenerating(false);
   }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId, generateAudio]);
