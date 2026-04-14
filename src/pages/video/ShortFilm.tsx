@@ -29,6 +29,7 @@ export default function ShortFilm() {
     planMode, setPlanMode, isAiPlanning,
     saveDraft, loadDraft,
     customRoles, setCustomRoles,
+    audioAssets, isGeneratingAudio,
   } = useShortFilmProject();
 
   const [showPreview, setShowPreview] = useState(false);

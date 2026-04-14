@@ -233,6 +233,8 @@ export function useShortFilmProject() {
     setPlanMode('auto');
     setCustomRoles([]);
     setSettings(DEFAULT_SETTINGS);
+    setAudioAssets({ perShotAudio: [] });
+    setIsGeneratingAudio(false);
   }, []);
 
   // ─── Retry single failed shot ──────────────────────────────
