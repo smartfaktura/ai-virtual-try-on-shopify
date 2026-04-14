@@ -3,6 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw, Sparkles, Cog, Loader2 } from 'lucide-react';
 import type { ShotPlanItem } from '@/types/shortFilm';
 
+interface ReferenceOption {
+  id: string;
+  url: string;
+  role: string;
+  name?: string;
+}
+
 interface ShotPlanEditorProps {
   shots: ShotPlanItem[];
   onRegenerate: () => void;
@@ -13,11 +20,12 @@ interface ShotPlanEditorProps {
   planMode?: 'auto' | 'ai';
   onPlanModeChange?: (mode: 'auto' | 'ai') => void;
   isAiPlanning?: boolean;
+  availableReferences?: ReferenceOption[];
 }
 
 export function ShotPlanEditor({
   shots, onRegenerate, onUpdateShot, onDeleteShot, onAddShot, onReorderShots,
-  planMode = 'auto', onPlanModeChange, isAiPlanning,
+  planMode = 'auto', onPlanModeChange, isAiPlanning, availableReferences = [],
 }: ShotPlanEditorProps) {
   const editable = !!(onUpdateShot && onDeleteShot);
 
@@ -97,6 +105,7 @@ export function ShotPlanEditor({
               onMoveDown={() => onReorderShots?.(idx, idx + 1)}
               isFirst={idx === 0}
               isLast={idx === shots.length - 1}
+              availableReferences={availableReferences}
             />
           ))}
         </div>

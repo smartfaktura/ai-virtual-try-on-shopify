@@ -1,13 +1,16 @@
 import { STORY_STRUCTURE_OPTIONS } from '@/lib/shortFilmPlanner';
 import type { StoryStructure } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
+import { CustomStructureBuilder } from './CustomStructureBuilder';
 
 interface StoryStructureSelectorProps {
   value: StoryStructure | null;
   onChange: (structure: StoryStructure) => void;
+  customRoles?: string[];
+  onCustomRolesChange?: (roles: string[]) => void;
 }
 
-export function StoryStructureSelector({ value, onChange }: StoryStructureSelectorProps) {
+export function StoryStructureSelector({ value, onChange, customRoles = [], onCustomRolesChange }: StoryStructureSelectorProps) {
   return (
     <div className="space-y-4">
       <div>
@@ -48,6 +51,10 @@ export function StoryStructureSelector({ value, onChange }: StoryStructureSelect
           </button>
         ))}
       </div>
+
+      {value === 'custom' && onCustomRolesChange && (
+        <CustomStructureBuilder roles={customRoles} onChange={onCustomRolesChange} />
+      )}
     </div>
   );
 }

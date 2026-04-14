@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GripVertical, User, Package, Clock, Video, Pencil, Check, X, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { GripVertical, User, Package, Clock, Video, Pencil, Check, X, Trash2, ChevronUp, ChevronDown, ImageIcon } from 'lucide-react';
 import { formatRoleLabel, formatCameraMotion } from '@/lib/shortFilmPlanner';
 import type { ShotPlanItem } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
@@ -7,6 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface ReferenceOption {
+  id: string;
+  url: string;
+  role: string;
+  name?: string;
+}
 
 interface ShotCardProps {
   shot: ShotPlanItem;
@@ -20,11 +28,13 @@ interface ShotCardProps {
   onMoveDown?: () => void;
   isFirst?: boolean;
   isLast?: boolean;
+  availableReferences?: ReferenceOption[];
 }
 
 export function ShotCard({
   shot, isGenerating, isComplete, resultUrl,
   editable, onUpdate, onDelete, onMoveUp, onMoveDown, isFirst, isLast,
+  availableReferences = [],
 }: ShotCardProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(shot);
@@ -88,6 +98,30 @@ export function ShotCard({
               />
             </div>
           </div>
+          {availableReferences.length > 0 && (
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Source Image</label>
+              <Select
+                value={draft.scene_reference_id || '__auto__'}
+                onValueChange={v => setDraft(d => ({ ...d, scene_reference_id: v === '__auto__' ? undefined : v }))}
+              >
+                <SelectTrigger className="text-xs h-8">
+                  <SelectValue placeholder="Auto (default)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__auto__">Auto (default)</SelectItem>
+                  {availableReferences.map(ref => (
+                    <SelectItem key={ref.id} value={ref.id}>
+                      <span className="flex items-center gap-1.5">
+                        <img src={ref.url} className="h-4 w-4 rounded object-cover" alt="" />
+                        {ref.name || ref.role}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <label className="text-[10px] font-medium text-muted-foreground">Script Line (optional)</label>
             <Input

@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -11,40 +11,24 @@ import { ShortFilmProgressPanel } from '@/components/app/video/short-film/ShortF
 import { ShortFilmReviewSummary } from '@/components/app/video/short-film/ShortFilmReviewSummary';
 import { ShortFilmStepper } from '@/components/app/video/short-film/ShortFilmStepper';
 import { ShortFilmVideoPlayer } from '@/components/app/video/short-film/ShortFilmVideoPlayer';
-import { useMemo, useState } from 'react';
+import { ShortFilmProjectList } from '@/components/app/video/short-film/ShortFilmProjectList';
+import { useMemo, useState, useCallback } from 'react';
 
 export default function ShortFilm() {
   const {
-    step,
-    steps,
-    currentStepIndex,
-    filmType,
-    setFilmType,
-    storyStructure,
-    setStoryStructure,
-    references,
-    setReferences,
-    shots,
-    settings,
-    setSettings,
-    canAdvance,
-    goNext,
-    goBack,
-    regeneratePlan,
-    isGenerating,
-    shotStatuses,
-    startGeneration,
-    projectId,
-    totalCredits,
-    updateShot,
-    deleteShot,
-    addShot,
-    reorderShots,
-    resetProject,
-    retryShotGeneration,
-    planMode,
-    setPlanMode,
-    isAiPlanning,
+    step, steps, currentStepIndex,
+    filmType, setFilmType,
+    storyStructure, setStoryStructure,
+    references, setReferences,
+    shots, settings, setSettings,
+    canAdvance, goNext, goBack,
+    regeneratePlan, isGenerating, shotStatuses,
+    startGeneration, projectId, totalCredits,
+    updateShot, deleteShot, addShot, reorderShots,
+    resetProject, retryShotGeneration,
+    planMode, setPlanMode, isAiPlanning,
+    saveDraft, loadDraft,
+    customRoles, setCustomRoles,
   } = useShortFilmProject();
 
   const [showPreview, setShowPreview] = useState(false);
@@ -62,6 +46,31 @@ export default function ShortFilm() {
       });
   }, [shotStatuses, shots]);
 
+  const availableReferences = useMemo(() => {
+    return references.map(r => ({ id: r.id, url: r.url, role: r.role, name: r.name }));
+  }, [references]);
+
+  const downloadAllClips = useCallback(() => {
+    completedClips.forEach((clip, i) => {
+      const a = document.createElement('a');
+      a.href = clip.url;
+      a.download = `shot-${i + 1}.mp4`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }, [completedClips]);
+
+  const handleResumeDraft = useCallback((projectId: string) => {
+    loadDraft(projectId);
+  }, [loadDraft]);
+
+  const handleViewProject = useCallback((projectId: string) => {
+    // For now just navigate to video hub
+    window.location.href = '/app/video';
+  }, []);
+
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-24">
       <PageHeader
@@ -76,6 +85,9 @@ export default function ShortFilm() {
         )}
       </PageHeader>
 
+      {/* Project History */}
+      <ShortFilmProjectList onResumeDraft={handleResumeDraft} onViewProject={handleViewProject} />
+
       <ShortFilmStepper steps={steps} currentStepIndex={currentStepIndex} />
 
       {/* Step Content */}
@@ -89,7 +101,12 @@ export default function ShortFilm() {
         )}
 
         {step === 'story' && (
-          <StoryStructureSelector value={storyStructure} onChange={setStoryStructure} />
+          <StoryStructureSelector
+            value={storyStructure}
+            onChange={setStoryStructure}
+            customRoles={customRoles}
+            onCustomRolesChange={setCustomRoles}
+          />
         )}
 
         {step === 'shot_plan' && (
@@ -103,6 +120,7 @@ export default function ShortFilm() {
             planMode={planMode}
             onPlanModeChange={setPlanMode}
             isAiPlanning={isAiPlanning}
+            availableReferences={availableReferences}
           />
         )}
 
@@ -147,10 +165,18 @@ export default function ShortFilm() {
               </>
             )}
 
-            {/* Individual clips */}
+            {/* Individual clips + export */}
             {allDone && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-foreground">Generated Clips</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Generated Clips</h3>
+                  {completedClips.length > 0 && (
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={downloadAllClips}>
+                      <Download className="h-3.5 w-3.5" />
+                      Download All
+                    </Button>
+                  )}
+                </div>
                 <div className="grid gap-3">
                   {shotStatuses
                     .filter(s => s.result_url)
@@ -206,15 +232,28 @@ export default function ShortFilm() {
                 Back
               </Button>
               {currentStepIndex > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={resetProject}
-                  className="gap-1.5 text-muted-foreground"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Start Over
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetProject}
+                    className="gap-1.5 text-muted-foreground"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Start Over
+                  </Button>
+                  {currentStepIndex >= 1 && step !== 'review' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={saveDraft}
+                      className="gap-1.5 text-muted-foreground"
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                      Save Draft
+                    </Button>
+                  )}
+                </>
               )}
             </div>
 
