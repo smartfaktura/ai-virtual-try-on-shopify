@@ -7,7 +7,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels } from '@/hooks/useUserModels';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
-import { useProductImageScenes } from '@/hooks/useProductImageScenes';
+import { useAuth } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,18 +82,27 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     return allModels.filter(m => m.name.toLowerCase().includes(q));
   }, [allModels, modelSearch]);
 
-  // --- Scenes (always loaded via shared hook, just filter on open) ---
-  const { allScenes, categoryCollections, isLoading: scenesLoading } = useProductImageScenes();
-  const validScenes = useMemo(
-    () => allScenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http')),
-    [allScenes]
-  );
+  // --- Video-optimized scene presets (text-described, no images) ---
+  const VIDEO_SCENE_PRESETS = useMemo(() => [
+    { id: 'vs-1', title: 'Minimalist Studio', description: 'Clean white studio with soft directional shadows and subtle gradient backdrop.', mood: 'premium' },
+    { id: 'vs-2', title: 'Golden Hour Terrace', description: 'Warm golden sunset light on an outdoor stone terrace with blurred cityscape.', mood: 'luxury' },
+    { id: 'vs-3', title: 'Dark Moody Editorial', description: 'Deep black background with dramatic side lighting and soft reflections.', mood: 'editorial' },
+    { id: 'vs-4', title: 'Natural Linen Surface', description: 'Neutral linen fabric surface with soft natural window light and gentle shadows.', mood: 'minimal' },
+    { id: 'vs-5', title: 'Urban Concrete', description: 'Raw concrete surface and walls with industrial textures and cool diffused light.', mood: 'energetic' },
+    { id: 'vs-6', title: 'Botanical Garden', description: 'Lush greenery with dappled sunlight filtering through tropical leaves.', mood: 'organic' },
+    { id: 'vs-7', title: 'Marble & Gold', description: 'White marble surface with gold accents, soft studio lighting, premium feel.', mood: 'luxury' },
+    { id: 'vs-8', title: 'Coastal Breeze', description: 'Sandy beach tones with ocean blues, soft morning light and gentle movement.', mood: 'lifestyle' },
+    { id: 'vs-9', title: 'Neon Night', description: 'Dark environment with vibrant neon color accents and cinematic light flares.', mood: 'energetic' },
+    { id: 'vs-10', title: 'Warm Interior', description: 'Cozy interior space with warm lamp light, wood textures and soft furnishings.', mood: 'emotional' },
+    { id: 'vs-11', title: 'Misty Forest', description: 'Ethereal forest with morning mist, diffused cool light and organic textures.', mood: 'atmospheric' },
+    { id: 'vs-12', title: 'Clean Gradient', description: 'Smooth color gradient backdrop transitioning from light to dark, studio lit.', mood: 'clean' },
+  ], []);
 
   const filteredScenes = useMemo(() => {
-    if (!sceneSearch.trim()) return validScenes;
+    if (!sceneSearch.trim()) return VIDEO_SCENE_PRESETS;
     const q = sceneSearch.toLowerCase();
-    return validScenes.filter(s => s.title.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q));
-  }, [validScenes, sceneSearch]);
+    return VIDEO_SCENE_PRESETS.filter(s => s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
+  }, [VIDEO_SCENE_PRESETS, sceneSearch]);
 
   // --- User products (on-demand, paginated) ---
   const { data: userProducts, isLoading: productsLoading } = useQuery({
