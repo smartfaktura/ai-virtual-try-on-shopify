@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -10,6 +10,8 @@ import { ShortFilmSettingsPanel } from '@/components/app/video/short-film/ShortF
 import { ShortFilmProgressPanel } from '@/components/app/video/short-film/ShortFilmProgressPanel';
 import { ShortFilmReviewSummary } from '@/components/app/video/short-film/ShortFilmReviewSummary';
 import { ShortFilmStepper } from '@/components/app/video/short-film/ShortFilmStepper';
+import { ShortFilmVideoPlayer } from '@/components/app/video/short-film/ShortFilmVideoPlayer';
+import { useMemo, useState } from 'react';
 
 export default function ShortFilm() {
   const {
@@ -38,9 +40,27 @@ export default function ShortFilm() {
     deleteShot,
     addShot,
     reorderShots,
+    resetProject,
+    retryShotGeneration,
+    planMode,
+    setPlanMode,
+    isAiPlanning,
   } = useShortFilmProject();
 
+  const [showPreview, setShowPreview] = useState(false);
+
   const showCredits = shots.length > 0 && step !== 'film_type' && step !== 'references';
+
+  const allDone = !isGenerating && shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed');
+
+  const completedClips = useMemo(() => {
+    return shotStatuses
+      .filter(s => s.result_url)
+      .map(s => {
+        const shot = shots.find(sh => sh.shot_index === s.shot_index);
+        return { url: s.result_url!, label: `Shot ${s.shot_index} — ${shot?.role || 'clip'}` };
+      });
+  }, [shotStatuses, shots]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-24">
@@ -80,6 +100,9 @@ export default function ShortFilm() {
             onDeleteShot={deleteShot}
             onAddShot={addShot}
             onReorderShots={reorderShots}
+            planMode={planMode}
+            onPlanModeChange={setPlanMode}
+            isAiPlanning={isAiPlanning}
           />
         )}
 
@@ -99,10 +122,33 @@ export default function ShortFilm() {
 
         {step === 'review' && (isGenerating || shotStatuses.length > 0) && (
           <div className="space-y-6">
-            <ShortFilmProgressPanel shots={shots} shotStatuses={shotStatuses} />
+            <ShortFilmProgressPanel
+              shots={shots}
+              shotStatuses={shotStatuses}
+              onRetryShot={retryShotGeneration}
+            />
 
-            {/* Results section — show after all shots are done */}
-            {!isGenerating && shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed') && (
+            {/* Sequential preview player */}
+            {allDone && completedClips.length > 1 && (
+              <>
+                {showPreview ? (
+                  <ShortFilmVideoPlayer clips={completedClips} />
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setShowPreview(true)}
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                    Preview Film
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* Individual clips */}
+            {allDone && (
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-foreground">Generated Clips</h3>
                 <div className="grid gap-3">
@@ -148,16 +194,29 @@ export default function ShortFilm() {
       {!(step === 'review' && isGenerating) && (
         <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 z-40">
           <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goBack}
-              disabled={currentStepIndex === 0}
-              className="gap-1.5"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goBack}
+                disabled={currentStepIndex === 0}
+                className="gap-1.5"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+              {currentStepIndex > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetProject}
+                  className="gap-1.5 text-muted-foreground"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Start Over
+                </Button>
+              )}
+            </div>
 
             {step === 'review' && shotStatuses.length === 0 ? (
               <Button
