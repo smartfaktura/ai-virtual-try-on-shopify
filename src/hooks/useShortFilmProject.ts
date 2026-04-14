@@ -214,7 +214,7 @@ export function useShortFilmProject() {
               setAudioPhase('done');
             } else {
               // Audio was expected but missing — set idle so user can trigger
-              if (restoredSettings.audioMode !== 'silent' && restoredSettings.audioMode !== 'ambient') {
+              if (restoredSettings.audioMode !== 'ambient') {
                 console.log('[ShortFilm] Audio missing on restored draft — setting phase to idle for retry');
                 setAudioPhase('idle');
               }
