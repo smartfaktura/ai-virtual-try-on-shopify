@@ -452,11 +452,13 @@ export function useShortFilmProject() {
         const totalDuration = shotsToUse.reduce((sum, s) => sum + s.duration_sec, 0);
         const musicPrompt = settings.musicPrompt || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse);
         try {
+          console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', musicPrompt, 'duration:', Math.min(totalDuration, 120));
           const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
             method: 'POST',
             headers,
             body: JSON.stringify({ prompt: musicPrompt, duration: Math.min(totalDuration, 120) }),
           });
+          console.log('[ShortFilm Audio] Music response status:', res.status);
           if (res.ok) {
             const blob = await res.blob();
             const blobUrl = URL.createObjectURL(blob);
