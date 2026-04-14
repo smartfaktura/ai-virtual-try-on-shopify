@@ -579,6 +579,11 @@ export function useShortFilmProject() {
       toast.success('Short film generation complete!');
       refreshBalance();
 
+      // Generate audio layer if needed
+      if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
+        await generateAudio();
+      }
+
     } catch (err) {
       console.error('[ShortFilm] Generation failed:', err);
       toast.error(err instanceof Error ? err.message : 'Generation failed');
