@@ -1,47 +1,58 @@
 
 
-# Import 24 Apparel Scenes into product_image_scenes
+# Update 6 Activewear Scenes: Powder Blue → Dynamic {{aestheticColor}}
 
-## What This Does
-Insert 24 new apparel/clothing scenes from the RTF into the `product_image_scenes` table, mapped to `category_collection = 'garments'` (which already exists as "Clothing & Apparel" with 18 scenes). The new `apparel-*` scene IDs don't conflict with existing `*-garments` IDs.
+## Summary
 
-## Scene Summary (24 scenes)
+Update all 6 `activewear-powderblue-*` scenes to become fully color-dynamic. Every instance of "Powder Blue" in titles, scene IDs, prompt templates, and outfit hints gets replaced with either "Aesthetic" (for naming) or the `{{aestheticColor}}` token (for prompt content). The `= Powder Blue` assignment pattern is removed so the token resolves dynamically.
 
-| # | scene_id | Sub-Category | Type | Sort |
-|---|----------|-------------|------|------|
-| 1 | apparel-sunlit-studio-tailoring | Editorial Studio Looks | editorial | 2201 |
-| 2 | apparel-clean-studio-fullbody | Editorial Studio Looks | editorial | 2202 |
-| 3 | apparel-chair-studio-pose | Editorial Studio Looks | editorial | 2203 |
-| 4 | apparel-graphic-sweatshirt-studio | Editorial Studio Looks | editorial | 2204 |
-| 5 | apparel-garment-object-studio | Editorial Studio Looks | editorial | 2205 |
-| 6 | apparel-studio-fisheye-streetwear | Editorial Studio Looks | editorial | 2206 |
-| 7 | apparel-architectural-exterior-editorial | Elevated Location Editorial | editorial | 2207 |
-| 8 | apparel-interior-windowlight-editorial | Elevated Location Editorial | editorial | 2208 |
-| 9 | apparel-street-style-luxury-walk | Elevated Location Editorial | editorial | 2209 |
-| 10 | apparel-resort-seaside-editorial | Elevated Location Editorial | editorial | 2210 |
-| 11 | apparel-industrial-motion-editorial | Elevated Location Editorial | editorial | 2211 |
-| 12 | apparel-oldmoney-outdoor-portrait | Elevated Location Editorial | editorial | 2212 |
-| 13 | apparel-outfit-mirror-selfie | Everyday UGC Looks | lifestyle | 2213 |
-| 14 | apparel-cafe-errand-ugc | Everyday UGC Looks | lifestyle | 2214 |
-| 15 | apparel-stadium-ugc-look | Everyday UGC Looks | lifestyle | 2215 |
-| 16 | apparel-street-steps-casual | Everyday UGC Looks | lifestyle | 2216 |
-| 17 | apparel-home-lounge-ugc | Everyday UGC Looks | lifestyle | 2217 |
-| 18 | apparel-car-sporty-ugc | Everyday UGC Looks | lifestyle | 2218 |
-| 19 | apparel-super-editorial-campaign | Campaign Statement Images | campaign | 2219 |
-| 20 | apparel-vintage-cinematic-campaign | Campaign Statement Images | campaign | 2220 |
-| 21 | apparel-night-flash-campaign | Campaign Statement Images | campaign | 2221 |
-| 22 | apparel-architectural-grand-campaign | Campaign Statement Images | campaign | 2222 |
-| 23 | apparel-resort-glam-campaign | Campaign Statement Images | campaign | 2223 |
-| 24 | apparel-wildcard-concept-campaign | Campaign Statement Images | campaign | 2224 |
+## What Changes (6 UPDATE statements via insert tool)
 
-## Mapping
+### Naming changes
+- All `scene_id`: `powderblue` → `aesthetic`
+- All `title`: "Powder Blue" → "Aesthetic"
+- `suggested_colors` set to: `[{"hex":"#C2714F","label":"Terracotta"}]`
 
-- `category_collection = 'garments'` (joins existing 18 scenes)
-- `category_sort_order = 22` (from the RTF)
-- Sub-category sort orders: Editorial Studio Looks = 0, Elevated Location Editorial = 1, Everyday UGC Looks = 2, Campaign Statement Images = 3
-- Full `prompt_template`, `trigger_blocks` array, and `outfit_hint` (none specified in this RTF, so NULL)
-- All `is_active = true`
+### Prompt template changes (applied to all 6 scenes)
+
+Every "Powder Blue" string becomes `{{aestheticColor}}`. The `{{aestheticColor}} = Powder Blue` assignment becomes just `{{aestheticColor}}`.
+
+**Concrete examples of replacements in prompts:**
+
+| Before | After |
+|--------|-------|
+| `{{aestheticColor}} = Powder Blue shapes the mood` | `{{aestheticColor}} shapes the mood` |
+| `Use Powder Blue only in the environment, props, surfaces` | `Use {{aestheticColor}} only in the environment, props, surfaces` |
+| `Use Powder Blue through walls, court markings, props` | `Use {{aestheticColor}} through walls, court markings, props` |
+| `Use Powder Blue in mats, dumbbells, wall tone` | `Use {{aestheticColor}} in mats, dumbbells, wall tone` |
+| `Use Powder Blue in paper backdrops, floor tone` | `Use {{aestheticColor}} in paper backdrops, floor tone` |
+| `Use Powder Blue through mats, walls, dumbbells` | `Use {{aestheticColor}} through mats, walls, dumbbells` |
+| `Use Powder Blue through set walls, floors, props` | `Use {{aestheticColor}} through set walls, floors, props` |
+| `Build a Powder Blue world through walls` | `Build a {{aestheticColor}} world through walls` |
+
+### Outfit hint changes
+
+| Scene | Before | After |
+|-------|--------|-------|
+| Portrait | `subtle Powder Blue accents` | `subtle {{aestheticColor}} accents` |
+| Court Story | `tiny Powder Blue support accents` | `tiny {{aestheticColor}} support accents` |
+| Soft Gym | `Powder Blue support accents` | `{{aestheticColor}} support accents` |
+| UGC Mirror | `Powder Blue accents in the environment` | `{{aestheticColor}} accents in the environment` |
+| Hero | `subtle Powder Blue environment accents` | `subtle {{aestheticColor}} environment accents` |
+| Flat Lay | no outfit_hint (stays NULL) | stays NULL |
+
+## Rows affected
+
+| UUID | New scene_id | New Title |
+|------|-------------|-----------|
+| `09f32194...` | `activewear-aesthetic-portrait` | Aesthetic Sport Portrait |
+| `857b69d6...` | `activewear-aesthetic-court-story` | Aesthetic Court Story |
+| `c975b383...` | `activewear-aesthetic-soft-gym` | Aesthetic Soft Gym |
+| `ca7b13f7...` | `activewear-aesthetic-flatlay-story` | Aesthetic Set Flat Lay |
+| `1671e070...` | `activewear-aesthetic-ugc-mirror` | Aesthetic UGC Mirror |
+| `7753741c...` | `activewear-aesthetic-hero-finisher` | Aesthetic Sport Hero |
 
 ## Implementation
-Use the database insert tool to run a single `INSERT INTO product_image_scenes` with all 24 rows. No code changes needed — the existing hook handles everything dynamically.
+
+Run 6 `UPDATE` statements via the database insert tool updating `scene_id`, `title`, `prompt_template`, `outfit_hint`, and `suggested_colors` for each row. No code changes needed.
 
