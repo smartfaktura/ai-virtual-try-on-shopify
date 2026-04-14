@@ -171,31 +171,38 @@ export function useShortFilmProject() {
         setDraftProjectId(data.id);
         setProjectId(data.id);
 
-        // Restore persisted audio assets if project is complete
-        if (data.status === 'complete') {
-          const restoredAssets: AudioAssets = { perShotAudio: [] };
-          if (data.music_track_url) {
-            restoredAssets.backgroundTrackUrl = await toSignedUrl(data.music_track_url);
-          }
-          // Load per-shot audio URLs and sign them
+        // Restore shot statuses (result_url) so playback/download works on reload
+        {
           const { data: shotRows } = await supabase
             .from('video_shots')
-            .select('shot_index, audio_url, sfx_url')
+            .select('shot_index, status, result_url, audio_url, sfx_url')
             .eq('project_id', data.id)
             .order('shot_index');
-          if (shotRows) {
+          if (shotRows && shotRows.length > 0) {
+            const restoredStatuses: ShotStatus[] = shotRows.map((r: any) => ({
+              shot_index: r.shot_index,
+              status: r.status === 'complete' ? 'complete' : r.status === 'failed' ? 'failed' : 'pending',
+              result_url: r.result_url || undefined,
+            }));
+            setShotStatuses(restoredStatuses);
+
+            // Restore audio assets
+            const restoredAssets: AudioAssets = { perShotAudio: [] };
+            if (data.music_track_url) {
+              restoredAssets.backgroundTrackUrl = await toSignedUrl(data.music_track_url);
+            }
             for (const row of shotRows) {
-              if (row.sfx_url) {
-                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: await toSignedUrl(row.sfx_url), type: 'sfx' });
+              if ((row as any).sfx_url) {
+                restoredAssets.perShotAudio.push({ shotIndex: (row as any).shot_index, url: await toSignedUrl((row as any).sfx_url), type: 'sfx' });
               }
-              if (row.audio_url) {
-                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: await toSignedUrl(row.audio_url), type: 'voiceover' });
+              if ((row as any).audio_url) {
+                restoredAssets.perShotAudio.push({ shotIndex: (row as any).shot_index, url: await toSignedUrl((row as any).audio_url), type: 'voiceover' });
               }
             }
-          }
-          if (restoredAssets.backgroundTrackUrl || restoredAssets.perShotAudio.length > 0) {
-            setAudioAssets(restoredAssets);
-            setAudioPhase('done');
+            if (restoredAssets.backgroundTrackUrl || restoredAssets.perShotAudio.length > 0) {
+              setAudioAssets(restoredAssets);
+              setAudioPhase('done');
+            }
           }
         }
 
