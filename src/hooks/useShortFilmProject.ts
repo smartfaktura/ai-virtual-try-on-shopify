@@ -401,6 +401,7 @@ export function useShortFilmProject() {
     setIsGeneratingAudio(false);
     setAudioPhase('idle');
     setAudioShotStatuses([]);
+    try { sessionStorage.removeItem('sf_active_project'); } catch {}
   }, []);
 
   // ─── Retry single failed shot ──────────────────────────────
@@ -908,6 +909,7 @@ export function useShortFilmProject() {
       }
 
       setProjectId(currentProjectId);
+      try { sessionStorage.setItem('sf_active_project', currentProjectId!); } catch {}
 
       if (references.length > 0) {
         const inputRows = references.map((ref, i) => ({
