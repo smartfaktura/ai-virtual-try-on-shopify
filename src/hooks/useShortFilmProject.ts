@@ -980,7 +980,7 @@ export function useShortFilmProject() {
             mode: 'pro',
             cfg_scale: 0.5,
             preservation_strength: settings.preservationLevel || 'medium',
-            with_audio: !(settings.audioLayers?.music || settings.audioLayers?.sfx || settings.audioLayers?.voiceover),
+            with_audio: false,
             project_id: currentProjectId,
             image_urls: imageUrls,
           },

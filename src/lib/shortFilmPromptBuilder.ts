@@ -243,10 +243,9 @@ export function buildShotPrompt(
 
   // For character-visible shots, add strong human directives
   if (shot.character_visible) {
-    p1.push('A real human person with natural skin, visible face, and authentic expression.');
-    // Lip-sync: if character has voiceover script, tell Kling to animate lips
+    p1.push('Natural portrait, authentic expression, professional model.');
     if (shot.script_line && shot.vo_enabled !== false) {
-      p1.push('Character speaking dialogue, natural lip movement, conversational expression.');
+      p1.push('Character in conversation, expressive gesture.');
     }
   }
 
@@ -312,7 +311,9 @@ export function buildShotPrompt(
 
   // Hard truncate safety net
   if (prompt.length > MAX_PROMPT_LENGTH) {
-    prompt = prompt.slice(0, MAX_PROMPT_LENGTH).replace(/\s\S*$/, '');
+    const trimmed = prompt.slice(0, MAX_PROMPT_LENGTH);
+    const lastDot = trimmed.lastIndexOf('.');
+    prompt = lastDot > MAX_PROMPT_LENGTH * 0.6 ? trimmed.slice(0, lastDot + 1) : trimmed.replace(/\s\S*$/, '');
   }
 
   // Build negative prompt — add human-specific negatives when character is visible
