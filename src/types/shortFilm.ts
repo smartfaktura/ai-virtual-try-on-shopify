@@ -78,3 +78,5 @@ export interface AudioAssets {
 }
 
 export type ShortFilmStep = 'film_type' | 'references' | 'story' | 'shot_plan' | 'settings' | 'review';
+
+export type AudioPhase = 'idle' | 'music' | 'sfx' | 'voiceover' | 'done' | 'partial';

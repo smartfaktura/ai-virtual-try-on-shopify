@@ -13,6 +13,7 @@ import type {
   ShortFilmStep,
   ShotPlanItem,
   AudioAssets,
+  AudioPhase,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { toSignedUrl } from '@/lib/signedUrl';
@@ -29,7 +30,7 @@ export interface AudioShotStatus {
   voiceover: 'idle' | 'generating' | 'done' | 'failed';
 }
 
-export type AudioPhase = 'idle' | 'music' | 'sfx' | 'voiceover' | 'done';
+// AudioPhase is now imported from @/types/shortFilm
 
 interface DraftState {
   step: ShortFilmStep;
@@ -398,11 +399,12 @@ export function useShortFilmProject() {
   }, [user]);
 
   // ─── Audio generation ────────────────────────────────────────
-  const generateAudio = useCallback(async (targetProjectId?: string) => {
+  const generateAudio = useCallback(async (targetProjectId?: string, currentShots?: ShotPlanItem[]) => {
     if (!user) return;
     const mode = settings.audioMode;
     if (mode === 'silent' || mode === 'ambient') return;
 
+    const shotsToUse = currentShots || shots;
     const pid = targetProjectId || projectId;
     setIsGeneratingAudio(true);
     setAudioPhase('idle');
@@ -418,11 +420,18 @@ export function useShortFilmProject() {
       Authorization: `Bearer ${authToken}`,
     };
 
+    // Error tracking
+    let musicOk = false;
+    let sfxOk = 0;
+    let sfxFail = 0;
+    let voOk = 0;
+    let voFail = 0;
+
     // Init per-shot audio statuses
-    const initStatuses: AudioShotStatus[] = shots.map(s => ({
+    const initStatuses: AudioShotStatus[] = shotsToUse.map(s => ({
       shot_index: s.shot_index,
-      sfx: (mode === 'full_mix') ? 'idle' : 'idle',
-      voiceover: (mode === 'voiceover' || mode === 'full_mix') && s.script_line ? 'idle' : 'idle',
+      sfx: 'idle' as const,
+      voiceover: (mode === 'voiceover' || mode === 'full_mix') && s.script_line ? 'idle' as const : 'idle' as const,
     }));
     setAudioShotStatuses(initStatuses);
 
@@ -430,7 +439,7 @@ export function useShortFilmProject() {
       // Music track
       if (mode === 'music' || mode === 'full_mix') {
         setAudioPhase('music');
-        const totalDuration = shots.reduce((sum, s) => sum + s.duration_sec, 0);
+        const totalDuration = shotsToUse.reduce((sum, s) => sum + s.duration_sec, 0);
         const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music for a ${filmType?.replace(/_/g, ' ')} film`;
         try {
           const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
@@ -442,12 +451,15 @@ export function useShortFilmProject() {
             const blob = await res.blob();
             const blobUrl = URL.createObjectURL(blob);
             newAssets.backgroundTrackUrl = blobUrl;
+            musicOk = true;
 
             // Persist to storage
             const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/music-track.mp3`);
             if (storageUrl && pid) {
               await supabase.from('video_projects').update({ music_track_url: storageUrl } as any).eq('id', pid);
             }
+          } else {
+            console.error('[ShortFilm] Music generation returned', res.status);
           }
         } catch (e) {
           console.error('[ShortFilm] Music generation failed:', e);
@@ -457,7 +469,7 @@ export function useShortFilmProject() {
       // SFX per shot (music or full_mix)
       if (mode === 'music' || mode === 'full_mix') {
         setAudioPhase('sfx');
-        for (const shot of shots) {
+        for (const shot of shotsToUse) {
           setAudioShotStatuses(prev =>
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'generating' } : s)
           );
@@ -472,6 +484,7 @@ export function useShortFilmProject() {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
               newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'sfx' });
+              sfxOk++;
 
               const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/sfx-shot-${shot.shot_index}.mp3`);
               if (storageUrl && pid) {
@@ -482,11 +495,13 @@ export function useShortFilmProject() {
                 prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'done' } : s)
               );
             } else {
+              sfxFail++;
               setAudioShotStatuses(prev =>
                 prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'failed' } : s)
               );
             }
           } catch (e) {
+            sfxFail++;
             console.error(`[ShortFilm] SFX shot ${shot.shot_index} failed:`, e);
             setAudioShotStatuses(prev =>
               prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'failed' } : s)
@@ -499,7 +514,7 @@ export function useShortFilmProject() {
       if (mode === 'voiceover' || mode === 'full_mix') {
         setAudioPhase('voiceover');
         const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
-        for (const shot of shots) {
+        for (const shot of shotsToUse) {
           if (!shot.script_line) continue;
           setAudioShotStatuses(prev =>
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
@@ -514,6 +529,7 @@ export function useShortFilmProject() {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
               newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'voiceover' });
+              voOk++;
 
               const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/vo-shot-${shot.shot_index}.mp3`);
               if (storageUrl && pid) {
@@ -524,11 +540,13 @@ export function useShortFilmProject() {
                 prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'done' } : s)
               );
             } else {
+              voFail++;
               setAudioShotStatuses(prev =>
                 prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'failed' } : s)
               );
             }
           } catch (e) {
+            voFail++;
             console.error(`[ShortFilm] TTS shot ${shot.shot_index} failed:`, e);
             setAudioShotStatuses(prev =>
               prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'failed' } : s)
@@ -538,12 +556,32 @@ export function useShortFilmProject() {
       }
 
       setAudioAssets(newAssets);
-      setAudioPhase('done');
-      if (newAssets.backgroundTrackUrl || newAssets.perShotAudio.length > 0) {
+
+      // Determine phase based on results
+      const hasFailures = sfxFail > 0 || voFail > 0 || ((mode === 'music' || mode === 'full_mix') && !musicOk);
+      const hasSuccess = musicOk || sfxOk > 0 || voOk > 0;
+
+      if (hasFailures && !hasSuccess) {
+        setAudioPhase('partial');
+        toast.error('Audio generation failed. Tap "Generate Audio" to retry.');
+      } else if (hasFailures) {
+        setAudioPhase('partial');
+        const parts: string[] = [];
+        if (musicOk) parts.push('Music ✓');
+        else if (mode === 'music' || mode === 'full_mix') parts.push('Music ✗');
+        if (sfxOk > 0 || sfxFail > 0) parts.push(`SFX ${sfxOk}/${sfxOk + sfxFail}`);
+        if (voOk > 0 || voFail > 0) parts.push(`Voice ${voOk}/${voOk + voFail}`);
+        toast.error(`Audio partially generated: ${parts.join(', ')}`);
+      } else if (hasSuccess) {
+        setAudioPhase('done');
         toast.success('Audio layer generated');
+      } else {
+        setAudioPhase('done');
       }
     } catch (err) {
       console.error('[ShortFilm] Audio generation failed:', err);
+      setAudioPhase('partial');
+      toast.error('Audio generation failed');
     } finally {
       setIsGeneratingAudio(false);
     }
@@ -871,9 +909,9 @@ export function useShortFilmProject() {
       }
       refreshBalance();
 
-      // Generate audio layer if needed
+      // Generate audio layer if needed — pass current shots to avoid stale closure
       if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
-        await generateAudio(currentProjectId);
+        await generateAudio(currentProjectId, shots);
       }
 
     } catch (err) {
