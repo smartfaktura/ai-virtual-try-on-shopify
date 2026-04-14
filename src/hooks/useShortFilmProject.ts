@@ -799,6 +799,7 @@ export function useShortFilmProject() {
       // Set all shots to processing
       setShotStatuses(prev => prev.map(s => ({ ...s, status: 'processing' as const })));
 
+      let generationSucceeded = false;
       try {
         const result = await enqueueWithRetry({
           jobType: 'video_multishot',
@@ -825,6 +826,7 @@ export function useShortFilmProject() {
         const resultUrl = await pollQueueJobCompletion(result.jobId, 90);
 
         if (resultUrl) {
+          generationSucceeded = true;
           // All shots succeeded — mark all complete with the single video URL
           setShotStatuses(prev => prev.map(s => ({
             ...s, status: 'complete' as const, result_url: resultUrl,
@@ -846,9 +848,7 @@ export function useShortFilmProject() {
         setShotStatuses(prev => prev.map(s => ({ ...s, status: 'failed' as const })));
       }
 
-      const currentStatuses = shotStatuses;
-      const successCount = currentStatuses.filter(s => s.status === 'complete').length;
-      const projectStatus = successCount === shots.length ? 'complete' : successCount > 0 ? 'partial' : 'failed';
+      const projectStatus = generationSucceeded ? 'complete' : 'failed';
 
       // Persist full draft state for reopening
       const draftState: DraftState = {
@@ -858,11 +858,11 @@ export function useShortFilmProject() {
         status: projectStatus,
         draft_state_json: JSON.parse(JSON.stringify(draftState)),
       }).eq('id', currentProjectId!);
-      
-      if (successCount > 0) {
-        toast.success(projectStatus === 'complete' ? 'Short film generation complete!' : `${successCount}/${shots.length} shots completed`);
+
+      if (generationSucceeded) {
+        toast.success('Short film generation complete!');
       } else {
-        toast.error('All shots failed');
+        toast.error('Film generation failed');
       }
       refreshBalance();
 
