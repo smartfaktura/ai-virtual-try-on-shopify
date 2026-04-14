@@ -1038,7 +1038,9 @@ export function useShortFilmProject() {
 
     // Generate audio layer INDEPENDENTLY — outside the main try block
     const audioProjectId = projectId || draftProjectId;
-    if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
+    const audioLayers = getEffectiveLayers(settings);
+    const anyAudioLayerOn = audioLayers.music || audioLayers.sfx || audioLayers.voiceover;
+    if (anyAudioLayerOn) {
       console.log('[ShortFilm] Starting audio generation independently for project:', audioProjectId);
       try {
         await generateAudio(audioProjectId || undefined, shots);
