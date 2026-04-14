@@ -263,38 +263,36 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     [references, onChange]
   );
 
+  // Toggle a scene preset inline (no dialog close)
+  const toggleScenePreset = useCallback(
+    (scene: { id: string; title: string; description?: string }) => {
+      const presetName = `${scene.title}: ${scene.description || ''}`;
+      const existing = references.find(r => r.role === 'scene' && r.name === presetName);
+      if (existing) {
+        onChange(references.filter(r => r.id !== existing.id));
+      } else {
+        onChange([...references, { id: crypto.randomUUID(), url: '', role: 'scene', name: presetName }]);
+      }
+    },
+    [references, onChange]
+  );
+
   const pickProduct = useCallback(
     (product: FullProduct) => {
       const newRefs: ReferenceAsset[] = [];
       const pid = product.id;
       const name = product.title;
-
-      // Main image always
       newRefs.push({ id: crypto.randomUUID(), url: product.image_url, role: 'product', name, subRole: 'main', productId: pid });
-
-      // Add all available angle images
-      if (product.back_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.back_image_url, role: 'product', name, subRole: 'back', productId: pid });
-      }
-      if (product.side_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.side_image_url, role: 'product', name, subRole: 'side', productId: pid });
-      }
-      if (product.packaging_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.packaging_image_url, role: 'product', name, subRole: 'packaging', productId: pid });
-      }
-      if (product.inside_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.inside_image_url, role: 'product', name, subRole: 'inside', productId: pid });
-      }
-      if (product.texture_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.texture_image_url, role: 'product', name, subRole: 'texture', productId: pid });
-      }
-      // Extra images
+      if (product.back_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.back_image_url, role: 'product', name, subRole: 'back', productId: pid });
+      if (product.side_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.side_image_url, role: 'product', name, subRole: 'side', productId: pid });
+      if (product.packaging_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.packaging_image_url, role: 'product', name, subRole: 'packaging', productId: pid });
+      if (product.inside_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.inside_image_url, role: 'product', name, subRole: 'inside', productId: pid });
+      if (product.texture_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.texture_image_url, role: 'product', name, subRole: 'texture', productId: pid });
       if (product.extra_image_urls && product.extra_image_urls.length > 0) {
         product.extra_image_urls.forEach((url) => {
           newRefs.push({ id: crypto.randomUUID(), url, role: 'product', name, subRole: 'extra', productId: pid });
         });
       }
-
       onChange([...references, ...newRefs]);
       setProductPickerOpen(false);
     },
@@ -317,6 +315,37 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
       setStylePickerOpen(false);
     },
     [references, onChange]
+  );
+
+  // Toggle a style preset inline (no dialog close)
+  const toggleStylePreset = useCallback(
+    (preset: { id: string; title: string; keywords: string }) => {
+      const presetName = `${preset.title}: ${preset.keywords}`;
+      const existing = references.find(r => r.role === 'style' && r.name === presetName);
+      if (existing) {
+        onChange(references.filter(r => r.id !== existing.id));
+      } else {
+        onChange([...references, { id: crypto.randomUUID(), url: '', role: 'style', name: presetName }]);
+      }
+    },
+    [references, onChange]
+  );
+
+  // Helper to check if a preset is selected
+  const isScenePresetSelected = useCallback(
+    (scene: { title: string; description?: string }) => {
+      const presetName = `${scene.title}: ${scene.description || ''}`;
+      return references.some(r => r.role === 'scene' && r.name === presetName);
+    },
+    [references]
+  );
+
+  const isStylePresetSelected = useCallback(
+    (preset: { title: string; keywords: string }) => {
+      const presetName = `${preset.title}: ${preset.keywords}`;
+      return references.some(r => r.role === 'style' && r.name === presetName);
+    },
+    [references]
   );
 
   const openLibrary = (type: 'model' | 'scene' | 'product' | 'style') => {
