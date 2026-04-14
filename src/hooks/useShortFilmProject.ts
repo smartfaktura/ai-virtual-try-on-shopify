@@ -834,6 +834,7 @@ export function useShortFilmProject() {
     setIsGenerating(true);
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
 
+    let generationSucceeded = false;
     try {
       const token = await getAuthToken();
       if (!token) throw new Error('Not authenticated');
@@ -971,7 +972,7 @@ export function useShortFilmProject() {
       // Set all shots to processing
       setShotStatuses(prev => prev.map(s => ({ ...s, status: 'processing' as const })));
 
-      let generationSucceeded = false;
+      generationSucceeded = false;
       try {
         const result = await enqueueWithRetry({
           jobType: 'video_multishot',
@@ -1061,6 +1062,58 @@ export function useShortFilmProject() {
       } catch (audioErr) {
         console.error('[ShortFilm] Audio generation failed independently:', audioErr);
         toast.error('Audio generation failed — you can retry from the player');
+      }
+    }
+
+    // Lip-sync post-processing for character shots with voiceover
+    if (generationSucceeded && audioLayers.voiceover) {
+      const characterShotsWithVO = shots.filter(
+        s => s.character_visible && s.script_line && s.vo_enabled !== false && s.duration_sec >= 3
+      );
+      if (characterShotsWithVO.length > 0) {
+        console.log(`[ShortFilm] Starting lip-sync for ${characterShotsWithVO.length} character shots`);
+        try {
+          const videoUrl = shotStatuses.find(s => s.result_url)?.result_url;
+          // Get stored VO audio URLs for character shots
+          for (const shot of characterShotsWithVO) {
+            const voAsset = audioAssets.perShotAudio.find(
+              a => a.shotIndex === shot.shot_index && a.type === 'voiceover'
+            );
+            if (!voAsset || !videoUrl) continue;
+
+            try {
+              const { data: lipSyncData } = await supabase.functions.invoke('kling-lip-sync', {
+                body: { action: 'create', video_url: videoUrl, audio_url: voAsset.url },
+              });
+
+              if (lipSyncData?.task_id) {
+                console.log(`[ShortFilm] Lip-sync task created for shot ${shot.shot_index}: ${lipSyncData.task_id}`);
+                // Poll for lip-sync completion (max 60 polls @ 10s = 10 min)
+                for (let poll = 0; poll < 60; poll++) {
+                  await new Promise(r => setTimeout(r, 10_000));
+                  const { data: statusData } = await supabase.functions.invoke('kling-lip-sync', {
+                    body: { action: 'status', task_id: lipSyncData.task_id },
+                  });
+                  if (statusData?.status === 'succeed' && statusData?.video_url) {
+                    console.log(`[ShortFilm] Lip-sync complete for shot ${shot.shot_index}`);
+                    const signedLipSync = await toSignedUrl(statusData.video_url);
+                    setShotStatuses(prev => prev.map(s => ({ ...s, result_url: signedLipSync })));
+                    toast.success('Lip-sync applied to character shots!');
+                    break;
+                  }
+                  if (statusData?.status === 'failed') {
+                    console.warn(`[ShortFilm] Lip-sync failed for shot ${shot.shot_index}`);
+                    break;
+                  }
+                }
+              }
+            } catch (lsErr) {
+              console.error(`[ShortFilm] Lip-sync failed for shot ${shot.shot_index}:`, lsErr);
+            }
+          }
+        } catch (lipSyncErr) {
+          console.error('[ShortFilm] Lip-sync post-processing failed:', lipSyncErr);
+        }
       }
     }
 

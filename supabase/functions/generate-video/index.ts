@@ -280,7 +280,10 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
       if (projectId) dbRow.project_id = projectId;
       await serviceClient.from("generated_videos").insert(dbRow);
 
-      return respond(200, { task_id: taskId, job_id: jobId, fallback: "image2video" });
+      console.log(`[generate-video] Single-shot fallback completed, task_id=${taskId}`);
+      return new Response(JSON.stringify({ task_id: taskId, job_id: jobId, fallback: "image2video" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`[generate-video:multishot] Job ${jobId}, user ${userId}, shots=${shots.length}, duration=${totalDuration}s`);
@@ -303,7 +306,7 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
       mode,
       aspect_ratio: aspectRatio,
       duration: String(totalDuration),
-      sound: withAudio ? "on" : "off",
+      sound: "on",
       cfg_scale: cfgScale,
     };
 
@@ -314,7 +317,7 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
 
     // Add image references if provided
     if (imageUrls.length > 0) {
-      klingBody.image_list = imageUrls.map(url => ({ image_url: url }));
+      klingBody.image_list = imageUrls.map((url, i) => ({ image_url: url, index: i + 1 }));
     }
 
     console.log(`[generate-video:multishot] Kling omni-video request:`, JSON.stringify(klingBody));

@@ -241,10 +241,12 @@ export function buildShotPrompt(
     p1.push(`Feature subject from <<<image_${imageIndex}>>>.`);
   }
 
-  // For character-visible shots, add strong human directives
+  // For character-visible shots, add human directives with speech alignment
   if (shot.character_visible) {
     p1.push('Natural portrait, authentic expression, professional model.');
     if (shot.script_line && shot.vo_enabled !== false) {
+      p1.push(`Character delivering line: "${shot.script_line}" — match mouth movement and expression to speech cadence, natural lip movement.`);
+    } else {
       p1.push('Character in conversation, expressive gesture.');
     }
   }
@@ -291,7 +293,7 @@ export function buildShotPrompt(
   const p3: string[] = [];
   p3.push(roleCine.lighting);
   p3.push(roleCine.lens);
-  if (shot.script_line) {
+  if (shot.script_line && !shot.character_visible) {
     p3.push(`Visual matches: "${shot.script_line}".`);
   }
   if (shot.preservation_strength === 'high') {

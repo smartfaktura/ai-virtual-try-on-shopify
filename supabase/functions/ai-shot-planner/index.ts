@@ -87,7 +87,7 @@ serve(async (req) => {
     const wantSfx = audioLayers?.sfx !== false;
 
     const scriptLineInstruction = wantVoiceover
-      ? `- script_line (string: voiceover narration — CRITICAL: word count MUST match duration. Budget is ~2 words per second. A 2s shot = max 3-4 words as a punchy tagline. A 3s shot = max 6 words. A 4s shot = max 8 words. A 5s shot = max 10 words. Shots ≤ 2s should be 2-4 words maximum — a punchy tagline, NOT a sentence. For shots where character_visible=true, write dialogue the character would say naturally.)`
+      ? `- script_line (string: PRODUCT/BRAND-FOCUSED voiceover copy — sell the product, highlight features, benefits, brand promise. Create desire and urgency. Do NOT describe visual aesthetics, mood, or style. Examples of GOOD: "Precision-engineered for perfection." "Crafted from the finest materials." "Elevate every moment." Examples of BAD (do NOT write these): "Moody shadows dance across surfaces." "Iridescent light cascades." CRITICAL word budget: ~2 words per second. A 2s shot = max 3-4 words. A 3s shot = max 6 words. A 4s shot = max 8 words. A 5s shot = max 10 words. For character_visible shots, write natural product-endorsement dialogue.)`
       : `- script_line (string: MUST be empty string "" — voiceover is disabled by the user)`;
 
     const sfxInstruction = wantSfx
@@ -96,7 +96,8 @@ serve(async (req) => {
       : `- sfx_prompt (string: MUST be empty string "" — SFX is disabled by the user)
 - sfx_trigger_at (number: 0)`;
 
-    const systemPrompt = `You are a cinematic short film director specializing in brand and product films.
+    const systemPrompt = `You are a cinematic short film director specializing in E-COMMERCE PRODUCT and BRAND films.
+IMPORTANT: This is a product/brand advertisement film. Every script_line MUST sell the product or reinforce the brand. Style/mood presets affect VISUALS ONLY — never reference visual aesthetics in voiceover scripts.
 You MUST generate shots that follow the EXACT role sequence provided. Do NOT invent your own roles.
 
 VALID ROLES (use ONLY these): ${VALID_ROLES.join(", ")}
@@ -137,9 +138,9 @@ REQUIRED ROLE SEQUENCE (follow this exactly): ${roleSequence.join(" → ")}
 Target total duration: 15 seconds
 Number of shots: ${roleSequence.length}
 ${tone ? `Tone/mood: ${tone}` : ""}
-${tonePresetText ? `Tone cinematography guidance: ${tonePresetText}` : ""}
-${stylePresetNames ? `Selected visual style: ${stylePresetNames}` : ""}
-${scenePresetNames ? `Selected scene environment: ${scenePresetNames}` : ""}
+${tonePresetText ? `VISUAL STYLE ONLY (do NOT reference in script_line — this is for camera/lighting/color only): ${tonePresetText}` : ""}
+${stylePresetNames ? `VISUAL STYLE ONLY: ${stylePresetNames}` : ""}
+${scenePresetNames ? `Scene environment (visual only): ${scenePresetNames}` : ""}
 ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
 Audio preferences: ${wantVoiceover ? "Voiceover ENABLED" : "Voiceover DISABLED"}, ${wantSfx ? "SFX ENABLED" : "SFX DISABLED"}
 
