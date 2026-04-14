@@ -88,7 +88,7 @@ export function useShortFilmProject() {
         await supabase
           .from('video_projects')
           .update({
-            draft_state_json: draftState as unknown as Record<string, unknown>,
+          draft_state_json: JSON.parse(JSON.stringify(draftState)),
             title: `Draft — ${filmType?.replace(/_/g, ' ') || 'Short Film'}`,
             updated_at: new Date().toISOString(),
           })
@@ -96,15 +96,15 @@ export function useShortFilmProject() {
       } else {
         const { data } = await supabase
           .from('video_projects')
-          .insert({
+          .insert([{
             user_id: user.id,
             workflow_type: 'short_film',
             title: `Draft — ${filmType?.replace(/_/g, ' ') || 'Short Film'}`,
             status: 'draft',
             analysis_status: 'complete',
-            draft_state_json: draftState as unknown as Record<string, unknown>,
-            settings_json: settings as unknown as Record<string, unknown>,
-          })
+            draft_state_json: JSON.parse(JSON.stringify(draftState)),
+            settings_json: JSON.parse(JSON.stringify(settings)),
+          }])
           .select('id')
           .single();
         if (data) setDraftProjectId(data.id);
