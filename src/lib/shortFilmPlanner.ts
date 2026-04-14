@@ -21,7 +21,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Rocket,
     defaultStructure: 'hook_reveal_detail_closing',
     defaultTone: 'premium',
-    defaultShotCount: 4,
+    defaultShotCount: 3,
   },
   {
     value: 'brand_story',
@@ -31,7 +31,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: BookOpen,
     defaultStructure: 'intro_product_lifestyle_end',
     defaultTone: 'editorial',
-    defaultShotCount: 5,
+    defaultShotCount: 3,
   },
   {
     value: 'fashion_campaign',
@@ -41,7 +41,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Shirt,
     defaultStructure: 'atmosphere_focus_human_finish',
     defaultTone: 'editorial',
-    defaultShotCount: 5,
+    defaultShotCount: 3,
   },
   {
     value: 'beauty_film',
@@ -51,7 +51,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Sparkles,
     defaultStructure: 'hook_reveal_detail_closing',
     defaultTone: 'luxury',
-    defaultShotCount: 4,
+    defaultShotCount: 3,
   },
   {
     value: 'luxury_mood',
@@ -61,7 +61,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Gem,
     defaultStructure: 'tease_build_highlight_resolve',
     defaultTone: 'luxury',
-    defaultShotCount: 4,
+    defaultShotCount: 3,
   },
   {
     value: 'sports_campaign',
@@ -71,7 +71,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Zap,
     defaultStructure: 'hook_reveal_detail_closing',
     defaultTone: 'energetic',
-    defaultShotCount: 4,
+    defaultShotCount: 3,
   },
   {
     value: 'lifestyle_teaser',
@@ -81,7 +81,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Leaf,
     defaultStructure: 'intro_product_lifestyle_end',
     defaultTone: 'minimal',
-    defaultShotCount: 4,
+    defaultShotCount: 3,
   },
   {
     value: 'custom',
@@ -91,7 +91,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Clapperboard,
     defaultStructure: 'custom',
     defaultTone: 'clean',
-    defaultShotCount: 4,
+    defaultShotCount: 3,
   },
 ];
 
