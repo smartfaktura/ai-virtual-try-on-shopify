@@ -972,7 +972,7 @@ export function useShortFilmProject() {
       // Set all shots to processing
       setShotStatuses(prev => prev.map(s => ({ ...s, status: 'processing' as const })));
 
-      let generationSucceeded = false;
+      generationSucceeded = false;
       try {
         const result = await enqueueWithRetry({
           jobType: 'video_multishot',
