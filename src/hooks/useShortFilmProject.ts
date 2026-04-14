@@ -5,6 +5,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { generateShotPlan } from '@/lib/shortFilmPlanner';
 import { buildShotPrompt, estimateShortFilmCredits } from '@/lib/shortFilmPromptBuilder';
+import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
 import type {
   FilmType,
   StoryStructure,
@@ -301,9 +302,12 @@ export function useShortFilmProject() {
     });
 
     try {
-      const { data: enqueueResult, error: enqueueError } = await supabase.functions.invoke('generate-video', {
-        body: {
-          action: 'create',
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+
+      const result = await enqueueWithRetry({
+        jobType: 'video',
+        payload: {
           image_url: sourceImageUrl || '',
           prompt,
           duration: settings.shotDuration,
@@ -315,30 +319,31 @@ export function useShortFilmProject() {
           project_id: projectId,
           workflow_type: 'short_film',
         },
-      });
+        imageCount: 1,
+      }, token);
 
-      if (enqueueError) throw new Error(enqueueError.message);
-
-      const taskId = enqueueResult?.task_id || enqueueResult?.kling_task_id;
-      const videoId = enqueueResult?.video_id;
-
-      if (taskId && videoId) {
-        const resultUrl = await pollShotCompletion(videoId, 60);
-        setShotStatuses(prev =>
-          prev.map(s =>
-            s.shot_index === shotIndex
-              ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
-              : s
-          )
-        );
-        if (resultUrl) {
-          await supabase
-            .from('video_shots')
-            .update({ status: 'complete', result_url: resultUrl })
-            .eq('project_id', projectId)
-            .eq('shot_index', shotIndex);
-        }
+      if (isEnqueueError(result)) {
+        throw new Error(result.message);
       }
+
+      sendWake(token);
+
+      const resultUrl = await pollQueueJobCompletion(result.jobId, 60);
+      setShotStatuses(prev =>
+        prev.map(s =>
+          s.shot_index === shotIndex
+            ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
+            : s
+        )
+      );
+      if (resultUrl) {
+        await supabase
+          .from('video_shots')
+          .update({ status: 'complete', result_url: resultUrl })
+          .eq('project_id', projectId)
+          .eq('shot_index', shotIndex);
+      }
+      refreshBalance();
     } catch (err) {
       console.error(`[ShortFilm] Retry shot ${shotIndex} failed:`, err);
       setShotStatuses(prev =>
@@ -346,7 +351,7 @@ export function useShortFilmProject() {
       );
       toast.error(`Shot ${shotIndex} retry failed`);
     }
-  }, [projectId, user, filmType, shots, settings, references]);
+  }, [projectId, user, filmType, shots, settings, references, refreshBalance]);
 
   // ─── Upload audio blob to storage ─────────────────────────────
   const uploadAudioToStorage = useCallback(async (blob: Blob, filename: string): Promise<string | null> => {
@@ -637,6 +642,9 @@ export function useShortFilmProject() {
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
 
     try {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+
       // If we have a draft, update it; otherwise create new project
       let currentProjectId = draftProjectId;
 
@@ -723,8 +731,13 @@ export function useShortFilmProject() {
       });
       await supabase.from('video_shots').insert(shotRows);
 
+      // Enqueue all shots via the queue system
+      const jobIds: { shotIndex: number; jobId: string }[] = [];
+
       for (let i = 0; i < shots.length; i++) {
         const shot = shots[i];
+        await paceDelay(i);
+
         setShotStatuses(prev =>
           prev.map(s =>
             s.shot_index === shot.shot_index ? { ...s, status: 'processing' } : s
@@ -741,9 +754,9 @@ export function useShortFilmProject() {
         });
 
         try {
-          const { data: enqueueResult, error: enqueueError } = await supabase.functions.invoke('generate-video', {
-            body: {
-              action: 'create',
+          const result = await enqueueWithRetry({
+            jobType: 'video',
+            payload: {
               image_url: sourceImageUrl || '',
               prompt,
               duration: settings.shotDuration,
@@ -755,18 +768,46 @@ export function useShortFilmProject() {
               project_id: currentProjectId,
               workflow_type: 'short_film',
             },
-          });
+            imageCount: 1,
+            skipWake: true,
+          }, token);
 
-          if (enqueueError) throw new Error(enqueueError.message);
-
-          const taskId = enqueueResult?.task_id || enqueueResult?.kling_task_id;
-          const videoId = enqueueResult?.video_id;
-
-          if (taskId && videoId) {
-            const resultUrl = await pollShotCompletion(videoId, 60);
+          if (isEnqueueError(result)) {
+            console.error(`[ShortFilm] Enqueue shot ${shot.shot_index} failed:`, result.message);
             setShotStatuses(prev =>
               prev.map(s =>
-                s.shot_index === shot.shot_index
+                s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
+              )
+            );
+            if (result.type === 'insufficient_credits') {
+              toast.error('Insufficient credits');
+              break;
+            }
+            continue;
+          }
+
+          jobIds.push({ shotIndex: shot.shot_index, jobId: result.jobId });
+        } catch (shotErr) {
+          console.error(`[ShortFilm] Shot ${shot.shot_index} failed:`, shotErr);
+          setShotStatuses(prev =>
+            prev.map(s =>
+              s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
+            )
+          );
+        }
+      }
+
+      // Wake the queue processor once after all enqueues
+      sendWake(token);
+
+      // Poll all enqueued jobs for completion
+      await Promise.all(
+        jobIds.map(async ({ shotIndex, jobId }) => {
+          try {
+            const resultUrl = await pollQueueJobCompletion(jobId, 60);
+            setShotStatuses(prev =>
+              prev.map(s =>
+                s.shot_index === shotIndex
                   ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
                   : s
               )
@@ -777,24 +818,17 @@ export function useShortFilmProject() {
                 .from('video_shots')
                 .update({ status: 'complete', result_url: resultUrl })
                 .eq('project_id', currentProjectId!)
-                .eq('shot_index', shot.shot_index);
+                .eq('shot_index', shotIndex);
             }
-          } else {
+          } catch {
             setShotStatuses(prev =>
               prev.map(s =>
-                s.shot_index === shot.shot_index ? { ...s, status: 'complete' } : s
+                s.shot_index === shotIndex ? { ...s, status: 'failed' } : s
               )
             );
           }
-        } catch (shotErr) {
-          console.error(`[ShortFilm] Shot ${shot.shot_index} failed:`, shotErr);
-          setShotStatuses(prev =>
-            prev.map(s =>
-              s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
-            )
-          );
-        }
-      }
+        })
+      );
 
       await supabase.from('video_projects').update({ status: 'complete' }).eq('id', currentProjectId!);
       toast.success('Short film generation complete!');
@@ -938,21 +972,38 @@ function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): S
   }));
 }
 
-/** Poll generated_videos for a specific video to complete */
-async function pollShotCompletion(videoId: string, maxPolls: number): Promise<string | null> {
+/** Poll generation_queue for a job, then find the video URL from generated_videos */
+async function pollQueueJobCompletion(jobId: string, maxPolls: number): Promise<string | null> {
   for (let i = 0; i < maxPolls; i++) {
     await new Promise(r => setTimeout(r, 10_000));
 
     const { data } = await supabase
-      .from('generated_videos')
-      .select('status, video_url')
-      .eq('id', videoId)
+      .from('generation_queue')
+      .select('status, result, error_message')
+      .eq('id', jobId)
       .single();
 
-    if (data?.status === 'completed' && data.video_url) {
-      return data.video_url;
+    if (!data) continue;
+
+    if (data.status === 'completed') {
+      // The worker stores kling_task_id in result; find the generated_videos row
+      const result = data.result as Record<string, unknown> | null;
+      if (result?.video_url) return result.video_url as string;
+
+      // Fallback: look up by kling_task_id
+      const klingTaskId = result?.kling_task_id as string | undefined;
+      if (klingTaskId) {
+        const { data: videoRow } = await supabase
+          .from('generated_videos')
+          .select('video_url, status')
+          .eq('kling_task_id', klingTaskId)
+          .single();
+        if (videoRow?.video_url) return videoRow.video_url;
+      }
+      return null;
     }
-    if (data?.status === 'failed') {
+
+    if (data.status === 'failed' || data.status === 'cancelled') {
       return null;
     }
   }
