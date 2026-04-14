@@ -51,12 +51,16 @@ const VOICE_OPTIONS = [
   { id: 'nPczCjzI2devNBz1zQrb', label: 'Brian — professional male' },
 ];
 
-export function ShortFilmSettingsPanel({ settings, onChange }: ShortFilmSettingsPanelProps) {
+export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: ShortFilmSettingsPanelProps) {
   const update = (partial: Partial<ShortFilmSettings>) =>
     onChange({ ...settings, ...partial });
 
   const showMusicPrompt = settings.audioMode === 'music' || settings.audioMode === 'full_mix';
   const showVoicePicker = settings.audioMode === 'voiceover' || settings.audioMode === 'full_mix';
+  const showPreview = settings.audioMode !== 'silent' && settings.audioMode !== 'ambient' && !!onPreviewAudio;
+
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   return (
     <div className="space-y-6">
