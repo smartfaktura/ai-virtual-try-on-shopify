@@ -458,7 +458,7 @@ export function useShortFilmProject() {
       if (mode === 'music' || mode === 'full_mix') {
         setAudioPhase('music');
         const totalDuration = shotsToUse.reduce((sum, s) => sum + s.duration_sec, 0);
-        const musicPrompt = settings.musicPrompt || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse);
+        const musicPrompt = settings.musicPrompt || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse, references);
         try {
           console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', musicPrompt, 'duration:', Math.min(totalDuration, 120));
           const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
@@ -494,7 +494,7 @@ export function useShortFilmProject() {
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'generating' } : s)
           );
           try {
-            const sfxPrompt = buildContextualSfxPrompt(shot);
+            const sfxPrompt = shot.sfx_prompt || buildContextualSfxPrompt(shot, references);
             console.log(`[ShortFilm Audio] Calling elevenlabs-sfx for shot ${shot.shot_index} — prompt:`, sfxPrompt, 'duration:', shot.duration_sec);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
               method: 'POST',
@@ -633,7 +633,7 @@ export function useShortFilmProject() {
     try {
       let res: Response;
       if (type === 'sfx') {
-        const sfxPrompt = buildContextualSfxPrompt(shot);
+        const sfxPrompt = shot.sfx_prompt || buildContextualSfxPrompt(shot, references);
         res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
           method: 'POST', headers,
           body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
