@@ -1,13 +1,13 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
-import { Play, Pause, Volume2, Music, Mic, Download } from 'lucide-react';
+import { Play, Pause, Download, Music, Loader2 } from 'lucide-react';
 import type { AudioAssets } from '@/types/shortFilm';
 
 interface ShotMeta {
   shot_index: number;
   duration_sec: number;
+  sfx_trigger_at?: number;
 }
 
 interface ShortFilmVideoPlayerProps {
@@ -15,24 +15,30 @@ interface ShortFilmVideoPlayerProps {
   audioAssets?: AudioAssets;
   shots?: ShotMeta[];
   onDownload?: () => void;
+  onDownloadWithAudio?: () => void;
+  isDownloadingWithAudio?: boolean;
 }
 
-export function ShortFilmVideoPlayer({ clips, audioAssets, shots, onDownload }: ShortFilmVideoPlayerProps) {
+export function ShortFilmVideoPlayer({ clips, audioAssets, shots, onDownload, onDownloadWithAudio, isDownloadingWithAudio }: ShortFilmVideoPlayerProps) {
   if (!clips.length) return null;
-  return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} onDownload={onDownload} />;
+  return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} onDownload={onDownload} onDownloadWithAudio={onDownloadWithAudio} isDownloadingWithAudio={isDownloadingWithAudio} />;
 }
 
-/* ─── Single combined video player with audio mixing ─── */
+/* ─── Single combined video player with audio sync ─── */
 function SingleVideoPlayer({
   clip,
   audioAssets,
   shots,
   onDownload,
+  onDownloadWithAudio,
+  isDownloadingWithAudio,
 }: {
   clip: { url: string; label: string };
   audioAssets?: AudioAssets;
   shots?: ShotMeta[];
   onDownload?: () => void;
+  onDownloadWithAudio?: () => void;
+  isDownloadingWithAudio?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgAudioRef = useRef<HTMLAudioElement>(null);
@@ -40,17 +46,19 @@ function SingleVideoPlayer({
   const rafRef = useRef<number>(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [musicVolume, setMusicVolume] = useState(0.5);
-  const [sfxVolume, setSfxVolume] = useState(0.7);
-  const [voiceVolume, setVoiceVolume] = useState(1.0);
-  const [showMixer, setShowMixer] = useState(false);
   const [currentShotIdx, setCurrentShotIdx] = useState(-1);
   const [videoError, setVideoError] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  // Fixed internal volumes
+  const musicVolume = 0.5;
+  const sfxVolume = 0.7;
+  const voiceVolume = 1.0;
+
   const hasAudio = audioAssets && (audioAssets.backgroundTrackUrl || audioAssets.perShotAudio.length > 0);
+  const hasMusic = !!audioAssets?.backgroundTrackUrl;
 
   const shotOffsets = useMemo(() => {
     if (!shots || shots.length === 0) return [];
@@ -58,21 +66,14 @@ function SingleVideoPlayer({
     return shots.map(s => {
       const start = acc;
       acc += s.duration_sec;
-      return { shot_index: s.shot_index, start, end: acc };
+      return { shot_index: s.shot_index, start, end: acc, sfx_trigger_at: s.sfx_trigger_at ?? 0 };
     });
   }, [shots]);
 
-  // Volume sync
+  // Volume sync on mount
   useEffect(() => {
     if (bgAudioRef.current) bgAudioRef.current.volume = musicVolume;
-  }, [musicVolume]);
-
-  useEffect(() => {
-    shotAudioRefs.current.forEach((audio, key) => {
-      const type = key.split('-')[0];
-      audio.volume = type === 'sfx' ? sfxVolume : voiceVolume;
-    });
-  }, [sfxVolume, voiceVolume]);
+  }, []);
 
   // Preload per-shot audio on mount
   useEffect(() => {
@@ -95,26 +96,23 @@ function SingleVideoPlayer({
     });
   }, []);
 
-  const playShotAudio = useCallback((shotIndex: number) => {
-    if (!audioAssets) return;
-    const shotAudios = audioAssets.perShotAudio.filter(a => a.shotIndex === shotIndex);
-    shotAudios.forEach(a => {
-      const key = `${a.type}-${a.shotIndex}`;
-      const audio = shotAudioRefs.current.get(key);
-      if (audio) {
-        audio.volume = a.type === 'sfx' ? sfxVolume : voiceVolume;
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-      }
-    });
-  }, [audioAssets, sfxVolume, voiceVolume]);
+  const playShotAudioByType = useCallback((shotIndex: number, type: 'sfx' | 'voiceover') => {
+    const key = `${type}-${shotIndex}`;
+    const audio = shotAudioRefs.current.get(key);
+    if (audio) {
+      audio.volume = type === 'sfx' ? sfxVolume : voiceVolume;
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+  }, []);
 
-  // RAF loop for precise shot tracking + progress bar
+  // RAF loop for precise shot tracking + SFX trigger offset
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     let lastShotIdx = -1;
+    const sfxTriggered = new Set<number>();
 
     const onFrame = () => {
       if (video.paused || video.ended) return;
@@ -125,17 +123,28 @@ function SingleVideoPlayer({
 
       if (hasAudio && shotOffsets.length > 0) {
         const match = shotOffsets.find(s => t >= s.start && t < s.end);
-        if (match && match.shot_index !== lastShotIdx) {
-          lastShotIdx = match.shot_index;
-          setCurrentShotIdx(match.shot_index);
-          stopAllShotAudio();
-          playShotAudio(match.shot_index);
+        if (match) {
+          // New shot entered — play voiceover immediately, reset sfx trigger
+          if (match.shot_index !== lastShotIdx) {
+            lastShotIdx = match.shot_index;
+            setCurrentShotIdx(match.shot_index);
+            stopAllShotAudio();
+            sfxTriggered.delete(match.shot_index);
+            // Play voiceover at shot start
+            playShotAudioByType(match.shot_index, 'voiceover');
+          }
+          // Trigger SFX at offset
+          const sfxTime = match.start + match.sfx_trigger_at;
+          if (!sfxTriggered.has(match.shot_index) && t >= sfxTime) {
+            sfxTriggered.add(match.shot_index);
+            playShotAudioByType(match.shot_index, 'sfx');
+          }
         }
       }
       rafRef.current = requestAnimationFrame(onFrame);
     };
 
-    const onPlay = () => { lastShotIdx = -1; rafRef.current = requestAnimationFrame(onFrame); };
+    const onPlay = () => { lastShotIdx = -1; sfxTriggered.clear(); rafRef.current = requestAnimationFrame(onFrame); };
     const onPause = () => { cancelAnimationFrame(rafRef.current); };
     const onLoadedMetadata = () => { setDuration(video.duration); };
 
@@ -151,7 +160,7 @@ function SingleVideoPlayer({
       video.removeEventListener('pause', onPause);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
-  }, [hasAudio, shotOffsets, stopAllShotAudio, playShotAudio]);
+  }, [hasAudio, shotOffsets, stopAllShotAudio, playShotAudioByType]);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -220,21 +229,26 @@ function SingleVideoPlayer({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">Your Short Film</h3>
         <div className="flex items-center gap-1.5">
-          {hasAudio && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 text-xs text-muted-foreground"
-              onClick={() => setShowMixer(!showMixer)}
-            >
-              <Volume2 className="h-3 w-3" />
-              Mixer
-            </Button>
-          )}
           {onDownload && (
             <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onDownload}>
               <Download className="h-3 w-3" />
               Download
+            </Button>
+          )}
+          {hasMusic && onDownloadWithAudio && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 text-xs"
+              onClick={onDownloadWithAudio}
+              disabled={isDownloadingWithAudio}
+            >
+              {isDownloadingWithAudio ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Music className="h-3 w-3" />
+              )}
+              {isDownloadingWithAudio ? 'Muxing...' : 'Download with Music'}
             </Button>
           )}
         </div>
@@ -294,51 +308,6 @@ function SingleVideoPlayer({
         {totalDuration ? `${shots?.length} shots · ${totalDuration}s` : clip.label}
         {hasAudio && ' · 🔊 Audio'}
       </p>
-
-      {showMixer && hasAudio && (
-        <div className="rounded-lg border border-border bg-card p-3 space-y-3">
-          <p className="text-xs font-medium text-foreground">Volume Mixer</p>
-          {audioAssets?.backgroundTrackUrl && (
-            <MixerRow icon={Music} label="Music" value={musicVolume} onChange={setMusicVolume} />
-          )}
-          {audioAssets?.perShotAudio.some(a => a.type === 'sfx') && (
-            <MixerRow icon={Volume2} label="SFX" value={sfxVolume} onChange={setSfxVolume} />
-          )}
-          {audioAssets?.perShotAudio.some(a => a.type === 'voiceover') && (
-            <MixerRow icon={Mic} label="Voice" value={voiceVolume} onChange={setVoiceVolume} />
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── Mixer row component ─── */
-function MixerRow({
-  icon: Icon,
-  label,
-  value,
-  onChange,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <span className="text-xs text-muted-foreground w-12">{label}</span>
-      <Slider
-        value={[value * 100]}
-        onValueChange={([v]) => onChange(v / 100)}
-        max={100}
-        step={1}
-        className="flex-1"
-      />
-      <span className="text-[10px] text-muted-foreground w-8 text-right">
-        {Math.round(value * 100)}%
-      </span>
     </div>
   );
 }
