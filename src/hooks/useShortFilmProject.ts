@@ -188,11 +188,15 @@ export function useShortFilmProject() {
         setReferences(d.references || []);
         setShots(d.shots || []);
         
-        // Force old 'silent' drafts to 'full_mix' so audio generation works
+        // Backward compat: migrate old audioMode to audioLayers
         const restoredSettings = d.settings || DEFAULT_SETTINGS;
+        if (!restoredSettings.audioLayers) {
+          restoredSettings.audioLayers = audioModeToLayers(restoredSettings.audioMode || 'full_mix');
+          console.log('[ShortFilm] Migrated audioMode to audioLayers:', restoredSettings.audioLayers);
+        }
         if (restoredSettings.audioMode === 'silent') {
-          console.log('[ShortFilm] Old draft had audioMode=silent, upgrading to full_mix');
           restoredSettings.audioMode = 'full_mix';
+          restoredSettings.audioLayers = { music: true, sfx: true, voiceover: true };
         }
         setSettings(restoredSettings);
         
