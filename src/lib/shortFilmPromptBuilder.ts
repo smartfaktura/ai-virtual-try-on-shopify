@@ -214,7 +214,7 @@ export function buildShotPrompt(
   imageIndex?: number,
 ): { prompt: string; negative_prompt: string } {
   const MAX_PROMPT_LENGTH = 510;
-  const roleCine = ROLE_CINEMATICS[shot.role] || DEFAULT_CINEMATIC;
+  const roleCine = lookupRoleCinematic(shot.role);
 
   // Priority 1 — must have
   const p1: string[] = [];
