@@ -799,6 +799,7 @@ export function useShortFilmProject() {
       // Set all shots to processing
       setShotStatuses(prev => prev.map(s => ({ ...s, status: 'processing' as const })));
 
+      let generationSucceeded = false;
       try {
         const result = await enqueueWithRetry({
           jobType: 'video_multishot',
@@ -825,6 +826,7 @@ export function useShortFilmProject() {
         const resultUrl = await pollQueueJobCompletion(result.jobId, 90);
 
         if (resultUrl) {
+          generationSucceeded = true;
           // All shots succeeded — mark all complete with the single video URL
           setShotStatuses(prev => prev.map(s => ({
             ...s, status: 'complete' as const, result_url: resultUrl,
@@ -846,8 +848,7 @@ export function useShortFilmProject() {
         setShotStatuses(prev => prev.map(s => ({ ...s, status: 'failed' as const })));
       }
 
-      const allSucceeded = resultUrl !== null;
-      const projectStatus = allSucceeded ? 'complete' : 'failed';
+      const projectStatus = generationSucceeded ? 'complete' : 'failed';
 
       // Persist full draft state for reopening
       const draftState: DraftState = {
