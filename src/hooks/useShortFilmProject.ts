@@ -870,7 +870,7 @@ export function useShortFilmProject() {
 
       // Generate audio layer if needed
       if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
-        await generateAudio();
+        await generateAudio(currentProjectId);
       }
 
     } catch (err) {
