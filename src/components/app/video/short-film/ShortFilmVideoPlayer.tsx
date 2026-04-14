@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, SkipForward, SkipBack, Volume2, Music, Mic } from 'lucide-react';
@@ -10,6 +10,80 @@ interface ShortFilmVideoPlayerProps {
 }
 
 export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlayerProps) {
+  // Detect single combined video (all clips share the same URL)
+  const isSingleVideo = useMemo(() => {
+    if (clips.length <= 1) return true;
+    const firstUrl = clips[0]?.url;
+    return clips.every(c => c.url === firstUrl);
+  }, [clips]);
+
+  if (isSingleVideo && clips.length > 0) {
+    return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} />;
+  }
+
+  return <MultiClipPlayer clips={clips} audioAssets={audioAssets} />;
+}
+
+/* ─── Single combined video player (multi-shot output) ─── */
+function SingleVideoPlayer({
+  clip,
+  audioAssets,
+}: {
+  clip: { url: string; label: string };
+  audioAssets?: AudioAssets;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(() => {});
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-foreground">Preview Film</h3>
+
+      <div className="rounded-xl border border-border overflow-hidden bg-black">
+        <video
+          ref={videoRef}
+          src={clip.url}
+          className="w-full aspect-video"
+          playsInline
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+        />
+      </div>
+
+      <div className="flex items-center justify-center gap-2">
+        <Button variant="outline" size="icon" className="h-9 w-9" onClick={togglePlay}>
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </Button>
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Combined film — {clip.label}
+      </p>
+    </div>
+  );
+}
+
+/* ─── Multi-clip sequencer (legacy / separate clips) ─── */
+function MultiClipPlayer({
+  clips,
+  audioAssets,
+}: {
+  clips: { url: string; label: string }[];
+  audioAssets?: AudioAssets;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgAudioRef = useRef<HTMLAudioElement>(null);
   const shotAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
@@ -24,14 +98,10 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
   const current = clips[currentIndex];
   const hasAudio = audioAssets && (audioAssets.backgroundTrackUrl || audioAssets.perShotAudio.length > 0);
 
-  // Sync background track volume
   useEffect(() => {
-    if (bgAudioRef.current) {
-      bgAudioRef.current.volume = musicVolume;
-    }
+    if (bgAudioRef.current) bgAudioRef.current.volume = musicVolume;
   }, [musicVolume]);
 
-  // Sync per-shot audio volumes
   useEffect(() => {
     shotAudioRefs.current.forEach((audio, key) => {
       const type = key.split('-')[0];
@@ -39,7 +109,6 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
     });
   }, [sfxVolume, voiceVolume]);
 
-  // Stop all per-shot audio
   const stopAllShotAudio = useCallback(() => {
     shotAudioRefs.current.forEach((audio) => {
       audio.pause();
@@ -47,7 +116,6 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
     });
   }, []);
 
-  // Play per-shot audio for current index
   const playShotAudio = useCallback((shotIndex: number) => {
     if (!audioAssets) return;
     const shotAudios = audioAssets.perShotAudio.filter(a => a.shotIndex === shotIndex);
@@ -74,7 +142,6 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
     }
   }, [currentIndex, clips.length, stopAllShotAudio]);
 
-  // Handle clip change
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -82,9 +149,7 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
     stopAllShotAudio();
     if (isPlaying) {
       video.play().catch(() => {});
-      // Play per-shot audio for new clip
-      const shot = currentIndex + 1; // shot_index is 1-based
-      playShotAudio(shot);
+      playShotAudio(currentIndex + 1);
     }
   }, [currentIndex, isPlaying, stopAllShotAudio, playShotAudio]);
 
@@ -94,7 +159,6 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
     if (video.paused) {
       video.play().catch(() => {});
       setIsPlaying(true);
-      // Start background track
       if (bgAudioRef.current && audioAssets?.backgroundTrackUrl) {
         bgAudioRef.current.play().catch(() => {});
       }
@@ -113,7 +177,6 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
     setIsPlaying(true);
   };
 
-  // Cleanup audio on unmount
   useEffect(() => {
     return () => {
       shotAudioRefs.current.forEach(audio => {
@@ -155,36 +218,18 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
         />
       </div>
 
-      {/* Background audio element */}
       {audioAssets?.backgroundTrackUrl && (
-        <audio
-          ref={bgAudioRef}
-          src={audioAssets.backgroundTrackUrl}
-          loop
-          preload="auto"
-        />
+        <audio ref={bgAudioRef} src={audioAssets.backgroundTrackUrl} loop preload="auto" />
       )}
 
       <div className="flex items-center justify-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          disabled={currentIndex === 0}
-          onClick={() => handleSkip(-1)}
-        >
+        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentIndex === 0} onClick={() => handleSkip(-1)}>
           <SkipBack className="h-4 w-4" />
         </Button>
         <Button variant="outline" size="icon" className="h-9 w-9" onClick={togglePlay}>
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          disabled={currentIndex >= clips.length - 1}
-          onClick={() => handleSkip(1)}
-        >
+        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentIndex >= clips.length - 1} onClick={() => handleSkip(1)}>
           <SkipForward className="h-4 w-4" />
         </Button>
       </div>
@@ -193,63 +238,50 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
         Shot {currentIndex + 1} / {clips.length} — {current?.label}
       </p>
 
-      {/* Volume Mixer */}
       {showMixer && hasAudio && (
         <div className="rounded-lg border border-border bg-card p-3 space-y-3">
           <p className="text-xs font-medium text-foreground">Volume Mixer</p>
-
           {audioAssets?.backgroundTrackUrl && (
-            <div className="flex items-center gap-3">
-              <Music className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-xs text-muted-foreground w-12">Music</span>
-              <Slider
-                value={[musicVolume * 100]}
-                onValueChange={([v]) => setMusicVolume(v / 100)}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
-              <span className="text-[10px] text-muted-foreground w-8 text-right">
-                {Math.round(musicVolume * 100)}%
-              </span>
-            </div>
+            <MixerRow icon={Music} label="Music" value={musicVolume} onChange={setMusicVolume} />
           )}
-
           {audioAssets?.perShotAudio.some(a => a.type === 'sfx') && (
-            <div className="flex items-center gap-3">
-              <Volume2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-xs text-muted-foreground w-12">SFX</span>
-              <Slider
-                value={[sfxVolume * 100]}
-                onValueChange={([v]) => setSfxVolume(v / 100)}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
-              <span className="text-[10px] text-muted-foreground w-8 text-right">
-                {Math.round(sfxVolume * 100)}%
-              </span>
-            </div>
+            <MixerRow icon={Volume2} label="SFX" value={sfxVolume} onChange={setSfxVolume} />
           )}
-
           {audioAssets?.perShotAudio.some(a => a.type === 'voiceover') && (
-            <div className="flex items-center gap-3">
-              <Mic className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-xs text-muted-foreground w-12">Voice</span>
-              <Slider
-                value={[voiceVolume * 100]}
-                onValueChange={([v]) => setVoiceVolume(v / 100)}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
-              <span className="text-[10px] text-muted-foreground w-8 text-right">
-                {Math.round(voiceVolume * 100)}%
-              </span>
-            </div>
+            <MixerRow icon={Mic} label="Voice" value={voiceVolume} onChange={setVoiceVolume} />
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Mixer row component ─── */
+function MixerRow({
+  icon: Icon,
+  label,
+  value,
+  onChange,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <span className="text-xs text-muted-foreground w-12">{label}</span>
+      <Slider
+        value={[value * 100]}
+        onValueChange={([v]) => onChange(v / 100)}
+        max={100}
+        step={1}
+        className="flex-1"
+      />
+      <span className="text-[10px] text-muted-foreground w-8 text-right">
+        {Math.round(value * 100)}%
+      </span>
     </div>
   );
 }
