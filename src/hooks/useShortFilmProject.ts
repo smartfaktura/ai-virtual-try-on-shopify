@@ -834,6 +834,7 @@ export function useShortFilmProject() {
     setIsGenerating(true);
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
 
+    let generationSucceeded = false;
     try {
       const token = await getAuthToken();
       if (!token) throw new Error('Not authenticated');
