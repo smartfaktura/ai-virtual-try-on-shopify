@@ -408,7 +408,11 @@ export function useShortFilmProject() {
   const generateAudio = useCallback(async (targetProjectId?: string, currentShots?: ShotPlanItem[]) => {
     if (!user) return;
     const mode = settings.audioMode;
-    if (mode === 'silent' || mode === 'ambient') return;
+    console.log('[ShortFilm Audio] generateAudio called — mode:', mode, 'shots:', (currentShots || shots).length, 'projectId:', targetProjectId || projectId);
+    if (mode === 'silent' || mode === 'ambient') {
+      console.log('[ShortFilm Audio] Skipping — mode is', mode);
+      return;
+    }
 
     const shotsToUse = currentShots || shots;
     const pid = targetProjectId || projectId;
