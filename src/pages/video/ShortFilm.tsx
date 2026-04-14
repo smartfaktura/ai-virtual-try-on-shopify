@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download, Loader2, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
