@@ -1,86 +1,55 @@
-<final-text>
-Short Film audit complete. It is not fully fixed yet.
 
-What I found
-- The mobile floating bar is covering the bottom of the page content. Your screenshot confirms the last film cards get hidden behind it because `/app/video/short-film` no longer reserves bottom space.
-- The floating bar still does not match the newer floating system used elsewhere: radius, blur, spacing, safe-area behavior, button height, and CTA wording are behind the standard.
-- Film type cards still use emoji icons, which breaks the current brand/design system.
-- Several important actions are functionally wrong:
-  - `My Films -> View` ignores the project id and just sends users to `/app/video`.
-  - completed short films are not reliably reopenable because the full restorable state is not always persisted on generate.
-  - `Download All` opens one tab/download per clip, which can get popup-blocked and feels broken.
-  - `showPreview` is local-only and is not reset cleanly on new film/load/reset.
-- Completion logic is misleading:
-  - `allDone` treats failed shots as “done”, so completion UI can appear even when shots failed.
-  - project status is marked `complete` even if some shots fail, so list actions/statuses become inaccurate.
-  - audio CTA can appear after failed video runs.
-- Film type “defaults” are mostly not applied. The UI says film type sets defaults, but `defaultStructure` / `defaultTone` are not actually being applied in the workflow state.
-- Touch/accessibility is still inconsistent:
-  - many short-film card buttons lack shared focus-ring treatment
-  - several icon buttons are too small for mobile touch targets
-  - raw enum text/truncated labels still show in review states
-- Step-specific responsive issues remain:
-  - reference section headers crowd the Library button on smaller widths
-  - library pickers use tiny 3-column mobile grids
-  - shot cards/retry actions need better mobile layout
-  - review summary and project list need cleaner mobile stacking
-- There is also a React ref warning surfacing when this route mounts; if it is caused by this page wrapper path, I should clear it during the pass.
 
-Implementation plan
-1. Fix the workflow state and button behavior in `useShortFilmProject`
-   - apply film-type defaults when a film type is chosen
-   - split “finished” into real success vs partial failure states
-   - only show audio/preview/completion actions when they actually make sense
-   - persist a full reopenable project snapshot on generate
-   - make completed projects reopen correctly from `My Films`
-   - reset preview state correctly on reset/load/new run
-   - replace blind insert behavior for project shots/inputs with safe replace/upsert logic
-   - set project status from the real result, not always `complete`
+# Short Film Reference Panel — Broken Library Pickers
 
-2. Rebuild the page shell to match the current design system
-   - add proper bottom spacing and safe-area handling so the floating bar never covers content
-   - align the sticky bar to the Product Images floating pattern
-   - use contextual CTA labels instead of generic “Next”
-   - increase mobile touch targets to proper sizes
-   - reuse the shared stepper pattern instead of maintaining a drifting duplicate
+## Problems Found
 
-3. Clean up the visual system across every short-film step
-   - replace emoji film icons with Lucide icons
-   - add consistent focus-visible rings and aria labels to all interactive cards/buttons
-   - fix reference section header stacking and mobile library picker grids
-   - improve shot card layout, metadata wrapping, action sizing, and failed retry placement
-   - clean review summary labels so users see proper names, not raw values/slugs
-   - make project list rows/actions stack cleanly on mobile/tablet
+### 1. Scene Library shows empty cards (your screenshot)
+The scene picker dialog renders ALL 859 active scenes from `product_image_scenes`. Only 186 have `preview_image_url`. The filter `allScenes.filter(s => s.previewUrl)` catches the null ones, but scenes with empty strings or broken URLs still render as empty skeleton-like cards. The real fix: only show scenes that have a valid preview image, and add a loading/empty state.
 
-4. Fix the remaining user-visible action quality issues
-   - make “View/Open” actually reopen the correct short film
-   - replace multi-tab `Download All` with a proper bundled download flow
-   - keep reset/save/back/next behavior consistent across breakpoints
-   - ensure every visible button has a real working outcome
+### 2. Model Library only shows custom models
+`ReferenceUploadPanel` uses `useCustomModels()` which only queries the `custom_models` table. It completely ignores:
+- Built-in models from `mockModels` (mockData.ts) — the main model library
+- Sort order, image overrides, name overrides, and hidden status from `useModelSortOrder`
+- User-uploaded models from `useUserModels`
 
-Files I expect to touch
-- `src/pages/video/ShortFilm.tsx`
-- `src/hooks/useShortFilmProject.ts`
-- `src/components/app/video/short-film/ShortFilmStickyBar.tsx`
-- `src/components/app/video/short-film/ShortFilmStepper.tsx` or replace it with the shared catalog stepper
-- `src/components/app/video/short-film/FilmTypeSelector.tsx`
-- `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
-- `src/components/app/video/short-film/ShotCard.tsx`
-- `src/components/app/video/short-film/ShotPlanEditor.tsx`
-- `src/components/app/video/short-film/CustomStructureBuilder.tsx`
-- `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx`
-- `src/components/app/video/short-film/ShortFilmProgressPanel.tsx`
-- `src/components/app/video/short-film/ShortFilmReviewSummary.tsx`
-- `src/components/app/video/short-film/ShortFilmProjectList.tsx`
-- `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx`
-- `src/lib/shortFilmPlanner.ts`
-- possibly the route wrapper path if the ref warning is confirmed to originate there
+The Product Images page merges all three sources. The short film picker should do the same.
 
-QA I will run after implementation
-- test every button in every step
-- test full flow on mobile, tablet, and desktop
-- verify sticky bar never overlaps content
-- verify save/resume/open completed film
-- verify download, preview, reset, retry, and generation-failure states
-- verify focus, touch targets, and keyboard navigation across the full short-film flow
-</final-text>
+### 3. No product integration
+The "Product References" section only has file upload. It should also offer a "Library" button to pick from existing user products (same as `ProductSelectorChip` uses from `user_products` table).
+
+## Plan
+
+### File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
+
+**A. Fix Model Picker**
+- Import `mockModels` from `@/data/mockData`
+- Import `useModelSortOrder` and `useUserModels`
+- Merge all model sources the same way `ProductImages.tsx` does: `sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels, ...customModelProfiles, ...userModelProfiles]))))`
+- Update `pickModel` to use `ModelProfile` shape (`modelId`, `previewUrl`, `name`) instead of `CustomModel` shape
+- Add loading skeleton while models load
+
+**B. Fix Scene Picker**
+- Filter scenes to only those with a truthy `previewUrl` that starts with `http` (eliminates empty strings / broken refs)
+- Add a loading state while scenes fetch
+- If no scenes have previews, show a clear "No scene previews available" message instead of an empty grid
+
+**C. Add Product Library button**
+- Add `libraryType: 'product'` to the Product References section config
+- Import `useUserProducts` hook
+- Add a product picker dialog similar to scene/model pickers
+- When a product is picked, add its `image_url` as a product reference
+
+**D. Visual polish**
+- Add `ShimmerImage` to all picker grids for graceful loading
+- Use `grid-cols-2 sm:grid-cols-3` for better mobile layout in picker dialogs
+- Add `focus-visible:ring-2` to all picker buttons
+
+### Files to change
+
+| File | Change |
+|------|--------|
+| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Merge all model sources, filter broken scene previews, add product picker, add loading states |
+
+No other files need changes — hooks already exist and are reusable.
+
