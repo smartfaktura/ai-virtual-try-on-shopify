@@ -123,12 +123,20 @@ export function ShotCard({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] font-medium text-muted-foreground">Camera Motion</label>
-              <Input
-                value={draft.camera_motion}
-                onChange={e => setDraft(d => ({ ...d, camera_motion: e.target.value }))}
-                className="text-xs h-8"
-              />
+              <label className="text-[10px] font-medium text-muted-foreground">Scene Type</label>
+              <Select
+                value={draft.scene_type}
+                onValueChange={v => setDraft(d => ({ ...d, scene_type: v }))}
+              >
+                <SelectTrigger className="text-xs h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCENE_TYPE_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-[10px] font-medium text-muted-foreground">Duration (sec)</label>
@@ -142,36 +150,89 @@ export function ShotCard({
               />
             </div>
           </div>
-          {availableReferences.length > 0 && (
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] font-medium text-muted-foreground">Source Image</label>
+              <label className="text-[10px] font-medium text-muted-foreground">Camera Motion</label>
+              <Input
+                value={draft.camera_motion}
+                onChange={e => setDraft(d => ({ ...d, camera_motion: e.target.value }))}
+                className="text-xs h-8"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Subject Motion</label>
               <Select
-                value={draft.scene_reference_id || '__auto__'}
-                onValueChange={v => setDraft(d => ({ ...d, scene_reference_id: v === '__auto__' ? undefined : v }))}
+                value={draft.subject_motion}
+                onValueChange={v => setDraft(d => ({ ...d, subject_motion: v }))}
               >
                 <SelectTrigger className="text-xs h-8">
-                  <SelectValue placeholder="Auto (default)" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__auto__">Auto (default)</SelectItem>
-                  {availableReferences.map(ref => (
-                    <SelectItem key={ref.id} value={ref.id}>
-                      <span className="flex items-center gap-1.5">
-                        <img src={ref.url} className="h-4 w-4 rounded object-cover" alt="" />
-                        {ref.name || ref.role}
-                      </span>
-                    </SelectItem>
+                  {SUBJECT_MOTION_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Preservation</label>
+              <Select
+                value={draft.preservation_strength}
+                onValueChange={v => setDraft(d => ({ ...d, preservation_strength: v as 'low' | 'medium' | 'high' }))}
+              >
+                <SelectTrigger className="text-xs h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRESERVATION_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {availableReferences.length > 0 && (
+              <div>
+                <label className="text-[10px] font-medium text-muted-foreground">Source Image</label>
+                <Select
+                  value={draft.scene_reference_id || '__auto__'}
+                  onValueChange={v => setDraft(d => ({ ...d, scene_reference_id: v === '__auto__' ? undefined : v }))}
+                >
+                  <SelectTrigger className="text-xs h-8">
+                    <SelectValue placeholder="Auto (default)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__auto__">Auto (default)</SelectItem>
+                    {availableReferences.map(ref => (
+                      <SelectItem key={ref.id} value={ref.id}>
+                        <span className="flex items-center gap-1.5">
+                          <img src={ref.url} className="h-4 w-4 rounded object-cover" alt="" />
+                          {ref.name || ref.role}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
           <div>
-            <label className="text-[10px] font-medium text-muted-foreground">Script Line (optional)</label>
+            <label className="text-[10px] font-medium text-muted-foreground">Script Line (voiceover)</label>
             <Input
               value={draft.script_line || ''}
               onChange={e => setDraft(d => ({ ...d, script_line: e.target.value || undefined }))}
               placeholder="Voiceover or narration..."
+              className="text-xs h-8"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-medium text-muted-foreground">Custom Instructions (optional)</label>
+            <Input
+              value={draft.user_notes || ''}
+              onChange={e => setDraft(d => ({ ...d, user_notes: e.target.value || undefined }))}
+              placeholder="e.g. show product from the side, warm tones..."
               className="text-xs h-8"
             />
           </div>
