@@ -972,39 +972,45 @@ function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): S
   }));
 }
 
-/** Poll generation_queue for a job, then find the video URL from generated_videos */
+/** Poll generation_queue for a job, then trigger status polling via generate-video */
 async function pollQueueJobCompletion(jobId: string, maxPolls: number): Promise<string | null> {
+  let klingTaskId: string | null = null;
+
   for (let i = 0; i < maxPolls; i++) {
     await new Promise(r => setTimeout(r, 10_000));
 
-    const { data } = await supabase
-      .from('generation_queue')
-      .select('status, result, error_message')
-      .eq('id', jobId)
-      .single();
+    // Phase 1: Get kling_task_id from queue result
+    if (!klingTaskId) {
+      const { data } = await supabase
+        .from('generation_queue')
+        .select('status, result, error_message')
+        .eq('id', jobId)
+        .single();
 
-    if (!data) continue;
-
-    if (data.status === 'completed') {
-      // The worker stores kling_task_id in result; find the generated_videos row
-      const result = data.result as Record<string, unknown> | null;
-      if (result?.video_url) return result.video_url as string;
-
-      // Fallback: look up by kling_task_id
-      const klingTaskId = result?.kling_task_id as string | undefined;
-      if (klingTaskId) {
-        const { data: videoRow } = await supabase
-          .from('generated_videos')
-          .select('video_url, status')
-          .eq('kling_task_id', klingTaskId)
-          .single();
-        if (videoRow?.video_url) return videoRow.video_url;
+      if (!data) continue;
+      if (data.status === 'failed' || data.status === 'cancelled') return null;
+      if (data.status === 'completed') {
+        const result = data.result as Record<string, unknown> | null;
+        return (result?.video_url as string) || null;
       }
-      return null;
+
+      const result = data.result as Record<string, unknown> | null;
+      klingTaskId = (result?.kling_task_id as string) || null;
+      if (!klingTaskId) continue;
     }
 
-    if (data.status === 'failed' || data.status === 'cancelled') {
-      return null;
+    // Phase 2: Poll Kling via the status action to trigger server-side completion
+    try {
+      const { data: statusData } = await supabase.functions.invoke('generate-video', {
+        body: { action: 'status', task_id: klingTaskId, queue_job_id: jobId },
+      });
+
+      if (statusData?.status === 'succeed' && statusData?.video_url) {
+        return statusData.video_url as string;
+      }
+      if (statusData?.status === 'failed') return null;
+    } catch {
+      // Continue polling on transient errors
     }
   }
   return null;
