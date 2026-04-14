@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
-import { generateShotPlan } from '@/lib/shortFilmPlanner';
+import { generateShotPlan, FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
 import { buildShotPrompt, estimateShortFilmCredits } from '@/lib/shortFilmPromptBuilder';
 import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
 import type {
