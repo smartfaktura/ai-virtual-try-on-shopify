@@ -1,54 +1,46 @@
 
 
-# Fix Short Film Audio Timing & Quality
+# Fix Short Film Audio & Results Page
 
-## Problems Found
+## Build Errors
 
-From the console logs, the ElevenLabs calls are succeeding (all 200s). The issues are:
+The `buildContextualSfxPrompt` and `fitTextToDuration` functions are syntactically broken — they got inserted **inside** the body of `buildContextualMusicPrompt` (between lines 1063-1123), making them nested/invisible to the hook. The `buildContextualMusicPrompt` function itself is split in two halves (lines 1050-1062 and 1124-1127).
 
-1. **Voiceover text doesn't fit shot duration** — "In the shadows of the city, true refinement finds its light." takes ~4s to speak naturally, but may be assigned to a 2s shot. The TTS generates full-length speech with no awareness of the shot's duration, so words get cut off or overlap the next shot.
+**Fix**: Restructure lines 1048-1127 so all three functions are properly independent top-level functions with correct closing braces.
 
-2. **SFX prompts are too vague** — Currently just `"scene_type ambient sound, purpose"` (e.g., "atmosphere mood ambient sound, Leave a lasting impression of the brand's premium noir aesthetic."). These produce random ambient noise instead of targeted effects like "soft fabric swoosh" or "camera shutter click".
+## Results Page UX Issues
 
-3. **Player shot-tracking is imprecise** — Uses `timeupdate` event (~4Hz / every 250ms), which is too slow for 2-second shots. Audio can start 250ms late, and very short shots can be missed entirely.
-
-4. **No TTS speed parameter** — ElevenLabs supports a `speed` parameter (0.7–1.2) but it's not being passed, so speech can't be compressed to fit shorter shots.
+1. **Duplicate videos**: "Preview Film" (with audio player) AND "Your Short Film" (plain `<video controls>` without audio) both show — redundant and confusing.
+2. **"Your Short Film" has no audio**: It's a raw `<video>` tag at line 312 with no audio mixing.
+3. **Download has no audio**: `downloadAllClips` just fetches the raw video URL — no audio tracks merged.
+4. **Preview Film lacks native controls**: Only a play/pause button, no scrubber/progress bar.
 
 ## Implementation Plan
 
-### 1. Duration-aware voiceover text (useShortFilmProject.ts)
-- Before sending to TTS, calculate a word budget based on shot duration (~2.5 words/second for natural speech)
-- If `script_line` exceeds the budget, use Lovable AI to rewrite it to fit the duration
-- Pass `speed` parameter to the TTS edge function (up to 1.2x for slightly long lines)
+### 1. Fix broken function nesting (useShortFilmProject.ts)
+- Close `buildContextualMusicPrompt` properly before `buildContextualSfxPrompt`
+- Make all three helper functions independent top-level functions
+- This fixes the TS2552/TS2304 build errors
 
-### 2. Update TTS edge function to accept `speed` (elevenlabs-tts/index.ts)
-- Accept optional `speed` param from request body
-- Pass it through to ElevenLabs API as `voice_settings.speed`
+### 2. Remove duplicate "Your Short Film" section (ShortFilm.tsx)
+- Remove lines 302-341 (the second video + shot breakdown)
+- Move the shot breakdown metadata into the Preview Film section below the player
+- Keep only ONE video display: the `ShortFilmVideoPlayer` with full audio mixing
 
-### 3. Contextual SFX prompts (useShortFilmProject.ts)
-- Build specific SFX prompts based on shot role + scene_type:
-  - `hook` → "dramatic cinematic whoosh impact"
-  - `product_reveal` → "elegant reveal shimmer"
-  - `detail_closeup` → "soft mechanical focus click"
-  - `brand_finish` → "deep cinematic bass hit"
-  - etc.
-- Include shot context (camera_motion, subject_motion) for more precise results
+### 3. Add video controls to ShortFilmVideoPlayer
+- Add a progress/scrubber bar using the video's `currentTime` and `duration`
+- Add current time / total time display
+- Keep the existing play/pause + mixer
 
-### 4. Precise audio scheduling in player (ShortFilmVideoPlayer.tsx)
-- Replace `timeupdate` listener with `requestAnimationFrame` loop for ~60Hz precision
-- Pre-load all per-shot audio elements on mount to eliminate playback delay
-- Schedule SFX with a small offset (0.1s) from shot start for cinematic feel
-
-### 5. Script line word-count validation in planner (shortFilmPlanner.ts)
-- Add duration-aware default `script_line` values — shorter lines for 2s shots, longer for 5s shots
-- Cap at ~2.5 words per second of shot duration
+### 4. Move download to use the Preview Film section
+- Single download button next to "Preview Film" header
+- Download still fetches the raw video (audio merging would require server-side FFmpeg, which is out of scope — but note this limitation)
 
 ## Files to Change
 
 | File | Change |
 |------|--------|
-| `supabase/functions/elevenlabs-tts/index.ts` | Accept & pass `speed` parameter |
-| `src/hooks/useShortFilmProject.ts` | Duration-aware text trimming, contextual SFX prompts, speed calculation |
-| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Replace `timeupdate` with `requestAnimationFrame`, preload audio |
-| `src/lib/shortFilmPlanner.ts` | Duration-aware default script lines |
+| `src/hooks/useShortFilmProject.ts` | Fix function nesting — close `buildContextualMusicPrompt` before the other two functions |
+| `src/pages/video/ShortFilm.tsx` | Remove duplicate "Your Short Film" section, consolidate into single player with download + shot breakdown |
+| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Add progress bar / scrubber and time display |
 
