@@ -61,8 +61,8 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   const { user } = useAuth();
 
   // --- Model sources (on-demand: only fetch when dialog opens) ---
-  const { asProfiles: customModelProfiles, isLoading: customModelsLoading } = useCustomModels(modelPickerOpen);
-  const { asProfiles: userModelProfiles, isLoading: userModelsLoading } = useUserModels(modelPickerOpen);
+  const { asProfiles: customModelProfiles, isLoading: customModelsLoading } = useCustomModels({ enabled: modelPickerOpen });
+  const { asProfiles: userModelProfiles, isLoading: userModelsLoading } = useUserModels({ enabled: modelPickerOpen });
   const {
     sortModels, applyOverrides, applyNameOverrides, filterHidden,
     isLoading: sortLoading,
@@ -82,8 +82,8 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     return allModels.filter(m => m.name.toLowerCase().includes(q));
   }, [allModels, modelSearch]);
 
-  // --- Scenes (on-demand) ---
-  const { allScenes, isLoading: scenesLoading } = useProductImageScenes(scenePickerOpen);
+  // --- Scenes (always loaded via shared hook, just filter on open) ---
+  const { allScenes, isLoading: scenesLoading } = useProductImageScenes();
   const validScenes = useMemo(
     () => allScenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http')),
     [allScenes]
