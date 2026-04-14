@@ -88,7 +88,7 @@ async function saveVideoToStorage(
 }
 
 // =============================================
-// WORKER MODE — called by process-queue
+// WORKER MODE — called by process-queue (single shot)
 // =============================================
 async function handleWorkerMode(body: Record<string, unknown>) {
   const jobId = body.job_id as string;
@@ -129,13 +129,8 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     };
     if (prompt) klingBody.prompt = prompt;
     if (negativePrompt) klingBody.negative_prompt = negativePrompt;
-    // Note: aspect_ratio is NOT sent for image2video — Kling ignores it
-    // and always outputs the same ratio as the source image.
     if (typeof cfgScale === "number") klingBody.cfg_scale = cfgScale;
     klingBody.sound = withAudio ? "on" : "off";
-
-    // Note: kling-v3 image2video does NOT support structured camera_control.
-    // All camera motion is driven via prompt text only.
 
     const createRes = await fetch(`${KLING_API_BASE}/videos/image2video`, {
       method: "POST",
@@ -152,7 +147,6 @@ async function handleWorkerMode(body: Record<string, unknown>) {
 
     const taskId = createResult.data.task_id;
 
-    // Save kling_task_id to queue result for debugging
     await serviceClient
       .from("generation_queue")
       .update({ result: { kling_task_id: taskId, status: "submitted" } })
@@ -173,20 +167,17 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     if (typeof cfgScale === "number") dbRow.cfg_scale = cfgScale;
     if (projectId) dbRow.project_id = projectId;
     if (workflowType) dbRow.workflow_type = workflowType;
-    // Persist camera motion for download naming & metadata display
     const cameraMotionValue = body.cameraMotion as string | undefined;
     if (cameraMotionValue) dbRow.camera_type = cameraMotionValue;
 
     await serviceClient.from("generated_videos").insert(dbRow);
 
-    // Worker is submit-only — client polls via action: "status"
     console.log(`[generate-video:worker] Job ${jobId} submitted, kling_task_id=${taskId}. Client will poll.`);
 
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : "Unknown error";
     console.error(`[generate-video:worker] Job ${jobId} error:`, errorMsg);
 
-    // Mark queue job as failed
     await serviceClient
       .from("generation_queue")
       .update({
@@ -196,7 +187,117 @@ async function handleWorkerMode(body: Record<string, unknown>) {
       })
       .eq("id", jobId);
 
-    // Refund credits
+    await serviceClient.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+  }
+}
+
+// =============================================
+// WORKER MODE — Multi-shot (Kling Omni)
+// =============================================
+async function handleMultishotWorkerMode(body: Record<string, unknown>) {
+  const jobId = body.job_id as string;
+  const userId = body.user_id as string;
+  const creditsReserved = body.credits_reserved as number;
+
+  const KLING_ACCESS_KEY = Deno.env.get("KLING_ACCESS_KEY")!;
+  const KLING_SECRET_KEY = Deno.env.get("KLING_SECRET_KEY")!;
+  const serviceClient = getServiceClient();
+
+  try {
+    const jwt = await createKlingJWT(KLING_ACCESS_KEY, KLING_SECRET_KEY);
+    const headers = { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" };
+
+    const shots = body.shots as Array<{ prompt: string; duration: number; index: number }>;
+    const totalDuration = body.total_duration as number;
+    const aspectRatio = (body.aspect_ratio as string) || "16:9";
+    const mode = (body.mode as string) || "pro";
+    const withAudio = body.with_audio as boolean;
+    const projectId = body.project_id as string | undefined;
+    const imageUrls = (body.image_urls as string[]) || [];
+
+    if (!shots || shots.length < 1) throw new Error("shots array is required");
+
+    console.log(`[generate-video:multishot] Job ${jobId}, user ${userId}, shots=${shots.length}, duration=${totalDuration}s`);
+
+    // Build Kling Omni multi-shot request
+    const multiPrompt = shots.map(s => ({
+      index: s.index,
+      prompt: s.prompt,
+      duration: String(s.duration),
+    }));
+
+    const klingBody: Record<string, unknown> = {
+      model_name: "kling-v3-omni",
+      multi_shot: true,
+      shot_type: "customize",
+      prompt: "",
+      multi_prompt: multiPrompt,
+      mode,
+      aspect_ratio: aspectRatio,
+      duration: String(totalDuration),
+      sound: withAudio ? "on" : "off",
+    };
+
+    // Add image references if provided
+    if (imageUrls.length > 0) {
+      klingBody.image_list = imageUrls.map(url => ({ image_url: url }));
+      // Reference images in prompts using <<<image_N>>> syntax
+      // The prompts should already contain these references if needed
+    }
+
+    console.log(`[generate-video:multishot] Kling omni-video request:`, JSON.stringify(klingBody));
+
+    const createRes = await fetch(`${KLING_API_BASE}/videos/omni-video`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(klingBody),
+    });
+
+    const createResult = await createRes.json();
+    console.log(`[generate-video:multishot] Kling create response:`, JSON.stringify(createResult));
+
+    if (!createRes.ok || createResult.code !== 0) {
+      throw new Error(createResult.message || `Kling Omni API error: ${createRes.status}`);
+    }
+
+    const taskId = createResult.data.task_id;
+
+    await serviceClient
+      .from("generation_queue")
+      .update({ result: { kling_task_id: taskId, status: "submitted", endpoint: "omni" } })
+      .eq("id", jobId);
+
+    // Insert a single generated_videos row for the combined film
+    const dbRow: Record<string, unknown> = {
+      user_id: userId,
+      source_image_url: imageUrls[0] || "",
+      prompt: `Multi-shot film (${shots.length} shots)`,
+      kling_task_id: taskId,
+      model_name: "kling-v3-omni",
+      duration: String(totalDuration),
+      aspect_ratio: aspectRatio,
+      status: "processing",
+      workflow_type: "short_film",
+    };
+    if (projectId) dbRow.project_id = projectId;
+
+    await serviceClient.from("generated_videos").insert(dbRow);
+
+    console.log(`[generate-video:multishot] Job ${jobId} submitted, kling_task_id=${taskId}. Client will poll.`);
+
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[generate-video:multishot] Job ${jobId} error:`, errorMsg);
+
+    await serviceClient
+      .from("generation_queue")
+      .update({
+        status: "failed",
+        error_message: errorMsg,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", jobId);
+
     await serviceClient.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
   }
 }
@@ -212,11 +313,17 @@ serve(async (req) => {
     // ---- WORKER MODE (called by process-queue) ----
     const isQueueInternal = req.headers.get("x-queue-internal") === "true";
     if (isQueueInternal && body.job_id) {
-      // Fire-and-forget style: start worker, return 200 immediately
-      // The worker updates generation_queue directly
-      handleWorkerMode(body).catch(err => {
-        console.error("[generate-video] Worker mode unhandled error:", err);
-      });
+      const jobType = body.job_type as string;
+
+      if (jobType === "video_multishot") {
+        handleMultishotWorkerMode(body).catch(err => {
+          console.error("[generate-video] Multishot worker unhandled error:", err);
+        });
+      } else {
+        handleWorkerMode(body).catch(err => {
+          console.error("[generate-video] Worker mode unhandled error:", err);
+        });
+      }
 
       return new Response(
         JSON.stringify({ ok: true, job_id: body.job_id }),
@@ -240,12 +347,18 @@ serve(async (req) => {
       "Content-Type": "application/json",
     };
 
-    // ---- STATUS poll (backward compat) ----
+    // ---- STATUS poll ----
     if (action === "status") {
       const { task_id } = body;
       if (!task_id) throw new Error("task_id is required");
 
-      const res = await fetch(`${KLING_API_BASE}/videos/image2video/${task_id}`, {
+      // Determine which endpoint to poll based on the endpoint hint
+      const endpoint = (body.endpoint as string) || "image2video";
+      const statusUrl = endpoint === "omni"
+        ? `${KLING_API_BASE}/videos/omni-video/${task_id}`
+        : `${KLING_API_BASE}/videos/image2video/${task_id}`;
+
+      const res = await fetch(statusUrl, {
         method: "GET",
         headers,
       });
@@ -268,14 +381,12 @@ serve(async (req) => {
         const tempVideoUrl = taskData.task_result.videos[0].url;
         let permanentUrl = tempVideoUrl;
 
-        // Extract Kling cover image for lightweight grid thumbnails
         const coverImageUrl = taskData.task_result.videos[0].cover_image_url as string | undefined;
         let savedPreviewUrl: string | undefined;
 
         try {
           permanentUrl = await saveVideoToStorage(serviceClient, tempVideoUrl, userId, task_id);
 
-          // Save cover image to storage as preview thumbnail
           if (coverImageUrl) {
             try {
               const coverRes = await fetch(coverImageUrl);
@@ -312,7 +423,6 @@ serve(async (req) => {
           console.error("[generate-video] Error saving video permanently:", saveErr);
         }
 
-        // Also complete the queue job so useGenerationQueue sees it
         if (queueJobId) {
           await serviceClient
             .from("generation_queue")
@@ -336,7 +446,6 @@ serve(async (req) => {
             .update({ status: "failed", error_message: response.error as string, completed_at: new Date().toISOString() })
             .eq("kling_task_id", task_id);
 
-          // Also fail the queue job and refund credits
           if (queueJobId) {
             const { data: queueRow } = await serviceClient
               .from("generation_queue")
@@ -375,7 +484,7 @@ serve(async (req) => {
       const serviceClient = getServiceClient();
       const { data: stuckVideos, error: queryError } = await serviceClient
         .from("generated_videos")
-        .select("kling_task_id")
+        .select("kling_task_id, model_name")
         .eq("user_id", userId)
         .eq("status", "processing")
         .not("kling_task_id", "is", null);
@@ -396,10 +505,13 @@ serve(async (req) => {
       for (const video of stuckVideos) {
         if (!video.kling_task_id) continue;
         try {
-          const statusRes = await fetch(`${KLING_API_BASE}/videos/image2video/${video.kling_task_id}`, {
-            method: "GET",
-            headers,
-          });
+          // Determine endpoint based on model name
+          const isOmni = video.model_name === "kling-v3-omni";
+          const statusUrl = isOmni
+            ? `${KLING_API_BASE}/videos/omni-video/${video.kling_task_id}`
+            : `${KLING_API_BASE}/videos/image2video/${video.kling_task_id}`;
+
+          const statusRes = await fetch(statusUrl, { method: "GET", headers });
           const statusResult = await statusRes.json();
           if (!statusRes.ok || statusResult.code !== 0) continue;
 
@@ -411,7 +523,6 @@ serve(async (req) => {
               permanentUrl = await saveVideoToStorage(serviceClient, permanentUrl, userId, video.kling_task_id);
             } catch (_) { /* keep temp url */ }
 
-            // Capture cover image as preview
             const coverImageUrl = taskData.task_result.videos[0].cover_image_url as string | undefined;
             if (coverImageUrl) {
               try {
@@ -427,7 +538,7 @@ serve(async (req) => {
                     savedPreviewUrl = pData.publicUrl;
                   }
                 }
-              } catch (_) { /* ignore preview errors */ }
+              } catch (_) { /* ignore */ }
             }
 
             const updateData: Record<string, unknown> = {
@@ -459,7 +570,7 @@ serve(async (req) => {
         .from("generation_queue")
         .select("id, result, credits_reserved, user_id")
         .eq("user_id", userId)
-        .eq("job_type", "video")
+        .in("job_type", ["video", "video_multishot"])
         .in("status", ["processing", "queued"]);
 
       let queueResolved = 0;
@@ -468,7 +579,6 @@ serve(async (req) => {
           const klingTaskId = (qJob.result as Record<string, unknown>)?.kling_task_id as string | undefined;
           if (!klingTaskId) continue;
 
-          // Check if the corresponding generated_videos row has resolved
           const { data: videoRow } = await serviceClient
             .from("generated_videos")
             .select("status, video_url")
