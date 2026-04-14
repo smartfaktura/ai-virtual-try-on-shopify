@@ -335,7 +335,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
               <ShimmerImage
                 src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })}
                 alt={m.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
             <p className="text-xs font-medium text-foreground p-2 truncate">{m.name}</p>
@@ -405,7 +405,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
               <ShimmerImage
                 src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
                 alt={p.title}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
             <p className="text-xs font-medium text-foreground p-2 truncate">{p.title}</p>
