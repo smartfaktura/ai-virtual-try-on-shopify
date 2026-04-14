@@ -250,9 +250,15 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                     <div key={ref.id} className="relative group">
                       {ref.url ? (
                         <img
-                          src={getOptimizedUrl(ref.url, { width: 128, quality: 60 })}
+                          src={getOptimizedUrl(ref.url, { quality: 70 })}
                           alt={ref.name || section.label}
-                          className="h-16 w-16 rounded-lg object-cover bg-muted/30 border border-border"
+                          className={`rounded-lg border border-border loading="lazy" ${
+                            section.role === 'product'
+                              ? 'h-16 w-16 object-contain bg-white'
+                              : section.role === 'model'
+                              ? 'w-12 aspect-[3/4] object-cover bg-muted/30'
+                              : 'h-16 w-16 object-cover bg-muted/30'
+                          }`}
                           loading="lazy"
                         />
                       ) : (
@@ -268,7 +274,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                         <X className="h-3 w-3" />
                       </button>
                       {ref.name && (
-                        <p className="text-[9px] text-muted-foreground text-center truncate w-16 mt-0.5">{ref.name}</p>
+                        <p className={`text-[9px] text-muted-foreground text-center truncate mt-0.5 ${section.role === 'model' ? 'w-12' : 'w-16'}`}>{ref.name}</p>
                       )}
                     </div>
                   ))}
