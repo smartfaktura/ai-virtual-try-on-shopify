@@ -83,7 +83,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   }, [allModels, modelSearch]);
 
   // --- Scenes (always loaded via shared hook, just filter on open) ---
-  const { allScenes, isLoading: scenesLoading } = useProductImageScenes();
+  const { allScenes, categoryCollections, isLoading: scenesLoading } = useProductImageScenes();
   const validScenes = useMemo(
     () => allScenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http')),
     [allScenes]
@@ -317,49 +317,86 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             onClick={() => pickModel(m)}
             className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
-            <ShimmerImage
-              src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })}
-              alt={m.name}
-              className="w-full aspect-[3/4] object-cover"
-              aspectRatio="3/4"
-            />
-            <p className="text-[10px] font-medium text-foreground p-1.5 truncate">{m.name}</p>
+            <div className="aspect-[3/4] bg-muted/30">
+              <ShimmerImage
+                src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })}
+                alt={m.name}
+                className="w-full h-full object-contain"
+                aspectRatio="3/4"
+              />
+            </div>
+            <p className="text-xs font-medium text-foreground p-2 truncate">{m.name}</p>
           </button>
         )}
         emptyText="No models available yet."
       />
 
-      {/* Scene Library Picker */}
-      <PickerDialog
-        open={scenePickerOpen}
-        onOpenChange={setScenePickerOpen}
-        title="Pick from Scene Library"
-        search={sceneSearch}
-        onSearch={setSceneSearch}
-        loading={scenePickerOpen && scenesLoading}
-        items={filteredScenes}
-        visibleCount={sceneVisible}
-        onLoadMore={() => setSceneVisible(v => v + PAGE_SIZE)}
-        renderItem={(s) => (
-          <button
-            key={s.id}
-            onClick={() => pickScene(s)}
-            className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          >
-            <ShimmerImage
-              src={getOptimizedUrl(s.previewUrl, { width: 200, quality: 60 })}
-              alt={s.title}
-              className="w-full aspect-square object-cover"
-              aspectRatio="1/1"
+      {/* Scene Library Picker — grouped by category */}
+      <Dialog open={scenePickerOpen} onOpenChange={setScenePickerOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Pick from Scene Library</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search scenes..."
+              value={sceneSearch}
+              onChange={(e) => setSceneSearch(e.target.value)}
+              className="pl-9 h-9 text-sm"
             />
-            <div className="p-1.5">
-              <p className="text-[10px] font-medium text-foreground truncate">{s.title}</p>
-            </div>
-          </button>
-        )}
-        emptyText="No scene previews available."
-        maxWidth="max-w-lg"
-      />
+          </div>
+          <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
+            {scenePickerOpen && scenesLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-square rounded-lg" />
+                ))}
+              </div>
+            ) : sceneSearch.trim() ? (
+              /* Flat filtered list when searching */
+              filteredScenes.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-12">No scenes match your search.</p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
+                  {filteredScenes.slice(0, sceneVisible).map((s) => (
+                    <SceneCard key={s.id} scene={s} onPick={pickScene} />
+                  ))}
+                  {filteredScenes.length > sceneVisible && (
+                    <div className="col-span-full flex justify-center py-3">
+                      <button onClick={() => setSceneVisible(v => v + PAGE_SIZE)} className="text-xs text-primary hover:underline font-medium">
+                        Load more ({filteredScenes.length - sceneVisible} remaining)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            ) : (
+              /* Grouped by category */
+              categoryCollections.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-12">No scene previews available.</p>
+              ) : (
+                <div className="space-y-4 py-2">
+                  {categoryCollections.map((cat) => {
+                    const withPreview = cat.scenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http'));
+                    if (withPreview.length === 0) return null;
+                    return (
+                      <div key={cat.id}>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{cat.title}</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {withPreview.map((s) => (
+                            <SceneCard key={s.id} scene={s} onPick={pickScene} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Product Library Picker */}
       <PickerDialog
@@ -378,13 +415,15 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             onClick={() => pickProduct(p)}
             className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
-            <ShimmerImage
-              src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
-              alt={p.title}
-              className="w-full aspect-square object-cover"
-              aspectRatio="1/1"
-            />
-            <p className="text-[10px] font-medium text-foreground p-1.5 truncate">{p.title}</p>
+            <div className="aspect-square bg-white rounded-t-lg">
+              <ShimmerImage
+                src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
+                alt={p.title}
+                className="w-full h-full object-contain"
+                aspectRatio="1/1"
+              />
+            </div>
+            <p className="text-xs font-medium text-foreground p-2 truncate">{p.title}</p>
           </button>
         )}
         emptyText="No products yet. Add products in your product library first."
