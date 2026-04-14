@@ -29,10 +29,11 @@ Return ONLY a valid JSON array of shot objects. Each shot object must have exact
 - character_visible (boolean)
 - preservation_strength ("low" | "medium" | "high")
 - script_line (string: a SHORT voiceover narration line for this shot, 5-15 words, matching the shot mood and purpose)
+- sfx_prompt (string: a descriptive sound effect prompt for this shot, 5-20 words, describing the exact ambient/impact/transition sound that should play — match the scene environment and mood)
 
 Generate 3-5 shots with varied cinematic pacing. The total of all duration_sec values MUST equal exactly 15 seconds. Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments. Maximum 6 shots. Vary camera motions and scene types for cinematic interest.
 
-IMPORTANT: Every shot MUST have a script_line with a compelling voiceover narration.`;
+IMPORTANT: Every shot MUST have a script_line with a compelling voiceover narration AND an sfx_prompt with a matching atmospheric sound effect.`;
 
     const userPrompt = `Film type: ${filmType}
 Story structure: ${storyStructure}
@@ -40,7 +41,7 @@ Target total duration: 15 seconds
 ${tone ? `Tone/mood: ${tone}` : ""}
 ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
 
-Generate the shot plan as a JSON array. Remember: each shot needs its own duration_sec (use cinematic pacing, NOT equal splits) and a script_line for voiceover.`;
+Generate the shot plan as a JSON array. Remember: each shot needs its own duration_sec (use cinematic pacing, NOT equal splits), a script_line for voiceover, and an sfx_prompt for sound effects.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -99,6 +100,7 @@ Generate the shot plan as a JSON array. Remember: each shot needs its own durati
       character_visible: s.character_visible ?? false,
       preservation_strength: s.preservation_strength || "medium",
       script_line: s.script_line || `Shot ${i + 1} narration.`,
+      sfx_prompt: s.sfx_prompt || `subtle cinematic ambient sound, ${Math.max(1, Math.min(15, Number(s.duration_sec) || 3))} seconds`,
     }));
 
     // Verify total doesn't exceed 15s
