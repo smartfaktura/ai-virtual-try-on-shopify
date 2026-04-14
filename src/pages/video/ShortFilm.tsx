@@ -91,17 +91,22 @@ export default function ShortFilm() {
 
       // If music track exists, mux it into the video
       if (audioAssets?.backgroundTrackUrl) {
-        const { data, error } = await supabase.functions.invoke('mux-video-audio', {
-          body: {
-            video_url: completedClips[0].url,
-            audio_url: audioAssets.backgroundTrackUrl,
-          },
-        });
-        if (!error && data?.url) {
-          downloadUrl = data.url;
-          filename = 'short-film-final.mp4';
+        try {
+          const { data, error } = await supabase.functions.invoke('mux-video-audio', {
+            body: {
+              video_url: completedClips[0].url,
+              audio_url: audioAssets.backgroundTrackUrl,
+            },
+          });
+          if (!error && data?.url && !data?.fallback) {
+            downloadUrl = data.url;
+            filename = 'short-film-final.mp4';
+          } else {
+            console.warn('[Download] Mux fallback — downloading raw video', data?.error);
+          }
+        } catch (muxErr) {
+          console.warn('[Download] Mux call failed, downloading raw video', muxErr);
         }
-        // If muxing fails, fall through to raw download
       }
 
       const response = await fetch(downloadUrl);
