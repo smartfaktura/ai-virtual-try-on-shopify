@@ -1,7 +1,8 @@
 import type { ShortFilmSettings } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
-import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic } from 'lucide-react';
+import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic, Music, AudioLines } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ShortFilmSettingsPanelProps {
   settings: ShortFilmSettings;
@@ -16,9 +17,11 @@ const ASPECT_OPTIONS = [
 ];
 
 const AUDIO_OPTIONS = [
-  { value: 'silent' as const, label: 'Silent', icon: VolumeX },
-  { value: 'ambient' as const, label: 'Ambient', icon: Volume2 },
-  { value: 'voice' as const, label: 'Voiceover', icon: Mic },
+  { value: 'silent' as const, label: 'Silent', icon: VolumeX, desc: 'No audio' },
+  { value: 'ambient' as const, label: 'Ambient', icon: Volume2, desc: 'Kling native' },
+  { value: 'music' as const, label: 'Music', icon: Music, desc: 'AI background track' },
+  { value: 'voiceover' as const, label: 'Voiceover', icon: Mic, desc: 'AI narration' },
+  { value: 'full_mix' as const, label: 'Full Mix', icon: AudioLines, desc: 'Music + SFX + Voice' },
 ];
 
 const PRESERVATION_OPTIONS = [
@@ -32,9 +35,25 @@ const DURATION_OPTIONS = [
   { value: '10' as const, label: '10s per shot' },
 ];
 
+const VOICE_OPTIONS = [
+  { id: 'JBFqnCBsd6RMkjVDRZzb', label: 'George — warm male' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', label: 'Sarah — clear female' },
+  { id: 'CwhRBWXzGAHq8TQ4Fs17', label: 'Roger — confident male' },
+  { id: 'FGY2WhTYpPnrIDTdsKH5', label: 'Laura — elegant female' },
+  { id: 'TX3LPaxmHKxFdv7VOQHJ', label: 'Liam — neutral male' },
+  { id: 'Xb7hH8MSUJpSbSDYk0k2', label: 'Alice — soft female' },
+  { id: 'pFZP5JQG7iQjIQuC4Bku', label: 'Lily — gentle female' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', label: 'Daniel — deep male' },
+  { id: 'cgSgspJ2msm6clMCkdW9', label: 'Jessica — bright female' },
+  { id: 'nPczCjzI2devNBz1zQrb', label: 'Brian — professional male' },
+];
+
 export function ShortFilmSettingsPanel({ settings, onChange }: ShortFilmSettingsPanelProps) {
   const update = (partial: Partial<ShortFilmSettings>) =>
     onChange({ ...settings, ...partial });
+
+  const showMusicPrompt = settings.audioMode === 'music' || settings.audioMode === 'full_mix';
+  const showVoicePicker = settings.audioMode === 'voiceover' || settings.audioMode === 'full_mix';
 
   return (
     <div className="space-y-6">
@@ -95,7 +114,7 @@ export function ShortFilmSettingsPanel({ settings, onChange }: ShortFilmSettings
       {/* Audio Mode */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Audio</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {AUDIO_OPTIONS.map((opt) => {
             const Icon = opt.icon;
             return (
@@ -103,19 +122,61 @@ export function ShortFilmSettingsPanel({ settings, onChange }: ShortFilmSettings
                 key={opt.value}
                 onClick={() => update({ audioMode: opt.value })}
                 className={cn(
-                  'flex items-center justify-center gap-2 rounded-lg border p-3 transition-all',
+                  'flex flex-col items-center gap-1 rounded-lg border p-2.5 transition-all',
                   settings.audioMode === opt.value
                     ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                     : 'border-border hover:border-primary/40'
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <span className="text-sm font-medium">{opt.label}</span>
+                <span className="text-xs font-medium">{opt.label}</span>
+                <span className="text-[10px] text-muted-foreground leading-tight text-center">{opt.desc}</span>
               </button>
             );
           })}
         </div>
       </div>
+
+      {/* Music Prompt */}
+      {showMusicPrompt && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Music Style</p>
+          <p className="text-xs text-muted-foreground">
+            Describe the mood and style of the background track.
+          </p>
+          <Input
+            value={settings.musicPrompt || ''}
+            onChange={(e) => update({ musicPrompt: e.target.value })}
+            placeholder="e.g. cinematic ambient, warm piano, energetic electronic..."
+            className="text-sm"
+          />
+        </div>
+      )}
+
+      {/* Voice Picker */}
+      {showVoicePicker && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Voiceover Voice</p>
+          <p className="text-xs text-muted-foreground">
+            Choose a voice for AI narration of script lines.
+          </p>
+          <Select
+            value={settings.voiceId || VOICE_OPTIONS[0].id}
+            onValueChange={(val) => update({ voiceId: val })}
+          >
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Select a voice" />
+            </SelectTrigger>
+            <SelectContent>
+              {VOICE_OPTIONS.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Preservation Level */}
       <div className="space-y-2">

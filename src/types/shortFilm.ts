@@ -59,10 +59,17 @@ export interface StoryStructureOption {
 
 export interface ShortFilmSettings {
   aspectRatio: '16:9' | '9:16' | '1:1' | '4:5';
-  audioMode: 'silent' | 'ambient' | 'voice';
+  audioMode: 'silent' | 'ambient' | 'music' | 'voiceover' | 'full_mix';
   preservationLevel: 'low' | 'medium' | 'high';
   shotDuration: '5' | '10';
   tone?: string;
+  musicPrompt?: string;
+  voiceId?: string;
+}
+
+export interface AudioAssets {
+  backgroundTrackUrl?: string;
+  perShotAudio: { shotIndex: number; url: string; type: 'sfx' | 'voiceover' }[];
 }
 
 export type ShortFilmStep = 'film_type' | 'references' | 'story' | 'shot_plan' | 'settings' | 'review';
