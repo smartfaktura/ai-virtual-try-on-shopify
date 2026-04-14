@@ -34,7 +34,7 @@ serve(async (req) => {
       });
     }
 
-    const { text, voiceId } = await req.json();
+    const { text, voiceId, speed } = await req.json();
 
     if (!text || typeof text !== "string" || text.length < 1) {
       return new Response(JSON.stringify({ error: "Invalid text" }), {
@@ -44,6 +44,8 @@ serve(async (req) => {
     }
 
     const voice = voiceId || "JBFqnCBsd6RMkjVDRZzb";
+    // Clamp speed to ElevenLabs supported range (0.7–1.2)
+    const speechSpeed = typeof speed === 'number' ? Math.min(1.2, Math.max(0.7, speed)) : 1.0;
 
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) {
@@ -52,6 +54,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`[elevenlabs-tts] Generating — voice=${voice}, speed=${speechSpeed}, textLen=${text.length}`);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice}?output_format=mp3_44100_128`,
@@ -69,6 +73,7 @@ serve(async (req) => {
             similarity_boost: 0.75,
             style: 0.3,
             use_speaker_boost: true,
+            speed: speechSpeed,
           },
         }),
       }

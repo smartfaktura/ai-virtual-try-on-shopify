@@ -99,12 +99,14 @@ function SingleVideoPlayer({
     });
   }, [audioAssets, sfxVolume, voiceVolume]);
 
-  // Track current shot by video currentTime to trigger per-shot audio
+  // Track current shot with requestAnimationFrame for precise timing
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !hasAudio || shotOffsets.length === 0) return;
 
-    const onTimeUpdate = () => {
+    let rafId: number;
+    const onFrame = () => {
+      if (video.paused || video.ended) return;
       const t = video.currentTime;
       const match = shotOffsets.find(s => t >= s.start && t < s.end);
       if (match && match.shot_index !== currentShotIdx) {
@@ -112,10 +114,22 @@ function SingleVideoPlayer({
         stopAllShotAudio();
         playShotAudio(match.shot_index);
       }
+      rafId = requestAnimationFrame(onFrame);
     };
 
-    video.addEventListener('timeupdate', onTimeUpdate);
-    return () => video.removeEventListener('timeupdate', onTimeUpdate);
+    const onPlay = () => { rafId = requestAnimationFrame(onFrame); };
+    const onPause = () => { cancelAnimationFrame(rafId); };
+
+    video.addEventListener('play', onPlay);
+    video.addEventListener('pause', onPause);
+    // Start immediately if already playing
+    if (!video.paused) { rafId = requestAnimationFrame(onFrame); }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      video.removeEventListener('play', onPlay);
+      video.removeEventListener('pause', onPause);
+    };
   }, [hasAudio, shotOffsets, currentShotIdx, stopAllShotAudio, playShotAudio]);
 
   const togglePlay = () => {
