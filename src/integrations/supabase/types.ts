@@ -2016,6 +2016,7 @@ export type Database = {
           charged_credits: number
           cover_image_url: string | null
           created_at: string
+          draft_state_json: Json | null
           estimated_credits: number
           generation_mode: string
           id: string
@@ -2031,6 +2032,7 @@ export type Database = {
           charged_credits?: number
           cover_image_url?: string | null
           created_at?: string
+          draft_state_json?: Json | null
           estimated_credits?: number
           generation_mode?: string
           id?: string
@@ -2046,6 +2048,7 @@ export type Database = {
           charged_credits?: number
           cover_image_url?: string | null
           created_at?: string
+          draft_state_json?: Json | null
           estimated_credits?: number
           generation_mode?: string
           id?: string

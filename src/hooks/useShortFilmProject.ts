@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
-import { useGenerateVideo } from '@/hooks/useGenerateVideo';
 import { toast } from '@/lib/brandedToast';
 import { generateShotPlan } from '@/lib/shortFilmPlanner';
 import { buildShotPrompt, estimateShortFilmCredits } from '@/lib/shortFilmPromptBuilder';
@@ -33,6 +32,8 @@ export function useShortFilmProject() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [shotStatuses, setShotStatuses] = useState<ShotStatus[]>([]);
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [planMode, setPlanMode] = useState<'auto' | 'ai'>('auto');
+  const [isAiPlanning, setIsAiPlanning] = useState(false);
   const [settings, setSettings] = useState<ShortFilmSettings>({
     aspectRatio: '16:9',
     audioMode: 'silent',
@@ -53,23 +54,63 @@ export function useShortFilmProject() {
       case 'film_type': return !!filmType;
       case 'references': return true;
       case 'story': return !!storyStructure;
-      case 'shot_plan': return shots.length > 0;
+      case 'shot_plan': return shots.length > 0 && !isAiPlanning;
       case 'settings': return true;
       case 'review': return !isGenerating;
       default: return false;
     }
-  }, [step, filmType, storyStructure, shots, isGenerating]);
+  }, [step, filmType, storyStructure, shots, isGenerating, isAiPlanning]);
+
+  // ─── AI Shot Plan Generation ────────────────────────────────
+  const generateAiPlan = useCallback(async () => {
+    if (!filmType || !storyStructure) return;
+    setIsAiPlanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-shot-planner', {
+        body: {
+          filmType,
+          storyStructure,
+          shotDuration: settings.shotDuration,
+          tone: settings.tone || '',
+          referenceDescriptions: references.map(r => `${r.role}: ${r.name || r.url}`).join('; '),
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.shots && Array.isArray(data.shots)) {
+        setShots(data.shots);
+        toast.success(`AI Director generated ${data.shots.length} shots`);
+      } else {
+        throw new Error('Invalid AI response');
+      }
+    } catch (err) {
+      console.error('[ShortFilm] AI planning failed:', err);
+      toast.error('AI planning failed. Using auto plan instead.');
+      setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
+    } finally {
+      setIsAiPlanning(false);
+    }
+  }, [filmType, storyStructure, settings.shotDuration, settings.tone, references]);
 
   const goNext = useCallback(() => {
     const idx = steps.indexOf(step);
     if (idx < steps.length - 1) {
       const nextStep = steps[idx + 1];
       if (nextStep === 'shot_plan' && filmType && storyStructure) {
-        setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
+        if (planMode === 'ai') {
+          setShots([]); // clear while AI generates
+          setStep(nextStep);
+          // Fire AI plan after step transition
+          setTimeout(() => {
+            generateAiPlan();
+          }, 0);
+          return;
+        } else {
+          setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
+        }
       }
       setStep(nextStep);
     }
-  }, [step, filmType, storyStructure, settings.shotDuration]);
+  }, [step, filmType, storyStructure, settings.shotDuration, planMode, generateAiPlan]);
 
   const goBack = useCallback(() => {
     const idx = steps.indexOf(step);
@@ -77,17 +118,107 @@ export function useShortFilmProject() {
   }, [step]);
 
   const regeneratePlan = useCallback(() => {
-    if (filmType && storyStructure) {
+    if (planMode === 'ai') {
+      generateAiPlan();
+    } else if (filmType && storyStructure) {
       setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
     }
-  }, [filmType, storyStructure, settings.shotDuration]);
+  }, [filmType, storyStructure, settings.shotDuration, planMode, generateAiPlan]);
+
+  // ─── Reset project ─────────────────────────────────────────
+  const resetProject = useCallback(() => {
+    setStep('film_type');
+    setFilmType(null);
+    setStoryStructure(null);
+    setReferences([]);
+    setShots([]);
+    setShotStatuses([]);
+    setProjectId(null);
+    setIsGenerating(false);
+    setPlanMode('auto');
+    setSettings({
+      aspectRatio: '16:9',
+      audioMode: 'silent',
+      preservationLevel: 'medium',
+      shotDuration: '5',
+    });
+  }, []);
+
+  // ─── Retry single failed shot ──────────────────────────────
+  const retryShotGeneration = useCallback(async (shotIndex: number) => {
+    if (!projectId || !user || !filmType) return;
+
+    const shot = shots.find(s => s.shot_index === shotIndex);
+    if (!shot) return;
+
+    setShotStatuses(prev =>
+      prev.map(s => s.shot_index === shotIndex ? { ...s, status: 'processing' } : s)
+    );
+
+    const productRef = references.find(r => r.role === 'product');
+    const sceneRef = references.find(r => r.role === 'scene');
+    const sourceImageUrl = productRef?.url || sceneRef?.url;
+
+    const { prompt, negative_prompt } = buildShotPrompt(shot, {
+      filmType,
+      tone: settings.tone || '',
+      settings,
+      references,
+    });
+
+    try {
+      const { data: enqueueResult, error: enqueueError } = await supabase.functions.invoke('generate-video', {
+        body: {
+          action: 'create',
+          image_url: sourceImageUrl || '',
+          prompt,
+          duration: settings.shotDuration,
+          model_name: 'kling-v3',
+          aspect_ratio: settings.aspectRatio,
+          mode: 'pro',
+          negative_prompt,
+          with_audio: settings.audioMode === 'ambient',
+          project_id: projectId,
+          workflow_type: 'short_film',
+        },
+      });
+
+      if (enqueueError) throw new Error(enqueueError.message);
+
+      const taskId = enqueueResult?.task_id || enqueueResult?.kling_task_id;
+      const videoId = enqueueResult?.video_id;
+
+      if (taskId && videoId) {
+        const resultUrl = await pollShotCompletion(videoId, 60);
+        setShotStatuses(prev =>
+          prev.map(s =>
+            s.shot_index === shotIndex
+              ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
+              : s
+          )
+        );
+        if (resultUrl) {
+          await supabase
+            .from('video_shots')
+            .update({ status: 'complete', result_url: resultUrl })
+            .eq('project_id', projectId)
+            .eq('shot_index', shotIndex);
+        }
+      }
+    } catch (err) {
+      console.error(`[ShortFilm] Retry shot ${shotIndex} failed:`, err);
+      setShotStatuses(prev =>
+        prev.map(s => s.shot_index === shotIndex ? { ...s, status: 'failed' } : s)
+      );
+      toast.error(`Shot ${shotIndex} retry failed`);
+    }
+  }, [projectId, user, filmType, shots, settings, references]);
 
   // ─── Real generation pipeline ───────────────────────────────
 
   const startGeneration = useCallback(async () => {
     if (!user || !filmType || !storyStructure || shots.length === 0) return;
 
-    // Credit check
     if (balance < totalCredits) {
       toast.error(`Not enough credits. Need ${totalCredits}, have ${balance}.`);
       return;
@@ -97,7 +228,6 @@ export function useShortFilmProject() {
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
 
     try {
-      // 1. Create video_project
       const { data: project, error: projectError } = await supabase
         .from('video_projects')
         .insert({
@@ -122,7 +252,6 @@ export function useShortFilmProject() {
       if (projectError || !project) throw new Error(projectError?.message || 'Failed to create project');
       setProjectId(project.id);
 
-      // 2. Insert reference inputs
       if (references.length > 0) {
         const inputRows = references.map((ref, i) => ({
           project_id: project.id,
@@ -134,7 +263,6 @@ export function useShortFilmProject() {
         await supabase.from('video_inputs').insert(inputRows);
       }
 
-      // 3. Insert shot rows
       const shotRows = shots.map((shot) => {
         const { prompt, negative_prompt } = buildShotPrompt(shot, {
           filmType,
@@ -162,7 +290,6 @@ export function useShortFilmProject() {
       });
       await supabase.from('video_shots').insert(shotRows);
 
-      // 4. Generate each shot sequentially via the queue
       const productRef = references.find(r => r.role === 'product');
       const sceneRef = references.find(r => r.role === 'scene');
       const sourceImageUrl = productRef?.url || sceneRef?.url;
@@ -183,7 +310,6 @@ export function useShortFilmProject() {
         });
 
         try {
-          // Use generate-video edge function via queue
           const { data: enqueueResult, error: enqueueError } = await supabase.functions.invoke('generate-video', {
             body: {
               action: 'create',
@@ -202,7 +328,6 @@ export function useShortFilmProject() {
 
           if (enqueueError) throw new Error(enqueueError.message);
 
-          // Poll for completion
           const taskId = enqueueResult?.task_id || enqueueResult?.kling_task_id;
           const videoId = enqueueResult?.video_id;
 
@@ -216,7 +341,6 @@ export function useShortFilmProject() {
               )
             );
 
-            // Update video_shots row
             if (resultUrl) {
               await supabase
                 .from('video_shots')
@@ -225,7 +349,6 @@ export function useShortFilmProject() {
                 .eq('shot_index', shot.shot_index);
             }
           } else {
-            // Fallback: mark as complete if no task tracking
             setShotStatuses(prev =>
               prev.map(s =>
                 s.shot_index === shot.shot_index ? { ...s, status: 'complete' } : s
@@ -242,7 +365,6 @@ export function useShortFilmProject() {
         }
       }
 
-      // 5. Mark project complete
       await supabase.from('video_projects').update({ status: 'complete' }).eq('id', project.id);
       toast.success('Short film generation complete!');
       refreshBalance();
@@ -322,6 +444,11 @@ export function useShortFilmProject() {
     deleteShot,
     addShot,
     reorderShots,
+    resetProject,
+    retryShotGeneration,
+    planMode,
+    setPlanMode,
+    isAiPlanning,
   };
 }
 
