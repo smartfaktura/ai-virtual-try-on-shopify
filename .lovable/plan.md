@@ -1,62 +1,43 @@
 
 
-# Short Film — Phase 3 Next Steps
+# Short Film — Phase 4: AI Director + Resilience
 
 ## Current Status
-The scaffold is solid: 6-step UI, film type + story structure selectors, shot plan generation/editing, settings panel, real DB persistence (video_projects/shots/inputs), real generation via `generate-video` edge function with polling, credit check, Model Library picker, and results display with video playback.
+Phases 1–3 are complete: 6-step UI, real uploads, Scene/Model Library pickers, inline shot editing with reorder, script lines per shot, tone override, credits badge, and real generation via `generate-video` with DB persistence and polling.
 
-## What's still missing
+## What to build next
 
-### 1. Scene Library picker for references
-The Model Library picker exists, but there is no "Pick from Scene Library" button for scene references. The `useProductImageScenes` hook is not used. Add a Scene Library dialog (similar to the Model picker) so users can pick scenes from existing admin-curated scenes.
+### 1. AI-Powered Shot Plan Generation
+Replace the deterministic `generateShotPlan()` with an optional AI mode. Create an edge function `ai-shot-planner` that calls Lovable AI (gemini-3-flash-preview) to generate a creative, context-aware shot plan based on film type, story structure, references, and any script input. Add a toggle in the shot plan step: "Auto Plan" (current preset logic) vs "AI Director" (calls the edge function). Parse the AI response into `ShotPlanItem[]`.
 
-### 2. Editable shot plan (drag-to-reorder + inline edit)
-`ShotPlanEditor` renders `ShotCard` as read-only. The plan doc mentions drag-to-reorder, but no drag library is wired. Add:
-- Drag-to-reorder using `@dnd-kit` (already likely in deps) or a simple move-up/move-down button approach
-- Inline editing of shot purpose, camera motion, and duration
-- Delete shot and add custom shot buttons
+### 2. Start Over / Reset Flow
+Add a "Start Over" button in the bottom nav bar (visible after step 1). Resets all state: filmType, storyStructure, references, shots, settings, shotStatuses back to defaults.
 
-### 3. Script / voiceover input
-The `ShotPlanItem` type has `script_line` but there's no UI to input script lines per shot, or a bulk script textarea. Add an optional script mode toggle in the story step or shot plan step where users can type voiceover lines per shot.
+### 3. Save Draft Projects
+Persist partial project state to `video_projects` with `status: 'draft'` when the user leaves mid-flow or clicks "Save Draft". On return, allow loading the last draft. Add a `draft_state_json` column or reuse `settings_json` to store the full form state.
 
-### 4. Tone / style customization
-The prompt builder uses `TONE_MAP` based on film type but there's no user-facing tone input. Add a tone/mood text input or tag picker in the settings step so users can override or refine the tone directive.
+### 4. Retry Individual Failed Shots
+When generation completes with some failed shots, show a "Retry" button on each failed shot card. Clicking it re-invokes `generate-video` for just that shot and resumes polling.
 
-### 5. AI-powered shot plan generation
-Currently `generateShotPlan()` is a deterministic preset-based function. Enhance it to optionally call an AI model (Lovable AI Gateway) to generate a more creative, context-aware shot plan based on the film type, references, and any script input.
+### 5. Stitch / Preview Final Film
+After all shots complete, add a "Preview Film" button that plays all clips sequentially (simple JS-based playlist, no server-side stitching). Optional: call an edge function to concatenate clips into a single MP4 using ffmpeg if available.
 
-### 6. Polish & UX
-- Credit estimate badge visible throughout the flow (not just review)
-- Ability to "Start Over" / reset the flow
-- Save draft project (persist partial state to DB before generation)
-- Better error recovery (retry individual failed shots)
+## Implementation order
+1. AI Shot Planner edge function + toggle UI (highest impact)
+2. Start Over / Reset (quick win)
+3. Retry failed shots (resilience)
+4. Save draft projects (requires migration)
+5. Preview/stitch final film (polish)
 
-## Recommended implementation order
+## Files to create/change
 
-**Phase 3A** (immediate, high-impact UX):
-1. Scene Library picker in references step
-2. Editable shot plan (reorder + inline edit + add/remove shots)
-3. Script input per shot
-
-**Phase 3B** (refinement):
-4. Tone customization UI
-5. Credits badge throughout flow
-6. Start over / reset
-
-**Phase 3C** (advanced):
-7. AI-powered shot plan generation via Lovable AI
-8. Save draft projects
-9. Retry failed shots individually
-
-## Files to change
-
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Add Scene Library picker dialog |
-| `src/components/app/video/short-film/ShotPlanEditor.tsx` | Add reorder, inline edit, add/delete shot |
-| `src/components/app/video/short-film/ShotCard.tsx` | Add edit mode with inputs for purpose, camera, duration |
-| `src/hooks/useShortFilmProject.ts` | Add `updateShot`, `removeShot`, `addShot`, `reorderShots` methods; expose `setShots` |
-| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Add tone/mood input field |
-| `src/types/shortFilm.ts` | Add `tone` to `ShortFilmSettings` |
-| `src/pages/video/ShortFilm.tsx` | Pass new handlers to editors, add credits badge |
+| `supabase/functions/ai-shot-planner/index.ts` | New — edge function calling Lovable AI to generate shot plans |
+| `src/hooks/useShortFilmProject.ts` | Add `resetProject()`, `retryShotGeneration()`, AI plan mode toggle |
+| `src/components/app/video/short-film/ShotPlanEditor.tsx` | Add "AI Director" vs "Auto Plan" toggle button |
+| `src/pages/video/ShortFilm.tsx` | Add "Start Over" button, retry UI on failed shots, sequential preview player |
+| `src/components/app/video/short-film/ShortFilmProgressPanel.tsx` | Add per-shot retry button for failed shots |
+| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | New — sequential playlist player for completed clips |
+| DB migration | Add `draft_state_json` column to `video_projects` (for save draft feature) |
 
