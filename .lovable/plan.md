@@ -1,41 +1,44 @@
 
 
-# Add Pre-Made Style / Mood Presets for Short Film
+# Fix: Short Film Video Not Showing (Black Screen)
 
-## What
+## Root Cause
 
-The "Style / Mood" section in the short film references panel currently only supports manual file upload — there's no Library button or pre-made presets. We'll add 10 cinematic style/mood presets users can pick from instantly, covering a wide range of professional visual tones.
+The `generated-videos` storage bucket is **private**. The short film flow stores raw public URLs (e.g., `https://.../storage/v1/object/public/generated-videos/...`) in `result_url`, but these return 403 because the bucket requires signed URLs. The `<video>` tag tries to load the unsigned URL and gets nothing — hence the black screen.
 
-## Style Presets (10)
+The regular video hub works fine because `useGenerateVideo` calls `toSignedUrl()` on every video URL. The short film flow skips this step in two places:
 
-| Preset | Description (injected into prompts) |
-|--------|------|
-| **Cinematic Noir** | Deep blacks, high contrast, chiaroscuro lighting, film noir shadows, moody desaturated palette |
-| **Golden Hour Warmth** | Warm amber tones, long soft shadows, golden backlight, sun-kissed skin, dreamy lens flare |
-| **Ethereal Soft Focus** | Soft diffusion filter, pastel tones, dreamy bokeh, luminous highlights, gentle haze |
-| **Bold & Saturated** | Vivid punchy colors, high saturation, strong contrast, dynamic energy, editorial pop |
-| **Monochrome Elegance** | Black and white, fine grain, rich tonal range, timeless classic photography feel |
-| **Neon Cyberpunk** | Vibrant neon blues and magentas, dark environment, futuristic glow, reflective wet surfaces |
-| **Vintage Film Stock** | Warm muted tones, analog grain, faded highlights, 70s film aesthetic, nostalgic color shift |
-| **Clean Luxury** | Pristine whites, soft even lighting, premium minimalist feel, subtle warm undertones |
-| **Dramatic Chiaroscuro** | Rembrandt lighting, deep rich shadows, single key light, painterly contrast, fine art feel |
-| **Natural Documentary** | Available light, authentic grain, handheld intimacy, realistic color, raw unpolished beauty |
+1. **After generation completes** (line ~835): `pollQueueJobCompletion` returns an unsigned URL, stored directly in `shotStatuses`
+2. **On draft restore** (line ~186): `result_url` loaded from `video_shots` table is used as-is
 
-## Implementation
+## Fix
 
-### `ReferenceUploadPanel.tsx`
-- Add a `STYLE_MOOD_PRESETS` array with the 10 presets (id, title, description, keywords)
-- Add state for a style picker dialog (`stylePickerOpen`)
-- Change the Style / Mood section from `libraryType: null` to `libraryType: 'style'`
-- Add `openLibrary` handler for `'style'` type
-- Add a picker dialog (same pattern as scene presets) showing the 10 presets as selectable cards with a Palette icon
-- `pickStyle` callback stores the preset: `url: ''`, `role: 'style'`, `name: "preset.title: preset.keywords"`
-- The keywords string is what gets injected into prompts via `buildShotPrompt`
+### `useShortFilmProject.ts` — Sign video URLs
 
-### `shortFilmPromptBuilder.ts`
-- Already handles style references via `context.references` — style refs with no URL but a `name` containing keywords will be appended to the tone/style portion of the prompt (P2 priority)
-- Add explicit handling: if any reference has `role === 'style'` and no URL, extract the name text and inject it as a style directive alongside the tone preset
+**After generation** (~line 831-836): Sign the `resultUrl` before storing it in state:
+```typescript
+const signedResultUrl = await toSignedUrl(resultUrl);
+setShotStatuses(prev => prev.map(s => ({
+  ...s, status: 'complete', result_url: signedResultUrl,
+})));
+```
 
-### No other files need changes
-The style references are already part of the `ReferenceAsset[]` array that flows through the system.
+**On draft restore** (~line 183-188): Sign each `result_url` when restoring shot statuses:
+```typescript
+const restoredStatuses = await Promise.all(shotRows.map(async (r) => ({
+  shot_index: r.shot_index,
+  status: r.status === 'complete' ? 'complete' : r.status === 'failed' ? 'failed' : 'pending',
+  result_url: r.result_url ? await toSignedUrl(r.result_url) : undefined,
+})));
+```
+
+**On retry** (~line 357-362): Same fix — sign `resultUrl` before storing.
+
+### Files to Change
+
+| File | Change |
+|------|--------|
+| `src/hooks/useShortFilmProject.ts` | Sign `result_url` with `toSignedUrl()` in 3 places: generation complete, draft restore, and retry |
+
+No other files need changes — the `<video>` tag and `completedClips` derivation are fine; they just need valid signed URLs.
 
