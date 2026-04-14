@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
@@ -20,6 +20,24 @@ interface ShotStatus {
   result_url?: string;
 }
 
+interface DraftState {
+  step: ShortFilmStep;
+  filmType: FilmType | null;
+  storyStructure: StoryStructure | null;
+  references: ReferenceAsset[];
+  shots: ShotPlanItem[];
+  settings: ShortFilmSettings;
+  planMode: 'auto' | 'ai';
+  customRoles?: string[];
+}
+
+const DEFAULT_SETTINGS: ShortFilmSettings = {
+  aspectRatio: '16:9',
+  audioMode: 'silent',
+  preservationLevel: 'medium',
+  shotDuration: '5',
+};
+
 export function useShortFilmProject() {
   const { user } = useAuth();
   const { balance, refreshBalance } = useCredits();
@@ -34,12 +52,9 @@ export function useShortFilmProject() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [planMode, setPlanMode] = useState<'auto' | 'ai'>('auto');
   const [isAiPlanning, setIsAiPlanning] = useState(false);
-  const [settings, setSettings] = useState<ShortFilmSettings>({
-    aspectRatio: '16:9',
-    audioMode: 'silent',
-    preservationLevel: 'medium',
-    shotDuration: '5',
-  });
+  const [customRoles, setCustomRoles] = useState<string[]>([]);
+  const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
+  const [settings, setSettings] = useState<ShortFilmSettings>(DEFAULT_SETTINGS);
 
   const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
@@ -53,13 +68,81 @@ export function useShortFilmProject() {
     switch (step) {
       case 'film_type': return !!filmType;
       case 'references': return true;
-      case 'story': return !!storyStructure;
+      case 'story': return !!storyStructure && (storyStructure !== 'custom' || customRoles.length >= 2);
       case 'shot_plan': return shots.length > 0 && !isAiPlanning;
       case 'settings': return true;
       case 'review': return !isGenerating;
       default: return false;
     }
-  }, [step, filmType, storyStructure, shots, isGenerating, isAiPlanning]);
+  }, [step, filmType, storyStructure, shots, isGenerating, isAiPlanning, customRoles]);
+
+  // ─── Save Draft ────────────────────────────────────────────
+  const saveDraft = useCallback(async () => {
+    if (!user) return;
+    const draftState: DraftState = {
+      step, filmType, storyStructure, references, shots, settings, planMode, customRoles,
+    };
+
+    try {
+      if (draftProjectId) {
+        await supabase
+          .from('video_projects')
+          .update({
+            draft_state_json: draftState as unknown as Record<string, unknown>,
+            title: `Draft — ${filmType?.replace(/_/g, ' ') || 'Short Film'}`,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', draftProjectId);
+      } else {
+        const { data } = await supabase
+          .from('video_projects')
+          .insert({
+            user_id: user.id,
+            workflow_type: 'short_film',
+            title: `Draft — ${filmType?.replace(/_/g, ' ') || 'Short Film'}`,
+            status: 'draft',
+            analysis_status: 'complete',
+            draft_state_json: draftState as unknown as Record<string, unknown>,
+            settings_json: settings as unknown as Record<string, unknown>,
+          })
+          .select('id')
+          .single();
+        if (data) setDraftProjectId(data.id);
+      }
+      toast.success('Draft saved');
+    } catch (err) {
+      console.error('[ShortFilm] Save draft failed:', err);
+      toast.error('Failed to save draft');
+    }
+  }, [user, step, filmType, storyStructure, references, shots, settings, planMode, customRoles, draftProjectId]);
+
+  // ─── Load Draft ────────────────────────────────────────────
+  const loadDraft = useCallback(async (projectIdToLoad: string) => {
+    try {
+      const { data } = await supabase
+        .from('video_projects')
+        .select('id, draft_state_json')
+        .eq('id', projectIdToLoad)
+        .single();
+
+      if (data?.draft_state_json) {
+        const d = data.draft_state_json as unknown as DraftState;
+        setStep(d.step || 'film_type');
+        setFilmType(d.filmType || null);
+        setStoryStructure(d.storyStructure || null);
+        setReferences(d.references || []);
+        setShots(d.shots || []);
+        setSettings(d.settings || DEFAULT_SETTINGS);
+        setPlanMode(d.planMode || 'auto');
+        setCustomRoles(d.customRoles || []);
+        setDraftProjectId(data.id);
+        toast.success('Draft resumed');
+      }
+    } catch (err) {
+      console.error('[ShortFilm] Load draft failed:', err);
+      toast.error('Failed to load draft');
+    }
+  }, []);
 
   // ─── AI Shot Plan Generation ────────────────────────────────
   const generateAiPlan = useCallback(async () => {
@@ -73,6 +156,7 @@ export function useShortFilmProject() {
           shotDuration: settings.shotDuration,
           tone: settings.tone || '',
           referenceDescriptions: references.map(r => `${r.role}: ${r.name || r.url}`).join('; '),
+          customRoles: storyStructure === 'custom' ? customRoles : undefined,
         },
       });
       if (error) throw new Error(error.message);
@@ -85,11 +169,15 @@ export function useShortFilmProject() {
     } catch (err) {
       console.error('[ShortFilm] AI planning failed:', err);
       toast.error('AI planning failed. Using auto plan instead.');
-      setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
+      if (storyStructure === 'custom' && customRoles.length > 0) {
+        setShots(generateShotPlanFromRoles(customRoles, settings.shotDuration));
+      } else {
+        setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
+      }
     } finally {
       setIsAiPlanning(false);
     }
-  }, [filmType, storyStructure, settings.shotDuration, settings.tone, references]);
+  }, [filmType, storyStructure, settings.shotDuration, settings.tone, references, customRoles]);
 
   const goNext = useCallback(() => {
     const idx = steps.indexOf(step);
@@ -97,20 +185,19 @@ export function useShortFilmProject() {
       const nextStep = steps[idx + 1];
       if (nextStep === 'shot_plan' && filmType && storyStructure) {
         if (planMode === 'ai') {
-          setShots([]); // clear while AI generates
+          setShots([]);
           setStep(nextStep);
-          // Fire AI plan after step transition
-          setTimeout(() => {
-            generateAiPlan();
-          }, 0);
+          setTimeout(() => { generateAiPlan(); }, 0);
           return;
+        } else if (storyStructure === 'custom' && customRoles.length > 0) {
+          setShots(generateShotPlanFromRoles(customRoles, settings.shotDuration));
         } else {
           setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
         }
       }
       setStep(nextStep);
     }
-  }, [step, filmType, storyStructure, settings.shotDuration, planMode, generateAiPlan]);
+  }, [step, filmType, storyStructure, settings.shotDuration, planMode, generateAiPlan, customRoles]);
 
   const goBack = useCallback(() => {
     const idx = steps.indexOf(step);
@@ -121,9 +208,13 @@ export function useShortFilmProject() {
     if (planMode === 'ai') {
       generateAiPlan();
     } else if (filmType && storyStructure) {
-      setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
+      if (storyStructure === 'custom' && customRoles.length > 0) {
+        setShots(generateShotPlanFromRoles(customRoles, settings.shotDuration));
+      } else {
+        setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
+      }
     }
-  }, [filmType, storyStructure, settings.shotDuration, planMode, generateAiPlan]);
+  }, [filmType, storyStructure, settings.shotDuration, planMode, generateAiPlan, customRoles]);
 
   // ─── Reset project ─────────────────────────────────────────
   const resetProject = useCallback(() => {
@@ -134,14 +225,11 @@ export function useShortFilmProject() {
     setShots([]);
     setShotStatuses([]);
     setProjectId(null);
+    setDraftProjectId(null);
     setIsGenerating(false);
     setPlanMode('auto');
-    setSettings({
-      aspectRatio: '16:9',
-      audioMode: 'silent',
-      preservationLevel: 'medium',
-      shotDuration: '5',
-    });
+    setCustomRoles([]);
+    setSettings(DEFAULT_SETTINGS);
   }, []);
 
   // ─── Retry single failed shot ──────────────────────────────
@@ -155,9 +243,7 @@ export function useShortFilmProject() {
       prev.map(s => s.shot_index === shotIndex ? { ...s, status: 'processing' } : s)
     );
 
-    const productRef = references.find(r => r.role === 'product');
-    const sceneRef = references.find(r => r.role === 'scene');
-    const sourceImageUrl = productRef?.url || sceneRef?.url;
+    const sourceImageUrl = getSourceImageForShot(shot, references);
 
     const { prompt, negative_prompt } = buildShotPrompt(shot, {
       filmType,
@@ -228,33 +314,57 @@ export function useShortFilmProject() {
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
 
     try {
-      const { data: project, error: projectError } = await supabase
-        .from('video_projects')
-        .insert({
-          user_id: user.id,
-          workflow_type: 'short_film',
-          title: `Short Film — ${filmType.replace(/_/g, ' ')}`,
-          settings_json: {
-            filmType,
-            storyStructure,
-            aspectRatio: settings.aspectRatio,
-            audioMode: settings.audioMode,
-            preservationLevel: settings.preservationLevel,
-            shotDuration: settings.shotDuration,
-          },
-          status: 'processing',
-          analysis_status: 'complete',
-          estimated_credits: totalCredits,
-        })
-        .select('id')
-        .single();
+      // If we have a draft, update it; otherwise create new project
+      let currentProjectId = draftProjectId;
 
-      if (projectError || !project) throw new Error(projectError?.message || 'Failed to create project');
-      setProjectId(project.id);
+      if (currentProjectId) {
+        await supabase
+          .from('video_projects')
+          .update({
+            status: 'processing',
+            settings_json: {
+              filmType,
+              storyStructure,
+              aspectRatio: settings.aspectRatio,
+              audioMode: settings.audioMode,
+              preservationLevel: settings.preservationLevel,
+              shotDuration: settings.shotDuration,
+            },
+            estimated_credits: totalCredits,
+            title: `Short Film — ${filmType.replace(/_/g, ' ')}`,
+          })
+          .eq('id', currentProjectId);
+      } else {
+        const { data: project, error: projectError } = await supabase
+          .from('video_projects')
+          .insert({
+            user_id: user.id,
+            workflow_type: 'short_film',
+            title: `Short Film — ${filmType.replace(/_/g, ' ')}`,
+            settings_json: {
+              filmType,
+              storyStructure,
+              aspectRatio: settings.aspectRatio,
+              audioMode: settings.audioMode,
+              preservationLevel: settings.preservationLevel,
+              shotDuration: settings.shotDuration,
+            },
+            status: 'processing',
+            analysis_status: 'complete',
+            estimated_credits: totalCredits,
+          })
+          .select('id')
+          .single();
+
+        if (projectError || !project) throw new Error(projectError?.message || 'Failed to create project');
+        currentProjectId = project.id;
+      }
+
+      setProjectId(currentProjectId);
 
       if (references.length > 0) {
         const inputRows = references.map((ref, i) => ({
-          project_id: project.id,
+          project_id: currentProjectId!,
           type: 'image',
           asset_url: ref.url,
           input_role: `${ref.role}_ref`,
@@ -271,7 +381,7 @@ export function useShortFilmProject() {
           references,
         });
         return {
-          project_id: project.id,
+          project_id: currentProjectId!,
           shot_index: shot.shot_index,
           prompt_text: prompt,
           duration_sec: shot.duration_sec,
@@ -290,10 +400,6 @@ export function useShortFilmProject() {
       });
       await supabase.from('video_shots').insert(shotRows);
 
-      const productRef = references.find(r => r.role === 'product');
-      const sceneRef = references.find(r => r.role === 'scene');
-      const sourceImageUrl = productRef?.url || sceneRef?.url;
-
       for (let i = 0; i < shots.length; i++) {
         const shot = shots[i];
         setShotStatuses(prev =>
@@ -301,6 +407,8 @@ export function useShortFilmProject() {
             s.shot_index === shot.shot_index ? { ...s, status: 'processing' } : s
           )
         );
+
+        const sourceImageUrl = getSourceImageForShot(shot, references);
 
         const { prompt, negative_prompt } = buildShotPrompt(shot, {
           filmType,
@@ -321,7 +429,7 @@ export function useShortFilmProject() {
               mode: 'pro',
               negative_prompt,
               with_audio: settings.audioMode === 'ambient',
-              project_id: project.id,
+              project_id: currentProjectId,
               workflow_type: 'short_film',
             },
           });
@@ -345,7 +453,7 @@ export function useShortFilmProject() {
               await supabase
                 .from('video_shots')
                 .update({ status: 'complete', result_url: resultUrl })
-                .eq('project_id', project.id)
+                .eq('project_id', currentProjectId!)
                 .eq('shot_index', shot.shot_index);
             }
           } else {
@@ -365,7 +473,7 @@ export function useShortFilmProject() {
         }
       }
 
-      await supabase.from('video_projects').update({ status: 'complete' }).eq('id', project.id);
+      await supabase.from('video_projects').update({ status: 'complete' }).eq('id', currentProjectId!);
       toast.success('Short film generation complete!');
       refreshBalance();
 
@@ -375,7 +483,7 @@ export function useShortFilmProject() {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance]);
+  }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId]);
 
   const updateShot = useCallback((index: number, updated: ShotPlanItem) => {
     setShots(prev => prev.map((s, i) => i === index ? updated : s));
@@ -449,7 +557,50 @@ export function useShortFilmProject() {
     planMode,
     setPlanMode,
     isAiPlanning,
+    saveDraft,
+    loadDraft,
+    customRoles,
+    setCustomRoles,
   };
+}
+
+/** Get the best source image for a specific shot based on its source_reference_id or role */
+function getSourceImageForShot(shot: ShotPlanItem, references: ReferenceAsset[]): string {
+  // Per-shot override
+  if (shot.scene_reference_id) {
+    const ref = references.find(r => r.id === shot.scene_reference_id);
+    if (ref) return ref.url;
+  }
+  if (shot.model_reference_id) {
+    const ref = references.find(r => r.id === shot.model_reference_id);
+    if (ref) return ref.url;
+  }
+  // Fallback based on shot properties
+  if (shot.character_visible) {
+    const modelRef = references.find(r => r.role === 'model');
+    if (modelRef) return modelRef.url;
+  }
+  const productRef = references.find(r => r.role === 'product');
+  const sceneRef = references.find(r => r.role === 'scene');
+  return productRef?.url || sceneRef?.url || '';
+}
+
+/** Generate shot plan from custom roles */
+function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): ShotPlanItem[] {
+  // Import the generateShotPlan logic but with custom roles
+  const durationSec = Number(shotDuration);
+  return roles.map((role, index) => ({
+    shot_index: index + 1,
+    role,
+    purpose: `Custom ${role.replace(/_/g, ' ')} shot`,
+    scene_type: 'general',
+    camera_motion: 'slow_push',
+    subject_motion: 'minimal',
+    duration_sec: durationSec,
+    product_visible: role.includes('product') || role.includes('detail') || role.includes('highlight'),
+    character_visible: role.includes('human') || role.includes('lifestyle'),
+    preservation_strength: role.includes('product') || role.includes('detail') ? 'high' : 'medium',
+  }));
 }
 
 /** Poll generated_videos for a specific video to complete */
