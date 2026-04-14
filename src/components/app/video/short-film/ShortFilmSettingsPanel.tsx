@@ -75,7 +75,7 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
       {/* Aspect Ratio */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Aspect Ratio</p>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {ASPECT_OPTIONS.map((opt) => {
             const Icon = opt.icon;
             return (
@@ -122,7 +122,7 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
       {/* Audio Mode */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Audio</p>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {AUDIO_OPTIONS.map((opt) => {
             const Icon = opt.icon;
             return (

@@ -31,14 +31,14 @@ export function ShotPlanEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="space-y-3">
         <div>
           <h2 className="text-lg font-semibold text-foreground">Shot Plan</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {shots.length} shots • Review and adjust your film's shot sequence.
+            {shots.length} shots -- Review and adjust your film's shot sequence
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {onPlanModeChange && (
             <div className="flex rounded-lg border border-border overflow-hidden">
               <button
