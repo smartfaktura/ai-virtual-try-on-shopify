@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GripVertical, User, Package, Clock, Video, Pencil, Check, X, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { GripVertical, User, Package, Clock, Video, Pencil, Check, X, Trash2, ChevronUp, ChevronDown, ImageIcon } from 'lucide-react';
 import { formatRoleLabel, formatCameraMotion } from '@/lib/shortFilmPlanner';
 import type { ShotPlanItem } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
@@ -7,6 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface ReferenceOption {
+  id: string;
+  url: string;
+  role: string;
+  name?: string;
+}
 
 interface ShotCardProps {
   shot: ShotPlanItem;
@@ -20,11 +28,13 @@ interface ShotCardProps {
   onMoveDown?: () => void;
   isFirst?: boolean;
   isLast?: boolean;
+  availableReferences?: ReferenceOption[];
 }
 
 export function ShotCard({
   shot, isGenerating, isComplete, resultUrl,
   editable, onUpdate, onDelete, onMoveUp, onMoveDown, isFirst, isLast,
+  availableReferences = [],
 }: ShotCardProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(shot);
