@@ -1,4 +1,4 @@
-import { Sparkles, Coins, ExternalLink, RotateCw, Play, Download, Loader2, Music } from 'lucide-react';
+import { Sparkles, Coins, ExternalLink, RotateCw, Download, Loader2, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -35,7 +35,6 @@ export default function ShortFilm() {
     generateAudio, previewAudio,
   } = useShortFilmProject();
 
-  const [showPreview, setShowPreview] = useState(false);
   const generationStartRef = useRef<number>(Date.now());
 
   // Track generation start time
