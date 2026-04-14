@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GripVertical, User, Package, Clock, Video, Pencil, Check, X, Trash2, ChevronUp, ChevronDown, ImageIcon } from 'lucide-react';
+import { GripVertical, User, Package, Clock, Video, Pencil, Check, X, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { formatRoleLabel, formatCameraMotion } from '@/lib/shortFilmPlanner';
 import type { ShotPlanItem } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
@@ -56,13 +56,13 @@ export function ShotCard({
       <div className="rounded-xl border border-primary/40 bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <Badge variant="secondary" className="text-[10px] font-semibold uppercase tracking-wide">
-            Shot {shot.shot_index} — {formatRoleLabel(shot.role)}
+            Shot {shot.shot_index} -- {formatRoleLabel(shot.role)}
           </Badge>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={confirmEdit}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={confirmEdit}>
               <Check className="h-3.5 w-3.5 text-green-600" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={cancelEdit}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit}>
               <X className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -151,7 +151,7 @@ export function ShotCard({
             <button
               onClick={onMoveUp}
               disabled={isFirst}
-              className="text-muted-foreground/60 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-6 w-6 flex items-center justify-center text-muted-foreground/60 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             >
               <ChevronUp className="h-3.5 w-3.5" />
             </button>
@@ -159,7 +159,7 @@ export function ShotCard({
             <button
               onClick={onMoveDown}
               disabled={isLast}
-              className="text-muted-foreground/60 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-6 w-6 flex items-center justify-center text-muted-foreground/60 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             >
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
@@ -191,7 +191,7 @@ export function ShotCard({
 
         <p className="text-xs text-muted-foreground">{shot.purpose}</p>
 
-        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
           <span className="inline-flex items-center gap-1">
             <Video className="h-3 w-3" />
             {formatCameraMotion(shot.camera_motion)}
@@ -219,10 +219,10 @@ export function ShotCard({
 
       {editable && (
         <div className="flex flex-col gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startEdit}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={startEdit}>
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={onDelete}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={onDelete}>
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>

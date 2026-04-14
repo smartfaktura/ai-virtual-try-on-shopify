@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
-import { generateShotPlan } from '@/lib/shortFilmPlanner';
+import { generateShotPlan, FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
 import { buildShotPrompt, estimateShortFilmCredits } from '@/lib/shortFilmPromptBuilder';
 import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
 import type {
@@ -54,8 +54,26 @@ export function useShortFilmProject() {
   const { balance, refreshBalance } = useCredits();
 
   const [step, setStep] = useState<ShortFilmStep>('film_type');
-  const [filmType, setFilmType] = useState<FilmType | null>(null);
+  const [filmType, setFilmTypeRaw] = useState<FilmType | null>(null);
   const [storyStructure, setStoryStructure] = useState<StoryStructure | null>(null);
+
+  // Apply film-type defaults when changed
+  const setFilmType = useCallback((ft: FilmType | null) => {
+    setFilmTypeRaw(ft);
+    if (ft) {
+      const option = FILM_TYPE_OPTIONS.find(o => o.value === ft);
+      if (option) {
+        // Apply default structure unless custom
+        if (option.defaultStructure !== 'custom') {
+          setStoryStructure(option.defaultStructure);
+        }
+        // Apply default tone
+        if (option.defaultTone) {
+          setSettings(prev => ({ ...prev, tone: option.defaultTone }));
+        }
+      }
+    }
+  }, []);
   const [references, setReferences] = useState<ReferenceAsset[]>([]);
   const [shots, setShots] = useState<ShotPlanItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -830,8 +848,27 @@ export function useShortFilmProject() {
         })
       );
 
-      await supabase.from('video_projects').update({ status: 'complete' }).eq('id', currentProjectId!);
-      toast.success('Short film generation complete!');
+      const finalStatuses = shotStatuses;
+      const successCount = jobIds.filter(j => {
+        const s = finalStatuses.find(fs => fs.shot_index === j.shotIndex);
+        return s?.status === 'complete';
+      }).length;
+      const projectStatus = successCount === shots.length ? 'complete' : successCount > 0 ? 'partial' : 'failed';
+
+      // Persist full draft state for reopening
+      const draftState: DraftState = {
+        step: 'review', filmType, storyStructure, references, shots, settings, planMode, customRoles,
+      };
+      await supabase.from('video_projects').update({
+        status: projectStatus,
+        draft_state_json: JSON.parse(JSON.stringify(draftState)),
+      }).eq('id', currentProjectId!);
+      
+      if (successCount > 0) {
+        toast.success(projectStatus === 'complete' ? 'Short film generation complete!' : `${successCount}/${shots.length} shots completed`);
+      } else {
+        toast.error('All shots failed');
+      }
       refreshBalance();
 
       // Generate audio layer if needed

@@ -1,3 +1,5 @@
+import type { ComponentType } from 'react';
+
 export type FilmType =
   | 'product_launch'
   | 'brand_story'
@@ -45,6 +47,7 @@ export interface FilmTypeOption {
   label: string;
   description: string;
   icon: string;
+  lucideIcon?: ComponentType<{ className?: string }>;
   defaultStructure: StoryStructure;
   defaultTone: string;
   defaultShotCount: number;

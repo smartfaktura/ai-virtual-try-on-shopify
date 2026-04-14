@@ -39,14 +39,18 @@ export default function ShortFilm() {
 
   const showCredits = shots.length > 0 && step !== 'film_type' && step !== 'references';
 
+  const successCount = shotStatuses.filter(s => s.status === 'complete').length;
+  const failedCount = shotStatuses.filter(s => s.status === 'failed').length;
   const allDone = !isGenerating && shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed');
+  const allSucceeded = allDone && failedCount === 0 && successCount > 0;
+  const hasFailures = allDone && failedCount > 0;
 
   const completedClips = useMemo(() => {
     return shotStatuses
       .filter(s => s.result_url)
       .map(s => {
         const shot = shots.find(sh => sh.shot_index === s.shot_index);
-        return { url: s.result_url!, label: `Shot ${s.shot_index} — ${shot?.role || 'clip'}` };
+        return { url: s.result_url!, label: `Shot ${s.shot_index} -- ${shot?.role || 'clip'}` };
       });
   }, [shotStatuses, shots]);
 
@@ -54,28 +58,37 @@ export default function ShortFilm() {
     return references.map(r => ({ id: r.id, url: r.url, role: r.role, name: r.name }));
   }, [references]);
 
-  const downloadAllClips = useCallback(() => {
-    completedClips.forEach((clip, i) => {
-      const a = document.createElement('a');
-      a.href = clip.url;
-      a.download = `shot-${i + 1}.mp4`;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    });
+  const downloadAllClips = useCallback(async () => {
+    for (const clip of completedClips) {
+      try {
+        const response = await fetch(clip.url);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `${clip.label.replace(/[^a-zA-Z0-9-_ ]/g, '')}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        // Stagger downloads to avoid browser blocking
+        await new Promise(r => setTimeout(r, 500));
+      } catch {
+        // Fallback: open in new tab
+        window.open(clip.url, '_blank');
+      }
+    }
   }, [completedClips]);
 
   const handleResumeDraft = useCallback((projectId: string) => {
     loadDraft(projectId);
   }, [loadDraft]);
 
-  const handleViewProject = useCallback((projectId: string) => {
-    window.location.href = '/app/video';
-  }, []);
+  const handleViewProject = useCallback((pid: string) => {
+    loadDraft(pid);
+  }, [loadDraft]);
 
   const handleStepClick = useCallback((index: number) => {
-    // Navigate backward only
     if (index < currentStepIndex) {
       for (let i = currentStepIndex; i > index; i--) {
         goBack();
@@ -87,10 +100,15 @@ export default function ShortFilm() {
     return index < currentStepIndex;
   }, [currentStepIndex]);
 
+  const handleReset = useCallback(() => {
+    setShowPreview(false);
+    resetProject();
+  }, [resetProject]);
+
   const hideBar = step === 'review' && isGenerating;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-6">
+    <div className="max-w-2xl mx-auto space-y-6 pb-28">
       <PageHeader
         title="Short Film"
         subtitle="Plan and generate a premium multi-shot brand film"
@@ -204,13 +222,13 @@ export default function ShortFilm() {
                 <p className="text-sm font-medium text-foreground">Some audio tracks failed</p>
                 <div className="flex flex-wrap gap-1.5">
                   {audioShotStatuses.filter(s => s.sfx === 'failed').map(s => (
-                    <Button key={`sfx-${s.shot_index}`} variant="outline" size="sm" className="h-7 text-xs gap-1"
+                    <Button key={`sfx-${s.shot_index}`} variant="outline" size="sm" className="h-8 text-xs gap-1"
                       onClick={() => retryAudioForShot(s.shot_index, 'sfx')}>
                       <RotateCw className="h-3 w-3" /> SFX Shot {s.shot_index}
                     </Button>
                   ))}
                   {audioShotStatuses.filter(s => s.voiceover === 'failed').map(s => (
-                    <Button key={`vo-${s.shot_index}`} variant="outline" size="sm" className="h-7 text-xs gap-1"
+                    <Button key={`vo-${s.shot_index}`} variant="outline" size="sm" className="h-8 text-xs gap-1"
                       onClick={() => retryAudioForShot(s.shot_index, 'voiceover')}>
                       <RotateCw className="h-3 w-3" /> Voice Shot {s.shot_index}
                     </Button>
@@ -219,11 +237,11 @@ export default function ShortFilm() {
               </div>
             )}
 
-            {allDone && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (
+            {allSucceeded && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="gap-1.5 h-9"
                 onClick={() => generateAudio()}
               >
                 <Music className="h-3.5 w-3.5" />
@@ -239,7 +257,7 @@ export default function ShortFilm() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-1.5"
+                    className="gap-1.5 h-9"
                     onClick={() => setShowPreview(true)}
                   >
                     <Play className="h-3.5 w-3.5" />
@@ -251,10 +269,10 @@ export default function ShortFilm() {
 
             {allDone && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-sm font-semibold text-foreground">Generated Clips</h3>
                   {completedClips.length > 0 && (
-                    <Button variant="outline" size="sm" className="gap-1.5" onClick={downloadAllClips}>
+                    <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={downloadAllClips}>
                       <Download className="h-3.5 w-3.5" />
                       Download All
                     </Button>
@@ -276,7 +294,7 @@ export default function ShortFilm() {
                           {shot && (
                             <div className="px-3 py-2">
                               <p className="text-xs font-medium text-foreground">
-                                Shot {s.shot_index} — {shot.role}
+                                Shot {s.shot_index} -- {shot.role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                               </p>
                               <p className="text-[10px] text-muted-foreground">{shot.purpose}</p>
                             </div>
@@ -285,13 +303,10 @@ export default function ShortFilm() {
                       );
                     })}
                 </div>
-                {projectId && (
-                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                    <a href="/app/video">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      View in Video Hub
-                    </a>
-                  </Button>
+                {hasFailures && (
+                  <p className="text-xs text-destructive">
+                    {failedCount} shot{failedCount !== 1 ? 's' : ''} failed -- use the retry button above each failed shot
+                  </p>
                 )}
               </div>
             )}
@@ -314,7 +329,7 @@ export default function ShortFilm() {
           onNext={goNext}
           onBack={goBack}
           onGenerate={startGeneration}
-          onReset={resetProject}
+          onReset={handleReset}
           onSaveDraft={saveDraft}
           onDownloadAll={downloadAllClips}
         />

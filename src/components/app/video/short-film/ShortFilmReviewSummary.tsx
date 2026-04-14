@@ -1,5 +1,6 @@
 import { Coins } from 'lucide-react';
 import { ShotCard } from './ShotCard';
+import { FILM_TYPE_OPTIONS, STORY_STRUCTURE_OPTIONS } from '@/lib/shortFilmPlanner';
 import type { ShotPlanItem, FilmType, StoryStructure, ShortFilmSettings } from '@/types/shortFilm';
 
 interface ShortFilmReviewSummaryProps {
@@ -10,6 +11,14 @@ interface ShortFilmReviewSummaryProps {
   totalCredits: number;
 }
 
+const AUDIO_LABELS: Record<string, string> = {
+  silent: 'Silent',
+  ambient: 'Ambient (Kling native)',
+  music: 'AI Music',
+  voiceover: 'AI Voiceover',
+  full_mix: 'Full Mix',
+};
+
 export function ShortFilmReviewSummary({
   filmType,
   storyStructure,
@@ -17,12 +26,16 @@ export function ShortFilmReviewSummary({
   settings,
   totalCredits,
 }: ShortFilmReviewSummaryProps) {
+  const filmLabel = FILM_TYPE_OPTIONS.find(f => f.value === filmType)?.label || filmType?.replace(/_/g, ' ') || '--';
+  const structureLabel = STORY_STRUCTURE_OPTIONS.find(s => s.value === storyStructure)?.label || storyStructure?.replace(/_/g, ' ') || '--';
+  const audioLabel = AUDIO_LABELS[settings.audioMode] || settings.audioMode;
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-foreground">Review & Generate</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Everything looks good? Generate your {shots.length}-shot brand film.
+          Everything looks good? Generate your {shots.length}-shot brand film
         </p>
       </div>
 
@@ -30,23 +43,19 @@ export function ShortFilmReviewSummary({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-muted-foreground">Film Type</span>
-            <p className="font-medium text-foreground capitalize">
-              {filmType?.replace(/_/g, ' ')}
-            </p>
+            <p className="font-medium text-foreground">{filmLabel}</p>
           </div>
           <div>
             <span className="text-muted-foreground">Structure</span>
-            <p className="font-medium text-foreground capitalize">
-              {storyStructure?.replace(/_/g, ' → ').slice(0, 30)}
-            </p>
+            <p className="font-medium text-foreground truncate">{structureLabel}</p>
           </div>
           <div>
             <span className="text-muted-foreground">Shots</span>
-            <p className="font-medium text-foreground">{shots.length} shots × {settings.shotDuration}s</p>
+            <p className="font-medium text-foreground">{shots.length} shots x {settings.shotDuration}s</p>
           </div>
           <div>
             <span className="text-muted-foreground">Audio</span>
-            <p className="font-medium text-foreground capitalize">{settings.audioMode}</p>
+            <p className="font-medium text-foreground">{audioLabel}</p>
           </div>
         </div>
       </div>
