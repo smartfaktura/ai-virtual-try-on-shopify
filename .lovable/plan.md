@@ -1,43 +1,60 @@
 
 
-# Use Kling Native Audio for Dialog/SFX + ElevenLabs Music Only
+# Simplify End Screen + Audio Preferences Before AI Director
 
-## Approach
-
-Kling v3's multishot endpoint generates lip-synced speech and sound effects natively when `sound: "on"` is set. Instead of fighting to sync external audio, we let Kling handle dialog and SFX, and only layer ElevenLabs background music on top.
+## Problem Summary
+1. The end screen has separate "Download" and "Download with Music" buttons — confusing since Kling now handles dialog/SFX natively and only music comes from ElevenLabs
+2. Voice settings still show ElevenLabs voice options (irrelevant now — Kling handles voice natively)
+3. No audio preference prompt before AI Director starts — user should choose what they want upfront
 
 ## Changes
 
-### 1. Enable Kling native audio (`useShortFilmProject.ts`)
-- Line 1009: Change `with_audio: false` to `with_audio: true` — this tells Kling to generate speech/SFX natively with lip-sync
-- Line 441 (single-shot path): Same change — `with_audio: true`
+### 1. Simplified End Screen (`ShortFilm.tsx` + `ShortFilmVideoPlayer.tsx`)
 
-### 2. Skip ElevenLabs SFX + Voiceover generation (`useShortFilmProject.ts`)
-- In `generateAudio()` (lines 601-698): Skip the SFX and Voiceover blocks entirely. Only generate the **music** track via ElevenLabs.
-- Remove the lip-sync post-processing block (lines 1090-1133) — no longer needed since Kling handles it natively.
+**Current**: Two download buttons — "Download" (raw video) and "Download with Music" (muxed via FFmpeg).
 
-### 3. Update player to unmute video but keep music overlay (`ShortFilmVideoPlayer.tsx`)
-- Change `muted={!!hasAudio}` logic: the video should only be muted if there is NO Kling native audio. Since we now always have Kling audio, set `muted={false}` (or more precisely, only mute when there's no video audio at all).
-- Simplify: `muted` should be `false` because Kling audio is baked in. The only external layer is background music via `<audio>` element.
-- Remove the SFX/voiceover playback logic from the RAF loop — the player only needs to sync background music now.
+**New**: Single "Download" button that:
+- If music track exists → auto-mux video + music via `mux-video-audio` edge function, then download the combined file
+- If no music track → download the raw video directly (which already has Kling dialog/SFX baked in)
 
-### 4. Update audio layer settings UI
-- The SFX and Voiceover toggles in settings should still exist (they control what Kling generates via prompt hints), but they no longer trigger separate ElevenLabs API calls.
-- Update `getEffectiveLayers()` usage: only `music` triggers ElevenLabs; `sfx` and `voiceover` are communicated to Kling through prompt content (already handled by `ROLE_AUDIO_CUES` in the prompt engine).
+Remove the separate "Download with Music" button. The player stays the same (unmuted video + background music `<audio>` element for preview).
 
-## Result
+Also remove the stale audio generation UI (SFX/VO retry buttons, audio phase indicators for sfx/voiceover) since those are no longer generated via ElevenLabs.
 
-| Layer | Provider | How |
-|-------|----------|-----|
-| Dialog/Voice | Kling native | `sound: "on"`, lip-synced automatically |
-| Sound Effects | Kling native | Generated from prompt audio cues |
-| Background Music | ElevenLabs | Separate `<audio>` element, synced to video timeline |
+### 2. Remove ElevenLabs Voice Picker from Settings (`ShortFilmSettingsPanel.tsx`)
+
+Remove the `VOICE_OPTIONS` list and the voice picker dropdown — voice is now handled by Kling natively via the prompt. The settings panel keeps: Quality, Aspect Ratio, Duration, Music Style, Preservation Level, and Tone.
+
+Update the Audio info section to say something like: "Dialog & sound effects are generated natively with the video. Background music is added separately."
+
+### 3. Audio Preferences Step — Before AI Director (`ShortFilm.tsx` + `FilmTypeSelector.tsx`)
+
+Add an "Audio Preferences" section to the **Film Type** step (step 1), shown after the user selects a film type. Three toggle cards:
+- **Background Music** — "Add a music track on top of your film" (default: ON)
+- **Dialog / Speech** — "Characters speak in the video" (default: OFF)  
+- **Sound Effects** — "Ambient sounds, impacts, transitions" (default: ON)
+
+These map to the existing `audioLayers` in settings (`music`, `voiceover`, `sfx`). The AI Director will use these preferences when building the shot plan (e.g., generating `script_line` fields only when Dialog is ON, adding `sfx_prompt` only when SFX is ON).
+
+Move the `audioLayers` state initialization from the Shot Plan step to Film Type selection so it's set before AI planning begins.
+
+### 4. Clean Up Stale Retry/Audio UI (`ShortFilm.tsx`)
+
+Remove:
+- The per-shot SFX/VO retry buttons (lines 277-294) — no longer applicable
+- The audio phase indicators for `sfx` and `voiceover` phases (lines 253-254) — only `music` phase matters
+- The `retryAudioForShot` usage for sfx/voiceover
+
+Keep:
+- Music generation status indicator
+- "Regenerate Audio" button (for music only)
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/hooks/useShortFilmProject.ts` | Set `with_audio: true`, remove ElevenLabs SFX/VO generation, remove lip-sync block |
-| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Unmute video, simplify to only sync background music overlay |
-| `supabase/functions/generate-video/index.ts` | Already correct — uses `withAudio` flag, no changes needed |
+| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Single download button (auto-mux if music exists), remove `onDownloadWithAudio` prop |
+| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Remove ElevenLabs voice picker, update audio info text |
+| `src/components/app/video/short-film/FilmTypeSelector.tsx` | Add Audio Preferences toggles below film type selection |
+| `src/pages/video/ShortFilm.tsx` | Pass audioLayers to FilmTypeSelector, simplify end screen (single download), remove stale SFX/VO retry UI |
 
