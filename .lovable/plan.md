@@ -1,66 +1,64 @@
 
 
-# Fix Short Film Audio Matching & Control
+# Download Options & SFX Timing Control
 
-## Root Problem
+## Changes
 
-Audio feels random because:
-1. **Music prompt** ignores the user's selected Style/Mood presets — it builds a generic "cinematic ambient" prompt
-2. **SFX prompts** are hardcoded by shot role — no user control, no connection to selected scene/style presets
-3. **No per-shot SFX editing** — users can't customize what sound effect plays for each shot
-4. The music and SFX don't reflect the actual visual content the user configured
+### 1. Replace Volume Mixer with Download Options
+**File: `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx`**
 
-## Solution
+- Remove the Mixer button and entire Volume Mixer section
+- Replace single Download button with two buttons when music exists:
+  - "Download" — video only (current behavior)
+  - "Download with Music" — triggers a new `onDownloadWithAudio` callback
+- If no music/audio was generated, show only "Download"
+- Keep internal volume levels at sensible defaults (music 0.5, sfx 0.7, voice 1.0) for preview playback — no user control needed
 
-### 1. Add `sfx_prompt` field to `ShotPlanItem` type
-Allow per-shot custom SFX text so users can control exactly what sound plays.
+### 2. Add `onDownloadWithAudio` prop and muxing logic
+**File: `src/pages/video/ShortFilm.tsx`**
 
+- Pass a new `onDownloadWithAudio` callback to `ShortFilmVideoPlayer`
+- This function fetches the video + music track, combines them using an `<audio>` + `MediaRecorder` approach or simply downloads both files (pragmatic: download video + separate audio track, since true client-side muxing is complex)
+- Pragmatic approach: use a backend function to mux video + audio into one MP4
+
+**File: `supabase/functions/mux-video-audio/index.ts`** (new edge function)
+- Accepts video URL + audio URL, uses ffmpeg to combine into single MP4, returns the muxed file
+- This gives a proper single-file download with embedded audio
+
+### 3. Add SFX trigger offset to ShotPlanItem
 **File: `src/types/shortFilm.ts`**
-- Add `sfx_prompt?: string` to `ShotPlanItem`
 
-### 2. Surface SFX prompt editing in ShotCard + ShotPlanEditor
-Next to the existing "Script Line" input, add a "Sound Effect" input per shot. Auto-filled by `buildContextualSfxPrompt` but fully editable.
+Add `sfx_trigger_at?: number` to `ShotPlanItem` — offset in seconds from shot start (default 0 = shot start). This lets users control exactly when the SFX plays within a shot.
 
-**Files: `src/components/app/video/short-film/ShotCard.tsx`, `ShotPlanEditor.tsx`**
-- Add SFX prompt input field in the shot editor (with the 🔊 icon)
-- Show current SFX prompt in collapsed card view
-- Auto-populate default SFX prompts when generating the shot plan
+### 4. Surface SFX timing control in ShotPlanEditor
+**File: `src/components/app/video/short-film/ShotPlanEditor.tsx`**
 
-### 3. Connect Style/Mood presets to music prompt generation
-Currently `buildContextualMusicPrompt` ignores the selected style presets. Feed the user's selected style keywords into the music prompt.
+Next to the existing SFX prompt input, add a small number input or dropdown for trigger offset:
+- Label: "Trigger at" with options like "Start", "0.5s", "1s", "1.5s", "2s" or a free-form input
+- Shows only when `sfx_prompt` is non-empty
 
-**File: `src/hooks/useShortFilmProject.ts`**
-- Pass `references` to `buildContextualMusicPrompt` 
-- Extract selected style preset keywords from `references.filter(r => r.role === 'style')`
-- Inject style keywords into the music prompt (e.g., "cinematic noir, deep blacks, dramatic" → "dark cinematic noir ambient music with dramatic tension")
+### 5. Use `sfx_trigger_at` in playback
+**File: `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx`**
 
-### 4. Use `sfx_prompt` in audio generation instead of hardcoded function
-When generating SFX, prefer `shot.sfx_prompt` if set, falling back to `buildContextualSfxPrompt`.
+Update the RAF loop: instead of triggering SFX at shot start, trigger at `shotOffset.start + sfx_trigger_at`. Pass shots with full `ShotPlanItem` data (or at least `sfx_trigger_at`) to the player.
 
-**File: `src/hooks/useShortFilmProject.ts`**
-- Change line ~497: `const sfxPrompt = shot.sfx_prompt || buildContextualSfxPrompt(shot);`
+### 6. Auto-populate sensible SFX timing defaults
+**File: `src/lib/shortFilmPlanner.ts`**
 
-### 5. Auto-populate `sfx_prompt` in shot plan generation
-When the AI Director or preset planner creates shots, pre-fill `sfx_prompt` with the contextual default so users see what will be generated and can edit it.
-
-**File: `src/lib/shortFilmPlanner.ts`** — add `sfx_prompt` to generated shot plans
-**File: `supabase/functions/ai-shot-planner/index.ts`** — add `sfx_prompt` to the AI prompt schema
-
-### 6. Connect scene presets to SFX context
-If scene presets are selected (e.g., "Neon Rain Street"), incorporate environment keywords into SFX prompts automatically.
-
-**File: `src/hooks/useShortFilmProject.ts`**
-- Update `buildContextualSfxPrompt` to accept `references` parameter
-- Extract scene preset names and blend into the SFX prompt
+Set default `sfx_trigger_at` based on shot role:
+- `hook` → 0 (immediate impact)
+- `product_reveal` → 0.5 (slight delay for reveal moment)
+- `closing` → 0 (immediate)
+- Others → 0
 
 ## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/types/shortFilm.ts` | Add `sfx_prompt?: string` to `ShotPlanItem` |
-| `src/components/app/video/short-film/ShotCard.tsx` | Add SFX prompt input in editor, show in collapsed view |
-| `src/components/app/video/short-film/ShotPlanEditor.tsx` | Add inline SFX prompt field next to script_line |
-| `src/hooks/useShortFilmProject.ts` | Use `shot.sfx_prompt` for SFX gen; pass style/scene refs into music & SFX prompt builders |
-| `src/lib/shortFilmPlanner.ts` | Pre-fill `sfx_prompt` on generated shots |
-| `supabase/functions/ai-shot-planner/index.ts` | Add `sfx_prompt` to AI schema |
+| `src/types/shortFilm.ts` | Add `sfx_trigger_at?: number` to `ShotPlanItem`; add `offset_sec` to `AudioAssets.perShotAudio` |
+| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Remove mixer, add dual download buttons, use `sfx_trigger_at` in RAF loop |
+| `src/components/app/video/short-film/ShotPlanEditor.tsx` | Add SFX trigger offset input next to SFX prompt |
+| `src/pages/video/ShortFilm.tsx` | Add `downloadWithAudio` callback using mux edge function |
+| `src/lib/shortFilmPlanner.ts` | Default `sfx_trigger_at` per role |
+| `supabase/functions/mux-video-audio/index.ts` | New: combine video + audio tracks into single MP4 |
 
