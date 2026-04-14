@@ -327,20 +327,12 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         visibleCount={modelVisible}
         onLoadMore={() => setModelVisible(v => v + PAGE_SIZE)}
         renderItem={(m) => (
-          <button
+          <ModelSelectorCard
             key={m.modelId}
-            onClick={() => pickModel(m)}
-            className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          >
-            <div className="aspect-[3/4] bg-muted/30 rounded-t-lg overflow-hidden">
-              <ShimmerImage
-                src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })}
-                alt={m.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <p className="text-xs font-medium text-foreground p-2 truncate">{m.name}</p>
-          </button>
+            model={m}
+            isSelected={false}
+            onSelect={() => pickModel(m)}
+          />
         )}
         emptyText="No models available yet."
       />
