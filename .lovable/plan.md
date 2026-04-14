@@ -1,35 +1,18 @@
 
 
-# Verification: Short Film Pipeline Status
+# Fix: Prevent Auto-Reload During Video Generation
 
-## What's already correct ✓
+## What Happened
+A new build deployed while your short film was generating. The `versionCheck.ts` auto-reload mechanism only excludes `/app/catalog` and `/app/generate/product-images` — it does NOT exclude `/app/video/short-film`. The page force-reloaded, destroying your in-memory generation state.
 
-| Component | Status | Detail |
-|-----------|--------|--------|
-| `kling-lip-sync/index.ts` | ✓ Complete | Create + poll actions, JWT auth, proper CORS |
-| `generate-video/index.ts` multishot | ✓ Fixed | `sound: "on"`, 1-based `image_list` index, `respond()` crash removed |
-| `useShortFilmProject.ts` | ✓ Fixed | `with_audio: false` in both main + retry paths, lip-sync post-processing wired |
-| `ai-shot-planner/index.ts` | ✓ Fixed | Product-focused script_line instructions, style presets isolated |
-| `shortFilmPromptBuilder.ts` | ✓ Fixed | Character speech directives, softer human descriptions, sentence-boundary truncation |
-| `generated-audio` UPDATE RLS | ✓ Migrated | Upsert now allowed |
+## Fix
 
-## What's missing ✗
+### File: `src/lib/versionCheck.ts`
+Add `/app/video` to the exclusion list. This covers all video workflows (short-film, animate, hub) since they all hold in-memory generation state:
 
-### `kling-lip-sync` not in `supabase/config.toml`
-
-The function exists but **has no config entry**, so it won't deploy. Need to add:
-
-```toml
-[functions.kling-lip-sync]
-  verify_jwt = false
+```typescript
+if (window.location.pathname.startsWith('/app/video')) return;
 ```
 
-This is a one-line addition to `supabase/config.toml`.
-
-## Changes
-
-### File: `supabase/config.toml`
-Add `kling-lip-sync` function entry with `verify_jwt = false` at the end of the functions list.
-
-That's it — everything else is properly wired.
+This single line protects all video routes from mid-generation reloads.
 
