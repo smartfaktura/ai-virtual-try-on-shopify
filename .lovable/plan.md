@@ -1,85 +1,53 @@
 
 
-# Fix Short Film Generation: Prompt Length Exceeds Kling 512-Char Limit
+# Fix Shot Duration Bug in Short Film
 
-## Root Cause
+## Problem
 
-The actual error from the most recent failed job:
-```
-multiPrompt[0].prompt: size must be between 0 and 512
-```
+Kling's omni-video multi-shot endpoint has strict constraints:
+- **Max total duration**: 15 seconds
+- **Per-shot duration**: must be "5" or "10" (not arbitrary values like 3 or 4)
+- **Min 2 shots** for multi-shot mode
 
-Kling's `omni-video` multi-shot endpoint has a **512 character hard limit per shot prompt**. The current `buildShotPrompt()` in `src/lib/shortFilmPromptBuilder.ts` concatenates ~12 sections of cinematic language (tone preset, image ref, role directive, purpose, lighting, lens, camera motion, subject motion, script line, preservation, aspect ratio hint, production footer) — producing prompts of 500–650 characters. Most exceed the limit.
-
-The prior `job_type` routing bug (already fixed) was the first failure. Once that was fixed, the prompts themselves became the blocker.
+The current code caps total duration to 15s but then `distributeShotDurations()` divides it evenly, producing invalid per-shot values (e.g., 4 shots × 10s = 40s → capped to 15s → distributed as 4,4,4,3 → Kling rejects these). Even with 5s selected, 4 shots = 20s → capped to 15s → distributed as 4,4,4,3 — still invalid.
 
 ## Fix
 
-**File**: `src/lib/shortFilmPromptBuilder.ts` — `buildShotPrompt()` function
+**Enforce "5s per shot" as the only multi-shot option** and **cap shot count to 3** (3×5=15s max). The "10s" option only works with 1 shot (which falls back to single-shot mode anyway).
 
-Truncate each shot prompt to 512 characters maximum. The approach:
+### Changes
 
-1. Build the prompt as today (all cinematic parts joined).
-2. Before returning, check if `prompt.length > 510`. If so, intelligently truncate:
-   - Keep the most important parts (image reference, role directive, purpose, camera motion).
-   - Drop the lower-priority padding (aspect ratio hint, production footer, preservation note, lighting/lens details).
-   - If still over 510, hard-truncate at 510 chars on a word boundary.
-3. This preserves the creative intent while respecting the API constraint.
+**1. `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx`**
+- Remove the "10s per shot" button entirely, or show it as disabled with a tooltip explaining the 15s limit
+- Simpler: just remove it — short films are always 5s per shot
 
-### Priority order for prompt sections (keep → drop):
-1. **Keep**: Image reference (`<<<image_N>>>`) — critical for visual consistency
-2. **Keep**: Role directive — defines the shot's narrative purpose  
-3. **Keep**: Purpose — user-defined shot intent
-4. **Keep**: Camera motion — defines movement
-5. **Drop if needed**: Tone preset (shorten to key phrase)
-6. **Drop if needed**: Lighting, lens, subject motion, script line, preservation, aspect ratio, footer
+**2. `src/lib/shortFilmPromptBuilder.ts`**
+- `calculateTotalDuration`: remove the generic cap logic; just return `shotCount * 5`, capped at 15
+- `distributeShotDurations`: always return `5` for each shot (no fractional distribution)
+- Guard: max 3 shots (15s / 5s)
 
-### Implementation
+**3. `src/hooks/useShortFilmProject.ts`**
+- When building `multishotPayload`, set each shot's duration to `5` (hardcoded safe value)
+- If shot plan has >3 shots, truncate to 3 before sending
 
-Replace the current linear concatenation with a priority-based builder that caps at 510 characters:
+**4. `src/lib/shortFilmPlanner.ts`**
+- Cap `defaultShotCount` values to max 3 for all film types (currently some are 4-5)
 
-```typescript
-export function buildShotPrompt(...): { prompt: string; negative_prompt: string } {
-  const MAX_PROMPT_LENGTH = 510;
-  
-  // Priority tiers — higher priority = included first
-  const priority1: string[] = []; // Must have
-  const priority2: string[] = []; // Important  
-  const priority3: string[] = []; // Nice to have
-  
-  // Image ref (P1)
-  if (imageIndex) priority1.push(`Feature subject from <<<image_${imageIndex}>>>.`);
-  
-  // Role directive + purpose (P1)
-  priority1.push(roleCine.directive);
-  priority1.push(shot.purpose);
-  
-  // Camera/subject motion (P2)
-  // Tone preset shortened (P2)
-  // Lighting, lens (P3)
-  // Footer, aspect, preservation (P3)
-  
-  // Build prompt adding tiers until at limit
-  let prompt = priority1.join(' ');
-  for (const part of [...priority2, ...priority3]) {
-    if ((prompt + ' ' + part).length > MAX_PROMPT_LENGTH) break;
-    prompt += ' ' + part;
-  }
-  
-  // Hard truncate safety net
-  if (prompt.length > MAX_PROMPT_LENGTH) {
-    prompt = prompt.slice(0, MAX_PROMPT_LENGTH).replace(/\s\S*$/, '');
-  }
-  
-  return { prompt, negative_prompt: allNegatives.join(', ') };
-}
-```
+**5. `supabase/functions/ai-shot-planner/index.ts`**
+- Update the system prompt to say "Generate 2-3 shots" instead of "4-8 shots"
 
-## Files to Change
+**6. `src/types/shortFilm.ts`**
+- Change `shotDuration` type from `'5' | '10'` to just `'5'` (or keep for backwards compat but ignore)
+
+### Summary
 
 | File | Change |
 |------|--------|
-| `src/lib/shortFilmPromptBuilder.ts` | Rewrite `buildShotPrompt` with priority-based 510-char cap |
-
-No edge function changes needed — the backend is correct now. This is purely a client-side prompt construction issue.
+| `ShortFilmSettingsPanel.tsx` | Remove 10s option from UI |
+| `shortFilmPromptBuilder.ts` | Hardcode 5s per shot, cap at 3 shots |
+| `useShortFilmProject.ts` | Force duration=5 per shot, truncate to 3 shots max |
+| `shortFilmPlanner.ts` | Cap defaultShotCount to 3 |
+| `ai-shot-planner/index.ts` | Change prompt to "2-3 shots" |
+| `shortFilm.ts` | Update type (optional) |
+| `videoCreditPricing.ts` | Remove `basePerShot10s` references |
 
