@@ -1,37 +1,40 @@
 
+Short answer: the 1:1 box exists now, but the product previews are still wrong because the short-film product picker is still rendering raw `user_products.image_url` assets. Many of those are tall/narrow or have large blank margins, so `object-contain` inside a square naturally produces the thin center-strip effect from your screenshot. That means this is no longer just a modal layout bug — it is also a source-framing problem.
 
-# Fix Striped/Broken Previews in Short Film Picker Dialogs
+What I will change
 
-## Root Cause
+1. Rebuild every short-film modal card to one strict structure
+- fixed square media area (`1:1`)
+- fixed footer below it
+- title always visible at the bottom
+- same card contract for Products, Scenes, and Models
 
-Every picker card wraps `ShimmerImage` inside a `<div className="aspect-square bg-white">`, then also passes `aspectRatio="1/1"` to `ShimmerImage`. The `ShimmerImage` component creates its own wrapper `<div className="relative overflow-hidden w-full h-full" style={{ aspectRatio: "1/1" }}>`. This double-nesting of aspect-ratio containers causes the inner image to collapse to a thin stripe because `h-full` inside an aspect-ratio parent does not resolve as expected in all layout contexts.
+2. Fix the product picker card layout in `ReferenceUploadPanel.tsx`
+- make each card `w-full flex flex-col`
+- keep the media area as a true square
+- move the title into a dedicated bottom footer with stable height
+- remove the current “title can disappear into the card body” behavior
 
-## Fix
+3. Fix preview fitting behavior everywhere in short film
+- product image centered in the square
+- scale to the largest size possible without cutting off top or bottom
+- keep full-product visibility
+- update selected reference thumbnails too, because they still use `object-cover` and stay zoomed/cropped outside the modal
 
-Remove the outer wrapper `<div>` from each card's image area. Instead, pass `aspectRatio`, `wrapperClassName` (for background color + rounding), and `object-contain` directly to `ShimmerImage`. This gives ShimmerImage sole control over sizing.
+4. Fix the real source problem for products
+- the current product picker still pulls from `/app/products` (`user_products`)
+- if those raw assets remain too padded/tall, I will switch the short-film product picker to a better, tighter visual source instead of trying to solve bad framing with CSS alone
+- I will also review whether the short-film product references should come from the more appropriate product-visual / try-on asset flow rather than the raw catalog hero image
 
-### File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
+Files I expect to change
+- `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
+- possibly one related query/hook if I switch the product source away from raw `user_products`
 
-**Product picker** (lines 418-425): Replace the wrapping div + ShimmerImage with:
-```tsx
-<ShimmerImage
-  src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
-  alt={p.title}
-  className="w-full h-full object-contain"
-  aspectRatio="1/1"
-  wrapperClassName="bg-white rounded-t-lg"
-/>
-```
+Acceptance criteria
+- every modal card shows a real full square preview
+- product title is clearly visible in a footer under the image
+- selected references are no longer zoomed/cropped
+- products render as large as possible while still showing the full item
+- no more thin center-strip previews unless the original asset itself is unusably padded, in which case I will replace the source
 
-**Model picker** (lines 320-327): Same pattern but with `aspectRatio="3/4"` and `bg-muted/30`.
-
-**SceneCard** (lines 442-449): Same pattern with `aspectRatio="1/1"` and `bg-muted/30`.
-
-**Selected reference thumbnails** (wherever they render in the existing refs list): same fix if they also double-wrap.
-
-### Changes summary
-
-| File | Change |
-|------|--------|
-| `ReferenceUploadPanel.tsx` | Remove outer `<div className="aspect-*">` wrappers from all 3 picker card types + SceneCard; let ShimmerImage own the aspect ratio and background via its `wrapperClassName` and `aspectRatio` props |
-
+If you want me to continue in a new request, I’ll implement this card-layout fix first and then switch the product picker source if the raw product library still causes the strip effect.
