@@ -11,6 +11,7 @@ import type {
   ShortFilmSettings,
   ShortFilmStep,
   ShotPlanItem,
+  AudioAssets,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 
@@ -55,6 +56,8 @@ export function useShortFilmProject() {
   const [customRoles, setCustomRoles] = useState<string[]>([]);
   const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
   const [settings, setSettings] = useState<ShortFilmSettings>(DEFAULT_SETTINGS);
+  const [audioAssets, setAudioAssets] = useState<AudioAssets>({ perShotAudio: [] });
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
 
   const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
