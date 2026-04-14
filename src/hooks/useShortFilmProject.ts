@@ -134,7 +134,7 @@ export function useShortFilmProject() {
     try {
       const { data } = await supabase
         .from('video_projects')
-        .select('id, draft_state_json')
+        .select('id, draft_state_json, music_track_url, status')
         .eq('id', projectIdToLoad)
         .single();
 
@@ -149,6 +149,36 @@ export function useShortFilmProject() {
         setPlanMode(d.planMode || 'auto');
         setCustomRoles(d.customRoles || []);
         setDraftProjectId(data.id);
+        setProjectId(data.id);
+
+        // Restore persisted audio assets if project is complete
+        if (data.status === 'complete') {
+          const restoredAssets: AudioAssets = { perShotAudio: [] };
+          if (data.music_track_url) {
+            restoredAssets.backgroundTrackUrl = data.music_track_url;
+          }
+          // Load per-shot audio URLs
+          const { data: shotRows } = await supabase
+            .from('video_shots')
+            .select('shot_index, audio_url, sfx_url')
+            .eq('project_id', data.id)
+            .order('shot_index');
+          if (shotRows) {
+            for (const row of shotRows) {
+              if (row.sfx_url) {
+                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: row.sfx_url, type: 'sfx' });
+              }
+              if (row.audio_url) {
+                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: row.audio_url, type: 'voiceover' });
+              }
+            }
+          }
+          if (restoredAssets.backgroundTrackUrl || restoredAssets.perShotAudio.length > 0) {
+            setAudioAssets(restoredAssets);
+            setAudioPhase('done');
+          }
+        }
+
         toast.success('Draft resumed');
       }
     } catch (err) {
@@ -329,10 +359,11 @@ export function useShortFilmProject() {
       console.error('[ShortFilm] Audio upload failed:', error);
       return null;
     }
-    const { data: { signedUrl } } = await supabase.storage
+    // Use 7-day signed URLs to survive page refreshes
+    const { data } = await supabase.storage
       .from('generated-audio')
-      .createSignedUrl(path, 3600);
-    return signedUrl || null;
+      .createSignedUrl(path, 604800);
+    return data?.signedUrl || null;
   }, [user]);
 
   // ─── Audio generation ────────────────────────────────────────
@@ -392,8 +423,8 @@ export function useShortFilmProject() {
         }
       }
 
-      // SFX per shot (full_mix only)
-      if (mode === 'full_mix') {
+      // SFX per shot (music or full_mix)
+      if (mode === 'music' || mode === 'full_mix') {
         setAudioPhase('sfx');
         for (const shot of shots) {
           setAudioShotStatuses(prev =>

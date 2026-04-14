@@ -59,7 +59,8 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
   const showVoicePicker = settings.audioMode === 'voiceover' || settings.audioMode === 'full_mix';
   const showPreview = settings.audioMode !== 'silent' && settings.audioMode !== 'ambient' && !!onPreviewAudio;
 
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   return (
@@ -192,35 +193,41 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
             variant="outline"
             size="sm"
             className="gap-1.5"
-            disabled={isPreviewing}
+            disabled={isLoadingPreview}
             onClick={async () => {
-              if (previewAudioRef.current) {
+              // If currently playing, stop it
+              if (isPlayingPreview && previewAudioRef.current) {
                 previewAudioRef.current.pause();
                 previewAudioRef.current = null;
-                setIsPreviewing(false);
+                setIsPlayingPreview(false);
                 return;
               }
-              setIsPreviewing(true);
+              setIsLoadingPreview(true);
               try {
                 const url = await onPreviewAudio!();
                 if (url) {
                   const audio = new Audio(url);
                   previewAudioRef.current = audio;
                   audio.onended = () => {
-                    setIsPreviewing(false);
+                    setIsPlayingPreview(false);
                     previewAudioRef.current = null;
                   };
+                  setIsLoadingPreview(false);
+                  setIsPlayingPreview(true);
                   await audio.play();
                 } else {
-                  setIsPreviewing(false);
+                  setIsLoadingPreview(false);
                 }
               } catch {
-                setIsPreviewing(false);
+                setIsLoadingPreview(false);
+                setIsPlayingPreview(false);
               }
             }}
           >
-            {isPreviewing ? (
+            {isLoadingPreview ? (
               <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating preview...</>
+            ) : isPlayingPreview ? (
+              <><StopIcon className="h-3.5 w-3.5" /> Stop Preview</>
             ) : (
               <><Play className="h-3.5 w-3.5" /> Preview Audio</>
             )}
