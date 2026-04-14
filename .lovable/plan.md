@@ -1,82 +1,54 @@
 
 
-# Fix Short Film Audio Generation — Complete Debug & Solution
+# Fix Short Film Audio Timing & Quality
 
-## Root Causes
+## Problems Found
 
-After thorough investigation, the three ElevenLabs edge functions (`elevenlabs-music`, `elevenlabs-sfx`, `elevenlabs-tts`) have **zero logs** — they have literally never been called, even though the functions are deployed and the API key is configured.
+From the console logs, the ElevenLabs calls are succeeding (all 200s). The issues are:
 
-The `generateAudio()` function code itself is correct. The problem is that **it never executes**:
+1. **Voiceover text doesn't fit shot duration** — "In the shadows of the city, true refinement finds its light." takes ~4s to speak naturally, but may be assigned to a 2s shot. The TTS generates full-length speech with no awareness of the shot's duration, so words get cut off or overlap the next shot.
 
-1. **Audio call is fragile in the generation flow**: The `await generateAudio()` at line 920 sits inside a try block (lines 715-928). If the DB update at line 906 (`video_projects.update()`) throws any error (network, type mismatch), the outer catch at line 923 skips audio entirely — with no specific error logging for this scenario.
+2. **SFX prompts are too vague** — Currently just `"scene_type ambient sound, purpose"` (e.g., "atmosphere mood ambient sound, Leave a lasting impression of the brand's premium noir aesthetic."). These produce random ambient noise instead of targeted effects like "soft fabric swoosh" or "camera shutter click".
 
-2. **No auto-trigger on draft restore**: When a completed project is restored via `loadDraft`, audio phase is set to `'idle'` but audio does NOT auto-generate. Users must manually find and click the "Generate Audio" button.
+3. **Player shot-tracking is imprecise** — Uses `timeupdate` event (~4Hz / every 250ms), which is too slow for 2-second shots. Audio can start 250ms late, and very short shots can be missed entirely.
 
-3. **15-minute gap**: Audio only triggers after the 15-minute video poll completes. If the user closes the tab during polling (common behavior), audio never runs, and the next visit only shows the idle button.
-
-4. **Old drafts have `audioMode: 'silent'`**: Projects created before the recent default change still carry `'silent'` in their persisted `settings_json`, making the button condition fail.
+4. **No TTS speed parameter** — ElevenLabs supports a `speed` parameter (0.7–1.2) but it's not being passed, so speech can't be compressed to fit shorter shots.
 
 ## Implementation Plan
 
-### 1. Move audio generation outside the fragile try block
-**File: `src/hooks/useShortFilmProject.ts`**
-- Move `generateAudio()` call out of the inner try-catch (line 851-898) so a DB update failure doesn't prevent audio
-- Add explicit `console.log` before the audio call for debugging
-- Wrap audio call in its own try-catch with specific error logging
+### 1. Duration-aware voiceover text (useShortFilmProject.ts)
+- Before sending to TTS, calculate a word budget based on shot duration (~2.5 words/second for natural speech)
+- If `script_line` exceeds the budget, use Lovable AI to rewrite it to fit the duration
+- Pass `speed` parameter to the TTS edge function (up to 1.2x for slightly long lines)
 
-### 2. Auto-generate audio on draft restore when missing
-**File: `src/hooks/useShortFilmProject.ts`**  
-- In `loadDraft`, after detecting `audioPhase === 'idle'` (audio expected but missing) AND all shots are complete, automatically call `generateAudio()` instead of just showing the button
-- This ensures users who return to a completed project get their audio without manual intervention
+### 2. Update TTS edge function to accept `speed` (elevenlabs-tts/index.ts)
+- Accept optional `speed` param from request body
+- Pass it through to ElevenLabs API as `voice_settings.speed`
 
-### 3. Add diagnostic logging to `generateAudio`
-**File: `src/hooks/useShortFilmProject.ts`**
-- Add `console.log` at entry: mode, shot count, project ID
-- Add `console.log` before each `fetch` call
-- Add `console.log` on response status from each ElevenLabs call
-- This will make future debugging possible via console logs
+### 3. Contextual SFX prompts (useShortFilmProject.ts)
+- Build specific SFX prompts based on shot role + scene_type:
+  - `hook` → "dramatic cinematic whoosh impact"
+  - `product_reveal` → "elegant reveal shimmer"
+  - `detail_closeup` → "soft mechanical focus click"
+  - `brand_finish` → "deep cinematic bass hit"
+  - etc.
+- Include shot context (camera_motion, subject_motion) for more precise results
 
-### 4. Force `audioMode` to `'full_mix'` when restoring old drafts with `'silent'`
-**File: `src/hooks/useShortFilmProject.ts`**
-- In `loadDraft`, if restored settings have `audioMode === 'silent'`, override to `'full_mix'`
-- This fixes old projects that were created with the previous default
+### 4. Precise audio scheduling in player (ShortFilmVideoPlayer.tsx)
+- Replace `timeupdate` listener with `requestAnimationFrame` loop for ~60Hz precision
+- Pre-load all per-shot audio elements on mount to eliminate playback delay
+- Schedule SFX with a small offset (0.1s) from shot start for cinematic feel
 
-### 5. Deploy edge functions to ensure they're live
-- Deploy `elevenlabs-music`, `elevenlabs-sfx`, `elevenlabs-tts` to confirm they're accessible
+### 5. Script line word-count validation in planner (shortFilmPlanner.ts)
+- Add duration-aware default `script_line` values — shorter lines for 2s shots, longer for 5s shots
+- Cap at ~2.5 words per second of shot duration
 
-### Files to Change
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/hooks/useShortFilmProject.ts` | Move audio call, add auto-trigger on restore, add logging, fix old draft audioMode |
+| `supabase/functions/elevenlabs-tts/index.ts` | Accept & pass `speed` parameter |
+| `src/hooks/useShortFilmProject.ts` | Duration-aware text trimming, contextual SFX prompts, speed calculation |
+| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Replace `timeupdate` with `requestAnimationFrame`, preload audio |
+| `src/lib/shortFilmPlanner.ts` | Duration-aware default script lines |
 
-### Technical Detail
-
-The critical code change in `startGeneration`:
-
-```
-// BEFORE (fragile — DB error kills audio):
-try {
-  ...video polling...
-  await supabase.from('video_projects').update(...)  // if this throws...
-  await generateAudio(...)  // ...this never runs
-} catch (err) { ... }
-
-// AFTER (resilient):  
-try {
-  ...video polling...
-} catch { ... }
-
-// Audio runs independently
-try {
-  await supabase.from('video_projects').update(...)
-} catch { console.error(...) }
-
-if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
-  try {
-    await generateAudio(currentProjectId, shots);
-  } catch (audioErr) {
-    console.error('[ShortFilm] Audio generation failed independently:', audioErr);
-  }
-}
-```
