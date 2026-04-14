@@ -859,7 +859,7 @@ export function useShortFilmProject() {
         draft_state_json: JSON.parse(JSON.stringify(draftState)),
       }).eq('id', currentProjectId!);
 
-      if (allSucceeded) {
+      if (generationSucceeded) {
         toast.success('Short film generation complete!');
       } else {
         toast.error('Film generation failed');
