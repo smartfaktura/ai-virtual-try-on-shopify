@@ -45,7 +45,7 @@ interface DraftState {
 
 const DEFAULT_SETTINGS: ShortFilmSettings = {
   aspectRatio: '16:9',
-  audioMode: 'silent',
+  audioMode: 'full_mix',
   preservationLevel: 'medium',
   shotDuration: '5',
   quality: 'pro',
@@ -204,6 +204,12 @@ export function useShortFilmProject() {
             if (restoredAssets.backgroundTrackUrl || restoredAssets.perShotAudio.length > 0) {
               setAudioAssets(restoredAssets);
               setAudioPhase('done');
+            } else {
+              // Audio was expected but missing — allow retry
+              const restoredSettings = d.settings || DEFAULT_SETTINGS;
+              if (restoredSettings.audioMode !== 'silent' && restoredSettings.audioMode !== 'ambient') {
+                setAudioPhase('idle');
+              }
             }
           }
         }
@@ -440,7 +446,7 @@ export function useShortFilmProject() {
       if (mode === 'music' || mode === 'full_mix') {
         setAudioPhase('music');
         const totalDuration = shotsToUse.reduce((sum, s) => sum + s.duration_sec, 0);
-        const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music for a ${filmType?.replace(/_/g, ' ')} film`;
+        const musicPrompt = settings.musicPrompt || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse);
         try {
           const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
             method: 'POST',
@@ -1006,6 +1012,25 @@ export function useShortFilmProject() {
     retryAudioForShot,
     previewAudio,
   };
+}
+
+/** Build a rich music prompt from film context */
+function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | undefined, shots: ShotPlanItem[]): string {
+  const type = filmType?.replace(/_/g, ' ') || 'cinematic';
+  const mood = tone || 'ambient';
+  const roles = [...new Set(shots.map(s => s.role))].slice(0, 4).join(', ');
+  const hasHook = shots.some(s => s.role === 'hook' || s.role === 'tease');
+  const hasClosing = shots.some(s => s.role === 'closing' || s.role === 'resolve');
+
+  let prompt = `cinematic ${mood} background music for a ${type} film`;
+  if (hasHook && hasClosing) {
+    prompt += ', slow building tension with elegant resolution';
+  } else if (hasHook) {
+    prompt += ', dramatic opening with rising intensity';
+  }
+  if (roles) prompt += `, featuring ${roles} moments`;
+  prompt += ', no vocals, professional production quality';
+  return prompt;
 }
 
 /** Get the best source image for a specific shot based on its source_reference_id or role */

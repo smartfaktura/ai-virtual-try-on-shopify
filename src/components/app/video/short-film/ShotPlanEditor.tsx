@@ -1,6 +1,7 @@
 import { ShotCard } from './ShotCard';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Sparkles, Cog, Loader2 } from 'lucide-react';
+import { Plus, RefreshCw, Sparkles, Cog, Loader2, Mic } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import type { ShotPlanItem } from '@/types/shortFilm';
 
 interface ReferenceOption {
@@ -97,18 +98,33 @@ export function ShotPlanEditor({
       ) : (
         <div className="space-y-2">
           {shots.map((shot, idx) => (
-            <ShotCard
-              key={`${shot.shot_index}-${idx}`}
-              shot={shot}
-              editable={editable}
-              onUpdate={(updated) => onUpdateShot?.(idx, updated)}
-              onDelete={() => onDeleteShot?.(idx)}
-              onMoveUp={() => onReorderShots?.(idx, idx - 1)}
-              onMoveDown={() => onReorderShots?.(idx, idx + 1)}
-              isFirst={idx === 0}
-              isLast={idx === shots.length - 1}
-              availableReferences={availableReferences}
-            />
+            <div key={`${shot.shot_index}-${idx}`} className="space-y-1">
+              <ShotCard
+                shot={shot}
+                editable={editable}
+                onUpdate={(updated) => onUpdateShot?.(idx, updated)}
+                onDelete={() => onDeleteShot?.(idx)}
+                onMoveUp={() => onReorderShots?.(idx, idx - 1)}
+                onMoveDown={() => onReorderShots?.(idx, idx + 1)}
+                isFirst={idx === 0}
+                isLast={idx === shots.length - 1}
+                availableReferences={availableReferences}
+              />
+              {editable && (
+                <div className="flex items-center gap-2 pl-10 pr-2">
+                  <Mic className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <Input
+                    value={shot.script_line || ''}
+                    onChange={e => onUpdateShot?.(idx, { ...shot, script_line: e.target.value || undefined })}
+                    placeholder="Voiceover narration for this shot..."
+                    className="text-xs h-7 bg-muted/30 border-muted"
+                  />
+                  <span className="text-[9px] text-muted-foreground shrink-0 w-8 text-right">
+                    {(shot.script_line || '').split(/\s+/).filter(Boolean).length}w
+                  </span>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
