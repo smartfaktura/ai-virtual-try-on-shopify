@@ -84,21 +84,38 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   const { upload, isUploading } = useFileUpload();
   const { user } = useAuth();
 
-  // --- Model sources ---
-  const { asProfiles: customModelProfiles, isLoading: customModelsLoading } = useCustomModels({ enabled: modelPickerOpen });
-  const { asProfiles: userModelProfiles, isLoading: userModelsLoading } = useUserModels({ enabled: modelPickerOpen });
+  // --- Model sources (eager load for inline grid) ---
+  const { asProfiles: customModelProfiles, isLoading: customModelsLoading } = useCustomModels();
+  const { asProfiles: userModelProfiles, isLoading: userModelsLoading } = useUserModels();
   const {
     sortModels, applyOverrides, applyNameOverrides, filterHidden,
     isLoading: sortLoading,
   } = useModelSortOrder();
 
   const allModels = useMemo(() => {
-    if (!modelPickerOpen) return [];
     const merged: ModelProfile[] = [...mockModels, ...customModelProfiles, ...userModelProfiles];
     return sortModels(filterHidden(applyNameOverrides(applyOverrides(merged))));
-  }, [modelPickerOpen, customModelProfiles, userModelProfiles, sortModels, filterHidden, applyNameOverrides, applyOverrides]);
+  }, [customModelProfiles, userModelProfiles, sortModels, filterHidden, applyNameOverrides, applyOverrides]);
 
-  const modelsLoading = modelPickerOpen && (customModelsLoading || userModelsLoading || sortLoading);
+  const modelsLoading = customModelsLoading || userModelsLoading || sortLoading;
+
+  // Inline preview: user models first, then custom, then built-in — max 8
+  const inlineModels = useMemo(() => {
+    const userFirst: ModelProfile[] = [];
+    const rest: ModelProfile[] = [];
+    for (const m of allModels) {
+      if (m.modelId.startsWith('user-') || m.modelId.startsWith('custom-')) {
+        userFirst.push(m);
+      } else {
+        rest.push(m);
+      }
+    }
+    return [...userFirst, ...rest].slice(0, 8);
+  }, [allModels]);
+
+  const selectedModelUrls = useMemo(() => {
+    return new Set(references.filter(r => r.role === 'model' && r.url).map(r => r.url));
+  }, [references]);
 
   const filteredModels = useMemo(() => {
     if (!modelSearch.trim()) return allModels;
