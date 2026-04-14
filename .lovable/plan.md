@@ -1,53 +1,67 @@
 
 
-# Fix Shot Duration Bug in Short Film
+# Fix Short Film: Support Variable Shot Durations and Up to 6 Shots
 
-## Problem
+## What's Wrong
 
-Kling's omni-video multi-shot endpoint has strict constraints:
-- **Max total duration**: 15 seconds
-- **Per-shot duration**: must be "5" or "10" (not arbitrary values like 3 or 4)
-- **Min 2 shots** for multi-shot mode
+The previous fix was overly restrictive. Kling's official omni-video API actually supports:
+- **1-6 shots** per multi-shot request
+- **Per-shot duration**: any integer from **1 to total duration** (not just 5 or 10)
+- **Total duration**: 3-15 seconds (v3-omni)
+- **Constraint**: sum of all shot durations must equal total duration
 
-The current code caps total duration to 15s but then `distributeShotDurations()` divides it evenly, producing invalid per-shot values (e.g., 4 shots × 10s = 40s → capped to 15s → distributed as 4,4,4,3 → Kling rejects these). Even with 5s selected, 4 shots = 20s → capped to 15s → distributed as 4,4,4,3 — still invalid.
+The current code hardcodes 3 shots max, 5s each — throwing away the ability to have 4-5 shots with cinematically varied pacing (e.g., a 2s hook, 4s reveal, 5s hero, 4s closing = 15s total).
 
-## Fix
+## Plan
 
-**Enforce "5s per shot" as the only multi-shot option** and **cap shot count to 3** (3×5=15s max). The "10s" option only works with 1 shot (which falls back to single-shot mode anyway).
+### 1. Restore 4-role story structures (`shortFilmPlanner.ts`)
+- Add back the 4th role to structures that were truncated (e.g., `hook_reveal_detail_closing` → `['hook', 'product_reveal', 'detail_closeup', 'brand_finish']`)
+- Remove the `slice(0, 3)` cap in `generateShotPlan`
+- Instead cap at 6 shots max
+- Assign **cinematic default durations** per role instead of flat 5s:
+  - `hook`/`tease`: 2s (short, punchy)
+  - `reveal`/`product_reveal`/`highlight`: 4s (hero moment)
+  - `detail_closeup`/`product_focus`: 3s
+  - `brand_finish`/`resolve`/`end_frame`: 3s
+  - `intro`/`atmosphere`: 3s
+  - `lifestyle`/`human_interaction`: 3s
+  - `build`: 2s
+- Ensure default durations sum to ≤15s per structure
 
-### Changes
+### 2. Update duration helpers (`shortFilmPromptBuilder.ts`)
+- `calculateTotalDuration`: sum actual `duration_sec` from shots (cap at 15)
+- `distributeShotDurations`: return each shot's own `duration_sec` (no longer force 5s)
+- Keep max 15s total validation
 
-**1. `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx`**
-- Remove the "10s per shot" button entirely, or show it as disabled with a tooltip explaining the 15s limit
-- Simpler: just remove it — short films are always 5s per shot
+### 3. Update generation payload (`useShortFilmProject.ts`)
+- Remove `slice(0, 3)` — cap at 6 shots instead
+- Use each shot's `duration_sec` directly in the payload
+- Validate total ≤ 15s before sending; if over, proportionally scale down
+- Pass correct `totalDuration` as sum of per-shot durations
 
-**2. `src/lib/shortFilmPromptBuilder.ts`**
-- `calculateTotalDuration`: remove the generic cap logic; just return `shotCount * 5`, capped at 15
-- `distributeShotDurations`: always return `5` for each shot (no fractional distribution)
-- Guard: max 3 shots (15s / 5s)
+### 4. Update settings panel (`ShortFilmSettingsPanel.tsx`)
+- Replace the static "5s per shot" label with dynamic info: e.g., "4 shots · 15s total (platform limit: 15s)"
+- No duration picker needed since each shot's duration is set in the shot plan editor
 
-**3. `src/hooks/useShortFilmProject.ts`**
-- When building `multishotPayload`, set each shot's duration to `5` (hardcoded safe value)
-- If shot plan has >3 shots, truncate to 3 before sending
+### 5. Update ShotCard duration input (`ShotCard.tsx`)
+- Change `max={10}` to `max={15}` (a single shot could be up to 15s if it's the only one)
+- Keep `min={1}` (Kling minimum per shot is 1s) — currently it's 3, needs to be 1
 
-**4. `src/lib/shortFilmPlanner.ts`**
-- Cap `defaultShotCount` values to max 3 for all film types (currently some are 4-5)
+### 6. Update AI planner prompt (`ai-shot-planner/index.ts`)
+- Update system prompt to say "2-6 shots" with variable durations summing to exactly 15s
+- Instruct it to use cinematic pacing (shorter hooks, longer hero shots)
 
-**5. `supabase/functions/ai-shot-planner/index.ts`**
-- Update the system prompt to say "Generate 2-3 shots" instead of "4-8 shots"
+### 7. Update custom structure description (`shortFilmPlanner.ts`)
+- Change "max 3" to "max 6" in the custom structure description
 
-**6. `src/types/shortFilm.ts`**
-- Change `shotDuration` type from `'5' | '10'` to just `'5'` (or keep for backwards compat but ignore)
-
-### Summary
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `ShortFilmSettingsPanel.tsx` | Remove 10s option from UI |
-| `shortFilmPromptBuilder.ts` | Hardcode 5s per shot, cap at 3 shots |
-| `useShortFilmProject.ts` | Force duration=5 per shot, truncate to 3 shots max |
-| `shortFilmPlanner.ts` | Cap defaultShotCount to 3 |
-| `ai-shot-planner/index.ts` | Change prompt to "2-3 shots" |
-| `shortFilm.ts` | Update type (optional) |
-| `videoCreditPricing.ts` | Remove `basePerShot10s` references |
+| `src/lib/shortFilmPlanner.ts` | Restore 4-role structures, add per-role default durations, cap at 6 |
+| `src/lib/shortFilmPromptBuilder.ts` | Use actual per-shot durations, validate total ≤ 15 |
+| `src/hooks/useShortFilmProject.ts` | Remove slice(0,3), use per-shot duration_sec, validate total |
+| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Dynamic duration info |
+| `src/components/app/video/short-film/ShotCard.tsx` | min=1, max=15 for duration input |
+| `supabase/functions/ai-shot-planner/index.ts` | 2-6 shots, variable durations, cinematic pacing |
 
