@@ -1,52 +1,85 @@
 
-Fix the remaining zoomed/cropped thumbnails in the Short Film References step by updating the selected-reference preview row, not the library dialog.
 
-What’s actually wrong
-- The library pickers were already corrected, but the small previews shown after selection in `src/components/app/video/short-film/ReferenceUploadPanel.tsx` still use one generic thumbnail template for every role:
-  - fixed `h-16 w-16`
-  - `object-cover`
-  - `getOptimizedUrl(..., { width: 128, quality: 60 })`
-- That combination crops products and models in the References step, which is why they still look zoomed even after the picker fixes.
+# Fix Short Film Generation: Prompt Length Exceeds Kling 512-Char Limit
 
-Implementation plan
+## Root Cause
 
-1. Update selected reference thumbnails in `ReferenceUploadPanel.tsx`
-- Replace the current single preview `<img>` block inside `sectionRefs.map(...)` with role-specific rendering.
+The actual error from the most recent failed job:
+```
+multiPrompt[0].prompt: size must be between 0 and 512
+```
 
-2. Match product preview behavior to product flows
-- For `product` references:
-  - keep a square card
-  - remove forced width from `getOptimizedUrl`
-  - use a white/muted background
-  - switch from `object-cover` to `object-contain`
-- This mirrors how product previews are shown in the product image flows, which avoids “zoomed in” crops for packshots and accessories.
+Kling's `omni-video` multi-shot endpoint has a **512 character hard limit per shot prompt**. The current `buildShotPrompt()` in `src/lib/shortFilmPromptBuilder.ts` concatenates ~12 sections of cinematic language (tone preset, image ref, role directive, purpose, lighting, lens, camera motion, subject motion, script line, preservation, aspect ratio hint, production footer) — producing prompts of 500–650 characters. Most exceed the limit.
 
-3. Match model preview behavior to model flows
-- For `model` references:
-  - use a portrait thumbnail (`aspect-[3/4]`) or a compact variant of the model card styling
-  - keep `object-cover`
-  - remove forced width from `getOptimizedUrl`
-- This matches how models are framed elsewhere and prevents face crops caused by stuffing model images into the same square crop as products.
+The prior `job_type` routing bug (already fixed) was the first failure. Once that was fixed, the prompts themselves became the blocker.
 
-4. Keep other roles sensible
-- `scene`, `style`, `logo` can stay compact, but should also avoid unnecessary width forcing.
-- Scene refs without URLs should keep the existing placeholder treatment.
+## Fix
 
-5. Preserve current UX
-- Keep remove button behavior, names under thumbnails, wrapping layout, and upload/dropzone behavior unchanged.
-- Only change thumbnail framing/rendering so the step remains visually stable.
+**File**: `src/lib/shortFilmPromptBuilder.ts` — `buildShotPrompt()` function
 
-Recommended code shape
-- Add a small helper like `renderReferencePreview(ref, section)` or a tiny local component to avoid inline conditional clutter.
-- Use role-based classes such as:
-  - product: square + `object-contain`
-  - model: `aspect-[3/4]` + `object-cover`
-  - fallback: square + `object-cover`
+Truncate each shot prompt to 512 characters maximum. The approach:
 
-Files to change
-- `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
+1. Build the prompt as today (all cinematic parts joined).
+2. Before returning, check if `prompt.length > 510`. If so, intelligently truncate:
+   - Keep the most important parts (image reference, role directive, purpose, camera motion).
+   - Drop the lower-priority padding (aspect ratio hint, production footer, preservation note, lighting/lens details).
+   - If still over 510, hard-truncate at 510 chars on a word boundary.
+3. This preserves the creative intent while respecting the API constraint.
 
-Expected result
-- Product thumbnails in `/app/video/short-film` → References will stop looking zoomed and will match product preview behavior.
-- Model thumbnails in the same step will use proper portrait framing instead of being cramped into the same square crop.
-- The “selected references” area will finally match the rest of the app, not just the picker dialogs.
+### Priority order for prompt sections (keep → drop):
+1. **Keep**: Image reference (`<<<image_N>>>`) — critical for visual consistency
+2. **Keep**: Role directive — defines the shot's narrative purpose  
+3. **Keep**: Purpose — user-defined shot intent
+4. **Keep**: Camera motion — defines movement
+5. **Drop if needed**: Tone preset (shorten to key phrase)
+6. **Drop if needed**: Lighting, lens, subject motion, script line, preservation, aspect ratio, footer
+
+### Implementation
+
+Replace the current linear concatenation with a priority-based builder that caps at 510 characters:
+
+```typescript
+export function buildShotPrompt(...): { prompt: string; negative_prompt: string } {
+  const MAX_PROMPT_LENGTH = 510;
+  
+  // Priority tiers — higher priority = included first
+  const priority1: string[] = []; // Must have
+  const priority2: string[] = []; // Important  
+  const priority3: string[] = []; // Nice to have
+  
+  // Image ref (P1)
+  if (imageIndex) priority1.push(`Feature subject from <<<image_${imageIndex}>>>.`);
+  
+  // Role directive + purpose (P1)
+  priority1.push(roleCine.directive);
+  priority1.push(shot.purpose);
+  
+  // Camera/subject motion (P2)
+  // Tone preset shortened (P2)
+  // Lighting, lens (P3)
+  // Footer, aspect, preservation (P3)
+  
+  // Build prompt adding tiers until at limit
+  let prompt = priority1.join(' ');
+  for (const part of [...priority2, ...priority3]) {
+    if ((prompt + ' ' + part).length > MAX_PROMPT_LENGTH) break;
+    prompt += ' ' + part;
+  }
+  
+  // Hard truncate safety net
+  if (prompt.length > MAX_PROMPT_LENGTH) {
+    prompt = prompt.slice(0, MAX_PROMPT_LENGTH).replace(/\s\S*$/, '');
+  }
+  
+  return { prompt, negative_prompt: allNegatives.join(', ') };
+}
+```
+
+## Files to Change
+
+| File | Change |
+|------|--------|
+| `src/lib/shortFilmPromptBuilder.ts` | Rewrite `buildShotPrompt` with priority-based 510-char cap |
+
+No edge function changes needed — the backend is correct now. This is purely a client-side prompt construction issue.
+
