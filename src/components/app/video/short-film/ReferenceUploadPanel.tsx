@@ -744,8 +744,8 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
           <ModelSelectorCard
             key={m.modelId}
             model={m}
-            isSelected={false}
-            onSelect={() => pickModel(m)}
+            isSelected={selectedModelUrls.has(m.previewUrl)}
+            onSelect={() => toggleModel(m)}
           />
         )}
         emptyText="No models available yet."
