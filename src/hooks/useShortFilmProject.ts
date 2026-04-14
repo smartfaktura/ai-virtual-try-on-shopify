@@ -683,7 +683,7 @@ export function useShortFilmProject() {
         prev.map(s => s.shot_index === shotIndex ? { ...s, [statusKey]: 'failed' } : s)
       );
     }
-  }, [user, shots, settings.voiceId, projectId, uploadAudioToStorage]);
+  }, [user, shots, settings.voiceId, projectId, uploadAudioToStorage, references]);
 
   // ─── Preview audio (short sample) ─────────────────────────
   const previewAudio = useCallback(async (): Promise<string | null> => {
