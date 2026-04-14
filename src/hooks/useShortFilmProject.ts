@@ -302,9 +302,12 @@ export function useShortFilmProject() {
     });
 
     try {
-      const { data: enqueueResult, error: enqueueError } = await supabase.functions.invoke('generate-video', {
-        body: {
-          action: 'create',
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+
+      const result = await enqueueWithRetry({
+        jobType: 'video',
+        payload: {
           image_url: sourceImageUrl || '',
           prompt,
           duration: settings.shotDuration,
@@ -316,30 +319,31 @@ export function useShortFilmProject() {
           project_id: projectId,
           workflow_type: 'short_film',
         },
-      });
+        imageCount: 1,
+      }, token);
 
-      if (enqueueError) throw new Error(enqueueError.message);
-
-      const taskId = enqueueResult?.task_id || enqueueResult?.kling_task_id;
-      const videoId = enqueueResult?.video_id;
-
-      if (taskId && videoId) {
-        const resultUrl = await pollShotCompletion(videoId, 60);
-        setShotStatuses(prev =>
-          prev.map(s =>
-            s.shot_index === shotIndex
-              ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
-              : s
-          )
-        );
-        if (resultUrl) {
-          await supabase
-            .from('video_shots')
-            .update({ status: 'complete', result_url: resultUrl })
-            .eq('project_id', projectId)
-            .eq('shot_index', shotIndex);
-        }
+      if (isEnqueueError(result)) {
+        throw new Error(result.message);
       }
+
+      sendWake(token);
+
+      const resultUrl = await pollQueueJobCompletion(result.jobId, 60);
+      setShotStatuses(prev =>
+        prev.map(s =>
+          s.shot_index === shotIndex
+            ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
+            : s
+        )
+      );
+      if (resultUrl) {
+        await supabase
+          .from('video_shots')
+          .update({ status: 'complete', result_url: resultUrl })
+          .eq('project_id', projectId)
+          .eq('shot_index', shotIndex);
+      }
+      refreshBalance();
     } catch (err) {
       console.error(`[ShortFilm] Retry shot ${shotIndex} failed:`, err);
       setShotStatuses(prev =>
@@ -347,7 +351,7 @@ export function useShortFilmProject() {
       );
       toast.error(`Shot ${shotIndex} retry failed`);
     }
-  }, [projectId, user, filmType, shots, settings, references]);
+  }, [projectId, user, filmType, shots, settings, references, refreshBalance]);
 
   // ─── Upload audio blob to storage ─────────────────────────────
   const uploadAudioToStorage = useCallback(async (blob: Blob, filename: string): Promise<string | null> => {
