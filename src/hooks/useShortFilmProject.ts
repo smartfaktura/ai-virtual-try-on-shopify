@@ -21,6 +21,14 @@ interface ShotStatus {
   result_url?: string;
 }
 
+export interface AudioShotStatus {
+  shot_index: number;
+  sfx: 'idle' | 'generating' | 'done' | 'failed';
+  voiceover: 'idle' | 'generating' | 'done' | 'failed';
+}
+
+export type AudioPhase = 'idle' | 'music' | 'sfx' | 'voiceover' | 'done';
+
 interface DraftState {
   step: ShortFilmStep;
   filmType: FilmType | null;
