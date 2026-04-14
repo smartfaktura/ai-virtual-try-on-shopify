@@ -167,7 +167,15 @@ export function useShortFilmProject() {
         setStoryStructure(d.storyStructure || null);
         setReferences(d.references || []);
         setShots(d.shots || []);
-        setSettings(d.settings || DEFAULT_SETTINGS);
+        
+        // Force old 'silent' drafts to 'full_mix' so audio generation works
+        const restoredSettings = d.settings || DEFAULT_SETTINGS;
+        if (restoredSettings.audioMode === 'silent') {
+          console.log('[ShortFilm] Old draft had audioMode=silent, upgrading to full_mix');
+          restoredSettings.audioMode = 'full_mix';
+        }
+        setSettings(restoredSettings);
+        
         setPlanMode(d.planMode || 'ai');
         setCustomRoles(d.customRoles || []);
         setDraftProjectId(data.id);
@@ -205,9 +213,9 @@ export function useShortFilmProject() {
               setAudioAssets(restoredAssets);
               setAudioPhase('done');
             } else {
-              // Audio was expected but missing — allow retry
-              const restoredSettings = d.settings || DEFAULT_SETTINGS;
+              // Audio was expected but missing — set idle so user can trigger
               if (restoredSettings.audioMode !== 'silent' && restoredSettings.audioMode !== 'ambient') {
+                console.log('[ShortFilm] Audio missing on restored draft — setting phase to idle for retry');
                 setAudioPhase('idle');
               }
             }
