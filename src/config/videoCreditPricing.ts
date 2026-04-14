@@ -20,6 +20,13 @@ export const VIDEO_CREDIT_RULES = {
     ambient: 4,
     voice: 10,
   },
+  shortFilm: {
+    basePerShot5s: 10,
+    basePerShot10s: 18,
+    ambient: 4,
+    voice: 12,
+    planningFee: 5,     // AI shot-plan generation
+  },
 } as const;
 
 export type VideoWorkflowType = 'animate' | 'adSequence' | 'consistentModel';

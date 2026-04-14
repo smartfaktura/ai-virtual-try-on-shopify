@@ -40,6 +40,7 @@ const MobileUpload = lazy(() => import('@/pages/MobileUpload'));
 const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
 const VideoHub = lazy(() => import('@/pages/VideoHub'));
 const AnimateVideo = lazy(() => import('@/pages/video/AnimateVideo'));
+const ShortFilm = lazy(() => import('@/pages/video/ShortFilm'));
 const Freestyle = lazy(() => import('@/pages/Freestyle'));
 const CatalogHub = lazy(() => import('@/pages/CatalogHub'));
 const CatalogGenerate = lazy(() => import('@/pages/CatalogGenerate'));
