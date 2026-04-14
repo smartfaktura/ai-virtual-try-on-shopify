@@ -474,10 +474,11 @@ export function useShortFilmProject() {
   // ─── Audio generation ────────────────────────────────────────
   const generateAudio = useCallback(async (targetProjectId?: string, currentShots?: ShotPlanItem[]) => {
     if (!user) return;
-    const mode = settings.audioMode;
-    console.log('[ShortFilm Audio] generateAudio called — mode:', mode, 'shots:', (currentShots || shots).length, 'projectId:', targetProjectId || projectId);
-    if (mode === 'silent' || mode === 'ambient') {
-      console.log('[ShortFilm Audio] Skipping — mode is', mode);
+    const layers = getEffectiveLayers(settings);
+    const anyLayerOn = layers.music || layers.sfx || layers.voiceover;
+    console.log('[ShortFilm Audio] generateAudio called — layers:', layers, 'shots:', (currentShots || shots).length);
+    if (!anyLayerOn) {
+      console.log('[ShortFilm Audio] Skipping — all layers disabled');
       return;
     }
 
