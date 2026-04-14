@@ -1,71 +1,48 @@
 
 
-# Fix Kling Logic Issues + Expand Scene & Style Presets
+# Audit: Short Film Prompt Engineering Pipeline — Issues & Fixes
 
-## Logic Problems Found
+## Issues Found
 
-### 1. ROLE_CINEMATICS key mismatch with actual system roles
-The `ROLE_CINEMATICS` map in `shortFilmPromptBuilder.ts` uses **old shorthand keys** (`hero`, `detail`, `closing`, `reveal`, `transition`) that don't match the **actual system roles** used in shot plans (`product_reveal`, `detail_closeup`, `brand_finish`, etc.). When `buildShotPrompt` looks up `ROLE_CINEMATICS[shot.role]` for a role like `product_reveal`, it falls back to `DEFAULT_CINEMATIC` — losing all the rich lighting/lens/directive instructions.
+### Critical Bug 1: `with_audio` still uses deprecated `audioMode` in main generation
+**Line 980** in `useShortFilmProject.ts`: `with_audio: settings.audioMode === 'ambient'` — this was fixed for `retryShotGeneration` but NOT for the main `startGeneration` multi-shot payload. Since `audioMode` is deprecated in favor of `audioLayers`, this always evaluates to `false` (Kling native audio is never requested).
 
-**Fix**: Rename keys to match system roles AND add aliases so both work.
+### Critical Bug 2: `tonePresetText` never sent to AI Director
+The edge function accepts `tonePresetText` (line 140) to give the AI rich cinematographic guidance per film type (e.g., "sleek commercial film, premium product reveal..."), but the hook never passes it. The `TONE_PRESETS` map exists in `shortFilmPromptBuilder.ts` but is only used during Kling prompt building — the AI Director never receives it, so its creative decisions lack film-type-specific visual direction.
 
-### 2. `addShot()` uses invalid enum values
-Line 1074-1076: `role: 'detail'`, `scene_type: 'product_closeup'`, `camera_motion: 'slow_push'` — none of these are valid system values. Should be `role: 'detail_closeup'`, `scene_type: 'macro_closeup'`, `camera_motion: 'slow_push_in'`.
+### Issue 3: Scene reference descriptions not injected into `buildShotPrompt`
+The prompt builder reads style preset keywords from references (`role === 'style'`), but completely ignores scene references (`role === 'scene'`). A user selecting "Japanese Zen Garden" or "Parisian Cafe" gets zero injection into the Kling prompt. Only the scene_type enum label (e.g., "product hero") is added — which is generic, not the rich description from the preset.
 
-### 3. `retryShotGeneration` uses single-shot fallback with wrong model
-Line 415: Uses `model_name: 'kling-v3'` and `with_audio: settings.audioMode === 'ambient'` — should check `audioLayers` not deprecated `audioMode`. Also the retry enqueues as `video` job type (single shot) when the original was `video_multishot` — this won't produce matching output.
+### Issue 4: `audio_mode` persisted in `video_shots` instead of `audioLayers`
+Line 912: `audio_mode: settings.audioMode` — still using the deprecated field. Should persist the layer info.
 
-### 4. `settings_json` persists deprecated `audioMode` instead of `audioLayers`
-Lines 844-846 and 862-864 in `startGeneration` save `audioMode` to `settings_json` but never save `audioLayers`.
+### Issue 5: Style/scene keywords truncated too aggressively
+In `buildShotPrompt`, scene and style keywords are in priority tier P2 — they get dropped quickly when prompt approaches 510 chars. For a system that depends on these for visual accuracy, they should be P1 (after image reference and role directive).
 
-### 5. Music timing cues not reaching SFX generation
-SFX offset is computed correctly in `generateAudio` but `retryAudioForShot` (line 751) doesn't include `offset_sec` when re-adding to `perShotAudio`.
-
-### 6. Scene/Style presets are limited (16 each)
-User wants more trending options.
+### Issue 6: No scene description in prompt for text-only scene presets
+Line 250-253 only adds `Scene style: macro closeup.` (the raw scene_type enum). It doesn't inject the actual scene preset description like "Raked sand patterns, moss-covered stones, soft natural overcast light, bamboo accents." The rich description data exists in references but is never pulled into the prompt.
 
 ## Changes
 
-### File: `src/lib/shortFilmPromptBuilder.ts`
-- **Rename all `ROLE_CINEMATICS` keys** to match system roles: `hook`→keep, `reveal`→`product_reveal`, `detail`→`detail_closeup`, `closing`→`brand_finish`, `product`→`product_moment`, `lifestyle`→`lifestyle_moment`, `focus`→`product_focus`, `human`→`human_interaction`, `finish`→`end_frame`, `hero`→`highlight`
-- Add a lookup function that tries the exact role key first, then falls back to a shortened alias (for custom roles)
-- Keep the rich cinematic directives, just fix the keys
-
 ### File: `src/hooks/useShortFilmProject.ts`
-- Fix `addShot()`: use valid role/scene_type/camera_motion values
-- Fix `retryShotGeneration`: use `audioLayers` instead of `audioMode` for `with_audio`
-- Fix `startGeneration` settings_json: persist `audioLayers` alongside `audioMode`
-- Fix `retryAudioForShot`: compute and pass `offset_sec` from timing manifest
+1. **Fix `with_audio`** (line 980): Change from `settings.audioMode === 'ambient'` to `!!(getEffectiveLayers(settings).sfx)` — consistent with retry logic
+2. **Send `tonePresetText`** to AI Director: Look up `TONE_PRESETS[filmType]` and pass it in the `ai-shot-planner` invoke body
+3. **Fix `audio_mode` in shot rows** (line 912): Persist `audioLayers` object instead of deprecated string
+4. Import `TONE_PRESETS` from `shortFilmPromptBuilder.ts` (needs to be exported)
 
-### File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
-- **Expand `STYLE_MOOD_PRESETS`** from 16 to 24 — add 8 trending styles:
-  - "ASMR Tactile" (satisfying texture sounds, close-up fingertip contact)
-  - "Y2K Chrome" (reflective metallic, iridescent, early-2000s aesthetic)
-  - "Wes Anderson Pastel" (symmetrical framing, pastel palette, whimsical)
-  - "Film Noir Revival" (deep contrast, venetian blind shadows, moody)
-  - "Analog Warmth" (VHS scanlines, warm halation, retro handheld)
-  - "Brutalist Clean" (raw concrete, geometric shadow, minimal)
-  - "Dreamy Vaseline" (soft lens diffusion, halation glow, romantic)
-  - "High-Speed Freeze" (frozen motion, splash/shatter mid-air, ultra-sharp)
-
-- **Expand `VIDEO_SCENE_PRESETS`** from 16 to 24 — add 8 trending scenes:
-  - "Japanese Zen Garden" (raked sand, moss stones, soft natural light)
-  - "Parisian Cafe" (warm interior, vintage furniture, soft morning light)
-  - "Snow-Covered Alps" (cold blue light, fresh powder, vast mountain scale)
-  - "Underground Parking" (fluorescent overhead, concrete pillars, gritty urban)
-  - "Art Gallery White Cube" (track-lit walls, polished floor, curated space)
-  - "Tropical Pool Villa" (turquoise water, palm shadows, warm golden hour)
-  - "Industrial Workshop" (metal sparks, heavy machinery, raw textures)
-  - "Cherry Blossom Path" (pink petals falling, soft overcast light, Japanese aesthetic)
+### File: `src/lib/shortFilmPromptBuilder.ts`
+1. **Export `TONE_PRESETS`** so the hook can send it to AI Director
+2. **Inject scene preset description into prompt**: Look for `role === 'scene'` references and extract the full description (after `:` separator), inject as P1.5 (between P1 and P2) — ensuring the Kling prompt matches the user's chosen environment
+3. **Promote style keywords to P1**: Move style preset injection from P2 to immediately after role directive — these are user-selected creative choices and should not be truncated
+4. **Add scene mood context**: When scene reference has a description, append environmental lighting/atmosphere cues to complement the role cinematics
 
 ### File: `supabase/functions/ai-shot-planner/index.ts`
-- No changes needed — the edge function already uses correct system roles
+No changes needed — it already accepts `tonePresetText` and uses it correctly when provided.
 
 ## Technical Summary
 
 | File | Change |
 |------|--------|
-| `src/lib/shortFilmPromptBuilder.ts` | Fix ROLE_CINEMATICS keys to match system roles |
-| `src/hooks/useShortFilmProject.ts` | Fix addShot invalid values, audioMode→audioLayers in persist/retry, offset_sec in retryAudio |
-| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Add 8 new style presets + 8 new scene presets (16→24 each) |
+| `src/hooks/useShortFilmProject.ts` | Fix `with_audio` in main generation; send `tonePresetText` to AI Director; fix `audio_mode` persistence |
+| `src/lib/shortFilmPromptBuilder.ts` | Export `TONE_PRESETS`; inject scene preset descriptions into Kling prompts; promote style/scene to higher priority tier |
 
