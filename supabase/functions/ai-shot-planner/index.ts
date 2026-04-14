@@ -6,42 +6,125 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/* ── Valid system enums ──────────────────────────────────────── */
+
+const VALID_ROLES = [
+  "hook", "intro", "tease", "atmosphere", "build",
+  "product_reveal", "product_moment", "product_focus",
+  "detail_closeup", "highlight", "lifestyle_moment",
+  "human_interaction", "resolve", "brand_finish", "end_frame",
+];
+
+const VALID_SCENE_TYPES = [
+  "atmospheric_lifestyle", "studio_reveal", "macro_closeup", "hero_end_frame",
+  "establishing_wide", "product_hero", "lifestyle_context", "end_card",
+  "mood_abstract", "studio_detail", "lifestyle_interaction", "abstract_tease",
+  "dynamic_sequence", "hero_spotlight", "resolve_wide",
+];
+
+const VALID_CAMERA_MOTIONS = [
+  "slow_drift", "slow_push_in", "micro_pan", "static", "slow_pan",
+  "orbit", "handheld_gentle", "tracking", "push_in", "pull_back",
+];
+
+const ROLE_ALIAS_MAP: Record<string, string> = {
+  hero: "product_reveal",
+  detail: "detail_closeup",
+  closing: "brand_finish",
+  lifestyle: "lifestyle_moment",
+  transition: "atmosphere",
+  reveal: "product_reveal",
+  focus: "product_focus",
+  finale: "brand_finish",
+  opener: "hook",
+  teaser: "tease",
+  end: "end_frame",
+  product: "product_moment",
+  interaction: "human_interaction",
+};
+
+const SFX_TRIGGER_DEFAULTS: Record<string, number> = {
+  hook: 0,
+  tease: 0,
+  product_reveal: 0.5,
+  highlight: 0.3,
+  closing: 0,
+  brand_finish: 0,
+  end_frame: 0,
+};
+
+function snapToValidValue(val: string, validList: string[], fallback: string): string {
+  if (validList.includes(val)) return val;
+  // Try partial match
+  const lower = val.toLowerCase().replace(/[\s-]/g, "_");
+  const match = validList.find(v => v === lower || lower.includes(v) || v.includes(lower));
+  return match || fallback;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { filmType, storyStructure, shotDuration, tone, referenceDescriptions } = await req.json();
+    const {
+      filmType, storyStructure, shotDuration, tone,
+      referenceDescriptions, customRoles, structureRoles,
+      filmDescription, tonePresetText, stylePresetNames, scenePresetNames,
+    } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    // Determine the role sequence the AI must follow
+    const roleSequence: string[] =
+      storyStructure === "custom" && Array.isArray(customRoles) && customRoles.length > 0
+        ? customRoles.slice(0, 6)
+        : Array.isArray(structureRoles) && structureRoles.length > 0
+          ? structureRoles.slice(0, 6)
+          : ["hook", "product_reveal", "detail_closeup", "brand_finish"];
+
     const systemPrompt = `You are a cinematic short film director specializing in brand and product films.
-Given a film type, story structure, and optional tone/references, generate a creative shot plan.
-Return ONLY a valid JSON array of shot objects. Each shot object must have exactly these fields:
+You MUST generate shots that follow the EXACT role sequence provided. Do NOT invent your own roles.
+
+VALID ROLES (use ONLY these): ${VALID_ROLES.join(", ")}
+
+VALID SCENE TYPES: ${VALID_SCENE_TYPES.join(", ")}
+
+VALID CAMERA MOTIONS: ${VALID_CAMERA_MOTIONS.join(", ")}
+
+Return ONLY a valid JSON array of shot objects. Each shot object MUST have exactly these fields:
 - shot_index (number, 1-based)
-- role (string: "hook", "hero", "detail", "lifestyle", "closing", "transition", "atmosphere")
+- role (string: MUST match the role from the provided sequence)
 - purpose (string: 1-sentence description of what this shot achieves)
-- scene_type (string: "product_closeup", "product_hero", "lifestyle_wide", "detail_macro", "atmosphere_mood", "human_interaction", "environment_pan")
-- camera_motion (string: "slow_push", "orbit", "static", "pull_back", "crane_up", "dolly_slide", "handheld_drift")
-- subject_motion (string: "static", "subtle_rotation", "slow_reveal", "human_gesture", "product_interaction", "environment_motion")
+- scene_type (string: from the valid scene types list above)
+- camera_motion (string: from the valid camera motions list above)
+- subject_motion (string: "minimal", "ambient", "natural_movement")
 - duration_sec (number: integer 1-15, use cinematic pacing — hooks/teases: 2s, hero reveals: 4-5s, details: 3s, closings: 3s)
 - product_visible (boolean)
 - character_visible (boolean)
 - preservation_strength ("low" | "medium" | "high")
-- script_line (string: a SHORT voiceover narration line for this shot, 5-15 words, matching the shot mood and purpose)
-- sfx_prompt (string: a descriptive sound effect prompt for this shot, 5-20 words, describing the exact ambient/impact/transition sound that should play — match the scene environment and mood)
+- script_line (string: SHORT voiceover narration, 5-15 words, matching the shot mood)
+- sfx_prompt (string: descriptive sound effect prompt, 5-20 words, matching scene environment and mood)
+- sfx_trigger_at (number: offset in seconds from shot start when SFX should trigger — 0 for immediate, 0.3-0.5 for reveals)
 
-Generate 3-5 shots with varied cinematic pacing. The total of all duration_sec values MUST equal exactly 15 seconds. Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments. Maximum 6 shots. Vary camera motions and scene types for cinematic interest.
+The total of all duration_sec values MUST equal exactly 15 seconds.
+Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments.
+Vary camera motions and scene types for cinematic interest.
+Every shot MUST have a compelling script_line AND an sfx_prompt with matching atmospheric sound.`;
 
-IMPORTANT: Every shot MUST have a script_line with a compelling voiceover narration AND an sfx_prompt with a matching atmospheric sound effect.`;
-
-    const userPrompt = `Film type: ${filmType}
+    const userPrompt = `Film type: ${filmType}${filmDescription ? ` — ${filmDescription}` : ""}
 Story structure: ${storyStructure}
+REQUIRED ROLE SEQUENCE (follow this exactly): ${roleSequence.join(" → ")}
 Target total duration: 15 seconds
+Number of shots: ${roleSequence.length}
 ${tone ? `Tone/mood: ${tone}` : ""}
+${tonePresetText ? `Tone cinematography guidance: ${tonePresetText}` : ""}
+${stylePresetNames ? `Selected visual style: ${stylePresetNames}` : ""}
+${scenePresetNames ? `Selected scene environment: ${scenePresetNames}` : ""}
 ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
 
-Generate the shot plan as a JSON array. Remember: each shot needs its own duration_sec (use cinematic pacing, NOT equal splits), a script_line for voiceover, and an sfx_prompt for sound effects.`;
+Generate exactly ${roleSequence.length} shots following the role sequence: ${roleSequence.join(", ")}.
+Each shot's "role" field MUST match the corresponding role in the sequence.
+Remember: cinematic pacing (NOT equal splits), script_line for voiceover, sfx_prompt for sound effects, and sfx_trigger_at for timing.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -87,21 +170,32 @@ Generate the shot plan as a JSON array. Remember: each shot needs its own durati
 
     const shots = JSON.parse(jsonMatch[0]);
 
-    // Validate and sanitize
-    const validShots = shots.map((s: any, i: number) => ({
-      shot_index: i + 1,
-      role: s.role || "detail",
-      purpose: s.purpose || "Shot",
-      scene_type: s.scene_type || "product_hero",
-      camera_motion: s.camera_motion || "slow_push",
-      subject_motion: s.subject_motion || "static",
-      duration_sec: Math.max(1, Math.min(15, Number(s.duration_sec) || 3)),
-      product_visible: s.product_visible ?? true,
-      character_visible: s.character_visible ?? false,
-      preservation_strength: s.preservation_strength || "medium",
-      script_line: s.script_line || `Shot ${i + 1} narration.`,
-      sfx_prompt: s.sfx_prompt || `subtle cinematic ambient sound, ${Math.max(1, Math.min(15, Number(s.duration_sec) || 3))} seconds`,
-    }));
+    // Validate and sanitize — snap roles to valid system roles
+    const validShots = shots.map((s: any, i: number) => {
+      // Map role: try exact match, then alias, then use sequence role
+      let role = s.role || roleSequence[i] || "detail_closeup";
+      if (!VALID_ROLES.includes(role)) {
+        role = ROLE_ALIAS_MAP[role] || roleSequence[i] || "detail_closeup";
+      }
+
+      return {
+        shot_index: i + 1,
+        role,
+        purpose: s.purpose || "Shot",
+        scene_type: snapToValidValue(s.scene_type || "", VALID_SCENE_TYPES, "product_hero"),
+        camera_motion: snapToValidValue(s.camera_motion || "", VALID_CAMERA_MOTIONS, "slow_push_in"),
+        subject_motion: s.subject_motion || "minimal",
+        duration_sec: Math.max(1, Math.min(15, Number(s.duration_sec) || 3)),
+        product_visible: s.product_visible ?? true,
+        character_visible: s.character_visible ?? false,
+        preservation_strength: s.preservation_strength || "medium",
+        script_line: s.script_line || `Shot ${i + 1} narration.`,
+        sfx_prompt: s.sfx_prompt || `subtle cinematic ambient sound`,
+        sfx_trigger_at: typeof s.sfx_trigger_at === "number"
+          ? Math.max(0, Math.min(5, s.sfx_trigger_at))
+          : (SFX_TRIGGER_DEFAULTS[role] ?? 0),
+      };
+    });
 
     // Verify total doesn't exceed 15s
     const total = validShots.reduce((sum: number, s: any) => sum + s.duration_sec, 0);
