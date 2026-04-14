@@ -282,41 +282,13 @@ export default function ShortFilm() {
             )}
 
             {allDone && completedClips.length > 0 && (
-              <>
-                {showPreview ? (
-                  <ShortFilmVideoPlayer clips={completedClips} audioAssets={audioAssets} shots={shotsMeta} />
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 h-9"
-                    onClick={() => setShowPreview(true)}
-                  >
-                    <Play className="h-3.5 w-3.5" />
-                    Preview Film
-                  </Button>
-                )}
-              </>
-            )}
-
-            {allDone && completedClips.length > 0 && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <h3 className="text-sm font-semibold text-foreground">Your Short Film</h3>
-                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={downloadAllClips}>
-                    <Download className="h-3.5 w-3.5" />
-                    Download
-                  </Button>
-                </div>
-                <div className="rounded-xl border border-border bg-card overflow-hidden">
-                  <video
-                    src={completedClips[0].url}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="w-full aspect-video bg-black"
-                  />
-                </div>
+                <ShortFilmVideoPlayer
+                  clips={completedClips}
+                  audioAssets={audioAssets}
+                  shots={shotsMeta}
+                  onDownload={downloadAllClips}
+                />
                 {/* Shot breakdown metadata */}
                 <div className="space-y-1">
                   <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
