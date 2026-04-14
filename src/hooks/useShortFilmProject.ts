@@ -72,7 +72,7 @@ export function useShortFilmProject() {
           storyStructure,
           shotDuration: settings.shotDuration,
           tone: settings.tone || '',
-          referenceDescriptions: references.map(r => `${r.role}: ${r.label || r.url}`).join('; '),
+          referenceDescriptions: references.map(r => `${r.role}: ${r.name || r.url}`).join('; '),
         },
       });
       if (error) throw new Error(error.message);
