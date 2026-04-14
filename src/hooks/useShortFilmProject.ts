@@ -1046,15 +1046,39 @@ export function useShortFilmProject() {
   };
 }
 
-/** Build a rich music prompt from film context */
-function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | undefined, shots: ShotPlanItem[]): string {
+/** Build a rich music prompt from film context, incorporating style references */
+function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | undefined, shots: ShotPlanItem[], refs?: ReferenceAsset[]): string {
   const type = filmType?.replace(/_/g, ' ') || 'cinematic';
   const mood = tone || 'ambient';
   const roles = [...new Set(shots.map(s => s.role))].slice(0, 4).join(', ');
   const hasHook = shots.some(s => s.role === 'hook' || s.role === 'tease');
   const hasClosing = shots.some(s => s.role === 'closing' || s.role === 'resolve');
 
-  let prompt = `cinematic ${mood} background music for a ${type} film`;
+  // Extract style keywords from selected style references
+  const styleKeywords = (refs || [])
+    .filter(r => r.role === 'style')
+    .map(r => r.name?.split(':')[0]?.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  // Extract scene context from scene references
+  const sceneKeywords = (refs || [])
+    .filter(r => r.role === 'scene')
+    .map(r => r.name?.split(':')[0]?.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  let prompt = '';
+  if (styleKeywords.length > 0) {
+    prompt = `${styleKeywords.join(', ')} style background music for a ${type} film`;
+  } else {
+    prompt = `cinematic ${mood} background music for a ${type} film`;
+  }
+
+  if (sceneKeywords.length > 0) {
+    prompt += `, set in ${sceneKeywords.join(' and ')} environment`;
+  }
+
   if (hasHook && hasClosing) {
     prompt += ', slow building tension with elegant resolution';
   } else if (hasHook) {
@@ -1065,8 +1089,8 @@ function buildContextualMusicPrompt(filmType: FilmType | null, tone: string | un
   return prompt;
 }
 
-/** Build contextual SFX prompt based on shot role and motion */
-function buildContextualSfxPrompt(shot: ShotPlanItem): string {
+/** Build contextual SFX prompt based on shot role, motion, and scene references */
+function buildContextualSfxPrompt(shot: ShotPlanItem, refs?: ReferenceAsset[]): string {
   const ROLE_SFX: Record<string, string> = {
     hook: 'dramatic cinematic whoosh impact with bass hit',
     tease: 'subtle mysterious tension riser, soft wind',
@@ -1099,7 +1123,16 @@ function buildContextualSfxPrompt(shot: ShotPlanItem): string {
   };
 
   const motionExtra = motionSfx[shot.camera_motion] || '';
-  return `${baseSfx}${motionExtra}, ${shot.duration_sec} seconds, professional cinematic quality`;
+
+  // Incorporate scene reference context
+  const sceneContext = (refs || [])
+    .filter(r => r.role === 'scene')
+    .map(r => r.name?.split(':')[0]?.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  const sceneExtra = sceneContext.length > 0 ? `, ${sceneContext.join(', ')} ambience` : '';
+
+  return `${baseSfx}${motionExtra}${sceneExtra}, ${shot.duration_sec} seconds, professional cinematic quality`;
 }
 
 /** Fit voiceover text to shot duration with word-budget trimming and speed adjustment */

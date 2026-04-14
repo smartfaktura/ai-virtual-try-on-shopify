@@ -26,6 +26,7 @@ export interface ShotPlanItem {
   subject_motion: string;
   duration_sec: number;
   script_line?: string;
+  sfx_prompt?: string;
   product_visible: boolean;
   character_visible: boolean;
   scene_reference_id?: string;
