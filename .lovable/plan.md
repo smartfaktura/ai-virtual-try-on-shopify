@@ -1,40 +1,50 @@
 
 
-# Improve Model Selection UX in Short Film References
+# Import 24 Activewear Scenes from RTF
 
-## Current Problem
-The Model/Character section in the short film reference panel is just a dashed upload zone with "Drop images or browse" and an "All" button that opens a full-screen dialog. This is unintuitive — users don't realize they can pick from existing models inline. The product images step 3 has a much better UX with an inline grid of model cards.
+## What This Does
+Insert 24 new activewear scenes into the `product_image_scenes` table via the database insert tool. All scenes are mapped to `category_collection = 'activewear'` with `category_sort_order = 25`. The existing 21 activewear scenes remain untouched since the new scene IDs don't conflict.
 
-## Changes
+## Data Summary
 
-### 1. Add inline model preview grid (`ReferenceUploadPanel.tsx`)
+| # | scene_id | Sub-Category | Type | Sort |
+|---|----------|-------------|------|------|
+| 1 | activewear-editorial-floor-pose | Editorial Sport Poses | editorial | 2501 |
+| 2 | activewear-editorial-standing-elongation | Editorial Sport Poses | editorial | 2502 |
+| 3 | activewear-editorial-chair-core-pose | Editorial Sport Poses | editorial | 2503 |
+| 4 | activewear-editorial-windowlight-pilates | Editorial Sport Poses | editorial | 2504 |
+| 5 | activewear-editorial-body-detail-crop | Editorial Sport Poses | editorial | 2505 |
+| 6 | activewear-editorial-balance-pose | Editorial Sport Poses | editorial | 2506 |
+| 7 | activewear-gym-mirror-ugc | Gym / Court / Outdoor UGC | lifestyle | 2507 |
+| 8 | activewear-court-sports-ugc | Gym / Court / Outdoor UGC | lifestyle | 2508 |
+| 9 | activewear-outdoor-wellness-ugc | Gym / Court / Outdoor UGC | lifestyle | 2509 |
+| 10 | activewear-cafe-errand-sport | Gym / Court / Outdoor UGC | lifestyle | 2510 |
+| 11 | activewear-travel-sport-ugc | Gym / Court / Outdoor UGC | lifestyle | 2511 |
+| 12 | activewear-studio-corner-ugc | Gym / Court / Outdoor UGC | lifestyle | 2512 |
+| 13 | activewear-flatlay-set-neat | Product Flat Lay / Gear Still | stilllife | 2513 |
+| 14 | activewear-gear-tray-still | Product Flat Lay / Gear Still | stilllife | 2514 |
+| 15 | activewear-bedside-soft-still | Product Flat Lay / Gear Still | stilllife | 2515 |
+| 16 | activewear-product-hanger-still | Product Flat Lay / Gear Still | stilllife | 2516 |
+| 17 | activewear-shoes-mat-still | Product Flat Lay / Gear Still | stilllife | 2517 |
+| 18 | activewear-wellness-objects-still | Product Flat Lay / Gear Still | stilllife | 2518 |
+| 19 | activewear-powderblue-portrait | Aesthetic Color Sport Sets | editorial | 2519 |
+| 20 | activewear-powderblue-court-story | Aesthetic Color Sport Sets | editorial | 2520 |
+| 21 | activewear-powderblue-soft-gym | Aesthetic Color Sport Sets | editorial | 2521 |
+| 22 | activewear-powderblue-flatlay-story | Aesthetic Color Sport Sets | stilllife | 2522 |
+| 23 | activewear-powderblue-ugc-mirror | Aesthetic Color Sport Sets | lifestyle | 2523 |
+| 24 | activewear-powderblue-hero-finisher | Aesthetic Color Sport Sets | campaign | 2524 |
 
-Replace the bare Model/Character section with an inline grid showing the first 6-8 models from the library (prioritizing user's brand models). Each card uses the existing `ModelSelectorCard` component with click-to-select. A "View All" link opens the full modal for more options.
+## Implementation
 
-**Before**: Upload zone only, "All" button opens dialog
-**After**: 
-- Inline row of 6 model thumbnails (brand models first, then library)
-- Click to add as reference, selected models show checkmark
-- "View All →" link opens the full picker dialog
-- Upload zone remains below for custom uploads
+1. **Use the database insert tool** to run a single `INSERT INTO product_image_scenes` statement with all 24 rows, including full `prompt_template`, `trigger_blocks` array, `outfit_hint`, `sub_category`, `sub_category_sort_order` (0-3 for the 4 groups), and `is_active = true`.
 
-### 2. Show selected models prominently
+2. **No code changes needed** — the existing `useProductImageScenes` hook and `buildCollections()` function already handle dynamic categories from the database. The TITLE_MAP in the hook already has an `activewear` entry mapped to "Activewear & Sportswear".
 
-Currently selected model references are shown as tiny 12px-wide thumbnails mixed with other refs. Improve to show them as proper cards with name labels, matching the product images pattern.
+3. **No migration needed** — this is a data insert, not a schema change.
 
-### 3. Preload model data eagerly
-
-Currently `useCustomModels` and `useUserModels` are only fetched when `modelPickerOpen` is true. Change to always fetch (lightweight query) so the inline grid renders immediately without requiring the dialog to open first.
-
-### 4. Fix: remove stale voice/audio references
-
-Quick audit items to clean up:
-- Verify `ShortFilmSettingsPanel.tsx` has no leftover voice picker references
-- Ensure the `audioLayers` toggles in `FilmTypeSelector.tsx` correctly pass through to the hook
-
-## Files Modified
-
-| File | Change |
-|------|--------|
-| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Add inline model grid with 6-8 cards, "View All" link, eager data loading, improved selected model display |
+## Sub-Category Sort Orders
+- Editorial Sport Poses → `sub_category_sort_order = 0`
+- Gym / Court / Outdoor UGC → `sub_category_sort_order = 1`
+- Product Flat Lay / Gear Still → `sub_category_sort_order = 2`
+- Aesthetic Color Sport Sets → `sub_category_sort_order = 3`
 
