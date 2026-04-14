@@ -14,6 +14,7 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   workflow: "generate-workflow",
   upscale: "upscale-worker",
   video: "generate-video",
+  video_multishot: "generate-video",
   catalog: "generate-catalog",
   "text-product": "generate-text-product",
 };
