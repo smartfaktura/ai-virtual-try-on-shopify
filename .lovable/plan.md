@@ -1,47 +1,87 @@
 
 
-# Short Film — Phase 5: Save Drafts, Project History, and Polish
+# Short Film — Audio Layer with ElevenLabs Integration
 
-## Current Status (Phases 1–4 complete)
-The Short Film workflow has: 6-step UI with stepper, film type + story structure selectors, real reference uploads with Scene/Model Library pickers, interactive shot plan editor (reorder, inline edit, add/delete), AI Director mode via edge function, tone override, credits badge, real generation via `generate-video` with DB persistence and polling, retry for failed shots, "Start Over" reset, and a sequential preview player.
+## Overview
+Add a full audio production layer to the Short Film workflow using ElevenLabs for AI Music, Sound Effects, and Voiceover generation. All audio plays client-side via `<audio>` sync with the existing `ShortFilmVideoPlayer` — no server-side stitching.
 
-## What to build next
+## Prerequisites
+- Connect the **ElevenLabs connector** to the project (no ElevenLabs connection exists yet). This provides `ELEVENLABS_API_KEY` as a secret for edge functions.
 
-### 1. Save & Load Draft Projects
-The `draft_state_json` column already exists on `video_projects`. Wire it up:
-- Add a "Save Draft" button (visible from step 2 onward) that persists the current form state (filmType, storyStructure, references, shots, settings, planMode, current step) to a `video_projects` row with `status: 'draft'`
-- On page load, check for the user's latest draft and offer a "Resume Draft" prompt
-- Loading a draft restores all state and jumps to the saved step
+## What gets built
 
-### 2. Project History List
-Add a small "My Films" section at the top of the Short Film page (or a collapsible panel) that lists the user's previous `video_projects` with `workflow_type: 'short_film'`. Show title, status (draft / processing / complete), date, and shot count. Clicking a completed project shows its clips; clicking a draft resumes it.
+### 1. Three Edge Functions for ElevenLabs
 
-### 3. Per-Shot Source Image Selection
-Currently all shots use the same source image (first product or scene reference). Allow each shot to optionally pick a different reference image from the uploaded set — useful for multi-product films or varied scenes. Add a small image selector dropdown on each `ShotCard` in edit mode.
+**`elevenlabs-music`** — Generate a background music track from a text prompt (e.g. "cinematic ambient for luxury fashion film, 30 seconds"). The prompt is auto-composed from film type + tone on the backend. Returns binary MP3.
 
-### 4. Custom Story Structure Builder
-When the user picks "Custom" structure, show an inline builder where they can add/remove/reorder roles (from a preset palette of ~15 roles) to compose their own narrative arc before generating the shot plan.
+**`elevenlabs-sfx`** — Generate per-shot sound effects from text descriptions (e.g. "wind through fabric", "footsteps on marble"). Up to 22s per effect. Returns binary MP3.
 
-### 5. Export & Share
-After generation completes, add:
-- "Download All" button that downloads each clip individually (zip not needed — sequential download)
-- "Copy Link" that creates a shareable public link to the project (requires a new `is_public` column on `video_projects` and a public viewer page)
+**`elevenlabs-tts`** — Convert `script_line` text per shot into spoken voiceover using a selected ElevenLabs voice. Returns binary MP3.
 
-## Implementation order
-1. Save & Load Drafts (highest user value, column already exists)
-2. Project History List (leverages draft + completed data)
-3. Per-shot source image selection (improves generation quality)
-4. Custom structure builder (advanced users)
-5. Export & share (polish)
+All three functions validate input with Zod, verify JWT, and include proper CORS headers.
+
+### 2. Updated Audio Mode UI
+
+Expand `audioMode` in settings from 3 options to 5:
+- **Silent** — no audio (existing)
+- **Ambient** — passed to Kling during generation (existing)
+- **Music** — AI-generated background track via ElevenLabs
+- **Voiceover** — AI narration from script lines via ElevenLabs TTS
+- **Full Mix** — Music + SFX + Voiceover layered together
+
+When "Music" or "Full Mix" is selected, show a text input for music mood/style prompt (auto-filled from film type + tone, editable).
+
+When "Voiceover" or "Full Mix" is selected, show a voice picker dropdown (preset list of ~10 ElevenLabs voices with labels like "Roger — warm male", "Sarah — clear female").
+
+### 3. Audio Generation Step
+
+After video generation completes, if audioMode is music/voiceover/full_mix, trigger audio generation:
+- **Music**: One API call to `elevenlabs-music` with a prompt derived from film type + tone + total duration
+- **SFX**: One call per shot to `elevenlabs-sfx` using shot purpose/scene_type as prompt
+- **Voiceover**: One call per shot (that has a `script_line`) to `elevenlabs-tts`
+
+Store generated audio as blob URLs in state. Show a small progress indicator ("Generating audio...").
+
+### 4. Audio-Synced Preview Player
+
+Upgrade `ShortFilmVideoPlayer` to accept optional audio tracks:
+- `backgroundTrackUrl` — plays continuously across all clips (music)
+- `perShotAudio` — array of `{ shotIndex, url, type: 'sfx' | 'voiceover' }` that play/pause in sync with each clip
+
+Use an `<audio>` element ref for the background track. On play/pause/skip, sync audio playback position. Per-shot audio starts when the matching clip begins and pauses when it ends.
+
+Add a simple volume mixer UI below the player: sliders for Music, SFX, and Voice volume levels.
+
+### 5. Type Updates
+
+```text
+ShortFilmSettings.audioMode: 'silent' | 'ambient' | 'music' | 'voiceover' | 'full_mix'
+ShortFilmSettings.musicPrompt?: string
+ShortFilmSettings.voiceId?: string
+
+New interface AudioAssets {
+  backgroundTrackUrl?: string;
+  perShotAudio: { shotIndex: number; url: string; type: 'sfx' | 'voiceover' }[];
+}
+```
 
 ## Files to create/change
 
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/hooks/useShortFilmProject.ts` | Add `saveDraft()`, `loadDraft()`, per-shot source image logic |
-| `src/pages/video/ShortFilm.tsx` | Add "Save Draft" button, "Resume Draft" prompt, project history panel |
-| `src/components/app/video/short-film/ShortFilmProjectList.tsx` | New — lists user's short film projects |
-| `src/components/app/video/short-film/ShotCard.tsx` | Add source image selector in edit mode |
-| `src/components/app/video/short-film/CustomStructureBuilder.tsx` | New — drag-to-compose custom story roles |
-| `src/components/app/video/short-film/StoryStructureSelector.tsx` | Integrate custom builder when "Custom" is selected |
+| `supabase/functions/elevenlabs-music/index.ts` | New — music generation edge function |
+| `supabase/functions/elevenlabs-sfx/index.ts` | New — SFX generation edge function |
+| `supabase/functions/elevenlabs-tts/index.ts` | New — TTS voiceover edge function |
+| `src/types/shortFilm.ts` | Add new audio modes, `musicPrompt`, `voiceId`, `AudioAssets` |
+| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Expand audio options, add music prompt input + voice picker |
+| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Add audio sync, background track, per-shot audio, volume mixer |
+| `src/hooks/useShortFilmProject.ts` | Add `generateAudio()` logic, store audio assets in state |
+| `src/pages/video/ShortFilm.tsx` | Wire audio generation after video completes, pass audio to player |
+
+## Implementation order
+1. Connect ElevenLabs connector
+2. Create three edge functions (music, sfx, tts)
+3. Update types and settings UI
+4. Add audio generation logic in hook
+5. Upgrade preview player with audio sync + volume mixer
 
