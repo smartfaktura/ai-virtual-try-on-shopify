@@ -298,6 +298,7 @@ export function useShortFilmProject() {
           filmDescription: filmOption?.description || '',
           stylePresetNames: stylePresetNames || undefined,
           scenePresetNames: scenePresetNames || undefined,
+          audioLayers: settings.audioLayers || { music: true, sfx: true, voiceover: true },
         },
       });
       if (error) throw new Error(error.message);
