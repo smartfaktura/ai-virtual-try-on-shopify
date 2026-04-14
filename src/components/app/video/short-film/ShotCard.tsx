@@ -9,6 +9,50 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const SCENE_TYPE_OPTIONS = [
+  { value: 'product_hero', label: 'Product Hero' },
+  { value: 'product_closeup', label: 'Product Close-up' },
+  { value: 'macro_closeup', label: 'Macro Close-up' },
+  { value: 'studio_reveal', label: 'Studio Reveal' },
+  { value: 'studio_detail', label: 'Studio Detail' },
+  { value: 'lifestyle_context', label: 'Lifestyle Context' },
+  { value: 'lifestyle_interaction', label: 'Lifestyle Interaction' },
+  { value: 'establishing_wide', label: 'Establishing Wide' },
+  { value: 'mood_abstract', label: 'Mood / Abstract' },
+  { value: 'hero_spotlight', label: 'Hero Spotlight' },
+  { value: 'dynamic_sequence', label: 'Dynamic Sequence' },
+  { value: 'end_card', label: 'End Card' },
+  { value: 'atmosphere_mood', label: 'Atmosphere' },
+  { value: 'environment_pan', label: 'Environment Pan' },
+  { value: 'human_interaction', label: 'Human Interaction' },
+  { value: 'fashion_runway', label: 'Fashion Runway' },
+  { value: 'beauty_macro', label: 'Beauty Macro' },
+  { value: 'sports_action', label: 'Sports Action' },
+  { value: 'food_detail', label: 'Food Detail' },
+  { value: 'architecture_wide', label: 'Architecture Wide' },
+  { value: 'nature_ambient', label: 'Nature Ambient' },
+  { value: 'abstract_tease', label: 'Abstract Tease' },
+  { value: 'hero_end_frame', label: 'Hero End Frame' },
+  { value: 'resolve_wide', label: 'Resolve Wide' },
+  { value: 'atmospheric_lifestyle', label: 'Atmospheric Lifestyle' },
+  { value: 'general', label: 'General' },
+];
+
+const SUBJECT_MOTION_OPTIONS = [
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'none', label: 'None' },
+  { value: 'natural_movement', label: 'Natural Movement' },
+  { value: 'ambient', label: 'Ambient' },
+  { value: 'dynamic', label: 'Dynamic' },
+  { value: 'slow_reveal', label: 'Slow Reveal' },
+];
+
+const PRESERVATION_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+];
+
 interface ReferenceOption {
   id: string;
   url: string;
