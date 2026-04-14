@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { generateShotPlan, FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
-import { buildShotPrompt, estimateShortFilmCredits, distributeShotDurations } from '@/lib/shortFilmPromptBuilder';
+import { buildShotPrompt, estimateShortFilmCredits, distributeShotDurations, TONE_PRESETS } from '@/lib/shortFilmPromptBuilder';
 import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
 import type {
   FilmType,
@@ -292,6 +292,7 @@ export function useShortFilmProject() {
           storyStructure,
           shotDuration: settings.shotDuration,
           tone: settings.tone || '',
+          tonePresetText: TONE_PRESETS[filmType] || TONE_PRESETS.custom,
           referenceDescriptions: refParts.join('; '),
           customRoles: storyStructure === 'custom' ? customRoles : undefined,
           structureRoles,
@@ -909,7 +910,7 @@ export function useShortFilmProject() {
           duration_sec: shot.duration_sec,
           status: 'pending',
           shot_role: shot.role,
-          audio_mode: settings.audioMode,
+          audio_mode: JSON.stringify(settings.audioLayers || { music: true, sfx: true, voiceover: true }),
           model_route: 'kling_v3',
           strategy_json: {
             camera_motion: shot.camera_motion,
@@ -977,7 +978,7 @@ export function useShortFilmProject() {
             total_duration: totalDuration,
             aspect_ratio: settings.aspectRatio,
             mode: 'pro',
-            with_audio: settings.audioMode === 'ambient',
+            with_audio: !!(settings.audioLayers?.sfx ?? true),
             project_id: currentProjectId,
             image_urls: imageUrls,
           },

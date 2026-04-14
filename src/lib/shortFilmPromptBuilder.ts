@@ -9,7 +9,7 @@ interface PromptContext {
 }
 
 /* ─── Cinematic tone presets per film type ─── */
-const TONE_PRESETS: Record<string, string> = {
+export const TONE_PRESETS: Record<string, string> = {
   product_launch:
     'sleek commercial film, premium product reveal, high-end advertising aesthetic, anamorphic lens flare',
   brand_story:
@@ -234,6 +234,19 @@ export function buildShotPrompt(
   p1.push(roleCine.directive);
   p1.push(shot.purpose);
 
+  // Priority 1.5 — user-selected style & scene presets (high priority, should not be truncated)
+  const styleRef = context.references?.find(r => r.role === 'style' && !r.url && r.name);
+  if (styleRef?.name) {
+    const keywords = styleRef.name.includes(':') ? styleRef.name.split(':').slice(1).join(':').trim() : styleRef.name;
+    if (keywords) p1.push(`Visual style: ${keywords}.`);
+  }
+
+  const sceneRef = context.references?.find(r => r.role === 'scene' && !r.url && r.name);
+  if (sceneRef?.name) {
+    const sceneDesc = sceneRef.name.includes(':') ? sceneRef.name.split(':').slice(1).join(':').trim() : sceneRef.name;
+    if (sceneDesc) p1.push(`Environment: ${sceneDesc}.`);
+  }
+
   // Priority 2 — important
   const p2: string[] = [];
   if (shot.camera_motion && shot.camera_motion !== 'static') {
@@ -246,22 +259,8 @@ export function buildShotPrompt(
     p2.push(shot.user_notes);
   }
 
-  // Inject scene type description for text-only scene presets
-  const sceneTypeLabel = shot.scene_type?.replace(/_/g, ' ');
-  if (sceneTypeLabel && sceneTypeLabel !== 'general') {
-    p2.push(`Scene style: ${sceneTypeLabel}.`);
-  }
-
   const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
   p2.push(`Cinematic 4K ${tonePreset}.`);
-
-  // Inject style/mood preset keywords from references
-  const styleRef = context.references?.find(r => r.role === 'style' && !r.url && r.name);
-  if (styleRef?.name) {
-    // name format: "Title: keyword1, keyword2, ..."
-    const keywords = styleRef.name.includes(':') ? styleRef.name.split(':').slice(1).join(':').trim() : styleRef.name;
-    if (keywords) p2.push(`Visual style: ${keywords}.`);
-  }
 
   // Priority 3 — nice to have
   const p3: string[] = [];
