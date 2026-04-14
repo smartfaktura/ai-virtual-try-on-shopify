@@ -47,16 +47,16 @@ async function getUserId(req: Request): Promise<string> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized");
 
-  const supabase = createClient(
+  const supabaseAuth = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_ANON_KEY")!,
     { global: { headers: { Authorization: authHeader } } }
   );
 
   const token = authHeader.replace("Bearer ", "");
-  const { data, error } = await supabase.auth.getClaims(token);
-  if (error || !data?.claims) throw new Error("Unauthorized");
-  return data.claims.sub as string;
+  const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
+  if (error || !user) throw new Error("Unauthorized");
+  return user.id;
 }
 
 // --- Helper: download video from Kling and save to storage ---
