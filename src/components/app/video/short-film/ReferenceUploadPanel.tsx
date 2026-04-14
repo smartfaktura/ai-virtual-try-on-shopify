@@ -242,7 +242,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                       <img
                         src={getOptimizedUrl(ref.url, { width: 128, quality: 60 })}
                         alt={ref.name || section.label}
-                        className="h-16 w-16 rounded-lg object-cover border border-border"
+                        className="h-16 w-16 rounded-lg object-contain bg-muted/30 border border-border"
                         loading="lazy"
                       />
                       <button
@@ -317,13 +317,13 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             onClick={() => pickModel(m)}
             className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
-            <ShimmerImage
-              src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })}
-              alt={m.name}
-              className="w-full h-full object-contain"
-              aspectRatio="3/4"
-              wrapperClassName="bg-muted/30 rounded-t-lg"
-            />
+            <div className="aspect-[3/4] bg-muted/30 rounded-t-lg overflow-hidden">
+              <ShimmerImage
+                src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })}
+                alt={m.name}
+                className="w-full h-full object-contain"
+              />
+            </div>
             <p className="text-xs font-medium text-foreground p-2 truncate">{m.name}</p>
           </button>
         )}
@@ -414,13 +414,13 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             onClick={() => pickProduct(p)}
             className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
-            <ShimmerImage
-              src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
-              alt={p.title}
-              className="w-full h-full object-contain"
-              aspectRatio="1/1"
-              wrapperClassName="bg-white rounded-t-lg"
-            />
+            <div className="aspect-square bg-white rounded-t-lg overflow-hidden">
+              <ShimmerImage
+                src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
+                alt={p.title}
+                className="w-full h-full object-contain"
+              />
+            </div>
             <p className="text-xs font-medium text-foreground p-2 truncate">{p.title}</p>
           </button>
         )}
@@ -437,13 +437,13 @@ function SceneCard({ scene, onPick }: { scene: { id: string; title: string; prev
       onClick={() => onPick(scene)}
       className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
-      <ShimmerImage
-        src={getOptimizedUrl(scene.previewUrl, { width: 200, quality: 60 })}
-        alt={scene.title}
-        className="w-full h-full object-contain"
-        aspectRatio="1/1"
-        wrapperClassName="bg-muted/30 rounded-t-lg"
-      />
+      <div className="aspect-square bg-muted/30 rounded-t-lg overflow-hidden">
+        <ShimmerImage
+          src={getOptimizedUrl(scene.previewUrl, { width: 200, quality: 60 })}
+          alt={scene.title}
+          className="w-full h-full object-contain"
+        />
+      </div>
       <p className="text-xs font-medium text-foreground p-2 truncate">{scene.title}</p>
     </button>
   );
