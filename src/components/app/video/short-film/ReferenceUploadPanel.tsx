@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Upload, X, Image as ImageIcon, Users, MapPin, Palette, Library, Loader2, Package, Search } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Users, MapPin, Palette, Library, Loader2, Package, Search, Trash2, Plus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -18,11 +18,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { ModelProfile } from '@/types';
 
+export type ProductSubRole = 'main' | 'back' | 'side' | 'packaging' | 'inside' | 'texture' | 'extra';
+
 export interface ReferenceAsset {
   id: string;
   url: string;
   role: 'product' | 'scene' | 'model' | 'style' | 'logo';
   name?: string;
+  subRole?: ProductSubRole;
+  productId?: string;
 }
 
 interface ReferenceUploadPanelProps {
@@ -30,8 +34,16 @@ interface ReferenceUploadPanelProps {
   onChange: (refs: ReferenceAsset[]) => void;
 }
 
-const SECTIONS = [
-  { role: 'product' as const, label: 'Product References', icon: Package, description: 'Upload hero product images for consistent appearance.', libraryType: 'product' as const },
+const ANGLE_SLOTS: { subRole: ProductSubRole; label: string; dbField?: string }[] = [
+  { subRole: 'main', label: 'Main' },
+  { subRole: 'back', label: 'Back', dbField: 'back_image_url' },
+  { subRole: 'side', label: 'Side', dbField: 'side_image_url' },
+  { subRole: 'packaging', label: 'Packaging', dbField: 'packaging_image_url' },
+  { subRole: 'inside', label: 'Inside', dbField: 'inside_image_url' },
+  { subRole: 'texture', label: 'Texture', dbField: 'texture_image_url' },
+];
+
+const NON_PRODUCT_SECTIONS = [
   { role: 'scene' as const, label: 'Scene References', icon: MapPin, description: 'Add environment or location references.', libraryType: 'scene' as const },
   { role: 'model' as const, label: 'Model / Character', icon: Users, description: 'Optional — add character reference images.', libraryType: 'model' as const },
   { role: 'style' as const, label: 'Style / Mood', icon: Palette, description: 'Upload visual tone or mood references.', libraryType: 'style' as const },
@@ -40,20 +52,31 @@ const SECTIONS = [
 
 const PAGE_SIZE = 24;
 
+interface FullProduct {
+  id: string;
+  title: string;
+  image_url: string;
+  back_image_url?: string | null;
+  side_image_url?: string | null;
+  packaging_image_url?: string | null;
+  inside_image_url?: string | null;
+  texture_image_url?: string | null;
+  extra_image_urls?: string[];
+}
+
 export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPanelProps) {
   const [dragRole, setDragRole] = useState<string | null>(null);
   const [uploadingRole, setUploadingRole] = useState<string | null>(null);
+  const [uploadingSlot, setUploadingSlot] = useState<string | null>(null); // productId:subRole
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [scenePickerOpen, setScenePickerOpen] = useState(false);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
 
-  // Search state per picker
   const [modelSearch, setModelSearch] = useState('');
   const [sceneSearch, setSceneSearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
 
-  // Visible count per picker (load-more)
   const [modelVisible, setModelVisible] = useState(PAGE_SIZE);
   const [sceneVisible, setSceneVisible] = useState(PAGE_SIZE);
   const [productVisible, setProductVisible] = useState(PAGE_SIZE);
@@ -61,7 +84,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   const { upload, isUploading } = useFileUpload();
   const { user } = useAuth();
 
-  // --- Model sources (on-demand: only fetch when dialog opens) ---
+  // --- Model sources ---
   const { asProfiles: customModelProfiles, isLoading: customModelsLoading } = useCustomModels({ enabled: modelPickerOpen });
   const { asProfiles: userModelProfiles, isLoading: userModelsLoading } = useUserModels({ enabled: modelPickerOpen });
   const {
@@ -83,7 +106,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     return allModels.filter(m => m.name.toLowerCase().includes(q));
   }, [allModels, modelSearch]);
 
-  // --- Style / Mood presets ---
+  // --- Style presets ---
   const STYLE_MOOD_PRESETS = useMemo(() => [
     { id: 'sm-1', title: 'Cinematic Noir', keywords: 'Deep blacks, high contrast, chiaroscuro lighting, film noir shadows, moody desaturated palette' },
     { id: 'sm-2', title: 'Golden Hour Warmth', keywords: 'Warm amber tones, long soft shadows, golden backlight, sun-kissed skin, dreamy lens flare' },
@@ -97,7 +120,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     { id: 'sm-10', title: 'Natural Documentary', keywords: 'Available light, authentic grain, handheld intimacy, realistic color, raw unpolished beauty' },
   ], []);
 
-  // --- Video-optimized scene presets (text-described, no images) ---
+  // --- Scene presets ---
   const VIDEO_SCENE_PRESETS = useMemo(() => [
     { id: 'vs-1', title: 'Minimalist Studio', description: 'Clean white studio with soft directional shadows and subtle gradient backdrop.', mood: 'premium' },
     { id: 'vs-2', title: 'Golden Hour Terrace', description: 'Warm golden sunset light on an outdoor stone terrace with blurred cityscape.', mood: 'luxury' },
@@ -119,23 +142,22 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     return VIDEO_SCENE_PRESETS.filter(s => s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
   }, [VIDEO_SCENE_PRESETS, sceneSearch]);
 
-  // --- User products (on-demand, paginated) ---
+  // --- User products with ALL angle fields ---
   const { data: userProducts, isLoading: productsLoading } = useQuery({
-    queryKey: ['user-products-ref-picker', user?.id],
+    queryKey: ['user-products-ref-picker-full', user?.id],
     queryFn: async () => {
-      // Fetch all products in pages of 500 to avoid 1000-row cap
-      let all: { id: string; title: string; image_url: string }[] = [];
+      let all: FullProduct[] = [];
       let from = 0;
       const batchSize = 500;
       while (true) {
         const { data, error } = await supabase
           .from('user_products')
-          .select('id, title, image_url')
+          .select('id, title, image_url, back_image_url, side_image_url, packaging_image_url, inside_image_url, texture_image_url, extra_image_urls')
           .order('created_at', { ascending: false })
           .range(from, from + batchSize - 1);
         if (error) throw error;
         if (!data || data.length === 0) break;
-        all = all.concat(data as { id: string; title: string; image_url: string }[]);
+        all = all.concat(data as FullProduct[]);
         if (data.length < batchSize) break;
         from += batchSize;
       }
@@ -151,6 +173,22 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     const q = productSearch.toLowerCase();
     return userProducts.filter(p => p.title.toLowerCase().includes(q));
   }, [userProducts, productSearch]);
+
+  // --- Grouped product references ---
+  const productGroups = useMemo(() => {
+    const productRefs = references.filter(r => r.role === 'product' && r.productId);
+    const groups = new Map<string, { name: string; refs: ReferenceAsset[] }>();
+    productRefs.forEach(ref => {
+      const pid = ref.productId!;
+      if (!groups.has(pid)) groups.set(pid, { name: ref.name || 'Product', refs: [] });
+      groups.get(pid)!.refs.push(ref);
+    });
+    return groups;
+  }, [references]);
+
+  const customProductRefs = useMemo(() => 
+    references.filter(r => r.role === 'product' && !r.productId),
+  [references]);
 
   // Reset search + visible count when dialogs open/close
   const openModelPicker = useCallback(() => {
@@ -170,19 +208,31 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   }, []);
 
   const handleFileUpload = useCallback(
-    async (role: ReferenceAsset['role'], files: FileList | null) => {
+    async (role: ReferenceAsset['role'], files: FileList | null, opts?: { subRole?: ProductSubRole; productId?: string }) => {
       if (!files || files.length === 0) return;
-      setUploadingRole(role);
+      if (opts?.productId && opts?.subRole) {
+        setUploadingSlot(`${opts.productId}:${opts.subRole}`);
+      } else {
+        setUploadingRole(role);
+      }
 
       const newRefs: ReferenceAsset[] = [];
       for (const file of Array.from(files)) {
         const url = await upload(file);
         if (url) {
-          newRefs.push({ id: crypto.randomUUID(), url, role, name: file.name });
+          newRefs.push({
+            id: crypto.randomUUID(),
+            url,
+            role,
+            name: file.name,
+            subRole: opts?.subRole,
+            productId: opts?.productId,
+          });
         }
       }
       if (newRefs.length > 0) onChange([...references, ...newRefs]);
       setUploadingRole(null);
+      setUploadingSlot(null);
     },
     [references, onChange, upload]
   );
@@ -197,7 +247,6 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
 
   const pickScene = useCallback(
     (scene: { id: string; title: string; description?: string }) => {
-      // Text-described scenes don't have image URLs — store description as name
       onChange([...references, { id: crypto.randomUUID(), url: '', role: 'scene', name: `${scene.title}: ${scene.description || ''}` }]);
       setScenePickerOpen(false);
     },
@@ -205,8 +254,38 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   );
 
   const pickProduct = useCallback(
-    (product: { id: string; title: string; image_url: string }) => {
-      onChange([...references, { id: crypto.randomUUID(), url: product.image_url, role: 'product', name: product.title }]);
+    (product: FullProduct) => {
+      const newRefs: ReferenceAsset[] = [];
+      const pid = product.id;
+      const name = product.title;
+
+      // Main image always
+      newRefs.push({ id: crypto.randomUUID(), url: product.image_url, role: 'product', name, subRole: 'main', productId: pid });
+
+      // Add all available angle images
+      if (product.back_image_url) {
+        newRefs.push({ id: crypto.randomUUID(), url: product.back_image_url, role: 'product', name, subRole: 'back', productId: pid });
+      }
+      if (product.side_image_url) {
+        newRefs.push({ id: crypto.randomUUID(), url: product.side_image_url, role: 'product', name, subRole: 'side', productId: pid });
+      }
+      if (product.packaging_image_url) {
+        newRefs.push({ id: crypto.randomUUID(), url: product.packaging_image_url, role: 'product', name, subRole: 'packaging', productId: pid });
+      }
+      if (product.inside_image_url) {
+        newRefs.push({ id: crypto.randomUUID(), url: product.inside_image_url, role: 'product', name, subRole: 'inside', productId: pid });
+      }
+      if (product.texture_image_url) {
+        newRefs.push({ id: crypto.randomUUID(), url: product.texture_image_url, role: 'product', name, subRole: 'texture', productId: pid });
+      }
+      // Extra images
+      if (product.extra_image_urls && product.extra_image_urls.length > 0) {
+        product.extra_image_urls.forEach((url) => {
+          newRefs.push({ id: crypto.randomUUID(), url, role: 'product', name, subRole: 'extra', productId: pid });
+        });
+      }
+
+      onChange([...references, ...newRefs]);
       setProductPickerOpen(false);
     },
     [references, onChange]
@@ -214,6 +293,11 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
 
   const removeRef = useCallback(
     (id: string) => onChange(references.filter((r) => r.id !== id)),
+    [references, onChange]
+  );
+
+  const removeProductGroup = useCallback(
+    (productId: string) => onChange(references.filter(r => !(r.role === 'product' && r.productId === productId))),
     [references, onChange]
   );
 
@@ -232,6 +316,9 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     else if (type === 'style') setStylePickerOpen(true);
   };
 
+  // Count how many products are added
+  const productCount = productGroups.size + (customProductRefs.length > 0 ? 1 : 0);
+
   return (
     <div className="space-y-4">
       <div>
@@ -242,7 +329,187 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
       </div>
 
       <div className="space-y-3">
-        {SECTIONS.map((section) => {
+        {/* ─── PRODUCT REFERENCES — Per-product card layout ─── */}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">Product References</p>
+              <p className="text-xs text-muted-foreground">
+                {productCount === 0 
+                  ? 'Add products with multiple angles for better results.' 
+                  : `${productCount} product${productCount > 1 ? 's' : ''} added`}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs shrink-0"
+              onClick={() => openLibrary('product')}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Product
+            </Button>
+          </div>
+
+          {/* Per-product cards */}
+          {Array.from(productGroups.entries()).map(([pid, group], groupIdx) => (
+            <div key={pid} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-foreground">
+                  Product {groupIdx + 1}: <span className="font-medium text-muted-foreground">{group.name}</span>
+                </p>
+                <button
+                  onClick={() => removeProductGroup(pid)}
+                  className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded"
+                  aria-label="Remove product"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {ANGLE_SLOTS.map((slot) => {
+                  const ref = group.refs.find(r => r.subRole === slot.subRole);
+                  const slotKey = `${pid}:${slot.subRole}`;
+                  const isSlotUploading = uploadingSlot === slotKey && isUploading;
+
+                  return (
+                    <div key={slot.subRole} className="space-y-1">
+                      {ref ? (
+                        <div className="relative group">
+                          <div className="aspect-square rounded-lg overflow-hidden border border-border bg-white">
+                            <img
+                              src={getOptimizedUrl(ref.url, { quality: 70 })}
+                              alt={`${slot.label} view`}
+                              className="w-full h-full object-contain"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                          </div>
+                          <button
+                            onClick={() => removeRef(ref.id)}
+                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            aria-label={`Remove ${slot.label}`}
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className={cn(
+                          "aspect-square rounded-lg border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors",
+                          isSlotUploading ? "border-primary/40 bg-primary/5 pointer-events-none" : "border-border hover:border-primary/40 hover:bg-muted/30"
+                        )}>
+                          {isSlotUploading ? (
+                            <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />
+                          ) : (
+                            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={(e) => handleFileUpload('product', e.target.files, { subRole: slot.subRole, productId: pid })}
+                            disabled={isSlotUploading}
+                          />
+                        </label>
+                      )}
+                      <p className="text-[9px] text-muted-foreground text-center font-medium">{slot.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Extra images row */}
+              {group.refs.filter(r => r.subRole === 'extra').length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <p className="text-[9px] text-muted-foreground w-full">Extra angles:</p>
+                  {group.refs.filter(r => r.subRole === 'extra').map(ref => (
+                    <div key={ref.id} className="relative group">
+                      <div className="h-10 w-10 rounded border border-border overflow-hidden bg-white">
+                        <img src={getOptimizedUrl(ref.url, { quality: 60 })} alt="Extra" className="w-full h-full object-contain" loading="lazy" />
+                      </div>
+                      <button
+                        onClick={() => removeRef(ref.id)}
+                        className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-2 w-2" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Custom (non-library) product uploads */}
+          {customProductRefs.length > 0 && (
+            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+              <p className="text-xs font-semibold text-foreground">Custom Uploads</p>
+              <div className="flex flex-wrap gap-2">
+                {customProductRefs.map((ref) => (
+                  <div key={ref.id} className="relative group">
+                    <img
+                      src={getOptimizedUrl(ref.url, { quality: 70 })}
+                      alt={ref.name || 'Product'}
+                      className="h-14 w-14 rounded-lg border border-border object-contain bg-white"
+                      loading="lazy"
+                    />
+                    <button
+                      onClick={() => removeRef(ref.id)}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    {ref.name && <p className="text-[9px] text-muted-foreground text-center truncate w-14 mt-0.5">{ref.name}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Drop zone for custom product uploads */}
+          <label
+            className={cn(
+              'flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-3 cursor-pointer transition-colors',
+              uploadingRole === 'product' && isUploading && 'pointer-events-none opacity-60',
+              dragRole === 'product'
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/40 hover:bg-muted/30'
+            )}
+            onDragOver={(e) => { e.preventDefault(); setDragRole('product'); }}
+            onDragLeave={() => setDragRole(null)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragRole(null);
+              handleFileUpload('product', e.dataTransfer.files);
+            }}
+          >
+            {uploadingRole === 'product' && isUploading ? (
+              <Loader2 className="h-4 w-4 text-primary animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className="text-xs text-muted-foreground">
+              {uploadingRole === 'product' && isUploading ? 'Uploading...' : (
+                <>Drop images or <span className="text-primary font-medium">browse</span></>
+              )}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              onChange={(e) => handleFileUpload('product', e.target.files)}
+              disabled={uploadingRole === 'product' && isUploading}
+            />
+          </label>
+        </div>
+
+        {/* ─── NON-PRODUCT SECTIONS ─── */}
+        {NON_PRODUCT_SECTIONS.map((section) => {
           const sectionRefs = references.filter((r) => r.role === section.role);
           const Icon = section.icon;
           const isSectionUploading = uploadingRole === section.role && isUploading;
@@ -276,10 +543,8 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                         <img
                           src={getOptimizedUrl(ref.url, { quality: 70 })}
                           alt={ref.name || section.label}
-                          className={`rounded-lg border border-border loading="lazy" ${
-                            section.role === 'product'
-                              ? 'h-16 w-16 object-contain bg-white'
-                              : section.role === 'model'
+                          className={`rounded-lg border border-border ${
+                            section.role === 'model'
                               ? 'w-12 aspect-[3/4] object-cover bg-muted/30'
                               : 'h-16 w-16 object-cover bg-muted/30'
                           }`}
@@ -367,7 +632,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         emptyText="No models available yet."
       />
 
-      {/* Scene Presets Picker — text-described for video */}
+      {/* Scene Presets Picker */}
       <Dialog open={scenePickerOpen} onOpenChange={setScenePickerOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" aria-describedby={undefined}>
           <DialogHeader>
@@ -444,22 +709,45 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         items={filteredProducts}
         visibleCount={productVisible}
         onLoadMore={() => setProductVisible(v => v + PAGE_SIZE)}
-        renderItem={(p) => (
-          <button
-            key={p.id}
-            onClick={() => pickProduct(p)}
-            className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          >
-            <div className="aspect-square bg-white rounded-t-lg overflow-hidden">
-              <ShimmerImage
-                src={getOptimizedUrl(p.image_url, { quality: 70 })}
-                alt={p.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <p className="text-xs font-medium text-foreground p-2 truncate">{p.title}</p>
-          </button>
-        )}
+        renderItem={(p) => {
+          const alreadyAdded = productGroups.has(p.id);
+          const angleCount = [p.back_image_url, p.side_image_url, p.packaging_image_url, p.inside_image_url, p.texture_image_url].filter(Boolean).length;
+          const extraCount = p.extra_image_urls?.length || 0;
+          return (
+            <button
+              key={p.id}
+              onClick={() => !alreadyAdded && pickProduct(p)}
+              disabled={alreadyAdded}
+              className={cn(
+                "rounded-lg border overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                alreadyAdded
+                  ? "border-primary/30 bg-primary/5 opacity-70 cursor-not-allowed"
+                  : "border-border hover:border-primary/50"
+              )}
+            >
+              <div className="aspect-square bg-white rounded-t-lg overflow-hidden relative">
+                <ShimmerImage
+                  src={getOptimizedUrl(p.image_url, { quality: 70 })}
+                  alt={p.title}
+                  className="w-full h-full object-cover"
+                />
+                {alreadyAdded && (
+                  <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                    <Check className="h-6 w-6 text-primary" />
+                  </div>
+                )}
+              </div>
+              <div className="p-2">
+                <p className="text-xs font-medium text-foreground truncate">{p.title}</p>
+                {(angleCount > 0 || extraCount > 0) && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {angleCount + 1 + extraCount} image{angleCount + extraCount > 0 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+            </button>
+          );
+        }}
         emptyText="No products yet. Add products in your product library first."
       />
     </div>
@@ -497,7 +785,6 @@ function PickerDialog<T>({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -508,7 +795,6 @@ function PickerDialog<T>({
           />
         </div>
 
-        {/* Grid */}
         <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">

@@ -1138,9 +1138,43 @@ function getSourceImageForShot(shot: ShotPlanItem, references: ReferenceAsset[])
     const modelRef = references.find(r => r.role === 'model');
     if (modelRef) return modelRef.url;
   }
-  const productRef = references.find(r => r.role === 'product');
+
+  // Multi-angle product matching: prefer angle based on shot role
+  const productRefs = references.filter(r => r.role === 'product' && r.url);
+  if (productRefs.length > 0) {
+    const role = shot.role?.toLowerCase() || '';
+    const sceneType = shot.scene_type?.toLowerCase() || '';
+
+    // Detail/texture shots → prefer texture or side
+    if (role.includes('detail') || sceneType.includes('closeup') || sceneType.includes('detail') || sceneType.includes('texture')) {
+      const tex = productRefs.find(r => r.subRole === 'texture');
+      if (tex) return tex.url;
+      const side = productRefs.find(r => r.subRole === 'side');
+      if (side) return side.url;
+    }
+    // Packaging shots
+    if (role.includes('packaging') || sceneType.includes('packaging') || sceneType.includes('unboxing')) {
+      const pkg = productRefs.find(r => r.subRole === 'packaging');
+      if (pkg) return pkg.url;
+    }
+    // Inside/interior shots
+    if (role.includes('inside') || role.includes('interior') || sceneType.includes('interior')) {
+      const ins = productRefs.find(r => r.subRole === 'inside');
+      if (ins) return ins.url;
+    }
+    // Back view shots
+    if (role.includes('back') || sceneType.includes('back')) {
+      const back = productRefs.find(r => r.subRole === 'back');
+      if (back) return back.url;
+    }
+    // Default to main
+    const main = productRefs.find(r => r.subRole === 'main');
+    if (main) return main.url;
+    return productRefs[0].url;
+  }
+
   const sceneRef = references.find(r => r.role === 'scene');
-  return productRef?.url || sceneRef?.url || '';
+  return sceneRef?.url || '';
 }
 
 /** Generate shot plan from custom roles */
