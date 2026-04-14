@@ -1,43 +1,47 @@
 
 
-# Short Film — Phase 4: AI Director + Resilience
+# Short Film — Phase 5: Save Drafts, Project History, and Polish
 
-## Current Status
-Phases 1–3 are complete: 6-step UI, real uploads, Scene/Model Library pickers, inline shot editing with reorder, script lines per shot, tone override, credits badge, and real generation via `generate-video` with DB persistence and polling.
+## Current Status (Phases 1–4 complete)
+The Short Film workflow has: 6-step UI with stepper, film type + story structure selectors, real reference uploads with Scene/Model Library pickers, interactive shot plan editor (reorder, inline edit, add/delete), AI Director mode via edge function, tone override, credits badge, real generation via `generate-video` with DB persistence and polling, retry for failed shots, "Start Over" reset, and a sequential preview player.
 
 ## What to build next
 
-### 1. AI-Powered Shot Plan Generation
-Replace the deterministic `generateShotPlan()` with an optional AI mode. Create an edge function `ai-shot-planner` that calls Lovable AI (gemini-3-flash-preview) to generate a creative, context-aware shot plan based on film type, story structure, references, and any script input. Add a toggle in the shot plan step: "Auto Plan" (current preset logic) vs "AI Director" (calls the edge function). Parse the AI response into `ShotPlanItem[]`.
+### 1. Save & Load Draft Projects
+The `draft_state_json` column already exists on `video_projects`. Wire it up:
+- Add a "Save Draft" button (visible from step 2 onward) that persists the current form state (filmType, storyStructure, references, shots, settings, planMode, current step) to a `video_projects` row with `status: 'draft'`
+- On page load, check for the user's latest draft and offer a "Resume Draft" prompt
+- Loading a draft restores all state and jumps to the saved step
 
-### 2. Start Over / Reset Flow
-Add a "Start Over" button in the bottom nav bar (visible after step 1). Resets all state: filmType, storyStructure, references, shots, settings, shotStatuses back to defaults.
+### 2. Project History List
+Add a small "My Films" section at the top of the Short Film page (or a collapsible panel) that lists the user's previous `video_projects` with `workflow_type: 'short_film'`. Show title, status (draft / processing / complete), date, and shot count. Clicking a completed project shows its clips; clicking a draft resumes it.
 
-### 3. Save Draft Projects
-Persist partial project state to `video_projects` with `status: 'draft'` when the user leaves mid-flow or clicks "Save Draft". On return, allow loading the last draft. Add a `draft_state_json` column or reuse `settings_json` to store the full form state.
+### 3. Per-Shot Source Image Selection
+Currently all shots use the same source image (first product or scene reference). Allow each shot to optionally pick a different reference image from the uploaded set — useful for multi-product films or varied scenes. Add a small image selector dropdown on each `ShotCard` in edit mode.
 
-### 4. Retry Individual Failed Shots
-When generation completes with some failed shots, show a "Retry" button on each failed shot card. Clicking it re-invokes `generate-video` for just that shot and resumes polling.
+### 4. Custom Story Structure Builder
+When the user picks "Custom" structure, show an inline builder where they can add/remove/reorder roles (from a preset palette of ~15 roles) to compose their own narrative arc before generating the shot plan.
 
-### 5. Stitch / Preview Final Film
-After all shots complete, add a "Preview Film" button that plays all clips sequentially (simple JS-based playlist, no server-side stitching). Optional: call an edge function to concatenate clips into a single MP4 using ffmpeg if available.
+### 5. Export & Share
+After generation completes, add:
+- "Download All" button that downloads each clip individually (zip not needed — sequential download)
+- "Copy Link" that creates a shareable public link to the project (requires a new `is_public` column on `video_projects` and a public viewer page)
 
 ## Implementation order
-1. AI Shot Planner edge function + toggle UI (highest impact)
-2. Start Over / Reset (quick win)
-3. Retry failed shots (resilience)
-4. Save draft projects (requires migration)
-5. Preview/stitch final film (polish)
+1. Save & Load Drafts (highest user value, column already exists)
+2. Project History List (leverages draft + completed data)
+3. Per-shot source image selection (improves generation quality)
+4. Custom structure builder (advanced users)
+5. Export & share (polish)
 
 ## Files to create/change
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `supabase/functions/ai-shot-planner/index.ts` | New — edge function calling Lovable AI to generate shot plans |
-| `src/hooks/useShortFilmProject.ts` | Add `resetProject()`, `retryShotGeneration()`, AI plan mode toggle |
-| `src/components/app/video/short-film/ShotPlanEditor.tsx` | Add "AI Director" vs "Auto Plan" toggle button |
-| `src/pages/video/ShortFilm.tsx` | Add "Start Over" button, retry UI on failed shots, sequential preview player |
-| `src/components/app/video/short-film/ShortFilmProgressPanel.tsx` | Add per-shot retry button for failed shots |
-| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | New — sequential playlist player for completed clips |
-| DB migration | Add `draft_state_json` column to `video_projects` (for save draft feature) |
+| `src/hooks/useShortFilmProject.ts` | Add `saveDraft()`, `loadDraft()`, per-shot source image logic |
+| `src/pages/video/ShortFilm.tsx` | Add "Save Draft" button, "Resume Draft" prompt, project history panel |
+| `src/components/app/video/short-film/ShortFilmProjectList.tsx` | New — lists user's short film projects |
+| `src/components/app/video/short-film/ShotCard.tsx` | Add source image selector in edit mode |
+| `src/components/app/video/short-film/CustomStructureBuilder.tsx` | New — drag-to-compose custom story roles |
+| `src/components/app/video/short-film/StoryStructureSelector.tsx` | Integrate custom builder when "Custom" is selected |
 
