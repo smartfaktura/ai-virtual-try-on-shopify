@@ -396,7 +396,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
           >
             <div className="aspect-square bg-white rounded-t-lg overflow-hidden">
               <ShimmerImage
-                src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
+                src={getOptimizedUrl(p.image_url, { quality: 70 })}
                 alt={p.title}
                 className="w-full h-full object-cover"
               />
