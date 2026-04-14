@@ -154,10 +154,65 @@ export default function ShortFilm() {
               <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Generating audio layer...</p>
-                  <p className="text-xs text-muted-foreground">Creating music, sound effects, and voiceover</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {audioPhase === 'music' && 'Generating background music...'}
+                    {audioPhase === 'sfx' && 'Generating sound effects...'}
+                    {audioPhase === 'voiceover' && 'Generating voiceover...'}
+                    {audioPhase === 'idle' && 'Preparing audio layer...'}
+                  </p>
+                  {audioShotStatuses.length > 0 && (audioPhase === 'sfx' || audioPhase === 'voiceover') && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {audioShotStatuses.map(s => {
+                        const status = audioPhase === 'sfx' ? s.sfx : s.voiceover;
+                        return (
+                          <span key={s.shot_index} className={`text-[10px] px-1.5 py-0.5 rounded ${
+                            status === 'generating' ? 'bg-amber-100 text-amber-800' :
+                            status === 'done' ? 'bg-green-100 text-green-800' :
+                            status === 'failed' ? 'bg-red-100 text-red-800' :
+                            'bg-muted text-muted-foreground'
+                          }`}>
+                            Shot {s.shot_index}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
+
+            {/* Audio retry for failed shots */}
+            {!isGeneratingAudio && audioShotStatuses.some(s => s.sfx === 'failed' || s.voiceover === 'failed') && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-2">
+                <p className="text-sm font-medium text-foreground">Some audio tracks failed</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {audioShotStatuses.filter(s => s.sfx === 'failed').map(s => (
+                    <Button key={`sfx-${s.shot_index}`} variant="outline" size="sm" className="h-7 text-xs gap-1"
+                      onClick={() => retryAudioForShot(s.shot_index, 'sfx')}>
+                      <RotateCw className="h-3 w-3" /> SFX Shot {s.shot_index}
+                    </Button>
+                  ))}
+                  {audioShotStatuses.filter(s => s.voiceover === 'failed').map(s => (
+                    <Button key={`vo-${s.shot_index}`} variant="outline" size="sm" className="h-7 text-xs gap-1"
+                      onClick={() => retryAudioForShot(s.shot_index, 'voiceover')}>
+                      <RotateCw className="h-3 w-3" /> Voice Shot {s.shot_index}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Regenerate audio button */}
+            {allDone && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => generateAudio()}
+              >
+                <Music className="h-3.5 w-3.5" />
+                {audioAssets.backgroundTrackUrl || audioAssets.perShotAudio.length > 0 ? 'Regenerate Audio' : 'Generate Audio'}
+              </Button>
             )}
 
             {/* Sequential preview player */}
