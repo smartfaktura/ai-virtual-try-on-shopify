@@ -45,14 +45,18 @@ export default function ShortFilm() {
   const allSucceeded = allDone && failedCount === 0 && successCount > 0;
   const hasFailures = allDone && failedCount > 0;
 
+  // Deduplicate: multi-shot produces one combined video shared across all shot statuses
   const completedClips = useMemo(() => {
-    return shotStatuses
-      .filter(s => s.result_url)
-      .map(s => {
-        const shot = shots.find(sh => sh.shot_index === s.shot_index);
-        return { url: s.result_url!, label: `Shot ${s.shot_index} -- ${shot?.role || 'clip'}` };
-      });
-  }, [shotStatuses, shots]);
+    const urls = new Set<string>();
+    const clips: { url: string; label: string }[] = [];
+    for (const s of shotStatuses) {
+      if (s.result_url && !urls.has(s.result_url)) {
+        urls.add(s.result_url);
+        clips.push({ url: s.result_url, label: 'Short Film' });
+      }
+    }
+    return clips;
+  }, [shotStatuses]);
 
   const availableReferences = useMemo(() => {
     return references.map(r => ({ id: r.id, url: r.url, role: r.role, name: r.name }));
@@ -279,48 +283,43 @@ export default function ShortFilm() {
               </>
             )}
 
-            {allDone && (
+            {allDone && completedClips.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <h3 className="text-sm font-semibold text-foreground">Generated Clips</h3>
-                  {completedClips.length > 0 && (
-                    <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={downloadAllClips}>
-                      <Download className="h-3.5 w-3.5" />
-                      Download All
-                    </Button>
-                  )}
+                  <h3 className="text-sm font-semibold text-foreground">Your Short Film</h3>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={downloadAllClips}>
+                    <Download className="h-3.5 w-3.5" />
+                    Download
+                  </Button>
                 </div>
-                <div className="grid gap-3">
-                  {shotStatuses
-                    .filter(s => s.result_url)
-                    .map(s => {
-                      const shot = shots.find(sh => sh.shot_index === s.shot_index);
-                      return (
-                        <div key={s.shot_index} className="rounded-xl border border-border bg-card overflow-hidden">
-                          <video
-                            src={s.result_url}
-                            controls
-                            playsInline
-                            className="w-full aspect-video bg-black"
-                          />
-                          {shot && (
-                            <div className="px-3 py-2">
-                              <p className="text-xs font-medium text-foreground">
-                                Shot {s.shot_index} -- {shot.role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground">{shot.purpose}</p>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                  <video
+                    src={completedClips[0].url}
+                    controls
+                    playsInline
+                    className="w-full aspect-video bg-black"
+                  />
                 </div>
-                {hasFailures && (
-                  <p className="text-xs text-destructive">
-                    {failedCount} shot{failedCount !== 1 ? 's' : ''} failed -- use the retry button above each failed shot
-                  </p>
-                )}
+                {/* Shot breakdown metadata */}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Shot Breakdown</p>
+                  {shots.map(shot => (
+                    <div key={shot.shot_index} className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="font-mono w-4">{shot.shot_index}</span>
+                      <span className="font-medium text-foreground">
+                        {shot.role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                      </span>
+                      <span>· {shot.duration_sec || 3}s</span>
+                      <span className="truncate">{shot.purpose}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
+            {allDone && completedClips.length === 0 && hasFailures && (
+              <p className="text-sm text-destructive">
+                Film generation failed. Use the Retry button to try again.
+              </p>
             )}
           </div>
         )}
