@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, CheckCircle2, Clapperboard, XCircle, Clock, Info } from 'lucide-react';
+import { Loader2, CheckCircle2, Clapperboard, XCircle, Clock, Info, Music } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
-import type { ShotPlanItem } from '@/types/shortFilm';
+import type { ShotPlanItem, AudioPhase } from '@/types/shortFilm';
 
 interface ShotStatus {
   shot_index: number;
@@ -15,14 +15,16 @@ interface ShortFilmProgressPanelProps {
   shotStatuses: ShotStatus[];
   onRetryShot?: (shotIndex: number) => void;
   generationStartTime?: number;
+  audioPhase?: AudioPhase;
+  musicEnabled?: boolean;
 }
 
 const DIRECTOR_PHASES = [
   { min: 0, message: 'Preparing your cinematic vision...' },
-  { min: 15, message: 'Building multi-shot sequence...' },
-  { min: 45, message: 'Rendering and compositing shots...' },
-  { min: 90, message: 'Applying transitions and polish...' },
-  { min: 150, message: 'Almost there — final compositing...' },
+  { min: 30, message: 'Building multi-shot sequence...' },
+  { min: 90, message: 'Rendering and compositing shots...' },
+  { min: 180, message: 'Applying transitions and polish...' },
+  { min: 270, message: 'Almost there — final compositing...' },
 ];
 
 function formatElapsed(seconds: number): string {
@@ -31,10 +33,15 @@ function formatElapsed(seconds: number): string {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot, generationStartTime }: ShortFilmProgressPanelProps) {
+export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot, generationStartTime, audioPhase, musicEnabled }: ShortFilmProgressPanelProps) {
   const hasAnyFailed = shotStatuses.some(s => s.status === 'failed');
   const isProcessing = shotStatuses.some(s => s.status === 'processing');
-  const allDone = shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed');
+  const videosDone = shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed');
+
+  // Unified "all done" — video done AND music done (if enabled)
+  const musicDone = !musicEnabled || audioPhase === 'done';
+  const allDone = videosDone && musicDone;
+  const isMusicPhase = videosDone && !hasAnyFailed && musicEnabled && audioPhase !== 'done';
 
   const [elapsed, setElapsed] = useState(0);
   const startTime = generationStartTime || Date.now();
@@ -51,13 +58,18 @@ export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot, gener
   const totalDuration = shots.reduce((sum, s) => sum + (s.duration_sec || 3), 0);
 
   // Phase-based director message
-  const directorMessage = allDone
-    ? (hasAnyFailed ? 'Film generation encountered issues' : 'Your short film is ready!')
-    : DIRECTOR_PHASES.slice().reverse().find(p => elapsed >= p.min)?.message || DIRECTOR_PHASES[0].message;
+  let directorMessage: string;
+  if (allDone) {
+    directorMessage = hasAnyFailed ? 'Film generation encountered issues' : 'Your short film is ready!';
+  } else if (isMusicPhase) {
+    directorMessage = 'Adding background music...';
+  } else {
+    directorMessage = DIRECTOR_PHASES.slice().reverse().find(p => elapsed >= p.min)?.message || DIRECTOR_PHASES[0].message;
+  }
 
-  // ETA range based on shot count and total duration
-  const etaMinSec = Math.max(60, totalDuration * 8);
-  const etaMaxSec = Math.max(120, totalDuration * 15);
+  // Realistic ETA: ~4-6 minutes for Kling multishot
+  const etaMinSec = 240;
+  const etaMaxSec = 360;
 
   return (
     <div className="space-y-5">
@@ -76,12 +88,16 @@ export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot, gener
             <h2 className="text-lg font-semibold text-foreground">
               {allDone
                 ? (hasAnyFailed ? 'Generation Failed' : 'Film Complete')
-                : 'Generating Your Film'}
+                : isMusicPhase
+                  ? 'Adding Music'
+                  : 'Generating Your Film'}
             </h2>
             <p className="text-sm text-muted-foreground">
               {allDone
                 ? (hasAnyFailed ? 'Something went wrong. You can retry.' : `${shots.length} shots · ${totalDuration}s combined video`)
-                : `${shots.length} shots · ${totalDuration}s total duration`}
+                : isMusicPhase
+                  ? 'Video is ready — generating background music track'
+                  : `${shots.length} shots · ${totalDuration}s total duration`}
             </p>
           </div>
         </div>
@@ -110,7 +126,11 @@ export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot, gener
       {/* Director message */}
       {!allDone && (
         <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4">
-          {teamMember?.avatar ? (
+          {isMusicPhase ? (
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Music className="h-5 w-5 text-primary" />
+            </div>
+          ) : teamMember?.avatar ? (
             <img
               src={teamMember.avatar}
               alt=""
@@ -123,7 +143,7 @@ export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot, gener
           )}
           <div>
             <p className="text-xs font-medium text-foreground">
-              {teamMember?.name || 'VOVV Director'}
+              {isMusicPhase ? 'Music Producer' : (teamMember?.name || 'VOVV Director')}
             </p>
             <p className="text-sm text-muted-foreground">{directorMessage}</p>
           </div>
