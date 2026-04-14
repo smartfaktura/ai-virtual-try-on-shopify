@@ -1,12 +1,15 @@
+import { useState, useRef } from 'react';
 import type { ShortFilmSettings } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
-import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic, Music, AudioLines } from 'lucide-react';
+import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic, Music, AudioLines, Play, Loader2, Square as StopIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface ShortFilmSettingsPanelProps {
   settings: ShortFilmSettings;
   onChange: (settings: ShortFilmSettings) => void;
+  onPreviewAudio?: () => Promise<string | null>;
 }
 
 const ASPECT_OPTIONS = [
