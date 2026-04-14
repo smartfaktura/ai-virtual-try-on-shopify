@@ -913,10 +913,14 @@ export function useShortFilmProject() {
       const draftState: DraftState = {
         step: 'review', filmType, storyStructure, references, shots, settings, planMode, customRoles,
       };
-      await supabase.from('video_projects').update({
-        status: projectStatus,
-        draft_state_json: JSON.parse(JSON.stringify(draftState)),
-      }).eq('id', currentProjectId!);
+      try {
+        await supabase.from('video_projects').update({
+          status: projectStatus,
+          draft_state_json: JSON.parse(JSON.stringify(draftState)),
+        }).eq('id', currentProjectId!);
+      } catch (dbErr) {
+        console.error('[ShortFilm] DB update after generation failed:', dbErr);
+      }
 
       if (generationSucceeded) {
         toast.success('Short film generation complete!');
@@ -925,17 +929,24 @@ export function useShortFilmProject() {
       }
       refreshBalance();
 
-      // Generate audio layer if needed — pass current shots to avoid stale closure
-      if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
-        await generateAudio(currentProjectId, shots);
-      }
-
     } catch (err) {
       console.error('[ShortFilm] Generation failed:', err);
       toast.error(err instanceof Error ? err.message : 'Generation failed');
-    } finally {
-      setIsGenerating(false);
     }
+
+    // Generate audio layer INDEPENDENTLY — outside the main try block
+    const audioProjectId = projectId || draftProjectId;
+    if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
+      console.log('[ShortFilm] Starting audio generation independently for project:', audioProjectId);
+      try {
+        await generateAudio(audioProjectId || undefined, shots);
+      } catch (audioErr) {
+        console.error('[ShortFilm] Audio generation failed independently:', audioErr);
+        toast.error('Audio generation failed — you can retry from the player');
+      }
+    }
+
+    setIsGenerating(false);
   }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId, generateAudio]);
 
   const updateShot = useCallback((index: number, updated: ShotPlanItem) => {
