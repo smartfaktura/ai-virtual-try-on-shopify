@@ -30,7 +30,7 @@ export interface AudioShotStatus {
   voiceover: 'idle' | 'generating' | 'done' | 'failed';
 }
 
-export type AudioPhase = 'idle' | 'music' | 'sfx' | 'voiceover' | 'done';
+// AudioPhase is now imported from @/types/shortFilm
 
 interface DraftState {
   step: ShortFilmStep;
