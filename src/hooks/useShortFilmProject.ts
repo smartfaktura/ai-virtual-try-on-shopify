@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { generateShotPlan, FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
-import { buildShotPrompt, estimateShortFilmCredits } from '@/lib/shortFilmPromptBuilder';
+import { buildShotPrompt, estimateShortFilmCredits, calculateTotalDuration, distributeShotDurations } from '@/lib/shortFilmPromptBuilder';
 import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
 import type {
   FilmType,
@@ -756,110 +756,93 @@ export function useShortFilmProject() {
       });
       await supabase.from('video_shots').insert(shotRows);
 
-      // Enqueue all shots via the queue system
-      const jobIds: { shotIndex: number; jobId: string }[] = [];
+      // ── Multi-shot: build single combined request ──
+      const totalDuration = calculateTotalDuration(shots.length, settings.shotDuration);
+      const perShotDurations = distributeShotDurations(shots.length, totalDuration);
 
-      for (let i = 0; i < shots.length; i++) {
-        const shot = shots[i];
-        await paceDelay(i);
+      // Collect unique image URLs for Kling image_list
+      const imageUrlSet = new Set<string>();
+      const shotImageMap: Map<number, number> = new Map(); // shot_index → image_N index (1-based)
+      shots.forEach((shot) => {
+        const url = getSourceImageForShot(shot, references);
+        if (url) {
+          if (!imageUrlSet.has(url)) {
+            imageUrlSet.add(url);
+          }
+          const idx = Array.from(imageUrlSet).indexOf(url) + 1;
+          shotImageMap.set(shot.shot_index, idx);
+        }
+      });
+      const imageUrls = Array.from(imageUrlSet);
 
-        setShotStatuses(prev =>
-          prev.map(s =>
-            s.shot_index === shot.shot_index ? { ...s, status: 'processing' } : s
-          )
-        );
-
-        const sourceImageUrl = getSourceImageForShot(shot, references);
-
-        const { prompt, negative_prompt } = buildShotPrompt(shot, {
+      // Build per-shot prompts with <<<image_N>>> references
+      const multishotPayload = shots.map((shot, i) => {
+        const imageIdx = shotImageMap.get(shot.shot_index);
+        const { prompt } = buildShotPrompt(shot, {
           filmType,
           tone: settings.tone || '',
           settings,
           references,
-        });
+        }, imageIdx);
 
-        try {
-          const result = await enqueueWithRetry({
-            jobType: 'video',
-            payload: {
-              image_url: sourceImageUrl || '',
-              prompt,
-              duration: settings.shotDuration,
-              model_name: 'kling-v3',
-              aspect_ratio: settings.aspectRatio,
-              mode: 'pro',
-              negative_prompt,
-              with_audio: settings.audioMode === 'ambient',
-              project_id: currentProjectId,
-              workflow_type: 'short_film',
-            },
-            imageCount: 1,
-            skipWake: true,
-          }, token);
+        return {
+          index: i + 1,
+          prompt,
+          duration: perShotDurations[i],
+        };
+      });
 
-          if (isEnqueueError(result)) {
-            console.error(`[ShortFilm] Enqueue shot ${shot.shot_index} failed:`, result.message);
-            setShotStatuses(prev =>
-              prev.map(s =>
-                s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
-              )
-            );
-            if (result.type === 'insufficient_credits') {
-              toast.error('Insufficient credits');
-              break;
-            }
-            continue;
-          }
+      // Set all shots to processing
+      setShotStatuses(prev => prev.map(s => ({ ...s, status: 'processing' as const })));
 
-          jobIds.push({ shotIndex: shot.shot_index, jobId: result.jobId });
-        } catch (shotErr) {
-          console.error(`[ShortFilm] Shot ${shot.shot_index} failed:`, shotErr);
-          setShotStatuses(prev =>
-            prev.map(s =>
-              s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
-            )
-          );
+      try {
+        const result = await enqueueWithRetry({
+          jobType: 'video_multishot',
+          payload: {
+            shots: multishotPayload,
+            total_duration: totalDuration,
+            aspect_ratio: settings.aspectRatio,
+            mode: 'pro',
+            with_audio: settings.audioMode === 'ambient',
+            project_id: currentProjectId,
+            image_urls: imageUrls,
+          },
+          imageCount: 1,
+        }, token);
+
+        if (isEnqueueError(result)) {
+          throw new Error(result.message);
         }
+
+        sendWake(token);
+
+        // Poll single job
+        const resultUrl = await pollMultishotCompletion(result.jobId, 90);
+
+        if (resultUrl) {
+          // All shots succeeded — mark all complete with the single video URL
+          setShotStatuses(prev => prev.map(s => ({
+            ...s, status: 'complete' as const, result_url: resultUrl,
+          })));
+
+          // Update all video_shots rows
+          for (const shot of shots) {
+            await supabase
+              .from('video_shots')
+              .update({ status: 'complete', result_url: resultUrl })
+              .eq('project_id', currentProjectId!)
+              .eq('shot_index', shot.shot_index);
+          }
+        } else {
+          setShotStatuses(prev => prev.map(s => ({ ...s, status: 'failed' as const })));
+        }
+      } catch (enqueueErr) {
+        console.error('[ShortFilm] Multi-shot enqueue failed:', enqueueErr);
+        setShotStatuses(prev => prev.map(s => ({ ...s, status: 'failed' as const })));
       }
 
-      // Wake the queue processor once after all enqueues
-      sendWake(token);
-
-      // Poll all enqueued jobs for completion
-      await Promise.all(
-        jobIds.map(async ({ shotIndex, jobId }) => {
-          try {
-            const resultUrl = await pollQueueJobCompletion(jobId, 60);
-            setShotStatuses(prev =>
-              prev.map(s =>
-                s.shot_index === shotIndex
-                  ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
-                  : s
-              )
-            );
-
-            if (resultUrl) {
-              await supabase
-                .from('video_shots')
-                .update({ status: 'complete', result_url: resultUrl })
-                .eq('project_id', currentProjectId!)
-                .eq('shot_index', shotIndex);
-            }
-          } catch {
-            setShotStatuses(prev =>
-              prev.map(s =>
-                s.shot_index === shotIndex ? { ...s, status: 'failed' } : s
-              )
-            );
-          }
-        })
-      );
-
-      const finalStatuses = shotStatuses;
-      const successCount = jobIds.filter(j => {
-        const s = finalStatuses.find(fs => fs.shot_index === j.shotIndex);
-        return s?.status === 'complete';
-      }).length;
+      const currentStatuses = shotStatuses;
+      const successCount = currentStatuses.filter(s => s.status === 'complete').length;
       const projectStatus = successCount === shots.length ? 'complete' : successCount > 0 ? 'partial' : 'failed';
 
       // Persist full draft state for reopening
