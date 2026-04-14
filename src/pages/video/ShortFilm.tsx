@@ -1,4 +1,5 @@
 import { Sparkles, Coins, ExternalLink, RotateCw, Download, Loader2, Music } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -13,6 +14,7 @@ import { ShortFilmStepper } from '@/components/app/video/short-film/ShortFilmSte
 import { ShortFilmStickyBar } from '@/components/app/video/short-film/ShortFilmStickyBar';
 import { ShortFilmVideoPlayer } from '@/components/app/video/short-film/ShortFilmVideoPlayer';
 import { ShortFilmProjectList } from '@/components/app/video/short-film/ShortFilmProjectList';
+import { supabase } from '@/integrations/supabase/client';
 import { useMemo, useState, useCallback, useRef } from 'react';
 
 export default function ShortFilm() {
@@ -66,9 +68,11 @@ export default function ShortFilm() {
   }, [shotStatuses]);
 
   const shotsMeta = useMemo(() =>
-    shots.map(s => ({ shot_index: s.shot_index, duration_sec: s.duration_sec })),
+    shots.map(s => ({ shot_index: s.shot_index, duration_sec: s.duration_sec, sfx_trigger_at: s.sfx_trigger_at })),
     [shots]
   );
+
+  const [isDownloadingWithAudio, setIsDownloadingWithAudio] = useState(false);
 
   const totalDuration = useMemo(() =>
     shots.reduce((sum, s) => sum + (s.duration_sec || 3), 0),
@@ -97,6 +101,39 @@ export default function ShortFilm() {
       }
     }
   }, [completedClips]);
+
+  const downloadWithAudio = useCallback(async () => {
+    if (!completedClips.length || !audioAssets?.backgroundTrackUrl) return;
+    setIsDownloadingWithAudio(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('mux-video-audio', {
+        body: {
+          video_url: completedClips[0].url,
+          audio_url: audioAssets.backgroundTrackUrl,
+        },
+      });
+      if (error || !data?.url) {
+        throw new Error(data?.error || error?.message || 'Muxing failed');
+      }
+      // Download the muxed file
+      const response = await fetch(data.url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'short-film-with-music.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      toast.success('Downloaded with music!');
+    } catch (err: any) {
+      console.error('Download with audio failed:', err);
+      toast.error(err.message || 'Failed to mux video with audio');
+    } finally {
+      setIsDownloadingWithAudio(false);
+    }
+  }, [completedClips, audioAssets]);
 
   const handleResumeDraft = useCallback((projectId: string) => {
     loadDraft(projectId);
@@ -286,6 +323,8 @@ export default function ShortFilm() {
                   audioAssets={audioAssets}
                   shots={shotsMeta}
                   onDownload={downloadAllClips}
+                  onDownloadWithAudio={downloadWithAudio}
+                  isDownloadingWithAudio={isDownloadingWithAudio}
                 />
                 {/* Shot breakdown metadata */}
                 <div className="space-y-1">

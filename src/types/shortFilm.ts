@@ -27,6 +27,7 @@ export interface ShotPlanItem {
   duration_sec: number;
   script_line?: string;
   sfx_prompt?: string;
+  sfx_trigger_at?: number;
   product_visible: boolean;
   character_visible: boolean;
   scene_reference_id?: string;
@@ -75,7 +76,7 @@ export interface ShortFilmSettings {
 
 export interface AudioAssets {
   backgroundTrackUrl?: string;
-  perShotAudio: { shotIndex: number; url: string; type: 'sfx' | 'voiceover' }[];
+  perShotAudio: { shotIndex: number; url: string; type: 'sfx' | 'voiceover'; offset_sec?: number }[];
 }
 
 export type ShortFilmStep = 'film_type' | 'references' | 'story' | 'shot_plan' | 'settings' | 'review';
