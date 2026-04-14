@@ -240,19 +240,12 @@ export default function ShortFilm() {
               shotStatuses={shotStatuses}
               onRetryShot={retryShotGeneration}
               generationStartTime={generationStartRef.current}
+              audioPhase={audioPhase}
+              musicEnabled={musicEnabled}
             />
 
-            {isGeneratingAudio && (
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <p className="text-sm font-medium text-foreground">
-                  Generating background music...
-                </p>
-              </div>
-            )}
-
-            {/* Generate / Regenerate music button */}
-            {allSucceeded && !isGeneratingAudio && settings.audioLayers?.music && (audioPhase === 'partial' || audioPhase === 'idle' || (audioPhase === 'done' && !audioAssets?.backgroundTrackUrl)) && (
+            {/* Regenerate music button — only after everything is done */}
+            {allSucceeded && !isGeneratingAudio && audioPhase === 'done' && audioAssets?.backgroundTrackUrl && (
               <Button
                 variant="outline"
                 size="sm"
@@ -260,7 +253,7 @@ export default function ShortFilm() {
                 onClick={() => generateAudio(projectId || undefined)}
               >
                 <Music className="h-3.5 w-3.5" />
-                {audioPhase === 'partial' ? 'Retry Music' : 'Generate Music'}
+                Regenerate Music
               </Button>
             )}
 
