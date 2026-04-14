@@ -303,6 +303,105 @@ export function useShortFilmProject() {
     }
   }, [projectId, user, filmType, shots, settings, references]);
 
+  // ─── Audio generation ────────────────────────────────────────
+  const generateAudio = useCallback(async () => {
+    if (!user) return;
+    const mode = settings.audioMode;
+    if (mode === 'silent' || mode === 'ambient') return;
+
+    setIsGeneratingAudio(true);
+    const newAssets: AudioAssets = { perShotAudio: [] };
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const session = (await supabase.auth.getSession()).data.session;
+    const authToken = session?.access_token || apikey;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      apikey,
+      Authorization: `Bearer ${authToken}`,
+    };
+
+    try {
+      // Music track
+      if (mode === 'music' || mode === 'full_mix') {
+        const totalDuration = shots.reduce((sum, s) => sum + s.duration_sec, 0);
+        const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music for a ${filmType?.replace(/_/g, ' ')} film`;
+        try {
+          const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ prompt: musicPrompt, duration: Math.min(totalDuration, 120) }),
+          });
+          if (res.ok) {
+            const blob = await res.blob();
+            newAssets.backgroundTrackUrl = URL.createObjectURL(blob);
+          }
+        } catch (e) {
+          console.error('[ShortFilm] Music generation failed:', e);
+        }
+      }
+
+      // SFX per shot (full_mix only)
+      if (mode === 'full_mix') {
+        for (const shot of shots) {
+          try {
+            const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
+            const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
+            });
+            if (res.ok) {
+              const blob = await res.blob();
+              newAssets.perShotAudio.push({
+                shotIndex: shot.shot_index,
+                url: URL.createObjectURL(blob),
+                type: 'sfx',
+              });
+            }
+          } catch (e) {
+            console.error(`[ShortFilm] SFX shot ${shot.shot_index} failed:`, e);
+          }
+        }
+      }
+
+      // Voiceover per shot
+      if (mode === 'voiceover' || mode === 'full_mix') {
+        const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
+        for (const shot of shots) {
+          if (!shot.script_line) continue;
+          try {
+            const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ text: shot.script_line, voiceId }),
+            });
+            if (res.ok) {
+              const blob = await res.blob();
+              newAssets.perShotAudio.push({
+                shotIndex: shot.shot_index,
+                url: URL.createObjectURL(blob),
+                type: 'voiceover',
+              });
+            }
+          } catch (e) {
+            console.error(`[ShortFilm] TTS shot ${shot.shot_index} failed:`, e);
+          }
+        }
+      }
+
+      setAudioAssets(newAssets);
+      if (newAssets.backgroundTrackUrl || newAssets.perShotAudio.length > 0) {
+        toast.success('Audio layer generated');
+      }
+    } catch (err) {
+      console.error('[ShortFilm] Audio generation failed:', err);
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  }, [user, settings, shots, filmType]);
+
   // ─── Real generation pipeline ───────────────────────────────
 
   const startGeneration = useCallback(async () => {
