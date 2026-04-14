@@ -39,10 +39,12 @@ const ROLE_DIRECTIVES: Record<string, string> = {
 
 /**
  * Build a structured video prompt for a single shot in a short film.
+ * When imageIndex is provided, embeds <<<image_N>>> Kling reference syntax.
  */
 export function buildShotPrompt(
   shot: ShotPlanItem,
   context: PromptContext,
+  imageIndex?: number,
 ): { prompt: string; negative_prompt: string } {
   const parts: string[] = [];
 
@@ -50,37 +52,42 @@ export function buildShotPrompt(
   const tone = TONE_MAP[context.filmType] || context.tone || 'cinematic, professional';
   parts.push(`Cinematic ${tone} video.`);
 
-  // 2. Role directive
+  // 2. Image reference (for Kling Omni <<<image_N>>> syntax)
+  if (typeof imageIndex === 'number' && imageIndex >= 1) {
+    parts.push(`Feature the subject from <<<image_${imageIndex}>>>.`);
+  }
+
+  // 3. Role directive
   const roleDirective = ROLE_DIRECTIVES[shot.role] || `Shot role: ${shot.role}.`;
   parts.push(roleDirective);
 
-  // 3. Purpose
+  // 4. Purpose
   parts.push(shot.purpose);
 
-  // 4. Scene type
+  // 5. Scene type
   parts.push(`Scene type: ${shot.scene_type.replace(/_/g, ' ')}.`);
 
-  // 5. Camera motion
+  // 6. Camera motion
   if (shot.camera_motion && shot.camera_motion !== 'static') {
     parts.push(`Camera motion: ${shot.camera_motion.replace(/_/g, ' ')}.`);
   }
 
-  // 6. Subject motion
+  // 7. Subject motion
   if (shot.subject_motion) {
     parts.push(`Subject motion: ${shot.subject_motion.replace(/_/g, ' ')}.`);
   }
 
-  // 7. Script line (if any)
+  // 8. Script line (if any)
   if (shot.script_line) {
     parts.push(`Visual matches: "${shot.script_line}".`);
   }
 
-  // 8. Preservation strength
+  // 9. Preservation strength
   if (shot.preservation_strength === 'high') {
     parts.push('Maintain strong visual consistency with reference images.');
   }
 
-  // 9. Aspect ratio hint
+  // 10. Aspect ratio hint
   if (context.settings.aspectRatio === '9:16') {
     parts.push('Vertical format, optimized for mobile viewing.');
   } else if (context.settings.aspectRatio === '1:1') {
@@ -101,12 +108,50 @@ export function buildShotPrompt(
 
 /**
  * Estimate total credits for the entire short film.
+ * Multi-shot generates ONE combined video, so credit cost is based on total duration.
  */
 export function estimateShortFilmCredits(
   shotCount: number,
   settings: ShortFilmSettings,
 ): number {
-  const perShot = settings.shotDuration === '10' ? 18 : 10;
-  const audioAdd = settings.audioMode === 'ambient' ? 4 : settings.audioMode === 'voiceover' ? 12 : settings.audioMode === 'music' ? 8 : settings.audioMode === 'full_mix' ? 16 : 0;
-  return (perShot + audioAdd) * shotCount + 5; // 5 = planning fee
+  // Base cost: one combined video (duration-based)
+  const totalDuration = calculateTotalDuration(shotCount, settings.shotDuration);
+  const videoCost = totalDuration <= 5 ? 10 : totalDuration <= 10 ? 18 : 25;
+
+  // Audio add-on (generated separately via ElevenLabs)
+  const audioAdd = settings.audioMode === 'ambient' ? 0 // ambient is native Kling audio, no extra cost
+    : settings.audioMode === 'voiceover' ? 12
+    : settings.audioMode === 'music' ? 8
+    : settings.audioMode === 'full_mix' ? 16
+    : 0;
+
+  return videoCost + audioAdd + 5; // 5 = planning fee
+}
+
+/**
+ * Calculate total film duration, capped at 15s (Kling max for multi-shot).
+ */
+export function calculateTotalDuration(
+  shotCount: number,
+  shotDuration: '5' | '10',
+): number {
+  const perShot = Number(shotDuration);
+  const raw = perShot * shotCount;
+  return Math.min(raw, 15);
+}
+
+/**
+ * Distribute total duration across shots, ensuring each is ≥ 1s and sum == total.
+ */
+export function distributeShotDurations(
+  shotCount: number,
+  totalDuration: number,
+): number[] {
+  if (shotCount <= 0) return [];
+  const base = Math.floor(totalDuration / shotCount);
+  const remainder = totalDuration - base * shotCount;
+
+  return Array.from({ length: shotCount }, (_, i) =>
+    Math.max(1, base + (i < remainder ? 1 : 0))
+  );
 }
