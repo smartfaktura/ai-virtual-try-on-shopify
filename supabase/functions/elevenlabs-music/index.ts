@@ -53,40 +53,67 @@ serve(async (req) => {
       });
     }
 
-    const response = await fetch("https://api.elevenlabs.io/v1/music", {
-      method: "POST",
-      headers: {
-        "xi-api-key": ELEVENLABS_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt,
-        duration_seconds: durationSec,
-      }),
-    });
+    // Retry up to 2 times on 5xx errors (ElevenLabs transient failures)
+    const MAX_RETRIES = 2;
+    let lastStatus = 0;
+    let lastErrText = "";
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("[elevenlabs-music] API error:", response.status, errText);
-      return new Response(JSON.stringify({ error: `ElevenLabs error: ${response.status}` }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        console.log(`[elevenlabs-music] Retry attempt ${attempt}/${MAX_RETRIES}`);
+        await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+
+      const response = await fetch("https://api.elevenlabs.io/v1/music", {
+        method: "POST",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          duration_seconds: durationSec,
+        }),
       });
+
+      if (response.ok) {
+        const audioBuffer = await response.arrayBuffer();
+        return new Response(audioBuffer, {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "audio/mpeg",
+          },
+        });
+      }
+
+      lastStatus = response.status;
+      lastErrText = await response.text();
+      console.error(`[elevenlabs-music] API error (attempt ${attempt + 1}):`, lastStatus, lastErrText);
+
+      // Only retry on 5xx (server errors)
+      if (lastStatus < 500) break;
     }
 
-    const audioBuffer = await response.arrayBuffer();
-
-    return new Response(audioBuffer, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "audio/mpeg",
-      },
-    });
+    // All retries exhausted or non-retryable error
+    const isFallbackable = lastStatus >= 500;
+    return new Response(
+      JSON.stringify({
+        error: isFallbackable ? "SERVICE_UNAVAILABLE" : `ElevenLabs error: ${lastStatus}`,
+        fallback: isFallbackable,
+      }),
+      {
+        status: 200, // Return 200 to prevent frontend crash handlers
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (err) {
     console.error("[elevenlabs-music] Error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "SERVICE_FAILED", fallback: true }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });
