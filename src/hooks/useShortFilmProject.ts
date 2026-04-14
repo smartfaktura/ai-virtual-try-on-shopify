@@ -862,6 +862,10 @@ export function useShortFilmProject() {
     audioAssets,
     isGeneratingAudio,
     generateAudio,
+    audioPhase,
+    audioShotStatuses,
+    retryAudioForShot,
+    previewAudio,
   };
 }
 
