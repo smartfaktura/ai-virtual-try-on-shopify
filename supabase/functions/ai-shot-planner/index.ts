@@ -244,7 +244,7 @@ Remember: cinematic pacing (NOT equal splits), sfx_prompt for sound effects, sfx
       }
     }
 
-    return new Response(JSON.stringify({ shots: validShots }), {
+    return new Response(JSON.stringify({ shots: validShots, ...(musicDirection ? { music_direction: musicDirection } : {}) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
