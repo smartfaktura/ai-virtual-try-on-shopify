@@ -1,32 +1,43 @@
 
 
-# Fix: Lip-Sync Breaks Video + Audio Playback
+# Use Kling Native Audio for Dialog/SFX + ElevenLabs Music Only
 
-## Problems Found
+## Approach
 
-### Problem 1: Lip-sync replaces the ENTIRE video with a single-shot clip
-Line 1122: `setShotStatuses(prev => prev.map(s => ({ ...s, result_url: signedLipSync })))` — this replaces ALL shot result URLs with the lip-synced video URL. The lip-sync API takes the full multishot video and re-renders it with one shot's voiceover baked in. This means:
-- The returned video has audio baked in (the VO for that one shot)
-- The player also plays the ElevenLabs VO/SFX/music on top → double audio = "mashed up" sound
+Kling v3's multishot endpoint generates lip-synced speech and sound effects natively when `sound: "on"` is set. Instead of fighting to sync external audio, we let Kling handle dialog and SFX, and only layer ElevenLabs background music on top.
 
-### Problem 2: Lip-sync sends a signed/private URL to Kling
-Line 1098: `videoUrl` comes from `shotStatuses[].result_url` which is a signed Supabase URL. Kling's lip-sync API needs a publicly accessible URL to fetch the video. A signed URL may work briefly but expires, and Kling may not be able to fetch it.
+## Changes
 
-### Problem 3: Lip-sync sends per-shot VO URL that may also be private
-Line 1108: `voAsset.url` is from the `generated-audio` bucket (private). Same access issue.
+### 1. Enable Kling native audio (`useShortFilmProject.ts`)
+- Line 1009: Change `with_audio: false` to `with_audio: true` — this tells Kling to generate speech/SFX natively with lip-sync
+- Line 441 (single-shot path): Same change — `with_audio: true`
 
-### Problem 4: Multishot video can't be lip-synced per-shot
-Kling lip-sync takes an entire video + an audio file and syncs lips across the whole video. You can't apply it to just one shot within a combined multishot video. The entire approach is fundamentally mismatched with the multishot pipeline.
+### 2. Skip ElevenLabs SFX + Voiceover generation (`useShortFilmProject.ts`)
+- In `generateAudio()` (lines 601-698): Skip the SFX and Voiceover blocks entirely. Only generate the **music** track via ElevenLabs.
+- Remove the lip-sync post-processing block (lines 1090-1133) — no longer needed since Kling handles it natively.
 
-## Fix
+### 3. Update player to unmute video but keep music overlay (`ShortFilmVideoPlayer.tsx`)
+- Change `muted={!!hasAudio}` logic: the video should only be muted if there is NO Kling native audio. Since we now always have Kling audio, set `muted={false}` (or more precisely, only mute when there's no video audio at all).
+- Simplify: `muted` should be `false` because Kling audio is baked in. The only external layer is background music via `<audio>` element.
+- Remove the SFX/voiceover playback logic from the RAF loop — the player only needs to sync background music now.
 
-### File: `src/hooks/useShortFilmProject.ts`
-**Disable lip-sync for multishot videos entirely.** The multishot pipeline produces a single combined video — Kling lip-sync can't selectively sync one shot's lips within it. The VO is already played as a separate audio layer with frame-accurate timing, which sounds good. Lip-sync should only apply to single-shot videos where the entire video is one character talking.
+### 4. Update audio layer settings UI
+- The SFX and Voiceover toggles in settings should still exist (they control what Kling generates via prompt hints), but they no longer trigger separate ElevenLabs API calls.
+- Update `getEffectiveLayers()` usage: only `music` triggers ElevenLabs; `sfx` and `voiceover` are communicated to Kling through prompt content (already handled by `ROLE_AUDIO_CUES` in the prompt engine).
 
-Change: Wrap the lip-sync block (lines 1090-1139) with a guard that only runs for single-shot projects (`shots.length === 1`). For multishot (which is the normal short film flow), skip lip-sync entirely — the VO layer already handles narration.
+## Result
 
-This single change fixes:
-- The "mashed up" audio (no more double VO from lip-sync + ElevenLabs)
-- The video replacement bug (lip-synced URL overwriting all shots)
-- The private URL access issue (lip-sync won't be called)
+| Layer | Provider | How |
+|-------|----------|-----|
+| Dialog/Voice | Kling native | `sound: "on"`, lip-synced automatically |
+| Sound Effects | Kling native | Generated from prompt audio cues |
+| Background Music | ElevenLabs | Separate `<audio>` element, synced to video timeline |
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/hooks/useShortFilmProject.ts` | Set `with_audio: true`, remove ElevenLabs SFX/VO generation, remove lip-sync block |
+| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Unmute video, simplify to only sync background music overlay |
+| `supabase/functions/generate-video/index.ts` | Already correct — uses `withAudio` flag, no changes needed |
 
