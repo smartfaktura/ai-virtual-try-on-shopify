@@ -590,7 +590,7 @@ export function useShortFilmProject() {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId]);
+  }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId, generateAudio]);
 
   const updateShot = useCallback((index: number, updated: ShotPlanItem) => {
     setShots(prev => prev.map((s, i) => i === index ? updated : s));
