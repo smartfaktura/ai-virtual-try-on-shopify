@@ -1,87 +1,76 @@
 
 
-# Short Film — Audio Layer with ElevenLabs Integration
+# Short Film Audio Integration — Current State & What's Next
 
-## Overview
-Add a full audio production layer to the Short Film workflow using ElevenLabs for AI Music, Sound Effects, and Voiceover generation. All audio plays client-side via `<audio>` sync with the existing `ShortFilmVideoPlayer` — no server-side stitching.
+## Current State (Complete)
 
-## Prerequisites
-- Connect the **ElevenLabs connector** to the project (no ElevenLabs connection exists yet). This provides `ELEVENLABS_API_KEY` as a secret for edge functions.
+The audio layer is fully wired end-to-end:
 
-## What gets built
+**Backend (3 Edge Functions):**
+- `elevenlabs-music` — generates background tracks from text prompts (up to 120s)
+- `elevenlabs-sfx` — generates per-shot sound effects (up to 22s)
+- `elevenlabs-tts` — generates voiceover from script lines using selectable voices
 
-### 1. Three Edge Functions for ElevenLabs
+**Frontend:**
+- Settings panel has 5 audio modes: Silent, Ambient, Music, Voiceover, Full Mix
+- Music style prompt input and voice picker (10 ElevenLabs voices) appear contextually
+- `generateAudio()` in the hook fires after video generation completes
+- `ShortFilmVideoPlayer` syncs background track + per-shot audio with a volume mixer (Music / SFX / Voice sliders)
 
-**`elevenlabs-music`** — Generate a background music track from a text prompt (e.g. "cinematic ambient for luxury fashion film, 30 seconds"). The prompt is auto-composed from film type + tone on the backend. Returns binary MP3.
+**What works today:**
+- Audio generation triggers automatically after all video shots complete
+- Blob URLs are created client-side for playback
+- Player handles play/pause/skip sync across all audio layers
 
-**`elevenlabs-sfx`** — Generate per-shot sound effects from text descriptions (e.g. "wind through fabric", "footsteps on marble"). Up to 22s per effect. Returns binary MP3.
+## Gaps & Issues to Address
 
-**`elevenlabs-tts`** — Convert `script_line` text per shot into spoken voiceover using a selected ElevenLabs voice. Returns binary MP3.
+### 1. Audio is Lost on Page Refresh
+Audio blob URLs only exist in memory. If the user refreshes or returns later, all generated audio is gone. Need to persist audio files to storage and save URLs in the database.
 
-All three functions validate input with Zod, verify JWT, and include proper CORS headers.
+### 2. No Audio Preview Before Full Generation
+Users can't hear what their music/voice will sound like until after the entire film generates. Add a "Preview Audio" button in the Settings step to generate a short sample.
 
-### 2. Updated Audio Mode UI
+### 3. No Per-Shot Audio Progress
+During audio generation, only a generic "Generating audio layer..." message shows. No indication of which shot's SFX/voiceover is being generated or individual failures.
 
-Expand `audioMode` in settings from 3 options to 5:
-- **Silent** — no audio (existing)
-- **Ambient** — passed to Kling during generation (existing)
-- **Music** — AI-generated background track via ElevenLabs
-- **Voiceover** — AI narration from script lines via ElevenLabs TTS
-- **Full Mix** — Music + SFX + Voiceover layered together
+### 4. Missing Audio Retry
+If a single SFX or voiceover call fails, there's no way to retry just that one — the user would need to regenerate all audio.
 
-When "Music" or "Full Mix" is selected, show a text input for music mood/style prompt (auto-filled from film type + tone, editable).
+### 5. Edge Function Auth Uses getClaims (may not exist)
+All three functions use `supabase.auth.getClaims()` which may not be available in all Supabase JS versions. Should use `supabase.auth.getUser()` instead for reliable JWT validation.
 
-When "Voiceover" or "Full Mix" is selected, show a voice picker dropdown (preset list of ~10 ElevenLabs voices with labels like "Roger — warm male", "Sarah — clear female").
+## Recommended Next Steps
 
-### 3. Audio Generation Step
+### Phase A: Persistence & Reliability (high priority)
+1. **Persist audio to storage** — upload generated audio blobs to a `generated-audio` storage bucket, save URLs in `video_shots` (new `audio_url` and `sfx_url` columns) and `video_projects` (new `music_track_url` column)
+2. **Fix auth in edge functions** — replace `getClaims` with `getUser` for reliable JWT validation
+3. **Per-shot audio progress** — show which shot is generating SFX/voiceover with status indicators
+4. **Individual audio retry** — retry failed SFX/voiceover per shot
 
-After video generation completes, if audioMode is music/voiceover/full_mix, trigger audio generation:
-- **Music**: One API call to `elevenlabs-music` with a prompt derived from film type + tone + total duration
-- **SFX**: One call per shot to `elevenlabs-sfx` using shot purpose/scene_type as prompt
-- **Voiceover**: One call per shot (that has a `script_line`) to `elevenlabs-tts`
-
-Store generated audio as blob URLs in state. Show a small progress indicator ("Generating audio...").
-
-### 4. Audio-Synced Preview Player
-
-Upgrade `ShortFilmVideoPlayer` to accept optional audio tracks:
-- `backgroundTrackUrl` — plays continuously across all clips (music)
-- `perShotAudio` — array of `{ shotIndex, url, type: 'sfx' | 'voiceover' }` that play/pause in sync with each clip
-
-Use an `<audio>` element ref for the background track. On play/pause/skip, sync audio playback position. Per-shot audio starts when the matching clip begins and pauses when it ends.
-
-Add a simple volume mixer UI below the player: sliders for Music, SFX, and Voice volume levels.
-
-### 5. Type Updates
-
-```text
-ShortFilmSettings.audioMode: 'silent' | 'ambient' | 'music' | 'voiceover' | 'full_mix'
-ShortFilmSettings.musicPrompt?: string
-ShortFilmSettings.voiceId?: string
-
-New interface AudioAssets {
-  backgroundTrackUrl?: string;
-  perShotAudio: { shotIndex: number; url: string; type: 'sfx' | 'voiceover' }[];
-}
-```
+### Phase B: UX Polish (medium priority)
+5. **Audio preview in Settings** — "Preview" button generates a 10s music sample and reads one script line so users can tune settings before committing
+6. **Audio regeneration** — "Regenerate Audio" button on completed projects to re-run audio with different settings without re-generating video
+7. **Waveform visualization** — replace plain sliders with mini waveform bars in the mixer
 
 ## Files to create/change
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `supabase/functions/elevenlabs-music/index.ts` | New — music generation edge function |
-| `supabase/functions/elevenlabs-sfx/index.ts` | New — SFX generation edge function |
-| `supabase/functions/elevenlabs-tts/index.ts` | New — TTS voiceover edge function |
-| `src/types/shortFilm.ts` | Add new audio modes, `musicPrompt`, `voiceId`, `AudioAssets` |
-| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Expand audio options, add music prompt input + voice picker |
-| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Add audio sync, background track, per-shot audio, volume mixer |
-| `src/hooks/useShortFilmProject.ts` | Add `generateAudio()` logic, store audio assets in state |
-| `src/pages/video/ShortFilm.tsx` | Wire audio generation after video completes, pass audio to player |
+| DB migration | Add `music_track_url` to `video_projects`, add `audio_url`/`sfx_url` to `video_shots` |
+| Migration | Create `generated-audio` storage bucket (private) |
+| `supabase/functions/elevenlabs-music/index.ts` | Replace `getClaims` with `getUser` |
+| `supabase/functions/elevenlabs-sfx/index.ts` | Replace `getClaims` with `getUser` |
+| `supabase/functions/elevenlabs-tts/index.ts` | Replace `getClaims` with `getUser` |
+| `src/hooks/useShortFilmProject.ts` | Upload audio to storage, save URLs to DB, per-shot progress, retry logic |
+| `src/pages/video/ShortFilm.tsx` | Per-shot audio progress UI, regenerate audio button |
+| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Audio preview button |
+| `src/components/app/video/short-film/ShortFilmProgressPanel.tsx` | Audio generation status per shot |
 
 ## Implementation order
-1. Connect ElevenLabs connector
-2. Create three edge functions (music, sfx, tts)
-3. Update types and settings UI
-4. Add audio generation logic in hook
-5. Upgrade preview player with audio sync + volume mixer
+1. Fix edge function auth (quick win, prevents runtime errors)
+2. DB migration + storage bucket for audio persistence
+3. Upload & persist audio in hook
+4. Per-shot audio progress + retry UI
+5. Audio preview in settings
+6. Regenerate audio button
 
