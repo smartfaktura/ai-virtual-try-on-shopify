@@ -27,19 +27,6 @@ const PRESERVATION_OPTIONS = [
   { value: 'high' as const, label: 'High', desc: 'Maximum fidelity' },
 ];
 
-const VOICE_OPTIONS = [
-  { id: 'JBFqnCBsd6RMkjVDRZzb', label: 'George — warm male' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', label: 'Sarah — clear female' },
-  { id: 'CwhRBWXzGAHq8TQ4Fs17', label: 'Roger — confident male' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', label: 'Laura — elegant female' },
-  { id: 'TX3LPaxmHKxFdv7VOQHJ', label: 'Liam — neutral male' },
-  { id: 'Xb7hH8MSUJpSbSDYk0k2', label: 'Alice — soft female' },
-  { id: 'pFZP5JQG7iQjIQuC4Bku', label: 'Lily — gentle female' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', label: 'Daniel — deep male' },
-  { id: 'cgSgspJ2msm6clMCkdW9', label: 'Jessica — bright female' },
-  { id: 'nPczCjzI2devNBz1zQrb', label: 'Brian — professional male' },
-];
-
 const MUSIC_PRESETS: { key: string; label: string; forFilmType?: string }[] = [
   { key: 'product_launch', label: 'Cinematic Orchestral', forFilmType: 'product_launch' },
   { key: 'brand_story', label: 'Warm Piano & Strings', forFilmType: 'brand_story' },
@@ -63,10 +50,9 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio, fil
   const update = (partial: Partial<ShortFilmSettings>) =>
     onChange({ ...settings, ...partial });
 
-  const layers: AudioLayers = settings.audioLayers || { music: true, sfx: true, voiceover: true };
+  const layers: AudioLayers = settings.audioLayers || { music: true, sfx: true, voiceover: false };
   const showMusicSection = layers.music;
-  const showVoicePicker = layers.voiceover;
-  const showPreview = (layers.music || layers.voiceover) && !!onPreviewAudio;
+  const showPreview = layers.music && !!onPreviewAudio;
 
   const currentPresetKey = settings.musicPresetKey || getDefaultMusicPresetKey(filmType, musicDirection);
 
@@ -142,7 +128,7 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio, fil
         </div>
       </div>
 
-      {/* Shot Duration info */}
+      {/* Duration */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Duration</p>
         <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
@@ -150,15 +136,13 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio, fil
         </div>
       </div>
 
-      {/* Audio note — configured in Shot Plan */}
+      {/* Audio info */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Audio</p>
         <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
-          Audio layers are configured in the Shot Plan step.
-          {layers.music && ' Music ✓'}
-          {layers.sfx && ' SFX ✓'}
-          {layers.voiceover && ' Voiceover ✓'}
-          {!layers.music && !layers.sfx && !layers.voiceover && ' All layers disabled'}
+          Dialog & sound effects are generated natively with the video.
+          {layers.music && ' Background music is added as a separate layer.'}
+          {!layers.music && !layers.sfx && !layers.voiceover && ' All audio layers disabled.'}
         </div>
       </div>
 
@@ -193,14 +177,12 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio, fil
             </SelectContent>
           </Select>
 
-          {/* Show AI Director suggestion preview */}
           {currentPresetKey === 'ai_director' && musicDirection && (
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-xs text-muted-foreground italic">
               "{musicDirection}"
             </div>
           )}
 
-          {/* Custom text input */}
           {currentPresetKey === 'custom' && (
             <Input
               value={settings.musicPrompt || ''}
@@ -209,31 +191,6 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio, fil
               className="text-sm"
             />
           )}
-        </div>
-      )}
-
-      {/* Voice Picker */}
-      {showVoicePicker && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Voiceover Voice</p>
-          <p className="text-xs text-muted-foreground">
-            Choose a voice for AI narration of script lines.
-          </p>
-          <Select
-            value={settings.voiceId || VOICE_OPTIONS[0].id}
-            onValueChange={(val) => update({ voiceId: val })}
-          >
-            <SelectTrigger className="text-sm">
-              <SelectValue placeholder="Select a voice" />
-            </SelectTrigger>
-            <SelectContent>
-              {VOICE_OPTIONS.map((v) => (
-                <SelectItem key={v.id} value={v.id}>
-                  {v.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       )}
 

@@ -1,12 +1,11 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Download, Music, Loader2 } from 'lucide-react';
+import { Play, Pause, Download, Loader2 } from 'lucide-react';
 import type { AudioAssets } from '@/types/shortFilm';
 
 interface ShotMeta {
   shot_index: number;
   duration_sec: number;
-  sfx_trigger_at?: number;
 }
 
 interface ShortFilmVideoPlayerProps {
@@ -14,30 +13,26 @@ interface ShortFilmVideoPlayerProps {
   audioAssets?: AudioAssets;
   shots?: ShotMeta[];
   onDownload?: () => void;
-  onDownloadWithAudio?: () => void;
-  isDownloadingWithAudio?: boolean;
+  isDownloading?: boolean;
 }
 
-export function ShortFilmVideoPlayer({ clips, audioAssets, shots, onDownload, onDownloadWithAudio, isDownloadingWithAudio }: ShortFilmVideoPlayerProps) {
+export function ShortFilmVideoPlayer({ clips, audioAssets, shots, onDownload, isDownloading }: ShortFilmVideoPlayerProps) {
   if (!clips.length) return null;
-  return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} onDownload={onDownload} onDownloadWithAudio={onDownloadWithAudio} isDownloadingWithAudio={isDownloadingWithAudio} />;
+  return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} onDownload={onDownload} isDownloading={isDownloading} />;
 }
 
-/* ─── Single combined video player with background music sync ─── */
 function SingleVideoPlayer({
   clip,
   audioAssets,
   shots,
   onDownload,
-  onDownloadWithAudio,
-  isDownloadingWithAudio,
+  isDownloading,
 }: {
   clip: { url: string; label: string };
   audioAssets?: AudioAssets;
   shots?: ShotMeta[];
   onDownload?: () => void;
-  onDownloadWithAudio?: () => void;
-  isDownloadingWithAudio?: boolean;
+  isDownloading?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgAudioRef = useRef<HTMLAudioElement>(null);
@@ -52,12 +47,10 @@ function SingleVideoPlayer({
   const musicVolume = 0.5;
   const hasMusic = !!audioAssets?.backgroundTrackUrl;
 
-  // Volume sync on mount
   useEffect(() => {
     if (bgAudioRef.current) bgAudioRef.current.volume = musicVolume;
   }, []);
 
-  // RAF loop for progress tracking
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -120,9 +113,7 @@ function SingleVideoPlayer({
     video.currentTime = pct * video.duration;
     setProgress(pct * 100);
     setCurrentTime(video.currentTime);
-    if (bgAudioRef.current) {
-      bgAudioRef.current.currentTime = video.currentTime;
-    }
+    if (bgAudioRef.current) bgAudioRef.current.currentTime = video.currentTime;
   };
 
   if (!clip) return null;
@@ -139,30 +130,22 @@ function SingleVideoPlayer({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">Your Short Film</h3>
-        <div className="flex items-center gap-1.5">
-          {onDownload && (
-            <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onDownload}>
+        {onDownload && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1 text-xs"
+            onClick={onDownload}
+            disabled={isDownloading}
+          >
+            {isDownloading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
               <Download className="h-3 w-3" />
-              Download
-            </Button>
-          )}
-          {hasMusic && onDownloadWithAudio && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1 text-xs"
-              onClick={onDownloadWithAudio}
-              disabled={isDownloadingWithAudio}
-            >
-              {isDownloadingWithAudio ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Music className="h-3 w-3" />
-              )}
-              {isDownloadingWithAudio ? 'Muxing...' : 'Download with Music'}
-            </Button>
-          )}
-        </div>
+            )}
+            {isDownloading ? 'Preparing...' : 'Download'}
+          </Button>
+        )}
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden bg-black">
@@ -190,17 +173,13 @@ function SingleVideoPlayer({
         <audio ref={bgAudioRef} src={audioAssets!.backgroundTrackUrl} loop preload="auto" />
       )}
 
-      {/* Controls bar */}
       <div className="flex items-center gap-3">
         <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={togglePlay} disabled={videoError}>
           {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </Button>
-
         <span className="text-[11px] font-mono text-muted-foreground w-10 shrink-0">
           {formatTime(currentTime)}
         </span>
-
-        {/* Clickable progress bar */}
         <div
           className="flex-1 h-2 rounded-full bg-secondary cursor-pointer relative overflow-hidden"
           onClick={handleSeek}
@@ -210,7 +189,6 @@ function SingleVideoPlayer({
             style={{ width: `${progress}%` }}
           />
         </div>
-
         <span className="text-[11px] font-mono text-muted-foreground w-10 shrink-0 text-right">
           {formatTime(duration)}
         </span>
