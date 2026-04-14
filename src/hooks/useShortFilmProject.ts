@@ -180,11 +180,11 @@ export function useShortFilmProject() {
             .eq('project_id', data.id)
             .order('shot_index');
           if (shotRows && shotRows.length > 0) {
-            const restoredStatuses: ShotStatus[] = shotRows.map((r: any) => ({
+            const restoredStatuses: ShotStatus[] = await Promise.all(shotRows.map(async (r: any) => ({
               shot_index: r.shot_index,
               status: r.status === 'complete' ? 'complete' : r.status === 'failed' ? 'failed' : 'pending',
-              result_url: r.result_url || undefined,
-            }));
+              result_url: r.result_url ? await toSignedUrl(r.result_url) : undefined,
+            })));
             setShotStatuses(restoredStatuses);
 
             // Restore audio assets
@@ -355,10 +355,11 @@ export function useShortFilmProject() {
       sendWake(token);
 
       const resultUrl = await pollQueueJobCompletion(result.jobId, 60);
+      const signedResult = resultUrl ? await toSignedUrl(resultUrl) : undefined;
       setShotStatuses(prev =>
         prev.map(s =>
           s.shot_index === shotIndex
-            ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
+            ? { ...s, status: signedResult ? 'complete' : 'failed', result_url: signedResult }
             : s
         )
       );
@@ -830,9 +831,10 @@ export function useShortFilmProject() {
 
         if (resultUrl) {
           generationSucceeded = true;
+          const signedResultUrl = await toSignedUrl(resultUrl);
           // All shots succeeded — mark all complete with the single video URL
           setShotStatuses(prev => prev.map(s => ({
-            ...s, status: 'complete' as const, result_url: resultUrl,
+            ...s, status: 'complete' as const, result_url: signedResultUrl,
           })));
 
           // Update all video_shots rows
