@@ -124,6 +124,14 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     { id: 'sm-14', title: 'Macro Texture Study', category: 'Motion', keywords: 'Extreme close-up, visible material fibers and pores, shallow DOF, studio ring light' },
     { id: 'sm-15', title: 'Liquid & Reflections', category: 'Motion', keywords: 'Refractive caustics, water droplets, chrome reflections, glass surfaces, wet textures' },
     { id: 'sm-16', title: 'Smoke & Atmosphere', category: 'Motion', keywords: 'Volumetric light rays through haze, floating particles, dramatic backlight, moody atmosphere' },
+    { id: 'sm-17', title: 'ASMR Tactile', category: 'Motion', keywords: 'Satisfying texture sounds, close-up fingertip contact, material sensory detail, crisp micro sounds' },
+    { id: 'sm-18', title: 'Y2K Chrome', category: 'Atmospheric', keywords: 'Reflective metallic surfaces, iridescent holographic sheen, early-2000s futurism, glossy plastic' },
+    { id: 'sm-19', title: 'Wes Anderson Pastel', category: 'Cinematic', keywords: 'Symmetrical framing, pastel palette, whimsical staging, centered composition, flat perspective' },
+    { id: 'sm-20', title: 'Film Noir Revival', category: 'Cinematic', keywords: 'Deep contrast, venetian blind shadows, moody single key light, desaturated cool tones, smoke' },
+    { id: 'sm-21', title: 'Analog Warmth', category: 'Atmospheric', keywords: 'VHS scanlines, warm halation glow, retro handheld feel, soft focus edges, vintage color shift' },
+    { id: 'sm-22', title: 'Brutalist Clean', category: 'Commercial', keywords: 'Raw concrete geometry, geometric shadow play, minimal stark composition, monochrome palette' },
+    { id: 'sm-23', title: 'Dreamy Vaseline', category: 'Atmospheric', keywords: 'Soft lens diffusion, halation glow, romantic haze, gentle highlight bloom, warm pastel tones' },
+    { id: 'sm-24', title: 'High-Speed Freeze', category: 'Motion', keywords: 'Frozen motion mid-air, splash and shatter detail, ultra-sharp 1/8000s freeze frame, dramatic impact' },
   ], []);
 
   // --- Scene presets (Kling 3.0 optimized) ---
@@ -144,6 +152,14 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     { id: 'vs-14', title: 'Neon Rain Street', category: 'Creative', description: 'Wet asphalt reflecting neon signage, magenta and cyan light pools, urban night, visible raindrops', mood: 'energetic' },
     { id: 'vs-15', title: 'Surreal Gradient Void', category: 'Creative', description: 'Smooth infinite color gradient, no visible ground plane, floating subject, dreamy atmosphere', mood: 'creative' },
     { id: 'vs-16', title: 'Desert Golden Sands', category: 'Creative', description: 'Warm orange dunes, harsh directional sunlight, heat haze, textured sand ripples, vast scale', mood: 'atmospheric' },
+    { id: 'vs-17', title: 'Japanese Zen Garden', category: 'Outdoor', description: 'Raked sand patterns, moss-covered stones, soft natural overcast light, bamboo accents, tranquil', mood: 'minimal' },
+    { id: 'vs-18', title: 'Parisian Cafe', category: 'Interior', description: 'Warm interior, vintage furniture, soft morning window light, marble bistro table, aged brass details', mood: 'lifestyle' },
+    { id: 'vs-19', title: 'Snow-Covered Alps', category: 'Outdoor', description: 'Cold blue light, fresh powder, vast mountain scale, crisp air, dramatic cloud shadows', mood: 'atmospheric' },
+    { id: 'vs-20', title: 'Underground Parking', category: 'Creative', description: 'Fluorescent overhead light, concrete pillars, gritty urban texture, car paint reflections', mood: 'editorial' },
+    { id: 'vs-21', title: 'Art Gallery White Cube', category: 'Interior', description: 'Track-lit walls, polished concrete floor, curated negative space, museum-grade lighting', mood: 'premium' },
+    { id: 'vs-22', title: 'Tropical Pool Villa', category: 'Outdoor', description: 'Turquoise water reflections, palm leaf shadows, warm golden hour, natural stone surfaces', mood: 'luxury' },
+    { id: 'vs-23', title: 'Industrial Workshop', category: 'Creative', description: 'Metal sparks, heavy machinery, raw welded textures, warm overhead industrial lighting', mood: 'energetic' },
+    { id: 'vs-24', title: 'Cherry Blossom Path', category: 'Outdoor', description: 'Pink petals falling softly, overcast diffused light, Japanese aesthetic, stone pathway', mood: 'emotional' },
   ], []);
 
   const filteredScenes = useMemo(() => {

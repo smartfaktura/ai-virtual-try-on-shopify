@@ -29,12 +29,15 @@ const TONE_PRESETS: Record<string, string> = {
 };
 
 /* ─── Per-role cinematographic directives ─── */
+/* ─── Per-role cinematographic directives ─── */
+/* Keys match the system roles emitted by the AI Director / preset planner */
 const ROLE_CINEMATICS: Record<string, {
   directive: string;
   lighting: string;
   lens: string;
   negatives: string[];
 }> = {
+  /* ── Story structure: hook_reveal_detail_closing ── */
   hook: {
     directive:
       'Dramatic opening shot. High visual intrigue. Silhouette-to-reveal transition with escalating energy.',
@@ -42,76 +45,82 @@ const ROLE_CINEMATICS: Record<string, {
     lens: 'Wide anamorphic lens, shallow depth of field, cinematic letterbox framing.',
     negatives: ['static', 'flat lighting', 'boring composition'],
   },
-  reveal: {
+  product_reveal: {
     directive:
       'Hero product reveal with dramatic emphasis. The subject emerges from shadow or motion blur into sharp focus.',
     lighting: 'Sculpted three-point lighting, key light at 45°, subtle fill, strong back-rim separation.',
     lens: 'Medium focal length, rack focus from background to subject, precision center framing.',
     negatives: ['premature reveal', 'cluttered frame', 'overlit'],
   },
-  detail: {
+  detail_closeup: {
     directive:
       'Extreme close-up detail shot. Showcase texture, craftsmanship, material quality.',
     lighting: 'Texture-revealing side light at 30°, soft fill opposite, micro-contrast enhancement.',
     lens: 'Macro lens, f/2.8 bokeh, ultra-shallow depth of field, rack focus across surface details.',
     negatives: ['wide shot', 'out of focus subject', 'flat angle'],
   },
-  closing: {
+  brand_finish: {
     directive:
       'Elegant final shot. Confident conclusion with logo-safe composition. Satisfying visual resolution.',
     lighting: 'Soft wrap-around lighting, gentle gradient falloff, clean even illumination.',
     lens: 'Slow pull-back or static lock-off, centered composition, fade-ready framing.',
     negatives: ['abrupt ending', 'busy background', 'harsh shadows'],
   },
-  intro: {
+
+  /* ── Story structure: intro_product_lifestyle_end ── */
+  scene_intro: {
     directive:
       'Establishing shot setting mood and spatial context. Draw the viewer into the world.',
     lighting: 'Atmospheric environmental lighting, volumetric haze, motivated practical light sources.',
     lens: 'Wide angle establishing shot, deep depth of field, slow dolly or crane movement.',
     negatives: ['tight framing', 'unclear context', 'static'],
   },
-  product: {
+  product_moment: {
     directive:
       'Hero product showcase. The product is the undeniable star — pristine, elevated, magnetic.',
     lighting: 'Studio product lighting, soft overhead diffusion, subtle gradient background, clean reflections.',
     lens: 'Medium telephoto compression, floating product feel, smooth slow orbit or push.',
     negatives: ['distracting elements', 'poor product visibility', 'cluttered'],
   },
-  lifestyle: {
+  lifestyle_moment: {
     directive:
       'Product in real-world context. Natural human interaction, aspirational but believable setting.',
     lighting: 'Natural window light or golden hour, warm color temperature, organic soft shadows.',
     lens: 'Medium wide, shallow DOF isolating subject from environment, gentle handheld sway.',
     negatives: ['staged feeling', 'unnatural poses', 'studio look'],
   },
-  atmosphere: {
-    directive:
-      'Pure mood and atmosphere. Abstract visual poetry — light, shadow, texture, movement.',
-    lighting: 'Dramatic chiaroscuro or ethereal soft glow, volumetric light rays, lens flare accents.',
-    lens: 'Experimental angles, anamorphic distortion, slow motion, dreamlike quality.',
-    negatives: ['literal', 'explanatory', 'sharp hard edges'],
-  },
-  focus: {
-    directive:
-      'Tight focus on the subject. Precision framing, intentional negative space.',
-    lighting: 'Spot lighting on subject, dark surround falloff, dramatic light-to-shadow ratio.',
-    lens: 'Long telephoto, f/1.4 extreme bokeh, subject isolation, locked tripod.',
-    negatives: ['wide framing', 'busy background', 'movement blur'],
-  },
-  human: {
-    directive:
-      'Human element — a real person with natural expression, gesture, and interaction. Emotional connection with the viewer.',
-    lighting: 'Beauty lighting, soft diffused key, eye-catch reflection, warm skin tones.',
-    lens: 'Portrait focal length 85-135mm, shallow DOF, intimate distance.',
-    negatives: ['distorted faces', 'unflattering angle', 'harsh shadows on face', 'mannequin', 'hanger', 'clothes rack', 'faceless figure'],
-  },
-  finish: {
+  end_frame: {
     directive:
       'Satisfying visual conclusion. Resolving energy, calm confident finish.',
     lighting: 'Soft even lighting, warm afterglow, gentle fade-down quality.',
     lens: 'Static or slow crane up, centered composition, clean negative space.',
     negatives: ['rushed', 'new information', 'jarring'],
   },
+
+  /* ── Story structure: atmosphere_focus_human_finish ── */
+  mood_atmosphere: {
+    directive:
+      'Pure mood and atmosphere. Abstract visual poetry — light, shadow, texture, movement.',
+    lighting: 'Dramatic chiaroscuro or ethereal soft glow, volumetric light rays, lens flare accents.',
+    lens: 'Experimental angles, anamorphic distortion, slow motion, dreamlike quality.',
+    negatives: ['literal', 'explanatory', 'sharp hard edges'],
+  },
+  product_focus: {
+    directive:
+      'Tight focus on the subject. Precision framing, intentional negative space.',
+    lighting: 'Spot lighting on subject, dark surround falloff, dramatic light-to-shadow ratio.',
+    lens: 'Long telephoto, f/1.4 extreme bokeh, subject isolation, locked tripod.',
+    negatives: ['wide framing', 'busy background', 'movement blur'],
+  },
+  human_interaction: {
+    directive:
+      'Human element — a real person with natural expression, gesture, and interaction. Emotional connection with the viewer.',
+    lighting: 'Beauty lighting, soft diffused key, eye-catch reflection, warm skin tones.',
+    lens: 'Portrait focal length 85-135mm, shallow DOF, intimate distance.',
+    negatives: ['distorted faces', 'unflattering angle', 'harsh shadows on face', 'mannequin', 'hanger', 'clothes rack', 'faceless figure'],
+  },
+
+  /* ── Story structure: tease_build_highlight_resolve ── */
   tease: {
     directive:
       'Teaser shot — hint without full reveal. Build curiosity and anticipation.',
@@ -140,13 +149,8 @@ const ROLE_CINEMATICS: Record<string, {
     lens: 'Gentle pull-back or settle, widening composition, breathing room.',
     negatives: ['new tension', 'abrupt', 'dark ending'],
   },
-  hero: {
-    directive:
-      'Hero product reveal — the starring moment. Maximum visual impact, premium presentation.',
-    lighting: 'Sculpted three-point lighting, perfect product illumination, dramatic rim separation.',
-    lens: 'Medium telephoto, shallow DOF, smooth orbit or push-in, cinematic framing.',
-    negatives: ['cluttered', 'poor lighting', 'unflattering angle'],
-  },
+
+  /* ── Shared / utility roles ── */
   transition: {
     directive:
       'Smooth visual transition connecting scenes. Elegant motion bridging two moments.',
@@ -155,6 +159,28 @@ const ROLE_CINEMATICS: Record<string, {
     negatives: ['jarring cut', 'mismatched lighting', 'static'],
   },
 };
+
+/* ── Legacy alias map: short names → system role keys ── */
+const ROLE_ALIASES: Record<string, string> = {
+  reveal: 'product_reveal',
+  detail: 'detail_closeup',
+  closing: 'brand_finish',
+  intro: 'scene_intro',
+  product: 'product_moment',
+  lifestyle: 'lifestyle_moment',
+  finish: 'end_frame',
+  atmosphere: 'mood_atmosphere',
+  focus: 'product_focus',
+  human: 'human_interaction',
+  hero: 'highlight',
+};
+
+/** Look up cinematic directives by role, with alias fallback */
+function lookupRoleCinematic(role: string) {
+  return ROLE_CINEMATICS[role]
+    || ROLE_CINEMATICS[ROLE_ALIASES[role] || '']
+    || DEFAULT_CINEMATIC;
+}
 
 const DEFAULT_CINEMATIC = {
   directive: 'Cinematic shot with professional production quality.',
@@ -188,7 +214,7 @@ export function buildShotPrompt(
   imageIndex?: number,
 ): { prompt: string; negative_prompt: string } {
   const MAX_PROMPT_LENGTH = 510;
-  const roleCine = ROLE_CINEMATICS[shot.role] || DEFAULT_CINEMATIC;
+  const roleCine = lookupRoleCinematic(shot.role);
 
   // Priority 1 — must have
   const p1: string[] = [];

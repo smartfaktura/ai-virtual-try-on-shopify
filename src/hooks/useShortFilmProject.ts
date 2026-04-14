@@ -416,7 +416,7 @@ export function useShortFilmProject() {
           aspect_ratio: settings.aspectRatio,
           mode: 'pro',
           negative_prompt,
-          with_audio: settings.audioMode === 'ambient',
+          with_audio: !!(getEffectiveLayers(settings).sfx),
           project_id: projectId,
           workflow_type: 'short_film',
         },
@@ -744,11 +744,16 @@ export function useShortFilmProject() {
         const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
 
+        // Compute offset_sec from cumulative shot durations
+        const offsetSec = shots
+          .filter(s => s.shot_index < shotIndex)
+          .reduce((sum, s) => sum + (s.duration_sec || 3), 0);
+
         setAudioAssets(prev => ({
           ...prev,
           perShotAudio: [
             ...prev.perShotAudio.filter(a => !(a.shotIndex === shotIndex && a.type === type)),
-            { shotIndex, url: blobUrl, type },
+            { shotIndex, url: blobUrl, type, offset_sec: offsetSec },
           ],
         }));
 
@@ -842,6 +847,7 @@ export function useShortFilmProject() {
               storyStructure,
               aspectRatio: settings.aspectRatio,
               audioMode: settings.audioMode,
+              audioLayers: { ...getEffectiveLayers(settings) },
               preservationLevel: settings.preservationLevel,
               shotDuration: settings.shotDuration,
             },
@@ -861,6 +867,7 @@ export function useShortFilmProject() {
               storyStructure,
               aspectRatio: settings.aspectRatio,
               audioMode: settings.audioMode,
+              audioLayers: { ...getEffectiveLayers(settings) },
               preservationLevel: settings.preservationLevel,
               shotDuration: settings.shotDuration,
             },
@@ -1070,10 +1077,10 @@ export function useShortFilmProject() {
       ...prev,
       {
         shot_index: prev.length + 1,
-        role: 'detail',
+        role: 'detail_closeup',
         purpose: 'New custom shot',
-        scene_type: 'product_closeup',
-        camera_motion: 'slow_push',
+        scene_type: 'macro_closeup',
+        camera_motion: 'slow_push_in',
         subject_motion: 'static',
         duration_sec: 3,
         product_visible: true,
