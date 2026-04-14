@@ -329,6 +329,12 @@ export function ShotCard({
             "{shot.script_line}"
           </p>
         )}
+
+        {shot.sfx_prompt && (
+          <p className="text-[10px] text-muted-foreground/60 border-l-2 border-muted pl-2">
+            🔊 {shot.sfx_prompt}
+          </p>
+        )}
       </div>
 
       {editable && (
