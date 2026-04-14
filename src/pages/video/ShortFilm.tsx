@@ -1,4 +1,4 @@
-import { Sparkles, Coins, ExternalLink, RotateCw, Download, Loader2, Music } from 'lucide-react';
+import { Sparkles, Coins, RotateCw, Loader2, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
@@ -33,13 +33,12 @@ export default function ShortFilm() {
     saveDraft, loadDraft,
     customRoles, setCustomRoles,
     audioAssets, isGeneratingAudio,
-    audioPhase, audioShotStatuses, retryAudioForShot,
+    audioPhase,
     generateAudio, previewAudio,
   } = useShortFilmProject();
 
   const generationStartRef = useRef<number>(Date.now());
 
-  // Track generation start time
   const prevIsGenerating = useRef(false);
   if (isGenerating && !prevIsGenerating.current) {
     generationStartRef.current = Date.now();
@@ -54,7 +53,6 @@ export default function ShortFilm() {
   const allSucceeded = allDone && failedCount === 0 && successCount > 0;
   const hasFailures = allDone && failedCount > 0;
 
-  // Deduplicate: multi-shot produces one combined video shared across all shot statuses
   const completedClips = useMemo(() => {
     const urls = new Set<string>();
     const clips: { url: string; label: string }[] = [];
@@ -68,11 +66,11 @@ export default function ShortFilm() {
   }, [shotStatuses]);
 
   const shotsMeta = useMemo(() =>
-    shots.map(s => ({ shot_index: s.shot_index, duration_sec: s.duration_sec, sfx_trigger_at: s.sfx_trigger_at })),
+    shots.map(s => ({ shot_index: s.shot_index, duration_sec: s.duration_sec })),
     [shots]
   );
 
-  const [isDownloadingWithAudio, setIsDownloadingWithAudio] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const totalDuration = useMemo(() =>
     shots.reduce((sum, s) => sum + (s.duration_sec || 3), 0),
@@ -83,55 +81,44 @@ export default function ShortFilm() {
     return references.map(r => ({ id: r.id, url: r.url, role: r.role, name: r.name }));
   }, [references]);
 
-  const downloadAllClips = useCallback(async () => {
-    for (const clip of completedClips) {
-      try {
-        const response = await fetch(clip.url);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = `short-film.mp4`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      } catch {
-        window.open(clip.url, '_blank');
-      }
-    }
-  }, [completedClips]);
-
-  const downloadWithAudio = useCallback(async () => {
-    if (!completedClips.length || !audioAssets?.backgroundTrackUrl) return;
-    setIsDownloadingWithAudio(true);
+  // Single smart download: auto-mux with music if available, otherwise raw video
+  const handleDownload = useCallback(async () => {
+    if (!completedClips.length) return;
+    setIsDownloading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('mux-video-audio', {
-        body: {
-          video_url: completedClips[0].url,
-          audio_url: audioAssets.backgroundTrackUrl,
-        },
-      });
-      if (error || !data?.url) {
-        throw new Error(data?.error || error?.message || 'Muxing failed');
+      let downloadUrl = completedClips[0].url;
+      let filename = 'short-film.mp4';
+
+      // If music track exists, mux it into the video
+      if (audioAssets?.backgroundTrackUrl) {
+        const { data, error } = await supabase.functions.invoke('mux-video-audio', {
+          body: {
+            video_url: completedClips[0].url,
+            audio_url: audioAssets.backgroundTrackUrl,
+          },
+        });
+        if (!error && data?.url) {
+          downloadUrl = data.url;
+          filename = 'short-film-final.mp4';
+        }
+        // If muxing fails, fall through to raw download
       }
-      // Download the muxed file
-      const response = await fetch(data.url);
+
+      const response = await fetch(downloadUrl);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = 'short-film-with-music.mp4';
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
-      toast.success('Downloaded with music!');
-    } catch (err: any) {
-      console.error('Download with audio failed:', err);
-      toast.error(err.message || 'Failed to mux video with audio');
+      toast.success('Downloaded!');
+    } catch {
+      window.open(completedClips[0].url, '_blank');
     } finally {
-      setIsDownloadingWithAudio(false);
+      setIsDownloading(false);
     }
   }, [completedClips, audioAssets]);
 
@@ -184,10 +171,14 @@ export default function ShortFilm() {
         canNavigateTo={canNavigateToStep}
       />
 
-      {/* Step Content */}
       <div className="min-h-[300px]">
         {step === 'film_type' && (
-          <FilmTypeSelector value={filmType} onChange={setFilmType} />
+          <FilmTypeSelector
+            value={filmType}
+            onChange={setFilmType}
+            audioLayers={settings.audioLayers || { music: true, sfx: true, voiceover: false }}
+            onAudioLayersChange={(layers) => setSettings(prev => ({ ...prev, audioLayers: layers }))}
+          />
         )}
 
         {step === 'references' && (
@@ -215,7 +206,7 @@ export default function ShortFilm() {
             onPlanModeChange={setPlanMode}
             isAiPlanning={isAiPlanning}
             availableReferences={availableReferences}
-            audioLayers={settings.audioLayers || { music: true, sfx: true, voiceover: true }}
+            audioLayers={settings.audioLayers || { music: true, sfx: true, voiceover: false }}
             onAudioLayersChange={(layers) => setSettings(prev => ({ ...prev, audioLayers: layers }))}
           />
         )}
@@ -246,55 +237,14 @@ export default function ShortFilm() {
             {isGeneratingAudio && (
               <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {audioPhase === 'music' && 'Generating background music...'}
-                    {audioPhase === 'sfx' && 'Generating sound effects...'}
-                    {audioPhase === 'voiceover' && 'Generating voiceover...'}
-                    {audioPhase === 'idle' && 'Preparing audio layer...'}
-                  </p>
-                  {audioShotStatuses.length > 0 && (audioPhase === 'sfx' || audioPhase === 'voiceover') && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {audioShotStatuses.map(s => {
-                        const status = audioPhase === 'sfx' ? s.sfx : s.voiceover;
-                        return (
-                          <span key={s.shot_index} className={`text-[10px] px-1.5 py-0.5 rounded ${
-                            status === 'generating' ? 'bg-amber-100 text-amber-800' :
-                            status === 'done' ? 'bg-green-100 text-green-800' :
-                            status === 'failed' ? 'bg-red-100 text-red-800' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            Shot {s.shot_index}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <p className="text-sm font-medium text-foreground">
+                  Generating background music...
+                </p>
               </div>
             )}
 
-            {!isGeneratingAudio && audioShotStatuses.some(s => s.sfx === 'failed' || s.voiceover === 'failed') && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-2">
-                <p className="text-sm font-medium text-foreground">Some audio tracks failed</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {audioShotStatuses.filter(s => s.sfx === 'failed').map(s => (
-                    <Button key={`sfx-${s.shot_index}`} variant="outline" size="sm" className="h-8 text-xs gap-1"
-                      onClick={() => retryAudioForShot(s.shot_index, 'sfx')}>
-                      <RotateCw className="h-3 w-3" /> SFX Shot {s.shot_index}
-                    </Button>
-                  ))}
-                  {audioShotStatuses.filter(s => s.voiceover === 'failed').map(s => (
-                    <Button key={`vo-${s.shot_index}`} variant="outline" size="sm" className="h-8 text-xs gap-1"
-                      onClick={() => retryAudioForShot(s.shot_index, 'voiceover')}>
-                      <RotateCw className="h-3 w-3" /> Voice Shot {s.shot_index}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {allSucceeded && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (audioPhase === 'partial' || audioPhase === 'idle' || (audioPhase === 'done' && !audioAssets?.backgroundTrackUrl && (audioAssets?.perShotAudio?.length ?? 0) === 0)) && (
+            {/* Generate / Regenerate music button */}
+            {allSucceeded && !isGeneratingAudio && settings.audioLayers?.music && (audioPhase === 'partial' || audioPhase === 'idle' || (audioPhase === 'done' && !audioAssets?.backgroundTrackUrl)) && (
               <Button
                 variant="outline"
                 size="sm"
@@ -302,11 +252,11 @@ export default function ShortFilm() {
                 onClick={() => generateAudio(projectId || undefined)}
               >
                 <Music className="h-3.5 w-3.5" />
-                {audioPhase === 'partial' ? 'Retry Audio' : 'Generate Audio'}
+                {audioPhase === 'partial' ? 'Retry Music' : 'Generate Music'}
               </Button>
             )}
 
-            {allSucceeded && !isGeneratingAudio && audioPhase === 'done' && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && audioAssets?.backgroundTrackUrl && (
+            {allSucceeded && !isGeneratingAudio && audioPhase === 'done' && audioAssets?.backgroundTrackUrl && (
               <Button
                 variant="outline"
                 size="sm"
@@ -314,7 +264,7 @@ export default function ShortFilm() {
                 onClick={() => generateAudio(projectId || undefined)}
               >
                 <Music className="h-3.5 w-3.5" />
-                Regenerate Audio
+                Regenerate Music
               </Button>
             )}
 
@@ -324,11 +274,9 @@ export default function ShortFilm() {
                   clips={completedClips}
                   audioAssets={audioAssets}
                   shots={shotsMeta}
-                  onDownload={downloadAllClips}
-                  onDownloadWithAudio={downloadWithAudio}
-                  isDownloadingWithAudio={isDownloadingWithAudio}
+                  onDownload={handleDownload}
+                  isDownloading={isDownloading}
                 />
-                {/* Shot breakdown metadata */}
                 <div className="space-y-1">
                   <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                     Shot Breakdown · {totalDuration}s
@@ -360,7 +308,6 @@ export default function ShortFilm() {
         )}
       </div>
 
-      {/* Floating bottom bar */}
       {!hideBar && (
         <ShortFilmStickyBar
           step={step}
@@ -377,7 +324,7 @@ export default function ShortFilm() {
           onGenerate={startGeneration}
           onReset={handleReset}
           onSaveDraft={saveDraft}
-          onDownloadAll={downloadAllClips}
+          onDownloadAll={handleDownload}
         />
       )}
     </div>

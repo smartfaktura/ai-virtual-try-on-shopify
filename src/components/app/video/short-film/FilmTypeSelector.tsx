@@ -1,15 +1,49 @@
 import { FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
-import type { FilmType } from '@/types/shortFilm';
+import type { FilmType, AudioLayers } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
+import { Music, MessageSquare, Volume2 } from 'lucide-react';
 
 interface FilmTypeSelectorProps {
   value: FilmType | null;
   onChange: (type: FilmType) => void;
+  audioLayers?: AudioLayers;
+  onAudioLayersChange?: (layers: AudioLayers) => void;
 }
 
-export function FilmTypeSelector({ value, onChange }: FilmTypeSelectorProps) {
+const AUDIO_PREF_OPTIONS = [
+  {
+    key: 'music' as const,
+    label: 'Background Music',
+    description: 'Add a music track on top of your film',
+    icon: Music,
+    defaultOn: true,
+  },
+  {
+    key: 'voiceover' as const,
+    label: 'Dialog / Speech',
+    description: 'Characters speak in the video',
+    icon: MessageSquare,
+    defaultOn: false,
+  },
+  {
+    key: 'sfx' as const,
+    label: 'Sound Effects',
+    description: 'Ambient sounds, impacts, transitions',
+    icon: Volume2,
+    defaultOn: true,
+  },
+];
+
+export function FilmTypeSelector({ value, onChange, audioLayers, onAudioLayersChange }: FilmTypeSelectorProps) {
+  const layers = audioLayers || { music: true, sfx: true, voiceover: false };
+
+  const toggleLayer = (key: 'music' | 'sfx' | 'voiceover') => {
+    if (!onAudioLayersChange) return;
+    onAudioLayersChange({ ...layers, [key]: !layers[key] });
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-foreground">What kind of film?</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -54,6 +88,51 @@ export function FilmTypeSelector({ value, onChange }: FilmTypeSelectorProps) {
           );
         })}
       </div>
+
+      {/* Audio Preferences — shown after film type is selected */}
+      {value && onAudioLayersChange && (
+        <div className="space-y-3 pt-2">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Audio Preferences</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Choose what audio layers to include — this guides the AI Director's planning
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {AUDIO_PREF_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isOn = layers[opt.key];
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => toggleLayer(opt.key)}
+                  className={cn(
+                    'flex items-start gap-3 rounded-xl border p-3 text-left transition-all',
+                    'hover:border-primary/50',
+                    isOn
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                      : 'border-border bg-card'
+                  )}
+                >
+                  <div className={cn(
+                    'h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5',
+                    isOn ? 'bg-primary/10' : 'bg-muted'
+                  )}>
+                    <Icon className={cn('h-4 w-4', isOn ? 'text-primary' : 'text-muted-foreground')} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Dialog & SFX are generated natively by the video engine. Background music is added as a separate layer.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
