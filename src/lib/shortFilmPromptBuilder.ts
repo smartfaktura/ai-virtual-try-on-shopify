@@ -189,6 +189,25 @@ const DEFAULT_CINEMATIC = {
   negatives: [] as string[],
 };
 
+/* ─── Scene-type → framing directive map ─── */
+const SCENE_TYPE_FRAMING: Record<string, string> = {
+  macro_closeup: 'Extreme macro close-up framing, ultra-tight on surface texture and fine detail.',
+  product_hero: 'Hero product shot, centered dominant framing with clean negative space.',
+  establishing_wide: 'Wide establishing shot, full environment context with deep depth of field.',
+  detail_insert: 'Tight insert shot, isolated detail element filling the frame.',
+  portrait_medium: 'Medium portrait framing, waist-up composition with shallow DOF.',
+  full_body: 'Full body shot, head-to-toe framing with environmental context.',
+  over_shoulder: 'Over-the-shoulder perspective, intimate conversational framing.',
+  birds_eye: 'Overhead bird\'s-eye view, top-down geometric composition.',
+  low_angle: 'Low angle shot looking upward, dramatic power perspective.',
+  dutch_angle: 'Dutch angle tilt, dynamic tension and visual energy.',
+  tracking: 'Tracking shot following subject movement through space.',
+  pov: 'Point-of-view shot, first-person immersive perspective.',
+  two_shot: 'Two-shot composition, balanced dual-subject framing.',
+  cutaway: 'Cutaway insert, contextual detail bridging narrative moments.',
+  reaction: 'Reaction shot, close-up capturing emotional response.',
+};
+
 /* ─── Core negative terms (always included) ─── */
 const BASE_NEGATIVES = [
   'blurry', 'low quality', 'watermark', 'text overlay', 'logo',
@@ -232,6 +251,13 @@ export function buildShotPrompt(
   }
 
   p1.push(roleCine.directive);
+
+  // Inject scene_type framing directive (P1 — critical for Kling shot composition)
+  const framingDirective = SCENE_TYPE_FRAMING[shot.scene_type];
+  if (framingDirective) {
+    p1.push(framingDirective);
+  }
+
   p1.push(shot.purpose);
 
   // Priority 1.5 — user-selected style & scene presets (high priority, should not be truncated)

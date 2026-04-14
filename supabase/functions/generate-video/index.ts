@@ -222,17 +222,23 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
     if (shots.length < 2) {
       console.log(`[generate-video:multishot] Only 1 shot — falling back to standard image2video`);
       const singleShot = shots[0];
+      const preservationStrength = (body.preservation_strength as string) || "medium";
+      const fidelityMap: Record<string, number> = { high: 0.85, medium: 0.65, low: 0.45 };
+      const imageFidelity = fidelityMap[preservationStrength] ?? 0.65;
+      const cfgScale = (body.cfg_scale as number) ?? 0.5;
+
       const i2vBody: Record<string, unknown> = {
-        model_name: "kling-v2-master",
+        model_name: "kling-v3",
         mode,
         duration: String(singleShot.duration || totalDuration),
         aspect_ratio: aspectRatio,
         prompt: singleShot.prompt,
+        cfg_scale: cfgScale,
       };
       if (negativePrompt) i2vBody.negative_prompt = negativePrompt;
       if (imageUrls.length > 0) {
         i2vBody.image = imageUrls[0];
-        i2vBody.image_fidelity = 0.65;
+        i2vBody.image_fidelity = imageFidelity;
       }
 
       console.log(`[generate-video:multishot→i2v] Kling request:`, JSON.stringify(i2vBody));
@@ -264,7 +270,7 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
         source_image_url: imageUrls[0] || "",
         prompt: singleShot.prompt,
         kling_task_id: taskId,
-        model_name: "kling-v2-master",
+        model_name: "kling-v3",
         duration: String(singleShot.duration || totalDuration),
         aspect_ratio: aspectRatio,
         negative_prompt: negativePrompt || null,
@@ -286,6 +292,8 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
       duration: String(s.duration),
     }));
 
+    const cfgScale = (body.cfg_scale as number) ?? 0.5;
+
     const klingBody: Record<string, unknown> = {
       model_name: "kling-v3-omni",
       multi_shot: true,
@@ -296,6 +304,7 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
       aspect_ratio: aspectRatio,
       duration: String(totalDuration),
       sound: withAudio ? "on" : "off",
+      cfg_scale: cfgScale,
     };
 
     // Add negative prompt if provided
