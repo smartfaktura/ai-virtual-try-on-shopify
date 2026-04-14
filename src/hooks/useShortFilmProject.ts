@@ -611,7 +611,7 @@ export function useShortFilmProject() {
     } finally {
       setIsGeneratingAudio(false);
     }
-  }, [user, settings, shots, filmType, projectId, uploadAudioToStorage]);
+  }, [user, settings, shots, filmType, projectId, uploadAudioToStorage, references]);
 
   // ─── Retry single audio track ──────────────────────────────
   const retryAudioForShot = useCallback(async (shotIndex: number, type: 'sfx' | 'voiceover') => {
