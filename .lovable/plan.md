@@ -1,46 +1,75 @@
 
 
-# Fix Short Film Audio & Results Page
+# Improve Product References in Short Film — Multi-Angle & Multi-Product
 
-## Build Errors
+## Current State
+- Product picker fetches only `id, title, image_url` — ignores `back_image_url`, `side_image_url`, `packaging_image_url`, `inside_image_url`, `texture_image_url`, `extra_image_urls`
+- Picking a product adds a single `ReferenceAsset` with the main image only
+- No concept of "Product 1", "Product 2" grouping — all product refs are flat
+- The `ReferenceAsset` type has no `subRole` or `productId` field to distinguish angles
 
-The `buildContextualSfxPrompt` and `fitTextToDuration` functions are syntactically broken — they got inserted **inside** the body of `buildContextualMusicPrompt` (between lines 1063-1123), making them nested/invisible to the hook. The `buildContextualMusicPrompt` function itself is split in two halves (lines 1050-1062 and 1124-1127).
+## Plan
 
-**Fix**: Restructure lines 1048-1127 so all three functions are properly independent top-level functions with correct closing braces.
+### 1. Extend ReferenceAsset type
+**File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`**
 
-## Results Page UX Issues
+Add optional fields to `ReferenceAsset`:
+- `subRole?: 'main' | 'back' | 'side' | 'packaging' | 'inside' | 'texture' | 'extra'` — which angle this image represents
+- `productId?: string` — links reference back to its source user_product
 
-1. **Duplicate videos**: "Preview Film" (with audio player) AND "Your Short Film" (plain `<video controls>` without audio) both show — redundant and confusing.
-2. **"Your Short Film" has no audio**: It's a raw `<video>` tag at line 312 with no audio mixing.
-3. **Download has no audio**: `downloadAllClips` just fetches the raw video URL — no audio tracks merged.
-4. **Preview Film lacks native controls**: Only a play/pause button, no scrubber/progress bar.
+### 2. Fetch full product data in picker
+**File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`**
 
-## Implementation Plan
+Update the product query to also select `back_image_url, side_image_url, packaging_image_url, inside_image_url, texture_image_url, extra_image_urls`.
 
-### 1. Fix broken function nesting (useShortFilmProject.ts)
-- Close `buildContextualMusicPrompt` properly before `buildContextualSfxPrompt`
-- Make all three helper functions independent top-level functions
-- This fixes the TS2552/TS2304 build errors
+### 3. Redesign `pickProduct` to add all available angles
+When a user picks a product from the library, auto-create one `ReferenceAsset` per available angle:
+- Main image → `subRole: 'main'`
+- Back → `subRole: 'back'` (if exists)
+- Side → `subRole: 'side'` (if exists)
+- etc.
 
-### 2. Remove duplicate "Your Short Film" section (ShortFilm.tsx)
-- Remove lines 302-341 (the second video + shot breakdown)
-- Move the shot breakdown metadata into the Preview Film section below the player
-- Keep only ONE video display: the `ShortFilmVideoPlayer` with full audio mixing
+All share the same `productId` for grouping.
 
-### 3. Add video controls to ShortFilmVideoPlayer
-- Add a progress/scrubber bar using the video's `currentTime` and `duration`
-- Add current time / total time display
-- Keep the existing play/pause + mixer
+### 4. Redesign the Product References section UI
+Replace the flat thumbnail list with a **per-product card** layout:
 
-### 4. Move download to use the Preview Film section
-- Single download button next to "Preview Film" header
-- Download still fetches the raw video (audio merging would require server-side FFmpeg, which is out of scope — but note this limitation)
+```text
+┌─────────────────────────────────────┐
+│ Product 1: Beige Full-Zip Hoodie    │
+│ ┌──────┐ ┌──────┐ ┌──────┐         │
+│ │ Main │ │ Back │ │ Side │  + more  │
+│ │  ✓   │ │  ✓   │ │  —   │         │
+│ └──────┘ └──────┘ └──────┘         │
+│ [Upload missing angles]             │
+└─────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ Product 2: Black Leather Bag        │
+│ ...                                 │
+└─────────────────────────────────────┘
+```
 
-## Files to Change
+- Each product card shows its name and a row of angle slots (main, back, side, packaging, inside, texture)
+- Filled slots show the image with a green check; empty slots show a dashed upload target
+- Users can upload directly to a specific angle slot
+- A remove button removes the entire product group
+
+For non-product-library uploads (drag & drop), keep the current flat behavior but label them as "Custom Upload".
+
+### 5. Update the generation hook to use multi-angle refs
+**File: `src/hooks/useShortFilmProject.ts`**
+
+In `getSourceImageForShot`, when matching a product reference, prefer the most relevant angle based on shot role:
+- `detail_closeup` / `product_focus` → prefer `texture` or `side`
+- `product_reveal` → prefer `main`
+- `hook` / `highlight` → prefer `main` or `back`
+
+This gives Kling better source material per shot.
+
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/hooks/useShortFilmProject.ts` | Fix function nesting — close `buildContextualMusicPrompt` before the other two functions |
-| `src/pages/video/ShortFilm.tsx` | Remove duplicate "Your Short Film" section, consolidate into single player with download + shot breakdown |
-| `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx` | Add progress bar / scrubber and time display |
+| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Extend `ReferenceAsset`, fetch full product data, redesign product section UI with per-product cards and angle slots, update `pickProduct` to add all angles |
+| `src/hooks/useShortFilmProject.ts` | Update `getSourceImageForShot` to prefer angle-specific images based on shot role |
 
