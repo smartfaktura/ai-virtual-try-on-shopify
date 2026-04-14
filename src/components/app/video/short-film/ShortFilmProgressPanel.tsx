@@ -31,7 +31,7 @@ export function ShortFilmProgressPanel({ shots, shotStatuses }: ShortFilmProgres
   const isAllDone = completedCount === shots.length && shots.length > 0;
 
   // Pick a team avatar for the "director" message
-  const teamMember = TEAM[Math.min(currentIndex >= 0 ? currentIndex : 0, TEAM.length - 1)];
+  const teamMember = TEAM_MEMBERS[Math.min(currentIndex >= 0 ? currentIndex : 0, TEAM_MEMBERS.length - 1)];
   const directorMessage = currentIndex >= 0
     ? DIRECTOR_MESSAGES[currentIndex % DIRECTOR_MESSAGES.length]
     : isAllDone
