@@ -552,6 +552,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
           const sectionRefs = references.filter((r) => r.role === section.role);
           const Icon = section.icon;
           const isSectionUploading = uploadingRole === section.role && isUploading;
+          const showQuickPicks = section.role === 'scene' || section.role === 'style';
 
           return (
             <div key={section.role} className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -569,31 +570,73 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                     onClick={() => openLibrary(section.libraryType!)}
                   >
                     <Library className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Library</span>
+                    <span className="hidden sm:inline">All</span>
                   </Button>
                 )}
               </div>
 
-              {sectionRefs.length > 0 && (
+              {/* Inline quick-pick chips for scene & style */}
+              {showQuickPicks && section.role === 'style' && (
+                <div className="flex flex-wrap gap-1.5">
+                  {STYLE_MOOD_PRESETS.map((preset) => {
+                    const selected = isStylePresetSelected(preset);
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => toggleStylePreset(preset)}
+                        className={cn(
+                          'h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all',
+                          selected
+                            ? 'border-primary bg-primary/15 text-primary'
+                            : 'border-border/60 bg-muted/30 text-muted-foreground/70 hover:bg-muted/60 hover:text-foreground/80'
+                        )}
+                        title={preset.keywords}
+                      >
+                        {preset.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {showQuickPicks && section.role === 'scene' && (
+                <div className="flex flex-wrap gap-1.5">
+                  {VIDEO_SCENE_PRESETS.map((preset) => {
+                    const selected = isScenePresetSelected(preset);
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => toggleScenePreset(preset)}
+                        className={cn(
+                          'h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all',
+                          selected
+                            ? 'border-primary bg-primary/15 text-primary'
+                            : 'border-border/60 bg-muted/30 text-muted-foreground/70 hover:bg-muted/60 hover:text-foreground/80'
+                        )}
+                        title={preset.description}
+                      >
+                        {preset.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Show image-based refs (uploaded or model picks) */}
+              {sectionRefs.filter(r => r.url).length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {sectionRefs.map((ref) => (
+                  {sectionRefs.filter(r => r.url).map((ref) => (
                     <div key={ref.id} className="relative group">
-                      {ref.url ? (
-                        <img
-                          src={getOptimizedUrl(ref.url, { quality: 70 })}
-                          alt={ref.name || section.label}
-                          className={`rounded-lg border border-border ${
-                            section.role === 'model'
-                              ? 'w-12 aspect-[3/4] object-cover bg-muted/30'
-                              : 'h-16 w-16 object-cover bg-muted/30'
-                          }`}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 rounded-lg bg-muted/30 border border-border flex items-center justify-center">
-                          {ref.role === 'style' ? <Palette className="h-4 w-4 text-primary" /> : <MapPin className="h-4 w-4 text-muted-foreground" />}
-                        </div>
-                      )}
+                      <img
+                        src={getOptimizedUrl(ref.url, { quality: 70 })}
+                        alt={ref.name || section.label}
+                        className={`rounded-lg border border-border ${
+                          section.role === 'model'
+                            ? 'w-12 aspect-[3/4] object-cover bg-muted/30'
+                            : 'h-16 w-16 object-cover bg-muted/30'
+                        }`}
+                        loading="lazy"
+                      />
                       <button
                         onClick={() => removeRef(ref.id)}
                         className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:opacity-100"
@@ -602,7 +645,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                         <X className="h-3 w-3" />
                       </button>
                       {ref.name && (
-                        <p className={`text-[9px] text-muted-foreground text-center truncate mt-0.5 ${section.role === 'model' ? 'w-12' : 'w-16'}`}>{ref.name}</p>
+                        <p className={`text-[9px] text-muted-foreground text-center truncate mt-0.5 ${section.role === 'model' ? 'w-12' : 'w-16'}`}>{ref.name?.split(':')[0]}</p>
                       )}
                     </div>
                   ))}
