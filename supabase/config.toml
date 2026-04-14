@@ -79,3 +79,5 @@ project_id = "azwiljtrbtaupofwmpzb"
     verify_jwt = false
   [functions.elevenlabs-tts]
     verify_jwt = false
+  [functions.kling-lip-sync]
+    verify_jwt = false
