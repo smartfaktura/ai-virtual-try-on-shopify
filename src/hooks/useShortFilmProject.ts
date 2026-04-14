@@ -138,7 +138,7 @@ export function useShortFilmProject() {
       const shotRows = shots.map((shot) => {
         const { prompt, negative_prompt } = buildShotPrompt(shot, {
           filmType,
-          tone: '',
+          tone: settings.tone || '',
           settings,
           references,
         });
@@ -177,7 +177,7 @@ export function useShortFilmProject() {
 
         const { prompt, negative_prompt } = buildShotPrompt(shot, {
           filmType,
-          tone: '',
+          tone: settings.tone || '',
           settings,
           references,
         });
@@ -255,6 +255,46 @@ export function useShortFilmProject() {
     }
   }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance]);
 
+  const updateShot = useCallback((index: number, updated: ShotPlanItem) => {
+    setShots(prev => prev.map((s, i) => i === index ? updated : s));
+  }, []);
+
+  const deleteShot = useCallback((index: number) => {
+    setShots(prev => {
+      const next = prev.filter((_, i) => i !== index);
+      return next.map((s, i) => ({ ...s, shot_index: i + 1 }));
+    });
+  }, []);
+
+  const addShot = useCallback(() => {
+    setShots(prev => [
+      ...prev,
+      {
+        shot_index: prev.length + 1,
+        role: 'detail',
+        purpose: 'New custom shot',
+        scene_type: 'product_closeup',
+        camera_motion: 'slow_push',
+        subject_motion: 'static',
+        duration_sec: Number(settings.shotDuration),
+        product_visible: true,
+        character_visible: false,
+        preservation_strength: settings.preservationLevel,
+      },
+    ]);
+  }, [settings.shotDuration, settings.preservationLevel]);
+
+  const reorderShots = useCallback((fromIndex: number, toIndex: number) => {
+    if (toIndex < 0) return;
+    setShots(prev => {
+      if (toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next.map((s, i) => ({ ...s, shot_index: i + 1 }));
+    });
+  }, []);
+
   return {
     step,
     setStep,
@@ -278,6 +318,10 @@ export function useShortFilmProject() {
     startGeneration,
     projectId,
     totalCredits,
+    updateShot,
+    deleteShot,
+    addShot,
+    reorderShots,
   };
 }
 
