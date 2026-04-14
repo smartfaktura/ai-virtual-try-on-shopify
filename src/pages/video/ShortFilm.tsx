@@ -13,7 +13,7 @@ import { ShortFilmStepper } from '@/components/app/video/short-film/ShortFilmSte
 import { ShortFilmStickyBar } from '@/components/app/video/short-film/ShortFilmStickyBar';
 import { ShortFilmVideoPlayer } from '@/components/app/video/short-film/ShortFilmVideoPlayer';
 import { ShortFilmProjectList } from '@/components/app/video/short-film/ShortFilmProjectList';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 
 export default function ShortFilm() {
   const {
@@ -36,6 +36,14 @@ export default function ShortFilm() {
   } = useShortFilmProject();
 
   const [showPreview, setShowPreview] = useState(false);
+  const generationStartRef = useRef<number>(Date.now());
+
+  // Track generation start time
+  const prevIsGenerating = useRef(false);
+  if (isGenerating && !prevIsGenerating.current) {
+    generationStartRef.current = Date.now();
+  }
+  prevIsGenerating.current = isGenerating;
 
   const showCredits = shots.length > 0 && step !== 'film_type' && step !== 'references';
 
@@ -58,6 +66,16 @@ export default function ShortFilm() {
     return clips;
   }, [shotStatuses]);
 
+  const shotsMeta = useMemo(() =>
+    shots.map(s => ({ shot_index: s.shot_index, duration_sec: s.duration_sec })),
+    [shots]
+  );
+
+  const totalDuration = useMemo(() =>
+    shots.reduce((sum, s) => sum + (s.duration_sec || 3), 0),
+    [shots]
+  );
+
   const availableReferences = useMemo(() => {
     return references.map(r => ({ id: r.id, url: r.url, role: r.role, name: r.name }));
   }, [references]);
@@ -70,15 +88,12 @@ export default function ShortFilm() {
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        a.download = `${clip.label.replace(/[^a-zA-Z0-9-_ ]/g, '')}.mp4`;
+        a.download = `short-film.mp4`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
-        // Stagger downloads to avoid browser blocking
-        await new Promise(r => setTimeout(r, 500));
       } catch {
-        // Fallback: open in new tab
         window.open(clip.url, '_blank');
       }
     }
@@ -188,6 +203,7 @@ export default function ShortFilm() {
               shots={shots}
               shotStatuses={shotStatuses}
               onRetryShot={retryShotGeneration}
+              generationStartTime={generationStartRef.current}
             />
 
             {isGeneratingAudio && (
@@ -246,7 +262,7 @@ export default function ShortFilm() {
                 variant="outline"
                 size="sm"
                 className="gap-1.5 h-9"
-                onClick={() => generateAudio()}
+                onClick={() => generateAudio(projectId || undefined)}
               >
                 <Music className="h-3.5 w-3.5" />
                 Generate Audio
@@ -258,7 +274,7 @@ export default function ShortFilm() {
                 variant="outline"
                 size="sm"
                 className="gap-1.5 h-9"
-                onClick={() => generateAudio()}
+                onClick={() => generateAudio(projectId || undefined)}
               >
                 <Music className="h-3.5 w-3.5" />
                 Regenerate Audio
@@ -268,7 +284,7 @@ export default function ShortFilm() {
             {allDone && completedClips.length > 0 && (
               <>
                 {showPreview ? (
-                  <ShortFilmVideoPlayer clips={completedClips} audioAssets={audioAssets} />
+                  <ShortFilmVideoPlayer clips={completedClips} audioAssets={audioAssets} shots={shotsMeta} />
                 ) : (
                   <Button
                     variant="outline"
@@ -297,20 +313,28 @@ export default function ShortFilm() {
                     src={completedClips[0].url}
                     controls
                     playsInline
+                    preload="metadata"
                     className="w-full aspect-video bg-black"
                   />
                 </div>
                 {/* Shot breakdown metadata */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Shot Breakdown</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                    Shot Breakdown · {totalDuration}s
+                  </p>
                   {shots.map(shot => (
                     <div key={shot.shot_index} className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="font-mono w-4">{shot.shot_index}</span>
                       <span className="font-medium text-foreground">
                         {shot.role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                       </span>
-                      <span>· {shot.duration_sec || 3}s</span>
+                      <span>· {shot.duration_sec}s</span>
                       <span className="truncate">{shot.purpose}</span>
+                      {shot.script_line && (
+                        <span className="text-[10px] italic text-muted-foreground/70 truncate ml-auto max-w-[150px]">
+                          🎙 "{shot.script_line}"
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>

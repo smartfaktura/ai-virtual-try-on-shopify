@@ -1,16 +1,21 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipForward, SkipBack, Volume2, Music, Mic } from 'lucide-react';
+import { Play, Pause, Volume2, Music, Mic } from 'lucide-react';
 import type { AudioAssets } from '@/types/shortFilm';
+
+interface ShotMeta {
+  shot_index: number;
+  duration_sec: number;
+}
 
 interface ShortFilmVideoPlayerProps {
   clips: { url: string; label: string }[];
   audioAssets?: AudioAssets;
+  shots?: ShotMeta[];
 }
 
-export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlayerProps) {
-  // Detect single combined video (all clips share the same URL)
+export function ShortFilmVideoPlayer({ clips, audioAssets, shots }: ShortFilmVideoPlayerProps) {
   const isSingleVideo = useMemo(() => {
     if (clips.length <= 1) return true;
     const firstUrl = clips[0]?.url;
@@ -18,86 +23,48 @@ export function ShortFilmVideoPlayer({ clips, audioAssets }: ShortFilmVideoPlaye
   }, [clips]);
 
   if (isSingleVideo && clips.length > 0) {
-    return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} />;
+    return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} />;
   }
 
-  return <MultiClipPlayer clips={clips} audioAssets={audioAssets} />;
+  return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} />;
 }
 
-/* ─── Single combined video player (multi-shot output) ─── */
+/* ─── Single combined video player with audio mixing ─── */
 function SingleVideoPlayer({
   clip,
   audioAssets,
+  shots,
 }: {
   clip: { url: string; label: string };
   audioAssets?: AudioAssets;
-}) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) {
-      video.play().catch(() => {});
-      setIsPlaying(true);
-    } else {
-      video.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-foreground">Preview Film</h3>
-
-      <div className="rounded-xl border border-border overflow-hidden bg-black">
-        <video
-          ref={videoRef}
-          src={clip.url}
-          className="w-full aspect-video"
-          playsInline
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
-        />
-      </div>
-
-      <div className="flex items-center justify-center gap-2">
-        <Button variant="outline" size="icon" className="h-9 w-9" onClick={togglePlay}>
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-      </div>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Combined film — {clip.label}
-      </p>
-    </div>
-  );
-}
-
-/* ─── Multi-clip sequencer (legacy / separate clips) ─── */
-function MultiClipPlayer({
-  clips,
-  audioAssets,
-}: {
-  clips: { url: string; label: string }[];
-  audioAssets?: AudioAssets;
+  shots?: ShotMeta[];
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgAudioRef = useRef<HTMLAudioElement>(null);
   const shotAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
 
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [musicVolume, setMusicVolume] = useState(0.6);
-  const [sfxVolume, setSfxVolume] = useState(0.8);
+  const [musicVolume, setMusicVolume] = useState(0.5);
+  const [sfxVolume, setSfxVolume] = useState(0.7);
   const [voiceVolume, setVoiceVolume] = useState(1.0);
   const [showMixer, setShowMixer] = useState(false);
+  const [currentShotIdx, setCurrentShotIdx] = useState(-1);
+  const [videoError, setVideoError] = useState(false);
 
-  const current = clips[currentIndex];
   const hasAudio = audioAssets && (audioAssets.backgroundTrackUrl || audioAssets.perShotAudio.length > 0);
 
+  // Calculate cumulative shot time offsets
+  const shotOffsets = useMemo(() => {
+    if (!shots || shots.length === 0) return [];
+    let acc = 0;
+    return shots.map(s => {
+      const start = acc;
+      acc += s.duration_sec;
+      return { shot_index: s.shot_index, start, end: acc };
+    });
+  }, [shots]);
+
+  // Volume sync
   useEffect(() => {
     if (bgAudioRef.current) bgAudioRef.current.volume = musicVolume;
   }, [musicVolume]);
@@ -132,26 +99,24 @@ function MultiClipPlayer({
     });
   }, [audioAssets, sfxVolume, voiceVolume]);
 
-  const playNext = useCallback(() => {
-    if (currentIndex < clips.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      setIsPlaying(false);
-      if (bgAudioRef.current) bgAudioRef.current.pause();
-      stopAllShotAudio();
-    }
-  }, [currentIndex, clips.length, stopAllShotAudio]);
-
+  // Track current shot by video currentTime to trigger per-shot audio
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-    video.load();
-    stopAllShotAudio();
-    if (isPlaying) {
-      video.play().catch(() => {});
-      playShotAudio(currentIndex + 1);
-    }
-  }, [currentIndex, isPlaying, stopAllShotAudio, playShotAudio]);
+    if (!video || !hasAudio || shotOffsets.length === 0) return;
+
+    const onTimeUpdate = () => {
+      const t = video.currentTime;
+      const match = shotOffsets.find(s => t >= s.start && t < s.end);
+      if (match && match.shot_index !== currentShotIdx) {
+        setCurrentShotIdx(match.shot_index);
+        stopAllShotAudio();
+        playShotAudio(match.shot_index);
+      }
+    };
+
+    video.addEventListener('timeupdate', onTimeUpdate);
+    return () => video.removeEventListener('timeupdate', onTimeUpdate);
+  }, [hasAudio, shotOffsets, currentShotIdx, stopAllShotAudio, playShotAudio]);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -160,9 +125,9 @@ function MultiClipPlayer({
       video.play().catch(() => {});
       setIsPlaying(true);
       if (bgAudioRef.current && audioAssets?.backgroundTrackUrl) {
+        bgAudioRef.current.currentTime = video.currentTime;
         bgAudioRef.current.play().catch(() => {});
       }
-      playShotAudio(currentIndex + 1);
     } else {
       video.pause();
       setIsPlaying(false);
@@ -171,12 +136,24 @@ function MultiClipPlayer({
     }
   };
 
-  const handleSkip = (direction: -1 | 1) => {
+  const handleVideoEnd = () => {
+    setIsPlaying(false);
+    if (bgAudioRef.current) bgAudioRef.current.pause();
     stopAllShotAudio();
-    setCurrentIndex(prev => prev + direction);
-    setIsPlaying(true);
+    setCurrentShotIdx(-1);
   };
 
+  const handleSeek = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (bgAudioRef.current) {
+      bgAudioRef.current.currentTime = video.currentTime;
+    }
+    stopAllShotAudio();
+    setCurrentShotIdx(-1);
+  };
+
+  // Cleanup
   useEffect(() => {
     return () => {
       shotAudioRefs.current.forEach(audio => {
@@ -187,7 +164,9 @@ function MultiClipPlayer({
     };
   }, []);
 
-  if (clips.length === 0) return null;
+  if (!clip) return null;
+
+  const totalDuration = shots ? shots.reduce((sum, s) => sum + s.duration_sec, 0) : null;
 
   return (
     <div className="space-y-3">
@@ -207,15 +186,24 @@ function MultiClipPlayer({
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden bg-black">
-        <video
-          ref={videoRef}
-          src={current?.url}
-          className="w-full aspect-video"
-          playsInline
-          onEnded={playNext}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
+        {videoError ? (
+          <div className="w-full aspect-video flex items-center justify-center bg-muted/10">
+            <p className="text-sm text-muted-foreground">Video failed to load. Try downloading instead.</p>
+          </div>
+        ) : (
+          <video
+            ref={videoRef}
+            src={clip.url}
+            className="w-full aspect-video"
+            playsInline
+            preload="metadata"
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={handleVideoEnd}
+            onSeeked={handleSeek}
+            onError={() => setVideoError(true)}
+          />
+        )}
       </div>
 
       {audioAssets?.backgroundTrackUrl && (
@@ -223,19 +211,14 @@ function MultiClipPlayer({
       )}
 
       <div className="flex items-center justify-center gap-2">
-        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentIndex === 0} onClick={() => handleSkip(-1)}>
-          <SkipBack className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="icon" className="h-9 w-9" onClick={togglePlay}>
+        <Button variant="outline" size="icon" className="h-9 w-9" onClick={togglePlay} disabled={videoError}>
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentIndex >= clips.length - 1} onClick={() => handleSkip(1)}>
-          <SkipForward className="h-4 w-4" />
         </Button>
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        Shot {currentIndex + 1} / {clips.length} — {current?.label}
+        {totalDuration ? `${shots?.length} shots · ${totalDuration}s` : clip.label}
+        {hasAudio && ' · 🔊 Audio'}
       </p>
 
       {showMixer && hasAudio && (

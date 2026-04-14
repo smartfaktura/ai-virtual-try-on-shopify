@@ -28,17 +28,19 @@ Return ONLY a valid JSON array of shot objects. Each shot object must have exact
 - product_visible (boolean)
 - character_visible (boolean)
 - preservation_strength ("low" | "medium" | "high")
-- script_line (string: optional voiceover suggestion for this shot)
+- script_line (string: a SHORT voiceover narration line for this shot, 5-15 words, matching the shot mood and purpose)
 
-Generate 3-5 shots with varied cinematic pacing. The total of all duration_sec values MUST equal exactly 15 seconds. Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments. Maximum 6 shots. Vary camera motions and scene types for cinematic interest.`;
+Generate 3-5 shots with varied cinematic pacing. The total of all duration_sec values MUST equal exactly 15 seconds. Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments. Maximum 6 shots. Vary camera motions and scene types for cinematic interest.
+
+IMPORTANT: Every shot MUST have a script_line with a compelling voiceover narration.`;
 
     const userPrompt = `Film type: ${filmType}
 Story structure: ${storyStructure}
-Duration per shot: ${shotDuration || 5} seconds
+Target total duration: 15 seconds
 ${tone ? `Tone/mood: ${tone}` : ""}
 ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
 
-Generate the shot plan as a JSON array.`;
+Generate the shot plan as a JSON array. Remember: each shot needs its own duration_sec (use cinematic pacing, NOT equal splits) and a script_line for voiceover.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -92,12 +94,27 @@ Generate the shot plan as a JSON array.`;
       scene_type: s.scene_type || "product_hero",
       camera_motion: s.camera_motion || "slow_push",
       subject_motion: s.subject_motion || "static",
-      duration_sec: Number(shotDuration) || 5,
+      duration_sec: Math.max(1, Math.min(15, Number(s.duration_sec) || 3)),
       product_visible: s.product_visible ?? true,
       character_visible: s.character_visible ?? false,
       preservation_strength: s.preservation_strength || "medium",
-      script_line: s.script_line || undefined,
+      script_line: s.script_line || `Shot ${i + 1} narration.`,
     }));
+
+    // Verify total doesn't exceed 15s
+    const total = validShots.reduce((sum: number, s: any) => sum + s.duration_sec, 0);
+    if (total > 15) {
+      const scale = 15 / total;
+      let remaining = 15;
+      for (let i = 0; i < validShots.length; i++) {
+        if (i === validShots.length - 1) {
+          validShots[i].duration_sec = Math.max(1, remaining);
+        } else {
+          validShots[i].duration_sec = Math.max(1, Math.round(validShots[i].duration_sec * scale));
+          remaining -= validShots[i].duration_sec;
+        }
+      }
+    }
 
     return new Response(JSON.stringify({ shots: validShots }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
