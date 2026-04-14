@@ -145,7 +145,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: false,
     character_visible: false,
     preservation_strength: 'medium',
-    script_line: 'Every great story begins with a single frame.',
+    script_line: 'A story begins.',
   },
   product_reveal: {
     purpose: 'Hero product reveal moment',
@@ -155,7 +155,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'Introducing something extraordinary.',
+    script_line: 'Meet something truly extraordinary.',
   },
   detail_closeup: {
     purpose: 'Show texture, materials, craftsmanship',
@@ -165,7 +165,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'Crafted with precision, down to every detail.',
+    script_line: 'Precision in every detail.',
   },
   brand_finish: {
     purpose: 'Close with lasting brand impression',
@@ -175,7 +175,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'This is more than a product. This is a statement.',
+    script_line: 'More than a product. A statement.',
   },
   intro: {
     purpose: 'Set the scene and mood',
@@ -185,7 +185,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: false,
     character_visible: false,
     preservation_strength: 'low',
-    script_line: 'Welcome to a world where every detail matters.',
+    script_line: 'Welcome to a world of detail.',
   },
   product_moment: {
     purpose: 'Feature the product prominently',
@@ -195,7 +195,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'Designed to stand out, built to last.',
+    script_line: 'Designed to stand out. Built to last.',
   },
   lifestyle_moment: {
     purpose: 'Show product in real-world context',
@@ -205,7 +205,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: true,
     preservation_strength: 'medium',
-    script_line: 'Where design meets everyday life.',
+    script_line: 'Design meets life.',
   },
   end_frame: {
     purpose: 'Brand sign-off and call-to-action',
@@ -215,7 +215,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'The story continues with you.',
+    script_line: 'Your story continues.',
   },
   atmosphere: {
     purpose: 'Build atmospheric mood',
@@ -225,7 +225,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: false,
     character_visible: false,
     preservation_strength: 'low',
-    script_line: 'Feel the atmosphere come alive.',
+    script_line: 'Feel the atmosphere.',
   },
   product_focus: {
     purpose: 'Focused product showcase',
@@ -235,7 +235,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'Every angle tells a story of craftsmanship.',
+    script_line: 'Every angle tells a story.',
   },
   human_interaction: {
     purpose: 'Show human connection with product',
@@ -245,7 +245,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: true,
     preservation_strength: 'medium',
-    script_line: 'Made for the moments that matter.',
+    script_line: 'Made for moments that matter.',
   },
   tease: {
     purpose: 'Create intrigue and anticipation',
@@ -255,7 +255,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: false,
     character_visible: false,
     preservation_strength: 'low',
-    script_line: 'Something remarkable is about to happen.',
+    script_line: 'Something remarkable awaits.',
   },
   build: {
     purpose: 'Build tension and momentum',
@@ -265,7 +265,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: false,
     character_visible: true,
     preservation_strength: 'medium',
-    script_line: 'The anticipation builds with every frame.',
+    script_line: 'Anticipation builds.',
   },
   highlight: {
     purpose: 'Peak hero product moment',
@@ -275,7 +275,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'This is the moment you have been waiting for.',
+    script_line: 'The moment you waited for.',
   },
   resolve: {
     purpose: 'Resolve the story, leave lasting impression',
@@ -285,7 +285,7 @@ const ROLE_DEFAULTS: Record<string, Partial<ShotPlanItem>> = {
     product_visible: true,
     character_visible: false,
     preservation_strength: 'high',
-    script_line: 'A lasting impression, sealed in elegance.',
+    script_line: 'Sealed in elegance.',
   },
 };
 
