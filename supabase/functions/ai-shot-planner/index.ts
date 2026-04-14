@@ -30,7 +30,7 @@ Return ONLY a valid JSON array of shot objects. Each shot object must have exact
 - preservation_strength ("low" | "medium" | "high")
 - script_line (string: optional voiceover suggestion for this shot)
 
-Generate 4-8 shots that tell a compelling visual story. Vary camera motions and scene types for cinematic interest.`;
+Generate exactly 2-3 shots (max 3) that tell a compelling visual story within a 15-second total duration limit. Each shot must be exactly 5 seconds. Vary camera motions and scene types for cinematic interest.`;
 
     const userPrompt = `Film type: ${filmType}
 Story structure: ${storyStructure}

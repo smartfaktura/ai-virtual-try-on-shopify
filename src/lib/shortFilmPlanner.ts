@@ -318,11 +318,13 @@ export function generateShotPlan(
   const tone = filmOption?.defaultTone || 'clean';
   const _toneStyle = TONE_MOTION_MAP[tone] || TONE_MOTION_MAP.clean;
 
-  const roles = structureOption?.roles?.length
+  const allRoles = structureOption?.roles?.length
     ? structureOption.roles
     : ['hook', 'product_reveal', 'detail_closeup', 'brand_finish'];
 
-  const durationSec = Number(shotDuration);
+  // Cap at 3 shots max (Kling multi-shot limit: 3×5s = 15s)
+  const roles = allRoles.slice(0, 3);
+  const durationSec = 5; // Always 5s per shot for multi-shot
 
   return roles.map((role, index) => {
     const defaults = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.hook;

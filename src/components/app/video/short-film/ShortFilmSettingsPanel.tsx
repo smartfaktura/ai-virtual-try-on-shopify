@@ -98,24 +98,11 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
         </div>
       </div>
 
-      {/* Shot Duration */}
+      {/* Shot Duration — fixed at 5s per shot (Kling multi-shot limit) */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Shot Duration</p>
-        <div className="grid grid-cols-2 gap-2">
-          {DURATION_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => update({ shotDuration: opt.value })}
-              className={cn(
-                'rounded-lg border p-3 text-sm font-medium transition-all',
-                settings.shotDuration === opt.value
-                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                  : 'border-border hover:border-primary/40'
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+          5s per shot · Max 3 shots · 15s total (platform limit)
         </div>
       </div>
 

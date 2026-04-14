@@ -246,28 +246,24 @@ export function estimateShortFilmCredits(
 
 /**
  * Calculate total film duration, capped at 15s (Kling max for multi-shot).
+ * Always uses 5s per shot; max 3 shots.
  */
 export function calculateTotalDuration(
   shotCount: number,
-  shotDuration: '5' | '10',
+  _shotDuration: '5' | '10' = '5',
 ): number {
-  const perShot = Number(shotDuration);
-  const raw = perShot * shotCount;
-  return Math.min(raw, 15);
+  const safeShotCount = Math.min(shotCount, 3);
+  return safeShotCount * 5;
 }
 
 /**
- * Distribute total duration across shots, ensuring each is ≥ 1s and sum == total.
+ * Distribute total duration across shots.
+ * Kling requires each shot to be exactly 5s or 10s — we always use 5s.
  */
 export function distributeShotDurations(
   shotCount: number,
-  totalDuration: number,
+  _totalDuration: number,
 ): number[] {
-  if (shotCount <= 0) return [];
-  const base = Math.floor(totalDuration / shotCount);
-  const remainder = totalDuration - base * shotCount;
-
-  return Array.from({ length: shotCount }, (_, i) =>
-    Math.max(1, base + (i < remainder ? 1 : 0))
-  );
+  const safeShotCount = Math.min(shotCount, 3);
+  return Array.from({ length: safeShotCount }, () => 5);
 }
