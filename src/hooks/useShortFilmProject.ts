@@ -604,21 +604,16 @@ export function useShortFilmProject() {
 
       setAudioAssets(newAssets);
 
-      // Determine phase based on results
-      const hasFailures = sfxFail > 0 || voFail > 0 || (layers.music && !musicOk);
-      const hasSuccess = musicOk || sfxOk > 0 || voOk > 0;
+      // Determine phase based on results (only music is generated via ElevenLabs now)
+      const hasFailures = layers.music && !musicOk;
+      const hasSuccess = musicOk;
 
       if (hasFailures && !hasSuccess) {
         setAudioPhase('partial');
-        toast.error('Audio generation failed. Tap "Generate Audio" to retry.');
+        toast.error('Music generation failed. Tap "Generate Audio" to retry.');
       } else if (hasFailures) {
         setAudioPhase('partial');
-        const parts: string[] = [];
-        if (musicOk) parts.push('Music ✓');
-        else if (layers.music) parts.push('Music ✗');
-        if (sfxOk > 0 || sfxFail > 0) parts.push(`SFX ${sfxOk}/${sfxOk + sfxFail}`);
-        if (voOk > 0 || voFail > 0) parts.push(`Voice ${voOk}/${voOk + voFail}`);
-        toast.error(`Audio partially generated: ${parts.join(', ')}`);
+        toast.error('Music generation partially failed.');
       } else if (hasSuccess) {
         setAudioPhase('done');
         toast.success('Audio layer generated');

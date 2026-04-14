@@ -1,6 +1,5 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Play, Pause, Download, Music, Loader2 } from 'lucide-react';
 import type { AudioAssets } from '@/types/shortFilm';
 
@@ -24,7 +23,7 @@ export function ShortFilmVideoPlayer({ clips, audioAssets, shots, onDownload, on
   return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} onDownload={onDownload} onDownloadWithAudio={onDownloadWithAudio} isDownloadingWithAudio={isDownloadingWithAudio} />;
 }
 
-/* ─── Single combined video player with audio sync ─── */
+/* ─── Single combined video player with background music sync ─── */
 function SingleVideoPlayer({
   clip,
   audioAssets,
@@ -42,77 +41,26 @@ function SingleVideoPlayer({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgAudioRef = useRef<HTMLAudioElement>(null);
-  const shotAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   const rafRef = useRef<number>(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentShotIdx, setCurrentShotIdx] = useState(-1);
   const [videoError, setVideoError] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Fixed internal volumes
   const musicVolume = 0.5;
-  const sfxVolume = 0.7;
-  const voiceVolume = 1.0;
-
-  const hasAudio = audioAssets && (audioAssets.backgroundTrackUrl || audioAssets.perShotAudio.length > 0);
   const hasMusic = !!audioAssets?.backgroundTrackUrl;
-
-  const shotOffsets = useMemo(() => {
-    if (!shots || shots.length === 0) return [];
-    let acc = 0;
-    return shots.map(s => {
-      const start = acc;
-      acc += s.duration_sec;
-      return { shot_index: s.shot_index, start, end: acc, sfx_trigger_at: s.sfx_trigger_at ?? 0 };
-    });
-  }, [shots]);
 
   // Volume sync on mount
   useEffect(() => {
     if (bgAudioRef.current) bgAudioRef.current.volume = musicVolume;
   }, []);
 
-  // Preload per-shot audio on mount
-  useEffect(() => {
-    if (!audioAssets) return;
-    audioAssets.perShotAudio.forEach(a => {
-      const key = `${a.type}-${a.shotIndex}`;
-      if (!shotAudioRefs.current.has(key)) {
-        const audio = new Audio(a.url);
-        audio.preload = 'auto';
-        audio.volume = a.type === 'sfx' ? sfxVolume : voiceVolume;
-        shotAudioRefs.current.set(key, audio);
-      }
-    });
-  }, [audioAssets]);
-
-  const stopAllShotAudio = useCallback(() => {
-    shotAudioRefs.current.forEach((audio) => {
-      audio.pause();
-      audio.currentTime = 0;
-    });
-  }, []);
-
-  const playShotAudioByType = useCallback((shotIndex: number, type: 'sfx' | 'voiceover') => {
-    const key = `${type}-${shotIndex}`;
-    const audio = shotAudioRefs.current.get(key);
-    if (audio) {
-      audio.volume = type === 'sfx' ? sfxVolume : voiceVolume;
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
-    }
-  }, []);
-
-  // RAF loop for precise shot tracking + SFX trigger offset
+  // RAF loop for progress tracking
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-
-    let lastShotIdx = -1;
-    const sfxTriggered = new Set<number>();
 
     const onFrame = () => {
       if (video.paused || video.ended) return;
@@ -120,31 +68,10 @@ function SingleVideoPlayer({
       const d = video.duration || 1;
       setCurrentTime(t);
       setProgress((t / d) * 100);
-
-      if (hasAudio && shotOffsets.length > 0) {
-        const match = shotOffsets.find(s => t >= s.start && t < s.end);
-        if (match) {
-          // New shot entered — play voiceover immediately, reset sfx trigger
-          if (match.shot_index !== lastShotIdx) {
-            lastShotIdx = match.shot_index;
-            setCurrentShotIdx(match.shot_index);
-            stopAllShotAudio();
-            sfxTriggered.delete(match.shot_index);
-            // Play voiceover at shot start
-            playShotAudioByType(match.shot_index, 'voiceover');
-          }
-          // Trigger SFX at offset
-          const sfxTime = match.start + match.sfx_trigger_at;
-          if (!sfxTriggered.has(match.shot_index) && t >= sfxTime) {
-            sfxTriggered.add(match.shot_index);
-            playShotAudioByType(match.shot_index, 'sfx');
-          }
-        }
-      }
       rafRef.current = requestAnimationFrame(onFrame);
     };
 
-    const onPlay = () => { lastShotIdx = -1; sfxTriggered.clear(); rafRef.current = requestAnimationFrame(onFrame); };
+    const onPlay = () => { rafRef.current = requestAnimationFrame(onFrame); };
     const onPause = () => { cancelAnimationFrame(rafRef.current); };
     const onLoadedMetadata = () => { setDuration(video.duration); };
 
@@ -160,7 +87,7 @@ function SingleVideoPlayer({
       video.removeEventListener('pause', onPause);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
-  }, [hasAudio, shotOffsets, stopAllShotAudio, playShotAudioByType]);
+  }, []);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -168,7 +95,7 @@ function SingleVideoPlayer({
     if (video.paused) {
       video.play().catch(() => {});
       setIsPlaying(true);
-      if (bgAudioRef.current && audioAssets?.backgroundTrackUrl) {
+      if (bgAudioRef.current && hasMusic) {
         bgAudioRef.current.currentTime = video.currentTime;
         bgAudioRef.current.play().catch(() => {});
       }
@@ -176,15 +103,12 @@ function SingleVideoPlayer({
       video.pause();
       setIsPlaying(false);
       if (bgAudioRef.current) bgAudioRef.current.pause();
-      stopAllShotAudio();
     }
   };
 
   const handleVideoEnd = () => {
     setIsPlaying(false);
     if (bgAudioRef.current) bgAudioRef.current.pause();
-    stopAllShotAudio();
-    setCurrentShotIdx(-1);
     setProgress(100);
   };
 
@@ -199,20 +123,7 @@ function SingleVideoPlayer({
     if (bgAudioRef.current) {
       bgAudioRef.current.currentTime = video.currentTime;
     }
-    stopAllShotAudio();
-    setCurrentShotIdx(-1);
   };
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      shotAudioRefs.current.forEach(audio => {
-        audio.pause();
-        audio.src = '';
-      });
-      shotAudioRefs.current.clear();
-    };
-  }, []);
 
   if (!clip) return null;
 
@@ -266,7 +177,7 @@ function SingleVideoPlayer({
             className="w-full aspect-video"
             playsInline
             preload="metadata"
-            muted={!!hasAudio}
+            muted={false}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onEnded={handleVideoEnd}
@@ -275,8 +186,8 @@ function SingleVideoPlayer({
         )}
       </div>
 
-      {audioAssets?.backgroundTrackUrl && (
-        <audio ref={bgAudioRef} src={audioAssets.backgroundTrackUrl} loop preload="auto" />
+      {hasMusic && (
+        <audio ref={bgAudioRef} src={audioAssets!.backgroundTrackUrl} loop preload="auto" />
       )}
 
       {/* Controls bar */}
@@ -307,7 +218,7 @@ function SingleVideoPlayer({
 
       <p className="text-center text-xs text-muted-foreground">
         {totalDuration ? `${shots?.length} shots · ${totalDuration}s` : clip.label}
-        {hasAudio && ' · 🔊 Audio'}
+        {hasMusic && ' · 🎵 Music'}
       </p>
     </div>
   );
