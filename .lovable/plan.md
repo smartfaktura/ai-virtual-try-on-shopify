@@ -1,75 +1,41 @@
 
-Fix Short Film: progress UX, black final player, broken audio mix, wrong shot timing, and weak model/scene fidelity
 
-What I found
-- The latest short film already has a real final video plus saved music, SFX, and voiceover files in the backend. So generation is mostly succeeding; the main failures are in playback/UI and prompt/reference mapping.
-- There is no elapsed time, ETA, or “safe to close” guidance because `ShortFilmProgressPanel.tsx` only shows a pulsing bar and rotating copy.
-- The success state uses a raw `<video>` with no poster, no loading/error state, and no combined-film preview handling. That makes a finished film look like a black empty box.
-- Audio is not actually missing from generation data; `SingleVideoPlayer` ignores `audioAssets`, so the combined-film path never plays music/SFX/voiceover.
-- Manual audio buttons still call `generateAudio()` without explicitly passing `projectId`.
-- Shot timing is still being flattened in `ai-shot-planner/index.ts` because it overwrites AI durations with `Number(shotDuration) || 5`, so the storyboard/breakdown can still show fake 5s shots.
-- Model/scene fidelity is too weak: text-only scene presets are not injected into prompts, and human shots are not strongly constrained against hanger/mannequin/product-only outputs.
+# Add Pre-Made Style / Mood Presets for Short Film
 
-Implementation plan
+## What
 
-1. Add real generation progress UX
-- In `useShortFilmProject.ts`, track generation start time and restore processing projects when reopened.
-- In `ShortFilmProgressPanel.tsx`, show:
-  - elapsed time
-  - estimated time range
-  - clearer current phase text
-  - “You can close this page — your film will keep rendering in the background”
-- Keep the storyboard visible, but make it clearly informational rather than fake per-shot completion.
+The "Style / Mood" section in the short film references panel currently only supports manual file upload — there's no Library button or pre-made presets. We'll add 10 cinematic style/mood presets users can pick from instantly, covering a wide range of professional visual tones.
 
-2. Fix the final result player
-- Replace the plain success `<video>` block in `ShortFilm.tsx` with a proper single-film result card:
-  - loading state
-  - metadata/error fallback
-  - explicit retry/open-video fallback
-  - poster support when available
-- Make all short-film CTAs say `Download`, not `Download All`.
-- If needed, also patch `generate-video/index.ts` so omni jobs save/use a preview image when available.
+## Style Presets (10)
 
-3. Make audio work on the combined final film
-- Refactor `ShortFilmVideoPlayer.tsx` so `SingleVideoPlayer` accepts shot metadata and reuses the mixer behavior.
-- Add:
-  - background music sync
-  - per-shot voiceover/SFX triggering from cumulative shot offsets
-  - seek / pause / resume handling
-  - mixer controls for Music / SFX / Voice
-- In `ShortFilm.tsx`, pass shots metadata into the player.
-- Fix manual audio buttons to call `generateAudio(projectId)` explicitly.
+| Preset | Description (injected into prompts) |
+|--------|------|
+| **Cinematic Noir** | Deep blacks, high contrast, chiaroscuro lighting, film noir shadows, moody desaturated palette |
+| **Golden Hour Warmth** | Warm amber tones, long soft shadows, golden backlight, sun-kissed skin, dreamy lens flare |
+| **Ethereal Soft Focus** | Soft diffusion filter, pastel tones, dreamy bokeh, luminous highlights, gentle haze |
+| **Bold & Saturated** | Vivid punchy colors, high saturation, strong contrast, dynamic energy, editorial pop |
+| **Monochrome Elegance** | Black and white, fine grain, rich tonal range, timeless classic photography feel |
+| **Neon Cyberpunk** | Vibrant neon blues and magentas, dark environment, futuristic glow, reflective wet surfaces |
+| **Vintage Film Stock** | Warm muted tones, analog grain, faded highlights, 70s film aesthetic, nostalgic color shift |
+| **Clean Luxury** | Pristine whites, soft even lighting, premium minimalist feel, subtle warm undertones |
+| **Dramatic Chiaroscuro** | Rembrandt lighting, deep rich shadows, single key light, painterly contrast, fine art feel |
+| **Natural Documentary** | Available light, authentic grain, handheld intimacy, realistic color, raw unpolished beauty |
 
-4. Make timing truthful everywhere
-- In `supabase/functions/ai-shot-planner/index.ts`, stop replacing AI durations with the stale global `shotDuration`.
-- Remove remaining stale `5s per shot` assumptions from the short-film flow and always derive totals from live `duration_sec`.
-- Recheck review/progress/success labels so they always reflect actual shot durations and total film length.
+## Implementation
 
-5. Strengthen scene + human fidelity
-- In `shortFilmPromptBuilder.ts`, inject selected scene preset text into prompts when the scene reference has no image URL.
-- For `character_visible` shots, add stronger directives and negatives so the model must appear and hanger/mannequin substitutions are discouraged.
-- Improve reference mapping so human + product shots can carry both model and product intent instead of relying on a single fallback image.
+### `ReferenceUploadPanel.tsx`
+- Add a `STYLE_MOOD_PRESETS` array with the 10 presets (id, title, description, keywords)
+- Add state for a style picker dialog (`stylePickerOpen`)
+- Change the Style / Mood section from `libraryType: null` to `libraryType: 'style'`
+- Add `openLibrary` handler for `'style'` type
+- Add a picker dialog (same pattern as scene presets) showing the 10 presets as selectable cards with a Palette icon
+- `pickStyle` callback stores the preset: `url: ''`, `role: 'style'`, `name: "preset.title: preset.keywords"`
+- The keywords string is what gets injected into prompts via `buildShotPrompt`
 
-6. Make audio/storyboard decisions visible to the user
-- In `ShotCard.tsx` / review UI, show which references each shot is using.
-- Surface the exact voiceover line per shot in review/success so users can see what will be spoken and where.
+### `shortFilmPromptBuilder.ts`
+- Already handles style references via `context.references` — style refs with no URL but a `name` containing keywords will be appended to the tone/style portion of the prompt (P2 priority)
+- Add explicit handling: if any reference has `role === 'style'` and no URL, extract the name text and inject it as a style directive alongside the tone preset
 
-Files to update
-- `src/components/app/video/short-film/ShortFilmProgressPanel.tsx`
-- `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx`
-- `src/pages/video/ShortFilm.tsx`
-- `src/hooks/useShortFilmProject.ts`
-- `src/components/app/video/short-film/ShortFilmStickyBar.tsx`
-- `src/lib/shortFilmPromptBuilder.ts`
-- `src/components/app/video/short-film/ShotCard.tsx`
-- `src/components/app/video/short-film/ShortFilmReviewSummary.tsx`
-- `supabase/functions/ai-shot-planner/index.ts`
-- possibly `supabase/functions/generate-video/index.ts` for omni poster/preview support
+### No other files need changes
+The style references are already part of the `ReferenceAsset[]` array that flows through the system.
 
-Expected result
-- Users see elapsed time, ETA, and safe-to-close messaging.
-- Finished films display as one real playable result instead of a black-looking blank player.
-- Download points to the actual final film.
-- Music, SFX, and voiceover play in sync on the combined-film preview.
-- Shot breakdown uses real durations.
-- Human/model shots follow the selected references more reliably.
