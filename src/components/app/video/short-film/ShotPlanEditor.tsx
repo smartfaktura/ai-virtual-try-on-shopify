@@ -1,6 +1,7 @@
 import { ShotCard } from './ShotCard';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Sparkles, Cog, Loader2, Mic, Volume2 } from 'lucide-react';
+import { Plus, RefreshCw, Sparkles, Cog, Loader2, Mic, Volume2, Clock } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import type { ShotPlanItem } from '@/types/shortFilm';
 
@@ -132,6 +133,27 @@ export function ShotPlanEditor({
                       placeholder="Sound effect description for this shot..."
                       className="text-xs h-7 bg-muted/30 border-muted"
                     />
+                    {shot.sfx_prompt && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        <Select
+                          value={String(shot.sfx_trigger_at ?? 0)}
+                          onValueChange={v => onUpdateShot?.(idx, { ...shot, sfx_trigger_at: parseFloat(v) })}
+                        >
+                          <SelectTrigger className="h-7 w-[72px] text-[10px] bg-muted/30 border-muted">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">Start</SelectItem>
+                            <SelectItem value="0.5">0.5s</SelectItem>
+                            <SelectItem value="1">1.0s</SelectItem>
+                            <SelectItem value="1.5">1.5s</SelectItem>
+                            <SelectItem value="2">2.0s</SelectItem>
+                            <SelectItem value="3">3.0s</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

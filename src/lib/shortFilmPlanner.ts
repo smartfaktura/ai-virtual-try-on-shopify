@@ -345,6 +345,15 @@ export function generateShotPlan(
       resolve: 'warm cinematic resolution, satisfying closing tone',
       closing: 'gentle fade-out ambience, soft cinematic outro',
     };
+    const SFX_TRIGGER_DEFAULTS: Record<string, number> = {
+      hook: 0,
+      tease: 0,
+      product_reveal: 0.5,
+      highlight: 0.3,
+      closing: 0,
+      brand_finish: 0,
+      end_frame: 0,
+    };
     return {
       shot_index: index + 1,
       role,
@@ -355,6 +364,7 @@ export function generateShotPlan(
       duration_sec: getDefaultDurationForRole(role),
       script_line: defaults.script_line,
       sfx_prompt: ROLE_SFX_DEFAULTS[role] || 'subtle cinematic ambient sound',
+      sfx_trigger_at: SFX_TRIGGER_DEFAULTS[role] ?? 0,
       product_visible: defaults.product_visible ?? false,
       character_visible: defaults.character_visible ?? false,
       preservation_strength: defaults.preservation_strength || 'medium',
