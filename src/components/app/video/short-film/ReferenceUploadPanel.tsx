@@ -280,10 +280,14 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     [references, onChange, upload]
   );
 
-  const pickModel = useCallback(
+  const toggleModel = useCallback(
     (model: ModelProfile) => {
-      onChange([...references, { id: crypto.randomUUID(), url: model.previewUrl, role: 'model', name: model.name }]);
-      setModelPickerOpen(false);
+      const existing = references.find(r => r.role === 'model' && r.url === model.previewUrl);
+      if (existing) {
+        onChange(references.filter(r => r.id !== existing.id));
+      } else {
+        onChange([...references, { id: crypto.randomUUID(), url: model.previewUrl, role: 'model', name: model.name }]);
+      }
     },
     [references, onChange]
   );
