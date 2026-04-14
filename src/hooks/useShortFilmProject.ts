@@ -167,7 +167,15 @@ export function useShortFilmProject() {
         setStoryStructure(d.storyStructure || null);
         setReferences(d.references || []);
         setShots(d.shots || []);
-        setSettings(d.settings || DEFAULT_SETTINGS);
+        
+        // Force old 'silent' drafts to 'full_mix' so audio generation works
+        const restoredSettings = d.settings || DEFAULT_SETTINGS;
+        if (restoredSettings.audioMode === 'silent') {
+          console.log('[ShortFilm] Old draft had audioMode=silent, upgrading to full_mix');
+          restoredSettings.audioMode = 'full_mix';
+        }
+        setSettings(restoredSettings);
+        
         setPlanMode(d.planMode || 'ai');
         setCustomRoles(d.customRoles || []);
         setDraftProjectId(data.id);
@@ -205,9 +213,9 @@ export function useShortFilmProject() {
               setAudioAssets(restoredAssets);
               setAudioPhase('done');
             } else {
-              // Audio was expected but missing — allow retry
-              const restoredSettings = d.settings || DEFAULT_SETTINGS;
-              if (restoredSettings.audioMode !== 'silent' && restoredSettings.audioMode !== 'ambient') {
+              // Audio was expected but missing — set idle so user can trigger
+              if (restoredSettings.audioMode !== 'ambient') {
+                console.log('[ShortFilm] Audio missing on restored draft — setting phase to idle for retry');
                 setAudioPhase('idle');
               }
             }
@@ -408,7 +416,11 @@ export function useShortFilmProject() {
   const generateAudio = useCallback(async (targetProjectId?: string, currentShots?: ShotPlanItem[]) => {
     if (!user) return;
     const mode = settings.audioMode;
-    if (mode === 'silent' || mode === 'ambient') return;
+    console.log('[ShortFilm Audio] generateAudio called — mode:', mode, 'shots:', (currentShots || shots).length, 'projectId:', targetProjectId || projectId);
+    if (mode === 'silent' || mode === 'ambient') {
+      console.log('[ShortFilm Audio] Skipping — mode is', mode);
+      return;
+    }
 
     const shotsToUse = currentShots || shots;
     const pid = targetProjectId || projectId;
@@ -448,11 +460,13 @@ export function useShortFilmProject() {
         const totalDuration = shotsToUse.reduce((sum, s) => sum + s.duration_sec, 0);
         const musicPrompt = settings.musicPrompt || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse);
         try {
+          console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', musicPrompt, 'duration:', Math.min(totalDuration, 120));
           const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
             method: 'POST',
             headers,
             body: JSON.stringify({ prompt: musicPrompt, duration: Math.min(totalDuration, 120) }),
           });
+          console.log('[ShortFilm Audio] Music response status:', res.status);
           if (res.ok) {
             const blob = await res.blob();
             const blobUrl = URL.createObjectURL(blob);
@@ -481,11 +495,13 @@ export function useShortFilmProject() {
           );
           try {
             const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
+            console.log(`[ShortFilm Audio] Calling elevenlabs-sfx for shot ${shot.shot_index} — prompt:`, sfxPrompt);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
               method: 'POST',
               headers,
               body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
             });
+            console.log(`[ShortFilm Audio] SFX shot ${shot.shot_index} response status:`, res.status);
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
@@ -526,11 +542,13 @@ export function useShortFilmProject() {
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
           );
           try {
+            console.log(`[ShortFilm Audio] Calling elevenlabs-tts for shot ${shot.shot_index} — text:`, shot.script_line);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
               method: 'POST',
               headers,
               body: JSON.stringify({ text: shot.script_line, voiceId }),
             });
+            console.log(`[ShortFilm Audio] TTS shot ${shot.shot_index} response status:`, res.status);
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
@@ -903,10 +921,14 @@ export function useShortFilmProject() {
       const draftState: DraftState = {
         step: 'review', filmType, storyStructure, references, shots, settings, planMode, customRoles,
       };
-      await supabase.from('video_projects').update({
-        status: projectStatus,
-        draft_state_json: JSON.parse(JSON.stringify(draftState)),
-      }).eq('id', currentProjectId!);
+      try {
+        await supabase.from('video_projects').update({
+          status: projectStatus,
+          draft_state_json: JSON.parse(JSON.stringify(draftState)),
+        }).eq('id', currentProjectId!);
+      } catch (dbErr) {
+        console.error('[ShortFilm] DB update after generation failed:', dbErr);
+      }
 
       if (generationSucceeded) {
         toast.success('Short film generation complete!');
@@ -915,17 +937,24 @@ export function useShortFilmProject() {
       }
       refreshBalance();
 
-      // Generate audio layer if needed — pass current shots to avoid stale closure
-      if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
-        await generateAudio(currentProjectId, shots);
-      }
-
     } catch (err) {
       console.error('[ShortFilm] Generation failed:', err);
       toast.error(err instanceof Error ? err.message : 'Generation failed');
-    } finally {
-      setIsGenerating(false);
     }
+
+    // Generate audio layer INDEPENDENTLY — outside the main try block
+    const audioProjectId = projectId || draftProjectId;
+    if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
+      console.log('[ShortFilm] Starting audio generation independently for project:', audioProjectId);
+      try {
+        await generateAudio(audioProjectId || undefined, shots);
+      } catch (audioErr) {
+        console.error('[ShortFilm] Audio generation failed independently:', audioErr);
+        toast.error('Audio generation failed — you can retry from the player');
+      }
+    }
+
+    setIsGenerating(false);
   }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId, generateAudio]);
 
   const updateShot = useCallback((index: number, updated: ShotPlanItem) => {
