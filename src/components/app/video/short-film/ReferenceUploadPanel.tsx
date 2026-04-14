@@ -599,7 +599,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                   <p className="text-sm font-medium text-foreground">{section.label}</p>
                   <p className="text-xs text-muted-foreground">{section.description}</p>
                 </div>
-                {section.libraryType && (
+                {section.libraryType && section.role !== 'model' && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -610,7 +610,44 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                     <span className="hidden sm:inline">All</span>
                   </Button>
                 )}
+                {section.role === 'model' && (
+                  <button
+                    onClick={openModelPicker}
+                    className="text-xs text-primary hover:underline font-medium shrink-0"
+                  >
+                    View All →
+                  </button>
+                )}
               </div>
+
+              {/* ─── INLINE MODEL GRID (model section only) ─── */}
+              {section.role === 'model' && (
+                <div className="space-y-2">
+                  {modelsLoading ? (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
+                      ))}
+                    </div>
+                  ) : inlineModels.length > 0 ? (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                      {inlineModels.map((m) => (
+                        <ModelSelectorCard
+                          key={m.modelId}
+                          model={m}
+                          isSelected={selectedModelUrls.has(m.previewUrl)}
+                          onSelect={() => toggleModel(m)}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                  {sectionRefs.filter(r => r.url).length > 0 && (
+                    <p className="text-[10px] text-muted-foreground">
+                      {sectionRefs.filter(r => r.url).length} model{sectionRefs.filter(r => r.url).length > 1 ? 's' : ''} selected
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Inline quick-pick chips for scene & style */}
               {showQuickPicks && section.role === 'style' && (
@@ -659,19 +696,15 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                 </div>
               )}
 
-              {/* Show image-based refs (uploaded or model picks) */}
-              {sectionRefs.filter(r => r.url).length > 0 && (
+              {/* Show image-based refs for non-model sections */}
+              {section.role !== 'model' && sectionRefs.filter(r => r.url).length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {sectionRefs.filter(r => r.url).map((ref) => (
                     <div key={ref.id} className="relative group">
                       <img
                         src={getOptimizedUrl(ref.url, { quality: 70 })}
                         alt={ref.name || section.label}
-                        className={`rounded-lg border border-border ${
-                          section.role === 'model'
-                            ? 'w-12 aspect-[3/4] object-cover bg-muted/30'
-                            : 'h-16 w-16 object-cover bg-muted/30'
-                        }`}
+                        className="h-16 w-16 rounded-lg border border-border object-cover bg-muted/30"
                         loading="lazy"
                       />
                       <button
@@ -682,7 +715,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                         <X className="h-3 w-3" />
                       </button>
                       {ref.name && (
-                        <p className={`text-[9px] text-muted-foreground text-center truncate mt-0.5 ${section.role === 'model' ? 'w-12' : 'w-16'}`}>{ref.name?.split(':')[0]}</p>
+                        <p className="text-[9px] text-muted-foreground text-center truncate mt-0.5 w-16">{ref.name?.split(':')[0]}</p>
                       )}
                     </div>
                   ))}
