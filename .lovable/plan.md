@@ -1,67 +1,48 @@
 
 
-# Short Film Flow Audit: 1 Critical Bug Found
+# Fix Zoomed Model Images in Short Film Picker
 
-## Bug: Stale State Causes Project Always Marked "Failed"
+## Problem
+The short film "Pick from Model Library" dialog renders model images with a custom inline template instead of reusing the `ModelSelectorCard` component used everywhere else (product images, brand models). The inline version also passes `{ width: 200 }` to `getOptimizedUrl`, which may cause blurry upscaling at display size.
 
-**Location**: `src/hooks/useShortFilmProject.ts`, lines 849-851
+## Fix
 
-After `pollQueueJobCompletion` resolves and `setShotStatuses` updates shot statuses to `'complete'`, the code immediately reads `shotStatuses` (the React state variable) to count successes:
+### File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
 
-```typescript
-const currentStatuses = shotStatuses;  // ← STALE! Still has 'processing' values
-const successCount = currentStatuses.filter(s => s.status === 'complete').length;
-// successCount is always 0 → project always marked 'failed'
-```
-
-React state updates from `setShotStatuses` are asynchronous — the closure still holds the old array where every shot is `'processing'`. So `successCount` is always 0, the project is always saved as `'failed'`, and the user always sees "All shots failed" even when the video generated successfully.
-
-**Fix**: Determine success/failure from the `resultUrl` return value (which is already in scope) instead of reading stale state:
+Replace the custom `renderItem` callback (lines 328-343) with the shared `ModelSelectorCard` component:
 
 ```typescript
-const allSucceeded = resultUrl !== null;
-const projectStatus = allSucceeded ? 'complete' : 'failed';
+// Before (custom inline render):
+renderItem={(m) => (
+  <button ...>
+    <div className="aspect-[3/4] bg-muted/30 rounded-t-lg overflow-hidden">
+      <ShimmerImage src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })} ... />
+    </div>
+    <p className="text-xs font-medium ...">{m.name}</p>
+  </button>
+)}
+
+// After (reuse ModelSelectorCard):
+renderItem={(m) => (
+  <ModelSelectorCard
+    key={m.modelId}
+    model={m}
+    isSelected={false}
+    onSelect={() => pickModel(m)}
+  />
+)}
 ```
 
-## Everything Else Looks Good
+This ensures:
+- Same `aspect-[3/4]` ratio with proper `object-cover` framing
+- Same optimized image URL logic (no forced 200px width)
+- Gradient overlay with name at bottom
+- Hover/focus states matching the rest of the app
 
-- Multi-shot payload construction with `negative_prompt` — correct
-- Kling omni-video request body (`multi_shot: true`, `shot_type: "customize"`, `multi_prompt`) — correct
-- Single-shot fallback (< 2 shots → `image2video`) — correct
-- Polling with `endpoint: "omni"` for multi-shot tasks — correct
-- `video_multishot` routing in `process-queue` — correct
-- Cinematic prompt engine (role-based cinematics, tone presets) — correct
-- `ShortFilmVideoPlayer` single-video detection — correct
-- Credits, refunds, error handling — correct
-
-## Files to Change
+### Import
+Add `import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';` to the file.
 
 | File | Change |
 |------|--------|
-| `src/hooks/useShortFilmProject.ts` | Lines 849-866: Replace stale `shotStatuses` read with `resultUrl`-based success check |
-
-## Implementation
-
-```typescript
-// Replace lines 849-866 with:
-const allSucceeded = resultUrl !== null;
-const projectStatus = allSucceeded ? 'complete' : 'failed';
-
-// Persist full draft state for reopening
-const draftState: DraftState = {
-  step: 'review', filmType, storyStructure, references, shots, settings, planMode, customRoles,
-};
-await supabase.from('video_projects').update({
-  status: projectStatus,
-  draft_state_json: JSON.parse(JSON.stringify(draftState)),
-}).eq('id', currentProjectId!);
-
-if (allSucceeded) {
-  toast.success('Short film generation complete!');
-} else {
-  toast.error('Film generation failed');
-}
-```
-
-One variable fix that prevents the project from being incorrectly marked as failed every time.
+| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Use `ModelSelectorCard` in model picker `renderItem` + add import |
 
