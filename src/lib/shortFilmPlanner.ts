@@ -21,7 +21,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Rocket,
     defaultStructure: 'hook_reveal_detail_closing',
     defaultTone: 'premium',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
   {
     value: 'brand_story',
@@ -31,7 +31,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: BookOpen,
     defaultStructure: 'intro_product_lifestyle_end',
     defaultTone: 'editorial',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
   {
     value: 'fashion_campaign',
@@ -41,7 +41,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Shirt,
     defaultStructure: 'atmosphere_focus_human_finish',
     defaultTone: 'editorial',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
   {
     value: 'beauty_film',
@@ -51,7 +51,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Sparkles,
     defaultStructure: 'hook_reveal_detail_closing',
     defaultTone: 'luxury',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
   {
     value: 'luxury_mood',
@@ -61,7 +61,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Gem,
     defaultStructure: 'tease_build_highlight_resolve',
     defaultTone: 'luxury',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
   {
     value: 'sports_campaign',
@@ -71,7 +71,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Zap,
     defaultStructure: 'hook_reveal_detail_closing',
     defaultTone: 'energetic',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
   {
     value: 'lifestyle_teaser',
@@ -81,7 +81,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Leaf,
     defaultStructure: 'intro_product_lifestyle_end',
     defaultTone: 'minimal',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
   {
     value: 'custom',
@@ -91,7 +91,7 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
     lucideIcon: Clapperboard,
     defaultStructure: 'custom',
     defaultTone: 'clean',
-    defaultShotCount: 3,
+    defaultShotCount: 4,
   },
 ];
 
@@ -102,32 +102,32 @@ export const FILM_TYPE_OPTIONS: FilmTypeOption[] = [
 export const STORY_STRUCTURE_OPTIONS: StoryStructureOption[] = [
   {
     value: 'hook_reveal_detail_closing',
-    label: 'Hook → Reveal → Closing',
-    description: 'Grab attention, reveal the product, close strong.',
-    roles: ['hook', 'product_reveal', 'brand_finish'],
+    label: 'Hook → Reveal → Detail → Closing',
+    description: 'Grab attention, reveal the product, show detail, close strong.',
+    roles: ['hook', 'product_reveal', 'detail_closeup', 'brand_finish'],
   },
   {
     value: 'intro_product_lifestyle_end',
-    label: 'Intro → Product → Lifestyle',
-    description: 'Set the scene, feature the product, show it in use.',
-    roles: ['intro', 'product_moment', 'lifestyle_moment'],
+    label: 'Intro → Product → Lifestyle → End',
+    description: 'Set the scene, feature the product, show it in use, sign off.',
+    roles: ['intro', 'product_moment', 'lifestyle_moment', 'end_frame'],
   },
   {
     value: 'atmosphere_focus_human_finish',
-    label: 'Atmosphere → Focus → Human',
-    description: 'Build mood, focus on the product, add a human element.',
-    roles: ['atmosphere', 'product_focus', 'human_interaction'],
+    label: 'Atmosphere → Focus → Human → Finish',
+    description: 'Build mood, focus on the product, add a human element, finish.',
+    roles: ['atmosphere', 'product_focus', 'human_interaction', 'brand_finish'],
   },
   {
     value: 'tease_build_highlight_resolve',
-    label: 'Tease → Build → Highlight',
-    description: 'Create intrigue, build tension, highlight the hero.',
-    roles: ['tease', 'build', 'highlight'],
+    label: 'Tease → Build → Highlight → Resolve',
+    description: 'Create intrigue, build tension, highlight the hero, resolve.',
+    roles: ['tease', 'build', 'highlight', 'resolve'],
   },
   {
     value: 'custom',
     label: 'Custom Structure',
-    description: 'Define your own shot roles and sequence (max 3).',
+    description: 'Define your own shot roles and sequence (max 6).',
     roles: [],
   },
 ];
@@ -322,9 +322,8 @@ export function generateShotPlan(
     ? structureOption.roles
     : ['hook', 'product_reveal', 'detail_closeup', 'brand_finish'];
 
-  // Cap at 3 shots max (Kling multi-shot limit: 3×5s = 15s)
-  const roles = allRoles.slice(0, 3);
-  const durationSec = 5; // Always 5s per shot for multi-shot
+  // Cap at 6 shots max (Kling multi-shot limit)
+  const roles = allRoles.slice(0, 6);
 
   return roles.map((role, index) => {
     const defaults = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.hook;
@@ -335,12 +334,35 @@ export function generateShotPlan(
       scene_type: defaults.scene_type || 'general',
       camera_motion: defaults.camera_motion || 'static',
       subject_motion: defaults.subject_motion || 'minimal',
-      duration_sec: durationSec,
+      duration_sec: getDefaultDurationForRole(role),
       product_visible: defaults.product_visible ?? false,
       character_visible: defaults.character_visible ?? false,
       preservation_strength: defaults.preservation_strength || 'medium',
     };
   });
+}
+
+/** Cinematic default durations per shot role — sums to ≤15s for 4-shot structures */
+function getDefaultDurationForRole(role: string): number {
+  const ROLE_DURATIONS: Record<string, number> = {
+    hook: 2,
+    tease: 2,
+    build: 2,
+    intro: 3,
+    atmosphere: 3,
+    product_reveal: 4,
+    highlight: 4,
+    product_moment: 4,
+    detail_closeup: 3,
+    product_focus: 3,
+    lifestyle_moment: 3,
+    human_interaction: 3,
+    brand_finish: 3,
+    end_frame: 3,
+    resolve: 3,
+    closing: 3,
+  };
+  return ROLE_DURATIONS[role] || 3;
 }
 
 export function formatRoleLabel(role: string): string {

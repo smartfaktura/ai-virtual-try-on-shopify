@@ -90,8 +90,8 @@ export function ShotCard({
               <label className="text-[10px] font-medium text-muted-foreground">Duration (sec)</label>
               <Input
                 type="number"
-                min={3}
-                max={10}
+                min={1}
+                max={15}
                 value={draft.duration_sec}
                 onChange={e => setDraft(d => ({ ...d, duration_sec: Number(e.target.value) }))}
                 className="text-xs h-8"

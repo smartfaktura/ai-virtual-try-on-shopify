@@ -97,11 +97,11 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
         </div>
       </div>
 
-      {/* Shot Duration — fixed at 5s per shot (Kling multi-shot limit) */}
+      {/* Shot Duration info */}
       <div className="space-y-2">
-        <p className="text-sm font-medium text-foreground">Shot Duration</p>
+        <p className="text-sm font-medium text-foreground">Duration</p>
         <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
-          5s per shot · Max 3 shots · 15s total (platform limit)
+          Variable per shot · Up to 6 shots · 15s total (platform limit)
         </div>
       </div>
 

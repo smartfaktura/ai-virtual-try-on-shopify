@@ -16,7 +16,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const systemPrompt = `You are a cinematic short film director specializing in brand and product films.
-Given a film type, story structure, duration per shot, and optional tone/references, generate a creative shot plan.
+Given a film type, story structure, and optional tone/references, generate a creative shot plan.
 Return ONLY a valid JSON array of shot objects. Each shot object must have exactly these fields:
 - shot_index (number, 1-based)
 - role (string: "hook", "hero", "detail", "lifestyle", "closing", "transition", "atmosphere")
@@ -24,13 +24,13 @@ Return ONLY a valid JSON array of shot objects. Each shot object must have exact
 - scene_type (string: "product_closeup", "product_hero", "lifestyle_wide", "detail_macro", "atmosphere_mood", "human_interaction", "environment_pan")
 - camera_motion (string: "slow_push", "orbit", "static", "pull_back", "crane_up", "dolly_slide", "handheld_drift")
 - subject_motion (string: "static", "subtle_rotation", "slow_reveal", "human_gesture", "product_interaction", "environment_motion")
-- duration_sec (number: must be ${shotDuration || 5})
+- duration_sec (number: integer 1-15, use cinematic pacing — hooks/teases: 2s, hero reveals: 4-5s, details: 3s, closings: 3s)
 - product_visible (boolean)
 - character_visible (boolean)
 - preservation_strength ("low" | "medium" | "high")
 - script_line (string: optional voiceover suggestion for this shot)
 
-Generate exactly 2-3 shots (max 3) that tell a compelling visual story within a 15-second total duration limit. Each shot must be exactly 5 seconds. Vary camera motions and scene types for cinematic interest.`;
+Generate 3-5 shots with varied cinematic pacing. The total of all duration_sec values MUST equal exactly 15 seconds. Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments. Maximum 6 shots. Vary camera motions and scene types for cinematic interest.`;
 
     const userPrompt = `Film type: ${filmType}
 Story structure: ${storyStructure}
