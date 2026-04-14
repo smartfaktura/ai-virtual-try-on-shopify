@@ -21,6 +21,14 @@ interface ShotStatus {
   result_url?: string;
 }
 
+export interface AudioShotStatus {
+  shot_index: number;
+  sfx: 'idle' | 'generating' | 'done' | 'failed';
+  voiceover: 'idle' | 'generating' | 'done' | 'failed';
+}
+
+export type AudioPhase = 'idle' | 'music' | 'sfx' | 'voiceover' | 'done';
+
 interface DraftState {
   step: ShortFilmStep;
   filmType: FilmType | null;
@@ -58,6 +66,8 @@ export function useShortFilmProject() {
   const [settings, setSettings] = useState<ShortFilmSettings>(DEFAULT_SETTINGS);
   const [audioAssets, setAudioAssets] = useState<AudioAssets>({ perShotAudio: [] });
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [audioPhase, setAudioPhase] = useState<AudioPhase>('idle');
+  const [audioShotStatuses, setAudioShotStatuses] = useState<AudioShotStatus[]>([]);
 
   const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
@@ -235,6 +245,8 @@ export function useShortFilmProject() {
     setSettings(DEFAULT_SETTINGS);
     setAudioAssets({ perShotAudio: [] });
     setIsGeneratingAudio(false);
+    setAudioPhase('idle');
+    setAudioShotStatuses([]);
   }, []);
 
   // ─── Retry single failed shot ──────────────────────────────
@@ -305,13 +317,33 @@ export function useShortFilmProject() {
     }
   }, [projectId, user, filmType, shots, settings, references]);
 
+  // ─── Upload audio blob to storage ─────────────────────────────
+  const uploadAudioToStorage = useCallback(async (blob: Blob, filename: string): Promise<string | null> => {
+    if (!user) return null;
+    const path = `${user.id}/${filename}`;
+    const { error } = await supabase.storage.from('generated-audio').upload(path, blob, {
+      contentType: 'audio/mpeg',
+      upsert: true,
+    });
+    if (error) {
+      console.error('[ShortFilm] Audio upload failed:', error);
+      return null;
+    }
+    const { data: { signedUrl } } = await supabase.storage
+      .from('generated-audio')
+      .createSignedUrl(path, 3600);
+    return signedUrl || null;
+  }, [user]);
+
   // ─── Audio generation ────────────────────────────────────────
-  const generateAudio = useCallback(async () => {
+  const generateAudio = useCallback(async (targetProjectId?: string) => {
     if (!user) return;
     const mode = settings.audioMode;
     if (mode === 'silent' || mode === 'ambient') return;
 
+    const pid = targetProjectId || projectId;
     setIsGeneratingAudio(true);
+    setAudioPhase('idle');
     const newAssets: AudioAssets = { perShotAudio: [] };
     const baseUrl = import.meta.env.VITE_SUPABASE_URL;
     const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -324,9 +356,18 @@ export function useShortFilmProject() {
       Authorization: `Bearer ${authToken}`,
     };
 
+    // Init per-shot audio statuses
+    const initStatuses: AudioShotStatus[] = shots.map(s => ({
+      shot_index: s.shot_index,
+      sfx: (mode === 'full_mix') ? 'idle' : 'idle',
+      voiceover: (mode === 'voiceover' || mode === 'full_mix') && s.script_line ? 'idle' : 'idle',
+    }));
+    setAudioShotStatuses(initStatuses);
+
     try {
       // Music track
       if (mode === 'music' || mode === 'full_mix') {
+        setAudioPhase('music');
         const totalDuration = shots.reduce((sum, s) => sum + s.duration_sec, 0);
         const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music for a ${filmType?.replace(/_/g, ' ')} film`;
         try {
@@ -337,7 +378,14 @@ export function useShortFilmProject() {
           });
           if (res.ok) {
             const blob = await res.blob();
-            newAssets.backgroundTrackUrl = URL.createObjectURL(blob);
+            const blobUrl = URL.createObjectURL(blob);
+            newAssets.backgroundTrackUrl = blobUrl;
+
+            // Persist to storage
+            const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/music-track.mp3`);
+            if (storageUrl && pid) {
+              await supabase.from('video_projects').update({ music_track_url: storageUrl } as any).eq('id', pid);
+            }
           }
         } catch (e) {
           console.error('[ShortFilm] Music generation failed:', e);
@@ -346,7 +394,11 @@ export function useShortFilmProject() {
 
       // SFX per shot (full_mix only)
       if (mode === 'full_mix') {
+        setAudioPhase('sfx');
         for (const shot of shots) {
+          setAudioShotStatuses(prev =>
+            prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'generating' } : s)
+          );
           try {
             const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
@@ -356,23 +408,40 @@ export function useShortFilmProject() {
             });
             if (res.ok) {
               const blob = await res.blob();
-              newAssets.perShotAudio.push({
-                shotIndex: shot.shot_index,
-                url: URL.createObjectURL(blob),
-                type: 'sfx',
-              });
+              const blobUrl = URL.createObjectURL(blob);
+              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'sfx' });
+
+              const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/sfx-shot-${shot.shot_index}.mp3`);
+              if (storageUrl && pid) {
+                await supabase.from('video_shots').update({ sfx_url: storageUrl } as any)
+                  .eq('project_id', pid).eq('shot_index', shot.shot_index);
+              }
+              setAudioShotStatuses(prev =>
+                prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'done' } : s)
+              );
+            } else {
+              setAudioShotStatuses(prev =>
+                prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'failed' } : s)
+              );
             }
           } catch (e) {
             console.error(`[ShortFilm] SFX shot ${shot.shot_index} failed:`, e);
+            setAudioShotStatuses(prev =>
+              prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'failed' } : s)
+            );
           }
         }
       }
 
       // Voiceover per shot
       if (mode === 'voiceover' || mode === 'full_mix') {
+        setAudioPhase('voiceover');
         const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
         for (const shot of shots) {
           if (!shot.script_line) continue;
+          setAudioShotStatuses(prev =>
+            prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
+          );
           try {
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
               method: 'POST',
@@ -381,19 +450,33 @@ export function useShortFilmProject() {
             });
             if (res.ok) {
               const blob = await res.blob();
-              newAssets.perShotAudio.push({
-                shotIndex: shot.shot_index,
-                url: URL.createObjectURL(blob),
-                type: 'voiceover',
-              });
+              const blobUrl = URL.createObjectURL(blob);
+              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'voiceover' });
+
+              const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/vo-shot-${shot.shot_index}.mp3`);
+              if (storageUrl && pid) {
+                await supabase.from('video_shots').update({ audio_url: storageUrl } as any)
+                  .eq('project_id', pid).eq('shot_index', shot.shot_index);
+              }
+              setAudioShotStatuses(prev =>
+                prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'done' } : s)
+              );
+            } else {
+              setAudioShotStatuses(prev =>
+                prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'failed' } : s)
+              );
             }
           } catch (e) {
             console.error(`[ShortFilm] TTS shot ${shot.shot_index} failed:`, e);
+            setAudioShotStatuses(prev =>
+              prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'failed' } : s)
+            );
           }
         }
       }
 
       setAudioAssets(newAssets);
+      setAudioPhase('done');
       if (newAssets.backgroundTrackUrl || newAssets.perShotAudio.length > 0) {
         toast.success('Audio layer generated');
       }
@@ -402,7 +485,113 @@ export function useShortFilmProject() {
     } finally {
       setIsGeneratingAudio(false);
     }
-  }, [user, settings, shots, filmType]);
+  }, [user, settings, shots, filmType, projectId, uploadAudioToStorage]);
+
+  // ─── Retry single audio track ──────────────────────────────
+  const retryAudioForShot = useCallback(async (shotIndex: number, type: 'sfx' | 'voiceover') => {
+    if (!user) return;
+    const shot = shots.find(s => s.shot_index === shotIndex);
+    if (!shot) return;
+
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const session = (await supabase.auth.getSession()).data.session;
+    const authToken = session?.access_token || apikey;
+    const headers = { 'Content-Type': 'application/json', apikey, Authorization: `Bearer ${authToken}` };
+
+    const statusKey = type === 'sfx' ? 'sfx' : 'voiceover';
+    setAudioShotStatuses(prev =>
+      prev.map(s => s.shot_index === shotIndex ? { ...s, [statusKey]: 'generating' } : s)
+    );
+
+    try {
+      let res: Response;
+      if (type === 'sfx') {
+        const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
+        res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
+          method: 'POST', headers,
+          body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
+        });
+      } else {
+        if (!shot.script_line) return;
+        const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
+        res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
+          method: 'POST', headers,
+          body: JSON.stringify({ text: shot.script_line, voiceId }),
+        });
+      }
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        setAudioAssets(prev => ({
+          ...prev,
+          perShotAudio: [
+            ...prev.perShotAudio.filter(a => !(a.shotIndex === shotIndex && a.type === type)),
+            { shotIndex, url: blobUrl, type },
+          ],
+        }));
+
+        const storageUrl = await uploadAudioToStorage(blob, `${projectId || 'preview'}/${type === 'sfx' ? 'sfx' : 'vo'}-shot-${shotIndex}.mp3`);
+        if (storageUrl && projectId) {
+          const col = type === 'sfx' ? 'sfx_url' : 'audio_url';
+          await supabase.from('video_shots').update({ [col]: storageUrl } as any)
+            .eq('project_id', projectId).eq('shot_index', shotIndex);
+        }
+
+        setAudioShotStatuses(prev =>
+          prev.map(s => s.shot_index === shotIndex ? { ...s, [statusKey]: 'done' } : s)
+        );
+        toast.success(`${type === 'sfx' ? 'SFX' : 'Voiceover'} for shot ${shotIndex} regenerated`);
+      } else {
+        setAudioShotStatuses(prev =>
+          prev.map(s => s.shot_index === shotIndex ? { ...s, [statusKey]: 'failed' } : s)
+        );
+        toast.error(`Failed to retry ${type} for shot ${shotIndex}`);
+      }
+    } catch (e) {
+      console.error(`[ShortFilm] Retry ${type} shot ${shotIndex} failed:`, e);
+      setAudioShotStatuses(prev =>
+        prev.map(s => s.shot_index === shotIndex ? { ...s, [statusKey]: 'failed' } : s)
+      );
+    }
+  }, [user, shots, settings.voiceId, projectId, uploadAudioToStorage]);
+
+  // ─── Preview audio (short sample) ─────────────────────────
+  const previewAudio = useCallback(async (): Promise<string | null> => {
+    if (!user) return null;
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const session = (await supabase.auth.getSession()).data.session;
+    const authToken = session?.access_token || apikey;
+    const headers = { 'Content-Type': 'application/json', apikey, Authorization: `Bearer ${authToken}` };
+
+    const mode = settings.audioMode;
+    if (mode === 'music' || mode === 'full_mix') {
+      const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music`;
+      const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ prompt: musicPrompt, duration: 10 }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        return URL.createObjectURL(blob);
+      }
+    } else if (mode === 'voiceover') {
+      const sampleText = shots.find(s => s.script_line)?.script_line || 'This is a preview of your voiceover.';
+      const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
+      const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ text: sampleText, voiceId }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        return URL.createObjectURL(blob);
+      }
+    }
+    return null;
+  }, [user, settings, shots]);
 
   // ─── Real generation pipeline ───────────────────────────────
 
@@ -673,6 +862,10 @@ export function useShortFilmProject() {
     audioAssets,
     isGeneratingAudio,
     generateAudio,
+    audioPhase,
+    audioShotStatuses,
+    retryAudioForShot,
+    previewAudio,
   };
 }
 

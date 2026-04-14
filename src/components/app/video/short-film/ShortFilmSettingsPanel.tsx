@@ -1,12 +1,15 @@
+import { useState, useRef } from 'react';
 import type { ShortFilmSettings } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
-import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic, Music, AudioLines } from 'lucide-react';
+import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic, Music, AudioLines, Play, Loader2, Square as StopIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface ShortFilmSettingsPanelProps {
   settings: ShortFilmSettings;
   onChange: (settings: ShortFilmSettings) => void;
+  onPreviewAudio?: () => Promise<string | null>;
 }
 
 const ASPECT_OPTIONS = [
@@ -48,12 +51,16 @@ const VOICE_OPTIONS = [
   { id: 'nPczCjzI2devNBz1zQrb', label: 'Brian — professional male' },
 ];
 
-export function ShortFilmSettingsPanel({ settings, onChange }: ShortFilmSettingsPanelProps) {
+export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: ShortFilmSettingsPanelProps) {
   const update = (partial: Partial<ShortFilmSettings>) =>
     onChange({ ...settings, ...partial });
 
   const showMusicPrompt = settings.audioMode === 'music' || settings.audioMode === 'full_mix';
   const showVoicePicker = settings.audioMode === 'voiceover' || settings.audioMode === 'full_mix';
+  const showPreview = settings.audioMode !== 'silent' && settings.audioMode !== 'ambient' && !!onPreviewAudio;
+
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   return (
     <div className="space-y-6">
@@ -178,7 +185,52 @@ export function ShortFilmSettingsPanel({ settings, onChange }: ShortFilmSettings
         </div>
       )}
 
-      {/* Preservation Level */}
+      {/* Audio Preview */}
+      {showPreview && (
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={isPreviewing}
+            onClick={async () => {
+              if (previewAudioRef.current) {
+                previewAudioRef.current.pause();
+                previewAudioRef.current = null;
+                setIsPreviewing(false);
+                return;
+              }
+              setIsPreviewing(true);
+              try {
+                const url = await onPreviewAudio!();
+                if (url) {
+                  const audio = new Audio(url);
+                  previewAudioRef.current = audio;
+                  audio.onended = () => {
+                    setIsPreviewing(false);
+                    previewAudioRef.current = null;
+                  };
+                  await audio.play();
+                } else {
+                  setIsPreviewing(false);
+                }
+              } catch {
+                setIsPreviewing(false);
+              }
+            }}
+          >
+            {isPreviewing ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating preview...</>
+            ) : (
+              <><Play className="h-3.5 w-3.5" /> Preview Audio</>
+            )}
+          </Button>
+          <p className="text-[10px] text-muted-foreground">
+            Generates a short 10s sample so you can tune settings before committing.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Preservation Level</p>
         <div className="grid grid-cols-3 gap-2">
