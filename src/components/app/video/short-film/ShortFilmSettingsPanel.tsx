@@ -71,6 +71,39 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
         </p>
       </div>
 
+      {/* Quality */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Film Quality</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => update({ quality: 'standard' })}
+            className={cn(
+              'flex flex-col items-center gap-1 rounded-lg border p-3 transition-all',
+              settings.quality === 'standard'
+                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                : 'border-border hover:border-primary/40'
+            )}
+          >
+            <Zap className="h-4 w-4 text-foreground" />
+            <span className="text-xs font-medium">Standard</span>
+            <span className="text-[10px] text-muted-foreground">Faster & cheaper</span>
+          </button>
+          <button
+            onClick={() => update({ quality: 'pro' })}
+            className={cn(
+              'flex flex-col items-center gap-1 rounded-lg border p-3 transition-all',
+              settings.quality === 'pro'
+                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                : 'border-border hover:border-primary/40'
+            )}
+          >
+            <Crown className="h-4 w-4 text-foreground" />
+            <span className="text-xs font-medium">Pro</span>
+            <span className="text-[10px] text-muted-foreground">Highest quality</span>
+          </button>
+        </div>
+      </div>
+
       {/* Aspect Ratio */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Aspect Ratio</p>
