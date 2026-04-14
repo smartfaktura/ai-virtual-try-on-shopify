@@ -338,11 +338,11 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         emptyText="No models available yet."
       />
 
-      {/* Scene Library Picker — grouped by category */}
+      {/* Scene Presets Picker — text-described for video */}
       <Dialog open={scenePickerOpen} onOpenChange={setScenePickerOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>Pick from Scene Library</DialogTitle>
+            <DialogTitle>Choose Scene Environment</DialogTitle>
           </DialogHeader>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -354,52 +354,25 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             />
           </div>
           <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
-            {scenePickerOpen && scenesLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-square rounded-lg" />
+            {filteredScenes.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-12">No scenes match your search.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+                {filteredScenes.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => pickScene(s)}
+                    className="rounded-lg border border-border hover:border-primary/50 p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none space-y-1"
+                  >
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <p className="text-sm font-medium text-foreground">{s.title}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
+                    <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{s.mood}</span>
+                  </button>
                 ))}
               </div>
-            ) : sceneSearch.trim() ? (
-              /* Flat filtered list when searching */
-              filteredScenes.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-12">No scenes match your search.</p>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
-                  {filteredScenes.slice(0, sceneVisible).map((s) => (
-                    <SceneCard key={s.id} scene={s} onPick={pickScene} />
-                  ))}
-                  {filteredScenes.length > sceneVisible && (
-                    <div className="col-span-full flex justify-center py-3">
-                      <button onClick={() => setSceneVisible(v => v + PAGE_SIZE)} className="text-xs text-primary hover:underline font-medium">
-                        Load more ({filteredScenes.length - sceneVisible} remaining)
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            ) : (
-              /* Grouped by category */
-              categoryCollections.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-12">No scene previews available.</p>
-              ) : (
-                <div className="space-y-4 py-2">
-                  {categoryCollections.map((cat) => {
-                    const withPreview = cat.scenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http'));
-                    if (withPreview.length === 0) return null;
-                    return (
-                      <div key={cat.id}>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{cat.title}</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {withPreview.map((s) => (
-                            <SceneCard key={s.id} scene={s} onPick={pickScene} />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )
             )}
           </div>
         </DialogContent>
