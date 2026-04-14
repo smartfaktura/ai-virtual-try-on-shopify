@@ -37,7 +37,7 @@ export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot }: Sho
   const directorMessage = currentIndex >= 0
     ? DIRECTOR_MESSAGES[currentIndex % DIRECTOR_MESSAGES.length]
     : isAllDone
-      ? failedCount > 0 ? `Done with ${failedCount} failed shot${failedCount > 1 ? 's' : ''} — retry below` : 'Your short film is ready!'
+      ? failedCount > 0 ? `Film generation failed — retry below` : 'Your short film is ready!'
       : 'Preparing your film...';
 
   return (
@@ -45,19 +45,31 @@ export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot }: Sho
       <div className="space-y-3">
         <div className="flex items-center gap-3">
           {isAllDone ? (
-            <CheckCircle2 className="h-6 w-6 text-green-500" />
+            <CheckCircle2 className={`h-6 w-6 ${failedCount > 0 ? 'text-destructive' : 'text-green-500'}`} />
           ) : (
             <Loader2 className="h-6 w-6 text-primary animate-spin" />
           )}
-          <div>
+          <div className="flex-1">
             <h2 className="text-lg font-semibold text-foreground">
-              {isAllDone ? 'Film Complete' : 'Generating Short Film'}
+              {isAllDone ? (failedCount > 0 ? 'Film Generation Failed' : 'Film Complete') : 'Generating Short Film'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {completedCount} / {shots.length} shots complete
-              {failedCount > 0 && ` • ${failedCount} failed`}
+              {isAllDone && failedCount > 0
+                ? 'The film could not be generated. You can retry.'
+                : `${completedCount} / ${shots.length} shots complete`}
             </p>
           </div>
+          {isAllDone && failedCount > 0 && onRetryShot && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => onRetryShot(0)}
+            >
+              <RotateCw className="h-3.5 w-3.5" />
+              Retry Film
+            </Button>
+          )}
         </div>
         <Progress value={progress} className="h-2" />
       </div>
@@ -85,29 +97,14 @@ export function ShortFilmProgressPanel({ shots, shotStatuses, onRetryShot }: Sho
       <div className="space-y-2">
         {shots.map((shot) => {
           const status = shotStatuses.find(s => s.shot_index === shot.shot_index);
-          const isFailed = status?.status === 'failed';
           return (
-            <div key={shot.shot_index} className="relative">
-              <ShotCard
-                shot={shot}
-                isGenerating={status?.status === 'processing'}
-                isComplete={status?.status === 'complete'}
-                resultUrl={status?.result_url}
-              />
-              {isFailed && onRetryShot && (
-                <div className="absolute top-2 right-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="gap-1.5 h-7 text-xs"
-                    onClick={() => onRetryShot(shot.shot_index)}
-                  >
-                    <RotateCw className="h-3 w-3" />
-                    Retry
-                  </Button>
-                </div>
-              )}
-            </div>
+            <ShotCard
+              key={shot.shot_index}
+              shot={shot}
+              isGenerating={status?.status === 'processing'}
+              isComplete={status?.status === 'complete'}
+              resultUrl={status?.result_url}
+            />
           );
         })}
       </div>
