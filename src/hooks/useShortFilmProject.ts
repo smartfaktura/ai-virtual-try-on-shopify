@@ -13,6 +13,7 @@ import type {
   ShortFilmStep,
   ShotPlanItem,
   AudioAssets,
+  AudioPhase,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { toSignedUrl } from '@/lib/signedUrl';
