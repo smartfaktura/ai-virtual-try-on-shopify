@@ -757,8 +757,10 @@ export function useShortFilmProject() {
       await supabase.from('video_shots').insert(shotRows);
 
       // ── Multi-shot: build single combined request ──
-      const totalDuration = calculateTotalDuration(shots.length, settings.shotDuration);
-      const perShotDurations = distributeShotDurations(shots.length, totalDuration);
+      // Cap at 3 shots, always 5s each (Kling multi-shot hard limits)
+      const safeShots = shots.slice(0, 3);
+      const totalDuration = calculateTotalDuration(safeShots.length, '5');
+      const perShotDurations = distributeShotDurations(safeShots.length, totalDuration);
 
       // Collect unique image URLs for Kling image_list
       const imageUrlSet = new Set<string>();
@@ -777,7 +779,7 @@ export function useShortFilmProject() {
 
       // Build per-shot prompts with <<<image_N>>> references
       let combinedNegativePrompt = '';
-      const multishotPayload = shots.map((shot, i) => {
+      const multishotPayload = safeShots.map((shot, i) => {
         const imageIdx = shotImageMap.get(shot.shot_index);
         const { prompt, negative_prompt } = buildShotPrompt(shot, {
           filmType,
