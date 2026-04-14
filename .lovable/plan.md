@@ -1,48 +1,51 @@
 
 
-# Audit: Short Film Prompt Engineering Pipeline — Issues & Fixes
+# Final Audit: Short Film → Kling Pipeline Alignment
 
 ## Issues Found
 
-### Critical Bug 1: `with_audio` still uses deprecated `audioMode` in main generation
-**Line 980** in `useShortFilmProject.ts`: `with_audio: settings.audioMode === 'ambient'` — this was fixed for `retryShotGeneration` but NOT for the main `startGeneration` multi-shot payload. Since `audioMode` is deprecated in favor of `audioLayers`, this always evaluates to `false` (Kling native audio is never requested).
+### 1. `scene_type` never injected into Kling prompt
+`buildShotPrompt` in `shortFilmPromptBuilder.ts` never mentions the shot's `scene_type` (e.g., `macro_closeup`, `product_hero`, `establishing_wide`). The AI Director carefully picks scene types but they are completely lost — Kling has no idea what framing or shot scale to use.
 
-### Critical Bug 2: `tonePresetText` never sent to AI Director
-The edge function accepts `tonePresetText` (line 140) to give the AI rich cinematographic guidance per film type (e.g., "sleek commercial film, premium product reveal..."), but the hook never passes it. The `TONE_PRESETS` map exists in `shortFilmPromptBuilder.ts` but is only used during Kling prompt building — the AI Director never receives it, so its creative decisions lack film-type-specific visual direction.
+**Fix**: Inject `scene_type` as a P1 framing directive after the role cinematic directive.
 
-### Issue 3: Scene reference descriptions not injected into `buildShotPrompt`
-The prompt builder reads style preset keywords from references (`role === 'style'`), but completely ignores scene references (`role === 'scene'`). A user selecting "Japanese Zen Garden" or "Parisian Cafe" gets zero injection into the Kling prompt. Only the scene_type enum label (e.g., "product hero") is added — which is generic, not the rich description from the preset.
+### 2. `generateShotPlanFromRoles` still uses invalid enums
+Line 1379-1380: `scene_type: 'general'`, `camera_motion: 'slow_push'` — neither exists in the valid system enums. Should be `'product_hero'` and `'slow_push_in'`.
 
-### Issue 4: `audio_mode` persisted in `video_shots` instead of `audioLayers`
-Line 912: `audio_mode: settings.audioMode` — still using the deprecated field. Should persist the layer info.
+### 3. Single-shot fallback uses old model `kling-v2-master`
+Line 226 in `generate-video/index.ts`: When there's only 1 shot, the multishot handler falls back to `kling-v2-master` instead of `kling-v3` (the current best single-shot model). The prompt is engineered for v3-grade output but generates on v2.
 
-### Issue 5: Style/scene keywords truncated too aggressively
-In `buildShotPrompt`, scene and style keywords are in priority tier P2 — they get dropped quickly when prompt approaches 510 chars. For a system that depends on these for visual accuracy, they should be P1 (after image reference and role directive).
+### 4. `image_fidelity` hardcoded to 0.65, ignores preservation_strength
+Line 236: Single-shot fallback sets `image_fidelity: 0.65` regardless of the user's preservation level. Should map: `high` → 0.85, `medium` → 0.65, `low` → 0.45.
 
-### Issue 6: No scene description in prompt for text-only scene presets
-Line 250-253 only adds `Scene style: macro closeup.` (the raw scene_type enum). It doesn't inject the actual scene preset description like "Raked sand patterns, moss-covered stones, soft natural overcast light, bamboo accents." The rich description data exists in references but is never pulled into the prompt.
+### 5. No `cfg_scale` sent for short film
+The animate pipeline uses `cfg_scale` from strategy (typically 0.5-0.7) to control prompt adherence, but multi-shot and single-shot short film payloads never include it. This means Kling uses its default, which may not match the cinematic intent.
+
+### 6. `sound` parameter not preservation-aware
+Kling's native `sound: "on"` generates ambient audio. Currently tied to SFX layer, but when the user has ElevenLabs SFX enabled, having Kling also generate its own audio creates conflicts. Should only enable Kling native sound when NO ElevenLabs audio layers are active (as a fallback ambient).
 
 ## Changes
 
-### File: `src/hooks/useShortFilmProject.ts`
-1. **Fix `with_audio`** (line 980): Change from `settings.audioMode === 'ambient'` to `!!(getEffectiveLayers(settings).sfx)` — consistent with retry logic
-2. **Send `tonePresetText`** to AI Director: Look up `TONE_PRESETS[filmType]` and pass it in the `ai-shot-planner` invoke body
-3. **Fix `audio_mode` in shot rows** (line 912): Persist `audioLayers` object instead of deprecated string
-4. Import `TONE_PRESETS` from `shortFilmPromptBuilder.ts` (needs to be exported)
-
 ### File: `src/lib/shortFilmPromptBuilder.ts`
-1. **Export `TONE_PRESETS`** so the hook can send it to AI Director
-2. **Inject scene preset description into prompt**: Look for `role === 'scene'` references and extract the full description (after `:` separator), inject as P1.5 (between P1 and P2) — ensuring the Kling prompt matches the user's chosen environment
-3. **Promote style keywords to P1**: Move style preset injection from P2 to immediately after role directive — these are user-selected creative choices and should not be truncated
-4. **Add scene mood context**: When scene reference has a description, append environmental lighting/atmosphere cues to complement the role cinematics
+- Add scene_type framing map (`SCENE_TYPE_FRAMING`) mapping each scene_type to a short framing directive (e.g., `macro_closeup` → "Extreme macro close-up framing", `establishing_wide` → "Wide establishing shot")
+- Inject scene_type framing as P1 element in `buildShotPrompt`, right after role directive
 
-### File: `supabase/functions/ai-shot-planner/index.ts`
-No changes needed — it already accepts `tonePresetText` and uses it correctly when provided.
+### File: `src/hooks/useShortFilmProject.ts`
+- Fix `generateShotPlanFromRoles`: change `scene_type: 'general'` → `'product_hero'`, `camera_motion: 'slow_push'` → `'slow_push_in'`
+- Add `cfg_scale: 0.5` to multishot payload
+- Add `preservation_strength` to multishot payload so backend can resolve `image_fidelity`
+- Fix `with_audio`: only enable Kling native sound when ALL ElevenLabs layers are off (true fallback ambient)
 
-## Technical Summary
+### File: `supabase/functions/generate-video/index.ts`
+- Single-shot fallback: change `kling-v2-master` → `kling-v3`
+- Single-shot fallback: read `preservation_strength` from payload and map to `image_fidelity` (high=0.85, medium=0.65, low=0.45)
+- Multi-shot: add `cfg_scale` from payload (default 0.5) to Kling omni-video request
+
+## Summary
 
 | File | Change |
 |------|--------|
-| `src/hooks/useShortFilmProject.ts` | Fix `with_audio` in main generation; send `tonePresetText` to AI Director; fix `audio_mode` persistence |
-| `src/lib/shortFilmPromptBuilder.ts` | Export `TONE_PRESETS`; inject scene preset descriptions into Kling prompts; promote style/scene to higher priority tier |
+| `src/lib/shortFilmPromptBuilder.ts` | Add scene_type framing directives to prompt P1 |
+| `src/hooks/useShortFilmProject.ts` | Fix custom role enums, add cfg_scale + preservation_strength to payload, fix with_audio logic |
+| `supabase/functions/generate-video/index.ts` | Upgrade fallback model to v3, dynamic image_fidelity, add cfg_scale |
 
