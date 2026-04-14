@@ -642,6 +642,9 @@ export function useShortFilmProject() {
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
 
     try {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+
       // If we have a draft, update it; otherwise create new project
       let currentProjectId = draftProjectId;
 
@@ -728,8 +731,13 @@ export function useShortFilmProject() {
       });
       await supabase.from('video_shots').insert(shotRows);
 
+      // Enqueue all shots via the queue system
+      const jobIds: { shotIndex: number; jobId: string }[] = [];
+
       for (let i = 0; i < shots.length; i++) {
         const shot = shots[i];
+        await paceDelay(i);
+
         setShotStatuses(prev =>
           prev.map(s =>
             s.shot_index === shot.shot_index ? { ...s, status: 'processing' } : s
@@ -746,9 +754,9 @@ export function useShortFilmProject() {
         });
 
         try {
-          const { data: enqueueResult, error: enqueueError } = await supabase.functions.invoke('generate-video', {
-            body: {
-              action: 'create',
+          const result = await enqueueWithRetry({
+            jobType: 'video',
+            payload: {
               image_url: sourceImageUrl || '',
               prompt,
               duration: settings.shotDuration,
@@ -760,18 +768,46 @@ export function useShortFilmProject() {
               project_id: currentProjectId,
               workflow_type: 'short_film',
             },
-          });
+            imageCount: 1,
+            skipWake: true,
+          }, token);
 
-          if (enqueueError) throw new Error(enqueueError.message);
-
-          const taskId = enqueueResult?.task_id || enqueueResult?.kling_task_id;
-          const videoId = enqueueResult?.video_id;
-
-          if (taskId && videoId) {
-            const resultUrl = await pollShotCompletion(videoId, 60);
+          if (isEnqueueError(result)) {
+            console.error(`[ShortFilm] Enqueue shot ${shot.shot_index} failed:`, result.message);
             setShotStatuses(prev =>
               prev.map(s =>
-                s.shot_index === shot.shot_index
+                s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
+              )
+            );
+            if (result.type === 'insufficient_credits') {
+              toast.error('Insufficient credits');
+              break;
+            }
+            continue;
+          }
+
+          jobIds.push({ shotIndex: shot.shot_index, jobId: result.jobId });
+        } catch (shotErr) {
+          console.error(`[ShortFilm] Shot ${shot.shot_index} failed:`, shotErr);
+          setShotStatuses(prev =>
+            prev.map(s =>
+              s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
+            )
+          );
+        }
+      }
+
+      // Wake the queue processor once after all enqueues
+      sendWake(token);
+
+      // Poll all enqueued jobs for completion
+      await Promise.all(
+        jobIds.map(async ({ shotIndex, jobId }) => {
+          try {
+            const resultUrl = await pollQueueJobCompletion(jobId, 60);
+            setShotStatuses(prev =>
+              prev.map(s =>
+                s.shot_index === shotIndex
                   ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
                   : s
               )
@@ -782,24 +818,17 @@ export function useShortFilmProject() {
                 .from('video_shots')
                 .update({ status: 'complete', result_url: resultUrl })
                 .eq('project_id', currentProjectId!)
-                .eq('shot_index', shot.shot_index);
+                .eq('shot_index', shotIndex);
             }
-          } else {
+          } catch {
             setShotStatuses(prev =>
               prev.map(s =>
-                s.shot_index === shot.shot_index ? { ...s, status: 'complete' } : s
+                s.shot_index === shotIndex ? { ...s, status: 'failed' } : s
               )
             );
           }
-        } catch (shotErr) {
-          console.error(`[ShortFilm] Shot ${shot.shot_index} failed:`, shotErr);
-          setShotStatuses(prev =>
-            prev.map(s =>
-              s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
-            )
-          );
-        }
-      }
+        })
+      );
 
       await supabase.from('video_projects').update({ status: 'complete' }).eq('id', currentProjectId!);
       toast.success('Short film generation complete!');
