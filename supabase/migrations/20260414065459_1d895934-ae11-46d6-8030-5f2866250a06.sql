@@ -1,0 +1,1 @@
+ALTER TABLE public.video_projects ADD COLUMN IF NOT EXISTS draft_state_json jsonb;
