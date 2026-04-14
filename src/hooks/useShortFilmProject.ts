@@ -556,7 +556,8 @@ export function useShortFilmProject() {
             body: JSON.stringify({ prompt: enrichedMusicPrompt, duration: Math.min(totalDuration, 120) }),
           });
           console.log('[ShortFilm Audio] Music response status:', res.status);
-          if (res.ok) {
+          const contentType = res.headers.get('content-type') || '';
+          if (res.ok && contentType.includes('audio')) {
             const blob = await res.blob();
             const blobUrl = URL.createObjectURL(blob);
             newAssets.backgroundTrackUrl = blobUrl;
@@ -567,7 +568,9 @@ export function useShortFilmProject() {
               await supabase.from('video_projects').update({ music_track_url: storageUrl } as any).eq('id', pid);
             }
           } else {
-            console.error('[ShortFilm] Music generation returned', res.status);
+            // Graceful fallback — ElevenLabs may be temporarily unavailable
+            const body = contentType.includes('json') ? await res.json().catch(() => ({})) : {};
+            console.warn('[ShortFilm] Music generation unavailable:', body.error || res.status, body.fallback ? '(fallback)' : '');
           }
         } catch (e) {
           console.error('[ShortFilm] Music generation failed:', e);
