@@ -2020,6 +2020,7 @@ export type Database = {
           estimated_credits: number
           generation_mode: string
           id: string
+          music_track_url: string | null
           settings_json: Json
           status: string
           title: string
@@ -2036,6 +2037,7 @@ export type Database = {
           estimated_credits?: number
           generation_mode?: string
           id?: string
+          music_track_url?: string | null
           settings_json?: Json
           status?: string
           title?: string
@@ -2052,6 +2054,7 @@ export type Database = {
           estimated_credits?: number
           generation_mode?: string
           id?: string
+          music_track_url?: string | null
           settings_json?: Json
           status?: string
           title?: string
@@ -2065,6 +2068,7 @@ export type Database = {
         Row: {
           analysis_json: Json | null
           audio_mode: string
+          audio_url: string | null
           created_at: string
           duration_sec: number
           id: string
@@ -2073,6 +2077,7 @@ export type Database = {
           prompt_template_name: string | null
           prompt_text: string
           result_url: string | null
+          sfx_url: string | null
           shot_index: number
           shot_role: string | null
           source_input_id: string | null
@@ -2083,6 +2088,7 @@ export type Database = {
         Insert: {
           analysis_json?: Json | null
           audio_mode?: string
+          audio_url?: string | null
           created_at?: string
           duration_sec?: number
           id?: string
@@ -2091,6 +2097,7 @@ export type Database = {
           prompt_template_name?: string | null
           prompt_text?: string
           result_url?: string | null
+          sfx_url?: string | null
           shot_index?: number
           shot_role?: string | null
           source_input_id?: string | null
@@ -2101,6 +2108,7 @@ export type Database = {
         Update: {
           analysis_json?: Json | null
           audio_mode?: string
+          audio_url?: string | null
           created_at?: string
           duration_sec?: number
           id?: string
@@ -2109,6 +2117,7 @@ export type Database = {
           prompt_template_name?: string | null
           prompt_text?: string
           result_url?: string | null
+          sfx_url?: string | null
           shot_index?: number
           shot_role?: string | null
           source_input_id?: string | null
