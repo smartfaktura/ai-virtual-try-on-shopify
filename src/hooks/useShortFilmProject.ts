@@ -54,8 +54,26 @@ export function useShortFilmProject() {
   const { balance, refreshBalance } = useCredits();
 
   const [step, setStep] = useState<ShortFilmStep>('film_type');
-  const [filmType, setFilmType] = useState<FilmType | null>(null);
+  const [filmType, setFilmTypeRaw] = useState<FilmType | null>(null);
   const [storyStructure, setStoryStructure] = useState<StoryStructure | null>(null);
+
+  // Apply film-type defaults when changed
+  const setFilmType = useCallback((ft: FilmType | null) => {
+    setFilmTypeRaw(ft);
+    if (ft) {
+      const option = FILM_TYPE_OPTIONS.find(o => o.value === ft);
+      if (option) {
+        // Apply default structure unless custom
+        if (option.defaultStructure !== 'custom') {
+          setStoryStructure(option.defaultStructure);
+        }
+        // Apply default tone
+        if (option.defaultTone) {
+          setSettings(prev => ({ ...prev, tone: option.defaultTone }));
+        }
+      }
+    }
+  }, []);
   const [references, setReferences] = useState<ReferenceAsset[]>([]);
   const [shots, setShots] = useState<ShotPlanItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
