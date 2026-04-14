@@ -14,6 +14,7 @@ import type {
   ShotPlanItem,
   AudioAssets,
   AudioPhase,
+  AudioLayers,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { toSignedUrl } from '@/lib/signedUrl';
@@ -46,10 +47,29 @@ interface DraftState {
 const DEFAULT_SETTINGS: ShortFilmSettings = {
   aspectRatio: '16:9',
   audioMode: 'full_mix',
+  audioLayers: { music: true, sfx: true, voiceover: true },
   preservationLevel: 'medium',
   shotDuration: '5',
   quality: 'pro',
 };
+
+/** Map legacy audioMode to audioLayers for backward compatibility */
+function audioModeToLayers(mode: string): AudioLayers {
+  switch (mode) {
+    case 'silent': return { music: false, sfx: false, voiceover: false };
+    case 'ambient': return { music: false, sfx: false, voiceover: false };
+    case 'music': return { music: true, sfx: true, voiceover: false };
+    case 'voiceover': return { music: false, sfx: false, voiceover: true };
+    case 'full_mix': return { music: true, sfx: true, voiceover: true };
+    default: return { music: true, sfx: true, voiceover: true };
+  }
+}
+
+/** Resolve effective audio layers from settings (with backward compat) */
+function getEffectiveLayers(settings: ShortFilmSettings): AudioLayers {
+  if (settings.audioLayers) return settings.audioLayers;
+  return audioModeToLayers(settings.audioMode);
+}
 
 export function useShortFilmProject() {
   const { user } = useAuth();
@@ -168,11 +188,15 @@ export function useShortFilmProject() {
         setReferences(d.references || []);
         setShots(d.shots || []);
         
-        // Force old 'silent' drafts to 'full_mix' so audio generation works
+        // Backward compat: migrate old audioMode to audioLayers
         const restoredSettings = d.settings || DEFAULT_SETTINGS;
+        if (!restoredSettings.audioLayers) {
+          restoredSettings.audioLayers = audioModeToLayers(restoredSettings.audioMode || 'full_mix');
+          console.log('[ShortFilm] Migrated audioMode to audioLayers:', restoredSettings.audioLayers);
+        }
         if (restoredSettings.audioMode === 'silent') {
-          console.log('[ShortFilm] Old draft had audioMode=silent, upgrading to full_mix');
           restoredSettings.audioMode = 'full_mix';
+          restoredSettings.audioLayers = { music: true, sfx: true, voiceover: true };
         }
         setSettings(restoredSettings);
         
@@ -274,6 +298,7 @@ export function useShortFilmProject() {
           filmDescription: filmOption?.description || '',
           stylePresetNames: stylePresetNames || undefined,
           scenePresetNames: scenePresetNames || undefined,
+          audioLayers: settings.audioLayers || { music: true, sfx: true, voiceover: true },
         },
       });
       if (error) throw new Error(error.message);
@@ -450,10 +475,11 @@ export function useShortFilmProject() {
   // ─── Audio generation ────────────────────────────────────────
   const generateAudio = useCallback(async (targetProjectId?: string, currentShots?: ShotPlanItem[]) => {
     if (!user) return;
-    const mode = settings.audioMode;
-    console.log('[ShortFilm Audio] generateAudio called — mode:', mode, 'shots:', (currentShots || shots).length, 'projectId:', targetProjectId || projectId);
-    if (mode === 'silent' || mode === 'ambient') {
-      console.log('[ShortFilm Audio] Skipping — mode is', mode);
+    const layers = getEffectiveLayers(settings);
+    const anyLayerOn = layers.music || layers.sfx || layers.voiceover;
+    console.log('[ShortFilm Audio] generateAudio called — layers:', layers, 'shots:', (currentShots || shots).length);
+    if (!anyLayerOn) {
+      console.log('[ShortFilm Audio] Skipping — all layers disabled');
       return;
     }
 
@@ -484,22 +510,49 @@ export function useShortFilmProject() {
     const initStatuses: AudioShotStatus[] = shotsToUse.map(s => ({
       shot_index: s.shot_index,
       sfx: 'idle' as const,
-      voiceover: (mode === 'voiceover' || mode === 'full_mix') && s.script_line ? 'idle' as const : 'idle' as const,
+      voiceover: layers.voiceover && s.script_line ? 'idle' as const : 'idle' as const,
     }));
     setAudioShotStatuses(initStatuses);
 
+    // ── Build timing manifest for precise audio cues ──
+    let cumulativeTime = 0;
+    const timingManifest = shotsToUse.map(s => {
+      const startAt = cumulativeTime;
+      cumulativeTime += s.duration_sec;
+      return {
+        shot_index: s.shot_index,
+        role: s.role,
+        start_sec: startAt,
+        end_sec: cumulativeTime,
+        duration_sec: s.duration_sec,
+        sfx_trigger_at: s.sfx_trigger_at ?? 0,
+        has_vo: layers.voiceover && s.vo_enabled !== false && !!s.script_line && s.duration_sec >= 3,
+        has_sfx: layers.sfx && s.sfx_enabled !== false,
+      };
+    });
+    console.log('[ShortFilm Audio] Timing manifest:', timingManifest);
+
     try {
       // Music track
-      if (mode === 'music' || mode === 'full_mix') {
+      if (layers.music) {
         setAudioPhase('music');
         const totalDuration = shotsToUse.reduce((sum, s) => sum + s.duration_sec, 0);
-        const musicPrompt = settings.musicPrompt || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse, references);
+
+        // Build timing cues for the music prompt
+        const timingCues = timingManifest.map(t =>
+          `${t.role} at ${t.start_sec.toFixed(1)}s–${t.end_sec.toFixed(1)}s`
+        ).join(', ');
+
+        const musicPrompt = settings.musicPrompt
+          || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse, references);
+        const enrichedMusicPrompt = `${musicPrompt}. Shot timing cues: ${timingCues}`;
+
         try {
-          console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', musicPrompt, 'duration:', Math.min(totalDuration, 120));
+          console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', enrichedMusicPrompt, 'duration:', Math.min(totalDuration, 120));
           const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ prompt: musicPrompt, duration: Math.min(totalDuration, 120) }),
+            body: JSON.stringify({ prompt: enrichedMusicPrompt, duration: Math.min(totalDuration, 120) }),
           });
           console.log('[ShortFilm Audio] Music response status:', res.status);
           if (res.ok) {
@@ -508,7 +561,6 @@ export function useShortFilmProject() {
             newAssets.backgroundTrackUrl = blobUrl;
             musicOk = true;
 
-            // Persist to storage
             const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/music-track.mp3`);
             if (storageUrl && pid) {
               await supabase.from('video_projects').update({ music_track_url: storageUrl } as any).eq('id', pid);
@@ -521,10 +573,11 @@ export function useShortFilmProject() {
         }
       }
 
-      // SFX per shot (music or full_mix)
-      if (mode === 'music' || mode === 'full_mix') {
+      // SFX per shot
+      if (layers.sfx) {
         setAudioPhase('sfx');
         for (const shot of shotsToUse) {
+          if (shot.sfx_enabled === false) continue;
           setAudioShotStatuses(prev =>
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'generating' } : s)
           );
@@ -540,7 +593,10 @@ export function useShortFilmProject() {
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
-              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'sfx' });
+              // Use timing manifest offset for precise playback
+              const manifest = timingManifest.find(t => t.shot_index === shot.shot_index);
+              const offset = manifest ? manifest.start_sec + (shot.sfx_trigger_at ?? 0) : undefined;
+              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'sfx', offset_sec: offset });
               sfxOk++;
 
               const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/sfx-shot-${shot.shot_index}.mp3`);
@@ -567,17 +623,16 @@ export function useShortFilmProject() {
         }
       }
 
-      // Voiceover per shot — duration-aware
-      if (mode === 'voiceover' || mode === 'full_mix') {
+      // Voiceover per shot — duration-aware, layer-aware
+      if (layers.voiceover) {
         setAudioPhase('voiceover');
         const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
         for (const shot of shotsToUse) {
-          if (!shot.script_line || shot.duration_sec < 3) continue; // Skip VO for shots < 3s
+          if (!shot.script_line || shot.duration_sec < 3 || shot.vo_enabled === false) continue;
           setAudioShotStatuses(prev =>
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
           );
           try {
-            // Duration-aware: trim text and calculate speed
             const { text: fittedText, speed } = fitTextToDuration(shot.script_line, shot.duration_sec);
             console.log(`[ShortFilm Audio] Calling elevenlabs-tts for shot ${shot.shot_index} — text: "${fittedText}" (orig: "${shot.script_line}"), speed: ${speed}, duration: ${shot.duration_sec}s`);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
@@ -589,7 +644,9 @@ export function useShortFilmProject() {
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
-              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'voiceover' });
+              const manifest = timingManifest.find(t => t.shot_index === shot.shot_index);
+              const offset = manifest ? manifest.start_sec : undefined;
+              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'voiceover', offset_sec: offset });
               voOk++;
 
               const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/vo-shot-${shot.shot_index}.mp3`);
@@ -619,7 +676,7 @@ export function useShortFilmProject() {
       setAudioAssets(newAssets);
 
       // Determine phase based on results
-      const hasFailures = sfxFail > 0 || voFail > 0 || ((mode === 'music' || mode === 'full_mix') && !musicOk);
+      const hasFailures = sfxFail > 0 || voFail > 0 || (layers.music && !musicOk);
       const hasSuccess = musicOk || sfxOk > 0 || voOk > 0;
 
       if (hasFailures && !hasSuccess) {
@@ -629,7 +686,7 @@ export function useShortFilmProject() {
         setAudioPhase('partial');
         const parts: string[] = [];
         if (musicOk) parts.push('Music ✓');
-        else if (mode === 'music' || mode === 'full_mix') parts.push('Music ✗');
+        else if (layers.music) parts.push('Music ✗');
         if (sfxOk > 0 || sfxFail > 0) parts.push(`SFX ${sfxOk}/${sfxOk + sfxFail}`);
         if (voOk > 0 || voFail > 0) parts.push(`Voice ${voOk}/${voOk + voFail}`);
         toast.error(`Audio partially generated: ${parts.join(', ')}`);
@@ -729,8 +786,8 @@ export function useShortFilmProject() {
     const authToken = session?.access_token || apikey;
     const headers = { 'Content-Type': 'application/json', apikey, Authorization: `Bearer ${authToken}` };
 
-    const mode = settings.audioMode;
-    if (mode === 'music' || mode === 'full_mix') {
+    const previewLayers = getEffectiveLayers(settings);
+    if (previewLayers.music) {
       const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music`;
       const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
         method: 'POST', headers,
@@ -740,7 +797,7 @@ export function useShortFilmProject() {
         const blob = await res.blob();
         return URL.createObjectURL(blob);
       }
-    } else if (mode === 'voiceover') {
+    } else if (previewLayers.voiceover) {
       const sampleText = shots.find(s => s.script_line)?.script_line || 'This is a preview of your voiceover.';
       const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
       const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
@@ -982,7 +1039,9 @@ export function useShortFilmProject() {
 
     // Generate audio layer INDEPENDENTLY — outside the main try block
     const audioProjectId = projectId || draftProjectId;
-    if (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') {
+    const audioLayers = getEffectiveLayers(settings);
+    const anyAudioLayerOn = audioLayers.music || audioLayers.sfx || audioLayers.voiceover;
+    if (anyAudioLayerOn) {
       console.log('[ShortFilm] Starting audio generation independently for project:', audioProjectId);
       try {
         await generateAudio(audioProjectId || undefined, shots);

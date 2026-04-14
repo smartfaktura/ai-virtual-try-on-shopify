@@ -28,6 +28,8 @@ export interface ShotPlanItem {
   script_line?: string;
   sfx_prompt?: string;
   sfx_trigger_at?: number;
+  vo_enabled?: boolean;
+  sfx_enabled?: boolean;
   product_visible: boolean;
   character_visible: boolean;
   scene_reference_id?: string;
@@ -64,9 +66,16 @@ export interface StoryStructureOption {
   roles: string[];
 }
 
+export interface AudioLayers {
+  music: boolean;
+  sfx: boolean;
+  voiceover: boolean;
+}
+
 export interface ShortFilmSettings {
   aspectRatio: '16:9' | '9:16' | '1:1' | '4:5';
   audioMode: 'silent' | 'ambient' | 'music' | 'voiceover' | 'full_mix';
+  audioLayers?: AudioLayers;
   preservationLevel: 'low' | 'medium' | 'high';
   shotDuration: '5' | '10';
   quality: 'standard' | 'pro';

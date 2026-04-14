@@ -55,7 +55,6 @@ const SFX_TRIGGER_DEFAULTS: Record<string, number> = {
 
 function snapToValidValue(val: string, validList: string[], fallback: string): string {
   if (validList.includes(val)) return val;
-  // Try partial match
   const lower = val.toLowerCase().replace(/[\s-]/g, "_");
   const match = validList.find(v => v === lower || lower.includes(v) || v.includes(lower));
   return match || fallback;
@@ -69,6 +68,7 @@ serve(async (req) => {
       filmType, storyStructure, shotDuration, tone,
       referenceDescriptions, customRoles, structureRoles,
       filmDescription, tonePresetText, stylePresetNames, scenePresetNames,
+      audioLayers,
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -81,6 +81,20 @@ serve(async (req) => {
         : Array.isArray(structureRoles) && structureRoles.length > 0
           ? structureRoles.slice(0, 6)
           : ["hook", "product_reveal", "detail_closeup", "brand_finish"];
+
+    // Resolve audio layer preferences — skip generating content the user doesn't want
+    const wantVoiceover = audioLayers?.voiceover !== false;
+    const wantSfx = audioLayers?.sfx !== false;
+
+    const scriptLineInstruction = wantVoiceover
+      ? `- script_line (string: voiceover narration — CRITICAL: word count MUST match duration. Budget is ~2 words per second. A 2s shot = max 3-4 words as a punchy tagline. A 3s shot = max 6 words. A 4s shot = max 8 words. A 5s shot = max 10 words. Shots ≤ 2s should be 2-4 words maximum — a punchy tagline, NOT a sentence. For shots where character_visible=true, write dialogue the character would say naturally.)`
+      : `- script_line (string: MUST be empty string "" — voiceover is disabled by the user)`;
+
+    const sfxInstruction = wantSfx
+      ? `- sfx_prompt (string: descriptive sound effect prompt, 5-20 words, matching scene environment and mood)
+- sfx_trigger_at (number: offset in seconds from shot start when SFX should trigger — 0 for impacts/hooks, 0.3-0.5 for reveals/transitions, 0 for ambient)`
+      : `- sfx_prompt (string: MUST be empty string "" — SFX is disabled by the user)
+- sfx_trigger_at (number: 0)`;
 
     const systemPrompt = `You are a cinematic short film director specializing in brand and product films.
 You MUST generate shots that follow the EXACT role sequence provided. Do NOT invent your own roles.
@@ -108,9 +122,8 @@ Each shot object MUST have exactly these fields:
 - product_visible (boolean)
 - character_visible (boolean)
 - preservation_strength ("low" | "medium" | "high")
-- script_line (string: voiceover narration — CRITICAL: word count MUST match duration. Budget is ~2 words per second. A 2s shot = max 3-4 words as a punchy tagline. A 3s shot = max 6 words. A 4s shot = max 8 words. A 5s shot = max 10 words. Shots ≤ 2s should be 2-4 words maximum — a punchy tagline, NOT a sentence.)
-- sfx_prompt (string: descriptive sound effect prompt, 5-20 words, matching scene environment and mood)
-- sfx_trigger_at (number: offset in seconds from shot start when SFX should trigger — 0 for impacts/hooks, 0.3-0.5 for reveals/transitions, 0 for ambient)
+${scriptLineInstruction}
+${sfxInstruction}
 
 The total of all duration_sec values MUST equal exactly 15 seconds.
 Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments.
@@ -128,11 +141,12 @@ ${tonePresetText ? `Tone cinematography guidance: ${tonePresetText}` : ""}
 ${stylePresetNames ? `Selected visual style: ${stylePresetNames}` : ""}
 ${scenePresetNames ? `Selected scene environment: ${scenePresetNames}` : ""}
 ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
+Audio preferences: ${wantVoiceover ? "Voiceover ENABLED" : "Voiceover DISABLED"}, ${wantSfx ? "SFX ENABLED" : "SFX DISABLED"}
 
 Generate exactly ${roleSequence.length} shots following the role sequence: ${roleSequence.join(", ")}.
 Each shot's "role" field MUST match the corresponding role in the sequence.
-CRITICAL: script_line word budget is ~2 words per second of shot duration. A 2s hook = "Feel the power." (3 words). A 4s reveal = "Something extraordinary, designed for you." (6 words). Do NOT write long sentences for short shots.
-Remember: cinematic pacing (NOT equal splits), sfx_prompt for sound effects, sfx_trigger_at for timing, and music_direction for the overall music track.`;
+${wantVoiceover ? 'CRITICAL: script_line word budget is ~2 words per second of shot duration. A 2s hook = "Feel the power." (3 words). A 4s reveal = "Something extraordinary, designed for you." (6 words). Do NOT write long sentences for short shots. For character_visible shots with script_line, write natural dialogue the character would say.' : "IMPORTANT: Leave script_line as empty string for ALL shots — user disabled voiceover."}
+Remember: cinematic pacing (NOT equal splits)${wantSfx ? ", sfx_prompt for sound effects, sfx_trigger_at for timing" : ""}, and music_direction for the overall music track.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -204,7 +218,6 @@ Remember: cinematic pacing (NOT equal splits), sfx_prompt for sound effects, sfx
 
     // Validate and sanitize — snap roles to valid system roles
     const validShots = shots.map((s: any, i: number) => {
-      // Map role: try exact match, then alias, then use sequence role
       let role = s.role || roleSequence[i] || "detail_closeup";
       if (!VALID_ROLES.includes(role)) {
         role = ROLE_ALIAS_MAP[role] || roleSequence[i] || "detail_closeup";
@@ -221,11 +234,11 @@ Remember: cinematic pacing (NOT equal splits), sfx_prompt for sound effects, sfx
         product_visible: s.product_visible ?? true,
         character_visible: s.character_visible ?? false,
         preservation_strength: s.preservation_strength || "medium",
-        script_line: s.script_line || `Shot ${i + 1} narration.`,
-        sfx_prompt: s.sfx_prompt || `subtle cinematic ambient sound`,
-        sfx_trigger_at: typeof s.sfx_trigger_at === "number"
-          ? Math.max(0, Math.min(5, s.sfx_trigger_at))
-          : (SFX_TRIGGER_DEFAULTS[role] ?? 0),
+        script_line: wantVoiceover ? (s.script_line || "") : "",
+        sfx_prompt: wantSfx ? (s.sfx_prompt || "subtle cinematic ambient sound") : "",
+        sfx_trigger_at: wantSfx
+          ? (typeof s.sfx_trigger_at === "number" ? Math.max(0, Math.min(5, s.sfx_trigger_at)) : (SFX_TRIGGER_DEFAULTS[role] ?? 0))
+          : 0,
       };
     });
 

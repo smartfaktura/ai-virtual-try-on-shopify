@@ -199,6 +199,10 @@ export function buildShotPrompt(
   // For character-visible shots, add strong human directives
   if (shot.character_visible) {
     p1.push('A real human person with natural skin, visible face, and authentic expression.');
+    // Lip-sync: if character has voiceover script, tell Kling to animate lips
+    if (shot.script_line && shot.vo_enabled !== false) {
+      p1.push('Character speaking dialogue, natural lip movement, conversational expression.');
+    }
   }
 
   p1.push(roleCine.directive);
@@ -282,11 +286,20 @@ export function estimateShortFilmCredits(
   const totalDuration = Math.min(shotCount * 3, 15);
   const videoCost = totalDuration <= 5 ? 10 : totalDuration <= 10 ? 18 : 25;
 
-  const audioAdd = settings.audioMode === 'ambient' ? 0
-    : settings.audioMode === 'voiceover' ? 12
-    : settings.audioMode === 'music' ? 8
-    : settings.audioMode === 'full_mix' ? 16
-    : 0;
+  // Use audioLayers if available, fall back to audioMode
+  const layers = settings.audioLayers;
+  let audioAdd = 0;
+  if (layers) {
+    if (layers.music) audioAdd += 8;
+    if (layers.sfx) audioAdd += 4;
+    if (layers.voiceover) audioAdd += 8;
+  } else {
+    audioAdd = settings.audioMode === 'ambient' ? 0
+      : settings.audioMode === 'voiceover' ? 12
+      : settings.audioMode === 'music' ? 8
+      : settings.audioMode === 'full_mix' ? 16
+      : 0;
+  }
 
   return videoCost + audioAdd + 5;
 }

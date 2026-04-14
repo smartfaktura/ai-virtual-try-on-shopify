@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import type { ShortFilmSettings } from '@/types/shortFilm';
+import type { ShortFilmSettings, AudioLayers } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
-import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic, Music, AudioLines, Play, Loader2, Square as StopIcon, Zap, Crown } from 'lucide-react';
+import { Monitor, Smartphone, Square, RectangleVertical, Play, Loader2, Square as StopIcon, Zap, Crown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -19,22 +19,10 @@ const ASPECT_OPTIONS = [
   { value: '4:5' as const, label: '4:5', icon: RectangleVertical, desc: 'Social' },
 ];
 
-const AUDIO_OPTIONS = [
-  { value: 'silent' as const, label: 'Silent', icon: VolumeX, desc: 'No audio' },
-  { value: 'ambient' as const, label: 'Ambient', icon: Volume2, desc: 'Kling native' },
-  { value: 'music' as const, label: 'Music', icon: Music, desc: 'AI background track' },
-  { value: 'voiceover' as const, label: 'Voiceover', icon: Mic, desc: 'AI narration' },
-  { value: 'full_mix' as const, label: 'Full Mix', icon: AudioLines, desc: 'Music + SFX + Voice' },
-];
-
 const PRESERVATION_OPTIONS = [
   { value: 'low' as const, label: 'Low', desc: 'More creative freedom' },
   { value: 'medium' as const, label: 'Medium', desc: 'Balanced' },
   { value: 'high' as const, label: 'High', desc: 'Maximum fidelity' },
-];
-
-const DURATION_OPTIONS = [
-  { value: '5' as const, label: '5s per shot' },
 ];
 
 const VOICE_OPTIONS = [
@@ -54,9 +42,10 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
   const update = (partial: Partial<ShortFilmSettings>) =>
     onChange({ ...settings, ...partial });
 
-  const showMusicPrompt = settings.audioMode === 'music' || settings.audioMode === 'full_mix';
-  const showVoicePicker = settings.audioMode === 'voiceover' || settings.audioMode === 'full_mix';
-  const showPreview = settings.audioMode !== 'silent' && settings.audioMode !== 'ambient' && !!onPreviewAudio;
+  const layers: AudioLayers = settings.audioLayers || { music: true, sfx: true, voiceover: true };
+  const showMusicPrompt = layers.music;
+  const showVoicePicker = layers.voiceover;
+  const showPreview = (layers.music || layers.voiceover) && !!onPreviewAudio;
 
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
@@ -138,29 +127,15 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
         </div>
       </div>
 
-      {/* Audio Mode */}
+      {/* Audio note — configured in Shot Plan */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Audio</p>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-          {AUDIO_OPTIONS.map((opt) => {
-            const Icon = opt.icon;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => update({ audioMode: opt.value })}
-                className={cn(
-                  'flex flex-col items-center gap-1 rounded-lg border p-2.5 transition-all',
-                  settings.audioMode === opt.value
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                    : 'border-border hover:border-primary/40'
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="text-xs font-medium">{opt.label}</span>
-                <span className="text-[10px] text-muted-foreground leading-tight text-center">{opt.desc}</span>
-              </button>
-            );
-          })}
+        <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+          Audio layers are configured in the Shot Plan step.
+          {layers.music && ' Music ✓'}
+          {layers.sfx && ' SFX ✓'}
+          {layers.voiceover && ' Voiceover ✓'}
+          {!layers.music && !layers.sfx && !layers.voiceover && ' All layers disabled'}
         </div>
       </div>
 
@@ -214,7 +189,6 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
             className="gap-1.5"
             disabled={isLoadingPreview}
             onClick={async () => {
-              // If currently playing, stop it
               if (isPlayingPreview && previewAudioRef.current) {
                 previewAudioRef.current.pause();
                 previewAudioRef.current = null;
