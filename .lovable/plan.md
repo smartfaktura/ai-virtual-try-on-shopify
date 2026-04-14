@@ -1,48 +1,37 @@
 
 
-# Fix Zoomed Model Images in Short Film Picker
+# Fix Short Film: 2 Bugs
 
-## Problem
-The short film "Pick from Model Library" dialog renders model images with a custom inline template instead of reusing the `ModelSelectorCard` component used everywhere else (product images, brand models). The inline version also passes `{ width: 200 }` to `getOptimizedUrl`, which may cause blurry upscaling at display size.
+## Bug 1: `job_type` Not Passed to Worker → Wrong Handler
 
-## Fix
+**Root cause**: `process-queue/index.ts` line 133-138 builds `enrichedPayload` from `{ ...payload, user_id, job_id, credits_reserved }` but does NOT include `job_type`. When `generate-video` receives the request, `body.job_type` is `undefined`, so the check `jobType === "video_multishot"` (line 381) fails. It falls through to `handleWorkerMode` which requires `image_url` — causing `"image_url is required in payload"`.
 
-### File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
-
-Replace the custom `renderItem` callback (lines 328-343) with the shared `ModelSelectorCard` component:
+**Fix**: Add `job_type: jobType` to the enriched payload in `process-queue/index.ts`.
 
 ```typescript
-// Before (custom inline render):
-renderItem={(m) => (
-  <button ...>
-    <div className="aspect-[3/4] bg-muted/30 rounded-t-lg overflow-hidden">
-      <ShimmerImage src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })} ... />
-    </div>
-    <p className="text-xs font-medium ...">{m.name}</p>
-  </button>
-)}
-
-// After (reuse ModelSelectorCard):
-renderItem={(m) => (
-  <ModelSelectorCard
-    key={m.modelId}
-    model={m}
-    isSelected={false}
-    onSelect={() => pickModel(m)}
-  />
-)}
+const enrichedPayload = {
+  ...payload,
+  user_id: userId,
+  job_id: jobId,
+  job_type: jobType,        // ← ADD THIS
+  credits_reserved: creditsReserved,
+};
 ```
 
-This ensures:
-- Same `aspect-[3/4]` ratio with proper `object-cover` framing
-- Same optimized image URL logic (no forced 200px width)
-- Gradient overlay with name at bottom
-- Hover/focus states matching the rest of the app
+## Bug 2: Per-Shot "Retry" Buttons Make No Sense for Multi-Shot
 
-### Import
-Add `import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';` to the file.
+The UI shows a "Retry" button on each individual shot card. But multi-shot generation is a single combined video — there's no way to retry just one shot. When the film fails, all shots fail together, so the retry should be a single "Retry Film" action, not 4 individual buttons.
+
+**Fix**: In `ShortFilmProgressPanel.tsx`, hide per-shot retry buttons. Instead, show a single "Retry All" button when any shots have failed.
+
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Use `ModelSelectorCard` in model picker `renderItem` + add import |
+| `supabase/functions/process-queue/index.ts` | Add `job_type: jobType` to enriched payload (line 133) |
+| `src/components/app/video/short-film/ShortFilmProgressPanel.tsx` | Replace per-shot "Retry" with single "Retry Film" button |
+
+## Deploy
+
+Redeploy `process-queue` after the fix. This is the **actual** reason short film generation fails — the routing bug means every `video_multishot` job hits the wrong handler.
 
