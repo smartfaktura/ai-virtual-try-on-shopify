@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Upload, X, Image as ImageIcon, Users, MapPin, Palette, Library, Loader2, Package } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Users, MapPin, Palette, Library, Loader2, Package, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCustomModels } from '@/hooks/useCustomModels';
@@ -14,6 +15,7 @@ import { mockModels } from '@/data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { ModelProfile } from '@/types';
 
 export interface ReferenceAsset {
@@ -36,50 +38,112 @@ const SECTIONS = [
   { role: 'logo' as const, label: 'Logo / End Frame', icon: ImageIcon, description: 'Optional — logo for the closing shot.', libraryType: null },
 ];
 
+const PAGE_SIZE = 24;
+
 export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPanelProps) {
   const [dragRole, setDragRole] = useState<string | null>(null);
   const [uploadingRole, setUploadingRole] = useState<string | null>(null);
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [scenePickerOpen, setScenePickerOpen] = useState(false);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
+
+  // Search state per picker
+  const [modelSearch, setModelSearch] = useState('');
+  const [sceneSearch, setSceneSearch] = useState('');
+  const [productSearch, setProductSearch] = useState('');
+
+  // Visible count per picker (load-more)
+  const [modelVisible, setModelVisible] = useState(PAGE_SIZE);
+  const [sceneVisible, setSceneVisible] = useState(PAGE_SIZE);
+  const [productVisible, setProductVisible] = useState(PAGE_SIZE);
+
   const { upload, isUploading } = useFileUpload();
   const { user } = useAuth();
 
-  // --- Model sources (merged like Product Images) ---
-  const { asProfiles: customModelProfiles, isLoading: customModelsLoading } = useCustomModels();
-  const { asProfiles: userModelProfiles, isLoading: userModelsLoading } = useUserModels();
+  // --- Model sources (on-demand: only fetch when dialog opens) ---
+  const { asProfiles: customModelProfiles, isLoading: customModelsLoading } = useCustomModels(modelPickerOpen);
+  const { asProfiles: userModelProfiles, isLoading: userModelsLoading } = useUserModels(modelPickerOpen);
   const {
     sortModels, applyOverrides, applyNameOverrides, filterHidden,
     isLoading: sortLoading,
   } = useModelSortOrder();
 
   const allModels = useMemo(() => {
+    if (!modelPickerOpen) return [];
     const merged: ModelProfile[] = [...mockModels, ...customModelProfiles, ...userModelProfiles];
     return sortModels(filterHidden(applyNameOverrides(applyOverrides(merged))));
-  }, [mockModels, customModelProfiles, userModelProfiles, sortModels, filterHidden, applyNameOverrides, applyOverrides]);
+  }, [modelPickerOpen, customModelProfiles, userModelProfiles, sortModels, filterHidden, applyNameOverrides, applyOverrides]);
 
-  const modelsLoading = customModelsLoading || userModelsLoading || sortLoading;
+  const modelsLoading = modelPickerOpen && (customModelsLoading || userModelsLoading || sortLoading);
 
-  // --- Scenes ---
-  const { allScenes, isLoading: scenesLoading } = useProductImageScenes();
+  const filteredModels = useMemo(() => {
+    if (!modelSearch.trim()) return allModels;
+    const q = modelSearch.toLowerCase();
+    return allModels.filter(m => m.name.toLowerCase().includes(q));
+  }, [allModels, modelSearch]);
+
+  // --- Scenes (on-demand) ---
+  const { allScenes, isLoading: scenesLoading } = useProductImageScenes(scenePickerOpen);
   const validScenes = useMemo(
     () => allScenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http')),
     [allScenes]
   );
 
-  // --- User products ---
+  const filteredScenes = useMemo(() => {
+    if (!sceneSearch.trim()) return validScenes;
+    const q = sceneSearch.toLowerCase();
+    return validScenes.filter(s => s.title.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q));
+  }, [validScenes, sceneSearch]);
+
+  // --- User products (on-demand, paginated) ---
   const { data: userProducts, isLoading: productsLoading } = useQuery({
     queryKey: ['user-products-ref-picker', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_products')
-        .select('id, title, image_url')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as { id: string; title: string; image_url: string }[];
+      // Fetch all products in pages of 500 to avoid 1000-row cap
+      let all: { id: string; title: string; image_url: string }[] = [];
+      let from = 0;
+      const batchSize = 500;
+      while (true) {
+        const { data, error } = await supabase
+          .from('user_products')
+          .select('id, title, image_url')
+          .order('created_at', { ascending: false })
+          .range(from, from + batchSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all = all.concat(data as { id: string; title: string; image_url: string }[]);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      return all;
     },
-    enabled: !!user,
+    enabled: !!user && productPickerOpen,
+    staleTime: 60_000,
   });
+
+  const filteredProducts = useMemo(() => {
+    if (!userProducts) return [];
+    if (!productSearch.trim()) return userProducts;
+    const q = productSearch.toLowerCase();
+    return userProducts.filter(p => p.title.toLowerCase().includes(q));
+  }, [userProducts, productSearch]);
+
+  // Reset search + visible count when dialogs open/close
+  const openModelPicker = useCallback(() => {
+    setModelSearch('');
+    setModelVisible(PAGE_SIZE);
+    setModelPickerOpen(true);
+  }, []);
+  const openScenePicker = useCallback(() => {
+    setSceneSearch('');
+    setSceneVisible(PAGE_SIZE);
+    setScenePickerOpen(true);
+  }, []);
+  const openProductPicker = useCallback(() => {
+    setProductSearch('');
+    setProductVisible(PAGE_SIZE);
+    setProductPickerOpen(true);
+  }, []);
 
   const handleFileUpload = useCallback(
     async (role: ReferenceAsset['role'], files: FileList | null) => {
@@ -90,18 +154,10 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
       for (const file of Array.from(files)) {
         const url = await upload(file);
         if (url) {
-          newRefs.push({
-            id: crypto.randomUUID(),
-            url,
-            role,
-            name: file.name,
-          });
+          newRefs.push({ id: crypto.randomUUID(), url, role, name: file.name });
         }
       }
-
-      if (newRefs.length > 0) {
-        onChange([...references, ...newRefs]);
-      }
+      if (newRefs.length > 0) onChange([...references, ...newRefs]);
       setUploadingRole(null);
     },
     [references, onChange, upload]
@@ -109,13 +165,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
 
   const pickModel = useCallback(
     (model: ModelProfile) => {
-      const ref: ReferenceAsset = {
-        id: crypto.randomUUID(),
-        url: model.previewUrl,
-        role: 'model',
-        name: model.name,
-      };
-      onChange([...references, ref]);
+      onChange([...references, { id: crypto.randomUUID(), url: model.previewUrl, role: 'model', name: model.name }]);
       setModelPickerOpen(false);
     },
     [references, onChange]
@@ -124,13 +174,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   const pickScene = useCallback(
     (scene: { id: string; title: string; previewUrl?: string }) => {
       if (!scene.previewUrl) return;
-      const ref: ReferenceAsset = {
-        id: crypto.randomUUID(),
-        url: scene.previewUrl,
-        role: 'scene',
-        name: scene.title,
-      };
-      onChange([...references, ref]);
+      onChange([...references, { id: crypto.randomUUID(), url: scene.previewUrl, role: 'scene', name: scene.title }]);
       setScenePickerOpen(false);
     },
     [references, onChange]
@@ -138,29 +182,21 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
 
   const pickProduct = useCallback(
     (product: { id: string; title: string; image_url: string }) => {
-      const ref: ReferenceAsset = {
-        id: crypto.randomUUID(),
-        url: product.image_url,
-        role: 'product',
-        name: product.title,
-      };
-      onChange([...references, ref]);
+      onChange([...references, { id: crypto.randomUUID(), url: product.image_url, role: 'product', name: product.title }]);
       setProductPickerOpen(false);
     },
     [references, onChange]
   );
 
   const removeRef = useCallback(
-    (id: string) => {
-      onChange(references.filter((r) => r.id !== id));
-    },
+    (id: string) => onChange(references.filter((r) => r.id !== id)),
     [references, onChange]
   );
 
   const openLibrary = (type: 'model' | 'scene' | 'product') => {
-    if (type === 'model') setModelPickerOpen(true);
-    else if (type === 'scene') setScenePickerOpen(true);
-    else if (type === 'product') setProductPickerOpen(true);
+    if (type === 'model') openModelPicker();
+    else if (type === 'scene') openScenePicker();
+    else if (type === 'product') openProductPicker();
   };
 
   return (
@@ -204,9 +240,10 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                   {sectionRefs.map((ref) => (
                     <div key={ref.id} className="relative group">
                       <img
-                        src={ref.url}
+                        src={getOptimizedUrl(ref.url, { width: 128, quality: 60 })}
                         alt={ref.name || section.label}
                         className="h-16 w-16 rounded-lg object-cover border border-border"
+                        loading="lazy"
                       />
                       <button
                         onClick={() => removeRef(ref.id)}
@@ -263,116 +300,170 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         })}
       </div>
 
-      {/* Model Library Picker Dialog */}
-      <Dialog open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
-        <DialogContent className="max-w-md max-h-[85vh]">
-          <DialogHeader>
-            <DialogTitle>Pick from Model Library</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto py-2">
-            {modelsLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
-              ))
-            ) : allModels.length === 0 ? (
-              <p className="col-span-full text-sm text-muted-foreground text-center py-8">
-                No models available yet.
-              </p>
-            ) : (
-              allModels.map((m) => (
-                <button
-                  key={m.modelId}
-                  onClick={() => pickModel(m)}
-                  className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                >
-                  <ShimmerImage
-                    src={m.previewUrl}
-                    alt={m.name}
-                    className="w-full aspect-[3/4] object-cover"
-                    aspectRatio="3/4"
-                  />
-                  <p className="text-[10px] font-medium text-foreground p-1.5 truncate">{m.name}</p>
-                </button>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Model Library Picker */}
+      <PickerDialog
+        open={modelPickerOpen}
+        onOpenChange={setModelPickerOpen}
+        title="Pick from Model Library"
+        search={modelSearch}
+        onSearch={setModelSearch}
+        loading={modelsLoading}
+        items={filteredModels}
+        visibleCount={modelVisible}
+        onLoadMore={() => setModelVisible(v => v + PAGE_SIZE)}
+        renderItem={(m) => (
+          <button
+            key={m.modelId}
+            onClick={() => pickModel(m)}
+            className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <ShimmerImage
+              src={getOptimizedUrl(m.previewUrl, { width: 200, quality: 60 })}
+              alt={m.name}
+              className="w-full aspect-[3/4] object-cover"
+              aspectRatio="3/4"
+            />
+            <p className="text-[10px] font-medium text-foreground p-1.5 truncate">{m.name}</p>
+          </button>
+        )}
+        emptyText="No models available yet."
+      />
 
-      {/* Scene Library Picker Dialog */}
-      <Dialog open={scenePickerOpen} onOpenChange={setScenePickerOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh]">
-          <DialogHeader>
-            <DialogTitle>Pick from Scene Library</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto py-2">
-            {scenesLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square rounded-lg" />
-              ))
-            ) : validScenes.length === 0 ? (
-              <p className="col-span-full text-sm text-muted-foreground text-center py-8">
-                No scene previews available.
-              </p>
-            ) : (
-              validScenes.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => pickScene(s)}
-                  className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                >
-                  <ShimmerImage
-                    src={s.previewUrl}
-                    alt={s.title}
-                    className="w-full aspect-square object-cover"
-                    aspectRatio="1/1"
-                  />
-                  <div className="p-1.5">
-                    <p className="text-[10px] font-medium text-foreground truncate">{s.title}</p>
-                    <p className="text-[9px] text-muted-foreground truncate">{s.description}</p>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Scene Library Picker */}
+      <PickerDialog
+        open={scenePickerOpen}
+        onOpenChange={setScenePickerOpen}
+        title="Pick from Scene Library"
+        search={sceneSearch}
+        onSearch={setSceneSearch}
+        loading={scenePickerOpen && scenesLoading}
+        items={filteredScenes}
+        visibleCount={sceneVisible}
+        onLoadMore={() => setSceneVisible(v => v + PAGE_SIZE)}
+        renderItem={(s) => (
+          <button
+            key={s.id}
+            onClick={() => pickScene(s)}
+            className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <ShimmerImage
+              src={getOptimizedUrl(s.previewUrl, { width: 200, quality: 60 })}
+              alt={s.title}
+              className="w-full aspect-square object-cover"
+              aspectRatio="1/1"
+            />
+            <div className="p-1.5">
+              <p className="text-[10px] font-medium text-foreground truncate">{s.title}</p>
+            </div>
+          </button>
+        )}
+        emptyText="No scene previews available."
+        maxWidth="max-w-lg"
+      />
 
-      {/* Product Library Picker Dialog */}
-      <Dialog open={productPickerOpen} onOpenChange={setProductPickerOpen}>
-        <DialogContent className="max-w-md max-h-[85vh]">
-          <DialogHeader>
-            <DialogTitle>Pick from Products</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto py-2">
-            {productsLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square rounded-lg" />
-              ))
-            ) : !userProducts || userProducts.length === 0 ? (
-              <p className="col-span-full text-sm text-muted-foreground text-center py-8">
-                No products yet. Add products in your product library first.
-              </p>
-            ) : (
-              userProducts.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => pickProduct(p)}
-                  className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                >
-                  <ShimmerImage
-                    src={p.image_url}
-                    alt={p.title}
-                    className="w-full aspect-square object-cover"
-                    aspectRatio="1/1"
-                  />
-                  <p className="text-[10px] font-medium text-foreground p-1.5 truncate">{p.title}</p>
-                </button>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Product Library Picker */}
+      <PickerDialog
+        open={productPickerOpen}
+        onOpenChange={setProductPickerOpen}
+        title="Pick from Products"
+        search={productSearch}
+        onSearch={setProductSearch}
+        loading={productsLoading && productPickerOpen}
+        items={filteredProducts}
+        visibleCount={productVisible}
+        onLoadMore={() => setProductVisible(v => v + PAGE_SIZE)}
+        renderItem={(p) => (
+          <button
+            key={p.id}
+            onClick={() => pickProduct(p)}
+            className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <ShimmerImage
+              src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
+              alt={p.title}
+              className="w-full aspect-square object-cover"
+              aspectRatio="1/1"
+            />
+            <p className="text-[10px] font-medium text-foreground p-1.5 truncate">{p.title}</p>
+          </button>
+        )}
+        emptyText="No products yet. Add products in your product library first."
+      />
     </div>
+  );
+}
+
+/* ─── Generic picker dialog with search + load-more ─── */
+interface PickerDialogProps<T> {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  title: string;
+  search: string;
+  onSearch: (v: string) => void;
+  loading: boolean;
+  items: T[];
+  visibleCount: number;
+  onLoadMore: () => void;
+  renderItem: (item: T) => React.ReactNode;
+  emptyText: string;
+  maxWidth?: string;
+}
+
+function PickerDialog<T>({
+  open, onOpenChange, title, search, onSearch,
+  loading, items, visibleCount, onLoadMore,
+  renderItem, emptyText, maxWidth = 'max-w-md',
+}: PickerDialogProps<T>) {
+  const visible = items.slice(0, visibleCount);
+  const hasMore = items.length > visibleCount;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={cn(maxWidth, 'max-h-[85vh] flex flex-col')} aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => onSearch(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+
+        {/* Grid */}
+        <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-square rounded-lg" />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-12">{emptyText}</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
+                {visible.map(renderItem)}
+              </div>
+              {hasMore && (
+                <div className="flex justify-center py-3">
+                  <button
+                    onClick={onLoadMore}
+                    className="text-xs text-primary hover:underline font-medium"
+                  >
+                    Load more ({items.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
