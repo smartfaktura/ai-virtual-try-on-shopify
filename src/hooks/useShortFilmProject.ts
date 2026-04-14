@@ -417,7 +417,7 @@ export function useShortFilmProject() {
           aspect_ratio: settings.aspectRatio,
           mode: 'pro',
           negative_prompt,
-          with_audio: !!(getEffectiveLayers(settings).sfx),
+          with_audio: false,
           project_id: projectId,
           workflow_type: 'short_film',
         },
