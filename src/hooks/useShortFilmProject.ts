@@ -668,6 +668,9 @@ export function useShortFilmProject() {
     loadDraft,
     customRoles,
     setCustomRoles,
+    audioAssets,
+    isGeneratingAudio,
+    generateAudio,
   };
 }
 
