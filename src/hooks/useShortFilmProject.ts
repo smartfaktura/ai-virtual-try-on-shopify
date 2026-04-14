@@ -47,7 +47,7 @@ interface DraftState {
 const DEFAULT_SETTINGS: ShortFilmSettings = {
   aspectRatio: '16:9',
   audioMode: 'full_mix',
-  audioLayers: { music: true, sfx: true, voiceover: true },
+  audioLayers: { music: true, sfx: true, voiceover: false },
   preservationLevel: 'medium',
   shotDuration: '5',
   quality: 'pro',
@@ -196,7 +196,7 @@ export function useShortFilmProject() {
         }
         if (restoredSettings.audioMode === 'silent') {
           restoredSettings.audioMode = 'full_mix';
-          restoredSettings.audioLayers = { music: true, sfx: true, voiceover: true };
+          restoredSettings.audioLayers = { music: true, sfx: true, voiceover: false };
         }
         setSettings(restoredSettings);
         
@@ -319,7 +319,7 @@ export function useShortFilmProject() {
           filmDescription: filmOption?.description || '',
           stylePresetNames: stylePresetNames || undefined,
           scenePresetNames: scenePresetNames || undefined,
-          audioLayers: settings.audioLayers || { music: true, sfx: true, voiceover: true },
+          audioLayers: settings.audioLayers || { music: true, sfx: true, voiceover: false },
         },
       });
       if (error) throw new Error(error.message);

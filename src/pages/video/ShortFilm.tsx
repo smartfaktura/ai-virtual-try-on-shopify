@@ -49,7 +49,10 @@ export default function ShortFilm() {
 
   const successCount = shotStatuses.filter(s => s.status === 'complete').length;
   const failedCount = shotStatuses.filter(s => s.status === 'failed').length;
-  const allDone = !isGenerating && shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed');
+  const videosDone = !isGenerating && shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed');
+  const musicEnabled = !!settings.audioLayers?.music;
+  const musicDone = !musicEnabled || (audioPhase === 'done' && !!audioAssets?.backgroundTrackUrl);
+  const allDone = videosDone && musicDone;
   const allSucceeded = allDone && failedCount === 0 && successCount > 0;
   const hasFailures = allDone && failedCount > 0;
 
