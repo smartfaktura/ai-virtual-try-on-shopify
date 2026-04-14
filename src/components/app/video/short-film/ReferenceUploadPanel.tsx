@@ -34,7 +34,7 @@ const SECTIONS = [
   { role: 'product' as const, label: 'Product References', icon: Package, description: 'Upload hero product images for consistent appearance.', libraryType: 'product' as const },
   { role: 'scene' as const, label: 'Scene References', icon: MapPin, description: 'Add environment or location references.', libraryType: 'scene' as const },
   { role: 'model' as const, label: 'Model / Character', icon: Users, description: 'Optional — add character reference images.', libraryType: 'model' as const },
-  { role: 'style' as const, label: 'Style / Mood', icon: Palette, description: 'Upload visual tone or mood references.', libraryType: null },
+  { role: 'style' as const, label: 'Style / Mood', icon: Palette, description: 'Upload visual tone or mood references.', libraryType: 'style' as const },
   { role: 'logo' as const, label: 'Logo / End Frame', icon: ImageIcon, description: 'Optional — logo for the closing shot.', libraryType: null },
 ];
 
@@ -46,6 +46,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [scenePickerOpen, setScenePickerOpen] = useState(false);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [stylePickerOpen, setStylePickerOpen] = useState(false);
 
   // Search state per picker
   const [modelSearch, setModelSearch] = useState('');
@@ -81,6 +82,20 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     const q = modelSearch.toLowerCase();
     return allModels.filter(m => m.name.toLowerCase().includes(q));
   }, [allModels, modelSearch]);
+
+  // --- Style / Mood presets ---
+  const STYLE_MOOD_PRESETS = useMemo(() => [
+    { id: 'sm-1', title: 'Cinematic Noir', keywords: 'Deep blacks, high contrast, chiaroscuro lighting, film noir shadows, moody desaturated palette' },
+    { id: 'sm-2', title: 'Golden Hour Warmth', keywords: 'Warm amber tones, long soft shadows, golden backlight, sun-kissed skin, dreamy lens flare' },
+    { id: 'sm-3', title: 'Ethereal Soft Focus', keywords: 'Soft diffusion filter, pastel tones, dreamy bokeh, luminous highlights, gentle haze' },
+    { id: 'sm-4', title: 'Bold & Saturated', keywords: 'Vivid punchy colors, high saturation, strong contrast, dynamic energy, editorial pop' },
+    { id: 'sm-5', title: 'Monochrome Elegance', keywords: 'Black and white, fine grain, rich tonal range, timeless classic photography feel' },
+    { id: 'sm-6', title: 'Neon Cyberpunk', keywords: 'Vibrant neon blues and magentas, dark environment, futuristic glow, reflective wet surfaces' },
+    { id: 'sm-7', title: 'Vintage Film Stock', keywords: 'Warm muted tones, analog grain, faded highlights, 70s film aesthetic, nostalgic color shift' },
+    { id: 'sm-8', title: 'Clean Luxury', keywords: 'Pristine whites, soft even lighting, premium minimalist feel, subtle warm undertones' },
+    { id: 'sm-9', title: 'Dramatic Chiaroscuro', keywords: 'Rembrandt lighting, deep rich shadows, single key light, painterly contrast, fine art feel' },
+    { id: 'sm-10', title: 'Natural Documentary', keywords: 'Available light, authentic grain, handheld intimacy, realistic color, raw unpolished beauty' },
+  ], []);
 
   // --- Video-optimized scene presets (text-described, no images) ---
   const VIDEO_SCENE_PRESETS = useMemo(() => [
@@ -202,10 +217,19 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     [references, onChange]
   );
 
-  const openLibrary = (type: 'model' | 'scene' | 'product') => {
+  const pickStyle = useCallback(
+    (preset: { id: string; title: string; keywords: string }) => {
+      onChange([...references, { id: crypto.randomUUID(), url: '', role: 'style', name: `${preset.title}: ${preset.keywords}` }]);
+      setStylePickerOpen(false);
+    },
+    [references, onChange]
+  );
+
+  const openLibrary = (type: 'model' | 'scene' | 'product' | 'style') => {
     if (type === 'model') openModelPicker();
     else if (type === 'scene') openScenePicker();
     else if (type === 'product') openProductPicker();
+    else if (type === 'style') setStylePickerOpen(true);
   };
 
   return (
@@ -263,7 +287,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                         />
                       ) : (
                         <div className="h-16 w-16 rounded-lg bg-muted/30 border border-border flex items-center justify-center">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          {ref.role === 'style' ? <Palette className="h-4 w-4 text-primary" /> : <MapPin className="h-4 w-4 text-muted-foreground" />}
                         </div>
                       )}
                       <button
@@ -379,6 +403,32 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                 ))}
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Style / Mood Picker */}
+      <Dialog open={stylePickerOpen} onOpenChange={setStylePickerOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Choose Style / Mood</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+              {STYLE_MOOD_PRESETS.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => pickStyle(s)}
+                  className="rounded-lg border border-border hover:border-primary/50 p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none space-y-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <Palette className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <p className="text-sm font-medium text-foreground">{s.title}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{s.keywords}</p>
+                </button>
+              ))}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
