@@ -166,70 +166,60 @@ export function buildShotPrompt(
   context: PromptContext,
   imageIndex?: number,
 ): { prompt: string; negative_prompt: string } {
-  const parts: string[] = [];
+  const MAX_PROMPT_LENGTH = 510;
   const roleCine = ROLE_CINEMATICS[shot.role] || DEFAULT_CINEMATIC;
 
-  // 1. Cinematic header — film type tone
-  const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
-  parts.push(`Cinematic 4K ${tonePreset}.`);
-
-  // 2. Image reference (Kling <<<image_N>>> syntax)
+  // Priority 1 — must have
+  const p1: string[] = [];
   if (typeof imageIndex === 'number' && imageIndex >= 1) {
-    parts.push(`Feature the subject from <<<image_${imageIndex}>>> with photorealistic consistency.`);
+    p1.push(`Feature subject from <<<image_${imageIndex}>>>.`);
   }
+  p1.push(roleCine.directive);
+  p1.push(shot.purpose);
 
-  // 3. Role-specific cinematographic directive
-  parts.push(roleCine.directive);
-
-  // 4. Purpose (user-defined shot intent)
-  parts.push(shot.purpose);
-
-  // 5. Lighting design
-  parts.push(roleCine.lighting);
-
-  // 6. Lens & camera
-  parts.push(roleCine.lens);
-
-  // 7. Camera motion (if not static)
+  // Priority 2 — important
+  const p2: string[] = [];
   if (shot.camera_motion && shot.camera_motion !== 'static') {
-    const motion = shot.camera_motion.replace(/_/g, ' ');
-    parts.push(`Smooth ${motion} camera movement with professional stabilization.`);
+    p2.push(`Smooth ${shot.camera_motion.replace(/_/g, ' ')} camera movement.`);
   }
-
-  // 8. Subject motion
   if (shot.subject_motion && shot.subject_motion !== 'none') {
-    parts.push(`Subject motion: ${shot.subject_motion.replace(/_/g, ' ')}.`);
+    p2.push(`Subject motion: ${shot.subject_motion.replace(/_/g, ' ')}.`);
   }
+  const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
+  p2.push(`Cinematic 4K ${tonePreset}.`);
 
-  // 9. Script line visual match
+  // Priority 3 — nice to have
+  const p3: string[] = [];
+  p3.push(roleCine.lighting);
+  p3.push(roleCine.lens);
   if (shot.script_line) {
-    parts.push(`Visual matches: "${shot.script_line}".`);
+    p3.push(`Visual matches: "${shot.script_line}".`);
   }
-
-  // 10. Preservation / consistency
   if (shot.preservation_strength === 'high') {
-    parts.push('Maintain strong visual consistency with reference images. Identical colors, textures, and proportions.');
+    p3.push('Maintain strong visual consistency with references.');
   } else if (shot.preservation_strength === 'medium') {
-    parts.push('Maintain visual consistency with reference styling and color palette.');
+    p3.push('Maintain visual consistency with reference styling.');
+  }
+  p3.push('Professional color grading, film-grade production.');
+
+  // Build prompt respecting char limit
+  let prompt = p1.join(' ');
+  for (const part of [...p2, ...p3]) {
+    const next = prompt + ' ' + part;
+    if (next.length > MAX_PROMPT_LENGTH) break;
+    prompt = next;
   }
 
-  // 11. Aspect ratio composition hints
-  if (context.settings.aspectRatio === '9:16') {
-    parts.push('Vertical format, mobile-optimized composition, subject fills vertical frame.');
-  } else if (context.settings.aspectRatio === '1:1') {
-    parts.push('Square format, centered symmetrical composition.');
-  } else if (context.settings.aspectRatio === '16:9') {
-    parts.push('Widescreen cinematic format, horizontal composition with breathing room.');
+  // Hard truncate safety net
+  if (prompt.length > MAX_PROMPT_LENGTH) {
+    prompt = prompt.slice(0, MAX_PROMPT_LENGTH).replace(/\s\S*$/, '');
   }
 
-  // 12. Production quality footer
-  parts.push('Professional color grading, rich dynamic range, film-grade production value.');
-
-  // Build negative prompt — combine base + role-specific
+  // Build negative prompt
   const allNegatives = [...BASE_NEGATIVES, ...roleCine.negatives];
 
   return {
-    prompt: parts.join(' '),
+    prompt,
     negative_prompt: allNegatives.join(', '),
   };
 }
