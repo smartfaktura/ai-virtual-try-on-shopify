@@ -304,9 +304,9 @@ export function useShortFilmProject() {
       if (error) throw new Error(error.message);
       if (data?.shots && Array.isArray(data.shots)) {
         setShots(data.shots);
-        // Store AI-generated music direction if present
+        // Store AI-generated music direction and pre-select AI Director preset
         if (data.music_direction) {
-          setSettings(prev => ({ ...prev, musicPrompt: data.music_direction }));
+          setSettings(prev => ({ ...prev, musicPrompt: data.music_direction, musicPresetKey: 'ai_director' }));
         }
         toast.success(`AI Director generated ${data.shots.length} shots`);
       } else {
