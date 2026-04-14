@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { mockModels } from '@/data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { ModelProfile } from '@/types';
