@@ -266,6 +266,7 @@ function SingleVideoPlayer({
             className="w-full aspect-video"
             playsInline
             preload="metadata"
+            muted={!!hasAudio}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onEnded={handleVideoEnd}

@@ -306,7 +306,7 @@ async function handleMultishotWorkerMode(body: Record<string, unknown>) {
       mode,
       aspect_ratio: aspectRatio,
       duration: String(totalDuration),
-      sound: "on",
+      sound: withAudio ? "on" : "off",
       cfg_scale: cfgScale,
     };
 
