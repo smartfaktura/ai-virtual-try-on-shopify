@@ -185,6 +185,9 @@ export function buildShotPrompt(
   if (shot.subject_motion && shot.subject_motion !== 'none') {
     p2.push(`Subject motion: ${shot.subject_motion.replace(/_/g, ' ')}.`);
   }
+  if (shot.user_notes) {
+    p2.push(shot.user_notes);
+  }
   const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
   p2.push(`Cinematic 4K ${tonePreset}.`);
 

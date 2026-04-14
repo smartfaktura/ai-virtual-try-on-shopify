@@ -79,7 +79,7 @@ export function useShortFilmProject() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [shotStatuses, setShotStatuses] = useState<ShotStatus[]>([]);
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [planMode, setPlanMode] = useState<'auto' | 'ai'>('auto');
+  const [planMode, setPlanMode] = useState<'auto' | 'ai'>('ai');
   const [isAiPlanning, setIsAiPlanning] = useState(false);
   const [customRoles, setCustomRoles] = useState<string[]>([]);
   const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
@@ -990,7 +990,6 @@ function getSourceImageForShot(shot: ShotPlanItem, references: ReferenceAsset[])
 
 /** Generate shot plan from custom roles */
 function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): ShotPlanItem[] {
-  // Import the generateShotPlan logic but with custom roles
   return roles.slice(0, 6).map((role, index) => ({
     shot_index: index + 1,
     role,
@@ -999,6 +998,7 @@ function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): S
     camera_motion: 'slow_push',
     subject_motion: 'minimal',
     duration_sec: 3,
+    script_line: `Custom ${role.replace(/_/g, ' ')} narration.`,
     product_visible: role.includes('product') || role.includes('detail') || role.includes('highlight'),
     character_visible: role.includes('human') || role.includes('lifestyle'),
     preservation_strength: role.includes('product') || role.includes('detail') ? 'high' : 'medium',
