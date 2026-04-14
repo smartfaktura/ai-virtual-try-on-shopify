@@ -1,32 +1,40 @@
 
 
-# Fix Audio Defaults, ETA, and Unified Progress
+# Improve Model Selection UX in Short Film References
 
-## Issues
-1. **Dialog/Speech preselected**: `DEFAULT_SETTINGS.audioLayers.voiceover` is `true` — should be `false`
-2. **Wrong ETA**: Currently `totalDuration * 8` to `totalDuration * 15` which gives ~30s-60s for a short film. Real time is ~5 minutes. Fix to show ~4-6 min range.
-3. **Fragmented progress**: User sees separate "Generating film" then "Generating background music" as independent steps. Should be one unified progress that only shows "Complete" when everything (video + music) is done.
+## Current Problem
+The Model/Character section in the short film reference panel is just a dashed upload zone with "Drop images or browse" and an "All" button that opens a full-screen dialog. This is unintuitive — users don't realize they can pick from existing models inline. The product images step 3 has a much better UX with an inline grid of model cards.
 
 ## Changes
 
-### 1. Fix default voiceover to OFF (`src/hooks/useShortFilmProject.ts`)
-- Line 50: Change `voiceover: true` to `voiceover: false`
-- Also fix backward-compat fallback on lines 199 and 322 where `voiceover: true` is hardcoded
+### 1. Add inline model preview grid (`ReferenceUploadPanel.tsx`)
 
-### 2. Fix ETA in progress panel (`ShortFilmProgressPanel.tsx`)
-- Change ETA formula to realistic values: ~240s (4min) to ~360s (6min) regardless of shot count, since Kling multishot processes as one job
+Replace the bare Model/Character section with an inline grid showing the first 6-8 models from the library (prioritizing user's brand models). Each card uses the existing `ModelSelectorCard` component with click-to-select. A "View All" link opens the full modal for more options.
 
-### 3. Unified progress — hide "Complete" until everything is done (`ShortFilm.tsx`)
-- Change `allDone` / `allSucceeded` logic to also account for music generation: if `settings.audioLayers.music` is ON, the film is not "done" until `audioPhase === 'done'` and `audioAssets?.backgroundTrackUrl` exists
-- Remove the separate "Generating background music..." banner — fold it into the progress panel phases
-- Update `ShortFilmProgressPanel` to accept an `audioPhase` prop and show music generation as part of the same flow (e.g., director message says "Adding background music..." after video completes)
-- Single "Film Complete" state only when both video AND music (if enabled) are ready
+**Before**: Upload zone only, "All" button opens dialog
+**After**: 
+- Inline row of 6 model thumbnails (brand models first, then library)
+- Click to add as reference, selected models show checkmark
+- "View All →" link opens the full picker dialog
+- Upload zone remains below for custom uploads
 
-### Files Modified
+### 2. Show selected models prominently
+
+Currently selected model references are shown as tiny 12px-wide thumbnails mixed with other refs. Improve to show them as proper cards with name labels, matching the product images pattern.
+
+### 3. Preload model data eagerly
+
+Currently `useCustomModels` and `useUserModels` are only fetched when `modelPickerOpen` is true. Change to always fetch (lightweight query) so the inline grid renders immediately without requiring the dialog to open first.
+
+### 4. Fix: remove stale voice/audio references
+
+Quick audit items to clean up:
+- Verify `ShortFilmSettingsPanel.tsx` has no leftover voice picker references
+- Ensure the `audioLayers` toggles in `FilmTypeSelector.tsx` correctly pass through to the hook
+
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/hooks/useShortFilmProject.ts` | Default `voiceover: false`, fix hardcoded fallbacks |
-| `src/components/app/video/short-film/ShortFilmProgressPanel.tsx` | Fix ETA to ~4-6 min, add `audioPhase` prop for unified progress |
-| `src/pages/video/ShortFilm.tsx` | Unify completion logic (video+music), remove separate music banner |
+| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Add inline model grid with 6-8 cards, "View All" link, eager data loading, improved selected model display |
 
