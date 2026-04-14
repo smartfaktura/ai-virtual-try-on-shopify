@@ -245,6 +245,8 @@ export function useShortFilmProject() {
     setSettings(DEFAULT_SETTINGS);
     setAudioAssets({ perShotAudio: [] });
     setIsGeneratingAudio(false);
+    setAudioPhase('idle');
+    setAudioShotStatuses([]);
   }, []);
 
   // ─── Retry single failed shot ──────────────────────────────
