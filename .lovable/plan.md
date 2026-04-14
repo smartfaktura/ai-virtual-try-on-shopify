@@ -1,55 +1,64 @@
+<final-text>
+I checked the short-film reference loading flow again.
 
+Short answer: your suspicion is partly right, but the main issue is not a backend timeout. The library requests are client-side and I can see successful 200 responses for products and model metadata. The real problem is that `/app/video/short-film` is loading and rendering the pickers in a very heavy way:
 
-# Short Film Reference Panel — Broken Library Pickers
+- all picker data starts loading as soon as the References step mounts
+- the dialogs try to render entire libraries at once
+- thumbnails use raw/original image URLs instead of lighter preview URLs
+- the products query is unpaginated, so very large libraries can hit the 1000-row API cap
+- the UI shows full-grid skeletons too aggressively, so it looks “stuck” even when data exists
 
-## Problems Found
+Also important: admin-managed models are already wired into short film through `mockModels + model_sort_order`, and brand models are wired through `user_models`. So the source mapping is correct; the loading strategy is what needs to be fixed.
+</final-text>
 
-### 1. Scene Library shows empty cards (your screenshot)
-The scene picker dialog renders ALL 859 active scenes from `product_image_scenes`. Only 186 have `preview_image_url`. The filter `allScenes.filter(s => s.previewUrl)` catches the null ones, but scenes with empty strings or broken URLs still render as empty skeleton-like cards. The real fix: only show scenes that have a valid preview image, and add a loading/empty state.
+Implementation plan
 
-### 2. Model Library only shows custom models
-`ReferenceUploadPanel` uses `useCustomModels()` which only queries the `custom_models` table. It completely ignores:
-- Built-in models from `mockModels` (mockData.ts) — the main model library
-- Sort order, image overrides, name overrides, and hidden status from `useModelSortOrder`
-- User-uploaded models from `useUserModels`
+1. Rebuild the short-film pickers to load on demand
+- only fetch products when the Product dialog opens
+- only fetch scenes when the Scene dialog opens
+- only fetch model-related queries when the Model dialog opens
+- stop preloading large libraries just by entering the References step
 
-The Product Images page merges all three sources. The short film picker should do the same.
+2. Stop rendering huge libraries all at once
+- add search + initial visible slice for each picker
+- render only the first batch initially
+- add “Load more” / infinite-scroll behavior for long lists
+- keep current results visible during background refetch instead of replacing everything with skeletons
 
-### 3. No product integration
-The "Product References" section only has file upload. It should also offer a "Library" button to pick from existing user products (same as `ProductSelectorChip` uses from `user_products` table).
+3. Fix heavy image loading
+- switch picker cards to optimized thumbnail URLs using the existing image optimization helper
+- use small preview widths for products, scenes, and overridden admin model images
+- keep original URLs only for the final selected reference asset, not the picker grid
 
-## Plan
+4. Make large libraries robust
+- paginate the products query so large `/app/products` libraries do not silently stop at the API row cap
+- use lightweight scene fields for short-film picker needs instead of the full scene payload
+- keep the merged model source, but page/filter the rendered grid so `/app/admin/models` changes still appear without choking the modal
 
-### File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
+5. Clean up the broken loading UX
+- only show empty states after fetch completion
+- only show skeletons when there is truly no data yet
+- preserve loaded cards while images continue streaming in
+- clear the dialog ref warning if it is still triggered by this picker composition
 
-**A. Fix Model Picker**
-- Import `mockModels` from `@/data/mockData`
-- Import `useModelSortOrder` and `useUserModels`
-- Merge all model sources the same way `ProductImages.tsx` does: `sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels, ...customModelProfiles, ...userModelProfiles]))))`
-- Update `pickModel` to use `ModelProfile` shape (`modelId`, `previewUrl`, `name`) instead of `CustomModel` shape
-- Add loading skeleton while models load
+Files I expect to touch
+- `src/components/app/video/short-film/ReferenceUploadPanel.tsx`
+- `src/hooks/useProductImageScenes.ts`
+- `src/hooks/useModelSortOrder.ts`
+- possibly a small new lightweight picker hook for short-film libraries
+- possibly `src/components/ui/dialog.tsx` only if the ref warning needs a direct cleanup
 
-**B. Fix Scene Picker**
-- Filter scenes to only those with a truthy `previewUrl` that starts with `http` (eliminates empty strings / broken refs)
-- Add a loading state while scenes fetch
-- If no scenes have previews, show a clear "No scene previews available" message instead of an empty grid
+Technical details
+- Products: real risk of row-cap + over-rendering
+- Scenes: not a 1000+ limit issue right now, but still too many cards/images rendered at once
+- Models: data merge is correct; rendering and thumbnail strategy are the weak points
+- This does not need background job architecture; it needs lazy queries, pagination, and thumbnail optimization
 
-**C. Add Product Library button**
-- Add `libraryType: 'product'` to the Product References section config
-- Import `useUserProducts` hook
-- Add a product picker dialog similar to scene/model pickers
-- When a product is picked, add its `image_url` as a product reference
-
-**D. Visual polish**
-- Add `ShimmerImage` to all picker grids for graceful loading
-- Use `grid-cols-2 sm:grid-cols-3` for better mobile layout in picker dialogs
-- Add `focus-visible:ring-2` to all picker buttons
-
-### Files to change
-
-| File | Change |
-|------|--------|
-| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Merge all model sources, filter broken scene previews, add product picker, add loading states |
-
-No other files need changes — hooks already exist and are reusable.
-
+QA I will run after implementation
+- verify products from `/app/products` appear in short film
+- verify admin-managed models from `/app/admin/models` appear in short film
+- verify scenes open with real thumbnails and no blank/stuck grids
+- test with mobile, tablet, and desktop
+- verify picker open/close/search/load-more behavior stays responsive
+- verify selected references are still added correctly after the picker refactor
