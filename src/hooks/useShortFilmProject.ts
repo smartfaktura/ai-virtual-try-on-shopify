@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
@@ -401,6 +401,7 @@ export function useShortFilmProject() {
     setIsGeneratingAudio(false);
     setAudioPhase('idle');
     setAudioShotStatuses([]);
+    try { sessionStorage.removeItem('sf_active_project'); } catch {}
   }, []);
 
   // ─── Retry single failed shot ──────────────────────────────
@@ -908,6 +909,7 @@ export function useShortFilmProject() {
       }
 
       setProjectId(currentProjectId);
+      try { sessionStorage.setItem('sf_active_project', currentProjectId!); } catch {}
 
       if (references.length > 0) {
         const inputRows = references.map((ref, i) => ({
@@ -1179,6 +1181,38 @@ export function useShortFilmProject() {
       return next.map((s, i) => ({ ...s, shot_index: i + 1 }));
     });
   }, []);
+
+  // ─── Auto-trigger audio after recovery ─────────────────────
+  const autoAudioTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (audioPhase !== 'idle' || !projectId || isGeneratingAudio || isGenerating) return;
+    if (autoAudioTriggeredRef.current) return;
+    const hasCompleteShots = shotStatuses.some(s => s.status === 'complete');
+    const layers = getEffectiveLayers(settings);
+    const anyAudioOn = layers.music || layers.sfx || layers.voiceover;
+    if (hasCompleteShots && anyAudioOn && !audioAssets?.backgroundTrackUrl) {
+      console.log('[ShortFilm] Auto-triggering audio generation for recovered project:', projectId);
+      autoAudioTriggeredRef.current = true;
+      generateAudio(projectId, shots);
+    }
+  }, [audioPhase, projectId, isGeneratingAudio, isGenerating, shotStatuses, settings, audioAssets, shots, generateAudio]);
+
+  // Reset auto-audio flag when project changes
+  useEffect(() => {
+    autoAudioTriggeredRef.current = false;
+  }, [projectId]);
+
+  // ─── Auto-resume from sessionStorage ───────────────────────
+  useEffect(() => {
+    if (projectId || draftProjectId) return; // already loaded
+    try {
+      const savedId = sessionStorage.getItem('sf_active_project');
+      if (savedId) {
+        console.log('[ShortFilm] Auto-resuming project from sessionStorage:', savedId);
+        loadDraft(savedId);
+      }
+    } catch {}
+  }, []); // only on mount
 
   return {
     step,
