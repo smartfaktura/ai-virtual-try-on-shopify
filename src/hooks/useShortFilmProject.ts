@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS: ShortFilmSettings = {
   audioMode: 'silent',
   preservationLevel: 'medium',
   shotDuration: '5',
+  quality: 'pro',
 };
 
 export function useShortFilmProject() {
@@ -166,7 +167,7 @@ export function useShortFilmProject() {
         setReferences(d.references || []);
         setShots(d.shots || []);
         setSettings(d.settings || DEFAULT_SETTINGS);
-        setPlanMode(d.planMode || 'auto');
+        setPlanMode(d.planMode || 'ai');
         setCustomRoles(d.customRoles || []);
         setDraftProjectId(data.id);
         setProjectId(data.id);
@@ -297,7 +298,7 @@ export function useShortFilmProject() {
     setProjectId(null);
     setDraftProjectId(null);
     setIsGenerating(false);
-    setPlanMode('auto');
+    setPlanMode('ai');
     setCustomRoles([]);
     setSettings(DEFAULT_SETTINGS);
     setAudioAssets({ perShotAudio: [] });
