@@ -1,6 +1,7 @@
 import type { ShortFilmSettings } from '@/types/shortFilm';
 import { cn } from '@/lib/utils';
 import { Monitor, Smartphone, Square, RectangleVertical, Volume2, VolumeX, Mic } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface ShortFilmSettingsPanelProps {
   settings: ShortFilmSettings;
@@ -136,6 +137,20 @@ export function ShortFilmSettingsPanel({ settings, onChange }: ShortFilmSettings
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Tone / Mood */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Tone / Mood Override</p>
+        <p className="text-xs text-muted-foreground">
+          Optional — override the default tone for the chosen film type.
+        </p>
+        <Input
+          value={settings.tone || ''}
+          onChange={(e) => update({ tone: e.target.value })}
+          placeholder="e.g. dark & moody, warm editorial, high-energy..."
+          className="text-sm"
+        />
       </div>
     </div>
   );

@@ -62,6 +62,7 @@ export interface ShortFilmSettings {
   audioMode: 'silent' | 'ambient' | 'voice';
   preservationLevel: 'low' | 'medium' | 'high';
   shotDuration: '5' | '10';
+  tone?: string;
 }
 
 export type ShortFilmStep = 'film_type' | 'references' | 'story' | 'shot_plan' | 'settings' | 'review';

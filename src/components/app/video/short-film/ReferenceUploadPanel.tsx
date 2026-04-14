@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCustomModels } from '@/hooks/useCustomModels';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export interface ReferenceAsset {
@@ -19,19 +20,21 @@ interface ReferenceUploadPanelProps {
 }
 
 const SECTIONS = [
-  { role: 'product' as const, label: 'Product References', icon: ImageIcon, description: 'Upload hero product images for consistent appearance.', showLibrary: false },
-  { role: 'scene' as const, label: 'Scene References', icon: MapPin, description: 'Add environment or location references.', showLibrary: false },
-  { role: 'model' as const, label: 'Model / Character', icon: Users, description: 'Optional — add character reference images.', showLibrary: true },
-  { role: 'style' as const, label: 'Style / Mood', icon: Palette, description: 'Upload visual tone or mood references.', showLibrary: false },
-  { role: 'logo' as const, label: 'Logo / End Frame', icon: ImageIcon, description: 'Optional — logo for the closing shot.', showLibrary: false },
+  { role: 'product' as const, label: 'Product References', icon: ImageIcon, description: 'Upload hero product images for consistent appearance.', libraryType: null },
+  { role: 'scene' as const, label: 'Scene References', icon: MapPin, description: 'Add environment or location references.', libraryType: 'scene' as const },
+  { role: 'model' as const, label: 'Model / Character', icon: Users, description: 'Optional — add character reference images.', libraryType: 'model' as const },
+  { role: 'style' as const, label: 'Style / Mood', icon: Palette, description: 'Upload visual tone or mood references.', libraryType: null },
+  { role: 'logo' as const, label: 'Logo / End Frame', icon: ImageIcon, description: 'Optional — logo for the closing shot.', libraryType: null },
 ];
 
 export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPanelProps) {
   const [dragRole, setDragRole] = useState<string | null>(null);
   const [uploadingRole, setUploadingRole] = useState<string | null>(null);
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
+  const [scenePickerOpen, setScenePickerOpen] = useState(false);
   const { upload, isUploading } = useFileUpload();
   const { models } = useCustomModels();
+  const { allScenes } = useProductImageScenes();
 
   const handleFileUpload = useCallback(
     async (role: ReferenceAsset['role'], files: FileList | null) => {
@@ -73,12 +76,32 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     [references, onChange]
   );
 
+  const pickScene = useCallback(
+    (scene: { id: string; title: string; previewUrl?: string }) => {
+      if (!scene.previewUrl) return;
+      const ref: ReferenceAsset = {
+        id: crypto.randomUUID(),
+        url: scene.previewUrl,
+        role: 'scene',
+        name: scene.title,
+      };
+      onChange([...references, ref]);
+      setScenePickerOpen(false);
+    },
+    [references, onChange]
+  );
+
   const removeRef = useCallback(
     (id: string) => {
       onChange(references.filter((r) => r.id !== id));
     },
     [references, onChange]
   );
+
+  const openLibrary = (type: 'model' | 'scene') => {
+    if (type === 'model') setModelPickerOpen(true);
+    else setScenePickerOpen(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -103,12 +126,12 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                   <p className="text-sm font-medium text-foreground">{section.label}</p>
                   <p className="text-xs text-muted-foreground">{section.description}</p>
                 </div>
-                {section.showLibrary && (
+                {section.libraryType && (
                   <Button
                     variant="outline"
                     size="sm"
                     className="gap-1.5 text-xs"
-                    onClick={() => setModelPickerOpen(true)}
+                    onClick={() => openLibrary(section.libraryType!)}
                   >
                     <Library className="h-3.5 w-3.5" />
                     Library
@@ -203,6 +226,39 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             {models.length === 0 && (
               <p className="col-span-3 text-sm text-muted-foreground text-center py-8">
                 No models available yet.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Scene Library Picker Dialog */}
+      <Dialog open={scenePickerOpen} onOpenChange={setScenePickerOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Pick from Scene Library</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto py-2">
+            {allScenes.filter(s => s.previewUrl).map((s) => (
+              <button
+                key={s.id}
+                onClick={() => pickScene(s)}
+                className="group rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left"
+              >
+                <img
+                  src={s.previewUrl}
+                  alt={s.title}
+                  className="w-full aspect-square object-cover"
+                />
+                <div className="p-1.5">
+                  <p className="text-[10px] font-medium text-foreground truncate">{s.title}</p>
+                  <p className="text-[9px] text-muted-foreground truncate">{s.description}</p>
+                </div>
+              </button>
+            ))}
+            {allScenes.filter(s => s.previewUrl).length === 0 && (
+              <p className="col-span-3 text-sm text-muted-foreground text-center py-8">
+                No scenes with preview images available.
               </p>
             )}
           </div>
