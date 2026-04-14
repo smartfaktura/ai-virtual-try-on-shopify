@@ -1,76 +1,79 @@
 
 
-# Short Film Audio Integration — Current State & What's Next
+# Short Film Audio Integration — Current Audit & Next Steps
 
-## Current State (Complete)
+## Current State: What's Built
 
-The audio layer is fully wired end-to-end:
+**Backend — 3 Edge Functions (deployed):**
+- `elevenlabs-music` — generates background tracks (up to 120s) from text prompts
+- `elevenlabs-sfx` — generates per-shot sound effects (up to 22s) from descriptions
+- `elevenlabs-tts` — generates voiceover from script lines with selectable voices
 
-**Backend (3 Edge Functions):**
-- `elevenlabs-music` — generates background tracks from text prompts (up to 120s)
-- `elevenlabs-sfx` — generates per-shot sound effects (up to 22s)
-- `elevenlabs-tts` — generates voiceover from script lines using selectable voices
+**Frontend — Fully wired:**
+- Settings panel: 5 audio modes (Silent, Ambient, Music, Voiceover, Full Mix), music prompt input, voice picker (10 voices), preview audio button
+- `generateAudio()` fires after video generation; uploads blobs to `generated-audio` storage bucket and persists URLs to DB
+- Per-shot audio progress with status chips (generating/done/failed)
+- Individual retry buttons for failed SFX/voiceover per shot
+- Regenerate Audio button on completed projects
+- `ShortFilmVideoPlayer` syncs background track + per-shot audio with volume mixer (Music/SFX/Voice sliders)
 
-**Frontend:**
-- Settings panel has 5 audio modes: Silent, Ambient, Music, Voiceover, Full Mix
-- Music style prompt input and voice picker (10 ElevenLabs voices) appear contextually
-- `generateAudio()` in the hook fires after video generation completes
-- `ShortFilmVideoPlayer` syncs background track + per-shot audio with a volume mixer (Music / SFX / Voice sliders)
+**Database & Storage:**
+- `video_projects.music_track_url` column exists
+- `video_shots.audio_url` and `video_shots.sfx_url` columns exist
+- `generated-audio` private bucket with owner-based RLS policies
 
-**What works today:**
-- Audio generation triggers automatically after all video shots complete
-- Blob URLs are created client-side for playback
-- Player handles play/pause/skip sync across all audio layers
+**Auth:** All three edge functions use `getUser()` (fixed from `getClaims`)
 
-## Gaps & Issues to Address
+## Issues Found
 
-### 1. Audio is Lost on Page Refresh
-Audio blob URLs only exist in memory. If the user refreshes or returns later, all generated audio is gone. Need to persist audio files to storage and save URLs in the database.
+### 1. Broken CORS Import (Critical)
+All three edge functions import CORS headers from a non-existent path:
+```
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+```
+This module does not exist in the Supabase JS SDK. Other edge functions in this project (e.g. `generate-video`) define `corsHeaders` inline as a constant. This will cause a runtime import error and **break all three audio edge functions**.
 
-### 2. No Audio Preview Before Full Generation
-Users can't hear what their music/voice will sound like until after the entire film generates. Add a "Preview Audio" button in the Settings step to generate a short sample.
+### 2. Signed URLs Expire After 1 Hour
+Audio URLs persisted to DB use `createSignedUrl(path, 3600)` — a 1-hour expiry. If the user returns to a project after an hour, all audio links are dead. Should either use longer-lived signed URLs or generate fresh signed URLs on load.
 
-### 3. No Per-Shot Audio Progress
-During audio generation, only a generic "Generating audio layer..." message shows. No indication of which shot's SFX/voiceover is being generated or individual failures.
+### 3. No Audio Reload from DB
+When a user returns to a completed project (via `loadDraft`), persisted audio URLs are not loaded back into `audioAssets` state. The player will show no audio even though URLs exist in the database.
 
-### 4. Missing Audio Retry
-If a single SFX or voiceover call fails, there's no way to retry just that one — the user would need to regenerate all audio.
+### 4. SFX Only Generates in `full_mix` Mode
+The `generateAudio` function only generates SFX when `mode === 'full_mix'`. There is no standalone "SFX only" audio mode — users who want ambient SFX without music/voiceover have no option.
 
-### 5. Edge Function Auth Uses getClaims (may not exist)
-All three functions use `supabase.auth.getClaims()` which may not be available in all Supabase JS versions. Should use `supabase.auth.getUser()` instead for reliable JWT validation.
+### 5. Preview Button State Bug
+The preview button uses `isPreviewing` for both the loading state and the stop action, but never properly toggles to a "stop" state — once audio starts playing, clicking again tries to pause `previewAudioRef.current`, but `isPreviewing` is still true so the button shows "Generating preview..." and is disabled.
 
 ## Recommended Next Steps
 
-### Phase A: Persistence & Reliability (high priority)
-1. **Persist audio to storage** — upload generated audio blobs to a `generated-audio` storage bucket, save URLs in `video_shots` (new `audio_url` and `sfx_url` columns) and `video_projects` (new `music_track_url` column)
-2. **Fix auth in edge functions** — replace `getClaims` with `getUser` for reliable JWT validation
-3. **Per-shot audio progress** — show which shot is generating SFX/voiceover with status indicators
-4. **Individual audio retry** — retry failed SFX/voiceover per shot
+### Phase 1: Fix Critical Bugs (must-do)
 
-### Phase B: UX Polish (medium priority)
-5. **Audio preview in Settings** — "Preview" button generates a 10s music sample and reads one script line so users can tune settings before committing
-6. **Audio regeneration** — "Regenerate Audio" button on completed projects to re-run audio with different settings without re-generating video
-7. **Waveform visualization** — replace plain sliders with mini waveform bars in the mixer
+| # | Task | Files |
+|---|------|-------|
+| 1 | **Fix CORS import** — replace the broken import with an inline `corsHeaders` constant in all 3 edge functions | `supabase/functions/elevenlabs-{music,sfx,tts}/index.ts` |
+| 2 | **Fix signed URL expiry** — use 7-day signed URLs (604800s) or regenerate on load | `src/hooks/useShortFilmProject.ts` |
+| 3 | **Load persisted audio on draft resume** — when `loadDraft` restores a completed project, query `video_projects.music_track_url` and `video_shots.audio_url`/`sfx_url`, regenerate signed URLs, and populate `audioAssets` state | `src/hooks/useShortFilmProject.ts` |
 
-## Files to create/change
+### Phase 2: UX Polish (should-do)
 
-| File | Change |
-|------|--------|
-| DB migration | Add `music_track_url` to `video_projects`, add `audio_url`/`sfx_url` to `video_shots` |
-| Migration | Create `generated-audio` storage bucket (private) |
-| `supabase/functions/elevenlabs-music/index.ts` | Replace `getClaims` with `getUser` |
-| `supabase/functions/elevenlabs-sfx/index.ts` | Replace `getClaims` with `getUser` |
-| `supabase/functions/elevenlabs-tts/index.ts` | Replace `getClaims` with `getUser` |
-| `src/hooks/useShortFilmProject.ts` | Upload audio to storage, save URLs to DB, per-shot progress, retry logic |
-| `src/pages/video/ShortFilm.tsx` | Per-shot audio progress UI, regenerate audio button |
-| `src/components/app/video/short-film/ShortFilmSettingsPanel.tsx` | Audio preview button |
-| `src/components/app/video/short-film/ShortFilmProgressPanel.tsx` | Audio generation status per shot |
+| # | Task | Files |
+|---|------|-------|
+| 4 | **Fix preview button state** — separate `isLoadingPreview` from `isPlayingPreview` so the button correctly shows "Stop" while audio plays and "Preview" when idle | `ShortFilmSettingsPanel.tsx` |
+| 5 | **Add "SFX only" audio mode** or generate SFX in `music` mode too, so users can get ambient sounds without needing full_mix | `useShortFilmProject.ts`, `ShortFilmSettingsPanel.tsx` |
 
-## Implementation order
-1. Fix edge function auth (quick win, prevents runtime errors)
-2. DB migration + storage bucket for audio persistence
-3. Upload & persist audio in hook
-4. Per-shot audio progress + retry UI
-5. Audio preview in settings
-6. Regenerate audio button
+### Phase 3: Future Enhancements (nice-to-have)
+
+| # | Task |
+|---|------|
+| 6 | Waveform visualization in the volume mixer |
+| 7 | Audio download/export (zip all tracks) |
+| 8 | Per-shot audio preview in the shot editor |
+
+## Implementation Order
+1. Fix CORS import in all 3 edge functions (critical — nothing works without this)
+2. Fix signed URL expiry
+3. Load persisted audio on draft resume
+4. Fix preview button state
+5. Add SFX-only mode option
 
