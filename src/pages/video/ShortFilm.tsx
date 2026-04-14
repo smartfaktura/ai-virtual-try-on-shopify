@@ -215,6 +215,8 @@ export default function ShortFilm() {
             onPlanModeChange={setPlanMode}
             isAiPlanning={isAiPlanning}
             availableReferences={availableReferences}
+            audioLayers={settings.audioLayers || { music: true, sfx: true, voiceover: true }}
+            onAudioLayersChange={(layers) => setSettings(prev => ({ ...prev, audioLayers: layers }))}
           />
         )}
 

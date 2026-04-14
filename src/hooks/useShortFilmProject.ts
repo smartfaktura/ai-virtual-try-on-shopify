@@ -14,6 +14,7 @@ import type {
   ShotPlanItem,
   AudioAssets,
   AudioPhase,
+  AudioLayers,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { toSignedUrl } from '@/lib/signedUrl';
@@ -46,10 +47,29 @@ interface DraftState {
 const DEFAULT_SETTINGS: ShortFilmSettings = {
   aspectRatio: '16:9',
   audioMode: 'full_mix',
+  audioLayers: { music: true, sfx: true, voiceover: true },
   preservationLevel: 'medium',
   shotDuration: '5',
   quality: 'pro',
 };
+
+/** Map legacy audioMode to audioLayers for backward compatibility */
+function audioModeToLayers(mode: string): AudioLayers {
+  switch (mode) {
+    case 'silent': return { music: false, sfx: false, voiceover: false };
+    case 'ambient': return { music: false, sfx: false, voiceover: false };
+    case 'music': return { music: true, sfx: true, voiceover: false };
+    case 'voiceover': return { music: false, sfx: false, voiceover: true };
+    case 'full_mix': return { music: true, sfx: true, voiceover: true };
+    default: return { music: true, sfx: true, voiceover: true };
+  }
+}
+
+/** Resolve effective audio layers from settings (with backward compat) */
+function getEffectiveLayers(settings: ShortFilmSettings): AudioLayers {
+  if (settings.audioLayers) return settings.audioLayers;
+  return audioModeToLayers(settings.audioMode);
+}
 
 export function useShortFilmProject() {
   const { user } = useAuth();
