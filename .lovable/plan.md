@@ -1,50 +1,47 @@
 
 
-# Import 24 Activewear Scenes from RTF
+# Import 24 Apparel Scenes into product_image_scenes
 
 ## What This Does
-Insert 24 new activewear scenes into the `product_image_scenes` table via the database insert tool. All scenes are mapped to `category_collection = 'activewear'` with `category_sort_order = 25`. The existing 21 activewear scenes remain untouched since the new scene IDs don't conflict.
+Insert 24 new apparel/clothing scenes from the RTF into the `product_image_scenes` table, mapped to `category_collection = 'garments'` (which already exists as "Clothing & Apparel" with 18 scenes). The new `apparel-*` scene IDs don't conflict with existing `*-garments` IDs.
 
-## Data Summary
+## Scene Summary (24 scenes)
 
 | # | scene_id | Sub-Category | Type | Sort |
 |---|----------|-------------|------|------|
-| 1 | activewear-editorial-floor-pose | Editorial Sport Poses | editorial | 2501 |
-| 2 | activewear-editorial-standing-elongation | Editorial Sport Poses | editorial | 2502 |
-| 3 | activewear-editorial-chair-core-pose | Editorial Sport Poses | editorial | 2503 |
-| 4 | activewear-editorial-windowlight-pilates | Editorial Sport Poses | editorial | 2504 |
-| 5 | activewear-editorial-body-detail-crop | Editorial Sport Poses | editorial | 2505 |
-| 6 | activewear-editorial-balance-pose | Editorial Sport Poses | editorial | 2506 |
-| 7 | activewear-gym-mirror-ugc | Gym / Court / Outdoor UGC | lifestyle | 2507 |
-| 8 | activewear-court-sports-ugc | Gym / Court / Outdoor UGC | lifestyle | 2508 |
-| 9 | activewear-outdoor-wellness-ugc | Gym / Court / Outdoor UGC | lifestyle | 2509 |
-| 10 | activewear-cafe-errand-sport | Gym / Court / Outdoor UGC | lifestyle | 2510 |
-| 11 | activewear-travel-sport-ugc | Gym / Court / Outdoor UGC | lifestyle | 2511 |
-| 12 | activewear-studio-corner-ugc | Gym / Court / Outdoor UGC | lifestyle | 2512 |
-| 13 | activewear-flatlay-set-neat | Product Flat Lay / Gear Still | stilllife | 2513 |
-| 14 | activewear-gear-tray-still | Product Flat Lay / Gear Still | stilllife | 2514 |
-| 15 | activewear-bedside-soft-still | Product Flat Lay / Gear Still | stilllife | 2515 |
-| 16 | activewear-product-hanger-still | Product Flat Lay / Gear Still | stilllife | 2516 |
-| 17 | activewear-shoes-mat-still | Product Flat Lay / Gear Still | stilllife | 2517 |
-| 18 | activewear-wellness-objects-still | Product Flat Lay / Gear Still | stilllife | 2518 |
-| 19 | activewear-powderblue-portrait | Aesthetic Color Sport Sets | editorial | 2519 |
-| 20 | activewear-powderblue-court-story | Aesthetic Color Sport Sets | editorial | 2520 |
-| 21 | activewear-powderblue-soft-gym | Aesthetic Color Sport Sets | editorial | 2521 |
-| 22 | activewear-powderblue-flatlay-story | Aesthetic Color Sport Sets | stilllife | 2522 |
-| 23 | activewear-powderblue-ugc-mirror | Aesthetic Color Sport Sets | lifestyle | 2523 |
-| 24 | activewear-powderblue-hero-finisher | Aesthetic Color Sport Sets | campaign | 2524 |
+| 1 | apparel-sunlit-studio-tailoring | Editorial Studio Looks | editorial | 2201 |
+| 2 | apparel-clean-studio-fullbody | Editorial Studio Looks | editorial | 2202 |
+| 3 | apparel-chair-studio-pose | Editorial Studio Looks | editorial | 2203 |
+| 4 | apparel-graphic-sweatshirt-studio | Editorial Studio Looks | editorial | 2204 |
+| 5 | apparel-garment-object-studio | Editorial Studio Looks | editorial | 2205 |
+| 6 | apparel-studio-fisheye-streetwear | Editorial Studio Looks | editorial | 2206 |
+| 7 | apparel-architectural-exterior-editorial | Elevated Location Editorial | editorial | 2207 |
+| 8 | apparel-interior-windowlight-editorial | Elevated Location Editorial | editorial | 2208 |
+| 9 | apparel-street-style-luxury-walk | Elevated Location Editorial | editorial | 2209 |
+| 10 | apparel-resort-seaside-editorial | Elevated Location Editorial | editorial | 2210 |
+| 11 | apparel-industrial-motion-editorial | Elevated Location Editorial | editorial | 2211 |
+| 12 | apparel-oldmoney-outdoor-portrait | Elevated Location Editorial | editorial | 2212 |
+| 13 | apparel-outfit-mirror-selfie | Everyday UGC Looks | lifestyle | 2213 |
+| 14 | apparel-cafe-errand-ugc | Everyday UGC Looks | lifestyle | 2214 |
+| 15 | apparel-stadium-ugc-look | Everyday UGC Looks | lifestyle | 2215 |
+| 16 | apparel-street-steps-casual | Everyday UGC Looks | lifestyle | 2216 |
+| 17 | apparel-home-lounge-ugc | Everyday UGC Looks | lifestyle | 2217 |
+| 18 | apparel-car-sporty-ugc | Everyday UGC Looks | lifestyle | 2218 |
+| 19 | apparel-super-editorial-campaign | Campaign Statement Images | campaign | 2219 |
+| 20 | apparel-vintage-cinematic-campaign | Campaign Statement Images | campaign | 2220 |
+| 21 | apparel-night-flash-campaign | Campaign Statement Images | campaign | 2221 |
+| 22 | apparel-architectural-grand-campaign | Campaign Statement Images | campaign | 2222 |
+| 23 | apparel-resort-glam-campaign | Campaign Statement Images | campaign | 2223 |
+| 24 | apparel-wildcard-concept-campaign | Campaign Statement Images | campaign | 2224 |
+
+## Mapping
+
+- `category_collection = 'garments'` (joins existing 18 scenes)
+- `category_sort_order = 22` (from the RTF)
+- Sub-category sort orders: Editorial Studio Looks = 0, Elevated Location Editorial = 1, Everyday UGC Looks = 2, Campaign Statement Images = 3
+- Full `prompt_template`, `trigger_blocks` array, and `outfit_hint` (none specified in this RTF, so NULL)
+- All `is_active = true`
 
 ## Implementation
-
-1. **Use the database insert tool** to run a single `INSERT INTO product_image_scenes` statement with all 24 rows, including full `prompt_template`, `trigger_blocks` array, `outfit_hint`, `sub_category`, `sub_category_sort_order` (0-3 for the 4 groups), and `is_active = true`.
-
-2. **No code changes needed** — the existing `useProductImageScenes` hook and `buildCollections()` function already handle dynamic categories from the database. The TITLE_MAP in the hook already has an `activewear` entry mapped to "Activewear & Sportswear".
-
-3. **No migration needed** — this is a data insert, not a schema change.
-
-## Sub-Category Sort Orders
-- Editorial Sport Poses → `sub_category_sort_order = 0`
-- Gym / Court / Outdoor UGC → `sub_category_sort_order = 1`
-- Product Flat Lay / Gear Still → `sub_category_sort_order = 2`
-- Aesthetic Color Sport Sets → `sub_category_sort_order = 3`
+Use the database insert tool to run a single `INSERT INTO product_image_scenes` with all 24 rows. No code changes needed — the existing hook handles everything dynamically.
 
