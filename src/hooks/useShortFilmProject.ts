@@ -817,7 +817,7 @@ export function useShortFilmProject() {
         sendWake(token);
 
         // Poll single job
-        const resultUrl = await pollMultishotCompletion(result.jobId, 90);
+        const resultUrl = await pollQueueJobCompletion(result.jobId, 90);
 
         if (resultUrl) {
           // All shots succeeded — mark all complete with the single video URL
