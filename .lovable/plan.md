@@ -1,75 +1,103 @@
 
 
-# Improve Product References in Short Film — Multi-Angle & Multi-Product
+# Improve Style/Mood & Scene References — Kling-Optimized Presets with Inline Selection
 
-## Current State
-- Product picker fetches only `id, title, image_url` — ignores `back_image_url`, `side_image_url`, `packaging_image_url`, `inside_image_url`, `texture_image_url`, `extra_image_urls`
-- Picking a product adds a single `ReferenceAsset` with the main image only
-- No concept of "Product 1", "Product 2" grouping — all product refs are flat
-- The `ReferenceAsset` type has no `subRole` or `productId` field to distinguish angles
+## What Changes
 
-## Plan
+### 1. Replace Style/Mood presets with Kling 3.0 cinematography-optimized styles
 
-### 1. Extend ReferenceAsset type
-**File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`**
+Current presets are generic mood descriptions. Replace with Kling-specific directives that leverage the model's strengths: camera physics, texture descriptors, lighting direction, and temporal motion cues.
 
-Add optional fields to `ReferenceAsset`:
-- `subRole?: 'main' | 'back' | 'side' | 'packaging' | 'inside' | 'texture' | 'extra'` — which angle this image represents
-- `productId?: string` — links reference back to its source user_product
+**New Style/Mood presets (16 total, grouped by category):**
 
-### 2. Fetch full product data in picker
-**File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`**
+**Cinematic Film Looks:**
+- Cinematic Noir — Deep blacks, chiaroscuro single key light, hard shadows on wet surfaces, film grain, desaturated palette
+- Golden Hour Epic — Warm amber backlight, long soft shadows, golden rim highlights, anamorphic lens flare, shallow DOF
+- Vintage Film Stock — Warm muted tones, analog 35mm grain, faded highlights, 70s Kodachrome color shift
+- Monochrome Fine Art — Black and white, Rembrandt lighting, rich tonal range, skin pores visible, fine art feel
 
-Update the product query to also select `back_image_url, side_image_url, packaging_image_url, inside_image_url, texture_image_url, extra_image_urls`.
+**Commercial / Product:**
+- Clean Luxury — Pristine whites, soft even lighting, premium minimalist feel, subtle caustic reflections, macro detail
+- Bold Editorial Pop — Vivid punchy saturated colors, strong contrast, hard flash, dynamic energy, fashion editorial
+- Soft Diffusion Glow — Pastel tones, soft diffusion filter, dreamy bokeh, luminous highlights, gentle haze
 
-### 3. Redesign `pickProduct` to add all available angles
-When a user picks a product from the library, auto-create one `ReferenceAsset` per available angle:
-- Main image → `subRole: 'main'`
-- Back → `subRole: 'back'` (if exists)
-- Side → `subRole: 'side'` (if exists)
-- etc.
+**Atmospheric / Mood:**
+- Neon Cyberpunk — Vibrant neon blues and magentas, wet reflective surfaces, dark environment, volumetric haze
+- Dramatic Chiaroscuro — Single directional key light, deep rich shadows, painterly contrast, condensation on surfaces
+- Ethereal Morning Mist — Cool diffused light, visible breath in cold air, soft fog, desaturated greens
+- Natural Documentary — Available handheld light, authentic grain, realistic color, raw unpolished, skin texture visible
 
-All share the same `productId` for grouping.
+**Motion-Specific (Kling strengths):**
+- Slow Motion Reveal — Time-stretched movement, fabric ripples, hair flowing, particles suspended, ultra-smooth 30fps
+- Dynamic FPV Energy — Fast-paced drone perspective, motion blur on background, subject in sharp focus, high contrast
+- Macro Texture Study — Extreme close-up, visible material fibers and pores, shallow DOF, studio ring light
+- Liquid & Reflections — Refractive caustics, water droplets, chrome reflections, glass surfaces, wet textures
+- Smoke & Atmosphere — Volumetric light rays through haze, floating particles, dramatic backlight, moody atmosphere
 
-### 4. Redesign the Product References section UI
-Replace the flat thumbnail list with a **per-product card** layout:
+### 2. Replace Scene presets with Kling-optimized environment directives
 
+Current scenes are static descriptions. New ones include temporal markers, texture details, and physics cues that Kling 3.0 responds well to.
+
+**New Scene presets (16 total, grouped):**
+
+**Studio:**
+- White Infinity Cove — Seamless white cyclorama, soft directional shadows, subtle gradient, clean product isolation
+- Dark Editorial Studio — Deep matte black, dramatic single side light, soft reflections on floor, negative space
+- Marble & Gold Surface — White marble with gold veining, soft overhead studio light, refractive caustics on surface
+- Colored Gel Studio — Smooth color gradient backdrop, dual-color gel lighting (specify colors), controlled shadows
+
+**Natural / Outdoor:**
+- Golden Hour Terrace — Warm sunset light on stone terrace, blurred cityscape beyond, long shadows, warm atmospheric haze
+- Coastal Morning — Sandy beach tones, soft pre-dawn blue light, gentle ocean movement, sea mist, driftwood textures
+- Misty Forest Floor — Morning mist between moss-covered trees, dappled cool light filtering through canopy, organic debris
+- Rooftop at Dusk — Urban skyline, last light fading, warm string lights, concrete and metal textures, city glow
+
+**Interior:**
+- Modern Loft — Raw exposed brick, large industrial windows, natural side light, hardwood floors, warm ambient
+- Luxury Bathroom — Marble surfaces, soft warm vanity light, steam rising, chrome fixtures, water droplets
+- Cozy Warm Interior — Soft lamp light, wood textures, linen and wool fabrics, warm color temperature, intimate space
+- Minimalist Concrete — Raw concrete walls and floor, cool diffused light, industrial textures, brutalist geometry
+
+**Concept / Creative:**
+- Botanical Greenhouse — Lush tropical greenery, dappled sunlight through glass ceiling, humidity visible, organic textures
+- Neon Rain Street — Wet asphalt reflecting neon signage, magenta and cyan light pools, urban night, visible raindrops
+- Surreal Gradient Void — Smooth infinite color gradient, no visible ground plane, floating subject, dreamy atmosphere
+- Desert Golden Sands — Warm orange dunes, harsh directional sunlight, heat haze, textured sand ripples, vast scale
+
+### 3. Add inline quick-select chips (instant selection without Library dialog)
+
+For both Scene References and Style/Mood sections, add a scrollable row of chips directly in the card — users can tap to instantly add a preset without opening the Library dialog. The Library button remains for the full grid view.
+
+**UI structure per section:**
 ```text
-┌─────────────────────────────────────┐
-│ Product 1: Beige Full-Zip Hoodie    │
-│ ┌──────┐ ┌──────┐ ┌──────┐         │
-│ │ Main │ │ Back │ │ Side │  + more  │
-│ │  ✓   │ │  ✓   │ │  —   │         │
-│ └──────┘ └──────┘ └──────┘         │
-│ [Upload missing angles]             │
-└─────────────────────────────────────┘
-┌─────────────────────────────────────┐
-│ Product 2: Black Leather Bag        │
-│ ...                                 │
-└─────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ 🎨 Style / Mood                    [Library] │
+│ Upload visual tone or mood references.       │
+│                                              │
+│ Quick pick:                                  │
+│ [Cinematic Noir] [Golden Hour] [Clean Luxury]│
+│ [Neon Cyberpunk] [Macro Texture] [→ more]    │
+│                                              │
+│ [Selected: Cinematic Noir ✕]                 │
+│                                              │
+│ ┌─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐ │
+│ │    Drop images or browse                 │ │
+│ └─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘ │
+└──────────────────────────────────────────────┘
 ```
 
-- Each product card shows its name and a row of angle slots (main, back, side, packaging, inside, texture)
-- Filled slots show the image with a green check; empty slots show a dashed upload target
-- Users can upload directly to a specific angle slot
-- A remove button removes the entire product group
+- Show first 6 presets as horizontally scrollable chips
+- Clicking a chip instantly adds it as a reference (same as picking from Library)
+- Already-selected presets show as active/highlighted chips
+- Keep the Library button for the full searchable grid dialog
 
-For non-product-library uploads (drag & drop), keep the current flat behavior but label them as "Custom Upload".
+### 4. Improve Library dialog layout
 
-### 5. Update the generation hook to use multi-angle refs
-**File: `src/hooks/useShortFilmProject.ts`**
+Group presets by category with small section headers in the dialog grid for easier browsing.
 
-In `getSourceImageForShot`, when matching a product reference, prefer the most relevant angle based on shot role:
-- `detail_closeup` / `product_focus` → prefer `texture` or `side`
-- `product_reveal` → prefer `main`
-- `hook` / `highlight` → prefer `main` or `back`
-
-This gives Kling better source material per shot.
-
-### Files to Change
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Extend `ReferenceAsset`, fetch full product data, redesign product section UI with per-product cards and angle slots, update `pickProduct` to add all angles |
-| `src/hooks/useShortFilmProject.ts` | Update `getSourceImageForShot` to prefer angle-specific images based on shot role |
+| `src/components/app/video/short-film/ReferenceUploadPanel.tsx` | Replace `STYLE_MOOD_PRESETS` and `VIDEO_SCENE_PRESETS` arrays with Kling-optimized versions; add inline quick-pick chip row for scene and style sections; group presets by category in Library dialogs |
 
