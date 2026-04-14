@@ -41,17 +41,33 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Download both files
-    const [videoResp, audioResp] = await Promise.all([
-      fetch(video_url),
-      fetch(audio_url),
-    ])
+    console.log('[mux] Fetching video:', video_url.substring(0, 120))
+    console.log('[mux] Fetching audio:', audio_url.substring(0, 120))
+
+    // Download both files — handle fetch errors gracefully
+    let videoResp, audioResp
+    try {
+      ;[videoResp, audioResp] = await Promise.all([
+        fetch(video_url),
+        fetch(audio_url),
+      ])
+    } catch (fetchErr) {
+      console.error('[mux] Fetch failed:', fetchErr.message)
+      return new Response(
+        JSON.stringify({ error: 'FETCH_FAILED', message: fetchErr.message, fallback: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
 
     if (!videoResp.ok || !audioResp.ok) {
-      return new Response(JSON.stringify({ error: 'Failed to fetch source files' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      console.error('[mux] Non-OK response — video:', videoResp.status, 'audio:', audioResp.status)
+      // Consume bodies to prevent leak
+      await videoResp.text().catch(() => {})
+      await audioResp.text().catch(() => {})
+      return new Response(
+        JSON.stringify({ error: 'SOURCE_FETCH_FAILED', fallback: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     const videoBytes = new Uint8Array(await videoResp.arrayBuffer())
@@ -87,10 +103,11 @@ Deno.serve(async (req) => {
     if (code !== 0) {
       const errMsg = new TextDecoder().decode(stderr)
       console.error('ffmpeg error:', errMsg)
-      return new Response(JSON.stringify({ error: 'Muxing failed', details: errMsg.slice(-500) }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      try { await Deno.remove(tmpDir, { recursive: true }) } catch { /* ignore */ }
+      return new Response(
+        JSON.stringify({ error: 'MUXING_FAILED', fallback: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     // Upload to storage
@@ -108,10 +125,10 @@ Deno.serve(async (req) => {
     try { await Deno.remove(tmpDir, { recursive: true }) } catch { /* ignore */ }
 
     if (uploadError) {
-      return new Response(JSON.stringify({ error: 'Upload failed', details: uploadError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'UPLOAD_FAILED', fallback: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     // Create signed URL
@@ -125,9 +142,9 @@ Deno.serve(async (req) => {
     })
   } catch (err) {
     console.error('mux-video-audio error:', err)
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ error: 'SERVICE_FAILED', fallback: true }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
   }
 })
