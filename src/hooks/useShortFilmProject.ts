@@ -972,21 +972,38 @@ function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): S
   }));
 }
 
-/** Poll generated_videos for a specific video to complete */
-async function pollShotCompletion(videoId: string, maxPolls: number): Promise<string | null> {
+/** Poll generation_queue for a job, then find the video URL from generated_videos */
+async function pollQueueJobCompletion(jobId: string, maxPolls: number): Promise<string | null> {
   for (let i = 0; i < maxPolls; i++) {
     await new Promise(r => setTimeout(r, 10_000));
 
     const { data } = await supabase
-      .from('generated_videos')
-      .select('status, video_url')
-      .eq('id', videoId)
+      .from('generation_queue')
+      .select('status, result, error_message')
+      .eq('id', jobId)
       .single();
 
-    if (data?.status === 'completed' && data.video_url) {
-      return data.video_url;
+    if (!data) continue;
+
+    if (data.status === 'completed') {
+      // The worker stores kling_task_id in result; find the generated_videos row
+      const result = data.result as Record<string, unknown> | null;
+      if (result?.video_url) return result.video_url as string;
+
+      // Fallback: look up by kling_task_id
+      const klingTaskId = result?.kling_task_id as string | undefined;
+      if (klingTaskId) {
+        const { data: videoRow } = await supabase
+          .from('generated_videos')
+          .select('video_url, status')
+          .eq('kling_task_id', klingTaskId)
+          .single();
+        if (videoRow?.video_url) return videoRow.video_url;
+      }
+      return null;
     }
-    if (data?.status === 'failed') {
+
+    if (data.status === 'failed' || data.status === 'cancelled') {
       return null;
     }
   }
