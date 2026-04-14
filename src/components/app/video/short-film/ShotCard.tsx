@@ -98,6 +98,30 @@ export function ShotCard({
               />
             </div>
           </div>
+          {availableReferences.length > 0 && (
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Source Image</label>
+              <Select
+                value={draft.scene_reference_id || '__auto__'}
+                onValueChange={v => setDraft(d => ({ ...d, scene_reference_id: v === '__auto__' ? undefined : v }))}
+              >
+                <SelectTrigger className="text-xs h-8">
+                  <SelectValue placeholder="Auto (default)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__auto__">Auto (default)</SelectItem>
+                  {availableReferences.map(ref => (
+                    <SelectItem key={ref.id} value={ref.id}>
+                      <span className="flex items-center gap-1.5">
+                        <img src={ref.url} className="h-4 w-4 rounded object-cover" alt="" />
+                        {ref.name || ref.role}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <label className="text-[10px] font-medium text-muted-foreground">Script Line (optional)</label>
             <Input
