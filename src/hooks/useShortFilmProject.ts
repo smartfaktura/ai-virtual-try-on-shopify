@@ -1,4 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditContext';
+import { useGenerateVideo } from '@/hooks/useGenerateVideo';
+import { toast } from '@/lib/brandedToast';
+import { generateShotPlan } from '@/lib/shortFilmPlanner';
+import { buildShotPrompt, estimateShortFilmCredits } from '@/lib/shortFilmPromptBuilder';
 import type {
   FilmType,
   StoryStructure,
@@ -7,7 +14,6 @@ import type {
   ShotPlanItem,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
-import { generateShotPlan } from '@/lib/shortFilmPlanner';
 
 interface ShotStatus {
   shot_index: number;
@@ -16,6 +22,9 @@ interface ShotStatus {
 }
 
 export function useShortFilmProject() {
+  const { user } = useAuth();
+  const { balance, refreshBalance } = useCredits();
+
   const [step, setStep] = useState<ShortFilmStep>('film_type');
   const [filmType, setFilmType] = useState<FilmType | null>(null);
   const [storyStructure, setStoryStructure] = useState<StoryStructure | null>(null);
@@ -23,6 +32,7 @@ export function useShortFilmProject() {
   const [shots, setShots] = useState<ShotPlanItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [shotStatuses, setShotStatuses] = useState<ShotStatus[]>([]);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [settings, setSettings] = useState<ShortFilmSettings>({
     aspectRatio: '16:9',
     audioMode: 'silent',
@@ -33,10 +43,15 @@ export function useShortFilmProject() {
   const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
 
+  const totalCredits = useMemo(
+    () => estimateShortFilmCredits(shots.length, settings),
+    [shots.length, settings],
+  );
+
   const canAdvance = useMemo(() => {
     switch (step) {
       case 'film_type': return !!filmType;
-      case 'references': return true; // references are optional
+      case 'references': return true;
       case 'story': return !!storyStructure;
       case 'shot_plan': return shots.length > 0;
       case 'settings': return true;
@@ -49,7 +64,6 @@ export function useShortFilmProject() {
     const idx = steps.indexOf(step);
     if (idx < steps.length - 1) {
       const nextStep = steps[idx + 1];
-      // Auto-generate shot plan when entering that step
       if (nextStep === 'shot_plan' && filmType && storyStructure) {
         setShots(generateShotPlan(filmType, storyStructure, settings.shotDuration));
       }
@@ -68,35 +82,178 @@ export function useShortFilmProject() {
     }
   }, [filmType, storyStructure, settings.shotDuration]);
 
+  // ─── Real generation pipeline ───────────────────────────────
+
   const startGeneration = useCallback(async () => {
-    if (shots.length === 0) return;
+    if (!user || !filmType || !storyStructure || shots.length === 0) return;
+
+    // Credit check
+    if (balance < totalCredits) {
+      toast.error(`Not enough credits. Need ${totalCredits}, have ${balance}.`);
+      return;
+    }
+
     setIsGenerating(true);
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
 
-    // Sequential generation simulation — in production this calls generate-video per shot
-    for (let i = 0; i < shots.length; i++) {
-      setShotStatuses(prev =>
-        prev.map(s =>
-          s.shot_index === shots[i].shot_index
-            ? { ...s, status: 'processing' }
-            : s
-        )
-      );
+    try {
+      // 1. Create video_project
+      const { data: project, error: projectError } = await supabase
+        .from('video_projects')
+        .insert({
+          user_id: user.id,
+          workflow_type: 'short_film',
+          title: `Short Film — ${filmType.replace(/_/g, ' ')}`,
+          settings_json: {
+            filmType,
+            storyStructure,
+            aspectRatio: settings.aspectRatio,
+            audioMode: settings.audioMode,
+            preservationLevel: settings.preservationLevel,
+            shotDuration: settings.shotDuration,
+          },
+          status: 'processing',
+          analysis_status: 'complete',
+          estimated_credits: totalCredits,
+        })
+        .select('id')
+        .single();
 
-      // Simulate generation time — replace with real edge function call
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      if (projectError || !project) throw new Error(projectError?.message || 'Failed to create project');
+      setProjectId(project.id);
 
-      setShotStatuses(prev =>
-        prev.map(s =>
-          s.shot_index === shots[i].shot_index
-            ? { ...s, status: 'complete' }
-            : s
-        )
-      );
+      // 2. Insert reference inputs
+      if (references.length > 0) {
+        const inputRows = references.map((ref, i) => ({
+          project_id: project.id,
+          type: 'image',
+          asset_url: ref.url,
+          input_role: `${ref.role}_ref`,
+          sort_order: i,
+        }));
+        await supabase.from('video_inputs').insert(inputRows);
+      }
+
+      // 3. Insert shot rows
+      const shotRows = shots.map((shot) => {
+        const { prompt, negative_prompt } = buildShotPrompt(shot, {
+          filmType,
+          tone: '',
+          settings,
+          references,
+        });
+        return {
+          project_id: project.id,
+          shot_index: shot.shot_index,
+          prompt_text: prompt,
+          duration_sec: shot.duration_sec,
+          status: 'pending',
+          shot_role: shot.role,
+          audio_mode: settings.audioMode,
+          model_route: 'kling_v3',
+          strategy_json: {
+            camera_motion: shot.camera_motion,
+            subject_motion: shot.subject_motion,
+            preservation_strength: shot.preservation_strength,
+            scene_type: shot.scene_type,
+            negative_prompt,
+          },
+        };
+      });
+      await supabase.from('video_shots').insert(shotRows);
+
+      // 4. Generate each shot sequentially via the queue
+      const productRef = references.find(r => r.role === 'product');
+      const sceneRef = references.find(r => r.role === 'scene');
+      const sourceImageUrl = productRef?.url || sceneRef?.url;
+
+      for (let i = 0; i < shots.length; i++) {
+        const shot = shots[i];
+        setShotStatuses(prev =>
+          prev.map(s =>
+            s.shot_index === shot.shot_index ? { ...s, status: 'processing' } : s
+          )
+        );
+
+        const { prompt, negative_prompt } = buildShotPrompt(shot, {
+          filmType,
+          tone: '',
+          settings,
+          references,
+        });
+
+        try {
+          // Use generate-video edge function via queue
+          const { data: enqueueResult, error: enqueueError } = await supabase.functions.invoke('generate-video', {
+            body: {
+              action: 'create',
+              image_url: sourceImageUrl || '',
+              prompt,
+              duration: settings.shotDuration,
+              model_name: 'kling-v3',
+              aspect_ratio: settings.aspectRatio,
+              mode: 'pro',
+              negative_prompt,
+              with_audio: settings.audioMode === 'ambient',
+              project_id: project.id,
+              workflow_type: 'short_film',
+            },
+          });
+
+          if (enqueueError) throw new Error(enqueueError.message);
+
+          // Poll for completion
+          const taskId = enqueueResult?.task_id || enqueueResult?.kling_task_id;
+          const videoId = enqueueResult?.video_id;
+
+          if (taskId && videoId) {
+            const resultUrl = await pollShotCompletion(videoId, 60);
+            setShotStatuses(prev =>
+              prev.map(s =>
+                s.shot_index === shot.shot_index
+                  ? { ...s, status: resultUrl ? 'complete' : 'failed', result_url: resultUrl || undefined }
+                  : s
+              )
+            );
+
+            // Update video_shots row
+            if (resultUrl) {
+              await supabase
+                .from('video_shots')
+                .update({ status: 'complete', result_url: resultUrl })
+                .eq('project_id', project.id)
+                .eq('shot_index', shot.shot_index);
+            }
+          } else {
+            // Fallback: mark as complete if no task tracking
+            setShotStatuses(prev =>
+              prev.map(s =>
+                s.shot_index === shot.shot_index ? { ...s, status: 'complete' } : s
+              )
+            );
+          }
+        } catch (shotErr) {
+          console.error(`[ShortFilm] Shot ${shot.shot_index} failed:`, shotErr);
+          setShotStatuses(prev =>
+            prev.map(s =>
+              s.shot_index === shot.shot_index ? { ...s, status: 'failed' } : s
+            )
+          );
+        }
+      }
+
+      // 5. Mark project complete
+      await supabase.from('video_projects').update({ status: 'complete' }).eq('id', project.id);
+      toast.success('Short film generation complete!');
+      refreshBalance();
+
+    } catch (err) {
+      console.error('[ShortFilm] Generation failed:', err);
+      toast.error(err instanceof Error ? err.message : 'Generation failed');
+    } finally {
+      setIsGenerating(false);
     }
-
-    setIsGenerating(false);
-  }, [shots]);
+  }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance]);
 
   return {
     step,
@@ -119,5 +276,28 @@ export function useShortFilmProject() {
     isGenerating,
     shotStatuses,
     startGeneration,
+    projectId,
+    totalCredits,
   };
+}
+
+/** Poll generated_videos for a specific video to complete */
+async function pollShotCompletion(videoId: string, maxPolls: number): Promise<string | null> {
+  for (let i = 0; i < maxPolls; i++) {
+    await new Promise(r => setTimeout(r, 10_000));
+
+    const { data } = await supabase
+      .from('generated_videos')
+      .select('status, video_url')
+      .eq('id', videoId)
+      .single();
+
+    if (data?.status === 'completed' && data.video_url) {
+      return data.video_url;
+    }
+    if (data?.status === 'failed') {
+      return null;
+    }
+  }
+  return null;
 }

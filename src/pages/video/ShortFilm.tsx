@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Clapperboard, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -9,18 +9,9 @@ import { ShotPlanEditor } from '@/components/app/video/short-film/ShotPlanEditor
 import { ShortFilmSettingsPanel } from '@/components/app/video/short-film/ShortFilmSettingsPanel';
 import { ShortFilmProgressPanel } from '@/components/app/video/short-film/ShortFilmProgressPanel';
 import { ShotCard } from '@/components/app/video/short-film/ShotCard';
+import { ShortFilmReviewSummary } from '@/components/app/video/short-film/ShortFilmReviewSummary';
+import { ShortFilmStepper } from '@/components/app/video/short-film/ShortFilmStepper';
 import { cn } from '@/lib/utils';
-import { estimateCredits } from '@/config/videoCreditPricing';
-import { Coins } from 'lucide-react';
-
-const STEP_LABELS: Record<string, string> = {
-  film_type: 'Film Type',
-  references: 'References',
-  story: 'Story',
-  shot_plan: 'Shot Plan',
-  settings: 'Settings',
-  review: 'Review',
-};
 
 export default function ShortFilm() {
   const {
@@ -43,14 +34,9 @@ export default function ShortFilm() {
     isGenerating,
     shotStatuses,
     startGeneration,
+    projectId,
+    totalCredits,
   } = useShortFilmProject();
-
-  // Estimate credits for the whole film
-  const totalCredits = shots.length * estimateCredits({
-    workflowType: 'animate',
-    duration: settings.shotDuration,
-    audioMode: settings.audioMode,
-  });
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-24">
@@ -61,35 +47,7 @@ export default function ShortFilm() {
         <div />
       </PageHeader>
 
-      {/* Stepper */}
-      <div className="flex items-center gap-1">
-        {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-1 flex-1">
-            <div
-              className={cn(
-                'flex items-center justify-center h-7 w-7 rounded-full text-xs font-bold transition-all shrink-0',
-                i < currentStepIndex && 'bg-primary text-primary-foreground',
-                i === currentStepIndex && 'bg-primary text-primary-foreground ring-2 ring-primary/30',
-                i > currentStepIndex && 'bg-muted text-muted-foreground'
-              )}
-            >
-              {i + 1}
-            </div>
-            <span className={cn(
-              'text-xs font-medium hidden sm:block truncate',
-              i === currentStepIndex ? 'text-foreground' : 'text-muted-foreground'
-            )}>
-              {STEP_LABELS[s]}
-            </span>
-            {i < steps.length - 1 && (
-              <div className={cn(
-                'flex-1 h-px mx-1',
-                i < currentStepIndex ? 'bg-primary' : 'bg-border'
-              )} />
-            )}
-          </div>
-        ))}
-      </div>
+      <ShortFilmStepper steps={steps} currentStepIndex={currentStepIndex} />
 
       {/* Step Content */}
       <div className="min-h-[300px]">
@@ -114,58 +72,59 @@ export default function ShortFilm() {
         )}
 
         {step === 'review' && !isGenerating && shotStatuses.length === 0 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Review & Generate</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Everything looks good? Generate your {shots.length}-shot brand film.
-              </p>
-            </div>
-
-            {/* Quick summary */}
-            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Film Type</span>
-                  <p className="font-medium text-foreground capitalize">
-                    {filmType?.replace(/_/g, ' ')}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Structure</span>
-                  <p className="font-medium text-foreground capitalize">
-                    {storyStructure?.replace(/_/g, ' → ').slice(0, 30)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Shots</span>
-                  <p className="font-medium text-foreground">{shots.length} shots × {settings.shotDuration}s</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Audio</span>
-                  <p className="font-medium text-foreground capitalize">{settings.audioMode}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Shot preview */}
-            <div className="space-y-2">
-              {shots.map((shot) => (
-                <ShotCard key={shot.shot_index} shot={shot} />
-              ))}
-            </div>
-
-            {/* Credit estimate */}
-            <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/50 border border-border">
-              <Coins className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Estimated cost:</span>
-              <span className="text-sm font-semibold text-foreground">{totalCredits} credits</span>
-            </div>
-          </div>
+          <ShortFilmReviewSummary
+            filmType={filmType}
+            storyStructure={storyStructure}
+            shots={shots}
+            settings={settings}
+            totalCredits={totalCredits}
+          />
         )}
 
         {step === 'review' && (isGenerating || shotStatuses.length > 0) && (
-          <ShortFilmProgressPanel shots={shots} shotStatuses={shotStatuses} />
+          <div className="space-y-6">
+            <ShortFilmProgressPanel shots={shots} shotStatuses={shotStatuses} />
+
+            {/* Results section — show after all shots are done */}
+            {!isGenerating && shotStatuses.length > 0 && shotStatuses.every(s => s.status === 'complete' || s.status === 'failed') && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Generated Clips</h3>
+                <div className="grid gap-3">
+                  {shotStatuses
+                    .filter(s => s.result_url)
+                    .map(s => {
+                      const shot = shots.find(sh => sh.shot_index === s.shot_index);
+                      return (
+                        <div key={s.shot_index} className="rounded-xl border border-border bg-card overflow-hidden">
+                          <video
+                            src={s.result_url}
+                            controls
+                            playsInline
+                            className="w-full aspect-video bg-black"
+                          />
+                          {shot && (
+                            <div className="px-3 py-2">
+                              <p className="text-xs font-medium text-foreground">
+                                Shot {s.shot_index} — {shot.role}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">{shot.purpose}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+                {projectId && (
+                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                    <a href="/app/video">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      View in Video Hub
+                    </a>
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
