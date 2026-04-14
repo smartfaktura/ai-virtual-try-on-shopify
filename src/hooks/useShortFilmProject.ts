@@ -487,11 +487,13 @@ export function useShortFilmProject() {
           );
           try {
             const sfxPrompt = `${shot.scene_type.replace(/_/g, ' ')} ambient sound, ${shot.purpose}`;
+            console.log(`[ShortFilm Audio] Calling elevenlabs-sfx for shot ${shot.shot_index} — prompt:`, sfxPrompt);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
               method: 'POST',
               headers,
               body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
             });
+            console.log(`[ShortFilm Audio] SFX shot ${shot.shot_index} response status:`, res.status);
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
@@ -532,11 +534,13 @@ export function useShortFilmProject() {
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
           );
           try {
+            console.log(`[ShortFilm Audio] Calling elevenlabs-tts for shot ${shot.shot_index} — text:`, shot.script_line);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
               method: 'POST',
               headers,
               body: JSON.stringify({ text: shot.script_line, voiceId }),
             });
+            console.log(`[ShortFilm Audio] TTS shot ${shot.shot_index} response status:`, res.status);
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
