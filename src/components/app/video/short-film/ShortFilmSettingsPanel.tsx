@@ -185,7 +185,52 @@ export function ShortFilmSettingsPanel({ settings, onChange, onPreviewAudio }: S
         </div>
       )}
 
-      {/* Preservation Level */}
+      {/* Audio Preview */}
+      {showPreview && (
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={isPreviewing}
+            onClick={async () => {
+              if (previewAudioRef.current) {
+                previewAudioRef.current.pause();
+                previewAudioRef.current = null;
+                setIsPreviewing(false);
+                return;
+              }
+              setIsPreviewing(true);
+              try {
+                const url = await onPreviewAudio!();
+                if (url) {
+                  const audio = new Audio(url);
+                  previewAudioRef.current = audio;
+                  audio.onended = () => {
+                    setIsPreviewing(false);
+                    previewAudioRef.current = null;
+                  };
+                  await audio.play();
+                } else {
+                  setIsPreviewing(false);
+                }
+              } catch {
+                setIsPreviewing(false);
+              }
+            }}
+          >
+            {isPreviewing ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating preview...</>
+            ) : (
+              <><Play className="h-3.5 w-3.5" /> Preview Audio</>
+            )}
+          </Button>
+          <p className="text-[10px] text-muted-foreground">
+            Generates a short 10s sample so you can tune settings before committing.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Preservation Level</p>
         <div className="grid grid-cols-3 gap-2">
