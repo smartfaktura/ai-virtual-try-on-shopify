@@ -438,7 +438,7 @@ export function useShortFilmProject() {
           aspect_ratio: settings.aspectRatio,
           mode: 'pro',
           negative_prompt,
-          with_audio: false,
+          with_audio: true,
           project_id: projectId,
           workflow_type: 'short_film',
         },
@@ -598,123 +598,22 @@ export function useShortFilmProject() {
         }
       }
 
-      // SFX per shot
-      if (layers.sfx) {
-        setAudioPhase('sfx');
-        for (const shot of shotsToUse) {
-          if (shot.sfx_enabled === false) continue;
-          setAudioShotStatuses(prev =>
-            prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'generating' } : s)
-          );
-          try {
-            const sfxPrompt = shot.sfx_prompt || buildContextualSfxPrompt(shot, references);
-            console.log(`[ShortFilm Audio] Calling elevenlabs-sfx for shot ${shot.shot_index} — prompt:`, sfxPrompt, 'duration:', shot.duration_sec);
-            const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-sfx`, {
-              method: 'POST',
-              headers,
-              body: JSON.stringify({ prompt: sfxPrompt, duration: Math.min(shot.duration_sec, 22) }),
-            });
-            console.log(`[ShortFilm Audio] SFX shot ${shot.shot_index} response status:`, res.status);
-            if (res.ok) {
-              const blob = await res.blob();
-              const blobUrl = URL.createObjectURL(blob);
-              // Use timing manifest offset for precise playback
-              const manifest = timingManifest.find(t => t.shot_index === shot.shot_index);
-              const offset = manifest ? manifest.start_sec + (shot.sfx_trigger_at ?? 0) : undefined;
-              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'sfx', offset_sec: offset });
-              sfxOk++;
-
-              const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/sfx-shot-${shot.shot_index}.mp3`);
-              if (storageUrl && pid) {
-                await supabase.from('video_shots').update({ sfx_url: storageUrl } as any)
-                  .eq('project_id', pid).eq('shot_index', shot.shot_index);
-              }
-              setAudioShotStatuses(prev =>
-                prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'done' } : s)
-              );
-            } else {
-              sfxFail++;
-              setAudioShotStatuses(prev =>
-                prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'failed' } : s)
-              );
-            }
-          } catch (e) {
-            sfxFail++;
-            console.error(`[ShortFilm] SFX shot ${shot.shot_index} failed:`, e);
-            setAudioShotStatuses(prev =>
-              prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'failed' } : s)
-            );
-          }
-        }
-      }
-
-      // Voiceover per shot — duration-aware, layer-aware
-      if (layers.voiceover) {
-        setAudioPhase('voiceover');
-        const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
-        for (const shot of shotsToUse) {
-          if (!shot.script_line || shot.duration_sec < 3 || shot.vo_enabled === false) continue;
-          setAudioShotStatuses(prev =>
-            prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
-          );
-          try {
-            const { text: fittedText, speed } = fitTextToDuration(shot.script_line, shot.duration_sec);
-            console.log(`[ShortFilm Audio] Calling elevenlabs-tts for shot ${shot.shot_index} — text: "${fittedText}" (orig: "${shot.script_line}"), speed: ${speed}, duration: ${shot.duration_sec}s`);
-            const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
-              method: 'POST',
-              headers,
-              body: JSON.stringify({ text: fittedText, voiceId, speed }),
-            });
-            console.log(`[ShortFilm Audio] TTS shot ${shot.shot_index} response status:`, res.status);
-            if (res.ok) {
-              const blob = await res.blob();
-              const blobUrl = URL.createObjectURL(blob);
-              const manifest = timingManifest.find(t => t.shot_index === shot.shot_index);
-              const offset = manifest ? manifest.start_sec : undefined;
-              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'voiceover', offset_sec: offset });
-              voOk++;
-
-              const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/vo-shot-${shot.shot_index}.mp3`);
-              if (storageUrl && pid) {
-                await supabase.from('video_shots').update({ audio_url: storageUrl } as any)
-                  .eq('project_id', pid).eq('shot_index', shot.shot_index);
-              }
-              setAudioShotStatuses(prev =>
-                prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'done' } : s)
-              );
-            } else {
-              voFail++;
-              setAudioShotStatuses(prev =>
-                prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'failed' } : s)
-              );
-            }
-          } catch (e) {
-            voFail++;
-            console.error(`[ShortFilm] TTS shot ${shot.shot_index} failed:`, e);
-            setAudioShotStatuses(prev =>
-              prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'failed' } : s)
-            );
-          }
-        }
-      }
+      // SFX and Voiceover are now handled natively by Kling (sound: "on")
+      // via prompt audio cues — no separate ElevenLabs calls needed.
+      // The sfx/voiceover toggles still control prompt hints for Kling.
 
       setAudioAssets(newAssets);
 
-      // Determine phase based on results
-      const hasFailures = sfxFail > 0 || voFail > 0 || (layers.music && !musicOk);
-      const hasSuccess = musicOk || sfxOk > 0 || voOk > 0;
+      // Determine phase based on results (only music is generated via ElevenLabs now)
+      const hasFailures = layers.music && !musicOk;
+      const hasSuccess = musicOk;
 
       if (hasFailures && !hasSuccess) {
         setAudioPhase('partial');
-        toast.error('Audio generation failed. Tap "Generate Audio" to retry.');
+        toast.error('Music generation failed. Tap "Generate Audio" to retry.');
       } else if (hasFailures) {
         setAudioPhase('partial');
-        const parts: string[] = [];
-        if (musicOk) parts.push('Music ✓');
-        else if (layers.music) parts.push('Music ✗');
-        if (sfxOk > 0 || sfxFail > 0) parts.push(`SFX ${sfxOk}/${sfxOk + sfxFail}`);
-        if (voOk > 0 || voFail > 0) parts.push(`Voice ${voOk}/${voOk + voFail}`);
-        toast.error(`Audio partially generated: ${parts.join(', ')}`);
+        toast.error('Music generation partially failed.');
       } else if (hasSuccess) {
         setAudioPhase('done');
         toast.success('Audio layer generated');
@@ -1006,7 +905,7 @@ export function useShortFilmProject() {
             mode: 'pro',
             cfg_scale: 0.5,
             preservation_strength: settings.preservationLevel || 'medium',
-            with_audio: false,
+            with_audio: true,
             project_id: currentProjectId,
             image_urls: imageUrls,
           },
@@ -1087,50 +986,8 @@ export function useShortFilmProject() {
       }
     }
 
-    // Lip-sync post-processing — only for single-shot projects
-    // Multishot videos are a single combined clip; Kling lip-sync can't target
-    // individual shots within it, and the VO layer already provides narration.
-    if (generationSucceeded && audioLayers.voiceover && shots.length === 1) {
-      const shot = shots[0];
-      if (shot.character_visible && shot.script_line && shot.vo_enabled !== false && shot.duration_sec >= 3) {
-        console.log('[ShortFilm] Single-shot project — attempting lip-sync');
-        try {
-          const videoUrl = shotStatuses.find(s => s.result_url)?.result_url;
-          const voAsset = audioAssets.perShotAudio.find(
-            a => a.shotIndex === shot.shot_index && a.type === 'voiceover'
-          );
-          if (videoUrl && voAsset?.url) {
-            const { data: lipSyncData } = await supabase.functions.invoke('kling-lip-sync', {
-              body: { action: 'create', video_url: videoUrl, audio_url: voAsset.url },
-            });
-            if (lipSyncData?.task_id) {
-              console.log(`[ShortFilm] Lip-sync task created: ${lipSyncData.task_id}`);
-              for (let poll = 0; poll < 60; poll++) {
-                await new Promise(r => setTimeout(r, 10_000));
-                const { data: statusData } = await supabase.functions.invoke('kling-lip-sync', {
-                  body: { action: 'status', task_id: lipSyncData.task_id },
-                });
-                if (statusData?.status === 'succeed' && statusData?.video_url) {
-                  console.log('[ShortFilm] Lip-sync complete');
-                  const signedLipSync = await toSignedUrl(statusData.video_url);
-                  setShotStatuses(prev => prev.map(s => ({ ...s, result_url: signedLipSync })));
-                  toast.success('Lip-sync applied!');
-                  break;
-                }
-                if (statusData?.status === 'failed') {
-                  console.warn('[ShortFilm] Lip-sync failed');
-                  break;
-                }
-              }
-            }
-          }
-        } catch (lipSyncErr) {
-          console.error('[ShortFilm] Lip-sync failed:', lipSyncErr);
-        }
-      }
-    } else if (generationSucceeded && audioLayers.voiceover && shots.length > 1) {
-      console.log('[ShortFilm] Multishot project — skipping lip-sync, VO plays via audio layer');
-    }
+    // Lip-sync is handled natively by Kling (with_audio: true / sound: "on").
+    // No post-processing needed — dialog and SFX are baked into the video.
 
     setIsGenerating(false);
   }, [user, filmType, storyStructure, shots, settings, references, balance, totalCredits, refreshBalance, draftProjectId, generateAudio]);
