@@ -66,6 +66,8 @@ export function useShortFilmProject() {
   const [settings, setSettings] = useState<ShortFilmSettings>(DEFAULT_SETTINGS);
   const [audioAssets, setAudioAssets] = useState<AudioAssets>({ perShotAudio: [] });
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [audioPhase, setAudioPhase] = useState<AudioPhase>('idle');
+  const [audioShotStatuses, setAudioShotStatuses] = useState<AudioShotStatus[]>([]);
 
   const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
