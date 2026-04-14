@@ -35,7 +35,6 @@ const PRESERVATION_OPTIONS = [
 
 const DURATION_OPTIONS = [
   { value: '5' as const, label: '5s per shot' },
-  { value: '10' as const, label: '10s per shot' },
 ];
 
 const VOICE_OPTIONS = [
