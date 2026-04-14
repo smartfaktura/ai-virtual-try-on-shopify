@@ -432,6 +432,26 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   );
 }
 
+/* ─── Scene card used in grouped + search views ─── */
+function SceneCard({ scene, onPick }: { scene: { id: string; title: string; previewUrl?: string }; onPick: (s: { id: string; title: string; previewUrl?: string }) => void }) {
+  return (
+    <button
+      onClick={() => onPick(scene)}
+      className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+    >
+      <div className="aspect-square bg-muted/30">
+        <ShimmerImage
+          src={getOptimizedUrl(scene.previewUrl, { width: 200, quality: 60 })}
+          alt={scene.title}
+          className="w-full h-full object-contain"
+          aspectRatio="1/1"
+        />
+      </div>
+      <p className="text-xs font-medium text-foreground p-2 truncate">{scene.title}</p>
+    </button>
+  );
+}
+
 /* ─── Generic picker dialog with search + load-more ─── */
 interface PickerDialogProps<T> {
   open: boolean;
