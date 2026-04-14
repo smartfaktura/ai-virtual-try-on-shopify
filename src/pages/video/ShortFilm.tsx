@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download, Loader2, Music } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Coins, ExternalLink, RotateCcw, Play, Save, Download, Loader2, Music, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
@@ -30,6 +30,8 @@ export default function ShortFilm() {
     saveDraft, loadDraft,
     customRoles, setCustomRoles,
     audioAssets, isGeneratingAudio,
+    audioPhase, audioShotStatuses, retryAudioForShot,
+    generateAudio, previewAudio,
   } = useShortFilmProject();
 
   const [showPreview, setShowPreview] = useState(false);
