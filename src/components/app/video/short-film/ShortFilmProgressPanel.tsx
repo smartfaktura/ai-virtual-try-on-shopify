@@ -2,7 +2,7 @@ import { ShotCard } from './ShotCard';
 import { Progress } from '@/components/ui/progress';
 import type { ShotPlanItem } from '@/types/shortFilm';
 import { Loader2, CheckCircle2, Clapperboard } from 'lucide-react';
-import { TEAM } from '@/data/teamData';
+import { TEAM_MEMBERS } from '@/data/teamData';
 
 interface ShotStatus {
   shot_index: number;
