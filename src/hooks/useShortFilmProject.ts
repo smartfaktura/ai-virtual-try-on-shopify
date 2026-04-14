@@ -785,8 +785,8 @@ export function useShortFilmProject() {
     const authToken = session?.access_token || apikey;
     const headers = { 'Content-Type': 'application/json', apikey, Authorization: `Bearer ${authToken}` };
 
-    const mode = settings.audioMode;
-    if (mode === 'music' || mode === 'full_mix') {
+    const previewLayers = getEffectiveLayers(settings);
+    if (previewLayers.music) {
       const musicPrompt = settings.musicPrompt || `cinematic ${settings.tone || 'ambient'} background music`;
       const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
         method: 'POST', headers,
@@ -796,7 +796,7 @@ export function useShortFilmProject() {
         const blob = await res.blob();
         return URL.createObjectURL(blob);
       }
-    } else if (mode === 'voiceover') {
+    } else if (previewLayers.voiceover) {
       const sampleText = shots.find(s => s.script_line)?.script_line || 'This is a preview of your voiceover.';
       const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
       const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
