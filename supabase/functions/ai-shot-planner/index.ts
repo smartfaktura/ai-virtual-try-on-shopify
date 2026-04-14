@@ -169,14 +169,38 @@ Remember: cinematic pacing (NOT equal splits), sfx_prompt for sound effects, sfx
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Extract JSON array from response (handle markdown code blocks)
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
+    // Try to parse as {music_direction, shots} object first, fall back to plain array
+    let shots: any[];
+    let musicDirection: string | undefined;
+
+    const objMatch = content.match(/\{[\s\S]*\}/);
+    const arrMatch = content.match(/\[[\s\S]*\]/);
+
+    if (objMatch) {
+      try {
+        const parsed = JSON.parse(objMatch[0]);
+        if (Array.isArray(parsed.shots)) {
+          shots = parsed.shots;
+          musicDirection = typeof parsed.music_direction === "string" ? parsed.music_direction : undefined;
+        } else if (Array.isArray(parsed)) {
+          shots = parsed;
+        } else {
+          throw new Error("No shots array found");
+        }
+      } catch {
+        if (arrMatch) {
+          shots = JSON.parse(arrMatch[0]);
+        } else {
+          console.error("Could not parse shot plan from AI response:", content);
+          throw new Error("Failed to parse AI response into shot plan");
+        }
+      }
+    } else if (arrMatch) {
+      shots = JSON.parse(arrMatch[0]);
+    } else {
       console.error("Could not parse shot plan from AI response:", content);
       throw new Error("Failed to parse AI response into shot plan");
     }
-
-    const shots = JSON.parse(jsonMatch[0]);
 
     // Validate and sanitize — snap roles to valid system roles
     const validShots = shots.map((s: any, i: number) => {
