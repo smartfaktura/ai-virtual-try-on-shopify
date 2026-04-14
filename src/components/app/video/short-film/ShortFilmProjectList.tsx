@@ -40,7 +40,6 @@ export function ShortFilmProjectList({ onResumeDraft, onViewProject }: ShortFilm
         .limit(20);
 
       if (data && data.length > 0) {
-        // Get shot counts
         const ids = data.map(p => p.id);
         const { data: shots } = await supabase
           .from('video_shots')
@@ -84,11 +83,19 @@ export function ShortFilmProjectList({ onResumeDraft, onViewProject }: ShortFilm
     return 'bg-muted text-muted-foreground';
   };
 
+  const statusLabel = (s: string) => {
+    if (s === 'draft') return 'Draft';
+    if (s === 'processing') return 'Processing';
+    if (s === 'complete') return 'Complete';
+    if (s === 'partial') return 'Partial';
+    return s;
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        className="w-full flex items-center justify-between px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded-xl"
       >
         <div className="flex items-center gap-2">
           <Film className="h-4 w-4 text-muted-foreground" />
@@ -101,12 +108,12 @@ export function ShortFilmProjectList({ onResumeDraft, onViewProject }: ShortFilm
       {expanded && (
         <div className="border-t border-border divide-y divide-border">
           {projects.map(p => (
-            <div key={p.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors">
+            <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors gap-1.5 sm:gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-foreground truncate">{p.title}</p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   <span className={cn('text-[9px] font-medium px-1.5 py-0.5 rounded', statusColor(p.status))}>
-                    {p.status}
+                    {statusLabel(p.status)}
                   </span>
                   {p.shot_count ? (
                     <span className="text-[10px] text-muted-foreground">{p.shot_count} shots</span>
@@ -117,13 +124,13 @@ export function ShortFilmProjectList({ onResumeDraft, onViewProject }: ShortFilm
                   </span>
                 </div>
               </div>
-              <div>
+              <div className="flex items-center gap-1.5 shrink-0">
                 {p.status === 'draft' ? (
-                  <Button variant="ghost" size="sm" className="gap-1 text-xs h-7" onClick={() => onResumeDraft(p.id)}>
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs h-8 min-w-[80px]" onClick={() => onResumeDraft(p.id)}>
                     <Pencil className="h-3 w-3" /> Resume
                   </Button>
-                ) : p.status === 'complete' ? (
-                  <Button variant="ghost" size="sm" className="gap-1 text-xs h-7" onClick={() => onViewProject(p.id)}>
+                ) : (p.status === 'complete' || p.status === 'partial') ? (
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs h-8 min-w-[80px]" onClick={() => onViewProject(p.id)}>
                     <Play className="h-3 w-3" /> View
                   </Button>
                 ) : null}

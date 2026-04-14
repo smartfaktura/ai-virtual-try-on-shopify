@@ -11,6 +11,15 @@ const STEP_LABELS: Record<ShortFilmStep, string> = {
   review: 'Review',
 };
 
+const CTA_LABELS: Record<ShortFilmStep, string> = {
+  film_type: 'Next: Add References',
+  references: 'Next: Story Structure',
+  story: 'Next: Shot Plan',
+  shot_plan: 'Next: Settings',
+  settings: 'Review Film',
+  review: 'Generate Short Film',
+};
+
 interface ShortFilmStickyBarProps {
   step: ShortFilmStep;
   steps: ShortFilmStep[];
@@ -38,12 +47,12 @@ export function ShortFilmStickyBar({
 
   const ctaLabel = (() => {
     if (allDone) return null;
-    if (step === 'review') return 'Generate Short Film';
-    return 'Next';
+    return CTA_LABELS[step] || 'Continue';
   })();
 
   const showGenIcon = step === 'review' && !allDone;
   const showSaveDraft = currentStepIndex >= 1 && step !== 'review';
+  const canAfford = true; // credits checked at generation time
 
   return (
     <div className="sticky bottom-4 z-10">

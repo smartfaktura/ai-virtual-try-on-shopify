@@ -36,7 +36,8 @@ export function ShortFilmStepper({ steps, currentStepIndex, onStepClick, canNavi
                 onClick={() => canClick && onStepClick?.(i)}
                 disabled={!canClick}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-150 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+                  'flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-150 flex-shrink-0',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                   isActive && 'bg-primary text-primary-foreground shadow-sm',
                   isDone && !isActive && 'bg-primary/8 text-primary cursor-pointer hover:bg-primary/12',
                   !isActive && !isDone && canClick && 'text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/60',
@@ -80,7 +81,8 @@ export function ShortFilmStepper({ steps, currentStepIndex, onStepClick, canNavi
                   onClick={() => canClick && onStepClick?.(i)}
                   disabled={!canClick}
                   className={cn(
-                    'flex flex-col items-center gap-0.5 mx-auto rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+                    'flex flex-col items-center gap-0.5 mx-auto rounded-full',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                     !canClick && 'opacity-50 cursor-default',
                   )}
                 >
