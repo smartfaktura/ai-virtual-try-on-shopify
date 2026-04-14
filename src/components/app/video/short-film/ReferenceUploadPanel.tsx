@@ -106,34 +106,44 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     return allModels.filter(m => m.name.toLowerCase().includes(q));
   }, [allModels, modelSearch]);
 
-  // --- Style presets ---
+  // --- Style presets (Kling 3.0 optimized) ---
   const STYLE_MOOD_PRESETS = useMemo(() => [
-    { id: 'sm-1', title: 'Cinematic Noir', keywords: 'Deep blacks, high contrast, chiaroscuro lighting, film noir shadows, moody desaturated palette' },
-    { id: 'sm-2', title: 'Golden Hour Warmth', keywords: 'Warm amber tones, long soft shadows, golden backlight, sun-kissed skin, dreamy lens flare' },
-    { id: 'sm-3', title: 'Ethereal Soft Focus', keywords: 'Soft diffusion filter, pastel tones, dreamy bokeh, luminous highlights, gentle haze' },
-    { id: 'sm-4', title: 'Bold & Saturated', keywords: 'Vivid punchy colors, high saturation, strong contrast, dynamic energy, editorial pop' },
-    { id: 'sm-5', title: 'Monochrome Elegance', keywords: 'Black and white, fine grain, rich tonal range, timeless classic photography feel' },
-    { id: 'sm-6', title: 'Neon Cyberpunk', keywords: 'Vibrant neon blues and magentas, dark environment, futuristic glow, reflective wet surfaces' },
-    { id: 'sm-7', title: 'Vintage Film Stock', keywords: 'Warm muted tones, analog grain, faded highlights, 70s film aesthetic, nostalgic color shift' },
-    { id: 'sm-8', title: 'Clean Luxury', keywords: 'Pristine whites, soft even lighting, premium minimalist feel, subtle warm undertones' },
-    { id: 'sm-9', title: 'Dramatic Chiaroscuro', keywords: 'Rembrandt lighting, deep rich shadows, single key light, painterly contrast, fine art feel' },
-    { id: 'sm-10', title: 'Natural Documentary', keywords: 'Available light, authentic grain, handheld intimacy, realistic color, raw unpolished beauty' },
+    { id: 'sm-1', title: 'Cinematic Noir', category: 'Cinematic', keywords: 'Deep blacks, chiaroscuro single key light, hard shadows on wet surfaces, film grain, desaturated palette' },
+    { id: 'sm-2', title: 'Golden Hour Epic', category: 'Cinematic', keywords: 'Warm amber backlight, long soft shadows, golden rim highlights, anamorphic lens flare, shallow DOF' },
+    { id: 'sm-3', title: 'Vintage Film Stock', category: 'Cinematic', keywords: 'Warm muted tones, analog 35mm grain, faded highlights, 70s Kodachrome color shift' },
+    { id: 'sm-4', title: 'Monochrome Fine Art', category: 'Cinematic', keywords: 'Black and white, Rembrandt lighting, rich tonal range, skin pores visible, fine art feel' },
+    { id: 'sm-5', title: 'Clean Luxury', category: 'Commercial', keywords: 'Pristine whites, soft even lighting, premium minimalist feel, subtle caustic reflections, macro detail' },
+    { id: 'sm-6', title: 'Bold Editorial Pop', category: 'Commercial', keywords: 'Vivid punchy saturated colors, strong contrast, hard flash, dynamic energy, fashion editorial' },
+    { id: 'sm-7', title: 'Soft Diffusion Glow', category: 'Commercial', keywords: 'Pastel tones, soft diffusion filter, dreamy bokeh, luminous highlights, gentle haze' },
+    { id: 'sm-8', title: 'Neon Cyberpunk', category: 'Atmospheric', keywords: 'Vibrant neon blues and magentas, wet reflective surfaces, dark environment, volumetric haze' },
+    { id: 'sm-9', title: 'Dramatic Chiaroscuro', category: 'Atmospheric', keywords: 'Single directional key light, deep rich shadows, painterly contrast, condensation on surfaces' },
+    { id: 'sm-10', title: 'Ethereal Morning Mist', category: 'Atmospheric', keywords: 'Cool diffused light, visible breath in cold air, soft fog, desaturated greens' },
+    { id: 'sm-11', title: 'Natural Documentary', category: 'Atmospheric', keywords: 'Available handheld light, authentic grain, realistic color, raw unpolished, skin texture visible' },
+    { id: 'sm-12', title: 'Slow Motion Reveal', category: 'Motion', keywords: 'Time-stretched movement, fabric ripples, hair flowing, particles suspended, ultra-smooth 30fps' },
+    { id: 'sm-13', title: 'Dynamic FPV Energy', category: 'Motion', keywords: 'Fast-paced drone perspective, motion blur on background, subject in sharp focus, high contrast' },
+    { id: 'sm-14', title: 'Macro Texture Study', category: 'Motion', keywords: 'Extreme close-up, visible material fibers and pores, shallow DOF, studio ring light' },
+    { id: 'sm-15', title: 'Liquid & Reflections', category: 'Motion', keywords: 'Refractive caustics, water droplets, chrome reflections, glass surfaces, wet textures' },
+    { id: 'sm-16', title: 'Smoke & Atmosphere', category: 'Motion', keywords: 'Volumetric light rays through haze, floating particles, dramatic backlight, moody atmosphere' },
   ], []);
 
-  // --- Scene presets ---
+  // --- Scene presets (Kling 3.0 optimized) ---
   const VIDEO_SCENE_PRESETS = useMemo(() => [
-    { id: 'vs-1', title: 'Minimalist Studio', description: 'Clean white studio with soft directional shadows and subtle gradient backdrop.', mood: 'premium' },
-    { id: 'vs-2', title: 'Golden Hour Terrace', description: 'Warm golden sunset light on an outdoor stone terrace with blurred cityscape.', mood: 'luxury' },
-    { id: 'vs-3', title: 'Dark Moody Editorial', description: 'Deep black background with dramatic side lighting and soft reflections.', mood: 'editorial' },
-    { id: 'vs-4', title: 'Natural Linen Surface', description: 'Neutral linen fabric surface with soft natural window light and gentle shadows.', mood: 'minimal' },
-    { id: 'vs-5', title: 'Urban Concrete', description: 'Raw concrete surface and walls with industrial textures and cool diffused light.', mood: 'energetic' },
-    { id: 'vs-6', title: 'Botanical Garden', description: 'Lush greenery with dappled sunlight filtering through tropical leaves.', mood: 'organic' },
-    { id: 'vs-7', title: 'Marble & Gold', description: 'White marble surface with gold accents, soft studio lighting, premium feel.', mood: 'luxury' },
-    { id: 'vs-8', title: 'Coastal Breeze', description: 'Sandy beach tones with ocean blues, soft morning light and gentle movement.', mood: 'lifestyle' },
-    { id: 'vs-9', title: 'Neon Night', description: 'Dark environment with vibrant neon color accents and cinematic light flares.', mood: 'energetic' },
-    { id: 'vs-10', title: 'Warm Interior', description: 'Cozy interior space with warm lamp light, wood textures and soft furnishings.', mood: 'emotional' },
-    { id: 'vs-11', title: 'Misty Forest', description: 'Ethereal forest with morning mist, diffused cool light and organic textures.', mood: 'atmospheric' },
-    { id: 'vs-12', title: 'Clean Gradient', description: 'Smooth color gradient backdrop transitioning from light to dark, studio lit.', mood: 'clean' },
+    { id: 'vs-1', title: 'White Infinity Cove', category: 'Studio', description: 'Seamless white cyclorama, soft directional shadows, subtle gradient, clean product isolation', mood: 'premium' },
+    { id: 'vs-2', title: 'Dark Editorial Studio', category: 'Studio', description: 'Deep matte black, dramatic single side light, soft reflections on floor, negative space', mood: 'editorial' },
+    { id: 'vs-3', title: 'Marble & Gold Surface', category: 'Studio', description: 'White marble with gold veining, soft overhead studio light, refractive caustics on surface', mood: 'luxury' },
+    { id: 'vs-4', title: 'Colored Gel Studio', category: 'Studio', description: 'Smooth color gradient backdrop, dual-color gel lighting, controlled shadows', mood: 'creative' },
+    { id: 'vs-5', title: 'Golden Hour Terrace', category: 'Outdoor', description: 'Warm sunset light on stone terrace, blurred cityscape beyond, long shadows, warm atmospheric haze', mood: 'luxury' },
+    { id: 'vs-6', title: 'Coastal Morning', category: 'Outdoor', description: 'Sandy beach tones, soft pre-dawn blue light, gentle ocean movement, sea mist, driftwood textures', mood: 'lifestyle' },
+    { id: 'vs-7', title: 'Misty Forest Floor', category: 'Outdoor', description: 'Morning mist between moss-covered trees, dappled cool light filtering through canopy, organic debris', mood: 'atmospheric' },
+    { id: 'vs-8', title: 'Rooftop at Dusk', category: 'Outdoor', description: 'Urban skyline, last light fading, warm string lights, concrete and metal textures, city glow', mood: 'energetic' },
+    { id: 'vs-9', title: 'Modern Loft', category: 'Interior', description: 'Raw exposed brick, large industrial windows, natural side light, hardwood floors, warm ambient', mood: 'lifestyle' },
+    { id: 'vs-10', title: 'Luxury Bathroom', category: 'Interior', description: 'Marble surfaces, soft warm vanity light, steam rising, chrome fixtures, water droplets', mood: 'luxury' },
+    { id: 'vs-11', title: 'Cozy Warm Interior', category: 'Interior', description: 'Soft lamp light, wood textures, linen and wool fabrics, warm color temperature, intimate space', mood: 'emotional' },
+    { id: 'vs-12', title: 'Minimalist Concrete', category: 'Interior', description: 'Raw concrete walls and floor, cool diffused light, industrial textures, brutalist geometry', mood: 'minimal' },
+    { id: 'vs-13', title: 'Botanical Greenhouse', category: 'Creative', description: 'Lush tropical greenery, dappled sunlight through glass ceiling, humidity visible, organic textures', mood: 'organic' },
+    { id: 'vs-14', title: 'Neon Rain Street', category: 'Creative', description: 'Wet asphalt reflecting neon signage, magenta and cyan light pools, urban night, visible raindrops', mood: 'energetic' },
+    { id: 'vs-15', title: 'Surreal Gradient Void', category: 'Creative', description: 'Smooth infinite color gradient, no visible ground plane, floating subject, dreamy atmosphere', mood: 'creative' },
+    { id: 'vs-16', title: 'Desert Golden Sands', category: 'Creative', description: 'Warm orange dunes, harsh directional sunlight, heat haze, textured sand ripples, vast scale', mood: 'atmospheric' },
   ], []);
 
   const filteredScenes = useMemo(() => {
@@ -253,38 +263,36 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     [references, onChange]
   );
 
+  // Toggle a scene preset inline (no dialog close)
+  const toggleScenePreset = useCallback(
+    (scene: { id: string; title: string; description?: string }) => {
+      const presetName = `${scene.title}: ${scene.description || ''}`;
+      const existing = references.find(r => r.role === 'scene' && r.name === presetName);
+      if (existing) {
+        onChange(references.filter(r => r.id !== existing.id));
+      } else {
+        onChange([...references, { id: crypto.randomUUID(), url: '', role: 'scene', name: presetName }]);
+      }
+    },
+    [references, onChange]
+  );
+
   const pickProduct = useCallback(
     (product: FullProduct) => {
       const newRefs: ReferenceAsset[] = [];
       const pid = product.id;
       const name = product.title;
-
-      // Main image always
       newRefs.push({ id: crypto.randomUUID(), url: product.image_url, role: 'product', name, subRole: 'main', productId: pid });
-
-      // Add all available angle images
-      if (product.back_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.back_image_url, role: 'product', name, subRole: 'back', productId: pid });
-      }
-      if (product.side_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.side_image_url, role: 'product', name, subRole: 'side', productId: pid });
-      }
-      if (product.packaging_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.packaging_image_url, role: 'product', name, subRole: 'packaging', productId: pid });
-      }
-      if (product.inside_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.inside_image_url, role: 'product', name, subRole: 'inside', productId: pid });
-      }
-      if (product.texture_image_url) {
-        newRefs.push({ id: crypto.randomUUID(), url: product.texture_image_url, role: 'product', name, subRole: 'texture', productId: pid });
-      }
-      // Extra images
+      if (product.back_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.back_image_url, role: 'product', name, subRole: 'back', productId: pid });
+      if (product.side_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.side_image_url, role: 'product', name, subRole: 'side', productId: pid });
+      if (product.packaging_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.packaging_image_url, role: 'product', name, subRole: 'packaging', productId: pid });
+      if (product.inside_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.inside_image_url, role: 'product', name, subRole: 'inside', productId: pid });
+      if (product.texture_image_url) newRefs.push({ id: crypto.randomUUID(), url: product.texture_image_url, role: 'product', name, subRole: 'texture', productId: pid });
       if (product.extra_image_urls && product.extra_image_urls.length > 0) {
         product.extra_image_urls.forEach((url) => {
           newRefs.push({ id: crypto.randomUUID(), url, role: 'product', name, subRole: 'extra', productId: pid });
         });
       }
-
       onChange([...references, ...newRefs]);
       setProductPickerOpen(false);
     },
@@ -307,6 +315,37 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
       setStylePickerOpen(false);
     },
     [references, onChange]
+  );
+
+  // Toggle a style preset inline (no dialog close)
+  const toggleStylePreset = useCallback(
+    (preset: { id: string; title: string; keywords: string }) => {
+      const presetName = `${preset.title}: ${preset.keywords}`;
+      const existing = references.find(r => r.role === 'style' && r.name === presetName);
+      if (existing) {
+        onChange(references.filter(r => r.id !== existing.id));
+      } else {
+        onChange([...references, { id: crypto.randomUUID(), url: '', role: 'style', name: presetName }]);
+      }
+    },
+    [references, onChange]
+  );
+
+  // Helper to check if a preset is selected
+  const isScenePresetSelected = useCallback(
+    (scene: { title: string; description?: string }) => {
+      const presetName = `${scene.title}: ${scene.description || ''}`;
+      return references.some(r => r.role === 'scene' && r.name === presetName);
+    },
+    [references]
+  );
+
+  const isStylePresetSelected = useCallback(
+    (preset: { title: string; keywords: string }) => {
+      const presetName = `${preset.title}: ${preset.keywords}`;
+      return references.some(r => r.role === 'style' && r.name === presetName);
+    },
+    [references]
   );
 
   const openLibrary = (type: 'model' | 'scene' | 'product' | 'style') => {
@@ -513,6 +552,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
           const sectionRefs = references.filter((r) => r.role === section.role);
           const Icon = section.icon;
           const isSectionUploading = uploadingRole === section.role && isUploading;
+          const showQuickPicks = section.role === 'scene' || section.role === 'style';
 
           return (
             <div key={section.role} className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -530,31 +570,73 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                     onClick={() => openLibrary(section.libraryType!)}
                   >
                     <Library className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Library</span>
+                    <span className="hidden sm:inline">All</span>
                   </Button>
                 )}
               </div>
 
-              {sectionRefs.length > 0 && (
+              {/* Inline quick-pick chips for scene & style */}
+              {showQuickPicks && section.role === 'style' && (
+                <div className="flex flex-wrap gap-1.5">
+                  {STYLE_MOOD_PRESETS.map((preset) => {
+                    const selected = isStylePresetSelected(preset);
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => toggleStylePreset(preset)}
+                        className={cn(
+                          'h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all',
+                          selected
+                            ? 'border-primary bg-primary/15 text-primary'
+                            : 'border-border/60 bg-muted/30 text-muted-foreground/70 hover:bg-muted/60 hover:text-foreground/80'
+                        )}
+                        title={preset.keywords}
+                      >
+                        {preset.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {showQuickPicks && section.role === 'scene' && (
+                <div className="flex flex-wrap gap-1.5">
+                  {VIDEO_SCENE_PRESETS.map((preset) => {
+                    const selected = isScenePresetSelected(preset);
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => toggleScenePreset(preset)}
+                        className={cn(
+                          'h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all',
+                          selected
+                            ? 'border-primary bg-primary/15 text-primary'
+                            : 'border-border/60 bg-muted/30 text-muted-foreground/70 hover:bg-muted/60 hover:text-foreground/80'
+                        )}
+                        title={preset.description}
+                      >
+                        {preset.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Show image-based refs (uploaded or model picks) */}
+              {sectionRefs.filter(r => r.url).length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {sectionRefs.map((ref) => (
+                  {sectionRefs.filter(r => r.url).map((ref) => (
                     <div key={ref.id} className="relative group">
-                      {ref.url ? (
-                        <img
-                          src={getOptimizedUrl(ref.url, { quality: 70 })}
-                          alt={ref.name || section.label}
-                          className={`rounded-lg border border-border ${
-                            section.role === 'model'
-                              ? 'w-12 aspect-[3/4] object-cover bg-muted/30'
-                              : 'h-16 w-16 object-cover bg-muted/30'
-                          }`}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 rounded-lg bg-muted/30 border border-border flex items-center justify-center">
-                          {ref.role === 'style' ? <Palette className="h-4 w-4 text-primary" /> : <MapPin className="h-4 w-4 text-muted-foreground" />}
-                        </div>
-                      )}
+                      <img
+                        src={getOptimizedUrl(ref.url, { quality: 70 })}
+                        alt={ref.name || section.label}
+                        className={`rounded-lg border border-border ${
+                          section.role === 'model'
+                            ? 'w-12 aspect-[3/4] object-cover bg-muted/30'
+                            : 'h-16 w-16 object-cover bg-muted/30'
+                        }`}
+                        loading="lazy"
+                      />
                       <button
                         onClick={() => removeRef(ref.id)}
                         className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:opacity-100"
@@ -563,7 +645,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                         <X className="h-3 w-3" />
                       </button>
                       {ref.name && (
-                        <p className={`text-[9px] text-muted-foreground text-center truncate mt-0.5 ${section.role === 'model' ? 'w-12' : 'w-16'}`}>{ref.name}</p>
+                        <p className={`text-[9px] text-muted-foreground text-center truncate mt-0.5 ${section.role === 'model' ? 'w-12' : 'w-16'}`}>{ref.name?.split(':')[0]}</p>
                       )}
                     </div>
                   ))}
@@ -632,7 +714,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         emptyText="No models available yet."
       />
 
-      {/* Scene Presets Picker */}
+      {/* Scene Presets Picker — grouped by category */}
       <Dialog open={scenePickerOpen} onOpenChange={setScenePickerOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" aria-describedby={undefined}>
           <DialogHeader>
@@ -651,48 +733,83 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             {filteredScenes.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-12">No scenes match your search.</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
-                {filteredScenes.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => pickScene(s)}
-                    className="rounded-lg border border-border hover:border-primary/50 p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none space-y-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <p className="text-sm font-medium text-foreground">{s.title}</p>
+              <div className="space-y-4 py-2">
+                {['Studio', 'Outdoor', 'Interior', 'Creative'].map(cat => {
+                  const items = filteredScenes.filter(s => s.category === cat);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={cat}>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{cat}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {items.map((s) => {
+                          const selected = isScenePresetSelected(s);
+                          return (
+                            <button
+                              key={s.id}
+                              onClick={() => toggleScenePreset(s)}
+                              className={cn(
+                                "rounded-lg border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none space-y-1",
+                                selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                {selected && <Check className="h-3 w-3 text-primary shrink-0" />}
+                                <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                                <p className="text-sm font-medium text-foreground">{s.title}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
-                    <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{s.mood}</span>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Style / Mood Picker */}
+      {/* Style / Mood Picker — grouped by category */}
       <Dialog open={stylePickerOpen} onOpenChange={setStylePickerOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Choose Style / Mood</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
-              {STYLE_MOOD_PRESETS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => pickStyle(s)}
-                  className="rounded-lg border border-border hover:border-primary/50 p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none space-y-1"
-                >
-                  <div className="flex items-center gap-2">
-                    <Palette className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <p className="text-sm font-medium text-foreground">{s.title}</p>
+            <div className="space-y-4 py-2">
+              {['Cinematic', 'Commercial', 'Atmospheric', 'Motion'].map(cat => {
+                const items = STYLE_MOOD_PRESETS.filter(s => s.category === cat);
+                if (items.length === 0) return null;
+                return (
+                  <div key={cat}>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{cat}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {items.map((s) => {
+                        const selected = isStylePresetSelected(s);
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => toggleStylePreset(s)}
+                            className={cn(
+                              "rounded-lg border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none space-y-1",
+                              selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              {selected && <Check className="h-3 w-3 text-primary shrink-0" />}
+                              <Palette className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <p className="text-sm font-medium text-foreground">{s.title}</p>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">{s.keywords}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{s.keywords}</p>
-                </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         </DialogContent>
