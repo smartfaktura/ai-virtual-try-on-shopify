@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, Volume2, Music, Mic } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Play, Pause, Volume2, Music, Mic, Download } from 'lucide-react';
 import type { AudioAssets } from '@/types/shortFilm';
 
 interface ShotMeta {
@@ -13,20 +14,12 @@ interface ShortFilmVideoPlayerProps {
   clips: { url: string; label: string }[];
   audioAssets?: AudioAssets;
   shots?: ShotMeta[];
+  onDownload?: () => void;
 }
 
-export function ShortFilmVideoPlayer({ clips, audioAssets, shots }: ShortFilmVideoPlayerProps) {
-  const isSingleVideo = useMemo(() => {
-    if (clips.length <= 1) return true;
-    const firstUrl = clips[0]?.url;
-    return clips.every(c => c.url === firstUrl);
-  }, [clips]);
-
-  if (isSingleVideo && clips.length > 0) {
-    return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} />;
-  }
-
-  return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} />;
+export function ShortFilmVideoPlayer({ clips, audioAssets, shots, onDownload }: ShortFilmVideoPlayerProps) {
+  if (!clips.length) return null;
+  return <SingleVideoPlayer clip={clips[0]} audioAssets={audioAssets} shots={shots} onDownload={onDownload} />;
 }
 
 /* ─── Single combined video player with audio mixing ─── */
@@ -34,14 +27,17 @@ function SingleVideoPlayer({
   clip,
   audioAssets,
   shots,
+  onDownload,
 }: {
   clip: { url: string; label: string };
   audioAssets?: AudioAssets;
   shots?: ShotMeta[];
+  onDownload?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgAudioRef = useRef<HTMLAudioElement>(null);
   const shotAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const rafRef = useRef<number>(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [musicVolume, setMusicVolume] = useState(0.5);
@@ -50,10 +46,12 @@ function SingleVideoPlayer({
   const [showMixer, setShowMixer] = useState(false);
   const [currentShotIdx, setCurrentShotIdx] = useState(-1);
   const [videoError, setVideoError] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   const hasAudio = audioAssets && (audioAssets.backgroundTrackUrl || audioAssets.perShotAudio.length > 0);
 
-  // Calculate cumulative shot time offsets
   const shotOffsets = useMemo(() => {
     if (!shots || shots.length === 0) return [];
     let acc = 0;
@@ -76,6 +74,20 @@ function SingleVideoPlayer({
     });
   }, [sfxVolume, voiceVolume]);
 
+  // Preload per-shot audio on mount
+  useEffect(() => {
+    if (!audioAssets) return;
+    audioAssets.perShotAudio.forEach(a => {
+      const key = `${a.type}-${a.shotIndex}`;
+      if (!shotAudioRefs.current.has(key)) {
+        const audio = new Audio(a.url);
+        audio.preload = 'auto';
+        audio.volume = a.type === 'sfx' ? sfxVolume : voiceVolume;
+        shotAudioRefs.current.set(key, audio);
+      }
+    });
+  }, [audioAssets]);
+
   const stopAllShotAudio = useCallback(() => {
     shotAudioRefs.current.forEach((audio) => {
       audio.pause();
@@ -88,49 +100,58 @@ function SingleVideoPlayer({
     const shotAudios = audioAssets.perShotAudio.filter(a => a.shotIndex === shotIndex);
     shotAudios.forEach(a => {
       const key = `${a.type}-${a.shotIndex}`;
-      let audio = shotAudioRefs.current.get(key);
-      if (!audio) {
-        audio = new Audio(a.url);
-        shotAudioRefs.current.set(key, audio);
+      const audio = shotAudioRefs.current.get(key);
+      if (audio) {
+        audio.volume = a.type === 'sfx' ? sfxVolume : voiceVolume;
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
       }
-      audio.volume = a.type === 'sfx' ? sfxVolume : voiceVolume;
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
     });
   }, [audioAssets, sfxVolume, voiceVolume]);
 
-  // Track current shot with requestAnimationFrame for precise timing
+  // RAF loop for precise shot tracking + progress bar
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !hasAudio || shotOffsets.length === 0) return;
+    if (!video) return;
 
-    let rafId: number;
+    let lastShotIdx = -1;
+
     const onFrame = () => {
       if (video.paused || video.ended) return;
       const t = video.currentTime;
-      const match = shotOffsets.find(s => t >= s.start && t < s.end);
-      if (match && match.shot_index !== currentShotIdx) {
-        setCurrentShotIdx(match.shot_index);
-        stopAllShotAudio();
-        playShotAudio(match.shot_index);
+      const d = video.duration || 1;
+      setCurrentTime(t);
+      setProgress((t / d) * 100);
+
+      if (hasAudio && shotOffsets.length > 0) {
+        const match = shotOffsets.find(s => t >= s.start && t < s.end);
+        if (match && match.shot_index !== lastShotIdx) {
+          lastShotIdx = match.shot_index;
+          setCurrentShotIdx(match.shot_index);
+          stopAllShotAudio();
+          playShotAudio(match.shot_index);
+        }
       }
-      rafId = requestAnimationFrame(onFrame);
+      rafRef.current = requestAnimationFrame(onFrame);
     };
 
-    const onPlay = () => { rafId = requestAnimationFrame(onFrame); };
-    const onPause = () => { cancelAnimationFrame(rafId); };
+    const onPlay = () => { lastShotIdx = -1; rafRef.current = requestAnimationFrame(onFrame); };
+    const onPause = () => { cancelAnimationFrame(rafRef.current); };
+    const onLoadedMetadata = () => { setDuration(video.duration); };
 
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
-    // Start immediately if already playing
-    if (!video.paused) { rafId = requestAnimationFrame(onFrame); }
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
+    if (video.duration) setDuration(video.duration);
+    if (!video.paused) { rafRef.current = requestAnimationFrame(onFrame); }
 
     return () => {
-      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(rafRef.current);
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
-  }, [hasAudio, shotOffsets, currentShotIdx, stopAllShotAudio, playShotAudio]);
+  }, [hasAudio, shotOffsets, stopAllShotAudio, playShotAudio]);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -155,11 +176,17 @@ function SingleVideoPlayer({
     if (bgAudioRef.current) bgAudioRef.current.pause();
     stopAllShotAudio();
     setCurrentShotIdx(-1);
+    setProgress(100);
   };
 
-  const handleSeek = () => {
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !video.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    video.currentTime = pct * video.duration;
+    setProgress(pct * 100);
+    setCurrentTime(video.currentTime);
     if (bgAudioRef.current) {
       bgAudioRef.current.currentTime = video.currentTime;
     }
@@ -180,23 +207,37 @@ function SingleVideoPlayer({
 
   if (!clip) return null;
 
+  const formatTime = (t: number) => {
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
   const totalDuration = shots ? shots.reduce((sum, s) => sum + s.duration_sec, 0) : null;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Preview Film</h3>
-        {hasAudio && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1 text-xs text-muted-foreground"
-            onClick={() => setShowMixer(!showMixer)}
-          >
-            <Volume2 className="h-3 w-3" />
-            Mixer
-          </Button>
-        )}
+        <h3 className="text-sm font-semibold text-foreground">Your Short Film</h3>
+        <div className="flex items-center gap-1.5">
+          {hasAudio && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-xs text-muted-foreground"
+              onClick={() => setShowMixer(!showMixer)}
+            >
+              <Volume2 className="h-3 w-3" />
+              Mixer
+            </Button>
+          )}
+          {onDownload && (
+            <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onDownload}>
+              <Download className="h-3 w-3" />
+              Download
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden bg-black">
@@ -214,7 +255,6 @@ function SingleVideoPlayer({
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onEnded={handleVideoEnd}
-            onSeeked={handleSeek}
             onError={() => setVideoError(true)}
           />
         )}
@@ -224,10 +264,30 @@ function SingleVideoPlayer({
         <audio ref={bgAudioRef} src={audioAssets.backgroundTrackUrl} loop preload="auto" />
       )}
 
-      <div className="flex items-center justify-center gap-2">
-        <Button variant="outline" size="icon" className="h-9 w-9" onClick={togglePlay} disabled={videoError}>
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      {/* Controls bar */}
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={togglePlay} disabled={videoError}>
+          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </Button>
+
+        <span className="text-[11px] font-mono text-muted-foreground w-10 shrink-0">
+          {formatTime(currentTime)}
+        </span>
+
+        {/* Clickable progress bar */}
+        <div
+          className="flex-1 h-2 rounded-full bg-secondary cursor-pointer relative overflow-hidden"
+          onClick={handleSeek}
+        >
+          <div
+            className="absolute inset-y-0 left-0 bg-primary rounded-full transition-[width] duration-100"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <span className="text-[11px] font-mono text-muted-foreground w-10 shrink-0 text-right">
+          {formatTime(duration)}
+        </span>
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
