@@ -509,22 +509,49 @@ export function useShortFilmProject() {
     const initStatuses: AudioShotStatus[] = shotsToUse.map(s => ({
       shot_index: s.shot_index,
       sfx: 'idle' as const,
-      voiceover: (mode === 'voiceover' || mode === 'full_mix') && s.script_line ? 'idle' as const : 'idle' as const,
+      voiceover: layers.voiceover && s.script_line ? 'idle' as const : 'idle' as const,
     }));
     setAudioShotStatuses(initStatuses);
 
+    // ── Build timing manifest for precise audio cues ──
+    let cumulativeTime = 0;
+    const timingManifest = shotsToUse.map(s => {
+      const startAt = cumulativeTime;
+      cumulativeTime += s.duration_sec;
+      return {
+        shot_index: s.shot_index,
+        role: s.role,
+        start_sec: startAt,
+        end_sec: cumulativeTime,
+        duration_sec: s.duration_sec,
+        sfx_trigger_at: s.sfx_trigger_at ?? 0,
+        has_vo: layers.voiceover && s.vo_enabled !== false && !!s.script_line && s.duration_sec >= 3,
+        has_sfx: layers.sfx && s.sfx_enabled !== false,
+      };
+    });
+    console.log('[ShortFilm Audio] Timing manifest:', timingManifest);
+
     try {
       // Music track
-      if (mode === 'music' || mode === 'full_mix') {
+      if (layers.music) {
         setAudioPhase('music');
         const totalDuration = shotsToUse.reduce((sum, s) => sum + s.duration_sec, 0);
-        const musicPrompt = settings.musicPrompt || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse, references);
+
+        // Build timing cues for the music prompt
+        const timingCues = timingManifest.map(t =>
+          `${t.role} at ${t.start_sec.toFixed(1)}s–${t.end_sec.toFixed(1)}s`
+        ).join(', ');
+
+        const musicPrompt = settings.musicPrompt
+          || buildContextualMusicPrompt(filmType, settings.tone, shotsToUse, references);
+        const enrichedMusicPrompt = `${musicPrompt}. Shot timing cues: ${timingCues}`;
+
         try {
-          console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', musicPrompt, 'duration:', Math.min(totalDuration, 120));
+          console.log('[ShortFilm Audio] Calling elevenlabs-music — prompt:', enrichedMusicPrompt, 'duration:', Math.min(totalDuration, 120));
           const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-music`, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ prompt: musicPrompt, duration: Math.min(totalDuration, 120) }),
+            body: JSON.stringify({ prompt: enrichedMusicPrompt, duration: Math.min(totalDuration, 120) }),
           });
           console.log('[ShortFilm Audio] Music response status:', res.status);
           if (res.ok) {
@@ -533,7 +560,6 @@ export function useShortFilmProject() {
             newAssets.backgroundTrackUrl = blobUrl;
             musicOk = true;
 
-            // Persist to storage
             const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/music-track.mp3`);
             if (storageUrl && pid) {
               await supabase.from('video_projects').update({ music_track_url: storageUrl } as any).eq('id', pid);
@@ -546,10 +572,11 @@ export function useShortFilmProject() {
         }
       }
 
-      // SFX per shot (music or full_mix)
-      if (mode === 'music' || mode === 'full_mix') {
+      // SFX per shot
+      if (layers.sfx) {
         setAudioPhase('sfx');
         for (const shot of shotsToUse) {
+          if (shot.sfx_enabled === false) continue;
           setAudioShotStatuses(prev =>
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, sfx: 'generating' } : s)
           );
@@ -565,7 +592,10 @@ export function useShortFilmProject() {
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
-              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'sfx' });
+              // Use timing manifest offset for precise playback
+              const manifest = timingManifest.find(t => t.shot_index === shot.shot_index);
+              const offset = manifest ? manifest.start_sec + (shot.sfx_trigger_at ?? 0) : undefined;
+              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'sfx', offset_sec: offset });
               sfxOk++;
 
               const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/sfx-shot-${shot.shot_index}.mp3`);
@@ -592,17 +622,16 @@ export function useShortFilmProject() {
         }
       }
 
-      // Voiceover per shot — duration-aware
-      if (mode === 'voiceover' || mode === 'full_mix') {
+      // Voiceover per shot — duration-aware, layer-aware
+      if (layers.voiceover) {
         setAudioPhase('voiceover');
         const voiceId = settings.voiceId || 'JBFqnCBsd6RMkjVDRZzb';
         for (const shot of shotsToUse) {
-          if (!shot.script_line || shot.duration_sec < 3) continue; // Skip VO for shots < 3s
+          if (!shot.script_line || shot.duration_sec < 3 || shot.vo_enabled === false) continue;
           setAudioShotStatuses(prev =>
             prev.map(s => s.shot_index === shot.shot_index ? { ...s, voiceover: 'generating' } : s)
           );
           try {
-            // Duration-aware: trim text and calculate speed
             const { text: fittedText, speed } = fitTextToDuration(shot.script_line, shot.duration_sec);
             console.log(`[ShortFilm Audio] Calling elevenlabs-tts for shot ${shot.shot_index} — text: "${fittedText}" (orig: "${shot.script_line}"), speed: ${speed}, duration: ${shot.duration_sec}s`);
             const res = await fetch(`${baseUrl}/functions/v1/elevenlabs-tts`, {
@@ -614,7 +643,9 @@ export function useShortFilmProject() {
             if (res.ok) {
               const blob = await res.blob();
               const blobUrl = URL.createObjectURL(blob);
-              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'voiceover' });
+              const manifest = timingManifest.find(t => t.shot_index === shot.shot_index);
+              const offset = manifest ? manifest.start_sec : undefined;
+              newAssets.perShotAudio.push({ shotIndex: shot.shot_index, url: blobUrl, type: 'voiceover', offset_sec: offset });
               voOk++;
 
               const storageUrl = await uploadAudioToStorage(blob, `${pid || 'preview'}/vo-shot-${shot.shot_index}.mp3`);
@@ -644,7 +675,7 @@ export function useShortFilmProject() {
       setAudioAssets(newAssets);
 
       // Determine phase based on results
-      const hasFailures = sfxFail > 0 || voFail > 0 || ((mode === 'music' || mode === 'full_mix') && !musicOk);
+      const hasFailures = sfxFail > 0 || voFail > 0 || (layers.music && !musicOk);
       const hasSuccess = musicOk || sfxOk > 0 || voOk > 0;
 
       if (hasFailures && !hasSuccess) {
@@ -654,7 +685,7 @@ export function useShortFilmProject() {
         setAudioPhase('partial');
         const parts: string[] = [];
         if (musicOk) parts.push('Music ✓');
-        else if (mode === 'music' || mode === 'full_mix') parts.push('Music ✗');
+        else if (layers.music) parts.push('Music ✗');
         if (sfxOk > 0 || sfxFail > 0) parts.push(`SFX ${sfxOk}/${sfxOk + sfxFail}`);
         if (voOk > 0 || voFail > 0) parts.push(`Voice ${voOk}/${voOk + voFail}`);
         toast.error(`Audio partially generated: ${parts.join(', ')}`);
