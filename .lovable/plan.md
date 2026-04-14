@@ -1,37 +1,26 @@
 
 
-# Fix Short Film: 2 Bugs
+# Fix Zoomed Product Images in Short Film Picker
 
-## Bug 1: `job_type` Not Passed to Worker → Wrong Handler
+## Problem
+The "Pick from Products" dialog in `/app/video/short-film` passes `{ width: 200, quality: 60 }` to `getOptimizedUrl`, which forces the CDN to crop/resize to 200px. When displayed in the grid at a larger size, this causes a blurry, zoomed-in appearance.
 
-**Root cause**: `process-queue/index.ts` line 133-138 builds `enrichedPayload` from `{ ...payload, user_id, job_id, credits_reserved }` but does NOT include `job_type`. When `generate-video` receives the request, `body.job_type` is `undefined`, so the check `jobType === "video_multishot"` (line 381) fails. It falls through to `handleWorkerMode` which requires `image_url` — causing `"image_url is required in payload"`.
+The `/app/products` page uses `getOptimizedUrl(product.image_url, { quality: 70 })` with **no width constraint** — this is why products look correct there.
 
-**Fix**: Add `job_type: jobType` to the enriched payload in `process-queue/index.ts`.
+## Fix
 
+**File**: `src/components/app/video/short-film/ReferenceUploadPanel.tsx` (line 399)
+
+Change:
 ```typescript
-const enrichedPayload = {
-  ...payload,
-  user_id: userId,
-  job_id: jobId,
-  job_type: jobType,        // ← ADD THIS
-  credits_reserved: creditsReserved,
-};
+src={getOptimizedUrl(p.image_url, { width: 200, quality: 60 })}
+```
+To:
+```typescript
+src={getOptimizedUrl(p.image_url, { quality: 70 })}
 ```
 
-## Bug 2: Per-Shot "Retry" Buttons Make No Sense for Multi-Shot
+This matches the `/app/products` grid exactly — no forced width, same quality level, same `object-cover` fit.
 
-The UI shows a "Retry" button on each individual shot card. But multi-shot generation is a single combined video — there's no way to retry just one shot. When the film fails, all shots fail together, so the retry should be a single "Retry Film" action, not 4 individual buttons.
-
-**Fix**: In `ShortFilmProgressPanel.tsx`, hide per-shot retry buttons. Instead, show a single "Retry All" button when any shots have failed.
-
-## Files to Change
-
-| File | Change |
-|------|--------|
-| `supabase/functions/process-queue/index.ts` | Add `job_type: jobType` to enriched payload (line 133) |
-| `src/components/app/video/short-film/ShortFilmProgressPanel.tsx` | Replace per-shot "Retry" with single "Retry Film" button |
-
-## Deploy
-
-Redeploy `process-queue` after the fix. This is the **actual** reason short film generation fails — the routing bug means every `video_multishot` job hits the wrong handler.
+One line change, one file.
 
