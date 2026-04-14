@@ -1002,11 +1002,12 @@ function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): S
 /** Poll generation_queue for a job, then trigger status polling via generate-video */
 async function pollQueueJobCompletion(jobId: string, maxPolls: number): Promise<string | null> {
   let klingTaskId: string | null = null;
+  let endpoint: string | null = null;
 
   for (let i = 0; i < maxPolls; i++) {
     await new Promise(r => setTimeout(r, 10_000));
 
-    // Phase 1: Get kling_task_id from queue result
+    // Phase 1: Get kling_task_id + endpoint from queue result
     if (!klingTaskId) {
       const { data } = await supabase
         .from('generation_queue')
@@ -1023,13 +1024,19 @@ async function pollQueueJobCompletion(jobId: string, maxPolls: number): Promise<
 
       const result = data.result as Record<string, unknown> | null;
       klingTaskId = (result?.kling_task_id as string) || null;
+      endpoint = (result?.endpoint as string) || null;
       if (!klingTaskId) continue;
     }
 
-    // Phase 2: Poll Kling via the status action to trigger server-side completion
+    // Phase 2: Poll Kling via the status action — pass endpoint for omni-video tasks
     try {
       const { data: statusData } = await supabase.functions.invoke('generate-video', {
-        body: { action: 'status', task_id: klingTaskId, queue_job_id: jobId },
+        body: {
+          action: 'status',
+          task_id: klingTaskId,
+          queue_job_id: jobId,
+          ...(endpoint ? { endpoint } : {}),
+        },
       });
 
       if (statusData?.status === 'succeed' && statusData?.video_url) {
