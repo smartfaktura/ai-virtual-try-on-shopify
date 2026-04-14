@@ -7,7 +7,6 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels } from '@/hooks/useUserModels';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
-import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,18 +81,27 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
     return allModels.filter(m => m.name.toLowerCase().includes(q));
   }, [allModels, modelSearch]);
 
-  // --- Scenes (always loaded via shared hook, just filter on open) ---
-  const { allScenes, categoryCollections, isLoading: scenesLoading } = useProductImageScenes();
-  const validScenes = useMemo(
-    () => allScenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http')),
-    [allScenes]
-  );
+  // --- Video-optimized scene presets (text-described, no images) ---
+  const VIDEO_SCENE_PRESETS = useMemo(() => [
+    { id: 'vs-1', title: 'Minimalist Studio', description: 'Clean white studio with soft directional shadows and subtle gradient backdrop.', mood: 'premium' },
+    { id: 'vs-2', title: 'Golden Hour Terrace', description: 'Warm golden sunset light on an outdoor stone terrace with blurred cityscape.', mood: 'luxury' },
+    { id: 'vs-3', title: 'Dark Moody Editorial', description: 'Deep black background with dramatic side lighting and soft reflections.', mood: 'editorial' },
+    { id: 'vs-4', title: 'Natural Linen Surface', description: 'Neutral linen fabric surface with soft natural window light and gentle shadows.', mood: 'minimal' },
+    { id: 'vs-5', title: 'Urban Concrete', description: 'Raw concrete surface and walls with industrial textures and cool diffused light.', mood: 'energetic' },
+    { id: 'vs-6', title: 'Botanical Garden', description: 'Lush greenery with dappled sunlight filtering through tropical leaves.', mood: 'organic' },
+    { id: 'vs-7', title: 'Marble & Gold', description: 'White marble surface with gold accents, soft studio lighting, premium feel.', mood: 'luxury' },
+    { id: 'vs-8', title: 'Coastal Breeze', description: 'Sandy beach tones with ocean blues, soft morning light and gentle movement.', mood: 'lifestyle' },
+    { id: 'vs-9', title: 'Neon Night', description: 'Dark environment with vibrant neon color accents and cinematic light flares.', mood: 'energetic' },
+    { id: 'vs-10', title: 'Warm Interior', description: 'Cozy interior space with warm lamp light, wood textures and soft furnishings.', mood: 'emotional' },
+    { id: 'vs-11', title: 'Misty Forest', description: 'Ethereal forest with morning mist, diffused cool light and organic textures.', mood: 'atmospheric' },
+    { id: 'vs-12', title: 'Clean Gradient', description: 'Smooth color gradient backdrop transitioning from light to dark, studio lit.', mood: 'clean' },
+  ], []);
 
   const filteredScenes = useMemo(() => {
-    if (!sceneSearch.trim()) return validScenes;
+    if (!sceneSearch.trim()) return VIDEO_SCENE_PRESETS;
     const q = sceneSearch.toLowerCase();
-    return validScenes.filter(s => s.title.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q));
-  }, [validScenes, sceneSearch]);
+    return VIDEO_SCENE_PRESETS.filter(s => s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
+  }, [VIDEO_SCENE_PRESETS, sceneSearch]);
 
   // --- User products (on-demand, paginated) ---
   const { data: userProducts, isLoading: productsLoading } = useQuery({
@@ -172,9 +180,9 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   );
 
   const pickScene = useCallback(
-    (scene: { id: string; title: string; previewUrl?: string }) => {
-      if (!scene.previewUrl) return;
-      onChange([...references, { id: crypto.randomUUID(), url: scene.previewUrl, role: 'scene', name: scene.title }]);
+    (scene: { id: string; title: string; description?: string }) => {
+      // Text-described scenes don't have image URLs — store description as name
+      onChange([...references, { id: crypto.randomUUID(), url: '', role: 'scene', name: `${scene.title}: ${scene.description || ''}` }]);
       setScenePickerOpen(false);
     },
     [references, onChange]
@@ -239,12 +247,18 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
                 <div className="flex flex-wrap gap-2">
                   {sectionRefs.map((ref) => (
                     <div key={ref.id} className="relative group">
-                      <img
-                        src={getOptimizedUrl(ref.url, { width: 128, quality: 60 })}
-                        alt={ref.name || section.label}
-                        className="h-16 w-16 rounded-lg object-contain bg-muted/30 border border-border"
-                        loading="lazy"
-                      />
+                      {ref.url ? (
+                        <img
+                          src={getOptimizedUrl(ref.url, { width: 128, quality: 60 })}
+                          alt={ref.name || section.label}
+                          className="h-16 w-16 rounded-lg object-cover bg-muted/30 border border-border"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-lg bg-muted/30 border border-border flex items-center justify-center">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
                       <button
                         onClick={() => removeRef(ref.id)}
                         className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:opacity-100"
@@ -330,11 +344,11 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         emptyText="No models available yet."
       />
 
-      {/* Scene Library Picker — grouped by category */}
+      {/* Scene Presets Picker — text-described for video */}
       <Dialog open={scenePickerOpen} onOpenChange={setScenePickerOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>Pick from Scene Library</DialogTitle>
+            <DialogTitle>Choose Scene Environment</DialogTitle>
           </DialogHeader>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -346,52 +360,25 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
             />
           </div>
           <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
-            {scenePickerOpen && scenesLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-square rounded-lg" />
+            {filteredScenes.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-12">No scenes match your search.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+                {filteredScenes.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => pickScene(s)}
+                    className="rounded-lg border border-border hover:border-primary/50 p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none space-y-1"
+                  >
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <p className="text-sm font-medium text-foreground">{s.title}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
+                    <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{s.mood}</span>
+                  </button>
                 ))}
               </div>
-            ) : sceneSearch.trim() ? (
-              /* Flat filtered list when searching */
-              filteredScenes.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-12">No scenes match your search.</p>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
-                  {filteredScenes.slice(0, sceneVisible).map((s) => (
-                    <SceneCard key={s.id} scene={s} onPick={pickScene} />
-                  ))}
-                  {filteredScenes.length > sceneVisible && (
-                    <div className="col-span-full flex justify-center py-3">
-                      <button onClick={() => setSceneVisible(v => v + PAGE_SIZE)} className="text-xs text-primary hover:underline font-medium">
-                        Load more ({filteredScenes.length - sceneVisible} remaining)
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            ) : (
-              /* Grouped by category */
-              categoryCollections.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-12">No scene previews available.</p>
-              ) : (
-                <div className="space-y-4 py-2">
-                  {categoryCollections.map((cat) => {
-                    const withPreview = cat.scenes.filter(s => s.previewUrl && s.previewUrl.startsWith('http'));
-                    if (withPreview.length === 0) return null;
-                    return (
-                      <div key={cat.id}>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{cat.title}</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {withPreview.map((s) => (
-                            <SceneCard key={s.id} scene={s} onPick={pickScene} />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )
             )}
           </div>
         </DialogContent>
@@ -427,25 +414,6 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
         emptyText="No products yet. Add products in your product library first."
       />
     </div>
-  );
-}
-
-/* ─── Scene card used in grouped + search views ─── */
-function SceneCard({ scene, onPick }: { scene: { id: string; title: string; previewUrl?: string }; onPick: (s: { id: string; title: string; previewUrl?: string }) => void }) {
-  return (
-    <button
-      onClick={() => onPick(scene)}
-      className="rounded-lg border border-border hover:border-primary/50 overflow-hidden transition-all text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-    >
-      <div className="aspect-square bg-muted/30 rounded-t-lg overflow-hidden">
-        <ShimmerImage
-          src={getOptimizedUrl(scene.previewUrl, { width: 200, quality: 60 })}
-          alt={scene.title}
-          className="w-full h-full object-contain"
-        />
-      </div>
-      <p className="text-xs font-medium text-foreground p-2 truncate">{scene.title}</p>
-    </button>
   );
 }
 

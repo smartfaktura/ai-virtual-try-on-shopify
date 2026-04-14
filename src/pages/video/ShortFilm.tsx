@@ -237,7 +237,7 @@ export default function ShortFilm() {
               </div>
             )}
 
-            {allSucceeded && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (
+            {allSucceeded && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && audioPhase !== 'done' && (
               <Button
                 variant="outline"
                 size="sm"
@@ -245,7 +245,19 @@ export default function ShortFilm() {
                 onClick={() => generateAudio()}
               >
                 <Music className="h-3.5 w-3.5" />
-                {audioAssets.backgroundTrackUrl || audioAssets.perShotAudio.length > 0 ? 'Regenerate Audio' : 'Generate Audio'}
+                Generate Audio
+              </Button>
+            )}
+
+            {allSucceeded && !isGeneratingAudio && audioPhase === 'done' && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-9"
+                onClick={() => generateAudio()}
+              >
+                <Music className="h-3.5 w-3.5" />
+                Regenerate Audio
               </Button>
             )}
 
