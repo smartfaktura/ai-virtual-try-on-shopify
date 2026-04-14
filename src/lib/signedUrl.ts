@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 /** Buckets that are now private and need signed URLs */
-const PRIVATE_BUCKETS = ['generated-videos', 'generation-inputs'];
+const PRIVATE_BUCKETS = ['generated-videos', 'generation-inputs', 'generated-audio'];
 
 /** In-memory cache for signed URLs — avoids re-signing the same file across navigations & refetches */
 const CACHE_TTL_MS = 50 * 60 * 1000; // 50 min (safety margin under 1-hour expiry)

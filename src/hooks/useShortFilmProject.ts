@@ -14,6 +14,7 @@ import type {
   AudioAssets,
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 interface ShotStatus {
   shot_index: number;
@@ -155,9 +156,9 @@ export function useShortFilmProject() {
         if (data.status === 'complete') {
           const restoredAssets: AudioAssets = { perShotAudio: [] };
           if (data.music_track_url) {
-            restoredAssets.backgroundTrackUrl = data.music_track_url;
+            restoredAssets.backgroundTrackUrl = await toSignedUrl(data.music_track_url);
           }
-          // Load per-shot audio URLs
+          // Load per-shot audio URLs and sign them
           const { data: shotRows } = await supabase
             .from('video_shots')
             .select('shot_index, audio_url, sfx_url')
@@ -166,10 +167,10 @@ export function useShortFilmProject() {
           if (shotRows) {
             for (const row of shotRows) {
               if (row.sfx_url) {
-                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: row.sfx_url, type: 'sfx' });
+                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: await toSignedUrl(row.sfx_url), type: 'sfx' });
               }
               if (row.audio_url) {
-                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: row.audio_url, type: 'voiceover' });
+                restoredAssets.perShotAudio.push({ shotIndex: row.shot_index, url: await toSignedUrl(row.audio_url), type: 'voiceover' });
               }
             }
           }
@@ -359,11 +360,9 @@ export function useShortFilmProject() {
       console.error('[ShortFilm] Audio upload failed:', error);
       return null;
     }
-    // Use 7-day signed URLs to survive page refreshes
-    const { data } = await supabase.storage
-      .from('generated-audio')
-      .createSignedUrl(path, 604800);
-    return data?.signedUrl || null;
+    // Return the public-format URL for DB persistence; toSignedUrl() will sign on load
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    return `${SUPABASE_URL}/storage/v1/object/public/generated-audio/${path}`;
   }, [user]);
 
   // ─── Audio generation ────────────────────────────────────────
