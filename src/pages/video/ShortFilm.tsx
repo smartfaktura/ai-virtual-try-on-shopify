@@ -257,7 +257,7 @@ export default function ShortFilm() {
               </div>
             )}
 
-            {allSucceeded && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (audioPhase !== 'done' || audioPhase === 'partial' || (!audioAssets?.backgroundTrackUrl && audioAssets?.perShotAudio?.length === 0)) && (
+            {allSucceeded && !isGeneratingAudio && (settings.audioMode !== 'silent' && settings.audioMode !== 'ambient') && (audioPhase === 'partial' || audioPhase === 'idle' || (audioPhase === 'done' && !audioAssets?.backgroundTrackUrl && (audioAssets?.perShotAudio?.length ?? 0) === 0)) && (
               <Button
                 variant="outline"
                 size="sm"
