@@ -31,6 +31,7 @@ export interface ShotPlanItem {
   scene_reference_id?: string;
   model_reference_id?: string;
   preservation_strength: 'low' | 'medium' | 'high';
+  user_notes?: string;
 }
 
 export interface ShortFilmProject {
@@ -65,6 +66,7 @@ export interface ShortFilmSettings {
   audioMode: 'silent' | 'ambient' | 'music' | 'voiceover' | 'full_mix';
   preservationLevel: 'low' | 'medium' | 'high';
   shotDuration: '5' | '10';
+  quality: 'standard' | 'pro';
   tone?: string;
   musicPrompt?: string;
   voiceId?: string;

@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS: ShortFilmSettings = {
   audioMode: 'silent',
   preservationLevel: 'medium',
   shotDuration: '5',
+  quality: 'pro',
 };
 
 export function useShortFilmProject() {
@@ -79,7 +80,7 @@ export function useShortFilmProject() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [shotStatuses, setShotStatuses] = useState<ShotStatus[]>([]);
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [planMode, setPlanMode] = useState<'auto' | 'ai'>('auto');
+  const [planMode, setPlanMode] = useState<'auto' | 'ai'>('ai');
   const [isAiPlanning, setIsAiPlanning] = useState(false);
   const [customRoles, setCustomRoles] = useState<string[]>([]);
   const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
@@ -166,7 +167,7 @@ export function useShortFilmProject() {
         setReferences(d.references || []);
         setShots(d.shots || []);
         setSettings(d.settings || DEFAULT_SETTINGS);
-        setPlanMode(d.planMode || 'auto');
+        setPlanMode(d.planMode || 'ai');
         setCustomRoles(d.customRoles || []);
         setDraftProjectId(data.id);
         setProjectId(data.id);
@@ -297,7 +298,7 @@ export function useShortFilmProject() {
     setProjectId(null);
     setDraftProjectId(null);
     setIsGenerating(false);
-    setPlanMode('auto');
+    setPlanMode('ai');
     setCustomRoles([]);
     setSettings(DEFAULT_SETTINGS);
     setAudioAssets({ perShotAudio: [] });
@@ -990,7 +991,6 @@ function getSourceImageForShot(shot: ShotPlanItem, references: ReferenceAsset[])
 
 /** Generate shot plan from custom roles */
 function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): ShotPlanItem[] {
-  // Import the generateShotPlan logic but with custom roles
   return roles.slice(0, 6).map((role, index) => ({
     shot_index: index + 1,
     role,
@@ -999,6 +999,7 @@ function generateShotPlanFromRoles(roles: string[], shotDuration: '5' | '10'): S
     camera_motion: 'slow_push',
     subject_motion: 'minimal',
     duration_sec: 3,
+    script_line: `Custom ${role.replace(/_/g, ' ')} narration.`,
     product_visible: role.includes('product') || role.includes('detail') || role.includes('highlight'),
     character_visible: role.includes('human') || role.includes('lifestyle'),
     preservation_strength: role.includes('product') || role.includes('detail') ? 'high' : 'medium',

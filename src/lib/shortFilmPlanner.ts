@@ -335,6 +335,7 @@ export function generateShotPlan(
       camera_motion: defaults.camera_motion || 'static',
       subject_motion: defaults.subject_motion || 'minimal',
       duration_sec: getDefaultDurationForRole(role),
+      script_line: defaults.script_line,
       product_visible: defaults.product_visible ?? false,
       character_visible: defaults.character_visible ?? false,
       preservation_strength: defaults.preservation_strength || 'medium',

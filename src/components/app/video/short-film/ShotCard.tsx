@@ -9,6 +9,50 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const SCENE_TYPE_OPTIONS = [
+  { value: 'product_hero', label: 'Product Hero' },
+  { value: 'product_closeup', label: 'Product Close-up' },
+  { value: 'macro_closeup', label: 'Macro Close-up' },
+  { value: 'studio_reveal', label: 'Studio Reveal' },
+  { value: 'studio_detail', label: 'Studio Detail' },
+  { value: 'lifestyle_context', label: 'Lifestyle Context' },
+  { value: 'lifestyle_interaction', label: 'Lifestyle Interaction' },
+  { value: 'establishing_wide', label: 'Establishing Wide' },
+  { value: 'mood_abstract', label: 'Mood / Abstract' },
+  { value: 'hero_spotlight', label: 'Hero Spotlight' },
+  { value: 'dynamic_sequence', label: 'Dynamic Sequence' },
+  { value: 'end_card', label: 'End Card' },
+  { value: 'atmosphere_mood', label: 'Atmosphere' },
+  { value: 'environment_pan', label: 'Environment Pan' },
+  { value: 'human_interaction', label: 'Human Interaction' },
+  { value: 'fashion_runway', label: 'Fashion Runway' },
+  { value: 'beauty_macro', label: 'Beauty Macro' },
+  { value: 'sports_action', label: 'Sports Action' },
+  { value: 'food_detail', label: 'Food Detail' },
+  { value: 'architecture_wide', label: 'Architecture Wide' },
+  { value: 'nature_ambient', label: 'Nature Ambient' },
+  { value: 'abstract_tease', label: 'Abstract Tease' },
+  { value: 'hero_end_frame', label: 'Hero End Frame' },
+  { value: 'resolve_wide', label: 'Resolve Wide' },
+  { value: 'atmospheric_lifestyle', label: 'Atmospheric Lifestyle' },
+  { value: 'general', label: 'General' },
+];
+
+const SUBJECT_MOTION_OPTIONS = [
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'none', label: 'None' },
+  { value: 'natural_movement', label: 'Natural Movement' },
+  { value: 'ambient', label: 'Ambient' },
+  { value: 'dynamic', label: 'Dynamic' },
+  { value: 'slow_reveal', label: 'Slow Reveal' },
+];
+
+const PRESERVATION_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+];
+
 interface ReferenceOption {
   id: string;
   url: string;
@@ -79,12 +123,20 @@ export function ShotCard({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] font-medium text-muted-foreground">Camera Motion</label>
-              <Input
-                value={draft.camera_motion}
-                onChange={e => setDraft(d => ({ ...d, camera_motion: e.target.value }))}
-                className="text-xs h-8"
-              />
+              <label className="text-[10px] font-medium text-muted-foreground">Scene Type</label>
+              <Select
+                value={draft.scene_type}
+                onValueChange={v => setDraft(d => ({ ...d, scene_type: v }))}
+              >
+                <SelectTrigger className="text-xs h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCENE_TYPE_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-[10px] font-medium text-muted-foreground">Duration (sec)</label>
@@ -98,36 +150,89 @@ export function ShotCard({
               />
             </div>
           </div>
-          {availableReferences.length > 0 && (
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] font-medium text-muted-foreground">Source Image</label>
+              <label className="text-[10px] font-medium text-muted-foreground">Camera Motion</label>
+              <Input
+                value={draft.camera_motion}
+                onChange={e => setDraft(d => ({ ...d, camera_motion: e.target.value }))}
+                className="text-xs h-8"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Subject Motion</label>
               <Select
-                value={draft.scene_reference_id || '__auto__'}
-                onValueChange={v => setDraft(d => ({ ...d, scene_reference_id: v === '__auto__' ? undefined : v }))}
+                value={draft.subject_motion}
+                onValueChange={v => setDraft(d => ({ ...d, subject_motion: v }))}
               >
                 <SelectTrigger className="text-xs h-8">
-                  <SelectValue placeholder="Auto (default)" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__auto__">Auto (default)</SelectItem>
-                  {availableReferences.map(ref => (
-                    <SelectItem key={ref.id} value={ref.id}>
-                      <span className="flex items-center gap-1.5">
-                        <img src={ref.url} className="h-4 w-4 rounded object-cover" alt="" />
-                        {ref.name || ref.role}
-                      </span>
-                    </SelectItem>
+                  {SUBJECT_MOTION_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground">Preservation</label>
+              <Select
+                value={draft.preservation_strength}
+                onValueChange={v => setDraft(d => ({ ...d, preservation_strength: v as 'low' | 'medium' | 'high' }))}
+              >
+                <SelectTrigger className="text-xs h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRESERVATION_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {availableReferences.length > 0 && (
+              <div>
+                <label className="text-[10px] font-medium text-muted-foreground">Source Image</label>
+                <Select
+                  value={draft.scene_reference_id || '__auto__'}
+                  onValueChange={v => setDraft(d => ({ ...d, scene_reference_id: v === '__auto__' ? undefined : v }))}
+                >
+                  <SelectTrigger className="text-xs h-8">
+                    <SelectValue placeholder="Auto (default)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__auto__">Auto (default)</SelectItem>
+                    {availableReferences.map(ref => (
+                      <SelectItem key={ref.id} value={ref.id}>
+                        <span className="flex items-center gap-1.5">
+                          <img src={ref.url} className="h-4 w-4 rounded object-cover" alt="" />
+                          {ref.name || ref.role}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
           <div>
-            <label className="text-[10px] font-medium text-muted-foreground">Script Line (optional)</label>
+            <label className="text-[10px] font-medium text-muted-foreground">Script Line (voiceover)</label>
             <Input
               value={draft.script_line || ''}
               onChange={e => setDraft(d => ({ ...d, script_line: e.target.value || undefined }))}
               placeholder="Voiceover or narration..."
+              className="text-xs h-8"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-medium text-muted-foreground">Custom Instructions (optional)</label>
+            <Input
+              value={draft.user_notes || ''}
+              onChange={e => setDraft(d => ({ ...d, user_notes: e.target.value || undefined }))}
+              placeholder="e.g. show product from the side, warm tones..."
               className="text-xs h-8"
             />
           </div>

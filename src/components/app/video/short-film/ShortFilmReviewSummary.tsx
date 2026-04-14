@@ -51,7 +51,7 @@ export function ShortFilmReviewSummary({
           </div>
           <div>
             <span className="text-muted-foreground">Shots</span>
-            <p className="font-medium text-foreground">{shots.length} shots x {settings.shotDuration}s</p>
+            <p className="font-medium text-foreground">{shots.length} shots · {shots.reduce((sum, s) => sum + (s.duration_sec || 3), 0)}s total</p>
           </div>
           <div>
             <span className="text-muted-foreground">Audio</span>
