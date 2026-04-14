@@ -235,14 +235,45 @@ export function useShortFilmProject() {
     if (!filmType || !storyStructure) return;
     setIsAiPlanning(true);
     try {
+      // Resolve the role sequence from story structure
+      const { STORY_STRUCTURE_OPTIONS, FILM_TYPE_OPTIONS } = await import('@/lib/shortFilmPlanner');
+      const structureOption = STORY_STRUCTURE_OPTIONS.find(s => s.value === storyStructure);
+      const filmOption = FILM_TYPE_OPTIONS.find(f => f.value === filmType);
+      const structureRoles = storyStructure === 'custom' && customRoles.length > 0
+        ? customRoles
+        : structureOption?.roles || [];
+
+      // Build richer reference descriptions including style/scene preset names
+      const refParts = references.map(r => {
+        if (r.role === 'style' && r.name) return `Style: ${r.name}`;
+        if (r.role === 'scene' && r.name) return `Scene: ${r.name}`;
+        return `${r.role}: ${r.name || r.url}`;
+      });
+
+      const stylePresetNames = references
+        .filter(r => r.role === 'style')
+        .map(r => r.name)
+        .filter(Boolean)
+        .join(', ');
+
+      const scenePresetNames = references
+        .filter(r => r.role === 'scene')
+        .map(r => r.name)
+        .filter(Boolean)
+        .join(', ');
+
       const { data, error } = await supabase.functions.invoke('ai-shot-planner', {
         body: {
           filmType,
           storyStructure,
           shotDuration: settings.shotDuration,
           tone: settings.tone || '',
-          referenceDescriptions: references.map(r => `${r.role}: ${r.name || r.url}`).join('; '),
+          referenceDescriptions: refParts.join('; '),
           customRoles: storyStructure === 'custom' ? customRoles : undefined,
+          structureRoles,
+          filmDescription: filmOption?.description || '',
+          stylePresetNames: stylePresetNames || undefined,
+          scenePresetNames: scenePresetNames || undefined,
         },
       });
       if (error) throw new Error(error.message);
