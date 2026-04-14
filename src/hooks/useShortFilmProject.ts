@@ -848,8 +848,27 @@ export function useShortFilmProject() {
         })
       );
 
-      await supabase.from('video_projects').update({ status: 'complete' }).eq('id', currentProjectId!);
-      toast.success('Short film generation complete!');
+      const finalStatuses = shotStatuses;
+      const successCount = jobIds.filter(j => {
+        const s = finalStatuses.find(fs => fs.shot_index === j.shotIndex);
+        return s?.status === 'complete';
+      }).length;
+      const projectStatus = successCount === shots.length ? 'complete' : successCount > 0 ? 'partial' : 'failed';
+
+      // Persist full draft state for reopening
+      const draftState: DraftState = {
+        step: 'review', filmType, storyStructure, references, shots, settings, planMode, customRoles,
+      };
+      await supabase.from('video_projects').update({
+        status: projectStatus,
+        draft_state_json: JSON.parse(JSON.stringify(draftState)),
+      }).eq('id', currentProjectId!);
+      
+      if (successCount > 0) {
+        toast.success(projectStatus === 'complete' ? 'Short film generation complete!' : `${successCount}/${shots.length} shots completed`);
+      } else {
+        toast.error('All shots failed');
+      }
       refreshBalance();
 
       // Generate audio layer if needed
