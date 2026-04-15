@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, ChevronDown, X, Sparkles, Trash2, Crown } from 'lucide-react';
+import { User, ChevronDown, X, Sparkles, Trash2, Crown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
@@ -54,7 +54,6 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
 
   const isPaidPlan = ['growth', 'pro', 'enterprise'].includes(plan);
 
-  // User model IDs for badge display
   const userModelIds = new Set(userModelProfiles.map(m => m.modelId));
 
   const allModels = sortModels(filterHidden([...applyNameOverrides(applyOverrides(mockModels)), ...customModels, ...userModelProfiles]));
@@ -119,9 +118,9 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
       onClick={handleBrandModelClick}
       disabled={!isPaidPlan}
       className={cn(
-        'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+        'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all duration-200 text-left',
         isPaidPlan
-          ? 'border-dashed border-primary/30 hover:border-primary/50 cursor-pointer'
+          ? 'border-dashed border-primary/30 hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5 cursor-pointer'
           : 'border-dashed border-border opacity-50 grayscale cursor-not-allowed'
       )}
     >
@@ -144,16 +143,22 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
 
   const filtersAndGrid = (
     <>
+      {/* Header */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-foreground">Character Reference</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">Choose a model to guide the look and composition</p>
+      </div>
+
       {/* Gender filter */}
-      <div className="flex gap-1 mb-2">
+      <div className="flex gap-1.5 mb-3">
         {GENDER_FILTERS.map(f => (
           <button
             key={f.value}
             onClick={() => setGenderFilter(f.value)}
             className={cn(
-              'px-3 py-1 rounded-full text-[11px] font-medium transition-colors',
+              'px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors',
               genderFilter === f.value
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-foreground text-background'
                 : 'bg-muted/60 text-muted-foreground hover:bg-muted'
             )}
           >
@@ -163,15 +168,15 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
       </div>
 
       {/* Body type filter */}
-      <div className="flex gap-1 mb-3">
+      <div className="flex gap-1.5 mb-4">
         {BODY_FILTERS.map(f => (
           <button
             key={f.value}
             onClick={() => setBodyFilter(f.value)}
             className={cn(
-              'px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors',
+              'px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors',
               bodyFilter === f.value
-                ? 'bg-secondary text-secondary-foreground border border-border'
+                ? 'bg-muted border border-foreground/20 text-foreground'
                 : 'text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40'
             )}
           >
@@ -191,11 +196,12 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
         </button>
       )}
 
-      {/* Model grid — brand model card is last */}
-      <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
+      {/* Model grid */}
+      <div className="grid grid-cols-3 gap-2.5 max-h-80 overflow-y-auto pr-1">
         {filtered.map(model => {
           const isUserModel = userModelIds.has(model.modelId);
           const isLocked = isUserModel && !isPaidPlan;
+          const isSelected = selectedModel?.modelId === model.modelId;
 
           return (
             <button
@@ -209,11 +215,11 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
                 onOpenChange(false);
               }}
               className={cn(
-                'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+                'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all duration-200 text-left',
                 isLocked && 'opacity-50 grayscale cursor-not-allowed',
-                selectedModel?.modelId === model.modelId
-                  ? 'border-primary ring-2 ring-primary/30'
-                  : 'border-transparent hover:border-border'
+                isSelected
+                  ? 'border-primary ring-2 ring-primary/20'
+                  : 'border-transparent hover:border-border/60 hover:shadow-sm hover:-translate-y-0.5'
               )}
             >
               <div className="relative">
@@ -226,14 +232,19 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
                     <Crown className="w-4 h-4 text-primary" />
                   </div>
                 )}
+                {isSelected && !isLocked && (
+                  <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                  </div>
+                )}
               </div>
-              <div className="px-1.5 py-1 bg-background text-center">
-                <p className="text-[10px] font-medium text-foreground truncate">{model.name}</p>
+              <div className="px-1.5 py-1.5 bg-background text-center">
+                <p className="text-[11px] font-medium text-foreground truncate">{model.name}</p>
               </div>
               {isUserModel && !isLocked && (
                 <button
                   onClick={(e) => handleDeleteUserModel(model.modelId, e)}
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  className="absolute top-1 left-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -242,7 +253,6 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
           );
         })}
 
-        {/* Brand Models CTA — always last */}
         {brandModelCard}
 
         {filtered.length === 0 && (
@@ -252,7 +262,8 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
         )}
       </div>
 
-      <div className="mt-2">
+      {/* Footer */}
+      <div className="pt-3 mt-3 border-t border-border/30">
         <MissingRequestBanner category="model" compact />
       </div>
     </>
@@ -274,10 +285,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
       <PopoverTrigger asChild>
         {triggerButton}
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-3" align="start">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60 mb-2">
-          Character Reference
-        </p>
+      <PopoverContent className="w-[340px] p-4 rounded-xl border-border/50 shadow-xl shadow-black/8" align="start">
         {filtersAndGrid}
       </PopoverContent>
     </Popover>
