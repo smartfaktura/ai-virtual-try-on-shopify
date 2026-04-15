@@ -104,6 +104,11 @@ const COLLECTION_MERGE: Record<string, string> = {
   "wallets": "wallets-cardholders",
 };
 
+const TITLE_MAP_HOOK: Record<string, string> = {
+  furniture: 'Furniture',
+  'home-decor': 'Home Decor',
+};
+
 function buildCollections(scenes: DbScene[]): CategoryCollection[] {
   const catMap = new Map<string, DbScene[]>();
   const catSortOrder = new Map<string, number>();

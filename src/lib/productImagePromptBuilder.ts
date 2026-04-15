@@ -322,6 +322,8 @@ function defaultBackground(category?: string): string {
     case 'food':
     case 'beverages':
       return 'warm off-white background with natural warmth';
+    case 'furniture':
+      return 'styled interior room setting with architectural depth';
     case 'home-decor':
       return 'soft white studio background';
     default:
@@ -334,6 +336,8 @@ function defaultSurface(category?: string): string {
     case 'food':
     case 'beverages':
       return 'placed on a warm, natural wood surface with visible grain';
+    case 'furniture':
+      return 'positioned in a curated interior space on polished concrete or natural wood flooring';
     case 'home-decor':
       return 'placed on a premium styled surface with complementary texture';
     default:
@@ -461,6 +465,7 @@ function defaultLighting(category?: string): string {
     case 'sneakers':
     case 'boots':
     case 'high-heels': return 'Controlled directional lighting revealing leather grain and material depth.';
+    case 'furniture': return 'Warm directional interior lighting with natural window-light ambience revealing material textures and wood grain.';
     case 'home-decor': return 'Warm ambient interior lighting with natural window-light feel.';
     default: return 'Professional studio lighting with soft fill and controlled highlights.';
   }

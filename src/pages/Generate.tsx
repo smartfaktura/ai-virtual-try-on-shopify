@@ -774,7 +774,8 @@ export default function Generate() {
     { id: 'beauty-skincare', label: 'Cosmetics' },
     { id: 'food', label: 'Food' },
     { id: 'beverages', label: 'Beverages' },
-    { id: 'home-decor', label: 'Home & Interior' },
+    { id: 'furniture', label: 'Furniture' },
+    { id: 'home-decor', label: 'Home Decor' },
     { id: 'supplements-wellness', label: 'Supplements' },
     { id: 'other', label: 'Universal' },
   ];
@@ -842,7 +843,9 @@ export default function Generate() {
     if (beverageKeywords.some(kw => combined.includes(kw))) return 'beverages';
     const foodKeywords = ['cereal', 'granola', 'chocolate', 'honey', 'snack', 'food', 'organic', 'candy', 'chips', 'cookie'];
     if (foodKeywords.some(kw => combined.includes(kw))) return 'food';
-    const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'lamp', 'decor', 'home', 'interior', 'carafe', 'ceramic'];
+    const furnitureKeywords = ['sofa', 'couch', 'sectional', 'loveseat', 'armchair', 'recliner', 'dining table', 'coffee table', 'desk', 'bookshelf', 'bookcase', 'cabinet', 'dresser', 'wardrobe', 'sideboard', 'credenza', 'nightstand', 'ottoman', 'bench', 'stool', 'bed frame', 'headboard', 'futon', 'mattress', 'tv stand', 'media console', 'kitchen island', 'bar cart', 'furniture'];
+    if (furnitureKeywords.some(kw => combined.includes(kw))) return 'furniture';
+    const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'lamp', 'decor', 'home', 'interior', 'carafe', 'ceramic', 'diffuser', 'figurine', 'tray', 'coaster'];
     if (homeKeywords.some(kw => combined.includes(kw))) return 'home-decor';
     const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'omega', 'wellness', 'greens', 'superfood'];
     if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements-wellness';
@@ -3815,7 +3818,8 @@ export default function Generate() {
                     else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'beauty-skincare';
                     else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food';
                     else if (['coffee', 'tea', 'juice', 'beverage', 'drink'].some(kw => productType.includes(kw))) productCategory = 'beverages';
-                    else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home-decor';
+                    else if (['sofa', 'couch', 'table', 'desk', 'chair', 'bed', 'shelf', 'cabinet', 'dresser', 'wardrobe', 'furniture'].some(kw => productType.includes(kw))) productCategory = 'furniture';
+                    else if (['decor', 'home', 'candle', 'vase', 'lamp', 'pillow'].some(kw => productType.includes(kw))) productCategory = 'home-decor';
                     else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements-wellness';
 
                     const topPicks = mockTemplates.filter(t => t.enabled && t.category === productCategory).slice(0, 3);
