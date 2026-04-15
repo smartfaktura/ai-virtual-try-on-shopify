@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
+import { useCredits } from '@/contexts/CreditContext';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { FilmTypeSelector } from '@/components/app/video/short-film/FilmTypeSelector';
 import { ReferenceUploadPanel } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { StoryStructureSelector } from '@/components/app/video/short-film/StoryStructureSelector';
