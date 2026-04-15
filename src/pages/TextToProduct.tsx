@@ -310,7 +310,7 @@ export default function TextToProduct() {
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
-  const { refreshBalance, plan } = useCredits();
+  const { refreshBalance, plan, balance } = useCredits();
   const { user } = useAuth();
   const isFreeUser = plan === 'free';
   const conversionState = useConversionState();
@@ -476,6 +476,7 @@ export default function TextToProduct() {
   const canProceedFromScenes = selectedScenes.length > 0;
 
   const handleGenerate = useCallback(async () => {
+    if (creditCost > balance) { setNoCreditsModalOpen(true); return; }
     const scenesToGenerate = SCENE_TEMPLATES.filter(t => selectedScenes.includes(t.id));
     const newJobProductMap = new Map<string, string>();
     setCompletedJobs(new Map());
