@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUpRight, AlertCircle, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Sparkles } from 'lucide-react';
 import { creditPacks } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { type ConversionCategory, getLayer3Headline, getLayer3Subline } from '@/lib/conversionCopy';
