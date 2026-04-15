@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
@@ -71,6 +72,7 @@ export default function ProductImages() {
   };
 
   const [step, setStep] = useState<PIStep>(1);
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
   const [perCategoryScenes, setPerCategoryScenes] = useState<Map<string, Set<string>>>(new Map());
@@ -509,7 +511,7 @@ export default function ProductImages() {
 
   // Generation handler
   const handleGenerate = useCallback(async () => {
-    if (!canAfford) { openBuyModal(); return; }
+    if (!canAfford) { setNoCreditsModalOpen(true); return; }
 
     // Cancel any in-flight polling from a previous generation
     if (pollingRef.current) { clearTimeout(pollingRef.current); pollingRef.current = null; }
@@ -755,7 +757,7 @@ export default function ProductImages() {
     } catch {}
 
     startPolling(newJobMap);
-  }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
+  }, [selectedProducts, selectedScenes, canAfford, details, setBalanceFromServer, queryClient, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
   const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string; sceneId?: string; aspectRatio?: string }>) => {
     const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>();
@@ -1352,6 +1354,11 @@ export default function ProductImages() {
         open={demoPickerOpen}
         onOpenChange={setDemoPickerOpen}
         onSelect={handleQuickUpload}
+      />
+      <NoCreditsModal
+        open={noCreditsModalOpen}
+        onClose={() => setNoCreditsModalOpen(false)}
+        category="fallback"
       />
     </div>
   );
