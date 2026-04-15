@@ -389,6 +389,20 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       )}
 
       {/* Recommended (detected) categories */}
+      {isLoadingScenes && unifiedRecommended.length === 0 && (
+        <div className="space-y-3">
+          {Array.from({ length: Math.min(priorityCats.length || 2, 3) }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-8 w-48 rounded bg-muted mb-2" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                {Array.from({ length: 3 }).map((_, j) => (
+                  <div key={j} className="h-20 rounded-md bg-muted" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {unifiedRecommended.length > 0 && (
         <div className="space-y-2">
           {unifiedRecommended.map(cat => (
