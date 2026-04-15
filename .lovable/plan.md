@@ -1,27 +1,32 @@
 
 
-# Merge Duplicate Food Categories in Scene Selection
+# Merge snacks-food into Food & Snacks in Scene Grouping
 
 ## Problem
-The database has three `category_collection` values for food-related scenes:
-- `food` (16 scenes) — displayed as "Food & Snacks"
-- `snacks-food` (24 scenes) — displayed as raw slug "snacks-food" (no alias)
-- `food-beverage` (16 scenes) — already aliased to `food`
-
-Because `snacks-food` has no alias, it appears as a separate category section instead of merging with "Food & Snacks".
+The `buildCollections()` function in `src/hooks/useProductImageScenes.ts` groups scenes by their raw `category_collection` database value. Scenes tagged `snacks-food` (24) appear as a separate section from `food` (16), even though the `CATEGORY_ALIASES` mapping exists — that alias only affects product-to-category detection, not scene grouping.
 
 ## Solution
 
-**File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`**
+**File: `src/hooks/useProductImageScenes.ts`**
 
-Add one line to `CATEGORY_ALIASES`:
+Add a `COLLECTION_MERGE` map and apply it inside `buildCollections()` before grouping:
+
 ```typescript
-"snacks-food": "food",
+const COLLECTION_MERGE: Record<string, string> = {
+  "snacks-food": "food",
+  "food-beverage": "food",
+};
 ```
 
-This merges all 40 food scenes (16 from `food` + 24 from `snacks-food`) under the single "Food & Snacks" category tab. The `food-beverage` alias already exists.
+In the `for (const s of scenes)` loop (line 105-116), normalize the category before grouping:
+
+```typescript
+const cat = COLLECTION_MERGE[s.category_collection] ?? s.category_collection;
+```
+
+This merges all 40 food/snack scenes under the single "Food & Snacks" heading (which is already in the `TITLE_MAP` at line 150).
 
 ## Impact
-- One-line change
-- Users see a single "Food & Snacks" section with all 40 scenes instead of two separate sections
+- One constant + one line change in `buildCollections()`
+- All food-related scenes appear under a single "Food & Snacks" section with count 40
 
