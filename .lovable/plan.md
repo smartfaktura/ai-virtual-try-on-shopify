@@ -1,27 +1,27 @@
 
 
-# Hide Horizontal Scroll on Mobile/Tablet Stepper
+# Fix Mobile Stepper: Bigger, Show All Labels, Remove Progress Bar
 
-## Problem
-The stepper area near "Product / Shots / Setup / Generate" shows a horizontal scroll or "Carousel scroll" indicator on mobile and tablet viewports.
+## Problems
+1. Only the active step label is visible — other steps show icon-only (line 91 condition)
+2. Circles are small (`w-8 h-8`) and icons tiny (`w-3.5 h-3.5`)
+3. The progress bar below the steps (lines 107-113) looks like a "carousel scroll" indicator
 
-## Fix
-**File: `src/components/app/catalog/CatalogStepper.tsx`**
+## Fix — `src/components/app/catalog/CatalogStepper.tsx`
 
-Add `overflow-hidden` to the mobile stepper container (line 64) to prevent any horizontal scroll behavior or scroll indicator from appearing:
+### Mobile stepper redesign (lines 63-114)
 
-```tsx
-// Line 64 — add overflow-hidden
-<div className="sm:hidden overflow-hidden">
-```
+Replace the mobile stepper with a cleaner layout:
 
-Also add `overflow-hidden` to the outer wrapper (line 20) to ensure no scroll leaks on tablet:
+- **Show all step labels** — remove the `{isActive && ...}` condition on labels (line 91-95)
+- **Increase icon circle size** from `w-8 h-8` to `w-10 h-10`, icons from `w-3.5 h-3.5` to `w-4 h-4`
+- **Always show label text** below each icon — `text-[10px]` with proper color states
+- **Remove the progress bar entirely** (lines 107-113) — redundant with the step circles showing state
+- Keep `overflow-hidden` on the container
 
-```tsx
-// Line 20
-<div className="w-full overflow-hidden">
-```
+### Result
+4 evenly spaced step circles with labels always visible, no progress bar, larger touch targets. Matches the premium feel of the rest of the UI.
 
 ## Files changed
-- `src/components/app/catalog/CatalogStepper.tsx` — 2 lines
+- `src/components/app/catalog/CatalogStepper.tsx` — mobile stepper section only
 
