@@ -1,23 +1,25 @@
 
 
-# Fix Demo Picker — Fit All 9 Products Without Scrolling on Desktop
+# Reorder Demo Products
 
-## Problem
-With 3 columns × 3 rows and a 4:5 aspect ratio per card, the dialog overflows the viewport (90vh max). The cards are too tall.
-
-## Fix
-
-**Change aspect ratio from 4:5 to 1:1 (square)** on the image container. Square thumbnails are shorter and will let all 3 rows fit comfortably within the dialog's max-height.
+## Change
 
 **File: `src/components/app/product-images/DemoProductPicker.tsx`**
 
-- Line 61: change `aspectRatio: '4/5'` → `'1/1'`
-- Line 66: change `aspectRatio="4/5"` → `"1/1"`
-- Reduce card padding from `p-2` to `p-1.5` and gap from `gap-3` to `gap-2` to tighten the grid slightly
-- Widen dialog to `sm:max-w-2xl` so squares have more room
+Reorder the `DEMO_PRODUCTS` array to match the requested sequence:
 
-These changes keep the same 3-column layout but shorten each card enough that all 9 fit without scrolling on a standard desktop viewport.
+1. Cat-Eye Glasses (Eyewear)
+2. Leather Handbag (Bags)
+3. Zip Hoodie (Hoodies)
+4. Silk Scarf (Scarves)
+5. Baseball Cap (Hats)
+6. High-Rise Jeans (Jeans)
+7. Luxury Shampoo (Beauty)
+8. Bouclé Armchair (Furniture)
+9. Urban Backpack (Backpacks)
+
+Note: User listed 8 items — Backpack stays as 9th.
 
 ## Files changed
-- `src/components/app/product-images/DemoProductPicker.tsx` — aspect ratio, spacing, dialog width
+- `src/components/app/product-images/DemoProductPicker.tsx` — reorder array
 
