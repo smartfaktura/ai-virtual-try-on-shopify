@@ -14,7 +14,7 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 
 
 
-import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
+
 import { DashboardDiscoverSection } from '@/components/app/DashboardDiscoverSection';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
 import { DashboardTipCard } from '@/components/app/DashboardTipCard';
@@ -23,92 +23,14 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { JobStatus } from '@/types';
-import type { Workflow } from '@/pages/Workflows';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
-import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 
-/* ── Inline card with IntersectionObserver for animations ── */
-function DashboardWorkflowCard({ workflow, onNavigate, comingSoon }: { workflow: Workflow; onNavigate: (slug: string) => void; comingSoon?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.3 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  const scene = workflowScenes[workflow.name];
-
-  return (
-    <div
-      ref={ref}
-      className={`group rounded-xl border overflow-hidden transition-all duration-300 flex flex-col ${
-        comingSoon
-          ? 'opacity-75 border-dashed border-border/60 bg-card/80 cursor-default'
-          : 'border-border bg-card hover:shadow-lg hover:border-primary/30'
-      }`}
-    >
-      <div className="aspect-[4/5] bg-muted/30 overflow-hidden relative">
-        {scene && !comingSoon ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} mobileCompact={isMobile} />
-        ) : (
-          <img
-            src={getOptimizedUrl(workflow.preview_image_url || '/placeholder.svg', { quality: 60 })}
-            alt={workflow.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
-          />
-        )}
-        {comingSoon && (
-          <Badge variant="outline" className="absolute top-2 right-2 z-20 text-[10px] font-medium text-muted-foreground border-border/60">
-            Coming Soon
-          </Badge>
-        )}
-        {!comingSoon && workflow.uses_tryon && (
-          <Badge className="absolute top-2 right-2 z-20 text-[10px] px-2 py-0.5 bg-primary/90 text-primary-foreground border-0">
-            Try-On
-          </Badge>
-        )}
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="text-sm font-bold text-foreground truncate">{workflow.name}</h3>
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{workflow.description}</p>
-        {comingSoon ? (
-          <Button
-            size="sm"
-            className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
-            disabled
-            variant="secondary"
-          >
-            Coming Soon
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
-            onClick={() => onNavigate(workflow.slug || '')}
-          >
-            Create Set
-            <ArrowRight className="w-3 h-3" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -308,19 +230,6 @@ export default function Dashboard() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // Fetch workflows (for first-run grid)
-  const { data: workflows = [] } = useQuery({
-    queryKey: ['dashboard-workflows'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('workflows')
-        .select('*')
-        .order('sort_order');
-      if (error) throw error;
-      return data as unknown as Workflow[];
-    },
-    enabled: !!user,
-  });
 
 
   // Critical error state — show recovery UI instead of blank skeletons
@@ -483,35 +392,6 @@ export default function Dashboard() {
         <RecentCreationsGallery />
 
 
-        {/* Explore Workflows — compact animated cards */}
-        {workflows.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Templates</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-              {[...workflows].sort((a, b) => {
-                const order: Record<string, number> = {
-                  'Virtual Try-On Set': 1,
-                  'Product Listing Set': 2,
-                  'Selfie / UGC Set': 3,
-                  'Mirror Selfie Set': 4,
-                  'Flat Lay Set': 5,
-                };
-                return (order[a.name] ?? 99) - (order[b.name] ?? 99);
-              }).map(workflow => (
-                <DashboardWorkflowCard
-                  key={workflow.id}
-                  workflow={workflow}
-                  onNavigate={(slug) => navigate(slug ? `/app/generate/${slug}` : `/app/workflows`)}
-                  comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-
-        {/* Your AI Studio Team */}
-        <DashboardTeamCarousel />
 
 
         <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
@@ -662,8 +542,6 @@ export default function Dashboard() {
       </div>
 
 
-      {/* Your AI Studio Team */}
-      <DashboardTeamCarousel />
 
       {/* Recent Jobs */}
       <div className="space-y-4">
