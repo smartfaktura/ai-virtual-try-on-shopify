@@ -1,22 +1,24 @@
 
 
-# Save Image Optimization Rule as Project Memory
+# Fix Product Selection Grid — Remove Width-Based Crop
 
-No code changes needed — just persist the rule so it's always followed.
+## Problem
+The Step 1 product grid in `/app/generate/product-images` uses `getOptimizedUrl(p.image_url, { width: 280, quality: 70 })`. The `width: 280` triggers Supabase's server-side crop before the browser applies `object-contain`, producing the same zoomed-in artifact we fixed on workflow cards.
 
-## Memory to save: `mem://style/image-optimization-no-crop`
+These product cards display arbitrary aspect ratio images inside `aspect-square` containers with `object-contain` — so server-side width cropping is incorrect.
 
-**Content**: For all full-bleed, carousel, and background images, use quality-only optimization (`{ quality: 60 }`). Never add a `width` parameter to `getOptimizedUrl` for these use cases — Supabase's `/render/image/` endpoint crops server-side when width is set without height, producing a zoomed-in result. The `width` parameter is only safe for small fixed-size thumbnails (product chips, avatars) where the container dimensions are known and match.
+## Fix
 
-## Index update
+**File: `src/components/app/product-images/ProductImagesStep1Products.tsx`** (line 138)
 
-Add to Core rules:
-`Image optimization: quality-only for backgrounds/carousels. Never use width param — causes server-side crop zoom.`
+Change:
+```typescript
+src={getOptimizedUrl(p.image_url, { width: 280, quality: 70 })}
+```
+To:
+```typescript
+src={getOptimizedUrl(p.image_url, { quality: 70 })}
+```
 
-Add to Memories:
-`- [Image Optimization No-Crop](mem://style/image-optimization-no-crop) — Quality-only for full-bleed images, width only for fixed thumbnails`
-
-## Files
-- `mem://style/image-optimization-no-crop` (new)
-- `mem://index.md` (update)
+One line change. Keeps quality compression (~70% savings) but stops the server crop.
 
