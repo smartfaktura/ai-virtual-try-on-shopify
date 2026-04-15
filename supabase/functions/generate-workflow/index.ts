@@ -1301,6 +1301,37 @@ serve(async (req) => {
               } catch (uploadErr) {
                 console.error("[generate-workflow] Storage upload error:", uploadErr);
               }
+            } else if (!imageUrl.includes("supabase.co/storage")) {
+              // External URL (Seedream CDN etc.) — fetch and re-upload to permanent storage
+              try {
+                const extResp = await fetch(imageUrl, { signal: AbortSignal.timeout(15_000) });
+                if (extResp.ok) {
+                  const bytes = new Uint8Array(await extResp.arrayBuffer());
+                  const fmt = detectImageFormat(bytes);
+                  const userId = body.user_id || "anonymous";
+                  const jobId = body.job_id || crypto.randomUUID();
+                  const storagePath = `${userId}/${jobId}/${i}-${a}.${fmt.ext}`;
+
+                  const { error: uploadError } = await supabase.storage
+                    .from("workflow-previews")
+                    .upload(storagePath, bytes, {
+                      contentType: fmt.contentType,
+                      cacheControl: "3600",
+                    });
+
+                  if (!uploadError) {
+                    const { data: publicUrlData } = supabase.storage
+                      .from("workflow-previews")
+                      .getPublicUrl(storagePath);
+                    finalUrl = publicUrlData.publicUrl;
+                    console.log(`[generate-workflow] Re-uploaded external URL to storage: ${storagePath}`);
+                  } else {
+                    console.error("[generate-workflow] External URL re-upload failed:", uploadError.message);
+                  }
+                }
+              } catch (reuploadErr) {
+                console.error("[generate-workflow] External URL re-upload error:", reuploadErr);
+              }
             }
 
             images.push({
