@@ -1,62 +1,96 @@
-import { useEffect, useState } from 'react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Sparkles, ArrowRight, Package, User, Camera, Play } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-/* ── Typing animation ── */
-const PROMPT_TEXTS = [
-  'A luxury skincare bottle on wet marble in soft morning light...',
-  'Leather bag on a café table, golden hour, shallow depth of field...',
-  'Sneakers floating mid-air against a gradient sky, studio lighting...',
-  'Perfume bottle surrounded by fresh botanicals on linen cloth...',
+/* ── Assets (reuse landing page URLs) ── */
+const MODEL_AVATARS = [
+  { name: 'Zara', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-athletic-mixed.jpg'), { quality: 40, width: 40 }) },
+  { name: 'Freya', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-average-nordic.jpg'), { quality: 40, width: 40 }) },
+  { name: 'Olivia', src: getOptimizedUrl(getLandingAssetUrl('models/model-035-olivia.jpg'), { quality: 40, width: 40 }) },
 ];
-const TYPING_SPEED = 45;
-const PAUSE_AFTER_TYPED = 2400;
-const PAUSE_AFTER_ERASED = 600;
 
-function useTypingAnimation() {
-  const [text, setText] = useState('');
-  const [showCursor, setShowCursor] = useState(true);
+const CHIP_THUMB = getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 40, width: 40 });
+const SCENE_THUMB = getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 40, width: 40 });
 
-  useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    let charIdx = 0;
-    let erasing = false;
-    let promptIdx = 0;
-    const tick = () => {
-      const prompt = PROMPT_TEXTS[promptIdx];
-      if (!erasing) {
-        charIdx++;
-        setText(prompt.slice(0, charIdx));
-        if (charIdx >= prompt.length) { erasing = true; timeout = setTimeout(tick, PAUSE_AFTER_TYPED); return; }
-        timeout = setTimeout(tick, TYPING_SPEED + Math.random() * 30);
-      } else {
-        charIdx--;
-        setText(prompt.slice(0, charIdx));
-        if (charIdx <= 0) { erasing = false; promptIdx = (promptIdx + 1) % PROMPT_TEXTS.length; timeout = setTimeout(tick, PAUSE_AFTER_ERASED); return; }
-        timeout = setTimeout(tick, 18);
-      }
-    };
-    timeout = setTimeout(tick, 800);
-    return () => clearTimeout(timeout);
-  }, []);
+const RESULT_CARDS = [
+  { label: 'Studio', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-1.png'), { quality: 50, width: 200 }) },
+  { label: 'Court', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-2.png'), { quality: 50, width: 200 }) },
+  { label: 'Café', src: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 50, width: 200 }) },
+];
 
-  useEffect(() => {
-    const iv = setInterval(() => setShowCursor(p => !p), 530);
-    return () => clearInterval(iv);
-  }, []);
+const PROMPT_TEXT = 'Shoot my crop top on a court, studio, and café';
+const CYCLE_MS = 6500;
 
-  return { text, showCursor };
-}
+type ChipKey = 'product' | 'model' | 'scene';
+
+const CHIPS: { key: ChipKey; icon: typeof Package; label: string; delay: number }[] = [
+  { key: 'product', icon: Package, label: 'Crop Top', delay: 1200 },
+  { key: 'model', icon: User, label: 'Zara +2', delay: 1500 },
+  { key: 'scene', icon: Camera, label: 'Scenes', delay: 1800 },
+];
 
 /* ── Main card ── */
 interface Props { onSelect: () => void; mobileCompact?: boolean; }
 
 export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
-  const { text, showCursor } = useTypingAnimation();
+  const [cycle, setCycle] = useState(0);
+  const [typedText, setTypedText] = useState('');
+  const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({ product: false, model: false, scene: false });
+  const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [visibleResults, setVisibleResults] = useState<number[]>([]);
   const [hovered, setHovered] = useState(false);
+
+  // Preload tiny images
+  useEffect(() => {
+    [...MODEL_AVATARS.map(m => m.src), CHIP_THUMB, SCENE_THUMB, ...RESULT_CARDS.map(r => r.src)]
+      .forEach(url => { const img = new Image(); img.src = url; });
+  }, []);
+
+  // Animation cycle
+  useEffect(() => {
+    setTypedText('');
+    setActiveChips({ product: false, model: false, scene: false });
+    setGenerating(false);
+    setProgress(0);
+    setShowResults(false);
+    setVisibleResults([]);
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    let charIdx = 0;
+    const typeTimer = setInterval(() => {
+      if (charIdx < PROMPT_TEXT.length) {
+        charIdx = Math.min(charIdx + 3, PROMPT_TEXT.length);
+        setTypedText(PROMPT_TEXT.slice(0, charIdx));
+      } else {
+        clearInterval(typeTimer);
+      }
+    }, 30);
+
+    CHIPS.forEach((chip) => {
+      timers.push(setTimeout(() => setActiveChips(prev => ({ ...prev, [chip.key]: true })), chip.delay));
+    });
+
+    timers.push(setTimeout(() => setGenerating(true), 2400));
+    timers.push(setTimeout(() => setProgress(30), 2600));
+    timers.push(setTimeout(() => setProgress(65), 2900));
+    timers.push(setTimeout(() => setProgress(100), 3200));
+    timers.push(setTimeout(() => { setGenerating(false); setShowResults(true); }, 3600));
+
+    RESULT_CARDS.forEach((_, i) => {
+      timers.push(setTimeout(() => setVisibleResults(prev => [...prev, i]), 3800 + i * 180));
+    });
+
+    timers.push(setTimeout(() => setCycle(c => c + 1), CYCLE_MS));
+
+    return () => { clearInterval(typeTimer); timers.forEach(clearTimeout); };
+  }, [cycle]);
 
   return (
     <Card
@@ -70,51 +104,101 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
     >
       {/* ── Visual area ── */}
       <div className={cn(
-        'relative w-full overflow-hidden bg-gradient-to-br from-foreground/[0.03] via-muted/60 to-primary/[0.04]',
+        'relative w-full overflow-hidden bg-gradient-to-br from-foreground/[0.02] via-muted/40 to-primary/[0.03]',
         mobileCompact ? 'aspect-[2/3]' : 'aspect-[3/4]',
       )}>
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.035]" style={{
-          backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 0.5px, transparent 0.5px)',
-          backgroundSize: '20px 20px',
-        }} />
+        {/* Progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] z-10 overflow-hidden">
+          <div
+            className={cn('h-full w-full origin-left transition-transform duration-300', generating ? 'bg-primary' : 'bg-transparent')}
+            style={{ transform: `scaleX(${generating ? progress / 100 : 0})` }}
+          />
+        </div>
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-3 sm:px-5 gap-3">
-          {/* Badge */}
-          <Badge variant="secondary" className="text-[9px] font-semibold tracking-wider uppercase bg-foreground/[0.06] text-foreground/60 border-0 backdrop-blur-sm px-2.5 py-0.5">
-            <Sparkles className="w-2.5 h-2.5 mr-1 opacity-70" />
-            Freestyle Studio
-          </Badge>
-
-          {/* Pill tags */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
-            {['Products', 'Models', 'Scenes', 'Lighting'].map((tag) => (
-              <span key={tag} className="text-[9px] px-2 py-0.5 rounded-full bg-foreground/[0.05] text-foreground/50 font-medium">{tag}</span>
-            ))}
+        <div className="absolute inset-0 flex flex-col px-2 pt-3 pb-2 gap-1.5">
+          {/* Prompt box */}
+          <div className={cn(
+            'rounded-lg border bg-card/80 backdrop-blur-sm px-2 py-1.5 min-h-[28px] flex items-start transition-colors duration-300',
+            hovered ? 'border-primary/30' : 'border-border/50',
+          )}>
+            <p className="text-[9px] leading-relaxed text-foreground/80 flex-1 line-clamp-2">
+              {typedText}
+              <span className="inline-block w-[1px] h-2.5 bg-primary/60 ml-0.5 animate-pulse align-text-bottom" />
+            </p>
           </div>
 
-          {/* Prompt composer */}
+          {/* Chips + Generate row */}
+          <div className="flex items-center gap-1 overflow-hidden">
+            {CHIPS.map((chip) => {
+              const Icon = chip.icon;
+              const active = activeChips[chip.key];
+              const isModel = chip.key === 'model';
+              return (
+                <div
+                  key={chip.key}
+                  className={cn(
+                    'inline-flex items-center gap-0.5 h-5 px-1.5 rounded-full text-[8px] font-medium border whitespace-nowrap transition-all duration-500 shrink-0',
+                    active
+                      ? 'border-primary/40 bg-primary/10 text-primary scale-105'
+                      : 'border-border/40 bg-muted/30 text-muted-foreground/50',
+                  )}
+                >
+                  {active && isModel ? (
+                    <div className="flex -space-x-1 shrink-0">
+                      {MODEL_AVATARS.map((m, idx) => (
+                        <img key={m.name} src={m.src} alt={m.name}
+                          className="w-3 h-3 rounded-full object-cover ring-1 ring-card"
+                          style={{ zIndex: MODEL_AVATARS.length - idx }}
+                        />
+                      ))}
+                    </div>
+                  ) : active && chip.key === 'product' ? (
+                    <img src={CHIP_THUMB} alt="Product" className="w-3 h-3 object-cover rounded ring-1 ring-border/40 shrink-0" />
+                  ) : active && chip.key === 'scene' ? (
+                    <img src={SCENE_THUMB} alt="Scene" className="w-3 h-3 object-cover rounded ring-1 ring-border/40 shrink-0" />
+                  ) : (
+                    <Icon className="w-2.5 h-2.5 shrink-0" />
+                  )}
+                  <span>{active ? chip.label : chip.key.charAt(0).toUpperCase() + chip.key.slice(1)}</span>
+                </div>
+              );
+            })}
+
+            {/* Mini generate button */}
+            <div className={cn(
+              'ml-auto w-5 h-5 rounded-md flex items-center justify-center transition-all duration-500 shrink-0',
+              generating
+                ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                : showResults
+                  ? 'bg-primary/80 text-primary-foreground'
+                  : 'bg-muted text-muted-foreground',
+            )}>
+              {generating ? (
+                <div className="w-2 h-2 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              ) : (
+                <Play className="w-2 h-2" />
+              )}
+            </div>
+          </div>
+
+          {/* Result images */}
           <div className={cn(
-            'w-full max-w-[260px] rounded-xl border backdrop-blur-md transition-all duration-300',
-            hovered
-              ? 'border-primary/30 bg-card/90 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]'
-              : 'border-border/60 bg-card/70 shadow-sm',
+            'flex-1 grid grid-cols-3 gap-1 transition-all duration-500 min-h-0',
+            showResults ? 'opacity-100' : 'opacity-0',
           )}>
-            <div className="px-3 py-2.5 min-h-[44px] flex items-start">
-              <p className="text-[11px] leading-relaxed text-foreground/70 font-normal">
-                {text}
-                <span className={cn(
-                  'inline-block w-[1.5px] h-3.5 ml-0.5 -mb-0.5 bg-primary/60 transition-opacity duration-100',
-                  showCursor ? 'opacity-100' : 'opacity-0',
-                )} />
-              </p>
-            </div>
-            <div className="border-t border-border/40 px-3 py-1.5 flex items-center justify-between">
-              <span className="text-[9px] text-muted-foreground/50 font-medium">Describe any visual you want</span>
-              <div className={cn('w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center transition-colors', hovered && 'bg-primary/20')}>
-                <Sparkles className="w-2.5 h-2.5 text-primary/60" />
+            {RESULT_CARDS.map((card, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'rounded-md overflow-hidden border border-border/40 bg-card transition-all duration-500',
+                  visibleResults.includes(i)
+                    ? 'opacity-100 translate-y-0 scale-100'
+                    : 'opacity-0 translate-y-2 scale-95',
+                )}
+              >
+                <img src={card.src} alt={card.label} className="w-full h-full object-cover" loading="lazy" />
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
