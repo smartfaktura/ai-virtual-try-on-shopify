@@ -451,6 +451,35 @@ serve(async (req) => {
             } catch (uploadErr) {
               console.error("[generate-text-product] Storage upload error:", uploadErr);
             }
+          } else if (!imageUrl.includes("supabase.co/storage")) {
+            // External URL (Seedream CDN etc.) — fetch and re-upload to permanent storage
+            try {
+              const extResp = await fetch(imageUrl, { signal: AbortSignal.timeout(15_000) });
+              if (extResp.ok) {
+                const bytes = new Uint8Array(await extResp.arrayBuffer());
+                const fmt = detectImageFormat(bytes);
+                const storagePath = `${userId || "anonymous"}/${jobId || crypto.randomUUID()}/${i}.${fmt.ext}`;
+
+                const { error: uploadError } = await supabase.storage
+                  .from("workflow-previews")
+                  .upload(storagePath, bytes, {
+                    contentType: fmt.contentType,
+                    cacheControl: "3600",
+                  });
+
+                if (!uploadError) {
+                  const { data: publicUrlData } = supabase.storage
+                    .from("workflow-previews")
+                    .getPublicUrl(storagePath);
+                  finalUrl = publicUrlData.publicUrl;
+                  console.log(`[generate-text-product] Re-uploaded external URL to storage: ${storagePath}`);
+                } else {
+                  console.error("[generate-text-product] External URL re-upload failed:", uploadError.message);
+                }
+              }
+            } catch (reuploadErr) {
+              console.error("[generate-text-product] External URL re-upload error:", reuploadErr);
+            }
           }
 
           images.push({ url: finalUrl, label, aspect_ratio: aspectRatio });
