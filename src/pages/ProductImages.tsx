@@ -508,6 +508,10 @@ export default function ProductImages() {
   const handleGenerate = useCallback(async () => {
     if (!canAfford) { openBuyModal(); return; }
 
+    // Cancel any in-flight polling from a previous generation
+    if (pollingRef.current) { clearTimeout(pollingRef.current); pollingRef.current = null; }
+    setJobMap(new Map());
+
     const imgCount = parseInt(details.imageCount || '1', 10);
     const mc = (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) || 1;
     const totalExpected = (perCategoryScenes.size > 0 && hasMultipleCategories)

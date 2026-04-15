@@ -80,7 +80,7 @@ export function ProductImagesStep5Generating({
   const failedCount = failedJobIds?.size || 0;
   const completedOk = completedJobs - failedCount;
 
-  const pct = effectiveTotal > 0 ? Math.round((completedJobs / effectiveTotal) * 100) : 0;
+  const pct = effectiveTotal > 0 ? Math.min(100, Math.round((completedJobs / effectiveTotal) * 100)) : 0;
 
   const estimatePerImage = 8;
   const totalEstSeconds = Math.max(effectiveTotal * estimatePerImage, 1);
@@ -148,7 +148,7 @@ export function ProductImagesStep5Generating({
           <p className="text-sm text-muted-foreground">
             {isQueuing
               ? `Queuing scene ${enqueuedJobs} of ${expectedJobCount}`
-              : `${completedOk} of ${effectiveTotal} image${effectiveTotal !== 1 ? 's' : ''} completed`}
+              : `${Math.min(completedOk, effectiveTotal)} of ${effectiveTotal} image${effectiveTotal !== 1 ? 's' : ''} completed`}
             {productCount > 1 && !isQueuing && ` across ${productCount} products`}
           </p>
         </div>
