@@ -1,43 +1,39 @@
 
 
-# Fix Import Scenes: Auto-Deduplicate IDs & Bulk Sub-Category Selector
+# Rename Grid Size Buttons & Add 4th Grid Option
 
 ## Problem
-1. When importing a scene that already exists in another category, the scene_id conflicts and blocks import — user must manually rename each one
-2. No way to set a sub-category for all imported scenes at once — must configure each separately
+The S / M / L labels on the grid-size toggle look like clothing size selectors, which is confusing in context. Also, only 3 density options exist — user wants a 4th (4-column) option.
 
-## Solution
+## Changes
 
-### 1. Auto-suffix duplicate scene_ids (in `goToStep2`)
-When generating the `scene_id` from the scene name, check against `existingSceneIds` and also against other configs being created in the same batch. If a collision is found, append `-2`, `-3`, etc. until unique.
+**File:** `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-**File:** `src/components/app/ImportFromScenesModal.tsx`
+### 1. Add a 4th grid size and rename all labels
+Replace `GridSize` type and config:
 
-In `goToStep2` (~line 97), replace the simple `slugify(scene.name)` with a dedup function:
 ```typescript
-function deduplicateId(base: string, existing: string[], taken: Set<string>): string {
-  let candidate = base;
-  let i = 2;
-  while (existing.includes(candidate) || taken.has(candidate)) {
-    candidate = `${base}-${i}`;
-    i++;
-  }
-  return candidate;
-}
+type GridSize = 'xs' | 'small' | 'medium' | 'large';
+
+const GRID_CLASSES: Record<GridSize, string> = {
+  xs:     'grid-cols-2 sm:grid-cols-3 md:grid-cols-4',           // 4 cols max
+  small:  'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7',
+  medium: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6',
+  large:  'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+};
 ```
-Track a `takenIds` set during the loop so batch-internal collisions are also handled.
 
-### 2. Bulk sub-category selector (above the per-scene cards in Step 2)
-Add a "Set sub-category for all" dropdown at the top of Step 2. When changed, it updates `sub_category` on all configs at once. Individual per-scene overrides still work after.
+### 2. Use grid icons instead of text labels
+Replace `S/M/L` with small grid-dot icons (e.g., `LayoutGrid`, `Grid3x3`, `Grid2x2`) from lucide-react, or use descriptive labels like column counts. The toggle entries become:
 
-**Same file**, in the Step 2 render section (~line 272), add a control bar before the scene cards:
-- A `Select` dropdown with existing sub-categories + "Create new" option
-- A "Apply to all" button or auto-apply on change
-- Label: "Sub-category for all scenes"
+| ID | Icon/Label | Max columns |
+|----|-----------|-------------|
+| `small` | 7-col icon | 7 |
+| `medium` | 6-col icon | 6 |
+| `large` | 5-col icon | 5 |
+| `xs` | 4-col icon | 4 |
 
-### 3. Remove the hard block on duplicates
-The `handleImport` function currently refuses to import if any duplicate IDs exist (line 165). With auto-dedup this becomes less likely, but keep the warning as a soft indicator rather than removing it entirely — the user can still manually create a conflict if they edit the ID field.
+Will use small inline SVG grid-dot patterns (3×3, 2×3, 2×2, 1×2 dot grids) to visually represent density — no text, no ambiguity with clothing sizes.
 
-## Files Changed
-- `src/components/app/ImportFromScenesModal.tsx` — add `deduplicateId` helper, bulk sub-category UI, apply-all logic
+### Default stays `medium` (6 cols).
 
