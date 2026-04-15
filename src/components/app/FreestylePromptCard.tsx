@@ -1,15 +1,23 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { ArrowRight, ArrowUp, Camera, User, Package, Zap } from 'lucide-react';
+import { ArrowRight, ArrowUp, Zap } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const PROMPT_TEXT = 'Shoot my crop top on a court, studio, and café';
+const PROMPT_TEXT = 'Shoot my white crop top, editorial style, urban street and café';
+
+const STEP_IMAGES = {
+  scene: getOptimizedUrl(getLandingAssetUrl('poses/pose-lifestyle-coffee.jpg'), { quality: 50 }),
+  model: getOptimizedUrl(getLandingAssetUrl('models/model-female-slim-asian.jpg'), { quality: 50 }),
+  product: getOptimizedUrl(getLandingAssetUrl('workflows/workflow-tryon-product-flatlay.png'), { quality: 50 }),
+};
 
 const WORKFLOW_STEPS = [
-  { label: 'Scene', icon: Camera },
-  { label: 'Model', icon: User },
-  { label: 'Product', icon: Package },
+  { label: 'Scene', image: STEP_IMAGES.scene },
+  { label: 'Model', image: STEP_IMAGES.model },
+  { label: 'Product', image: STEP_IMAGES.product },
   { label: 'Generate', icon: Zap },
 ] as const;
 
@@ -17,7 +25,6 @@ const TYPING_SPEED = 55;
 const SEND_DELAY = 400;
 const PILL_STAGGER = 250;
 const HOLD_DURATION = 2200;
-const FADE_DURATION = 600;
 const RESTART_DELAY = 800;
 
 type Phase = 'idle' | 'typing' | 'sent' | 'pills' | 'hold' | 'fadeout';
@@ -44,7 +51,6 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
     timeouts.current.push(setTimeout(fn, ms));
   }, []);
 
-  // Intersection observer
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -56,7 +62,6 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
     return () => obs.disconnect();
   }, []);
 
-  // Animation loop
   useEffect(() => {
     if (!isVisible) return;
 
@@ -67,7 +72,6 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
       setCharIndex(0);
       setPillsVisible([false, false, false, false]);
 
-      // Brief idle pause then start typing
       addTimeout(() => {
         setPhase('typing');
         let idx = 0;
@@ -77,10 +81,8 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           if (idx >= PROMPT_TEXT.length) {
             if (typingInterval) clearInterval(typingInterval);
             typingInterval = null;
-            // Send pulse
             addTimeout(() => {
               setPhase('sent');
-              // Pills phase
               addTimeout(() => {
                 setPhase('pills');
                 WORKFLOW_STEPS.forEach((_, i) => {
@@ -92,13 +94,10 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
                     });
                   }, i * PILL_STAGGER);
                 });
-                // Hold
                 addTimeout(() => {
                   setPhase('hold');
-                  // Fade out
                   addTimeout(() => {
                     setPhase('fadeout');
-                    // Restart
                     addTimeout(startCycle, RESTART_DELAY);
                   }, HOLD_DURATION);
                 }, WORKFLOW_STEPS.length * PILL_STAGGER + 200);
@@ -130,15 +129,12 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
       )}
       onClick={onSelect}
     >
-      {/* Thumbnail / animation area */}
       <div className={cn(
         'relative w-full overflow-hidden bg-gradient-to-b from-muted/30 to-background flex flex-col items-center justify-center',
         mobileCompact ? 'aspect-[2/3]' : 'aspect-[3/4]',
       )}>
-        {/* Ambient glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary/[0.06] blur-3xl pointer-events-none" />
 
-        {/* Animated content */}
         <div
           className={cn(
             'relative z-10 w-full flex flex-col gap-3 transition-opacity duration-500',
@@ -151,7 +147,6 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
             'w-full rounded-xl border border-border/40 bg-muted/40 backdrop-blur-sm flex flex-col',
             mobileCompact ? 'p-2.5 min-h-[60px]' : 'p-3 min-h-[76px]',
           )}>
-            {/* Text area */}
             <div className="flex-1 flex items-start">
               <span className={cn(
                 'text-foreground/80 leading-relaxed font-medium break-words',
@@ -164,7 +159,6 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
               </span>
             </div>
 
-            {/* Send button */}
             <div className="flex justify-end mt-1.5">
               <div
                 className={cn(
@@ -178,20 +172,20 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
             </div>
           </div>
 
-          {/* Result pills */}
+          {/* Visual workflow pills */}
           <div className={cn(
             'flex flex-wrap items-center justify-center max-w-full overflow-hidden',
             mobileCompact ? 'gap-1.5' : 'gap-2',
           )}>
             {WORKFLOW_STEPS.map((step, i) => {
               const isGenerate = step.label === 'Generate';
-              const StepIcon = step.icon;
+              const hasImage = 'image' in step;
               return (
                 <span
                   key={step.label}
                   className={cn(
                     'inline-flex items-center gap-1 rounded-full border font-medium transition-all duration-300',
-                    mobileCompact ? 'px-1.5 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs',
+                    mobileCompact ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs',
                     isGenerate
                       ? 'bg-primary/10 border-primary/20 text-primary'
                       : 'bg-muted/30 border-border/30 text-foreground/70',
@@ -200,7 +194,18 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
                       : 'opacity-0 translate-y-1.5',
                   )}
                 >
-                  <StepIcon className={cn(mobileCompact ? 'w-2.5 h-2.5' : 'w-3 h-3')} />
+                  {hasImage ? (
+                    <img
+                      src={(step as { image: string }).image}
+                      alt={step.label}
+                      className={cn(
+                        'rounded-full object-cover flex-shrink-0',
+                        mobileCompact ? 'w-5 h-5' : 'w-6 h-6',
+                      )}
+                    />
+                  ) : (
+                    <Zap className={cn(mobileCompact ? 'w-2.5 h-2.5' : 'w-3 h-3')} />
+                  )}
                   {step.label}
                 </span>
               );
@@ -209,7 +214,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
         </div>
       </div>
 
-      {/* Content area — matches WorkflowCardCompact */}
+      {/* Content area */}
       <div className={cn('flex flex-col gap-1 flex-1', mobileCompact ? 'p-2' : 'p-4')}>
         <h3 className={cn(
           'font-bold tracking-tight leading-tight',
