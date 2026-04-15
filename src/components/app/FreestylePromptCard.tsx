@@ -1,12 +1,20 @@
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { ArrowRight, ArrowUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEXT = 'Shoot my crop top on a court, studio, and café';
-const CHAR_COUNT = PROMPT_TEXT.length;
-
 const RESULT_PILLS = ['Studio', 'Court', 'Café'] as const;
+
+const TYPING_SPEED = 55;
+const SEND_DELAY = 400;
+const PILL_STAGGER = 250;
+const HOLD_DURATION = 2200;
+const FADE_DURATION = 600;
+const RESTART_DELAY = 800;
+
+type Phase = 'idle' | 'typing' | 'sent' | 'pills' | 'hold' | 'fadeout';
 
 interface Props {
   onSelect: () => void;
@@ -14,145 +22,205 @@ interface Props {
 }
 
 export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [charIndex, setCharIndex] = useState(0);
+  const [pillsVisible, setPillsVisible] = useState([false, false, false]);
+  const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearAllTimeouts = useCallback(() => {
+    timeouts.current.forEach(clearTimeout);
+    timeouts.current = [];
+  }, []);
+
+  const addTimeout = useCallback((fn: () => void, ms: number) => {
+    timeouts.current.push(setTimeout(fn, ms));
+  }, []);
+
+  // Intersection observer
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.3 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Animation loop
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let typingInterval: ReturnType<typeof setInterval> | null = null;
+
+    const startCycle = () => {
+      setPhase('idle');
+      setCharIndex(0);
+      setPillsVisible([false, false, false]);
+
+      // Brief idle pause then start typing
+      addTimeout(() => {
+        setPhase('typing');
+        let idx = 0;
+        typingInterval = setInterval(() => {
+          idx++;
+          setCharIndex(idx);
+          if (idx >= PROMPT_TEXT.length) {
+            if (typingInterval) clearInterval(typingInterval);
+            typingInterval = null;
+            // Send pulse
+            addTimeout(() => {
+              setPhase('sent');
+              // Pills phase
+              addTimeout(() => {
+                setPhase('pills');
+                RESULT_PILLS.forEach((_, i) => {
+                  addTimeout(() => {
+                    setPillsVisible(prev => {
+                      const next = [...prev];
+                      next[i] = true;
+                      return next;
+                    });
+                  }, i * PILL_STAGGER);
+                });
+                // Hold
+                addTimeout(() => {
+                  setPhase('hold');
+                  // Fade out
+                  addTimeout(() => {
+                    setPhase('fadeout');
+                    // Restart
+                    addTimeout(startCycle, RESTART_DELAY);
+                  }, HOLD_DURATION);
+                }, RESULT_PILLS.length * PILL_STAGGER + 200);
+              }, SEND_DELAY);
+            }, SEND_DELAY);
+          }
+        }, TYPING_SPEED);
+      }, 600);
+    };
+
+    startCycle();
+
+    return () => {
+      clearAllTimeouts();
+      if (typingInterval) clearInterval(typingInterval);
+    };
+  }, [isVisible, addTimeout, clearAllTimeouts]);
+
+  const visibleText = PROMPT_TEXT.substring(0, charIndex);
+  const isFading = phase === 'fadeout';
+  const showSend = phase === 'sent' || phase === 'pills' || phase === 'hold';
+  const showCursor = phase === 'typing' || phase === 'idle';
+
   return (
     <Card
+      ref={ref}
       className={cn(
-        'group relative overflow-hidden border transition-all duration-300 flex flex-col cursor-pointer',
-        'hover:shadow-lg hover:border-primary/30',
+        'group relative overflow-hidden transition-shadow duration-300 flex flex-col border hover:shadow-lg cursor-pointer',
       )}
       onClick={onSelect}
     >
-      {/* Visual area */}
+      {/* Thumbnail / animation area */}
       <div className={cn(
-        'relative w-full overflow-hidden bg-gradient-to-b from-muted/20 to-background flex flex-col items-center justify-center',
-        mobileCompact ? 'px-3 py-5 gap-3' : 'px-5 py-8 gap-5',
+        'relative w-full overflow-hidden bg-gradient-to-b from-muted/30 to-background flex flex-col items-center justify-center',
+        mobileCompact ? 'aspect-[2/3]' : 'aspect-[3/4]',
       )}>
         {/* Ambient glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 rounded-full bg-primary/[0.08] blur-3xl pointer-events-none freestyle-glow" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary/[0.06] blur-3xl pointer-events-none" />
 
-        {/* Prompt input bar */}
-        <div className={cn(
-          'freestyle-loop relative z-10 w-full rounded-2xl border border-border/50 bg-muted/50 backdrop-blur-sm shadow-sm flex flex-col',
-          mobileCompact ? 'p-3 min-h-[70px]' : 'p-4 min-h-[90px]',
-        )}>
-          {/* Typewriter text */}
-          <div className="flex-1 flex items-start overflow-hidden">
-            <span className={cn(
-              'freestyle-typewriter text-foreground/80 leading-relaxed font-medium',
-              mobileCompact ? 'text-xs' : 'text-sm',
-            )}>
-              {PROMPT_TEXT}
-            </span>
-          </div>
+        {/* Animated content */}
+        <div
+          className={cn(
+            'relative z-10 w-full flex flex-col gap-3 transition-opacity duration-500',
+            mobileCompact ? 'px-3' : 'px-5',
+            isFading ? 'opacity-0' : 'opacity-100',
+          )}
+        >
+          {/* Prompt bar */}
+          <div className={cn(
+            'w-full rounded-xl border border-border/40 bg-muted/40 backdrop-blur-sm flex flex-col',
+            mobileCompact ? 'p-2.5 min-h-[60px]' : 'p-3 min-h-[76px]',
+          )}>
+            {/* Text area */}
+            <div className="flex-1 flex items-start">
+              <span className={cn(
+                'text-foreground/80 leading-relaxed font-medium break-words',
+                mobileCompact ? 'text-xs' : 'text-sm',
+              )}>
+                {visibleText}
+                {showCursor && (
+                  <span className="inline-block w-[2px] h-[1em] bg-primary/70 ml-0.5 align-middle animate-pulse" />
+                )}
+              </span>
+            </div>
 
-          {/* Send icon */}
-          <div className="flex justify-end mt-1.5">
-            <div className={cn(
-              'rounded-lg bg-primary/15 flex items-center justify-center freestyle-send-fade',
-              mobileCompact ? 'w-6 h-6' : 'w-7 h-7',
-            )}>
-              <ArrowUp className={cn('text-primary/70', mobileCompact ? 'w-3 h-3' : 'w-3.5 h-3.5')} />
+            {/* Send button */}
+            <div className="flex justify-end mt-1.5">
+              <div
+                className={cn(
+                  'rounded-lg bg-primary/15 flex items-center justify-center transition-all duration-300',
+                  mobileCompact ? 'w-6 h-6' : 'w-7 h-7',
+                  showSend ? 'opacity-100 scale-100' : 'opacity-0 scale-75',
+                )}
+              >
+                <ArrowUp className={cn('text-primary/70', mobileCompact ? 'w-3 h-3' : 'w-3.5 h-3.5')} />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Result pills */}
-        <div className="freestyle-loop relative z-10 flex items-center justify-center gap-2.5">
-          {RESULT_PILLS.map((label, i) => (
-            <span
-              key={label}
-              className={cn(
-                'rounded-full border border-border/30 bg-muted/30 text-foreground/70 font-medium freestyle-pill-in',
-                mobileCompact ? 'px-2.5 py-0.5 text-[10px]' : 'px-3.5 py-1 text-xs',
-              )}
-              style={{
-                animationDelay: `${3.2 + i * 0.3}s`,
-              }}
-            >
-              {label}
-            </span>
-          ))}
+          {/* Result pills */}
+          <div className="flex items-center justify-center gap-2">
+            {RESULT_PILLS.map((label, i) => (
+              <span
+                key={label}
+                className={cn(
+                  'rounded-full border border-border/30 bg-muted/30 text-foreground/70 font-medium transition-all duration-400',
+                  mobileCompact ? 'px-2.5 py-0.5 text-[10px]' : 'px-3 py-0.5 text-xs',
+                  pillsVisible[i]
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-1.5',
+                )}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Content area */}
-      <div className={cn('flex flex-col gap-1.5 flex-1', mobileCompact ? 'p-2' : 'p-4')}>
-        <h3 className={cn('font-bold tracking-tight leading-tight', mobileCompact ? 'text-xs' : 'text-base')}>
+      {/* Content area — matches WorkflowCardCompact */}
+      <div className={cn('flex flex-col gap-1 flex-1', mobileCompact ? 'p-2' : 'p-4')}>
+        <h3 className={cn(
+          'font-bold tracking-tight leading-tight',
+          mobileCompact ? 'text-[11px]' : 'text-sm',
+        )}>
           Freestyle Studio
         </h3>
+
         {!mobileCompact && (
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
             Type anything. Get styled visuals.
           </p>
         )}
+
         <div className="pt-1 mt-auto">
           <Button
             size="sm"
-            variant="outline"
             className={cn(
-              'rounded-full font-semibold gap-1.5 w-full border-primary/20 hover:bg-primary hover:text-primary-foreground transition-colors',
-              mobileCompact ? 'h-8 px-3 text-xs' : 'h-9 px-5 text-sm',
+              'rounded-full font-semibold gap-1 w-full',
+              mobileCompact ? 'h-8 px-3 text-xs' : 'h-8 px-5',
             )}
             onClick={(e) => { e.stopPropagation(); onSelect(); }}
           >
-            Start Creating
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            {mobileCompact ? 'Start' : 'Start Creating'}
+            <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes freestyle-type {
-          from { max-width: 0ch; }
-          to { max-width: ${CHAR_COUNT}ch; }
-        }
-        @keyframes freestyle-blink {
-          0%, 100% { border-color: hsl(var(--primary)); }
-          50% { border-color: transparent; }
-        }
-        @keyframes freestyle-pill-in {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes freestyle-send-in {
-          0%, 60% { opacity: 0; transform: scale(0.8); }
-          80%, 100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes freestyle-loop {
-          0%, 5% { opacity: 0; }
-          10% { opacity: 1; }
-          75% { opacity: 1; }
-          90%, 100% { opacity: 0; }
-        }
-        @keyframes freestyle-glow-pulse {
-          0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
-        }
-        .freestyle-typewriter {
-          display: inline-block;
-          overflow: hidden;
-          white-space: nowrap;
-          max-width: 0ch;
-          border-right: 2px solid hsl(var(--primary));
-          animation:
-            freestyle-type 3s steps(${CHAR_COUNT}, end) 0.7s forwards,
-            freestyle-blink 0.75s step-end 0.7s infinite;
-        }
-        .freestyle-pill-in {
-          opacity: 0;
-          animation: freestyle-pill-in 0.5s ease-out forwards;
-        }
-        .freestyle-send-fade {
-          opacity: 0;
-          animation: freestyle-send-in 3.5s ease-out forwards;
-        }
-        .freestyle-loop {
-          animation: freestyle-loop 8s ease-in-out infinite;
-        }
-        .freestyle-glow {
-          animation: freestyle-glow-pulse 4s ease-in-out infinite;
-        }
-      `}</style>
     </Card>
   );
 }
