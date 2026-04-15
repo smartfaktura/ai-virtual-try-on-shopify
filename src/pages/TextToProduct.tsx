@@ -963,19 +963,38 @@ export default function TextToProduct() {
       )}
 
       {/* Step 5: Results */}
-      {step === 'results' && <ResultsStep
-        allResults={allResults}
-        resultImages={resultImages}
-        products={products}
-        handleDownload={handleDownload}
-        resetQueue={resetQueue}
-        setProducts={setProducts}
-        setExpandedProducts={setExpandedProducts}
-        setSelectedScenes={setSelectedScenes}
-        setCompletedJobs={setCompletedJobs}
-        setStep={setStep}
-        makeProduct={makeProduct}
-      />}
+      {step === 'results' && (
+        <>
+          {isFreeUser && conversionState.canShowLayer1 && (
+            <PostGenerationUpgradeCard
+              category={conversionCategory}
+              onSeeMore={() => {
+                conversionState.dismissLayer1();
+                conversionState.openUpgradeDrawer('layer1_cta');
+              }}
+              onDismiss={conversionState.dismissLayer1}
+            />
+          )}
+          <ResultsStep
+            allResults={allResults}
+            resultImages={resultImages}
+            products={products}
+            handleDownload={handleDownload}
+            resetQueue={resetQueue}
+            setProducts={setProducts}
+            setExpandedProducts={setExpandedProducts}
+            setSelectedScenes={setSelectedScenes}
+            setCompletedJobs={setCompletedJobs}
+            setStep={setStep}
+            makeProduct={makeProduct}
+          />
+        </>
+      )}
+      <UpgradeValueDrawer
+        open={conversionState.layer2Open}
+        onClose={conversionState.dismissLayer2}
+        category={conversionCategory}
+      />
     </div>
   );
 }
