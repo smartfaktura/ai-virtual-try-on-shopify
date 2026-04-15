@@ -60,7 +60,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
         })}
       </div>
 
-      {/* Mobile stepper — icon-only, evenly spaced */}
+      {/* Mobile stepper */}
       <div className="sm:hidden overflow-hidden">
         <div className="flex items-center justify-between">
           {steps.map((s, i) => {
@@ -75,24 +75,27 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
                   onClick={() => canClick && onStepClick(s.number)}
                   disabled={!canClick}
                   className={cn(
-                    "flex flex-col items-center gap-0.5 mx-auto rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                    "flex flex-col items-center gap-1 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                     !canClick && 'opacity-50 cursor-default',
                   )}
                 >
                   <div className={cn(
-                    'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150',
+                    'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-150',
                     isActive && 'bg-primary text-primary-foreground',
                     isDone && !isActive && 'bg-primary/10 text-primary',
                     !isActive && !isDone && canClick && 'bg-muted text-muted-foreground',
                     !isActive && !isDone && !canClick && 'bg-muted/50 text-muted-foreground/30',
                   )}>
-                    {isDone ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
+                    {isDone ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                   </div>
-                  {isActive && (
-                    <span className="text-[8px] font-semibold text-primary truncate max-w-[48px] text-center">
-                      {s.label}
-                    </span>
-                  )}
+                  <span className={cn(
+                    'text-[10px] font-medium text-center truncate max-w-[56px]',
+                    isActive && 'text-primary font-semibold',
+                    isDone && !isActive && 'text-primary/70',
+                    !isActive && !isDone && 'text-muted-foreground',
+                  )}>
+                    {s.label}
+                  </span>
                 </button>
                 {i < steps.length - 1 && (
                   <div className={cn(
@@ -103,13 +106,6 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
               </div>
             );
           })}
-        </div>
-        {/* Progress bar */}
-        <div className="mt-2 h-1.5 bg-border rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all duration-300 rounded-full"
-            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-          />
         </div>
       </div>
     </div>
