@@ -746,10 +746,7 @@ export function useShortFilmProject() {
   const startGeneration = useCallback(async () => {
     if (!user || !filmType || !storyStructure || shots.length === 0) return;
 
-    if (balance < totalCredits) {
-      toast.error(`Not enough credits. Need ${totalCredits}, have ${balance}.`);
-      return;
-    }
+    // Credit check is handled at the page level (ShortFilm.tsx) before calling startGeneration
 
     setIsGenerating(true);
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
