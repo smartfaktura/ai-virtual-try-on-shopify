@@ -1,43 +1,62 @@
 
 
-# Freestyle Card — Workflow Step Pills with Responsive Fit
+# Freestyle Card — Visual Selection Thumbnails with Real Assets
 
 ## What changes
 
-**File: `src/components/app/FreestylePromptCard.tsx`**
+**File: `src/components/app/FreestylePromptCard.tsx` — Enhanced rewrite**
 
-### 1. Replace result pills with workflow step pills
-Replace `RESULT_PILLS = ['Studio', 'Court', 'Café']` with 4 workflow steps, each with a Lucide icon:
-
+### 1. Better prompt text
+Change from generic "Shoot my crop top on a court, studio, and café" to a more specific, product-aware prompt:
 ```
-Scene (Camera) → Model (User) → Product (Package) → Generate (Zap)
+"Shoot my white crop top, editorial style, urban street and café"
+```
+Short enough to type quickly, feels like a real user prompt.
+
+### 2. Replace icon-only pills with visual thumbnail pills
+After typing completes, instead of plain text pills with icons, show small circular/rounded thumbnail images with labels — similar to how other workflow cards show recipe items. Each pill gets a real image from existing landing-assets storage:
+
+- **Scene** → `poses/pose-lifestyle-coffee.jpg` (café scene)
+- **Model** → `models/model-female-slim-asian.jpg` (first model in list)
+- **Product** → `workflows/workflow-tryon-product-flatlay.png` (the crop top product)
+- **Generate** → keeps the Zap icon pill (no image, it's an action)
+
+Pill layout:
+```
+[ 🖼 Scene ] [ 🖼 Model ] [ 🖼 Product ] [ ⚡ Generate ]
 ```
 
-- First 3 pills: `bg-muted/30 border-border/30 text-foreground/70`
-- "Generate" pill: `bg-primary/10 border-primary/20 text-primary` — visually distinct as the action
-- Each pill shows icon + label side by side
+Each image pill: small `20×20` (mobile) or `24×24` (desktop) rounded-full image + label text. Compact enough to fit 4 across on any screen.
 
-### 2. Animation timing
-- After typewriter completes and send icon appears, pills fade in sequentially (300ms stagger)
-- Update `pillsVisible` state to track 4 items instead of 3
-- "Generate" pill gets a brief scale bump (`scale-105` → `scale-100`) on appear
-- Hold duration stays 2.2s, total loop ~8–9s
+### 3. Image loading
+- Use `getOptimizedUrl()` with `quality: 50` for tiny thumbnails (same pattern as `workflowAnimationData.tsx`)
+- Import `getLandingAssetUrl` and `getOptimizedUrl` from existing utils
+- Define asset URLs as constants at module level (no runtime fetching)
 
-### 3. Responsive layout — guaranteed fit on all screens
-The key issue: 4 pills with icons must not overflow on narrow cards.
+### 4. Animation timing stays the same
+- Typewriter types the new prompt text
+- Send icon appears
+- Pills fade in sequentially with thumbnails
+- Hold → fadeout → restart
+- No changes to the state machine logic
 
-- **Desktop** (`!mobileCompact`): `flex-wrap justify-center gap-2`, pills use `text-xs px-2.5 py-1`, icons `w-3 h-3`
-- **Mobile compact** (`mobileCompact`): `flex-wrap justify-center gap-1.5`, pills use `text-[10px] px-1.5 py-0.5`, icons `w-2.5 h-2.5`. Layout wraps into 2×2 grid naturally via flex-wrap
-- Pills container: `max-w-full` with `overflow-hidden` as safety net
-- Icon labels hide on extremely narrow cards: use `hidden xs:inline` on label text if needed — but with `flex-wrap` the 2×2 layout should handle it
+### 5. Pill markup change
+Replace the current icon-only `<span>` pills with:
+```tsx
+<span className="inline-flex items-center gap-1 rounded-full border ...">
+  <img src={step.image} className="w-5 h-5 rounded-full object-cover" />
+  <span>{step.label}</span>
+</span>
+```
+For "Generate" (no image), keep the Zap icon as before.
 
-### 4. No structural changes
-Card wrapper, aspect ratios, prompt bar, content area, and CTA button all remain identical. Only the pills section markup changes.
+### 6. Responsive sizing
+- Desktop: `w-6 h-6` images, `text-xs` labels, `px-2 py-0.5` pills
+- Mobile compact: `w-5 h-5` images, `text-[10px]` labels, `px-1.5 py-0.5` pills
+- `flex-wrap justify-center` ensures natural wrapping on narrow screens
 
-## Technical details
-- Import `Camera, User, Package, Zap` from lucide-react (remove unused imports)
-- `WORKFLOW_STEPS` array replaces `RESULT_PILLS`
-- `pillsVisible` initial state becomes `[false, false, false, false]`
-- `PILL_STAGGER` stays at 250ms (4 × 250 = 1s total reveal)
-- Adjust the hold timeout calc: `WORKFLOW_STEPS.length * PILL_STAGGER + 200`
+### What stays the same
+- Card structure, aspect ratios, content area, CTA button — all unchanged
+- State machine phases and timing constants — unchanged
+- IntersectionObserver pause/resume — unchanged
 
