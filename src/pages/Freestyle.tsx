@@ -739,7 +739,7 @@ export default function Freestyle() {
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
+  }, [canSubmit, hasEnoughCredits, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
