@@ -8,6 +8,7 @@ import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User, Shirt,
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './ProductImagesStep3Refine';
 import { computeTotalImages, computeTotalImagesPerCategory } from '@/lib/sceneVariations';
 import type { UserProduct, DetailSettings, ProductImageScene } from './types';
@@ -297,7 +298,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                                   if (!product) return null;
                                   return (
                                     <span key={propId} className="flex items-center gap-1 pl-1 pr-1.5 py-0.5 rounded-full bg-muted border border-border text-[10px] font-medium text-foreground">
-                                      <img src={product.image_url} alt={product.title} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+                                      <img src={getOptimizedUrl(product.image_url, { width: 32, quality: 40 })} alt={product.title} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
                                       <span className="truncate max-w-[80px]">{product.title}</span>
                                       <button type="button" onClick={() => removeProp(scene.id, propId)} className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"><X className="w-3 h-3" /></button>
                                     </span>
@@ -341,7 +342,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             {selectedProducts.length === 1 ? (
               <div className="flex items-center gap-3">
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-white border border-border/40 p-1 flex-shrink-0">
-                  <ShimmerImage src={selectedProducts[0].image_url} alt={selectedProducts[0].title} className="w-full h-full object-contain" />
+                  <ShimmerImage src={getOptimizedUrl(selectedProducts[0].image_url, { quality: 70 })} alt={selectedProducts[0].title} className="w-full h-full object-contain" />
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{selectedProducts[0].title}</p>
               </div>
@@ -350,7 +351,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 {selectedProducts.slice(0, 12).map(p => (
                   <div key={p.id} className="space-y-1">
                     <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40 p-1">
-                      <ShimmerImage src={p.image_url} alt={p.title} className="w-full h-full object-contain" />
+                      <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 70 })} alt={p.title} className="w-full h-full object-contain" />
                     </div>
                     <p className="text-[10px] text-muted-foreground truncate">{p.title}</p>
                   </div>
