@@ -1,30 +1,35 @@
 
 
-# Upload 24 Boots Editorial Scenes
+# Upload 24 Bracelet Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `boots` category collection, organized into 6 sub-categories. The existing 33 "Essential Shots" remain unchanged. Update `category_sort_order` to 23 as specified.
+Insert 24 new editorial scenes for the `bracelets` category collection (currently empty — no existing scenes). Organized into 4 sub-categories (families).
 
 ## Scene Mapping
 
-| Sub-Category | Sub Sort | Scenes (4 each) |
+| Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| Leg & Outfit (1-4) | 1 | trouser-seated, mini-skirt-leg, longline-coat, crossed-leg-sofa |
-| Off-Duty Street (5-8) | 2 | sidewalk-walk-ugc, mirror-hallway, curbside-standing, cafe-doorway |
-| Styled Still (9-12) | 3 | chair-still-life, floor-garment-drop, upright-pair-still, bag-pair-still |
-| Color Stories (13-16) | 4 | aesthetic-chair, aesthetic-floor-tone, aesthetic-outfit-accent, aesthetic-wall-scene |
-| Power Looks (17-20) | 5 | power-hero-stance, dramatic-wide-pose, dramatic-stride, minimal-wall-campaign |
-| Vintage Film (21-24) | 6 | vintage-hotel-flash, warm-analog-indoor, retro-street-film, faded-editorial-story |
+| On-Wrist Editorial (01-06) | 1 | wrist-clean-portrait, wrist-collarbone, fingers-face-editorial, sleeve-wrist-detail, two-wrist-composition, bent-arm-beauty |
+| Daily Wear UGC (07-12) | 2 | ugc-coffee-cup, ugc-desk-hand, ugc-phone-hand, ugc-book-journal, ugc-travel-wrist, ugc-mirror-wrist |
+| Styled Surface Still Life (13-18) | 3 | still-stone-surface, still-silk-linen, still-box-tray, still-book-paper, still-glass-reflection, still-sculptural-object |
+| Aesthetic Color Bracelet Stories (19-24) | 4 | color-wrist-editorial, color-desk-story, color-surface-still, color-reflection-story, color-fabric-mood, color-hero-campaign |
 
 ## Technical Details
-- **sort_order**: starts at 2549 (current max is 2548)
-- **category_sort_order**: update all boots scenes to 23
-- **Aesthetic color scenes** (13-16): suggested_colors `[{"name":"Muted Moss Stone","hex":"#8E9A84"}]`
-- **outfit_hint**: scenes 1-8, 15-24 have outfit directions; scenes 9-14 are still life (empty)
-- **trigger_blocks**: mapped per scene from RTF
-- Single batch INSERT + UPDATE existing boots `category_sort_order` to 23
+- **sort_order**: starts at 2573 (current max is 2572)
+- **category_collection**: `bracelets`
+- **category_sort_order**: needs to be determined — will check existing collections and assign next available
+- **trigger_blocks**: Scenes 1-12 use `personDetails`, scenes 13-18 are still life (no person), scenes 19-24 use `aestheticColor`
+- **Aesthetic color scenes** (19-24): Each has a unique `suggested_colors`:
+  - 19: Soft Rose Clay `#D7B6AE`
+  - 20: Warm Stone Taupe `#B7A79A`
+  - 21: Pistachio Smoke `#B9C3AE`
+  - 22: Smoky Lilac Grey `#B8AFBF`
+  - 23: Champagne Sand `#D9C8B2`
+  - 24: Deep Olive Slate `#7D8774`
+- **No outfit_hint** on any scene (jewelry category)
+- Full prompt templates extracted from RTF
 
 ## Execution
-1. UPDATE existing 33 boots scenes: set `category_sort_order = 23`
-2. INSERT 24 new rows with full prompt templates, trigger blocks, outfit hints, and suggested colors
+1. Single batch INSERT of 24 rows with full prompt templates, trigger blocks, and suggested colors
+2. No UPDATE needed (no existing bracelet scenes)
 
