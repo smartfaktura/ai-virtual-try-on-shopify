@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useShortFilmProject } from '@/hooks/useShortFilmProject';
+import { useCredits } from '@/contexts/CreditContext';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { FilmTypeSelector } from '@/components/app/video/short-film/FilmTypeSelector';
 import { ReferenceUploadPanel } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { StoryStructureSelector } from '@/components/app/video/short-film/StoryStructureSelector';
@@ -18,6 +20,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMemo, useState, useCallback, useRef } from 'react';
 
 export default function ShortFilm() {
+  const { balance } = useCredits();
+  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+
   const {
     step, steps, currentStepIndex,
     filmType, setFilmType,
@@ -36,6 +41,14 @@ export default function ShortFilm() {
     audioPhase,
     generateAudio, previewAudio,
   } = useShortFilmProject();
+
+  const handleGenerate = useCallback(() => {
+    if (balance < totalCredits) {
+      setNoCreditsOpen(true);
+      return;
+    }
+    startGeneration();
+  }, [balance, totalCredits, startGeneration]);
 
   const generationStartRef = useRef<number>(Date.now());
 
@@ -322,12 +335,14 @@ export default function ShortFilm() {
           hasCompletedClips={completedClips.length > 0}
           onNext={goNext}
           onBack={goBack}
-          onGenerate={startGeneration}
+           onGenerate={handleGenerate}
           onReset={handleReset}
           onSaveDraft={saveDraft}
           onDownloadAll={handleDownload}
         />
       )}
+
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
     </div>
   );
 }
