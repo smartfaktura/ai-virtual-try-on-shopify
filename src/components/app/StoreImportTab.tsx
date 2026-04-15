@@ -592,7 +592,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             );
           })()}
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 sticky bottom-0 bg-background pt-3 pb-1 -mb-1 z-10 border-t border-border/40">
             <Button variant="outline" size="sm" onClick={() => setExtracted(null)}>
               Discard
             </Button>
