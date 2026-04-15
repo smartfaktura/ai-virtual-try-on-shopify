@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List, History, RefreshCw, Loader2, Upload } from 'lucide-react';
+import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, History, RefreshCw, Loader2, Upload } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,7 +91,7 @@ export default function ProductImages() {
 
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
-  const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
+  
   const [visibleCount, setVisibleCount] = useState(25);
   const [sentinelEl, setSentinelEl] = useState<HTMLDivElement | null>(null);
   const MAX_PRODUCTS = 20;
@@ -1010,7 +1010,7 @@ export default function ProductImages() {
                     className="h-8 text-xs pl-8"
                   />
                 </div>
-                <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground font-mono shrink-0">⌘V</kbd>
+                
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
                   const filtered = userProducts.filter(p =>
                     p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
@@ -1019,14 +1019,6 @@ export default function ProductImages() {
                   setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
                 }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
-                <div className="flex border border-border rounded-md overflow-hidden">
-                  <button onClick={() => setProductViewMode('grid')} className={cn('p-1.5 transition-colors', productViewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}>
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => setProductViewMode('list')} className={cn('p-1.5 transition-colors', productViewMode === 'list' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}>
-                    <List className="w-3.5 h-3.5" />
-                  </button>
-                </div>
               </div>
 
               {selectedProductIds.size > 0 && (
@@ -1088,46 +1080,6 @@ export default function ProductImages() {
                     <span className="text-xs text-muted-foreground">{remaining} more…</span>
                   </div>
                 );
-
-                if (productViewMode === 'list') {
-                  return (
-                    <div className="space-y-1">
-                      <div className="max-h-[420px] overflow-y-auto pr-1 space-y-1">
-                        {visible.map(up => {
-                          const isSelected = selectedProductIds.has(up.id);
-                          const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
-                          return (
-                            <div key={up.id} role="button" tabIndex={0} onClick={() => {
-                               if (isDisabled) return;
-                               const s = new Set(selectedProductIds);
-                               if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
-                               setSelectedProductIds(s);
-                             }} onKeyDown={(e) => {
-                               if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isDisabled) return; const s = new Set(selectedProductIds); if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id); setSelectedProductIds(s); }
-                             }} className={cn(
-                               'w-full flex items-center gap-3 px-3 py-2 rounded-lg border-2 transition-all text-left cursor-pointer',
-                               isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
-                               isDisabled && 'opacity-40 cursor-not-allowed'
-                             )}>
-                              <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">{up.product_type || '\u00A0'}</p>
-                              </div>
-                              <div className={cn(
-                                'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
-                                isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30'
-                              )}>
-                                {isSelected && <Check className="w-3 h-3" />}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {loadMoreSentinel}
-                    </div>
-                  );
-                }
 
                 return (
                   <>
