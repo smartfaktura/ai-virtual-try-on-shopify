@@ -11,7 +11,13 @@ import { Progress } from '@/components/ui/progress';
 import { PageHeader } from '@/components/app/PageHeader';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
+import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
+import { useConversionState } from '@/hooks/useConversionState';
+import { resolveConversionCategory } from '@/lib/conversionCopy';
+import { useQuery } from '@tanstack/react-query';
 import { paceDelay } from '@/lib/enqueueGeneration';
 import { Download, ChevronLeft, ChevronRight, Sparkles, Image, Box, Camera, Smartphone, Eye, Gem, Check, Loader2, Plus, Trash2, ChevronDown, ChevronUp, Upload, X, ClipboardPaste } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -302,7 +308,21 @@ export default function TextToProduct() {
   const [completedJobs, setCompletedJobs] = useState<Map<string, { images: { url: string; label: string }[]; productTitle: string }>>(new Map());
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
-  const { refreshBalance } = useCredits();
+  const { refreshBalance, plan } = useCredits();
+  const { user } = useAuth();
+  const isFreeUser = plan === 'free';
+  const conversionState = useConversionState();
+  const { data: ttpProfileCats } = useQuery({
+    queryKey: ['profile-categories', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase.from('profiles').select('product_categories').eq('user_id', user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id && isFreeUser,
+    staleTime: Infinity,
+  });
+  const conversionCategory = resolveConversionCategory(ttpProfileCats?.product_categories);
 
   const {
     enqueue,
