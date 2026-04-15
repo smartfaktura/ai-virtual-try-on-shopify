@@ -48,6 +48,13 @@ const TRIGGER_BLOCKS = ALL_TRIGGER_KEYS;
 const CAT_LABEL_MAP: Record<string, string> = {};
 CATEGORIES.forEach(c => { CAT_LABEL_MAP[c.value] = c.label; });
 
+const COLLECTION_MERGE: Record<string, string> = {
+  "snacks-food": "food",
+  "food-beverage": "food",
+  "wallets": "wallets-cardholders",
+};
+const normalizeCat = (cat: string | null) => COLLECTION_MERGE[cat ?? ''] ?? (cat || 'other');
+
 
 
 function emptyScene(): Partial<DbScene> & { scene_id: string } {
@@ -115,8 +122,9 @@ export default function AdminProductImageScenes() {
     const map = new Map<string, Set<string>>();
     for (const s of rawScenes) {
       if (s.sub_category && s.category_collection) {
-        if (!map.has(s.category_collection)) map.set(s.category_collection, new Set());
-        map.get(s.category_collection)!.add(s.sub_category);
+        const cat = normalizeCat(s.category_collection);
+        if (!map.has(cat)) map.set(cat, new Set());
+        map.get(cat)!.add(s.sub_category);
       }
     }
     return new Map(Array.from(map.entries()).map(([k, v]) => [k, Array.from(v).sort()]));
@@ -147,7 +155,7 @@ export default function AdminProductImageScenes() {
       );
     }
     if (previewCategory !== '__all__') {
-      scenes = scenes.filter(s => s.category_collection === previewCategory);
+      scenes = scenes.filter(s => normalizeCat(s.category_collection) === previewCategory);
     }
     return scenes;
   }, [rawScenes, showHidden, search, previewCategory]);
@@ -156,7 +164,7 @@ export default function AdminProductImageScenes() {
   const groupedEntries = useMemo(() => {
     const map = new Map<string, DbScene[]>();
     for (const s of filtered) {
-      const key = s.category_collection || 'other';
+      const key = normalizeCat(s.category_collection);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(s);
     }
@@ -278,7 +286,7 @@ export default function AdminProductImageScenes() {
   };
 
   const handleMove = async (scene: DbScene, direction: 'up' | 'down') => {
-    const key = scene.category_collection || 'other';
+    const key = normalizeCat(scene.category_collection);
     const allInCategory = grouped.get(key) || [];
     // Filter to same sub_category only
     const subKey = scene.sub_category || '';
