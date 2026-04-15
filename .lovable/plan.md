@@ -1,28 +1,28 @@
 
 
-# Fix Save/Discard Buttons Visibility After URL Import
+# Add Loading Spinner to Download Button in Results
 
 ## Problem
-After importing a product from a URL, the extracted product preview (title, images, role assignment, reference angle slots) is tall enough to push the "Discard / Save Product" buttons below the visible area of the modal. Users must scroll down to find the CTA.
+The "Download All" button in the Product Images results (Step 6) changes its text to "Downloading…" but keeps the static Archive icon — no spinner or visual loading indicator to clearly signal work is happening.
 
 ## Fix
 
-### File: `src/components/app/StoreImportTab.tsx`
+### File: `src/components/app/product-images/ProductImagesStep6Results.tsx`
 
-Make the Save/Discard button row sticky at the bottom of the extracted product section:
-
-**Line 595** — Change the button container from:
-```
-<div className="flex justify-end gap-2">
-```
-to:
-```
-<div className="flex justify-end gap-2 sticky bottom-0 bg-background pt-3 pb-1 -mb-1 z-10 border-t border-border/40">
+**Line 4** — Add `Loader2` to the lucide import:
+```typescript
+import { Download, RefreshCw, CheckCircle, Archive, Loader2 } from 'lucide-react';
 ```
 
-This pins the buttons to the bottom of the scrollable area so they're always visible regardless of content height. The `bg-background` ensures content scrolls behind the buttons cleanly.
+**Lines 161-162** — Replace the static Archive icon with a spinner when downloading:
+```tsx
+<Button variant="outline" onClick={handleDownloadAll} disabled={downloading || totalImages === 0} className="gap-1.5">
+  {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
+  {downloading ? 'Downloading…' : 'Download All'}
+</Button>
+```
 
 ## Impact
-- 1 file, 1 line change
-- Applies to both the modal (AddProductModal) and the full page (AddProduct) since both render StoreImportTab inside scrollable containers
+- 1 file, 2 small changes
+- Adds a spinning loader icon during ZIP download so users see clear activity feedback
 
