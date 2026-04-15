@@ -550,7 +550,7 @@ export default function Freestyle() {
   const handleGenerate = useCallback(async () => {
     if (!canSubmit) return;
     if (!hasEnoughCredits) {
-      openBuyModal();
+      setNoCreditsModalOpen(true);
       return;
     }
     setIsUploading(true);
@@ -1228,6 +1228,12 @@ export default function Freestyle() {
         open={conversionState.layer2Open}
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
+      />
+      <NoCreditsModal
+        open={noCreditsModalOpen}
+        onClose={() => setNoCreditsModalOpen(false)}
+        category={conversionCategory}
+        generationCount={savedImages.length}
       />
     </div>
   );
