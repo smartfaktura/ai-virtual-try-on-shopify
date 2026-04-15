@@ -122,6 +122,7 @@ const CATEGORY_ALIASES: Record<string, string> = {
   "accessories": "bags-accessories",
   "food-beverage": "food",
   "food-beverages": "food",
+  "snacks-food": "food",
   "jewelry": "jewellery-necklaces",
   "jewellery": "jewellery-necklaces",
   "fashion": "garments",
