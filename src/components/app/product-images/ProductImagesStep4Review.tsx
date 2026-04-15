@@ -341,8 +341,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             </div>
             {selectedProducts.length === 1 ? (
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white border border-border/40 p-1 flex-shrink-0">
-                  <ShimmerImage src={getOptimizedUrl(selectedProducts[0].image_url, { quality: 70 })} alt={selectedProducts[0].title} className="w-full h-full object-contain" />
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white border border-border/40 flex-shrink-0">
+                  <ShimmerImage src={getOptimizedUrl(selectedProducts[0].image_url, { quality: 70 })} alt={selectedProducts[0].title} className="w-full h-full object-cover" />
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{selectedProducts[0].title}</p>
               </div>
@@ -350,8 +350,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               <div className={`grid gap-2 ${selectedProducts.length <= 3 ? `grid-cols-${selectedProducts.length}` : 'grid-cols-4 sm:grid-cols-6'}`}>
                 {selectedProducts.slice(0, 12).map(p => (
                   <div key={p.id} className="space-y-1">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40 p-1">
-                      <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 70 })} alt={p.title} className="w-full h-full object-contain" />
+                    <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40">
+                      <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 70 })} alt={p.title} className="w-full h-full object-cover" />
                     </div>
                     <p className="text-[10px] text-muted-foreground truncate">{p.title}</p>
                   </div>
