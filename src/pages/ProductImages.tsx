@@ -1046,6 +1046,15 @@ export default function ProductImages() {
                   }} className="gap-2">
                     <Upload className="w-4 h-4" />Upload product photo
                   </Button>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground w-full max-w-xs">
+                    <div className="h-px flex-1 bg-border" />
+                    <span>or</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <Button variant="outline" onClick={() => setDemoPickerOpen(true)} className="gap-2">
+                    <FlaskConical className="w-4 h-4" />
+                    Try a demo product
+                  </Button>
                   <p className="text-xs text-muted-foreground">
                     You can also paste an image from your clipboard{' '}
                     <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono font-medium text-muted-foreground ml-1">{PASTE_SHORTCUT}</kbd>
@@ -1339,6 +1348,11 @@ export default function ProductImages() {
           onBack={handleBack}
         />
       )}
+      <DemoProductPicker
+        open={demoPickerOpen}
+        onOpenChange={setDemoPickerOpen}
+        onSelect={handleQuickUpload}
+      />
     </div>
   );
 }
