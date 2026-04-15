@@ -1,71 +1,69 @@
 
 
-# Add Furniture Category & Split from Home Decor
+# Add 24 Furniture Scenes & Ensure Home Decor / Furniture Separation
 
-## Concept
-- **Furniture** = larger items (sofa, table, chair, bed, desk, shelf, cabinet, etc.)
-- **Home Decor** = smaller tabletop/console items (candle, vase, frame, pillow, lamp, etc.)
+## What We're Doing
 
-Furniture detection rules placed **before** home-decor so specific matches win.
+Adding 24 new furniture scenes from the uploaded document to the database, organized into 4 sub-categories. The `furniture` category already exists in the codebase — this task is about populating it with scenes and ensuring `home-decor` remains separate for smaller items.
 
-## Files to Update
+## Scenes to Insert (24 total)
 
-### 1. Types — Add `'furniture'` to unions
-- `src/types/index.ts` — add `'furniture'` to `TemplateCategory`
-- `src/components/app/product-images/types.ts` — add `'furniture'` to `ProductCategory`
+**Sub-category 1: Editorial Room Heroes** (sub_category_sort_order: 1)
+1. `furniture-editorial-room-hero-front` — Front Room Hero
+2. `furniture-editorial-corner-placement` — Corner Placement Editorial
+3. `furniture-editorial-wide-architectural` — Wide Architectural Room Story
+4. `furniture-editorial-material-close-room` — Material and Form Interior Crop
+5. `furniture-editorial-window-light` — Window Light Furniture Portrait
+6. `furniture-editorial-empty-space-hero` — Empty Space Hero
 
-### 2. `src/lib/categoryUtils.ts`
-- Add new furniture detection rule **before** the home-decor line (line 43):
-```
-furniture: ['sofa', 'couch', 'sectional', 'loveseat', 'armchair', 'recliner', 'chair', 'dining chair', 'office chair', 'accent chair', 'lounge chair', 'rocking chair', 'folding chair', 'bar stool', 'counter stool', 'stool', 'bench', 'ottoman', 'pouf', 'table', 'dining table', 'coffee table', 'side table', 'end table', 'console table', 'accent table', 'nightstand', 'bedside table', 'desk', 'standing desk', 'writing desk', 'vanity', 'bed', 'bed frame', 'headboard', 'bunk bed', 'daybed', 'futon', 'mattress', 'crib', 'shelf', 'bookshelf', 'bookcase', 'floating shelf', 'wall shelf', 'shelving unit', 'cabinet', 'filing cabinet', 'display cabinet', 'hutch', 'sideboard', 'buffet', 'credenza', 'dresser', 'chest of drawers', 'wardrobe', 'armoire', 'closet organizer', 'tv stand', 'media console', 'entertainment center', 'shoe rack', 'coat rack', 'wine rack', 'pantry', 'kitchen island', 'bar cart', 'furniture']
-```
-- Trim home-decor: remove `furniture` keyword from it
-- Add `furniture: 'Furniture'` to `categoryLabels`
+**Sub-category 2: Lived-In Interior Lifestyle** (sub_category_sort_order: 2)
+7. `furniture-lifestyle-livedin-room` — Lived-In Room Story
+8. `furniture-lifestyle-coffee-table-context` — Coffee Table Context Room
+9. `furniture-lifestyle-reading-corner` — Reading Corner Lifestyle
+10. `furniture-lifestyle-dining-context` — Dining or Gathering Context
+11. `furniture-lifestyle-bedroom-context` — Bedroom Context Lifestyle
+12. `furniture-lifestyle-evening-ambience` — Evening Ambience Room Story
 
-### 3. `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-- Add `'furniture'` key with the same extensive keyword list to `CATEGORY_KEYWORDS` (before `home-decor`)
-- Remove `'furniture'` from `home-decor` keywords
-- Add `'furniture'` to `CATEGORY_ALIASES`: `"furniture": "furniture"`
-- Add to `CATEGORY_SUPER_GROUPS` — move into `Home & Lifestyle` group: `['home-decor', 'furniture', 'tech-devices', 'supplements-wellness']`
+**Sub-category 3: Studio / Empty Space Furniture Still** (sub_category_sort_order: 3)
+13. `furniture-still-studio-isolated` — Studio Isolated Furniture Hero
+14. `furniture-still-stone-platform` — Stone Platform Furniture Still
+15. `furniture-still-material-detail` — Material Detail Furniture Still
+16. `furniture-still-symmetry-composition` — Symmetry Composition Still
+17. `furniture-still-empty-room-placement` — Empty Room Placement Still
+18. `furniture-still-one-object-support` — One Object Support Still
 
-### 4. `src/hooks/useProductImageScenes.ts`
-- Add `furniture: 'Furniture'` to `TITLE_MAP`
-- Change `home-decor` label from `'Home Decor / Furniture'` to `'Home Decor'`
+**Sub-category 4: Aesthetic Color Furniture Stories** (sub_category_sort_order: 4)
+- Lead color: Mineral Clay Taupe (#A59284)
+19. `furniture-color-wall-room-hero` — Color Wall Room Hero
+20. `furniture-color-lounge-story` — Color Lounge Interior Story
+21. `furniture-color-surface-still` — Color Surface Furniture Still
+22. `furniture-color-entry-corridor` — Color Corridor Furniture Story
+23. `furniture-color-reflection-mood` — Color Reflection Mood
+24. `furniture-color-hero-campaign` — Color Hero Furniture Campaign
 
-### 5. `src/pages/AdminProductImageScenes.tsx`
-- Add `{ value: 'furniture', label: 'Furniture' }` to `CATEGORIES` array
-- Update `home-decor` label to just `'Home Decor'`
+## Technical Steps
 
-### 6. `src/pages/AdminBulkPreviewUpload.tsx`
-- Add `furniture: 'Furniture'` to `TITLE_MAP`
-- Update `home-decor` label to `'Home Decor'`
+### 1. Database Migration — Insert 24 scenes
+- `category_collection`: `'furniture'`
+- `category_sort_order`: `26` (as specified in the document)
+- `is_active`: `true`
+- `sort_order`: sequential starting from a high offset to avoid conflicts
+- Scene types: `editorial`, `lifestyle`, `stilllife`, `campaign` (matching the document)
+- Scenes 19-24 get `suggested_colors`: `[{"hex": "#A59284", "label": "Mineral Clay Taupe"}]`
+- Full prompt templates extracted from the RTF
 
-### 7. `src/pages/Generate.tsx`
-- Add furniture detection keywords **before** homeKeywords (line 845)
-- Remove `'furniture'` from homeKeywords
-- Add `{ id: 'furniture', label: 'Furniture' }` to categories array (line 777)
-- Add furniture detection in the productType check (line 3818)
+### 2. Admin Scene Types — Add missing types
+**File: `src/pages/AdminProductImageScenes.tsx`** (line 29)
+- Add `'stilllife'` and `'campaign'` to `SCENE_TYPES` array
 
-### 8. `src/lib/productImagePromptBuilder.ts`
-- Add `case 'furniture':` with appropriate defaults:
-  - Background: `'styled interior room setting with architectural depth'`
-  - Surface: `'positioned in a curated interior space on polished concrete or natural wood flooring'`
-  - Lighting: `'Warm directional interior lighting with natural window-light ambience revealing material textures and wood grain.'`
+**File: `src/components/app/ImportFromScenesModal.tsx`** (line 17)
+- Same addition for consistency
 
-### 9. `src/lib/categoryConstants.ts`
-- No change needed (uses high-level product categories not collection IDs)
+### 3. Verify home-decor separation
+The `home-decor` category already exists separately with its own scenes. The furniture scenes use `category_collection: 'furniture'` — no overlap. The `COLLECTION_MERGE` map does NOT merge these two, keeping them distinct.
 
-## Furniture Keywords (comprehensive list)
-
-Seating: sofa, couch, sectional, loveseat, armchair, recliner, chair, dining chair, office chair, accent chair, lounge chair, rocking chair, folding chair, bar stool, counter stool, stool, bench, ottoman, pouf, bean bag
-
-Tables: table, dining table, coffee table, side table, end table, console table, accent table, nightstand, bedside table, desk, standing desk, writing desk, vanity
-
-Beds: bed, bed frame, headboard, bunk bed, daybed, futon, mattress, crib
-
-Storage: shelf, bookshelf, bookcase, floating shelf, wall shelf, shelving unit, cabinet, filing cabinet, display cabinet, hutch, sideboard, buffet, credenza, dresser, chest of drawers, wardrobe, armoire, closet organizer
-
-Media/Kitchen: tv stand, media console, entertainment center, shoe rack, coat rack, wine rack, kitchen island, bar cart, pantry
-
-General: furniture
+## Impact
+- 24 new furniture scenes appear under "Furniture" in the admin panel
+- Home Decor remains its own separate category with existing smaller-item scenes
+- `stilllife` and `campaign` scene types become selectable in admin dropdowns
 
