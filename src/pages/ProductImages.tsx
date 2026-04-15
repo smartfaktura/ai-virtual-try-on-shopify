@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, History, RefreshCw, Loader2, Upload } from 'lucide-react';
+import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, History, RefreshCw, Loader2, Upload, FlaskConical } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
+import { DemoProductPicker } from '@/components/app/product-images/DemoProductPicker';
 
 // Lazy-load step components for faster initial render
 const ProductImagesStep2Scenes = lazy(() => import('@/components/app/product-images/ProductImagesStep2Scenes'));
@@ -102,6 +103,7 @@ export default function ProductImages() {
   const [quickUploadProgress, setQuickUploadProgress] = useState('');
   const quickUploadInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [demoPickerOpen, setDemoPickerOpen] = useState(false);
 
   const handleQuickUpload = useCallback(async (file: File) => {
     if (!user) { toast.error('Please sign in to upload'); return; }
@@ -1044,6 +1046,15 @@ export default function ProductImages() {
                   }} className="gap-2">
                     <Upload className="w-4 h-4" />Upload product photo
                   </Button>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground w-full max-w-xs">
+                    <div className="h-px flex-1 bg-border" />
+                    <span>or</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <Button variant="outline" onClick={() => setDemoPickerOpen(true)} className="gap-2">
+                    <FlaskConical className="w-4 h-4" />
+                    Try a demo product
+                  </Button>
                   <p className="text-xs text-muted-foreground">
                     You can also paste an image from your clipboard{' '}
                     <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono font-medium text-muted-foreground ml-1">{PASTE_SHORTCUT}</kbd>
@@ -1337,6 +1348,11 @@ export default function ProductImages() {
           onBack={handleBack}
         />
       )}
+      <DemoProductPicker
+        open={demoPickerOpen}
+        onOpenChange={setDemoPickerOpen}
+        onSelect={handleQuickUpload}
+      />
     </div>
   );
 }
