@@ -13,7 +13,7 @@ const VALID_CATEGORIES = new Set([
   "high-heels", "garments", "dresses", "hoodies", "streetwear", "jeans", "jackets",
   "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
-  "home-decor", "tech-devices", "food", "beverages", "supplements-wellness",
+  "home-decor", "furniture", "tech-devices", "food", "beverages", "supplements-wellness",
 ]);
 
 /** Title-based category fallback when AI returns "other" or invalid */
@@ -47,6 +47,7 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/\bhat\b|\bcap\b|beanie|headband|beret|fedora/i, "hats-small"],
   [/\bshoe\b|\bshoes\b|sandal|loafer|slipper|mule/i, "shoes"],
   [/\bshirt\b|pants|skirt|coat|sweater|blouse|cardigan|vest/i, "garments"],
+  [/armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
   [/candle|vase|pillow|lamp|decor|cushion|throw|planter|frame/i, "home-decor"],
   [/phone|laptop|tablet|headphone|speaker|camera|earbuds|charger|keyboard|mouse/i, "tech-devices"],
   [/protein|vitamin|supplement|probiotic|collagen|creatine|pre-?workout/i, "supplements-wellness"],
@@ -67,6 +68,7 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["shoes", /sneaker|trainer/i, "sneakers"],
   ["shoes", /\bboot\b|\bboots\b/i, "boots"],
   ["shoes", /high heel|stiletto|pump/i, "high-heels"],
+  ["home-decor", /armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
 ];
 
 function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
@@ -122,7 +124,7 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, streetwear, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, streetwear, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above
