@@ -1,8 +1,8 @@
 
 
-# Post-Gen Conversion — Full Platform Audit (Round 8)
+# Post-Gen Conversion — Full Platform Audit (Round 9)
 
-## Coverage Matrix (Final State)
+## Coverage Matrix (Current State)
 
 | Page | Route | Layer 1 (Card) | Layer 2 (Drawer) | Layer 3 (Modal) | Credit Gate |
 |------|-------|:-:|:-:|:-:|:-:|
@@ -14,52 +14,54 @@
 | Animate Video | `/app/video/animate` | — | — | Yes | Yes |
 | Brand Models | `/app/models` | — | — | Yes | Yes |
 | Catalog Studio | `/app/catalog/generate` | — | — | Yes | Yes |
-| **Short Film** | `/app/video/short-film` | — | — | **None** | **BUG — toast.error only** |
-| **Creative Drops** | wizard component | — | — | **None** | **Uses old `openBuyModal`** |
-| **Upscale Modal** | in-page modal | — | — | **None** | **Disabled button, no purchase path** |
+| Short Film | `/app/video/short-film` | — | — | Yes | Yes |
+| Creative Drops | wizard component | — | — | Yes | Yes |
+| Upscale Modal | in-page modal | — | — | Yes | Yes |
+
+**All 11 generation surfaces now use `NoCreditsModal` for credit gates.**
 
 ## Component Design Audit
 
-All three components pass design, responsiveness, and accessibility checks. No regressions from Round 7:
-
 | Check | Status |
 |-------|--------|
-| Layer 1: 44px dismiss tap target | Pass |
-| Layer 1: chip alignment, 3s fade-in | Pass |
-| Layer 2: `sm:!max-w-[480px]`, close clearance, badge | Pass |
-| Layer 3: mobile padding, badge overflow, 44px buttons | Pass |
-| Layer 3: `grid-cols-1 sm:grid-cols-3` pack grid | Pass |
-| Layer 3: View Plans → `/app/settings` (internal) | Pass |
+| Layer 1: 44px dismiss tap target (p-2.5 + min-w/min-h) | Pass |
+| Layer 1: chip alignment pl-7 sm:pl-9 | Pass |
+| Layer 1: 3s delayed fade-in | Pass |
+| Layer 2: sm:!max-w-[480px] width override | Pass |
+| Layer 2: p-0 pt-2 + inner pt-10 close clearance | Pass |
+| Layer 2: "Most Popular" badge -top-2.5 with pt-3 | Pass |
+| Layer 3: px-5 sm:px-8 mobile padding | Pass |
+| Layer 3: overflow-visible + pt-4 for "Best Value" badge | Pass |
+| Layer 3: grid-cols-1 sm:grid-cols-3 pack layout | Pass |
+| Layer 3: min-h-[44px] on all buttons | Pass |
+| Layer 3: View Plans → /app/settings (internal) | Pass |
 
-**All components structurally sound. No design fixes needed.**
+## Remaining Items (Minor — No User Impact)
 
-## Bugs Found
+### 1. Residual toast in useShortFilmProject.ts (dead code)
 
-### Bug 1: Short Film — toast error, no NoCreditsModal
+`useShortFilmProject.ts` line 749–751 still has `toast.error("Not enough credits...")` + return. Since `ShortFilm.tsx` now intercepts at the page level before calling `startGeneration()`, this code path is unreachable. It serves as defense-in-depth but the toast will never fire.
 
-`useShortFilmProject.ts` line 749–751: when `balance < totalCredits`, it shows `toast.error("Not enough credits...")` and returns. No modal, no purchase path. The user hits a dead end.
+**Recommendation**: Remove the toast and early return from the hook to avoid confusion. Low priority — no user-facing impact.
 
-**Fix**: Add `NoCreditsModal` state to `ShortFilm.tsx`. Pass a callback from ShortFilm into the hook (or handle it at the page level by checking balance before calling `startGeneration`).
+### 2. `openBuyModal` still used in non-generation contexts (correct behavior)
 
-### Bug 2: Creative Drops Wizard — uses legacy `openBuyModal`
+These surfaces correctly use the legacy `openBuyModal` because they are navigation/info surfaces, not credit gates:
 
-`CreativeDropWizard.tsx` line 1781: calls `creditCtx.openBuyModal()` which opens the old `BuyCreditsModal`. This is a generation surface (Creative Drops generate images) so it should use `NoCreditsModal`.
+- `CreditIndicator.tsx` (sidebar) — opens pricing modal for browsing plans
+- `LowCreditsBanner.tsx` — persistent banner with "Top up" button
+- `Dashboard.tsx` — credit balance card click
+- `BrandModels.tsx` UpgradeHero — "Upgrade to Growth" button for plan-gated feature
 
-**Fix**: Import `NoCreditsModal`, add local state, replace `creditCtx.openBuyModal()` with `setNoCreditsOpen(true)`.
+No changes needed for these.
 
-### Bug 3: Upscale Modal — no purchase path when insufficient credits
+## Verdict
 
-`UpscaleModal.tsx` line 145: button shows "Insufficient credits" but is disabled with no way to purchase. The user is stuck.
+**The Post-Gen Conversion system is fully functional across all generation surfaces.** All credit gates open `NoCreditsModal`. All three conversion layers (Card, Drawer, Modal) pass design and accessibility checks at desktop, tablet, and mobile breakpoints.
 
-**Fix**: When `!hasEnough`, make the button open `NoCreditsModal` instead of being disabled.
-
-## Summary of Required Fixes
+Only one optional cleanup remains: removing the dead toast in `useShortFilmProject.ts`.
 
 | Priority | File | Fix |
 |----------|------|-----|
-| **Critical** | `src/pages/video/ShortFilm.tsx` | Add `NoCreditsModal` with credit check before `startGeneration` |
-| **Critical** | `src/components/app/UpscaleModal.tsx` | Add `NoCreditsModal`, open it when credits insufficient instead of disabled button |
-| **Medium** | `src/components/app/CreativeDropWizard.tsx` | Replace `creditCtx.openBuyModal()` with local `NoCreditsModal` |
-
-3 files to modify. All other surfaces pass.
+| Optional | `src/hooks/useShortFilmProject.ts` | Remove redundant toast.error + return at line 749–751 (dead code — page-level gate already prevents this path) |
 
