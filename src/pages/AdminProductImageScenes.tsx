@@ -53,7 +53,7 @@ const COLLECTION_MERGE: Record<string, string> = {
   "food-beverage": "food",
   "wallets": "wallets-cardholders",
 };
-const normalizeCat = (cat: string | null) => COLLECTION_MERGE[cat || ''] ?? cat || 'other';
+const normalizeCat = (cat: string | null) => COLLECTION_MERGE[cat ?? ''] ?? (cat || 'other');
 
 
 
