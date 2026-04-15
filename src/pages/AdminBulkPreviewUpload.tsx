@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom';
 const COLLECTION_MERGE: Record<string, string> = {
   "snacks-food": "food",
   "food-beverage": "food",
+  "wallets": "wallets-cardholders",
 };
 
 const TITLE_MAP: Record<string, string> = {
