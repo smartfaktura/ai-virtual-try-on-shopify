@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/lib/brandedToast';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -237,6 +238,7 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
   const [publishing, setPublishing] = useState(false);
   const { balance, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
+  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   const processFile = async (file: File) => {
     const reader = new FileReader();
@@ -703,8 +705,15 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
         </Button>
 
         {!makePublic && balance < 20 && (
-          <p className="text-xs text-destructive text-center">Not enough credits. You need at least 20.</p>
+          <button
+            type="button"
+            onClick={() => setNoCreditsOpen(true)}
+            className="text-xs text-destructive text-center w-full hover:underline cursor-pointer"
+          >
+            Not enough credits. You need at least 20. <span className="font-medium">Buy credits →</span>
+          </button>
         )}
+        <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
 
         {/* Server-side generation note */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
