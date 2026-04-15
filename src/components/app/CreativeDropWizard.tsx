@@ -38,6 +38,7 @@ import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { calculateDropCredits, type WorkflowCostConfig } from '@/lib/dropCreditCalculator';
 import type { Workflow } from '@/types/workflow';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useNavigate } from 'react-router-dom';
 import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
@@ -1989,6 +1990,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
     </div>
   );
 }
