@@ -138,6 +138,7 @@ const CATEGORY_ALIASES: Record<string, string> = {
   "wellness": "supplements-wellness",
   "home": "home-decor",
   "decor": "home-decor",
+  "furniture": "furniture",
   "footwear": "shoes",
   "sports": "activewear",
   "fitness": "activewear",
