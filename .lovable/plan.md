@@ -1,31 +1,25 @@
 
 
-# Move Badge Pills to Lower Side of Carousel Images
+# Fix Overlapping Badge Pills
 
 ## Problem
-Currently the badge pills are split — one at top-left (`top: '10%'`) and one at bottom-left (`bottom: '18%'`). User wants both pills grouped together on the lower side of the image.
+Badge pills overlap on Product Visuals, Virtual Try-On, and Product Listing cards (only 8% gap between `bottom: 26%` and `bottom: 18%`). Picture Perspectives and Catalog Studio also need more spacing between their pills.
 
-## Change
+## Changes in `src/components/app/workflowAnimationData.tsx`
 
-### File: `src/components/app/workflowAnimationData.tsx`
+**Product Visuals, Virtual Try-On, Product Listing** (lines 88/92, 110/114, 128/132):
+- First badge: `bottom: '26%'` → `bottom: '28%'` 
+- Second badge: `bottom: '18%'` → `bottom: '16%'`
+- Gap increases from 8% to 12%
 
-Update positions for all carousel workflow scenes that have two badges:
+**Selfie / UGC** — same fix pattern for its two bottom elements
 
-**Product Visuals** (lines ~92-99): Move first badge from `top: '10%'` to `bottom: '26%'`
-
-**Virtual Try-On Set** (lines ~110-117): Move first badge from `top: '10%'` to `bottom: '26%'`
-
-**Product Listing Set** (lines ~128-135): Move first badge from `top: '10%'` to `bottom: '26%'`
-
-**Selfie / UGC Set** — first element is a `product` type, move from `top: '10%'` to `bottom: '26%'`
-
-**Picture Perspectives** — move first badge from `top: '10%'` to `bottom: '16%'`, second from `bottom: '8%'` to `bottom: '6%'`
-
-**Catalog Studio** — move first badge from `bottom: '18%'` to `bottom: '16%'` (already low, just tighten gap)
-
-Result: both pills stacked at the bottom-left of each card, visually grouped.
+**Picture Perspectives** (lines 253/257) and **Catalog Studio** (lines 282/286) — use matching positions with more space:
+- First badge: `bottom: '20%'`
+- Second badge: `bottom: '8%'`
+- Gap increases from 10% to 12%, same positions on both cards
 
 ## Impact
-- 1 file, ~6 position tweaks
-- Consistent bottom-left pill placement across all carousel workflows
+- 1 file, position value tweaks across 6 workflow scenes
+- Consistent non-overlapping pill layout
 
