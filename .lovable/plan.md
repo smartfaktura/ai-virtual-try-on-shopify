@@ -1,43 +1,27 @@
 
 
-# Upload 24 Watches Editorial Scenes
+# Fix Library Bulk Download (ZIP only gets 1 file)
 
-## Summary
-Insert 24 new editorial scenes for the `watches` category collection (currently has 16 scenes with `category_sort_order: 17`). Organized into 4 sub-categories (6 scenes each). Update `category_sort_order` from 17 to 24 per RTF spec.
+## Root Cause
+The bulk download fetches each image via `fetch(item.imageUrl)` directly in the browser. Many of these URLs are external provider URLs (from AI generation services) that block cross-origin requests (CORS). The `catch` block silently skips failed fetches, so only 1 image ends up in the ZIP.
 
-## Scene Mapping
+## Solution
+Route all image fetches through Supabase Storage's download proxy. For external URLs, use the existing `?download=` parameter pattern or fetch via a proxy edge function. The simplest fix is to reuse the `downloadDropAsZip` utility from `src/lib/dropDownload.ts` (which has the same CORS issue) and instead proxy all downloads through a small edge function that fetches on the server side and returns the blob.
 
-| Sub-Category | Sub Sort | Scenes (6 each) |
-|---|---|---|
-| Editorial Product Studio (01-06) | 1 | watch-motion-blur-studio-hero, watch-blackwhite-hand-study, watch-hardware-dial-closeup, watch-sky-hero-still, watch-jewelry-creature-statement, watch-dark-shadow-product |
-| On-Wrist Editorial Portraits (07-12) | 2 | watch-wrist-beauty-portrait, watch-hand-face-editorial, watch-low-angle-fashion-editorial, watch-silhouette-wrist-shadow, watch-tailored-wrist-closeup, watch-sensual-evening-portrait |
-| Tailored & Everyday Watch Moments (13-18) | 3 | watch-business-seated-lifestyle, watch-shirt-cuff-daily-luxury, watch-cafe-table-lifestyle, watch-driving-wheel-moment, watch-evening-bar-lifestyle, watch-relaxed-weekend-luxury |
-| Campaign Watch Statements (19-24) | 4 | watch-super-editorial-campaign, watch-vintage-cinematic-campaign, watch-dark-power-campaign, watch-tailored-authority-campaign, watch-monument-product-campaign, watch-wildcard-concept-campaign |
+**However**, the simpler and more robust approach: use the **Supabase Storage render endpoint** as a CORS-friendly proxy. Since `getOptimizedUrl` already converts URLs to Supabase render URLs, we can use those for the fetch — they have proper CORS headers.
 
-## Technical Details
-- **sort_order**: RTF specifies 2401-2424; will use those values (no conflict with current max 2956)
-- **category_collection**: `watches`
-- **category_sort_order**: update existing 16 from `17` to `24` per RTF
-- **Scenes 1, 3-6**: editorial product-only; `sceneEnvironment` + `visualDirection` + `layout` + `detailFocus`; no `personDetails`, no `outfit_hint`
-- **Scene 2**: editorial + `personDetails`; outfit_hint: minimal monochrome styling; trigger: `personDetails, visualDirection, layout, detailFocus`
-- **Scenes 7-8, 10-11**: editorial + `personDetails` + `stylingDetails`; outfit_hint: minimal luxury wrist-visible styling; `detailFocus`
-- **Scene 9**: editorial + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint; no `detailFocus`
-- **Scene 12**: editorial + `personDetails` + `stylingDetails`; outfit_hint; no `detailFocus`
-- **Scenes 13, 15-16**: lifestyle + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint: polished daily styling
-- **Scene 14**: lifestyle + `personDetails` + `stylingDetails` + `detailFocus`; outfit_hint
-- **Scene 17**: lifestyle + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint
-- **Scene 18**: lifestyle + `personDetails` + `stylingDetails`; outfit_hint; no `sceneEnvironment`
-- **Scene 19**: campaign + `personDetails` + `sceneEnvironment` + `stylingDetails` + `detailFocus`; outfit_hint: strong editorial styling
-- **Scene 20**: campaign + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint
-- **Scene 21**: campaign + `personDetails` + `detailFocus`; outfit_hint; no `sceneEnvironment`
-- **Scene 22**: campaign + `personDetails` + `stylingDetails` + `sceneEnvironment`; outfit_hint
-- **Scene 23**: campaign product-only; `sceneEnvironment` + `visualDirection` + `layout` + `detailFocus`; no `personDetails`, no `outfit_hint`
-- **Scene 24**: campaign + `personDetails` + `sceneEnvironment` + `detailFocus`; outfit_hint
-- Scene types: editorial (1-12), lifestyle (13-18), campaign (19-24)
-- No `suggested_colors` / `aestheticColor` for any scene
-- Full prompt templates extracted from RTF
+### Changes
 
-## Execution
-1. UPDATE existing 16 watches scenes: set `category_sort_order = 24`
-2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and outfit hints
+1. **`src/pages/Jobs.tsx`** — Update `handleBulkDownload` to:
+   - Use `getOptimizedUrl(item.imageUrl, { quality: 100 })` for each image URL to route through Supabase's render endpoint (which has CORS headers)
+   - If that still has CORS issues, fall back to creating a temporary edge function `proxy-image-download` that fetches the URL server-side
+   - Add a toast for progress feedback (e.g., "Downloading 3/8…")
+   - Add error handling that reports how many images failed
+
+2. **Alternative if render proxy doesn't work**: Create an edge function `proxy-image-download` that accepts a URL, fetches it server-side, and returns the blob — bypassing CORS entirely.
+
+## Technical Detail
+The render endpoint pattern: `{SUPABASE_URL}/storage/v1/render/image/public/{bucket}/{path}` only works for Supabase-hosted images. For external provider URLs, we need the edge function approach.
+
+**Recommended approach**: Create a lightweight `image-proxy` edge function that accepts a URL parameter, fetches the image server-side, and streams it back. Then update `handleBulkDownload` to route all fetches through this proxy.
 
