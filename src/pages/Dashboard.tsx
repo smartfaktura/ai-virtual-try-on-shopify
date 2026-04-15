@@ -453,7 +453,45 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Feedback Banner */}
+        {/* More tools */}
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">More tools</h2>
+            <p className="text-sm text-muted-foreground mt-1">Specialized tools for angles, quality, and catalog creation.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {([
+              { icon: RotateCw, title: 'Picture Perspectives', label: 'More angles', desc: 'Turn one product image into a complete set of alternate views.', to: '/app/generate/product-images' },
+              { icon: Sparkles, title: 'Image Upscaling', label: 'Higher resolution', desc: 'Upscale images to 2K or 4K while improving clarity and detail.', to: '/app/workflows' },
+              { icon: LayoutGrid, title: 'Catalog Studio', label: 'Bulk creation', desc: 'Create catalog visuals in bulk with consistent styling.', to: '/app/workflows' },
+            ] as const).map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <div
+                  key={tool.title}
+                  className="border border-border/60 rounded-xl p-5 flex flex-col gap-3 hover:border-border hover:shadow-sm transition-all"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-foreground">{tool.title}</h3>
+                      <span className="text-[11px] text-muted-foreground/60">{tool.label}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">{tool.desc}</p>
+                  </div>
+                  <div className="mt-auto pt-1">
+                    <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate(tool.to)}>
+                      Open
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         <FeedbackBanner />
 
         {/* What You Can Create — showcase gallery */}
