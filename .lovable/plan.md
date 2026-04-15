@@ -1,34 +1,32 @@
 
 
-# Upload 24 Swimwear Editorial Scenes
+# Upload 24 Wallets / Cardholders Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `swimwear` category collection (currently has 18 scenes with `category_sort_order: 28`). Organized into 4 sub-categories (6 scenes each). Keep `category_sort_order` at 28 (no change specified in RTF).
+Insert 24 new editorial scenes for a new `wallets` category collection (no existing scenes). Organized into 4 sub-categories (6 scenes each). No `category_sort_order` specified in RTF — will need to assign one (suggest checking existing values for gap).
 
 ## Scene Mapping
 
 | Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| Editorial Resort Poses (01-06) | 1 | swimwear-editorial-lounger-resort, swimwear-editorial-poolside-standing, swimwear-editorial-balcony-seated, swimwear-editorial-cabana-curtain, swimwear-editorial-yacht-deck, swimwear-editorial-resort-stairs |
-| Pool / Beach Lifestyle UGC (07-12) | 2 | swimwear-ugc-towel-after-swim, swimwear-ugc-pool-edge-walk, swimwear-ugc-beach-towel-sit, swimwear-ugc-bag-essentials, swimwear-ugc-candid-friend-shot, swimwear-ugc-shoreline-pause |
-| Folded / Wet Surface Still (13-18) | 3 | swimwear-still-folded-towel, swimwear-still-wet-tile, swimwear-still-chair-ladder-drape, swimwear-still-sandy-surface, swimwear-still-water-reflection, swimwear-still-resort-essentials |
-| Aesthetic Color Swim Stories (19-24) | 4 | swimwear-color-resort-wall, swimwear-color-poolside-story, swimwear-color-towel-fabric, swimwear-color-sunset-mood, swimwear-color-water-reflection, swimwear-color-editorial-hero |
+| In-Hand Editorial Detail (01-06) | 1 | wallet-hand-one-hand-hero, wallet-hand-thumb-edge-detail, wallet-hand-card-pull, wallet-hand-open-reveal, wallet-hand-wrist-style-crop, wallet-hand-pocket-exit |
+| Desk / Daily Use UGC (07-12) | 2 | wallet-ugc-coffee-table, wallet-ugc-work-desk, wallet-ugc-cafe-payment, wallet-ugc-bag-drop, wallet-ugc-travel-tray, wallet-ugc-pocket-keys-phone |
+| Styled Surface Still Life (13-18) | 3 | wallet-still-stone-slab, wallet-still-fabric-contrast, wallet-still-open-composition, wallet-still-book-tray, wallet-still-drawer-shelf, wallet-still-gift-reveal |
+| Campaign Luxury Closeups (19-24) | 4 | wallet-campaign-shadow-cut, wallet-campaign-hardware-macro, wallet-campaign-monochrome-crop, wallet-campaign-aesthetic-gradient, wallet-campaign-reflection-hero, wallet-campaign-ultra-hero |
 
 ## Technical Details
-- **sort_order**: starts at 2909 (current global max is 2908)
-- **category_collection**: `swimwear`
-- **category_sort_order**: 28 (unchanged — no new value specified in RTF)
-- **Scenes 1-6**: editorial; `personDetails` + `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; outfit_hint for all (swimwear resort styling)
-- **Scenes 7-12**: lifestyle; `personDetails` + `productDetails` + `sceneEnvironment` + `stylingDetails` + `visualDirection` + `layout`; outfit_hint for all
+- **sort_order**: starts at 2933 (current global max is 2932)
+- **category_collection**: `wallets`
+- **category_sort_order**: 35 (new category, assign next available)
+- **Scenes 1-6**: editorial; all have `personDetails` + `productDetails` + `visualDirection` + `layout`; scenes 1-4 also have `sceneEnvironment`; scene 6 adds `stylingDetails`; no `outfit_hint` (hand-only shots, no full outfit)
+- **Scenes 7-12**: lifestyle; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; scenes 7, 9 add `personDetails`; scene 8, 10-12 have `personDetails` where hands shown; no `outfit_hint` (product-focused UGC)
 - **Scenes 13-18**: stilllife; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`, no `outfit_hint`
-- **Scenes 19-20**: `aestheticColor` + `personDetails`; `suggested_colors` includes all 5 colors: Lagoon Soft Blue #9FCFD4, Seafoam Mist #BFD8D2, Apricot Sand #E9B89A, Aqua Glass #9FD6D2, Shell Beige #DCCBB8; outfit_hint
-- **Scene 21**: `aestheticColor` still life (no `personDetails`, no outfit_hint); same `suggested_colors`
-- **Scene 22**: `aestheticColor` + `personDetails`; outfit_hint; same `suggested_colors`
-- **Scene 23**: `aestheticColor` product-only (no `personDetails`, no outfit_hint); same `suggested_colors`
-- **Scene 24**: `aestheticColor` + `personDetails`; outfit_hint; same `suggested_colors`; `scene_type: campaign`
-- Scene types: editorial (1-6, 19), lifestyle (7-12, 20, 22), stilllife (13-18, 21, 23), campaign (24)
+- **Scenes 19-21, 23-24**: campaign; `productDetails` + `visualDirection` + `layout`; no `personDetails`; scene 20 adds `detailFocus`
+- **Scene 22**: campaign + `aestheticColor`; `productDetails` + `visualDirection` + `layout`; `suggested_colors` TBD (RTF doesn't specify — will use a refined leather palette e.g. `[{"name":"Cognac Burnish","hex":"#8B5E3C"}]`)
+- **scene_type**: editorial (1-6), lifestyle (7-12), stilllife (13-18), campaign (19-24)
+- No `outfit_hint` for any scene (wallets = accessories, no clothing context)
 - Full prompt templates extracted from RTF
 
 ## Execution
-1. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, outfit hints, and suggested colors (no category_sort_order update needed)
+1. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and suggested colors for scene 22
 
