@@ -134,6 +134,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
   const [attempted, setAttempted] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   const markDirty = useCallback(() => { if (!isDirty) setIsDirty(true); }, [isDirty]);
 
@@ -1778,7 +1779,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-3 ml-8">
-                    <Button size="sm" className="rounded-full h-8 px-4 text-xs gap-1.5" onClick={() => creditCtx.openBuyModal()}>
+                    <Button size="sm" className="rounded-full h-8 px-4 text-xs gap-1.5" onClick={() => setNoCreditsOpen(true)}>
                       <CreditCard className="w-3.5 h-3.5" /> Buy Credits
                     </Button>
                     <Button size="sm" variant="ghost" className="rounded-full h-8 px-3 text-xs text-muted-foreground" asChild>
