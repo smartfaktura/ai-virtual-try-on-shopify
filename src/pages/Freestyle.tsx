@@ -172,7 +172,7 @@ export default function Freestyle() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
+  const { balance, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { user: authUser } = useAuth();
   const isFreeUser = plan === 'free';
   const conversionState = useConversionState();
