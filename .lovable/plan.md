@@ -1,20 +1,26 @@
 
 
-# Fix Single Image Download (CORS failure)
+# Fix ZIP File Names to Match Single Download Names
 
-## Root Cause
-Same CORS issue as the bulk download. `saveOrShareImage()` in `src/lib/mobileImageSave.ts` and `downloadImage()` in `LibraryImageCard.tsx` both do a direct browser `fetch(imageUrl)` which fails on external provider URLs.
+## Problem
+The bulk ZIP download uses a simplified naming scheme (`${safeLabel}_${safeId}`) while single downloads use `buildLibraryFileName(item)` which includes product name, scene name, model name, and short ID — producing much more descriptive filenames.
 
 ## Solution
-Route all image fetches through the already-deployed `image-proxy` edge function.
+Update `handleBulkDownload` in `src/pages/Jobs.tsx` to use `buildLibraryFileName(item)` (from `src/lib/downloadFileName.ts`) instead of the current `safeLabel + safeId` pattern. This ensures ZIP contents have the same names as individual downloads.
 
-### Changes
+### Change
+**`src/pages/Jobs.tsx`** (lines 231-233):
+- Import `buildLibraryFileName` from `@/lib/downloadFileName`
+- Replace the current naming logic:
+  ```typescript
+  // Before
+  const safeLabel = item.label.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+  const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 8);
+  zip.file(`${safeLabel}_${safeId}${ext}`, blob);
 
-1. **`src/lib/mobileImageSave.ts`** — Update `saveOrShareImage` to proxy the fetch through `image-proxy`:
-   - Build proxy URL: `${VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`
-   - Keep all existing mobile share sheet and fallback logic unchanged
+  // After
+  zip.file(`${buildLibraryFileName(item)}${ext}`, blob);
+  ```
 
-2. **`src/components/app/LibraryImageCard.tsx`** — Update `downloadImage` function to use the same proxy URL pattern
-
-Both are small one-line URL changes. The `image-proxy` edge function is already deployed and working.
+Single file change, consistent naming everywhere.
 
