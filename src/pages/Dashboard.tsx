@@ -14,7 +14,7 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 
 
 
-import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
+
 import { DashboardDiscoverSection } from '@/components/app/DashboardDiscoverSection';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
 import { DashboardTipCard } from '@/components/app/DashboardTipCard';
@@ -23,31 +23,13 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { JobStatus } from '@/types';
-import type { Workflow } from '@/pages/Workflows';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
-import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 
-/* ── Inline card with IntersectionObserver for animations ── */
-function DashboardWorkflowCard({ workflow, onNavigate, comingSoon }: { workflow: Workflow; onNavigate: (slug: string) => void; comingSoon?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.3 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
   }, []);
 
   const scene = workflowScenes[workflow.name];
@@ -308,19 +290,6 @@ export default function Dashboard() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // Fetch workflows (for first-run grid)
-  const { data: workflows = [] } = useQuery({
-    queryKey: ['dashboard-workflows'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('workflows')
-        .select('*')
-        .order('sort_order');
-      if (error) throw error;
-      return data as unknown as Workflow[];
-    },
-    enabled: !!user,
-  });
 
 
   // Critical error state — show recovery UI instead of blank skeletons
@@ -483,35 +452,6 @@ export default function Dashboard() {
         <RecentCreationsGallery />
 
 
-        {/* Explore Workflows — compact animated cards */}
-        {workflows.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Templates</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-              {[...workflows].sort((a, b) => {
-                const order: Record<string, number> = {
-                  'Virtual Try-On Set': 1,
-                  'Product Listing Set': 2,
-                  'Selfie / UGC Set': 3,
-                  'Mirror Selfie Set': 4,
-                  'Flat Lay Set': 5,
-                };
-                return (order[a.name] ?? 99) - (order[b.name] ?? 99);
-              }).map(workflow => (
-                <DashboardWorkflowCard
-                  key={workflow.id}
-                  workflow={workflow}
-                  onNavigate={(slug) => navigate(slug ? `/app/generate/${slug}` : `/app/workflows`)}
-                  comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-
-        {/* Your AI Studio Team */}
-        <DashboardTeamCarousel />
 
 
         <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
