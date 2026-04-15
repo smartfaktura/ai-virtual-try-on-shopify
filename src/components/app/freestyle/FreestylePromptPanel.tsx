@@ -247,12 +247,18 @@ export function FreestylePromptPanel({
         <>
           {/* Row 1 — Prompt Input */}
           <div className={`relative px-3 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-2 sm:pb-3`}>
+            <TypewriterPlaceholder
+              prompt={prompt}
+              sourceImagePreview={sourceImagePreview}
+              imageRole={imageRole}
+              hasAssets={hasAssets}
+            />
             <textarea
               value={prompt}
               onChange={e => onPromptChange(e.target.value)}
-              placeholder={sourceImagePreview && imageRole === 'edit' ? "Describe what to change — remove a detail, swap background, adjust colors…" : hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create…"}
+              placeholder={prompt.length === 0 ? '' : undefined}
               rows={isMobile ? 2 : 3}
-              className="w-full bg-transparent border-none text-base leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[56px] sm:min-h-[80px] lg:min-h-[72px] pr-10"
+              className="w-full bg-transparent border-none text-base leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[56px] sm:min-h-[80px] lg:min-h-[72px] pr-10 relative z-[1]"
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

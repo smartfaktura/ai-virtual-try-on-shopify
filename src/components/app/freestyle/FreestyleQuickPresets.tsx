@@ -206,7 +206,7 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
                 key={scene.poseId}
                 onClick={() => onSelect(scene)}
                 className={cn(
-                  'flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all snap-start shrink-0',
+                  'flex items-center gap-3 px-4 py-3 rounded-xl border transition-all snap-start shrink-0',
                   'hover:border-primary/50 hover:bg-accent/50 active:scale-[0.98]',
                   isActive
                     ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
@@ -216,11 +216,11 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
                 <img
                   src={getOptimizedUrl(scene.previewUrl, { quality: 60 })}
                   alt={scene.name}
-                  className="w-11 h-11 rounded-lg object-cover shrink-0"
+                  className="w-14 h-14 rounded-lg object-cover shrink-0"
                 />
                 <div className="text-left min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">{scene.name}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-sm font-semibold text-foreground truncate">{scene.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {poseCategoryLabels[scene.category] ?? scene.category}
                   </p>
                 </div>
