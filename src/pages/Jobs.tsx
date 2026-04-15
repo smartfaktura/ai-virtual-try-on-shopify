@@ -206,21 +206,42 @@ export default function Jobs() {
 
   const handleBulkDownload = async () => {
     setIsZipping(true);
+    const selected = items.filter(i => selectedIds.has(i.id));
+    const total = selected.length;
+    let succeeded = 0;
+    let failed = 0;
+
+    toast.info(`Preparing ${total} images…`);
+
     try {
       const zip = new JSZip();
-      const selected = items.filter(i => selectedIds.has(i.id));
-      for (const item of selected) {
+      const proxyBase = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy`;
+
+      for (let idx = 0; idx < total; idx++) {
+        const item = selected[idx];
         try {
-          const res = await fetch(item.imageUrl);
-          if (!res.ok) continue;
+          const proxyUrl = `${proxyBase}?url=${encodeURIComponent(item.imageUrl)}`;
+          const res = await fetch(proxyUrl);
+          if (!res.ok) { failed++; continue; }
+          const contentType = res.headers.get('content-type') || '';
+          let ext = '.png';
+          if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
+          else if (contentType.includes('webp')) ext = '.webp';
           const blob = await res.blob();
           const safeLabel = item.label.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
-          const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_');
-          zip.file(`${safeLabel}_${safeId}.png`, blob);
+          const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 8);
+          zip.file(`${safeLabel}_${safeId}${ext}`, blob);
+          succeeded++;
         } catch {
-          // skip failed downloads
+          failed++;
         }
       }
+
+      if (succeeded === 0) {
+        toast.error('All downloads failed — please try again');
+        return;
+      }
+
       const content = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(content);
       const a = document.createElement('a');
@@ -228,6 +249,14 @@ export default function Jobs() {
       a.download = 'library-images.zip';
       a.click();
       URL.revokeObjectURL(url);
+
+      if (failed > 0) {
+        toast.warning(`Downloaded ${succeeded}/${total} images (${failed} failed)`);
+      } else {
+        toast.success(`Downloaded ${succeeded} images`);
+      }
+    } catch (err) {
+      toast.error('Download failed — please try again');
     } finally {
       setIsZipping(false);
     }
