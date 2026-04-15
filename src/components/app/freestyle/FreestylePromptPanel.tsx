@@ -74,7 +74,101 @@ interface FreestylePromptPanelProps {
   isDirty?: boolean;
 }
 
-export function FreestylePromptPanel({
+const TYPEWRITER_PHRASES = [
+  "A luxury perfume on marble with golden hour lighting…",
+  "Streetwear jacket on a model in an industrial warehouse…",
+  "Minimalist skincare flat-lay with botanicals and morning light…",
+  "Sneakers on concrete with dramatic shadow play…",
+];
+
+function TypewriterPlaceholder({
+  prompt,
+  sourceImagePreview,
+  imageRole,
+  hasAssets,
+}: {
+  prompt: string;
+  sourceImagePreview: string | null;
+  imageRole: string;
+  hasAssets?: boolean;
+}) {
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [isErasing, setIsErasing] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // If there's a custom placeholder context, show static text instead
+  const hasCustomPlaceholder = (sourceImagePreview && imageRole === 'edit') || hasAssets;
+
+  useEffect(() => {
+    if (prompt.length > 0 || hasCustomPlaceholder) return;
+
+    const phrase = TYPEWRITER_PHRASES[phraseIdx];
+    if (!isErasing) {
+      if (charIdx < phrase.length) {
+        const t = setTimeout(() => setCharIdx(c => c + 1), 40);
+        return () => clearTimeout(t);
+      } else {
+        const t = setTimeout(() => setIsErasing(true), 2000);
+        return () => clearTimeout(t);
+      }
+    } else {
+      if (charIdx > 0) {
+        const t = setTimeout(() => setCharIdx(c => c - 1), 20);
+        return () => clearTimeout(t);
+      } else {
+        setIsErasing(false);
+        setPhraseIdx(i => (i + 1) % TYPEWRITER_PHRASES.length);
+      }
+    }
+  }, [charIdx, isErasing, phraseIdx, prompt.length, hasCustomPlaceholder]);
+
+  // Listen for focus/blur on parent textarea
+  useEffect(() => {
+    const handleFocus = () => setIsFocused(true);
+    const handleBlur = () => setIsFocused(false);
+    // Find the textarea sibling
+    const ta = document.querySelector<HTMLTextAreaElement>('.freestyle-prompt-textarea');
+    ta?.addEventListener('focus', handleFocus);
+    ta?.addEventListener('blur', handleBlur);
+    return () => {
+      ta?.removeEventListener('focus', handleFocus);
+      ta?.removeEventListener('blur', handleBlur);
+    };
+  }, []);
+
+  if (prompt.length > 0) return null;
+
+  if (hasCustomPlaceholder) {
+    const text = sourceImagePreview && imageRole === 'edit'
+      ? "Describe what to change — remove a detail, swap background, adjust colors…"
+      : "Optional — describe extra details, or leave empty to auto-generate";
+    return (
+      <div className="absolute inset-0 pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
+        {text}
+      </div>
+    );
+  }
+
+  if (isFocused) {
+    return (
+      <div className="absolute inset-0 pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
+        Describe what you want to create…
+      </div>
+    );
+  }
+
+  const displayText = TYPEWRITER_PHRASES[phraseIdx].slice(0, charIdx);
+
+  return (
+    <div className="absolute inset-0 pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
+      {displayText}
+      <span className="animate-pulse">|</span>
+    </div>
+  );
+}
+
+
   prompt, onPromptChange,
   hasAssets,
   sourceImagePreview, onUploadClick, onRemoveImage,
