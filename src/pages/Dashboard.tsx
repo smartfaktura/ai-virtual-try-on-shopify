@@ -461,9 +461,9 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {([
-              { icon: RotateCw, title: 'Picture Perspectives', label: 'More angles', desc: 'Turn one product image into a complete set of alternate views.', to: '/app/generate/product-images' },
-              { icon: Sparkles, title: 'Image Upscaling', label: 'Higher resolution', desc: 'Upscale images to 2K or 4K while improving clarity and detail.', to: '/app/workflows' },
-              { icon: LayoutGrid, title: 'Catalog Studio', label: 'Bulk creation', desc: 'Create catalog visuals in bulk with consistent styling.', to: '/app/workflows' },
+              { icon: RotateCw, title: 'Picture Perspectives', label: 'More angles', desc: 'Turn one product image into a complete set of alternate views.', to: '/app/perspectives' },
+              { icon: Sparkles, title: 'Image Upscaling', label: 'Higher resolution', desc: 'Upscale images to 2K or 4K while improving clarity and detail.', to: '/app/generate/image-upscaling' },
+              { icon: LayoutGrid, title: 'Catalog Studio', label: 'Bulk creation', desc: 'Create catalog visuals in bulk with consistent styling.', to: '/app/catalog' },
             ] as const).map((tool) => {
               const Icon = tool.icon;
               return (
