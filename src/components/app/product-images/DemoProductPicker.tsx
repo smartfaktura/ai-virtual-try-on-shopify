@@ -45,25 +45,25 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
   };
 
   const grid = (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-1">
       {DEMO_PRODUCTS.map((product) => (
         <button
           key={product.id}
           disabled={!!loadingId}
           onClick={() => handleSelect(product)}
           className={cn(
-            'group relative flex flex-col items-center rounded-xl border border-border/60 bg-card p-2 transition-all',
+            'group relative flex flex-col items-center rounded-xl border border-border/60 bg-card p-1.5 transition-all',
             'hover:border-primary/40 hover:shadow-md hover:shadow-primary/5',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
             'disabled:opacity-50 disabled:pointer-events-none',
           )}
         >
-          <div className="relative w-full overflow-hidden rounded-lg bg-muted/40 mb-1.5" style={{ aspectRatio: '4/5' }}>
+          <div className="relative w-full overflow-hidden rounded-lg bg-muted/40 mb-1.5" style={{ aspectRatio: '1/1' }}>
             <ShimmerImage
               src={product.previewSrc}
               alt={product.title}
               className="w-full h-full object-cover"
-              aspectRatio="4/5"
+              aspectRatio="1/1"
             />
             {loadingId === product.id && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
@@ -96,7 +96,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Try a demo product</DialogTitle>
           <DialogDescription>Pick one to see how it works</DialogDescription>
