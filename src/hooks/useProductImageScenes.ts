@@ -45,91 +45,58 @@ function dbToFrontend(d: DbScene): ProductImageScene {
   };
 }
 
-const QUERY_KEY = ['product-image-scenes'];
+// ── Fetch helpers ──
 
-export function useProductImageScenes() {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-
-  const { data: rawScenes, isLoading } = useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: async () => {
-      const PAGE = 1000;
-      let all: DbScene[] = [];
-      let from = 0;
-      while (true) {
-        const { data, error } = await supabase
-          .from('product_image_scenes' as any)
-          .select('*')
-          .order('sort_order', { ascending: true })
-          .range(from, from + PAGE - 1);
-        if (error) throw error;
-        const batch = (data || []) as unknown as DbScene[];
-        all = all.concat(batch);
-        if (batch.length < PAGE) break;
-        from += PAGE;
-      }
-      return all;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Derived frontend-shaped data with fallback
-  const scenes = rawScenes && rawScenes.length > 0 ? rawScenes : null;
-
-  const activeScenes: DbScene[] = scenes?.filter(s => s.is_active) ?? [];
-
-  const categoryCollections: CategoryCollection[] = scenes
-    ? buildCollections(activeScenes)
-    : CATEGORY_COLLECTIONS;
-
-  const allScenes: ProductImageScene[] = scenes
-    ? activeScenes.map(dbToFrontend)
-    : FALLBACK_ALL;
-
-  // Admin CRUD
-  const upsertScene = useMutation({
-    mutationFn: async (scene: Partial<DbScene> & { scene_id: string }) => {
-      const { error } = await supabase
-        .from('product_image_scenes' as any)
-        .upsert(scene as any, { onConflict: 'scene_id' });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
-  });
-
-  const deleteScene = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('product_image_scenes' as any)
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
-  });
-
-  const updateScene = useMutation({
-    mutationFn: async (params: { id: string; updates: Partial<DbScene> }) => {
-      const { error } = await supabase
-        .from('product_image_scenes' as any)
-        .update(params.updates as any)
-        .eq('id', params.id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
-  });
-
-  return {
-    rawScenes: rawScenes ?? [],
-    isLoading,
-    categoryCollections,
-    allScenes,
-    upsertScene,
-    deleteScene,
-    updateScene,
-  };
+async function fetchAllScenes(): Promise<DbScene[]> {
+  const PAGE = 1000;
+  let all: DbScene[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('product_image_scenes' as any)
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    const batch = (data || []) as unknown as DbScene[];
+    all = all.concat(batch);
+    if (batch.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
 }
+
+async function fetchScenesByCategories(categories: string[]): Promise<DbScene[]> {
+  const { data, error } = await supabase
+    .from('product_image_scenes' as any)
+    .select('*')
+    .in('category_collection', categories)
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  return (data || []) as unknown as DbScene[];
+}
+
+async function fetchScenesExcludingCategories(categories: string[]): Promise<DbScene[]> {
+  const PAGE = 1000;
+  let all: DbScene[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('product_image_scenes' as any)
+      .select('*')
+      .not('category_collection', 'in', `(${categories.join(',')})`)
+      .order('sort_order', { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    const batch = (data || []) as unknown as DbScene[];
+    all = all.concat(batch);
+    if (batch.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
+}
+
+// ── Collection builder ──
 
 function buildCollections(scenes: DbScene[]): CategoryCollection[] {
   const catMap = new Map<string, DbScene[]>();
@@ -190,14 +157,12 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
     .sort((a, b) => (catSortOrder.get(a[0]) ?? 999) - (catSortOrder.get(b[0]) ?? 999))
     .map(([id, dbScenes]) => {
       const frontendScenes = dbScenes.map(dbToFrontend);
-      // Build sub-groups
       const subGroupMap = new Map<string, ProductImageScene[]>();
       for (const s of frontendScenes) {
         const key = s.subCategory || '';
         if (!subGroupMap.has(key)) subGroupMap.set(key, []);
         subGroupMap.get(key)!.push(s);
       }
-      // Sort sub-groups by sub_category_sort_order (from first scene in group); empty label ("General") goes last
       const subGroups = Array.from(subGroupMap.entries())
         .map(([label, scenes]) => {
           const groupOrder = Math.min(...dbScenes.filter(d => (d.sub_category || '') === label).map(d => d.sub_category_sort_order ?? 0));
@@ -214,4 +179,118 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
         categorySortOrder: catSortOrder.get(id) ?? 0,
       };
     });
+}
+
+// ── Query keys ──
+
+const QUERY_KEY_ALL = ['product-image-scenes'];
+const QUERY_KEY_PRIORITY = ['product-image-scenes-priority'];
+const QUERY_KEY_REST = ['product-image-scenes-rest'];
+
+// ── Hook options ──
+
+interface UseProductImageScenesOptions {
+  /** When provided, fetches these categories first (instant) and the rest in background */
+  priorityCategories?: string[];
+}
+
+export function useProductImageScenes(options?: UseProductImageScenesOptions) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const priorityCats = options?.priorityCategories;
+  const hasPriority = priorityCats && priorityCats.length > 0;
+
+  // ── Mode A: Two-tier fetch (when priority categories provided) ──
+
+  const { data: priorityScenes, isLoading: isLoadingPriority } = useQuery({
+    queryKey: [...QUERY_KEY_PRIORITY, priorityCats],
+    queryFn: () => fetchScenesByCategories(priorityCats!),
+    enabled: !!hasPriority,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: restScenes, isLoading: isLoadingRest } = useQuery({
+    queryKey: [...QUERY_KEY_REST, priorityCats],
+    queryFn: () => fetchScenesExcludingCategories(priorityCats!),
+    enabled: !!hasPriority && !!priorityScenes,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // ── Mode B: Full fetch (no priority — admin, review, results) ──
+
+  const { data: allRawScenes, isLoading: isLoadingAll } = useQuery({
+    queryKey: QUERY_KEY_ALL,
+    queryFn: fetchAllScenes,
+    enabled: !hasPriority,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // ── Merge results ──
+
+  const rawScenes: DbScene[] = hasPriority
+    ? [...(priorityScenes ?? []), ...(restScenes ?? [])]
+    : (allRawScenes ?? []);
+
+  const isLoading = hasPriority ? isLoadingPriority : isLoadingAll;
+  const scenes = rawScenes.length > 0 ? rawScenes : null;
+  const activeScenes: DbScene[] = scenes?.filter(s => s.is_active) ?? [];
+
+  const categoryCollections: CategoryCollection[] = scenes
+    ? buildCollections(activeScenes)
+    : CATEGORY_COLLECTIONS;
+
+  const allScenes: ProductImageScene[] = scenes
+    ? activeScenes.map(dbToFrontend)
+    : FALLBACK_ALL;
+
+  // ── Admin CRUD ──
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: QUERY_KEY_ALL });
+    qc.invalidateQueries({ queryKey: QUERY_KEY_PRIORITY });
+    qc.invalidateQueries({ queryKey: QUERY_KEY_REST });
+  };
+
+  const upsertScene = useMutation({
+    mutationFn: async (scene: Partial<DbScene> & { scene_id: string }) => {
+      const { error } = await supabase
+        .from('product_image_scenes' as any)
+        .upsert(scene as any, { onConflict: 'scene_id' });
+      if (error) throw error;
+    },
+    onSuccess: invalidateAll,
+  });
+
+  const deleteScene = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('product_image_scenes' as any)
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateAll,
+  });
+
+  const updateScene = useMutation({
+    mutationFn: async (params: { id: string; updates: Partial<DbScene> }) => {
+      const { error } = await supabase
+        .from('product_image_scenes' as any)
+        .update(params.updates as any)
+        .eq('id', params.id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateAll,
+  });
+
+  return {
+    rawScenes,
+    isLoading,
+    isLoadingRest: hasPriority ? (isLoadingRest && !!priorityScenes) : false,
+    categoryCollections,
+    allScenes,
+    upsertScene,
+    deleteScene,
+    updateScene,
+  };
 }
