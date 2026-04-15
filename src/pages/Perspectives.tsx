@@ -86,6 +86,7 @@ export default function Perspectives() {
   const { user } = useAuth();
   const { balance: credits, refreshBalance: refreshCredits, setBalanceFromServer } = useCredits();
   const { upload, isUploading } = useFileUpload();
+  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   // ── State ──────────────────────────────────────────────────────────────
   const initialSource: SourceType | null = searchParams.get('source') ? 'scratch' : null;
@@ -445,7 +446,7 @@ export default function Perspectives() {
     }
     if (!canGenerate) return;
     if (totalCost > credits) {
-      toast.error(`Not enough credits. Need ${totalCost}, have ${credits}.`);
+      setNoCreditsOpen(true);
       return;
     }
 

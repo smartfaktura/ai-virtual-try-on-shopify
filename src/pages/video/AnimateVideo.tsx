@@ -60,6 +60,7 @@ export default function AnimateVideo() {
 
   const { balance: creditsBalance, plan } = useCredits();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
+  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   const isPaidUser = plan !== 'free';
   const [bulkMode, setBulkMode] = useState(false);
@@ -368,7 +369,7 @@ export default function AnimateVideo() {
       const perVideoCost = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
       const total = perVideoCost * readyImages.length * motionCount;
       if (total > creditsBalance) {
-        toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
+        setNoCreditsOpen(true);
         return;
       }
 
@@ -402,7 +403,7 @@ export default function AnimateVideo() {
       const perVideoCost = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
       const total = perVideoCost * motionCount;
       if (total > creditsBalance) {
-        toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
+        setNoCreditsOpen(true);
         return;
       }
       const singleImageAsBulk = selectedCameraMotions.map((motion, i) => ({
