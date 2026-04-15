@@ -1047,6 +1047,19 @@ export default function Freestyle() {
                 </div>
               </div>
             )}
+            {/* Layer 1: Post-generation upgrade card */}
+            {isFreeUser && conversionState.canShowLayer1 && galleryImages.length > 0 && (
+              <div className="px-3 lg:px-1 pt-1 pb-2">
+                <PostGenerationUpgradeCard
+                  category={conversionCategory}
+                  onSeeMore={() => {
+                    conversionState.dismissLayer1();
+                    conversionState.openUpgradeDrawer('layer1_cta');
+                  }}
+                  onDismiss={conversionState.dismissLayer1}
+                />
+              </div>
+            )}
             <FreestyleGallery
               images={galleryImages}
               onDownload={handleDownload}
@@ -1209,6 +1222,11 @@ export default function Freestyle() {
           />
         );
       })()}
+      <UpgradeValueDrawer
+        open={conversionState.layer2Open}
+        onClose={conversionState.dismissLayer2}
+        category={conversionCategory}
+      />
     </div>
   );
 }
