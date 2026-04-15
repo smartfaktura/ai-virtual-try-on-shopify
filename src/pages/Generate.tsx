@@ -1002,7 +1002,7 @@ export default function Generate() {
         nextMap.delete(model.modelId);
       } else {
         if (isFreeUser && next.size >= 1) {
-          toast.info('Free plan allows 1 model per generation. Upgrade for more.');
+          conversionState.openUpgradeDrawer('model_limit');
           return prev;
         }
         next.add(model.modelId);
