@@ -1,0 +1,1 @@
+UPDATE workflows SET sort_order = 0 WHERE slug = 'product-images';
