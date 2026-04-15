@@ -1,33 +1,35 @@
 
 
-# Upload 24 High Heels Editorial Scenes
+# Upload 24 Hoodies Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `high-heels` category collection (currently has 18 "Essential Shots" with `category_sort_order: 21`). Organized into 6 sub-categories. Keep `category_sort_order` at 21 as specified in RTF.
+Insert 24 new editorial scenes for the `hoodies` category collection (currently has 15 scenes with `category_sort_order: 23`). Organized into 6 sub-categories. Update `category_sort_order` from 23 to 18 per RTF spec.
 
 ## Scene Mapping
 
 | Sub-Category | Sub Sort | Scenes (4 each) |
 |---|---|---|
-| Editorial Heel Studio (01-04) | 1 | seated-chair-editorial, standing-minimal-editorial, windowlight-studio, monochrome-glam-studio |
-| Leg-Line Poses (05-08) | 2 | legs-up-editorial, crossed-leg-fashion, hosiery-leg-crop, reclined-leg-editorial |
-| Social Lifestyle Heel Moments (09-12) | 3 | bedroom-lifestyle, lounge-chair-lifestyle, morning-ritual-lifestyle, outfit-corner-social |
-| Luxury Still Life (13-16) | 4 | box-tissue-stilllife, book-perfume-stilllife, bedlinen-stilllife, bathroom-counter-stilllife |
-| Color Heel Stories (17-20) | 5 | aesthetic-chair-story, aesthetic-floor-light, aesthetic-leg-glamour, aesthetic-luxury-still |
-| Glamour Campaign (21-24) | 6 | black-glam-campaign, animalprint-campaign, red-glamour-campaign, iconic-glam-finisher |
+| Cozy Lifestyle Editorial (01-04) | 1 | boucle-lounge-portrait, oversized-standing-interior, lounge-floor-reading, minimal-wall-seated |
+| Street / Off-Duty UGC (05-08) | 2 | crosswalk-overhead-ugc, stairwell-offduty, mirror-travel-ugc, cafe-lounge-ugc |
+| Folded / Hanger / Product Still (09-12) | 3 | hanger-rail-still, folded-grid-still, fabric-detail-still, rail-and-set-still |
+| Aesthetic Color Comfort Sets (13-16) | 4 | aesthetic-set-lounge, aesthetic-travel-set, aesthetic-outdoor-comfort, aesthetic-home-story |
+| Graphic Campaign Looks (17-20) | 5 | bold-graphic-hero, yacht-knit-campaign, sport-knit-sun-campaign, power-back-graphic |
+| Travel / Transit Comfort (21-24) | 6 | airplane-window-comfort, private-jet-lounge, airport-tarmac-walk, hotel-arrival-transit |
 
 ## Technical Details
-- **sort_order**: starts at 2621 (current global max is 2620)
-- **category_collection**: `high-heels`
-- **category_sort_order**: remains `21` (already correct)
-- **Scenes 1-12**: `trigger_blocks` include `personDetails`, have `outfit_hint`
-- **Scenes 13-16**: still life, no `personDetails`, no `outfit_hint`
-- **Scenes 17-20**: `aestheticColor` trigger, `suggested_colors` = `[{"name":"Smoky Mauve Nude","hex":"#B9989A"}]`
-  - Scene 17, 19: with `personDetails` + outfit hint
-  - Scene 18, 20: still life, no person
-- **Scenes 21-24**: campaign with `personDetails` + outfit hint
-- Full prompt templates extracted from RTF
+
+- **sort_order**: starts at 2645 (current global max is 2644)
+- **category_collection**: `hoodies`
+- **category_sort_order**: update all hoodies scenes to `18` (currently 23)
+- **Scenes 1-8**: `trigger_blocks` include `personDetails`, have `outfit_hint`
+- **Scenes 9-12**: still life, no `personDetails`, no `outfit_hint`
+- **Scenes 13-16**: `aestheticColor` trigger, `suggested_colors` = `[{"name":"Oat Milk Beige","hex":"#D8CCBD"}]`, with `personDetails` + outfit hint
+- **Scenes 17-20**: graphic campaign with `personDetails` + outfit hint; scene 20 includes `backView` trigger
+- **Scenes 21-24**: travel comfort with `personDetails` + outfit hint
+- Scene 11 includes `detailFocus` trigger block
+- Full prompt templates extracted from document
 
 ## Execution
-1. Single batch INSERT of 24 new rows (no UPDATE needed since `category_sort_order` is already 21)
+1. UPDATE existing 15 hoodies scenes: set `category_sort_order = 18`
+2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, outfit hints, and suggested colors
 
