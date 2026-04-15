@@ -17,7 +17,7 @@ interface CatalogStepperProps {
 
 export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick }: CatalogStepperProps) {
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden">
       {/* Desktop stepper */}
       <div className="hidden sm:flex items-center justify-between w-full">
         {steps.map((s, i) => {
@@ -61,7 +61,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
       </div>
 
       {/* Mobile stepper — icon-only, evenly spaced */}
-      <div className="sm:hidden">
+      <div className="sm:hidden overflow-hidden">
         <div className="flex items-center justify-between">
           {steps.map((s, i) => {
             const isActive = currentStep === s.number;
