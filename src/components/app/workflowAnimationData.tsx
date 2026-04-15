@@ -63,7 +63,7 @@ const pvRaw = [
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776243895901-oddcm2.jpg',
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776250523409-wvjm1w.jpg',
 ];
-const pvImages = pvRaw.map((url) => getOptimizedUrl(url, { quality: 60, width: 600 }));
+const pvImages = pvRaw.map((url) => getOptimizedUrl(url, { quality: 60 }));
 
 /* ── Scene definitions ── */
 

@@ -235,7 +235,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact, m
 function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean; modalCompact?: boolean }) {
   const rawBackgrounds = scene.backgrounds ?? [scene.background];
   const backgrounds = useMemo(
-    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60, width: 600 })),
+    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
     [rawBackgrounds],
   );
   const INTERVAL = scene.interval ?? 2500;
@@ -299,7 +299,8 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
       <img
         src={backgrounds[current]}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-center"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ objectPosition: scene.objectPosition ?? 'center' }}
         onLoad={() => {
           if (!initialLoaded) setInitialLoaded(true);
         }}
