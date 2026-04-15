@@ -43,13 +43,14 @@ import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/com
 import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
 
 const STEP_DEFS = [
-  { number: 1, label: 'Products', icon: Package },
+  { number: 1, label: 'Product', icon: Package },
   { number: 2, label: 'Shots', icon: Layers },
   { number: 3, label: 'Setup', icon: Paintbrush },
-  { number: 4, label: 'Review', icon: ClipboardCheck },
-  { number: 5, label: 'Generate', icon: Sparkles },
-  { number: 6, label: 'Results', icon: CheckCircle },
+  { number: 4, label: 'Generate', icon: Sparkles },
 ];
+
+const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+const PASTE_SHORTCUT = IS_MAC ? '⌘ V' : 'Ctrl + V';
 
 
 export default function ProductImages() {
@@ -1000,11 +1001,12 @@ export default function ProductImages() {
           <>
             <div className="space-y-3">
               {/* Toolbar */}
+              {userProducts.length > 0 && (
               <div className="flex gap-2 items-center">
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <Input
-                    placeholder={userProducts.length > 0 ? `Search ${userProducts.length} products…` : 'Search products…'}
+                    placeholder={`Search ${userProducts.length} products…`}
                     value={productSearch}
                     onChange={e => setProductSearch(e.target.value)}
                     className="h-8 text-xs pl-8"
@@ -1020,6 +1022,7 @@ export default function ProductImages() {
                 }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
               </div>
+              )}
 
               {selectedProductIds.size > 0 && (
                 <div className="flex gap-2 items-center">
@@ -1030,23 +1033,21 @@ export default function ProductImages() {
 
               {/* Empty state */}
               {!isLoadingProducts && userProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 space-y-4 border-2 border-dashed border-border rounded-xl bg-muted/30">
-                  <Package className="w-10 h-10 text-muted-foreground/40" />
-                  <div className="text-center space-y-1">
-                    <p className="text-sm font-semibold text-foreground">No products yet</p>
-                    <p className="text-xs text-muted-foreground max-w-xs">Upload a product image to get started with professional visuals.</p>
+                <div className="flex flex-col items-center justify-center py-20 space-y-5 border-2 border-dashed border-border rounded-xl bg-muted/30">
+                  <Package className="w-12 h-12 text-muted-foreground/40" />
+                  <div className="text-center space-y-1.5">
+                    <p className="text-base font-semibold text-foreground">Start with your first product</p>
+                    <p className="text-sm text-muted-foreground max-w-xs">Upload a product photo to create clean, brand-ready visuals.</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => {
-                      quickUploadInputRef.current?.click();
-                    }} className="gap-1.5">
-                      <Upload className="w-3.5 h-3.5" />Upload Image
-                    </Button>
-                    <Button size="sm" onClick={() => setAddProductOpen(true)} className="gap-1.5">
-                      <Package className="w-3.5 h-3.5" />Add Product
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">or paste an image (Ctrl+V)</p>
+                  <Button onClick={() => {
+                    quickUploadInputRef.current?.click();
+                  }} className="gap-2">
+                    <Upload className="w-4 h-4" />Upload product photo
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    You can also paste an image from your clipboard{' '}
+                    <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono font-medium text-muted-foreground ml-1">{PASTE_SHORTCUT}</kbd>
+                  </p>
                   <input
                     ref={quickUploadInputRef}
                     type="file"

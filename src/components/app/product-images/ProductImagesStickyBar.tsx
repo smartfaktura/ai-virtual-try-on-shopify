@@ -3,10 +3,10 @@ import { Coins, Sparkles, ArrowRight } from 'lucide-react';
 import type { PIStep } from './types';
 
 const STEP_LABELS: Record<number, string> = {
-  1: 'Products',
-  2: 'Scenes',
+  1: 'Product',
+  2: 'Shots',
   3: 'Setup',
-  4: 'Review',
+  4: 'Generate',
 };
 
 interface StickyBarProps {
