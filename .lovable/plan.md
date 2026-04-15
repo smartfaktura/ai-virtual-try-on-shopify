@@ -1,69 +1,60 @@
 
 
-# Add 24 Furniture Scenes & Ensure Home Decor / Furniture Separation
+# Insert 24 Home Decor Scenes from RTF Document
 
 ## What We're Doing
-
-Adding 24 new furniture scenes from the uploaded document to the database, organized into 4 sub-categories. The `furniture` category already exists in the codebase — this task is about populating it with scenes and ensuring `home-decor` remains separate for smaller items.
+Adding 24 new home decor scenes to the `product_image_scenes` table under `category_collection: 'home-decor'`, organized into 4 sub-categories. These are separate from the 16 existing generic home-decor scenes already in the DB.
 
 ## Scenes to Insert (24 total)
 
-**Sub-category 1: Editorial Room Heroes** (sub_category_sort_order: 1)
-1. `furniture-editorial-room-hero-front` — Front Room Hero
-2. `furniture-editorial-corner-placement` — Corner Placement Editorial
-3. `furniture-editorial-wide-architectural` — Wide Architectural Room Story
-4. `furniture-editorial-material-close-room` — Material and Form Interior Crop
-5. `furniture-editorial-window-light` — Window Light Furniture Portrait
-6. `furniture-editorial-empty-space-hero` — Empty Space Hero
+**Sub-category 1: Editorial Object Studio** (sub_category_sort_order: 1)
+1. `decor-editorial-front-hero` — Front Object Hero
+2. `decor-editorial-shadow-hero` — Shadow Object Hero
+3. `decor-editorial-material-detail` — Material Detail Object Crop
+4. `decor-editorial-platform-presentation` — Platform Presentation
+5. `decor-editorial-windowlight-object` — Window Light Object Portrait
+6. `decor-editorial-empty-space-object` — Empty Space Object Hero
 
-**Sub-category 2: Lived-In Interior Lifestyle** (sub_category_sort_order: 2)
-7. `furniture-lifestyle-livedin-room` — Lived-In Room Story
-8. `furniture-lifestyle-coffee-table-context` — Coffee Table Context Room
-9. `furniture-lifestyle-reading-corner` — Reading Corner Lifestyle
-10. `furniture-lifestyle-dining-context` — Dining or Gathering Context
-11. `furniture-lifestyle-bedroom-context` — Bedroom Context Lifestyle
-12. `furniture-lifestyle-evening-ambience` — Evening Ambience Room Story
+**Sub-category 2: Console / Table / Shelf Lifestyle** (sub_category_sort_order: 2)
+7. `decor-lifestyle-console-placement` — Console Placement Story
+8. `decor-lifestyle-coffee-table` — Coffee Table Decor Story
+9. `decor-lifestyle-shelf-niche` — Shelf or Niche Styling
+10. `decor-lifestyle-bedside-placement` — Bedside or Side Table Story
+11. `decor-lifestyle-dining-sideboard` — Dining Sideboard Styling
+12. `decor-lifestyle-evening-ambience` — Evening Ambience Decor Story
 
-**Sub-category 3: Studio / Empty Space Furniture Still** (sub_category_sort_order: 3)
-13. `furniture-still-studio-isolated` — Studio Isolated Furniture Hero
-14. `furniture-still-stone-platform` — Stone Platform Furniture Still
-15. `furniture-still-material-detail` — Material Detail Furniture Still
-16. `furniture-still-symmetry-composition` — Symmetry Composition Still
-17. `furniture-still-empty-room-placement` — Empty Room Placement Still
-18. `furniture-still-one-object-support` — One Object Support Still
+**Sub-category 3: Grouped Styling Still Life** (sub_category_sort_order: 3)
+13. `decor-still-paired-objects` — Paired Objects Composition
+14. `decor-still-tray-composition` — Tray Styling Composition
+15. `decor-still-books-and-object` — Books and Object Still
+16. `decor-still-symmetry-group` — Symmetry Group Composition
+17. `decor-still-textile-and-object` — Textile and Object Story
+18. `decor-still-one-object-support` — One Object Support Still
 
-**Sub-category 4: Aesthetic Color Furniture Stories** (sub_category_sort_order: 4)
-- Lead color: Mineral Clay Taupe (#A59284)
-19. `furniture-color-wall-room-hero` — Color Wall Room Hero
-20. `furniture-color-lounge-story` — Color Lounge Interior Story
-21. `furniture-color-surface-still` — Color Surface Furniture Still
-22. `furniture-color-entry-corridor` — Color Corridor Furniture Story
-23. `furniture-color-reflection-mood` — Color Reflection Mood
-24. `furniture-color-hero-campaign` — Color Hero Furniture Campaign
+**Sub-category 4: Aesthetic Color Decor Stories** (sub_category_sort_order: 4)
+- Lead color: Dusty Olive Plaster (#9A9882)
+19. `decor-color-wall-hero` — Color Wall Decor Hero
+20. `decor-color-console-story` — Color Console Story
+21. `decor-color-surface-still` — Color Surface Decor Still
+22. `decor-color-shelf-story` — Color Shelf Story
+23. `decor-color-reflection-mood` — Color Reflection Mood
+24. `decor-color-hero-campaign` — Color Hero Decor Campaign
 
 ## Technical Steps
 
-### 1. Database Migration — Insert 24 scenes
-- `category_collection`: `'furniture'`
-- `category_sort_order`: `26` (as specified in the document)
+### Database Insert (using insert tool)
+- `category_collection`: `'home-decor'`
+- `category_sort_order`: `27` (per the document)
 - `is_active`: `true`
-- `sort_order`: sequential starting from a high offset to avoid conflicts
-- Scene types: `editorial`, `lifestyle`, `stilllife`, `campaign` (matching the document)
-- Scenes 19-24 get `suggested_colors`: `[{"hex": "#A59284", "label": "Mineral Clay Taupe"}]`
+- `sort_order`: sequential starting from 200 to avoid conflicts with existing 16 scenes
+- Scene types: `editorial`, `lifestyle`, `stilllife`, `campaign`
+- Scenes 19-24 get `suggested_colors`: `[{"hex": "#9A9882", "label": "Dusty Olive Plaster"}]`
 - Full prompt templates extracted from the RTF
 
-### 2. Admin Scene Types — Add missing types
-**File: `src/pages/AdminProductImageScenes.tsx`** (line 29)
-- Add `'stilllife'` and `'campaign'` to `SCENE_TYPES` array
-
-**File: `src/components/app/ImportFromScenesModal.tsx`** (line 17)
-- Same addition for consistency
-
-### 3. Verify home-decor separation
-The `home-decor` category already exists separately with its own scenes. The furniture scenes use `category_collection: 'furniture'` — no overlap. The `COLLECTION_MERGE` map does NOT merge these two, keeping them distinct.
+No code changes needed — `stilllife` and `campaign` scene types were already added in the previous furniture update.
 
 ## Impact
-- 24 new furniture scenes appear under "Furniture" in the admin panel
-- Home Decor remains its own separate category with existing smaller-item scenes
-- `stilllife` and `campaign` scene types become selectable in admin dropdowns
+- 24 new home decor scenes appear under "Home Decor" in the admin panel alongside the existing 16 generic scenes
+- All scenes are specifically designed for smaller tabletop/console decor items
+- The `home-decor` and `furniture` categories remain fully separate
 
