@@ -733,6 +733,7 @@ export default function ProductImages() {
     if (lastBalance !== null) setBalanceFromServer(lastBalance);
     setJobMap(new Map(newJobMap));
     setEnqueuedCount(newJobMap.size);
+    setExpectedJobCount(newJobMap.size);
     sendWake(token);
 
     // Persist session so page refresh can resume polling
@@ -830,6 +831,7 @@ export default function ProductImages() {
         if (!jobs) { pollingRef.current = setTimeout(poll, 3000); return; }
 
         const done = jobs.filter(j => j.status === 'completed' || j.status === 'failed');
+        const pct = jobIds.length > 0 ? Math.round((done.length / jobIds.length) * 100) : 0;
         const newCompleted = new Set<string>();
         const newFailed = new Set<string>();
         for (const j of done) {
@@ -868,8 +870,12 @@ export default function ProductImages() {
           return;
         }
 
-        pollingRef.current = setTimeout(poll, 3000);
-      } catch {
+        pollingRef.current = setTimeout(poll, pct > 80 ? 1500 : 3000);
+      } catch (err) {
+        console.warn('[ProductImages] polling error, retrying with token refresh:', err);
+        try {
+          await supabase.auth.refreshSession();
+        } catch { /* ignore refresh errors */ }
         pollingRef.current = setTimeout(poll, 5000);
       }
     };

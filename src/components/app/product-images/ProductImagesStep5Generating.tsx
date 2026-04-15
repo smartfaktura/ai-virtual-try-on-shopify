@@ -75,7 +75,7 @@ export function ProductImagesStep5Generating({
     return () => clearInterval(interval);
   }, []);
 
-  const effectiveTotal = expectedJobCount > 0 ? expectedJobCount : totalJobs;
+  const effectiveTotal = totalJobs > 0 ? totalJobs : expectedJobCount;
   const isQueuing = expectedJobCount > 0 && enqueuedJobs < expectedJobCount;
   const failedCount = failedJobIds?.size || 0;
   const completedOk = completedJobs - failedCount;
