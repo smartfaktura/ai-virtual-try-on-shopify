@@ -22,6 +22,7 @@ import {
   Save, Trash2, History, Check, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getBlocksByScene, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from './detailBlockConfig';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
@@ -404,11 +405,11 @@ function SceneThumbnail({ sceneId }: { sceneId: string }) {
   return (
     <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="w-6 h-6 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-        {scene?.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40" />}
+        {scene?.previewUrl ? <img src={getOptimizedUrl(scene.previewUrl, { width: 40, quality: 40 })} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40" />}
       </div>
       {hovered && (
         <div className="absolute z-50 left-0 top-full mt-1 w-[120px] h-[120px] rounded-lg bg-muted border border-border shadow-lg overflow-hidden">
-          {scene?.previewUrl ? <img src={scene.previewUrl} alt={scene?.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Camera className="w-8 h-8 text-muted-foreground/30" /></div>}
+          {scene?.previewUrl ? <img src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene?.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Camera className="w-8 h-8 text-muted-foreground/30" /></div>}
         </div>
       )}
     </div>
@@ -1867,7 +1868,7 @@ export function ProductImagesStep3Refine({
         >
           <div className="aspect-[3/4] bg-muted overflow-hidden">
             {scene.previewUrl ? (
-              <ShimmerImage src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+              <ShimmerImage src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene.title} className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Camera className="w-6 h-6 text-muted-foreground/30" />
