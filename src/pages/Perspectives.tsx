@@ -664,7 +664,7 @@ export default function Perspectives() {
   }
 
   return (
-    <div className="min-h-screen">
+    <>
       <SEOHead title="Picture Perspectives" description="Generate angle and detail variations from any image." />
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">

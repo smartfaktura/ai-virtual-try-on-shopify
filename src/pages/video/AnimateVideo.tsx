@@ -529,7 +529,7 @@ export default function AnimateVideo() {
   const currentProgressMember = PROGRESS_TEAM[progressAvatarIdx];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <>
       <PageHeader
         title="Animate Image"
         subtitle="Turn a still product image into a polished commercial video."
