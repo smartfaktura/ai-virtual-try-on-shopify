@@ -138,6 +138,7 @@ interface WorkflowSettingsPanelProps {
   handleGenerateClick: () => void;
   handleGenerateScenePreviews: () => void;
   setCurrentStep: (step: 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results') => void;
+  onFreeLimit?: (reason: string) => void;
 }
 
 export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps) {
