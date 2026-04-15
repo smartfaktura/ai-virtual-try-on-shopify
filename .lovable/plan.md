@@ -1,31 +1,32 @@
 
 
-# Fix: Smooth Loading State for Priority Scene Fetch
+# Upload 24 Beverages Editorial Scenes
 
-## Problem
-When the two-tier loading kicks in, there's a brief moment where `isLoadingPriority` is `true` but no skeleton/spinner is shown for the recommended section. The component renders with empty `categoryCollections` (or falls back to hardcoded `CATEGORY_COLLECTIONS`), then snaps to the real data — causing a visible "chop chop" flash.
+## What's happening
+The RTF file defines 24 new editorial scenes for the Beverages category, organized into 4 sub-categories. The `beverages` collection already has 19 "Essential Shots" (sub_category_sort_order: 0). These 24 scenes will be added as new sub-categories starting at sort_order 1.
 
-## Root Cause
-1. In `useProductImageScenes.ts` line 238: when `scenes` is null (priority still loading), it falls back to `CATEGORY_COLLECTIONS` (hardcoded data), then switches to DB data — causing a layout jump
-2. In `ProductImagesStep2Scenes.tsx`: there's no loading skeleton for the **recommended** section during initial fetch, only for the "Explore more" section
+## Scene Mapping (from RTF)
 
-## Fix
+| Sub-Category | Sort Order | Scenes |
+|---|---|---|
+| Editorial Drink Studio (6 scenes) | sub_cat: 1 | beverage-editorial-front-hero, beverage-editorial-close-condensation, beverage-editorial-pour-action, beverage-editorial-floating-hand-crop, beverage-editorial-glass-serve-hero, beverage-editorial-flavor-world-hero |
+| Social Lifestyle / Sport / Party UGC (6 scenes) | sub_cat: 2 | beverage-ugc-tennis-court, beverage-ugc-pool-cheers, beverage-ugc-car-window-style, beverage-ugc-close-face-hold, beverage-ugc-shopping-basket, beverage-ugc-friends-social-cheers |
+| Fruit / Pour / Surface Still Life (6 scenes) | sub_cat: 3 | beverage-still-fruit-bed, beverage-still-citrus-slice-surface, beverage-still-open-tab-detail, beverage-still-pour-into-glass, beverage-still-seat-row-product, beverage-still-reflective-surface-hero |
+| Aesthetic Color Beverage Stories (6 scenes) | sub_cat: 4 | beverage-color-wall-hero, beverage-color-handheld-story, beverage-color-sport-story, beverage-color-surface-still, beverage-color-night-mood, beverage-color-hero-campaign |
 
-### 1. `src/hooks/useProductImageScenes.ts`
-- When `hasPriority` and `isLoadingPriority` is true, return empty arrays instead of falling back to hardcoded `CATEGORY_COLLECTIONS` — this prevents the flash of stale/wrong data
-- Return `isLoading: true` properly so the UI can show a skeleton
+## Technical Details
 
-### 2. `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-- Destructure `isLoading` from the hook (not just `isLoadingRest`)
-- When `isLoading` is true, show a compact skeleton placeholder for the recommended section: 2-3 pulsing rows mimicking collapsed category headers
-- This replaces the current behavior of showing nothing or flashing fallback data
+- **Table**: `product_image_scenes`
+- **category_collection**: `beverages`
+- **category_sort_order**: `20` (as specified in RTF, replacing current `11`)
+- **sort_order**: Starting at `2525` (current max is `2524`)
+- **Aesthetic color scenes** (19-24): Will include `suggested_colors` with `[{"name":"Solar Tangerine","hex":"#F36C21"}]`
+- **Outfit hint scenes** (04, 07-10, 12, 20-21): Will include `outfit_hint` from RTF
+- **trigger_blocks**: Mapped per scene from RTF
+- **prompt_template**: Full prompt text extracted from RTF
+- **No schema changes needed** — all columns already exist
 
-## Result
-- User sees a subtle pulse animation for ~100ms while priority scenes load
-- Recommended category appears smoothly without any layout shift
-- "Explore more" section continues to show its own skeleton while background data loads
-
-## Files Changed
-- `src/hooks/useProductImageScenes.ts` — return empty arrays during priority loading instead of fallback
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — add loading skeleton for recommended section
+## Execution
+- Single batch INSERT of 24 rows using the database insert tool
+- Update existing 19 beverages scenes' `category_sort_order` from `11` to `20` to match RTF spec
 
