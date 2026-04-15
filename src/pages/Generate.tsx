@@ -1154,7 +1154,7 @@ export default function Generate() {
       toast.error('Pick a product first');
       return;
     }
-    if (balance < creditCost) { openBuyModal(); return; }
+    if (balance < creditCost) { setNoCreditsModalOpen(true); return; }
     // Upscale workflow path
     if (isUpscale) {
       handleUpscaleWorkflowGenerate();
@@ -1569,7 +1569,7 @@ export default function Generate() {
 
       if (balance < totalCreditsNeeded) {
         toast.error(`Need ${totalCreditsNeeded} credits for ${totalJobs} generations but you only have ${balance}. Please top up first.`);
-        openBuyModal();
+        setNoCreditsModalOpen(true);
         return;
       }
 
@@ -3994,7 +3994,7 @@ export default function Generate() {
                   {balance >= creditCost ? (
                     <p className="text-sm text-muted-foreground">{balance} credits available</p>
                   ) : (
-                    <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                    <button onClick={() => setNoCreditsModalOpen(true)} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
                       <AlertCircle className="w-3.5 h-3.5" />
                       {balance} credits — need {creditCost}. Top up
                     </button>
@@ -4004,7 +4004,7 @@ export default function Generate() {
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCurrentStep('template')}>Back</Button>
                   <Button
-                    onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                    onClick={balance >= creditCost ? handleGenerateClick : () => setNoCreditsModalOpen(true)}
                     className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
                   >
                     {balance >= creditCost ? `Generate ${imageCount} Images` : 'Buy Credits'}
@@ -4512,7 +4512,7 @@ export default function Generate() {
       {/* Modals */}
       <TryOnConfirmModal open={tryOnConfirmModalOpen} onClose={() => setTryOnConfirmModalOpen(false)} onConfirm={handleTryOnConfirmGenerate}
         product={selectedProduct} model={selectedModel} models={Array.from(selectedModelMap.values())} pose={selectedPose}
-        imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isEnqueuing} onBuyCredits={openBuyModal}
+        imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isEnqueuing} onBuyCredits={() => setNoCreditsModalOpen(true)}
         sourceImageUrl={selectedProduct && selectedSourceImages.size > 0 ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url : undefined} />
       <PublishModal open={publishModalOpen} onClose={() => setPublishModalOpen(false)} onPublish={handlePublish}
         selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])} product={selectedProduct} existingImages={selectedProduct?.images || []} />

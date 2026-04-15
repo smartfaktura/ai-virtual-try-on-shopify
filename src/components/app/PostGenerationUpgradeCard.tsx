@@ -32,7 +32,7 @@ export function PostGenerationUpgradeCard({ category, onSeeMore, onDismiss }: Po
       {/* Dismiss */}
       <button
         onClick={onDismiss}
-        className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
+        className="absolute top-3 right-3 p-2.5 rounded-full hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Dismiss"
       >
         <X className="w-3.5 h-3.5" />

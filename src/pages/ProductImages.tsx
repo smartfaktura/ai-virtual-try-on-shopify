@@ -57,7 +57,7 @@ const PASTE_SHORTCUT = IS_MAC ? '⌘ V' : 'Ctrl + V';
 export default function ProductImages() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
+  const { balance, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
   const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds } = useProductAnalysis();
   const { allScenes } = useProductImageScenes();
