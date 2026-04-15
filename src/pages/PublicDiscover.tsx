@@ -333,7 +333,7 @@ export default function PublicDiscover() {
 
   return (
     <PageLayout>
-      <SEOHead title="Explore AI Photography Presets & Scenes — VOVV AI" description="All images on this page were generated with VOVV.AI. Explore AI fashion photography styles, scenes and prompts — start generating for free." canonical={`${SITE_URL}/discover`} />
+      <SEOHead title="Explore AI Product Photography — VOVV AI" description="All images on this page were generated with VOVV.AI. Explore AI fashion photography styles, scenes and prompts — start generating for free." canonical={`${SITE_URL}/discover`} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
         {/* Header */}
         <div className="space-y-3 text-center">
