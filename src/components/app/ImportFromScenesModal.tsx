@@ -79,6 +79,15 @@ export default function ImportFromScenesModal({
   const [configs, setConfigs] = useState<Map<string, ImportConfig>>(new Map());
   const [newSubCatInputs, setNewSubCatInputs] = useState<Map<string, string>>(new Map());
   const [importing, setImporting] = useState(false);
+  const [bulkSubCategory, setBulkSubCategory] = useState('__none__');
+  const [bulkNewSubCat, setBulkNewSubCat] = useState('');
+
+  const allSubCategories = useMemo(() => {
+    const fromConfigs = Array.from(configs.values())
+      .map(c => c.sub_category)
+      .filter((v): v is string => !!v);
+    return [...new Set([...existingSubCategories, ...fromConfigs])];
+  }, [existingSubCategories, configs]);
 
   const activeScenes = useMemo(() =>
     customScenes.filter(s => s.is_active), [customScenes]);
