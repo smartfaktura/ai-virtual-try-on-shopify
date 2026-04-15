@@ -78,9 +78,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
 
   const handleBrandModelClick = () => {
     onOpenChange(false);
-    if (isPaidPlan) {
-      navigate('/app/models');
-    }
+    navigate('/app/models');
   };
 
   const triggerButton = (
@@ -116,13 +114,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
     <button
       key="brand-model-cta"
       onClick={handleBrandModelClick}
-      disabled={!isPaidPlan}
-      className={cn(
-        'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all duration-200 text-left',
-        isPaidPlan
-          ? 'border-dashed border-primary/30 hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5 cursor-pointer'
-          : 'border-dashed border-border opacity-50 grayscale cursor-not-allowed'
-      )}
+      className="relative flex flex-col rounded-lg overflow-hidden border-2 transition-all duration-200 text-left border-dashed border-primary/30 hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5 cursor-pointer"
     >
       <div className="w-full aspect-square bg-muted/60 flex flex-col items-center justify-center gap-1.5 p-2">
         <Sparkles className={cn("w-5 h-5", isPaidPlan ? "text-primary" : "text-muted-foreground")} />
