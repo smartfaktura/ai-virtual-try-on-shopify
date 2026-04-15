@@ -1,28 +1,17 @@
 
 
-# Add Loading Spinner to Download Button in Results
+# Replace Product Visuals Carousel Images
 
-## Problem
-The "Download All" button in the Product Images results (Step 6) changes its text to "Downloading…" but keeps the static Archive icon — no spinner or visual loading indicator to clearly signal work is happening.
+## Change
 
-## Fix
+### File: `src/components/app/workflowAnimationData.tsx`
 
-### File: `src/components/app/product-images/ProductImagesStep6Results.tsx`
+**Lines 56-77** — Replace the entire `pvImages` array with the 16 user-provided URLs.
 
-**Line 4** — Add `Loader2` to the lucide import:
-```typescript
-import { Download, RefreshCw, CheckCircle, Archive, Loader2 } from 'lucide-react';
-```
-
-**Lines 161-162** — Replace the static Archive icon with a spinner when downloading:
-```tsx
-<Button variant="outline" onClick={handleDownloadAll} disabled={downloading || totalImages === 0} className="gap-1.5">
-  {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
-  {downloading ? 'Downloading…' : 'Download All'}
-</Button>
-```
+**Line 87** — Change `interval` from `500` to `750` (0.75s per image).
 
 ## Impact
-- 1 file, 2 small changes
-- Adds a spinning loader icon during ZIP download so users see clear activity feedback
+- 1 file changed
+- 16 curated images instead of 20
+- 0.75s rotation — slower than current 0.5s for lighter loading, but still dynamic
 
