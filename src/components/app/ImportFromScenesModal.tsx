@@ -512,7 +512,7 @@ export default function ImportFromScenesModal({
                 {selected.size > 0 && <Badge variant="secondary" className="text-[10px] ml-1">{selected.size}</Badge>}
               </Button>
             ) : (
-              <Button onClick={handleImport} disabled={importing || duplicateIds.size > 0} className="gap-1">
+              <Button onClick={handleImport} disabled={importing} className="gap-1">
                 <Import className="w-4 h-4" />
                 {importing ? 'Importing...' : `Import ${configs.size} scene${configs.size !== 1 ? 's' : ''}`}
               </Button>
