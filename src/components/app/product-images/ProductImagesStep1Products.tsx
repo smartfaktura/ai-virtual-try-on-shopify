@@ -135,7 +135,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
               >
                 <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
                   <ShimmerImage
-                    src={getOptimizedUrl(p.image_url, { width: 280, quality: 70 })}
+                    src={getOptimizedUrl(p.image_url, { quality: 70 })}
                     alt={p.title}
                     className="max-w-full max-h-full object-contain"
                   />
