@@ -1,61 +1,43 @@
 
 
-# Insert 24 Tech Scenes into Product Image Scenes
+# Fix Import Scenes: Auto-Deduplicate IDs & Bulk Sub-Category Selector
 
-## What We're Doing
-Adding 24 new tech scenes to `product_image_scenes` under `category_collection: 'tech-devices'`, organized into 4 sub-categories. These join the 16 existing generic tech scenes already in the DB.
+## Problem
+1. When importing a scene that already exists in another category, the scene_id conflicts and blocks import — user must manually rename each one
+2. No way to set a sub-category for all imported scenes at once — must configure each separately
 
-## Scenes to Insert (24 total)
+## Solution
 
-**Sub-category 1: Editorial Tech Studio** (sub_category_sort_order: 1)
-1. `tech-editorial-front-hero` — Front Tech Hero
-2. `tech-editorial-shadow-hero` — Shadow Tech Hero
-3. `tech-editorial-material-detail` — Material and Hardware Detail
-4. `tech-editorial-floating-object` — Floating Tech Studio
-5. `tech-editorial-reflection-surface` — Reflection Surface Tech Still
-6. `tech-editorial-grouping-story` — Grouped Tech Composition
+### 1. Auto-suffix duplicate scene_ids (in `goToStep2`)
+When generating the `scene_id` from the scene name, check against `existingSceneIds` and also against other configs being created in the same batch. If a collision is found, append `-2`, `-3`, etc. until unique.
 
-**Sub-category 2: Desk / Hand / Daily Use UGC** (sub_category_sort_order: 2)
-7. `tech-lifestyle-inhand-hero` — In-Hand Tech Hero
-8. `tech-lifestyle-desk-use` — Desk Use Lifestyle
-9. `tech-lifestyle-cafe-or-travel` — Café or Travel Use Moment
-10. `tech-lifestyle-ear-wear-or-body-use` — Wearable or Body-Use Moment
-11. `tech-lifestyle-charging-or-connection` — Charging or Connection Story
-12. `tech-lifestyle-bag-pocket-story` — Bag or Pocket Tech Story
+**File:** `src/components/app/ImportFromScenesModal.tsx`
 
-**Sub-category 3: Surface / Setup / Product Still Life** (sub_category_sort_order: 3)
-13. `tech-still-desk-surface` — Desk Surface Tech Still
-14. `tech-still-open-device-or-case` — Open Device or Case Still
-15. `tech-still-accessory-paired` — Paired Accessory Composition
-16. `tech-still-shelf-placement` — Shelf or Studio Placement
-17. `tech-still-material-closeup` — Hardware Material Closeup
-18. `tech-still-symmetry-composition` — Symmetry Tech Composition
+In `goToStep2` (~line 97), replace the simple `slugify(scene.name)` with a dedup function:
+```typescript
+function deduplicateId(base: string, existing: string[], taken: Set<string>): string {
+  let candidate = base;
+  let i = 2;
+  while (existing.includes(candidate) || taken.has(candidate)) {
+    candidate = `${base}-${i}`;
+    i++;
+  }
+  return candidate;
+}
+```
+Track a `takenIds` set during the loop so batch-internal collisions are also handled.
 
-**Sub-category 4: Aesthetic Color Tech Stories** (sub_category_sort_order: 4)
-- Lead color: Graphite Moss (#6F7568)
-19. `tech-color-wall-hero` — Color Wall Tech Hero
-20. `tech-color-desk-story` — Color Desk Story
-21. `tech-color-surface-still` — Color Surface Tech Still
-22. `tech-color-shelf-story` — Color Shelf Tech Story
-23. `tech-color-reflection-mood` — Color Reflection Mood
-24. `tech-color-hero-campaign` — Color Hero Tech Campaign
+### 2. Bulk sub-category selector (above the per-scene cards in Step 2)
+Add a "Set sub-category for all" dropdown at the top of Step 2. When changed, it updates `sub_category` on all configs at once. Individual per-scene overrides still work after.
 
-## Technical Steps
+**Same file**, in the Step 2 render section (~line 272), add a control bar before the scene cards:
+- A `Select` dropdown with existing sub-categories + "Create new" option
+- A "Apply to all" button or auto-apply on change
+- Label: "Sub-category for all scenes"
 
-### Database Insert (using insert tool)
-- `category_collection`: `'tech-devices'`
-- `category_sort_order`: `28` (per the document)
-- `is_active`: `true`
-- `sort_order`: sequential starting from 200 to avoid conflicts with existing 16 scenes
-- Scene types: `editorial`, `lifestyle`, `stilllife`, `campaign`
-- Scenes 19-24 get `suggested_colors`: `[{"hex": "#6F7568", "label": "Graphite Moss"}]`
-- Full prompt templates extracted from the RTF
-- Some lifestyle scenes include `outfit_hint` for styling direction
+### 3. Remove the hard block on duplicates
+The `handleImport` function currently refuses to import if any duplicate IDs exist (line 165). With auto-dedup this becomes less likely, but keep the warning as a soft indicator rather than removing it entirely — the user can still manually create a conflict if they edit the ID field.
 
-No code changes needed — `stilllife` and `campaign` scene types already exist in admin dropdowns.
-
-## Impact
-- 24 new tech scenes appear under "Tech Devices" in the admin panel alongside existing 16 generic scenes
-- All scenes designed for consumer electronics (phones, laptops, earbuds, watches, etc.)
-- `tech-devices` category remains separate from all others
+## Files Changed
+- `src/components/app/ImportFromScenesModal.tsx` — add `deduplicateId` helper, bulk sub-category UI, apply-all logic
 
