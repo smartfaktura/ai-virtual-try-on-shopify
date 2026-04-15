@@ -235,7 +235,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact, m
 function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean; modalCompact?: boolean }) {
   const rawBackgrounds = scene.backgrounds ?? [scene.background];
   const backgrounds = useMemo(
-    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
+    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60, width: 600 })),
     [rawBackgrounds],
   );
   const INTERVAL = scene.interval ?? 2500;
@@ -243,6 +243,17 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
   const [progressKey, setProgressKey] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const currentRef = useRef(0);
+
+  // Preload next 2 images ahead for smooth carousel transitions
+  useEffect(() => {
+    if (!isActive || backgrounds.length <= 1) return;
+    const next1 = (currentRef.current + 1) % backgrounds.length;
+    const next2 = (currentRef.current + 2) % backgrounds.length;
+    [next1, next2].forEach((i) => {
+      const img = new Image();
+      img.src = backgrounds[i];
+    });
+  }, [current, isActive, backgrounds]);
 
   // Preload only the element images (small chips)
   const elementUrls = useMemo(
