@@ -385,6 +385,74 @@ export default function Dashboard() {
 
         <DashboardDiscoverSection />
 
+        {/* Create Video Section */}
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Create Video</h2>
+            <p className="text-base text-muted-foreground mt-1.5">Bring your visuals to life with motion and short film tools.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Card 1 — Animate from Image */}
+            <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Film className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground">Animate from Image</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Fast product videos from a single image.
+                </p>
+              </div>
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/video/animate')}>
+                Open
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Card 2 — Short Films */}
+            <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Clapperboard className="w-5 h-5 text-primary" />
+                </div>
+                <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Beta</Badge>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground">Short Films</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Multi-shot video creation with guided scene structure.
+                </p>
+              </div>
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/video/short-film')}>
+                Explore
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Video Showcase */}
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Your Products, In Motion</h2>
+            <p className="text-base text-muted-foreground mt-1.5">AI-generated video ads ready in minutes, not weeks.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 10 }, (_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted">
+                <video
+                  src={`/videos/showcase/showcase-${i + 1}.mp4`}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Feedback Banner */}
         <FeedbackBanner />
 
