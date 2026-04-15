@@ -12,6 +12,11 @@ import { toast } from 'sonner';
 import { Upload, Check, X, ArrowLeft, ImageIcon, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+const COLLECTION_MERGE: Record<string, string> = {
+  "snacks-food": "food",
+  "food-beverage": "food",
+};
+
 const TITLE_MAP: Record<string, string> = {
   fragrance: 'Fragrance',
   'beauty-skincare': 'Beauty & Skincare',
@@ -142,7 +147,10 @@ export default function AdminBulkPreviewUpload() {
   const categories = useMemo(() => {
     const catSet = new Set<string>();
     for (const s of rawScenes) {
-      if (s.is_active && s.category_collection) catSet.add(s.category_collection);
+      if (s.is_active && s.category_collection) {
+        const merged = COLLECTION_MERGE[s.category_collection] ?? s.category_collection;
+        catSet.add(merged);
+      }
     }
     return Array.from(catSet)
       .sort((a, b) => {
@@ -164,7 +172,10 @@ export default function AdminBulkPreviewUpload() {
   // Scenes filtered to selected category
   const categoryScenes = useMemo(() => {
     if (!category) return [];
-    return rawScenes.filter(s => s.category_collection === category && s.is_active);
+    return rawScenes.filter(s => {
+      const merged = COLLECTION_MERGE[s.category_collection ?? ''] ?? s.category_collection;
+      return merged === category && s.is_active;
+    });
   }, [rawScenes, category]);
 
   const handleFiles = useCallback((files: FileList | File[]) => {
