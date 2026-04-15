@@ -1,34 +1,56 @@
 
 
-# QA Design Audit — Post-Gen Conversion (Round 3)
+# QA Design Audit — Post-Gen Conversion (Round 4)
 
-## Bug Found
+## Design & Responsiveness Status
 
-### Bug 1: `!sm:max-w-[480px]` is invalid Tailwind — drawer width override is broken
+All three components are now structurally sound across breakpoints. The previous rounds fixed the critical issues (reactivity, padding, badge clipping, width override). Here is the final status:
 
-**Root cause**: Tailwind's important modifier `!` goes *before the utility name*, not before the responsive prefix. The correct syntax is `sm:!max-w-[480px]`, not `!sm:max-w-[480px]`.
+| Component | Desktop | Tablet | Mobile | Verdict |
+|-----------|---------|--------|--------|---------|
+| Layer 1 (Card) | Clean | Clean | Clean | Pass |
+| Layer 2 (Drawer) | Clean | Clean | Clean | Pass with 1 minor fix |
+| Layer 3 (Modal) | Clean | Clean | Clean | Pass |
 
-**Impact**: The class is silently ignored. The Sheet base variant `sm:max-w-sm` (384px) wins on desktop/tablet. The drawer is 96px narrower than intended (384px instead of 480px). Plan cards and content feel cramped on desktop.
+## Remaining Issues
 
-**Fix**: Change `!sm:max-w-[480px]` to `sm:!max-w-[480px]` on line 45 of `UpgradeValueDrawer.tsx`.
+### Issue 1: `Zap` icon imported but never used in UpgradeValueDrawer
+Line 5 imports `Zap` from lucide-react but it's never referenced in the component. Dead import — harmless but adds bundle weight and triggers lint warnings.
 
-### Bug 2: Layer 1 chip badges still `text-[10px]` on mobile
+**Fix**: Remove `Zap` from the import.
 
-The previous audit fixed Layer 2 chips to `text-[11px] sm:text-[10px]` for mobile readability, but Layer 1 chips in `PostGenerationUpgradeCard.tsx` (line 59) were left at `text-[10px]` across all breakpoints. Same readability problem — 10px text on a phone is below comfortable reading size.
+### Issue 2: Layer 3 (NoCreditsModal) missing from Freestyle and TextToProduct
+`NoCreditsModal` is only rendered in `Generate.tsx`. Neither `Freestyle.tsx` nor `TextToProduct.tsx` renders it. This means when a free user runs out of credits on those pages, there's no Layer 3 modal — they would only see toast-based messages or nothing. The full Post-Gen Conversion funnel (Layer 1 → Layer 2 → Layer 3) is incomplete on 2 of 3 pages.
 
-**Fix**: Change `text-[10px]` to `text-[11px] sm:text-[10px]` on the Badge className in `PostGenerationUpgradeCard.tsx` line 59.
+**Fix**: Add `NoCreditsModal` to both `Freestyle.tsx` and `TextToProduct.tsx` with `category` and `generationCount` props, matching the Generate.tsx pattern. Each page needs:
+- A `noCreditsModalOpen` state
+- The modal component rendered with category/count props
+- Wiring the modal trigger to wherever credits are checked before generation
 
-### Bug 3: NoCreditsModal close button overlaps "Best Value" badge
+### Issue 3: Potential state conflict — independent `useConversionState` per page
+Each page calls `useConversionState()` independently. If a user navigates from Generate → Freestyle within the same session, a fresh hook instance is created. The `layer1Dismissed` state resets (it's `useState(false)`), so the Layer 1 card could reappear on the new page even if dismissed on the previous one.
 
-The Dialog base positions its close X at `absolute right-4 top-4`. The modal uses `p-0 gap-0`, so the close button sits at pixel (16, 16) — right on top of the gradient header. This is visually acceptable. However, the "Best Value" badge on credit packs uses `absolute -top-3` and the grid has `mt-3` to compensate. On mobile (single column), the first pack card's badge is fine. But on desktop `sm:grid-cols-3`, if the popular pack is not the first item, the badge of whichever pack is popular clips against the grid gap. The `mt-3` is on the grid wrapper, not on individual cards.
+The session/localStorage guards (L1_SESSION_KEY) mitigate this partially — `dismissLayer1` sets `sessionStorage L1_SESSION_KEY = 'true'`, and `canShowLayer1` checks it. So after one dismiss per session, it stays hidden everywhere. This is **working correctly**. No fix needed.
 
-**Fix**: Move `mt-3` from the grid `div` to each individual pack card via `pt-4` on cards that have `pack.popular`, or add `overflow-visible` to the grid.
+### Issue 4: Layer 2 drawer close button vs content padding alignment
+The Sheet's built-in close button is at `absolute right-4 top-4` (16px from edges). The SheetContent has `p-0 pt-2`, and the inner div has `p-6 pt-10`. The close button sits at (right:16px, top:18px with pt-2). The header text starts at pt-10 (40px) + p-6 (24px) = 64px from top. This gives 46px vertical gap between the X and the title — plenty of clearance. **Clean, no fix needed.**
 
-## Summary of changes
+## Conflict Analysis
+
+| Feature | Conflict Risk | Status |
+|---------|--------------|--------|
+| Settings page pricing | Both use `startCheckout` from CreditContext | No conflict — different entry points, same checkout flow |
+| LowCreditsBanner | Shows warning banner, separate from conversion layers | No conflict — complementary |
+| Existing toast credit warnings | May duplicate Layer 2/3 messaging | Low risk — toasts are transient, modals are persistent |
+| Multiple Sheets/Dialogs open | Layer 2 (Sheet) + Layer 3 (Dialog) could theoretically both be open | No conflict — Layer 3 triggers on zero credits, Layer 2 on upsell; different states |
+
+## Summary of Changes
 
 | File | Fix |
 |------|-----|
-| `UpgradeValueDrawer.tsx` line 45 | `!sm:max-w-[480px]` → `sm:!max-w-[480px]` |
-| `PostGenerationUpgradeCard.tsx` line 59 | `text-[10px]` → `text-[11px] sm:text-[10px]` |
-| `NoCreditsModal.tsx` line 50 | Remove `mt-3` from grid, add `pt-4` to popular pack card for badge clearance |
+| `UpgradeValueDrawer.tsx` | Remove unused `Zap` import |
+| `Freestyle.tsx` | Add `NoCreditsModal` with category/count props |
+| `TextToProduct.tsx` | Add `NoCreditsModal` with category/count props |
+
+The drawer width, padding, badge clipping, and chip readability fixes from rounds 2–3 are all confirmed working. No further design regressions found.
 
