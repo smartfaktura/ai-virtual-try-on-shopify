@@ -1,77 +1,63 @@
 
 
-# Polish Desktop Model & Scene Picker Panels
+# Polish Freestyle Prompt Builder Modal
 
 ## Summary
-Redesign both the Model and Scene selector popovers on `/app/freestyle` to feel like premium floating picker panels with better hierarchy, spacing, hover/selection states, and visual polish. Desktop-focused, mobile unchanged.
+Refine the `PromptBuilderQuiz` component to feel like a premium guided setup wizard with better hierarchy, spacing, selection states, and fixed header/footer on desktop.
 
-## Files changed
+## File changed
+**`src/components/app/freestyle/PromptBuilderQuiz.tsx`**
 
-### 1. `src/components/app/freestyle/ModelSelectorChip.tsx`
+### Modal container
+- Widen from `max-w-xl` to `max-w-2xl` for more breathing room
+- Add `rounded-2xl shadow-2xl` for premium elevation
+- Set fixed max height with `max-h-[80vh]` and flex column layout
 
-**Header** — Replace the tiny uppercase label with a structured header block:
-- Title: "Character Reference" (text-sm font-semibold)
-- Helper: "Choose a model to guide the look and composition" (text-xs text-muted-foreground)
-- Visually separated from filters with a bottom border or spacing gap
+### Header (lines 397-405)
+- Increase padding to `px-6 py-4`
+- Title: bump to `text-base font-semibold`
+- Step indicator: style as a subtle pill badge (`px-2 py-0.5 rounded-full bg-muted text-[10px] font-medium`)
+- Icon container: slightly larger (`w-9 h-9 rounded-xl`)
 
-**Filters** — Restyle both filter rows:
-- Increase pill padding (px-3.5 py-1.5) and font size (text-xs)
-- Active state: `bg-foreground text-background` for primary, `bg-muted border border-foreground/20` for secondary
-- Add `gap-1.5` between pills and `mb-3` / `mb-4` between rows
-- Wrap filters + header in a sticky top area
+### Progress bar (lines 408-410)
+- Thinner: `h-[3px]` instead of `h-1`
+- Add `rounded-full` and softer track color
+- Better spacing: `pt-3 pb-1`
 
-**Grid** — Improve card grid:
-- Increase `gap` from `gap-2` to `gap-2.5`
-- Increase `max-h` from `max-h-64` to `max-h-80` for more breathing room
-- Card hover: `hover:border-border/60 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200`
-- Selected state: `border-primary ring-2 ring-primary/20` + small check circle overlay (top-right, 16px circle with checkmark)
-- Label below image: increase to `text-[11px]` with `py-1.5`
+### Content area (lines 412-415)
+- Increase padding to `px-7 py-6`
+- On desktop: `flex-1 overflow-y-auto` (scrolls between fixed header/footer)
+- Remove `max-h-[60vh]`, let flex layout handle it
 
-**Footer** — Restyle MissingRequestBanner area:
-- Add `pt-3 mt-3 border-t border-border/30` separator
-- The banner text already reads correctly
+### Category step (lines 215-234)
+- Question: bump to `text-lg font-semibold`
+- Helper text: change to "Choose the category that best matches your product." with `text-sm text-muted-foreground/60 mt-1`
+- Grid: increase gap to `gap-3` on desktop, keep `grid-cols-4`
+- More space between question and grid: `space-y-5`
 
-**PopoverContent** — Widen to `w-[340px]`, increase padding to `p-4`, add premium shadow: `shadow-xl shadow-black/8 border-border/50 rounded-xl`
+### OptionCard (lines 85-109)
+- Increase padding: `p-4 sm:p-5`
+- Improve spacing: `gap-2` instead of `gap-1.5`
+- Selected state: `border-primary bg-primary/5 ring-2 ring-primary/15 shadow-sm` (stronger ring)
+- Hover: `hover:border-border hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200`
+- Title: `text-sm font-medium` (bump from `text-xs`)
+- Description: `text-[11px] text-muted-foreground/60` (lighter)
+- Check indicator: slightly larger (`w-5 h-5`, `top-2 right-2`)
 
-### 2. `src/components/app/freestyle/SceneSelectorChip.tsx`
+### Footer (lines 418-440)
+- Increase padding: `px-7 py-4`
+- Stronger border: `border-t border-border/40`
+- Back button: `text-muted-foreground` ghost style, quieter
+- Next button: when disabled use `opacity-40`; when enabled use `bg-foreground text-background` (confident primary CTA)
+- Footer stays `shrink-0` (already fixed at bottom via flex)
 
-**Header** — Same structured header:
-- Title: "Scene / Environment" (text-sm font-semibold)
-- Helper: "Choose a scene to guide mood, framing, and visual context" (text-xs text-muted-foreground)
-- Remove the `Maximize2` expand icon (unclear purpose, user wants it removed)
-
-**Filters** — Keep only All / On-Model / Product:
-- Match the same pill styling as Model picker
-- Increase padding, active state uses `bg-foreground text-background`
-- Remove the expanded column-count controls from inline popover
-
-**Grid** — Major visual improvement:
-- Change from `grid-cols-3` to `grid-cols-3` but with `gap-2.5` (up from `gap-1.5`)
-- Card hover: same premium hover as Model picker
-- Selected: `border-primary ring-2 ring-primary/20` + check overlay
-- Title: change from `truncate` to `line-clamp-2` to avoid harsh truncation like "Mid-Century Modern L..."
-- Increase label font to `text-[11px]` with `py-2 px-2`
-- Category labels: increase to `text-[11px]` with `mb-2 mt-3`
-
-**Footer** — Same `border-t` separator treatment
-
-**PopoverContent** — Widen to `w-[520px]` (larger than Model picker for visual browsing), padding `p-4`, same premium shadow/border. Max height for grid: `max-h-[420px]`.
-
-**Expanded Dialog** — Keep as-is (it's a separate full dialog), but remove the expand button from the inline popover since user says to remove unclear icon.
-
-### 3. `src/components/ui/popover.tsx` — No changes needed (shadow/rounding overridden per-instance)
-
-## Design tokens (shared)
-- Panel: `rounded-xl border border-border/50 shadow-xl shadow-black/8`
-- Active pill: `bg-foreground text-background`
-- Inactive pill: `bg-muted/60 text-muted-foreground hover:bg-muted`
-- Card hover: `hover:border-border/60 hover:shadow-sm hover:-translate-y-0.5`
-- Card selected: `border-primary ring-2 ring-primary/20` + 16px check circle
-- Separator: `border-t border-border/30`
+### All other steps
+- Same `space-y-5` increase and typography improvements apply consistently
+- SectionPill: slightly more padding (`px-3 py-1`)
 
 ## What stays the same
-- Mobile behavior (MobilePickerSheet) — unchanged
-- All data fetching, filtering logic, brand model cards, delete handlers
-- Trigger chip buttons — unchanged
-- The expanded Dialog for scenes stays functional but expand icon removed from inline popover
+- All state logic, step flow, data, icon maps
+- Mobile layout branch
+- Review step textarea behavior
+- All imports and templates
 
