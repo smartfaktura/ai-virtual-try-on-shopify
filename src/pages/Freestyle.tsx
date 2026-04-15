@@ -30,6 +30,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
 import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useConversionState } from '@/hooks/useConversionState';
 import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { convertImageToBase64 } from '@/lib/imageUtils';
@@ -138,6 +139,7 @@ export default function Freestyle() {
   // First-time guide state — cached in localStorage for instant render, persisted per-user in DB
   const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
 
   const handleReset = useCallback(() => {
     setPrompt('');
@@ -170,7 +172,7 @@ export default function Freestyle() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
+  const { balance, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { user: authUser } = useAuth();
   const isFreeUser = plan === 'free';
   const conversionState = useConversionState();
@@ -548,7 +550,7 @@ export default function Freestyle() {
   const handleGenerate = useCallback(async () => {
     if (!canSubmit) return;
     if (!hasEnoughCredits) {
-      openBuyModal();
+      setNoCreditsModalOpen(true);
       return;
     }
     setIsUploading(true);
@@ -737,7 +739,7 @@ export default function Freestyle() {
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
+  }, [canSubmit, hasEnoughCredits, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, quality, cameraStyle, framing, imageRole, editIntent, setBalanceFromServer, saveImages, uploadImageToStorage, user, providerOverride]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -1226,6 +1228,12 @@ export default function Freestyle() {
         open={conversionState.layer2Open}
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
+      />
+      <NoCreditsModal
+        open={noCreditsModalOpen}
+        onClose={() => setNoCreditsModalOpen(false)}
+        category={conversionCategory}
+        generationCount={savedImages.length}
       />
     </div>
   );

@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
 import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
 import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useConversionState } from '@/hooks/useConversionState';
 import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { useQuery } from '@tanstack/react-query';
@@ -308,6 +309,7 @@ export default function TextToProduct() {
   const [completedJobs, setCompletedJobs] = useState<Map<string, { images: { url: string; label: string }[]; productTitle: string }>>(new Map());
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
   const { refreshBalance, plan } = useCredits();
   const { user } = useAuth();
   const isFreeUser = plan === 'free';
@@ -994,6 +996,12 @@ export default function TextToProduct() {
         open={conversionState.layer2Open}
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
+      />
+      <NoCreditsModal
+        open={noCreditsModalOpen}
+        onClose={() => setNoCreditsModalOpen(false)}
+        category={conversionCategory}
+        generationCount={allResults.reduce((sum, r) => sum + r.images.length, 0)}
       />
     </div>
   );
