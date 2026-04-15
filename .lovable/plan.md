@@ -1,32 +1,43 @@
 
 
-# Upload 24 Wallets / Cardholders Editorial Scenes
+# Upload 24 Watches Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for a new `wallets` category collection (no existing scenes). Organized into 4 sub-categories (6 scenes each). No `category_sort_order` specified in RTF — will need to assign one (suggest checking existing values for gap).
+Insert 24 new editorial scenes for the `watches` category collection (currently has 16 scenes with `category_sort_order: 17`). Organized into 4 sub-categories (6 scenes each). Update `category_sort_order` from 17 to 24 per RTF spec.
 
 ## Scene Mapping
 
 | Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| In-Hand Editorial Detail (01-06) | 1 | wallet-hand-one-hand-hero, wallet-hand-thumb-edge-detail, wallet-hand-card-pull, wallet-hand-open-reveal, wallet-hand-wrist-style-crop, wallet-hand-pocket-exit |
-| Desk / Daily Use UGC (07-12) | 2 | wallet-ugc-coffee-table, wallet-ugc-work-desk, wallet-ugc-cafe-payment, wallet-ugc-bag-drop, wallet-ugc-travel-tray, wallet-ugc-pocket-keys-phone |
-| Styled Surface Still Life (13-18) | 3 | wallet-still-stone-slab, wallet-still-fabric-contrast, wallet-still-open-composition, wallet-still-book-tray, wallet-still-drawer-shelf, wallet-still-gift-reveal |
-| Campaign Luxury Closeups (19-24) | 4 | wallet-campaign-shadow-cut, wallet-campaign-hardware-macro, wallet-campaign-monochrome-crop, wallet-campaign-aesthetic-gradient, wallet-campaign-reflection-hero, wallet-campaign-ultra-hero |
+| Editorial Product Studio (01-06) | 1 | watch-motion-blur-studio-hero, watch-blackwhite-hand-study, watch-hardware-dial-closeup, watch-sky-hero-still, watch-jewelry-creature-statement, watch-dark-shadow-product |
+| On-Wrist Editorial Portraits (07-12) | 2 | watch-wrist-beauty-portrait, watch-hand-face-editorial, watch-low-angle-fashion-editorial, watch-silhouette-wrist-shadow, watch-tailored-wrist-closeup, watch-sensual-evening-portrait |
+| Tailored & Everyday Watch Moments (13-18) | 3 | watch-business-seated-lifestyle, watch-shirt-cuff-daily-luxury, watch-cafe-table-lifestyle, watch-driving-wheel-moment, watch-evening-bar-lifestyle, watch-relaxed-weekend-luxury |
+| Campaign Watch Statements (19-24) | 4 | watch-super-editorial-campaign, watch-vintage-cinematic-campaign, watch-dark-power-campaign, watch-tailored-authority-campaign, watch-monument-product-campaign, watch-wildcard-concept-campaign |
 
 ## Technical Details
-- **sort_order**: starts at 2933 (current global max is 2932)
-- **category_collection**: `wallets`
-- **category_sort_order**: 35 (new category, assign next available)
-- **Scenes 1-6**: editorial; all have `personDetails` + `productDetails` + `visualDirection` + `layout`; scenes 1-4 also have `sceneEnvironment`; scene 6 adds `stylingDetails`; no `outfit_hint` (hand-only shots, no full outfit)
-- **Scenes 7-12**: lifestyle; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; scenes 7, 9 add `personDetails`; scene 8, 10-12 have `personDetails` where hands shown; no `outfit_hint` (product-focused UGC)
-- **Scenes 13-18**: stilllife; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`, no `outfit_hint`
-- **Scenes 19-21, 23-24**: campaign; `productDetails` + `visualDirection` + `layout`; no `personDetails`; scene 20 adds `detailFocus`
-- **Scene 22**: campaign + `aestheticColor`; `productDetails` + `visualDirection` + `layout`; `suggested_colors` TBD (RTF doesn't specify — will use a refined leather palette e.g. `[{"name":"Cognac Burnish","hex":"#8B5E3C"}]`)
-- **scene_type**: editorial (1-6), lifestyle (7-12), stilllife (13-18), campaign (19-24)
-- No `outfit_hint` for any scene (wallets = accessories, no clothing context)
+- **sort_order**: RTF specifies 2401-2424; will use those values (no conflict with current max 2956)
+- **category_collection**: `watches`
+- **category_sort_order**: update existing 16 from `17` to `24` per RTF
+- **Scenes 1, 3-6**: editorial product-only; `sceneEnvironment` + `visualDirection` + `layout` + `detailFocus`; no `personDetails`, no `outfit_hint`
+- **Scene 2**: editorial + `personDetails`; outfit_hint: minimal monochrome styling; trigger: `personDetails, visualDirection, layout, detailFocus`
+- **Scenes 7-8, 10-11**: editorial + `personDetails` + `stylingDetails`; outfit_hint: minimal luxury wrist-visible styling; `detailFocus`
+- **Scene 9**: editorial + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint; no `detailFocus`
+- **Scene 12**: editorial + `personDetails` + `stylingDetails`; outfit_hint; no `detailFocus`
+- **Scenes 13, 15-16**: lifestyle + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint: polished daily styling
+- **Scene 14**: lifestyle + `personDetails` + `stylingDetails` + `detailFocus`; outfit_hint
+- **Scene 17**: lifestyle + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint
+- **Scene 18**: lifestyle + `personDetails` + `stylingDetails`; outfit_hint; no `sceneEnvironment`
+- **Scene 19**: campaign + `personDetails` + `sceneEnvironment` + `stylingDetails` + `detailFocus`; outfit_hint: strong editorial styling
+- **Scene 20**: campaign + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint
+- **Scene 21**: campaign + `personDetails` + `detailFocus`; outfit_hint; no `sceneEnvironment`
+- **Scene 22**: campaign + `personDetails` + `stylingDetails` + `sceneEnvironment`; outfit_hint
+- **Scene 23**: campaign product-only; `sceneEnvironment` + `visualDirection` + `layout` + `detailFocus`; no `personDetails`, no `outfit_hint`
+- **Scene 24**: campaign + `personDetails` + `sceneEnvironment` + `detailFocus`; outfit_hint
+- Scene types: editorial (1-12), lifestyle (13-18), campaign (19-24)
+- No `suggested_colors` / `aestheticColor` for any scene
 - Full prompt templates extracted from RTF
 
 ## Execution
-1. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and suggested colors for scene 22
+1. UPDATE existing 16 watches scenes: set `category_sort_order = 24`
+2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and outfit hints
 
