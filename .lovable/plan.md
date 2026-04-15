@@ -1,39 +1,33 @@
 
 
-# Fix Food Category Merging in Bulk Preview Upload
+# Merge Wallet Categories into "Wallets & Cardholders"
 
 ## Problem
-`AdminBulkPreviewUpload.tsx` reads raw `category_collection` values directly, so `food`, `snacks-food`, and `food-beverage` show as separate categories in the dropdown. The `COLLECTION_MERGE` map from `useProductImageScenes.ts` is not applied here.
+The database has two `category_collection` values for wallet scenes:
+- `wallets-cardholders` — the canonical category with a title in `TITLE_MAP`
+- `wallets` — a separate slug that shows as its own section
 
 ## Solution
 
-**File: `src/pages/AdminBulkPreviewUpload.tsx`**
+**File: `src/hooks/useProductImageScenes.ts`**
 
-1. Import and reuse the `COLLECTION_MERGE` map from `useProductImageScenes.ts` (or define locally)
-2. In the `categories` useMemo (line 142), normalize `category_collection` through the merge map before building the set — so `snacks-food` and `food-beverage` both resolve to `food`
-3. In the `categoryScenes` useMemo (line 165), filter using the same normalization — match scenes whose merged category equals the selected category
-
-Changes are ~5 lines: add the merge map lookup in both the category builder and the scene filter.
-
-## Technical Detail
+Add one entry to the existing `COLLECTION_MERGE` map:
 
 ```typescript
-// At top, or import from useProductImageScenes
 const COLLECTION_MERGE: Record<string, string> = {
   "snacks-food": "food",
   "food-beverage": "food",
+  "wallets": "wallets-cardholders",  // ← add this
 };
-
-// In categories useMemo: normalize before adding to set
-const merged = COLLECTION_MERGE[s.category_collection] ?? s.category_collection;
-catSet.add(merged);
-
-// In categoryScenes useMemo: match via normalized value
-return rawScenes.filter(s => {
-  const merged = COLLECTION_MERGE[s.category_collection ?? ''] ?? s.category_collection;
-  return merged === category && s.is_active;
-});
 ```
 
-Result: "Food & Snacks" appears once in the dropdown and includes all 40 scenes.
+This merges all wallet scenes under the single "Wallets & Cardholders" heading already defined in `TITLE_MAP`.
+
+**File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`**
+
+Check if `CATEGORY_ALIASES` also needs a `"wallets": "wallets-cardholders"` entry for the product-to-category detection path.
+
+## Impact
+- One-line addition to `COLLECTION_MERGE`
+- All wallet/cardholder scenes appear under a single "Wallets & Cardholders" section
 
