@@ -8,13 +8,15 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 const DEMO_PRODUCTS = [
-  { id: 'demo_scarf', title: 'Silk Scarf', category: 'Scarves', src: '/images/demos/demo-scarf.png' },
-  { id: 'demo_cap', title: 'Baseball Cap', category: 'Hats', src: '/images/demos/demo-cap.png' },
-  { id: 'demo_shampoo', title: 'Luxury Shampoo', category: 'Beauty', src: '/images/demos/demo-shampoo.png' },
-  { id: 'demo_jeans', title: 'High-Rise Jeans', category: 'Jeans', src: '/images/demos/demo-jeans.png' },
-  { id: 'demo_hoodie', title: 'Zip Hoodie', category: 'Hoodies', src: '/images/demos/demo-hoodie.png' },
-  { id: 'demo_backpack', title: 'Urban Backpack', category: 'Backpacks', src: '/images/demos/demo-backpack.png' },
-  { id: 'demo_eyewear', title: 'Cat-Eye Glasses', category: 'Eyewear', src: '/images/demos/demo-eyewear.png' },
+  { id: 'demo_scarf', title: 'Silk Scarf', category: 'Scarves', previewSrc: '/images/demos/previews/demo-scarf.webp', sourceSrc: '/images/demos/demo-scarf.png' },
+  { id: 'demo_cap', title: 'Baseball Cap', category: 'Hats', previewSrc: '/images/demos/previews/demo-cap.webp', sourceSrc: '/images/demos/demo-cap.png' },
+  { id: 'demo_shampoo', title: 'Luxury Shampoo', category: 'Beauty', previewSrc: '/images/demos/previews/demo-shampoo.webp', sourceSrc: '/images/demos/demo-shampoo.png' },
+  { id: 'demo_jeans', title: 'High-Rise Jeans', category: 'Jeans', previewSrc: '/images/demos/previews/demo-jeans.webp', sourceSrc: '/images/demos/demo-jeans.png' },
+  { id: 'demo_hoodie', title: 'Zip Hoodie', category: 'Hoodies', previewSrc: '/images/demos/previews/demo-hoodie.webp', sourceSrc: '/images/demos/demo-hoodie.png' },
+  { id: 'demo_backpack', title: 'Urban Backpack', category: 'Backpacks', previewSrc: '/images/demos/previews/demo-backpack.webp', sourceSrc: '/images/demos/demo-backpack.png' },
+  { id: 'demo_eyewear', title: 'Cat-Eye Glasses', category: 'Eyewear', previewSrc: '/images/demos/previews/demo-eyewear.webp', sourceSrc: '/images/demos/demo-eyewear.png' },
+  { id: 'demo_chair', title: 'Bouclé Armchair', category: 'Furniture', previewSrc: '/images/demos/previews/demo-chair.webp', sourceSrc: '/images/demos/demo-chair.png' },
+  { id: 'demo_handbag', title: 'Leather Handbag', category: 'Bags', previewSrc: '/images/demos/previews/demo-handbag.webp', sourceSrc: '/images/demos/demo-handbag.png' },
 ];
 
 interface DemoProductPickerProps {
@@ -30,7 +32,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
   const handleSelect = async (product: typeof DEMO_PRODUCTS[0]) => {
     setLoadingId(product.id);
     try {
-      const response = await fetch(product.src);
+      const response = await fetch(product.sourceSrc);
       const blob = await response.blob();
       const file = new File([blob], `${product.id}.png`, { type: 'image/png' });
       onOpenChange(false);
@@ -50,17 +52,18 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
           disabled={!!loadingId}
           onClick={() => handleSelect(product)}
           className={cn(
-            'group relative flex flex-col items-center rounded-xl border border-border/60 bg-card p-2.5 transition-all',
+            'group relative flex flex-col items-center rounded-xl border border-border/60 bg-card p-2 transition-all',
             'hover:border-primary/40 hover:shadow-md hover:shadow-primary/5',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
             'disabled:opacity-50 disabled:pointer-events-none',
           )}
         >
-          <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted/40 mb-2">
+          <div className="relative w-full overflow-hidden rounded-lg bg-muted/40 mb-1.5" style={{ aspectRatio: '4/5' }}>
             <ShimmerImage
-              src={product.src}
+              src={product.previewSrc}
               alt={product.title}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
+              aspectRatio="4/5"
             />
             {loadingId === product.id && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
@@ -69,7 +72,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
             )}
           </div>
           <span className="text-xs font-medium text-foreground truncate w-full text-center">{product.title}</span>
-          <Badge variant="secondary" className="mt-1 text-[10px] px-1.5 py-0">{product.category}</Badge>
+          <Badge variant="secondary" className="mt-0.5 text-[10px] px-1.5 py-0">{product.category}</Badge>
         </button>
       ))}
     </div>
@@ -93,7 +96,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Try a demo product</DialogTitle>
           <DialogDescription>Pick one to see how it works</DialogDescription>
