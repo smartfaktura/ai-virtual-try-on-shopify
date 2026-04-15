@@ -103,6 +103,7 @@ export default function ProductImages() {
   const [quickUploadProgress, setQuickUploadProgress] = useState('');
   const quickUploadInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [demoPickerOpen, setDemoPickerOpen] = useState(false);
 
   const handleQuickUpload = useCallback(async (file: File) => {
     if (!user) { toast.error('Please sign in to upload'); return; }
