@@ -172,7 +172,10 @@ export default function AdminBulkPreviewUpload() {
   // Scenes filtered to selected category
   const categoryScenes = useMemo(() => {
     if (!category) return [];
-    return rawScenes.filter(s => s.category_collection === category && s.is_active);
+    return rawScenes.filter(s => {
+      const merged = COLLECTION_MERGE[s.category_collection ?? ''] ?? s.category_collection;
+      return merged === category && s.is_active;
+    });
   }, [rawScenes, category]);
 
   const handleFiles = useCallback((files: FileList | File[]) => {
