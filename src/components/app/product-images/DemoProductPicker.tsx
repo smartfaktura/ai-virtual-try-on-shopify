@@ -8,15 +8,15 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 const DEMO_PRODUCTS = [
+  { id: 'demo_eyewear', title: 'Cat-Eye Glasses', category: 'Eyewear', previewSrc: '/images/demos/previews/demo-eyewear.webp', sourceSrc: '/images/demos/demo-eyewear.png' },
+  { id: 'demo_handbag', title: 'Leather Handbag', category: 'Bags', previewSrc: '/images/demos/previews/demo-handbag.webp', sourceSrc: '/images/demos/demo-handbag.png' },
+  { id: 'demo_hoodie', title: 'Zip Hoodie', category: 'Hoodies', previewSrc: '/images/demos/previews/demo-hoodie.webp', sourceSrc: '/images/demos/demo-hoodie.png' },
   { id: 'demo_scarf', title: 'Silk Scarf', category: 'Scarves', previewSrc: '/images/demos/previews/demo-scarf.webp', sourceSrc: '/images/demos/demo-scarf.png' },
   { id: 'demo_cap', title: 'Baseball Cap', category: 'Hats', previewSrc: '/images/demos/previews/demo-cap.webp', sourceSrc: '/images/demos/demo-cap.png' },
-  { id: 'demo_shampoo', title: 'Luxury Shampoo', category: 'Beauty', previewSrc: '/images/demos/previews/demo-shampoo.webp', sourceSrc: '/images/demos/demo-shampoo.png' },
   { id: 'demo_jeans', title: 'High-Rise Jeans', category: 'Jeans', previewSrc: '/images/demos/previews/demo-jeans.webp', sourceSrc: '/images/demos/demo-jeans.png' },
-  { id: 'demo_hoodie', title: 'Zip Hoodie', category: 'Hoodies', previewSrc: '/images/demos/previews/demo-hoodie.webp', sourceSrc: '/images/demos/demo-hoodie.png' },
-  { id: 'demo_backpack', title: 'Urban Backpack', category: 'Backpacks', previewSrc: '/images/demos/previews/demo-backpack.webp', sourceSrc: '/images/demos/demo-backpack.png' },
-  { id: 'demo_eyewear', title: 'Cat-Eye Glasses', category: 'Eyewear', previewSrc: '/images/demos/previews/demo-eyewear.webp', sourceSrc: '/images/demos/demo-eyewear.png' },
+  { id: 'demo_shampoo', title: 'Luxury Shampoo', category: 'Beauty', previewSrc: '/images/demos/previews/demo-shampoo.webp', sourceSrc: '/images/demos/demo-shampoo.png' },
   { id: 'demo_chair', title: 'Bouclé Armchair', category: 'Furniture', previewSrc: '/images/demos/previews/demo-chair.webp', sourceSrc: '/images/demos/demo-chair.png' },
-  { id: 'demo_handbag', title: 'Leather Handbag', category: 'Bags', previewSrc: '/images/demos/previews/demo-handbag.webp', sourceSrc: '/images/demos/demo-handbag.png' },
+  { id: 'demo_backpack', title: 'Urban Backpack', category: 'Backpacks', previewSrc: '/images/demos/previews/demo-backpack.webp', sourceSrc: '/images/demos/demo-backpack.png' },
 ];
 
 interface DemoProductPickerProps {
