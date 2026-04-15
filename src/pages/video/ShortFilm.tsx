@@ -20,6 +20,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMemo, useState, useCallback, useRef } from 'react';
 
 export default function ShortFilm() {
+  const { balance } = useCredits();
+  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+
   const {
     step, steps, currentStepIndex,
     filmType, setFilmType,
@@ -38,6 +41,14 @@ export default function ShortFilm() {
     audioPhase,
     generateAudio, previewAudio,
   } = useShortFilmProject();
+
+  const handleGenerate = useCallback(() => {
+    if (balance < totalCredits) {
+      setNoCreditsOpen(true);
+      return;
+    }
+    startGeneration();
+  }, [balance, totalCredits, startGeneration]);
 
   const generationStartRef = useRef<number>(Date.now());
 
@@ -324,12 +335,14 @@ export default function ShortFilm() {
           hasCompletedClips={completedClips.length > 0}
           onNext={goNext}
           onBack={goBack}
-          onGenerate={startGeneration}
+           onGenerate={handleGenerate}
           onReset={handleReset}
           onSaveDraft={saveDraft}
           onDownloadAll={handleDownload}
         />
       )}
+
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
     </div>
   );
 }

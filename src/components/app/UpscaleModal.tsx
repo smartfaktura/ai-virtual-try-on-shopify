@@ -3,6 +3,7 @@ import { Zap, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/contexts/CreditContext';
 import { useUpscaleImages, type UpscaleResolution, type UpscaleItem } from '@/hooks/useUpscaleImages';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
 
 interface UpscaleModalProps {
