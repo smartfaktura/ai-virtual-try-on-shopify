@@ -529,7 +529,7 @@ export default function AnimateVideo() {
   const currentProgressMember = PROGRESS_TEAM[progressAvatarIdx];
 
   return (
-    <>
+    <div className="max-w-4xl mx-auto space-y-6">
       <PageHeader
         title="Animate Image"
         subtitle="Turn a still product image into a polished commercial video."
@@ -1466,8 +1466,7 @@ export default function AnimateVideo() {
           onQuickVariation={handleQuickVariation}
         />
       )}
-    </div>
       <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
-    </>
+    </div>
   );
 }
