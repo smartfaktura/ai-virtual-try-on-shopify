@@ -1,65 +1,68 @@
 
 
-# Import 24 Bag Scenes into product_image_scenes
+# Import 24 Beauty & Skincare Scenes into product_image_scenes
 
 ## What This Does
-Insert 24 new bag scenes from the RTF into `product_image_scenes`, mapped to `category_collection = 'bags-accessories'` (the existing bags category with 21 scenes already). All new `bag-*` scene IDs are unique and don't conflict with existing `*-bags` IDs.
+Insert 24 new skincare scenes into `product_image_scenes`, mapped to `category_collection = 'beauty-skincare'` (already has 18 existing scenes with `category_sort_order = 2`). New scenes use `category_sort_order = 18` as specified in the RTF. The TITLE_MAP already has `beauty-skincare` mapped to "Beauty & Skincare".
+
+For the 6 Aesthetic Color scenes (19-24), hardcoded "Mineral Sage Mist (#A8B7A1)" references will be replaced with `{{aestheticColor}}` token, and `suggested_colors` set to `[{"hex":"#A8B7A1","label":"Mineral Sage Mist"}]`.
 
 ## Scene Summary (24 scenes)
 
-### Sub-Cat 1: Editorial Product Studio (sub_category_sort_order = 0)
+### Sub-Cat 1: Editorial Skincare Product Studio (sub_category_sort_order = 0)
 | # | scene_id | Title | Type | Sort |
 |---|----------|-------|------|------|
-| 1 | bag-sculptural-studio-hero | Sculptural Bag Studio Hero | editorial | 2301 |
-| 2 | bag-hardware-closeup-studio | Hardware & Craft Closeup | editorial | 2302 |
-| 3 | bag-couch-luxury-still | Luxury Couch Bag Still | editorial | 2303 |
-| 4 | bag-car-interior-still | Vintage Car Bag Still | editorial | 2304 |
-| 5 | bag-monochrome-colorbox-studio | Monochrome Colorbox Bag | editorial | 2305 |
-| 6 | bag-display-dome-editorial | Display Dome Bag Statement | editorial | 2306 |
+| 1 | skincare-editorial-floating-hero | Floating Skincare Hero | editorial | 1801 |
+| 2 | skincare-editorial-shadow-surface | Shadow Surface Hero | editorial | 1802 |
+| 3 | skincare-editorial-formula-detail | Formula and Packaging Detail | editorial | 1803 |
+| 4 | skincare-editorial-formula-smear | Formula Smear Editorial | editorial | 1804 |
+| 5 | skincare-editorial-reflection-glass | Reflection Glass Skincare Still | editorial | 1805 |
+| 6 | skincare-editorial-grouping-story | Skincare Grouping Story | editorial | 1806 |
 
-### Sub-Cat 2: On-Body Editorial & Location (sub_category_sort_order = 1)
+### Sub-Cat 2: On-Skin Editorial Rituals (sub_category_sort_order = 1)
 | # | scene_id | Title | Type | Sort |
 |---|----------|-------|------|------|
-| 7 | bag-onbody-architectural-editorial | Architectural On-Body Editorial | editorial | 2307 |
-| 8 | bag-closebody-portrait-editorial | Close Body Bag Portrait | editorial | 2308 |
-| 9 | bag-car-window-editorial | Car Window Bag Editorial | editorial | 2309 |
-| 10 | bag-back-shoulder-editorial | Back Shoulder Bag View | editorial | 2310 |
-| 11 | bag-sunshadow-outdoor-editorial | Sun & Shadow Bag Portrait | editorial | 2311 |
-| 12 | bag-nature-minimal-editorial | Nature Minimal Bag Editorial | editorial | 2312 |
+| 7 | skincare-onskin-cheek-application | Cheek Application Editorial | editorial | 1807 |
+| 8 | skincare-dropper-skin-ritual | Dropper Skin Ritual | editorial | 1808 |
+| 9 | skincare-neck-shoulder-glow | Neck and Shoulder Glow | editorial | 1809 |
+| 10 | skincare-hand-product-beauty | Hand and Product Beauty Detail | editorial | 1810 |
+| 11 | skincare-clean-face-portrait | Clean Face Skincare Portrait | editorial | 1811 |
+| 12 | skincare-water-skin-ritual | Water and Skin Ritual | editorial | 1812 |
 
-### Sub-Cat 3: Everyday UGC Bag Looks (sub_category_sort_order = 2)
+### Sub-Cat 3: Daily Routine / Vanity UGC (sub_category_sort_order = 2)
 | # | scene_id | Title | Type | Sort |
 |---|----------|-------|------|------|
-| 13 | bag-mirror-selfie-luxury | Luxury Bag Mirror Selfie | lifestyle | 2313 |
-| 14 | bag-cafe-errand-ugc | Cafe Errand Bag Look | lifestyle | 2314 |
-| 15 | bag-street-carry-casual | Street Carry Casual | lifestyle | 2315 |
-| 16 | bag-travel-lobby-ugc | Travel Lobby Bag Moment | lifestyle | 2316 |
-| 17 | bag-weekend-outing-ugc | Weekend Outing Bag Look | lifestyle | 2317 |
-| 18 | bag-soft-home-carry-ugc | Soft Home Carry Story | lifestyle | 2318 |
+| 13 | skincare-vanity-mirror-routine | Vanity Mirror Routine | lifestyle | 1813 |
+| 14 | skincare-sinkside-daily-use | Sinkside Daily Use | lifestyle | 1814 |
+| 15 | skincare-bedside-evening-ritual | Bedside Evening Ritual | lifestyle | 1815 |
+| 16 | skincare-travel-routine-lifestyle | Travel Skincare Routine | lifestyle | 1816 |
+| 17 | skincare-flatlay-routine-essentials | Routine Essentials Flat Lay | lifestyle | 1817 |
+| 18 | skincare-spa-counter-lifestyle | Spa Counter Lifestyle | lifestyle | 1818 |
 
-### Sub-Cat 4: Campaign Bag Statements (sub_category_sort_order = 3)
+### Sub-Cat 4: Aesthetic Color Skincare Stories (sub_category_sort_order = 3)
 | # | scene_id | Title | Type | Sort |
 |---|----------|-------|------|------|
-| 19 | bag-super-editorial-campaign | Super Editorial Bag Campaign | campaign | 2319 |
-| 20 | bag-vintage-cinematic-campaign | Vintage Cinematic Bag Campaign | campaign | 2320 |
-| 21 | bag-nature-epic-campaign | Nature Epic Bag Campaign | campaign | 2321 |
-| 22 | bag-stilllife-stack-campaign | Stacked Bag Campaign Still | campaign | 2322 |
-| 23 | bag-logo-detail-campaign | Logo Detail Campaign | campaign | 2323 |
-| 24 | bag-wildcard-concept-campaign | Concept Wildcard Bag Campaign | campaign | 2324 |
+| 19 | skincare-color-surface-still | Color Surface Skincare Still | editorial | 1819 |
+| 20 | skincare-color-water-ritual | Color Water Ritual Story | editorial | 1820 |
+| 21 | skincare-color-beauty-portrait | Color Beauty Portrait | editorial | 1821 |
+| 22 | skincare-color-sculptural-set | Color Sculptural Skincare Set | editorial | 1822 |
+| 23 | skincare-color-soft-ritual-lifestyle | Color Soft Ritual Lifestyle | lifestyle | 1823 |
+| 24 | skincare-color-hero-campaign | Color Hero Skincare Campaign | campaign | 1824 |
 
-## Aesthetic Color Handling
-Scene 5 (bag-monochrome-colorbox-studio) includes `aestheticColor` in its trigger blocks and already uses the `{{aestheticColor}}` token in its prompt template. No hardcoded color to replace -- it's already dynamic.
+## Aesthetic Color Handling (Scenes 19-24)
+- All hardcoded "Mineral Sage Mist (#A8B7A1)" and "Mineral Sage Mist" in prompt templates replaced with `{{aestheticColor}}`
+- `= Mineral Sage Mist (#A8B7A1)` assignment pattern removed (token stays dynamic)
+- `suggested_colors` set to `[{"hex":"#A8B7A1","label":"Mineral Sage Mist"}]`
 
 ## Outfit Hints
-- On-Body Editorial scenes (7-12): "Minimal luxury styling with clean tailoring or soft separates, quiet jewelry, elongated line, and nothing that competes with the bag."
-- Everyday UGC scenes (13-18): "Relaxed premium off-duty styling with simple layers, clean accessories, natural carry behavior, and nothing that distracts from the bag."
-- Campaign scenes with models (19-21, 24): "Sharp editorial styling with controlled silhouettes, quiet luxury accessories, strong carry framing, and nothing that overpowers the bag."
-- Still-life campaign scenes (22, 23): No outfit hint (NULL).
-- Editorial Product Studio scenes (1-6): No outfit hint (NULL).
+- On-Skin Editorial Rituals (7-12): "Minimal beauty styling with bare or clean skin focus, soft robe or towel only if contextual, no heavy makeup or distracting accessories."
+- Daily Routine / Vanity UGC (13-18): "Relaxed premium self-care styling with clean basics, soft robe or towel, natural hair, and nothing that distracts from the skincare ritual."
+- Aesthetic Color scenes with model (20, 21, 23, 24): "Minimal beauty styling with {{aestheticColor}} accents in the environment only — robe, towel, or backdrop tones."
+- Editorial Product Studio (1-6) and still-life color scenes (19, 22): No outfit hint (NULL)
 
 ## Key Fields (all 24 rows)
-- `category_collection = 'bags-accessories'`, `category_sort_order = 23`
-- Full `prompt_template`, `trigger_blocks`, `outfit_hint` from RTF
+- `category_collection = 'beauty-skincare'`, `category_sort_order = 18`
+- Full `prompt_template`, `trigger_blocks` from RTF
 - `is_active = true`, `requires_extra_reference = false`, `use_scene_reference = false`
 
 ## Implementation
