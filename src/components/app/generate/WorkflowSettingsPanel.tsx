@@ -165,6 +165,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
     workflowImageCount, multiProductCount, angleMultiplier, aspectRatioCount, framingCount, interiorType,
     isAdmin, isGeneratingPreviews,
     openBuyModal, handleGenerateClick, handleGenerateScenePreviews, setCurrentStep,
+    onFreeLimit,
   } = props;
 
   // Force high quality for Selfie / UGC workflows
@@ -375,7 +376,8 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                       if (next.has(i)) { next.delete(i); }
                       else {
                         if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
-                          toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
+                          toast.error(isFreeUser ? undefined : `Free plan allows 1 scene per generation. Upgrade to unlock more.`);
+                          if (isFreeUser && onFreeLimit) { onFreeLimit('scene_limit'); return prev; }
                           return prev;
                         }
                         if (!isFreeUser && isFlatLay && next.size >= FLAT_LAY_SURFACE_LIMIT) {
