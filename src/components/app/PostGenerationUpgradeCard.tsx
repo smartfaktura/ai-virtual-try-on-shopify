@@ -51,7 +51,7 @@ export function PostGenerationUpgradeCard({ category, onSeeMore, onDismiss }: Po
         </div>
 
         {/* Unlock chips */}
-        <div className="flex flex-wrap gap-1.5 pl-9">
+        <div className="flex flex-wrap gap-1.5 pl-7 sm:pl-9">
           {copy.chips.map((chip) => (
             <Badge
               key={chip}
@@ -65,7 +65,7 @@ export function PostGenerationUpgradeCard({ category, onSeeMore, onDismiss }: Po
         </div>
 
         {/* CTA */}
-        <div className="pl-9">
+        <div className="pl-7 sm:pl-9">
           <Button
             variant="link"
             size="sm"

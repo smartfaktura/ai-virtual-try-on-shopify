@@ -29,7 +29,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden border-border/50 shadow-2xl">
         {/* Header */}
-        <div className="px-8 pt-8 pb-5 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
+        <div className="px-5 sm:px-8 pt-8 pb-5 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-xl bg-primary/10">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -46,8 +46,8 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
         </div>
 
         {/* Packs */}
-        <div className="px-8 py-7 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="px-5 sm:px-8 py-7 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-3">
             {creditPacks.map((pack) => (
               <div
                 key={pack.packId}
@@ -102,8 +102,8 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
           </div>
         </div>
 
-        <DialogFooter className="px-8 pb-7 pt-0">
-          <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px]">
+        <DialogFooter className="px-5 sm:px-8 pb-7 pt-0">
+          <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px] w-full sm:w-auto">
             Maybe Later
           </Button>
         </DialogFooter>

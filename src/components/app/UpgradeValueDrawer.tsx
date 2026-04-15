@@ -42,8 +42,8 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-[480px] overflow-y-auto p-0">
-        <div className="p-6 space-y-6">
+      <SheetContent side="right" className="w-full !sm:max-w-[480px] overflow-y-auto p-0 pt-2">
+        <div className="p-6 pt-10 space-y-6">
           {/* Header */}
           <SheetHeader className="space-y-1">
             <SheetTitle className="text-lg font-semibold tracking-tight">
@@ -112,7 +112,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {['Multi-scene', 'Multi-model', 'Batch export', 'Video'].map(f => (
-                    <span key={f} className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{f}</span>
+                    <span key={f} className="text-[11px] sm:text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{f}</span>
                   ))}
                 </div>
                 <Button
@@ -129,7 +129,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
             {/* Growth */}
             {growthPlan && (
-              <div className="relative rounded-xl border-2 border-primary/40 bg-primary/[0.02] p-4 space-y-3">
+              <div className="relative rounded-xl border-2 border-primary/40 bg-primary/[0.02] p-4 pt-3 space-y-3">
                 <div className="absolute -top-2.5 left-4">
                   <Badge className="bg-primary text-primary-foreground text-[10px] tracking-wider uppercase px-3 py-0 shadow-sm">
                     Most Popular
@@ -146,7 +146,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {['Everything in Starter', 'Brand Models', 'Priority queue'].map(f => (
-                    <span key={f} className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{f}</span>
+                    <span key={f} className="text-[11px] sm:text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{f}</span>
                   ))}
                 </div>
                 <Button
