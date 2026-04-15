@@ -240,6 +240,20 @@ export default function Generate() {
   const { isAdmin } = useIsAdmin();
   const [isGeneratingPreviews, setIsGeneratingPreviews] = useState(false);
 
+  // ── Conversion flow ──────────────────────────────────────────
+  const conversionState = useConversionState();
+  const { data: profileCats } = useQuery({
+    queryKey: ['profile-categories', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase.from('profiles').select('product_categories').eq('user_id', user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id && isFreeUser,
+    staleTime: Infinity,
+  });
+  const conversionCategory = resolveConversionCategory(profileCats?.product_categories);
+
   // Merge mock + custom + user models, sorted consistently
   const allModels = useMemo(() => {
     const deduped = new Map<string, typeof mockModels[0]>();
