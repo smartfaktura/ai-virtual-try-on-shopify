@@ -86,11 +86,13 @@ function TypewriterPlaceholder({
   sourceImagePreview,
   imageRole,
   hasAssets,
+  containerRef,
 }: {
   prompt: string;
   sourceImagePreview: string | null;
   imageRole: string;
   hasAssets?: boolean;
+  containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
