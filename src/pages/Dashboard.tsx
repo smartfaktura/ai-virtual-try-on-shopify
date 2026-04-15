@@ -469,23 +469,20 @@ export default function Dashboard() {
               return (
                 <div
                   key={tool.title}
-                  className="border border-border/60 rounded-xl p-5 flex flex-col gap-3 hover:border-border hover:shadow-sm transition-all"
+                  className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-foreground">{tool.title}</h3>
-                      <span className="text-[11px] text-muted-foreground/60">{tool.label}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{tool.desc}</p>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-foreground">{tool.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{tool.desc}</p>
+                    <span className="text-xs text-muted-foreground/60 mt-3 block">{tool.label}</span>
                   </div>
-                  <div className="mt-auto pt-1">
-                    <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate(tool.to)}>
-                      Open
-                    </Button>
-                  </div>
+                  <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-3 min-h-[44px]" onClick={() => navigate(tool.to)}>
+                    Open
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
                 </div>
               );
             })}
