@@ -14,7 +14,7 @@ import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
 import { toast } from 'sonner';
 
-const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
+const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
 
 interface ImportConfig {
   scene_id: string;

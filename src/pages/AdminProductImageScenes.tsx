@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
 
-const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
+const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
 const CATEGORIES = [
   { value: 'fragrance', label: 'Fragrance' },
   { value: 'beauty-skincare', label: 'Beauty & Skincare' },
