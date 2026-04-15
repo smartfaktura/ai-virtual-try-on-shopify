@@ -202,7 +202,7 @@ export function getLayer3Headline(category: ConversionCategory): string {
 
 export function getLayer3Subline(generationCount: number): string {
   if (generationCount <= 1) {
-    return 'You've created your first image. Brands at your stage typically need 50–100+ per month.';
+    return 'You\'ve created your first image. Brands at your stage typically need 50\u2013100+ per month.';
   }
-  return `You've created ${generationCount} images so far. Brands at your stage typically need 50–100+ per month.`;
+  return `You've created ${generationCount} images so far. Brands at your stage typically need 50\u2013100+ per month.`;
 }
