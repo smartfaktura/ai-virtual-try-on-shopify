@@ -127,15 +127,14 @@ function TypewriterPlaceholder({
   useEffect(() => {
     const handleFocus = () => setIsFocused(true);
     const handleBlur = () => setIsFocused(false);
-    // Find the textarea sibling
-    const ta = document.querySelector<HTMLTextAreaElement>('.freestyle-prompt-textarea');
+    const ta = containerRef?.current?.querySelector('textarea');
     ta?.addEventListener('focus', handleFocus);
     ta?.addEventListener('blur', handleBlur);
     return () => {
       ta?.removeEventListener('focus', handleFocus);
       ta?.removeEventListener('blur', handleBlur);
     };
-  }, []);
+  }, [containerRef]);
 
   if (prompt.length > 0) return null;
 
