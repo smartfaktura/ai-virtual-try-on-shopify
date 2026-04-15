@@ -4407,6 +4407,18 @@ export default function Generate() {
               </CardContent>
             </Card>
 
+            {/* Layer 1: Post-generation upgrade card */}
+            {isFreeUser && conversionState.canShowLayer1 && (
+              <PostGenerationUpgradeCard
+                category={conversionCategory}
+                onSeeMore={() => {
+                  conversionState.dismissLayer1();
+                  conversionState.openUpgradeDrawer('layer1_cta');
+                }}
+                onDismiss={conversionState.dismissLayer1}
+              />
+            )}
+
             <Card><CardContent className="p-5 space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
