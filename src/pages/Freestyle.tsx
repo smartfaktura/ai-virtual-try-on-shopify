@@ -175,13 +175,13 @@ export default function Freestyle() {
   const isFreeUser = plan === 'free';
   const conversionState = useConversionState();
   const { data: freestyleProfileCats } = useQuery({
-    queryKey: ['profile-categories', user?.id],
+    queryKey: ['profile-categories', authUser?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
-      const { data } = await supabase.from('profiles').select('product_categories').eq('user_id', user.id).maybeSingle();
+      if (!authUser?.id) return null;
+      const { data } = await supabase.from('profiles').select('product_categories').eq('user_id', authUser.id).maybeSingle();
       return data;
     },
-    enabled: !!user?.id && isFreeUser,
+    enabled: !!authUser?.id && isFreeUser,
     staleTime: Infinity,
   });
   const conversionCategory = resolveConversionCategory(freestyleProfileCats?.product_categories);
