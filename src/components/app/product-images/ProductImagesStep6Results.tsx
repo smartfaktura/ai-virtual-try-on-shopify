@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, RefreshCw, CheckCircle, Archive } from 'lucide-react';
+import { Download, RefreshCw, CheckCircle, Archive, Loader2 } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 import { useState, useMemo } from 'react';
@@ -159,7 +159,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
             <RefreshCw className="w-4 h-4" />Generate More
           </Button>
           <Button variant="outline" onClick={handleDownloadAll} disabled={downloading || totalImages === 0} className="gap-1.5">
-            <Archive className="w-4 h-4" />{downloading ? 'Downloading…' : 'Download All'}
+            {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}{downloading ? 'Downloading…' : 'Download All'}
           </Button>
           <Button variant="outline" onClick={onGoToLibrary} className="gap-1.5">
             <Download className="w-4 h-4" />View in Library
