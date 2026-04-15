@@ -1,38 +1,43 @@
 
 
-# Optimize Step 2 & 3 Scene Images — Quality Only
+# Fix Product Images on Review Page (Step 4)
 
-## The Rule (from `mem://style/image-optimization-no-crop`)
-
-**Never use `width` parameter** on `getOptimizedUrl` for scene preview cards, hover popups, or any image displayed with `object-cover` / `object-contain` in a flexible container. The `width` param triggers Supabase server-side cropping which causes the zoomed-in issue we fixed on workflow cards.
-
-The **only** safe use of `width` is for tiny fixed-size avatars (24-28px product chips in category tabs) where the container is a known small square.
+## Problem
+The product thumbnails in the Review page's "Products" summary card use raw image URLs without optimization, and the single-product layout needs the image to properly fill its container.
 
 ## Changes
 
-### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+**File: `src/components/app/product-images/ProductImagesStep4Review.tsx`**
 
-1. **Scene card previews** — Replace raw `<img>` with `ShimmerImage` + `getOptimizedUrl(url, { quality: 60 })`. No width. Add `loading="lazy"`.
-2. **Category tab product thumbnails (24px avatars)** — These are tiny fixed squares, safe to use `width: 40, quality: 40`.
-3. Add imports for `ShimmerImage` and `getOptimizedUrl`.
+1. **Add import** for `getOptimizedUrl` from `@/lib/imageOptimization`.
 
-### File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+2. **Single product image (line 344)** — Add quality-only optimization:
+```tsx
+// Before
+<ShimmerImage src={selectedProducts[0].image_url} ...
+// After  
+<ShimmerImage src={getOptimizedUrl(selectedProducts[0].image_url, { quality: 70 })} ...
+```
 
-1. **24px scene icons** — `width: 40, quality: 40` (fixed tiny thumbnail, safe).
-2. **120px hover popups** — `quality: 60` only. No width.
-3. **Scene cards** — `quality: 60` only. No width.
+3. **Multi-product grid images (line 353)** — Same fix:
+```tsx
+// Before
+<ShimmerImage src={p.image_url} ...
+// After
+<ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 70 })} ...
+```
 
-### File: `src/components/app/product-images/ProductImagesStep3Details.tsx`
+4. **Prop thumbnails in Advanced Scene Controls (line 300)** — Tiny 16px avatars, safe for width:
+```tsx
+// Before
+<img src={product.image_url} ...
+// After
+<img src={getOptimizedUrl(product.image_url, { width: 32, quality: 40 })} ...
+```
 
-1. Same pattern — `quality: 60` for previews, `width: 40` only for ≤28px icons.
+Quality-only for the product cards (flexible `object-contain` containers). Width only for the 16px prop chips.
 
-## Summary
-
-| Image type | Width param? | Quality | Why |
-|---|---|---|---|
-| Scene card (~150-200px) | **NO** | 60 | Flexible container, would crop |
-| Hover popup (~120px) | **NO** | 60 | Flexible container, would crop |
-| 24px avatar/icon | Yes, 40 | 40 | Fixed tiny square, safe |
-
-3 files updated. Zero risk of the zoom/crop issue.
+## Impact
+- 1 file, 3 image sources optimized
+- No width param on flexible containers — zero crop/zoom risk
 
