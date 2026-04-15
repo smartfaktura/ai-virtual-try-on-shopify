@@ -1055,7 +1055,7 @@ export default function ProductImages() {
                     <FlaskConical className="w-4 h-4" />
                     Try a demo product
                   </Button>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground hidden sm:block">
                     You can also paste an image from your clipboard{' '}
                     <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono font-medium text-muted-foreground ml-1">{PASTE_SHORTCUT}</kbd>
                   </p>
@@ -1335,7 +1335,7 @@ export default function ProductImages() {
       </div>
 
       {/* Sticky bottom bar for Steps 1-4 */}
-      {step >= 1 && step <= 4 && (
+      {step >= 1 && step <= 4 && !(step === 1 && selectedProducts.length === 0) && (
         <ProductImagesStickyBar
           step={step}
           productCount={selectedProducts.length}
