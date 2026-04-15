@@ -1,37 +1,38 @@
 
 
-# Upload 24 Necklaces Editorial Scenes
+# Upload 24 Rings Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `jewellery-necklaces` category collection (currently has 21 scenes with `category_sort_order: 31`). Organized into 6 sub-categories (4 scenes each). Update `category_sort_order` from 31 to 19 per RTF spec.
+Insert 24 new editorial scenes for the `jewellery-rings` category collection (currently has 21 scenes with `category_sort_order: 34`). Organized into 6 sub-categories (4 scenes each). Update `category_sort_order` from 34 to 19 per RTF spec.
 
 ## Scene Mapping
 
 | Sub-Category | Sub Sort | Scenes (4 each) |
 |---|---|---|
-| Editorial Neck Studio (01-04) | 1 | necklace-editorial-neck-portrait, necklace-seated-editorial-studio, necklace-shadow-face-editorial, necklace-layered-editorial-studio |
-| Collarbone & Body Crops (05-08) | 2 | necklace-collarbone-closeup, necklace-open-shirt-crop, necklace-backline-drop, necklace-hand-neck-bodycrop |
-| Lifestyle Jewelry Moments (09-12) | 3 | necklace-mirror-self-portrait, necklace-book-coffee-lifestyle, necklace-soft-window-lifestyle, necklace-candid-luxury-lifestyle |
-| Styled Necklace Still Life (13-16) | 4 | necklace-ceramic-shadow-stilllife, necklace-paper-stone-stilllife, necklace-silk-fold-stilllife, necklace-book-object-stilllife |
-| Aesthetic Color Necklace Stories (17-20) | 5 | necklace-aesthetic-color-portrait, necklace-aesthetic-stilllife-story, necklace-aesthetic-drape-story, necklace-aesthetic-sculptural-object |
-| Campaign Necklace Statements (21-24) | 6 | necklace-dark-campaign-portrait, necklace-sunlit-campaign-glow, necklace-waterlight-campaign, necklace-iconic-hero-finisher |
+| Editorial Product Studio (01-04) | 1 | rings-floating-editorial-studio, rings-shadow-pedestal-studio, rings-soft-reflection-studio, rings-clean-hero-closeup |
+| On-Hand Editorial (05-08) | 2 | rings-hand-on-shoulder-editorial, rings-face-touch-editorial, rings-stacked-finger-editorial, rings-clean-beauty-crop |
+| Lifestyle Hand UGC (09-12) | 3 | rings-coffee-hand-lifestyle, rings-windowlight-ugc-hand, rings-book-page-lifestyle, rings-relaxed-home-hand |
+| Jewelry Still Life (13-16) | 4 | rings-stone-slab-stilllife, rings-linen-silk-stilllife, rings-window-shadow-stilllife, rings-water-glass-stilllife |
+| Color Ring Stories (17-20) | 5 | rings-aesthetic-stone-color, rings-aesthetic-floating-story, rings-aesthetic-hand-story, rings-aesthetic-mineral-luxury |
+| Campaign Macro Statements (21-24) | 6 | rings-extreme-macro-beauty, rings-crystal-flare-macro, rings-water-macro-campaign, rings-iconic-macro-finisher |
 
 ## Technical Details
-- **sort_order**: starts at 2765 (current global max is 2764)
-- **category_collection**: `jewellery-necklaces`
-- **category_sort_order**: update all jewellery-necklaces scenes from `31` to `19` per RTF
-- **Scenes 1-4**: `personDetails` + `detailFocus` + `visualDirection` + `layout`; no outfit_hint (jewelry category)
-- **Scenes 5-8**: `personDetails` + `detailFocus` + `visualDirection` + `layout`; scene 7 includes `backView`
-- **Scenes 9-12**: `personDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `detailFocus`
-- **Scenes 13-16**: still life, no `personDetails`; `sceneEnvironment` + `detailFocus` + `visualDirection` + `layout`
-- **Scenes 17-20**: `aestheticColor` trigger; scenes 17, 19 include `personDetails`; scenes 18, 20 are still life; `suggested_colors` = `[{"name":"Soft Camel Blush","hex":"#C8A693"}]`
-- **Scenes 21-22**: `personDetails` + `detailFocus` + `visualDirection` + `layout` (campaign portraits)
-- **Scene 23**: still life campaign (no `personDetails`); `sceneEnvironment` + `detailFocus`
-- **Scene 24**: `personDetails` + `sceneEnvironment` + `detailFocus` + `visualDirection` + `layout` (hero finisher)
-- No `outfit_hint` for any scene (jewelry category — no garment styling)
+- **sort_order**: starts at 2789 (current global max is 2788)
+- **category_collection**: `jewellery-rings`
+- **category_sort_order**: update all jewellery-rings scenes from `34` to `19` per RTF
+- **Scenes 1-4**: still life / product-only; `sceneEnvironment, visualDirection, layout, detailFocus`; no `personDetails`, no `outfit_hint`
+- **Scenes 5-8**: on-hand with `personDetails, visualDirection, layout, detailFocus`; no `outfit_hint` (jewelry category)
+- **Scenes 9-12**: lifestyle with `personDetails, sceneEnvironment, visualDirection, layout`; no `detailFocus`, no `outfit_hint`
+- **Scenes 13-16**: still life, no `personDetails`; `sceneEnvironment, visualDirection, layout, detailFocus`
+- **Scenes 17-18, 20**: `aestheticColor` + still life (no `personDetails`); `suggested_colors` = `[{"name":"Mineral Sage","hex":"#A9B2A2"}]`
+- **Scene 19**: `aestheticColor` + `personDetails`; `suggested_colors` = `[{"name":"Mineral Sage","hex":"#A9B2A2"}]`
+- **Scene 21**: campaign with `personDetails, visualDirection, layout, detailFocus`
+- **Scenes 22-24**: campaign still life / product-only; `sceneEnvironment, visualDirection, layout, detailFocus`; no `personDetails`
+- No `outfit_hint` for any scene (jewelry category)
+- All scenes `scene_type: editorial`
 - Full prompt templates extracted from RTF
 
 ## Execution
-1. UPDATE existing 21 jewellery-necklaces scenes: set `category_sort_order = 19`
+1. UPDATE existing 21 jewellery-rings scenes: set `category_sort_order = 19`
 2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and suggested colors
 
