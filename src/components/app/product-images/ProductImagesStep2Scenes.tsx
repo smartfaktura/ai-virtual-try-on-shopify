@@ -86,13 +86,13 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
 };
 
-type GridSize = 'xs' | 'small' | 'medium' | 'large';
+type GridSize = '6col' | '5col' | '4col' | '3col';
 
 const GRID_CLASSES: Record<GridSize, string> = {
-  small: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7',
-  medium: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6',
-  large: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
-  xs: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4',
+  '6col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6',
+  '5col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+  '4col': 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+  '3col': 'grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3',
 };
 
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
@@ -281,10 +281,10 @@ function GridDots({ cols, rows }: { cols: number; rows: number }) {
 
 function GridSizeToggle({ value, onChange }: { value: GridSize; onChange: (v: GridSize) => void }) {
   const sizes: { id: GridSize; dots: [number, number]; title: string }[] = [
-    { id: 'small', dots: [4, 3], title: '7 columns' },
-    { id: 'medium', dots: [3, 3], title: '6 columns' },
-    { id: 'large', dots: [3, 2], title: '5 columns' },
-    { id: 'xs', dots: [2, 2], title: '4 columns' },
+    { id: '6col', dots: [4, 3], title: '6 columns' },
+    { id: '5col', dots: [3, 3], title: '5 columns' },
+    { id: '4col', dots: [3, 2], title: '4 columns' },
+    { id: '3col', dots: [2, 2], title: '3 columns' },
   ];
   return (
     <div className="flex items-center border border-border rounded-md overflow-hidden">
@@ -331,7 +331,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
   });
   const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
-  const [gridSize, setGridSize] = useState<GridSize>('medium');
+  const [gridSize, setGridSize] = useState<GridSize>('4col');
 
   // Build unified views: each category collection stands alone (no more global scenes)
   const unifiedRecommended = useMemo(() => {
