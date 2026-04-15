@@ -22,6 +22,7 @@ import { BulkProgressBanner } from '@/components/app/video/BulkProgressBanner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PRODUCT_CATEGORIES, SCENE_TYPES, CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
 import { estimateCredits, estimateBulkCredits } from '@/config/videoCreditPricing';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useBulkVideoProject } from '@/hooks/useBulkVideoProject';

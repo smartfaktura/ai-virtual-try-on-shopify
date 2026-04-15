@@ -18,6 +18,7 @@ import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useQuery } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useGeneratePerspectives } from '@/hooks/useGeneratePerspectives';
