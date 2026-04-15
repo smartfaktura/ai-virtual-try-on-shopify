@@ -542,8 +542,6 @@ export default function Dashboard() {
       </div>
 
 
-      {/* Your AI Studio Team */}
-      <DashboardTeamCarousel />
 
       {/* Recent Jobs */}
       <div className="space-y-4">
