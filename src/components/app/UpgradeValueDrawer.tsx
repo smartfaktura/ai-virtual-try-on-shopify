@@ -42,7 +42,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" <SheetContent side="right" className="w-full sm:!max-w-[480px] overflow-y-auto p-0 pt-2">>
+      <SheetContent side="right" className="w-full sm:!max-w-[480px] overflow-y-auto p-0 pt-2">
         <div className="p-6 pt-10 space-y-6">
           {/* Header */}
           <SheetHeader className="space-y-1">
