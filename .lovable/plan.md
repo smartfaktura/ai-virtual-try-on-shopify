@@ -1,35 +1,30 @@
 
 
-# Upload 24 Hoodies Editorial Scenes
+# Upload 24 Jackets Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `hoodies` category collection (currently has 15 scenes with `category_sort_order: 23`). Organized into 6 sub-categories. Update `category_sort_order` from 23 to 18 per RTF spec.
+Insert 24 new editorial scenes for the `jackets` category collection (currently has 18 "Essential Shots" with `category_sort_order: 26`). Organized into 4 sub-categories (6 scenes each). Keep `category_sort_order` at 26 as specified in RTF.
 
 ## Scene Mapping
 
-| Sub-Category | Sub Sort | Scenes (4 each) |
+| Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| Cozy Lifestyle Editorial (01-04) | 1 | boucle-lounge-portrait, oversized-standing-interior, lounge-floor-reading, minimal-wall-seated |
-| Street / Off-Duty UGC (05-08) | 2 | crosswalk-overhead-ugc, stairwell-offduty, mirror-travel-ugc, cafe-lounge-ugc |
-| Folded / Hanger / Product Still (09-12) | 3 | hanger-rail-still, folded-grid-still, fabric-detail-still, rail-and-set-still |
-| Aesthetic Color Comfort Sets (13-16) | 4 | aesthetic-set-lounge, aesthetic-travel-set, aesthetic-outdoor-comfort, aesthetic-home-story |
-| Graphic Campaign Looks (17-20) | 5 | bold-graphic-hero, yacht-knit-campaign, sport-knit-sun-campaign, power-back-graphic |
-| Travel / Transit Comfort (21-24) | 6 | airplane-window-comfort, private-jet-lounge, airport-tarmac-walk, hotel-arrival-transit |
+| Editorial Outerwear Portraits (01-06) | 1 | editorial-front-portrait, editorial-seated-portrait, editorial-side-profile, editorial-collar-closeup, editorial-open-layering, editorial-back-view |
+| Street UGC Layering (07-12) | 2 | ugc-sidewalk-walk, ugc-wall-lean, ugc-coffee-run, ugc-stair-corridor, ugc-travel-layering, ugc-hands-in-pockets |
+| Hanger / Chair / Styled Still (13-18) | 3 | still-hanger-rail, still-chair-drape, still-folded-surface, still-shelf-placement, still-closure-detail, still-one-object-style |
+| Aesthetic Color Outerwear Stories (19-24) | 4 | color-wall-portrait, color-lounge-chair, color-surface-still, color-entry-corridor, color-reflection-mood, color-hero-campaign |
 
 ## Technical Details
-
-- **sort_order**: starts at 2645 (current global max is 2644)
-- **category_collection**: `hoodies`
-- **category_sort_order**: update all hoodies scenes to `18` (currently 23)
-- **Scenes 1-8**: `trigger_blocks` include `personDetails`, have `outfit_hint`
-- **Scenes 9-12**: still life, no `personDetails`, no `outfit_hint`
-- **Scenes 13-16**: `aestheticColor` trigger, `suggested_colors` = `[{"name":"Oat Milk Beige","hex":"#D8CCBD"}]`, with `personDetails` + outfit hint
-- **Scenes 17-20**: graphic campaign with `personDetails` + outfit hint; scene 20 includes `backView` trigger
-- **Scenes 21-24**: travel comfort with `personDetails` + outfit hint
-- Scene 11 includes `detailFocus` trigger block
-- Full prompt templates extracted from document
+- **sort_order**: RTF specifies 2601-2624 but global max is 2668; will use 2669-2692 to avoid collisions
+- **category_collection**: `jackets`
+- **category_sort_order**: remains `26` (already correct)
+- **Scenes 1-12**: `trigger_blocks` include `personDetails`, have `outfit_hint`
+- **Scenes 13-18**: still life, no `personDetails`, no `outfit_hint`
+- **Scenes 19-20, 22, 24**: `aestheticColor` + `personDetails` + outfit hint
+- **Scenes 21, 23**: `aestheticColor`, still life / no person, no outfit hint
+- **Aesthetic color**: `suggested_colors` = `[{"name":"Dusty Slate Olive","hex":"#8A8F7A"}]` for scenes 19-24
+- Full prompt templates extracted from RTF
 
 ## Execution
-1. UPDATE existing 15 hoodies scenes: set `category_sort_order = 18`
-2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, outfit hints, and suggested colors
+1. Single batch INSERT of 24 new rows (no UPDATE needed since `category_sort_order` is already 26)
 
