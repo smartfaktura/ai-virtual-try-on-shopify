@@ -4523,7 +4523,7 @@ export default function Generate() {
       <ImageLightbox images={generatedImages} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)}
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
-      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} />
+      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category={conversionCategory} generationCount={generatedImages.length} />
       <AddProductModal
         open={showAddProduct}
         onOpenChange={setShowAddProduct}
