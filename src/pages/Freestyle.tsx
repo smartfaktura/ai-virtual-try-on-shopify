@@ -28,6 +28,10 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
+import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
+import { useConversionState } from '@/hooks/useConversionState';
+import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses, mockModels } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
