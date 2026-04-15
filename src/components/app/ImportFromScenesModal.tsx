@@ -35,6 +35,16 @@ function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+function deduplicateId(base: string, existing: string[], taken: Set<string>): string {
+  let candidate = base;
+  let i = 2;
+  while (existing.includes(candidate) || taken.has(candidate)) {
+    candidate = `${base}-${i}`;
+    i++;
+  }
+  return candidate;
+}
+
 function mapSceneType(category: string): string {
   const map: Record<string, string> = {
     lifestyle: 'lifestyle',
@@ -91,10 +101,13 @@ export default function ImportFromScenesModal({
 
   const goToStep2 = () => {
     const newConfigs = new Map<string, ImportConfig>();
+    const takenIds = new Set<string>();
     for (const id of selected) {
       const scene = customScenes.find(s => s.id === id);
       if (!scene) continue;
-      const sceneId = slugify(scene.name);
+      const baseId = slugify(scene.name);
+      const sceneId = deduplicateId(baseId, existingSceneIds, takenIds);
+      takenIds.add(sceneId);
       newConfigs.set(id, {
         scene_id: sceneId,
         title: scene.name,
@@ -163,8 +176,7 @@ export default function ImportFromScenesModal({
 
   const handleImport = async () => {
     if (duplicateIds.size > 0) {
-      toast.error('Fix duplicate scene IDs before importing');
-      return;
+      toast.warning('Some scene IDs already exist — they will be overwritten');
     }
     setImporting(true);
     let count = 0;
@@ -271,6 +283,81 @@ export default function ImportFromScenesModal({
 
         {step === 2 && (
           <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
+            {/* Bulk sub-category selector */}
+            <div className="border rounded-lg p-3 bg-muted/30 flex items-end gap-3">
+              <div className="flex-1">
+                <Label className="text-xs font-medium">Sub-category for all scenes</Label>
+                <Select
+                  value={bulkSubCategory}
+                  onValueChange={v => {
+                    setBulkSubCategory(v);
+                    if (v === '__none__' || v === '__new__') return;
+                    setConfigs(prev => {
+                      const next = new Map(prev);
+                      for (const [id, config] of next) {
+                        next.set(id, { ...config, sub_category: v });
+                      }
+                      return next;
+                    });
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select to apply to all…" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">None</SelectItem>
+                    {allSubCategories.map(sc => (
+                      <SelectItem key={sc} value={sc}>{sc}</SelectItem>
+                    ))}
+                    <SelectItem value="__new__">+ Create new...</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {bulkSubCategory === '__new__' && (
+                <div className="flex gap-1 flex-1">
+                  <Input
+                    value={bulkNewSubCat}
+                    onChange={e => setBulkNewSubCat(e.target.value)}
+                    placeholder="New sub-category name…"
+                    className="text-xs h-8"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && bulkNewSubCat.trim()) {
+                        const val = bulkNewSubCat.trim();
+                        setBulkSubCategory(val);
+                        setBulkNewSubCat('');
+                        setConfigs(prev => {
+                          const next = new Map(prev);
+                          for (const [id, config] of next) {
+                            next.set(id, { ...config, sub_category: val });
+                          }
+                          return next;
+                        });
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs px-2"
+                    onClick={() => {
+                      if (bulkNewSubCat.trim()) {
+                        const val = bulkNewSubCat.trim();
+                        setBulkSubCategory(val);
+                        setBulkNewSubCat('');
+                        setConfigs(prev => {
+                          const next = new Map(prev);
+                          for (const [id, config] of next) {
+                            next.set(id, { ...config, sub_category: val });
+                          }
+                          return next;
+                        });
+                      }
+                    }}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              )}
+            </div>
+
             {Array.from(configs.entries()).map(([id, config]) => {
               const scene = customScenes.find(s => s.id === id);
               const isDuplicate = duplicateIds.has(config.scene_id);
