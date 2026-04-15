@@ -139,6 +139,7 @@ export default function Freestyle() {
   // First-time guide state — cached in localStorage for instant render, persisted per-user in DB
   const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
 
   const handleReset = useCallback(() => {
     setPrompt('');
