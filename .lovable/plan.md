@@ -1,60 +1,61 @@
 
 
-# Insert 24 Home Decor Scenes from RTF Document
+# Insert 24 Tech Scenes into Product Image Scenes
 
 ## What We're Doing
-Adding 24 new home decor scenes to the `product_image_scenes` table under `category_collection: 'home-decor'`, organized into 4 sub-categories. These are separate from the 16 existing generic home-decor scenes already in the DB.
+Adding 24 new tech scenes to `product_image_scenes` under `category_collection: 'tech-devices'`, organized into 4 sub-categories. These join the 16 existing generic tech scenes already in the DB.
 
 ## Scenes to Insert (24 total)
 
-**Sub-category 1: Editorial Object Studio** (sub_category_sort_order: 1)
-1. `decor-editorial-front-hero` — Front Object Hero
-2. `decor-editorial-shadow-hero` — Shadow Object Hero
-3. `decor-editorial-material-detail` — Material Detail Object Crop
-4. `decor-editorial-platform-presentation` — Platform Presentation
-5. `decor-editorial-windowlight-object` — Window Light Object Portrait
-6. `decor-editorial-empty-space-object` — Empty Space Object Hero
+**Sub-category 1: Editorial Tech Studio** (sub_category_sort_order: 1)
+1. `tech-editorial-front-hero` — Front Tech Hero
+2. `tech-editorial-shadow-hero` — Shadow Tech Hero
+3. `tech-editorial-material-detail` — Material and Hardware Detail
+4. `tech-editorial-floating-object` — Floating Tech Studio
+5. `tech-editorial-reflection-surface` — Reflection Surface Tech Still
+6. `tech-editorial-grouping-story` — Grouped Tech Composition
 
-**Sub-category 2: Console / Table / Shelf Lifestyle** (sub_category_sort_order: 2)
-7. `decor-lifestyle-console-placement` — Console Placement Story
-8. `decor-lifestyle-coffee-table` — Coffee Table Decor Story
-9. `decor-lifestyle-shelf-niche` — Shelf or Niche Styling
-10. `decor-lifestyle-bedside-placement` — Bedside or Side Table Story
-11. `decor-lifestyle-dining-sideboard` — Dining Sideboard Styling
-12. `decor-lifestyle-evening-ambience` — Evening Ambience Decor Story
+**Sub-category 2: Desk / Hand / Daily Use UGC** (sub_category_sort_order: 2)
+7. `tech-lifestyle-inhand-hero` — In-Hand Tech Hero
+8. `tech-lifestyle-desk-use` — Desk Use Lifestyle
+9. `tech-lifestyle-cafe-or-travel` — Café or Travel Use Moment
+10. `tech-lifestyle-ear-wear-or-body-use` — Wearable or Body-Use Moment
+11. `tech-lifestyle-charging-or-connection` — Charging or Connection Story
+12. `tech-lifestyle-bag-pocket-story` — Bag or Pocket Tech Story
 
-**Sub-category 3: Grouped Styling Still Life** (sub_category_sort_order: 3)
-13. `decor-still-paired-objects` — Paired Objects Composition
-14. `decor-still-tray-composition` — Tray Styling Composition
-15. `decor-still-books-and-object` — Books and Object Still
-16. `decor-still-symmetry-group` — Symmetry Group Composition
-17. `decor-still-textile-and-object` — Textile and Object Story
-18. `decor-still-one-object-support` — One Object Support Still
+**Sub-category 3: Surface / Setup / Product Still Life** (sub_category_sort_order: 3)
+13. `tech-still-desk-surface` — Desk Surface Tech Still
+14. `tech-still-open-device-or-case` — Open Device or Case Still
+15. `tech-still-accessory-paired` — Paired Accessory Composition
+16. `tech-still-shelf-placement` — Shelf or Studio Placement
+17. `tech-still-material-closeup` — Hardware Material Closeup
+18. `tech-still-symmetry-composition` — Symmetry Tech Composition
 
-**Sub-category 4: Aesthetic Color Decor Stories** (sub_category_sort_order: 4)
-- Lead color: Dusty Olive Plaster (#9A9882)
-19. `decor-color-wall-hero` — Color Wall Decor Hero
-20. `decor-color-console-story` — Color Console Story
-21. `decor-color-surface-still` — Color Surface Decor Still
-22. `decor-color-shelf-story` — Color Shelf Story
-23. `decor-color-reflection-mood` — Color Reflection Mood
-24. `decor-color-hero-campaign` — Color Hero Decor Campaign
+**Sub-category 4: Aesthetic Color Tech Stories** (sub_category_sort_order: 4)
+- Lead color: Graphite Moss (#6F7568)
+19. `tech-color-wall-hero` — Color Wall Tech Hero
+20. `tech-color-desk-story` — Color Desk Story
+21. `tech-color-surface-still` — Color Surface Tech Still
+22. `tech-color-shelf-story` — Color Shelf Tech Story
+23. `tech-color-reflection-mood` — Color Reflection Mood
+24. `tech-color-hero-campaign` — Color Hero Tech Campaign
 
 ## Technical Steps
 
 ### Database Insert (using insert tool)
-- `category_collection`: `'home-decor'`
-- `category_sort_order`: `27` (per the document)
+- `category_collection`: `'tech-devices'`
+- `category_sort_order`: `28` (per the document)
 - `is_active`: `true`
 - `sort_order`: sequential starting from 200 to avoid conflicts with existing 16 scenes
 - Scene types: `editorial`, `lifestyle`, `stilllife`, `campaign`
-- Scenes 19-24 get `suggested_colors`: `[{"hex": "#9A9882", "label": "Dusty Olive Plaster"}]`
+- Scenes 19-24 get `suggested_colors`: `[{"hex": "#6F7568", "label": "Graphite Moss"}]`
 - Full prompt templates extracted from the RTF
+- Some lifestyle scenes include `outfit_hint` for styling direction
 
-No code changes needed — `stilllife` and `campaign` scene types were already added in the previous furniture update.
+No code changes needed — `stilllife` and `campaign` scene types already exist in admin dropdowns.
 
 ## Impact
-- 24 new home decor scenes appear under "Home Decor" in the admin panel alongside the existing 16 generic scenes
-- All scenes are specifically designed for smaller tabletop/console decor items
-- The `home-decor` and `furniture` categories remain fully separate
+- 24 new tech scenes appear under "Tech Devices" in the admin panel alongside existing 16 generic scenes
+- All scenes designed for consumer electronics (phones, laptops, earbuds, watches, etc.)
+- `tech-devices` category remains separate from all others
 
