@@ -981,7 +981,7 @@ export default function ProductImages() {
   return (
     <div className="space-y-6 pb-24">
       <SEOHead title="Create Product Visuals — VOVV" description="Generate product visuals" />
-      <PageHeader title="Create Product Visuals" subtitle="Choose products to generate clean, brand-ready visuals"><span /></PageHeader>
+      <PageHeader title="Create Product Visuals" subtitle="Create clean, brand-ready visuals for your products"><span /></PageHeader>
 
       {step <= 4 && (
         <CatalogStepper
@@ -1036,8 +1036,8 @@ export default function ProductImages() {
                 <div className="flex flex-col items-center justify-center py-20 space-y-5 border-2 border-dashed border-border rounded-xl bg-muted/30">
                   <Package className="w-12 h-12 text-muted-foreground/40" />
                   <div className="text-center space-y-1.5">
-                    <p className="text-base font-semibold text-foreground">Start with your first product</p>
-                    <p className="text-sm text-muted-foreground max-w-xs">Upload a product photo to create clean, brand-ready visuals.</p>
+                    <p className="text-base font-semibold text-foreground">Upload your first product photo</p>
+                    <p className="text-sm text-muted-foreground max-w-xs">Drag and drop an image here, or use the button below.</p>
                   </div>
                   <Button onClick={() => {
                     quickUploadInputRef.current?.click();
