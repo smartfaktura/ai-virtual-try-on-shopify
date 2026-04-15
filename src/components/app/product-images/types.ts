@@ -34,7 +34,7 @@ export interface OutfitPreset {
 export type ProductCategory =
   | 'fragrance' | 'beauty-skincare' | 'makeup-lipsticks'
   | 'bags-accessories' | 'hats-small' | 'shoes'
-  | 'garments' | 'home-decor' | 'tech-devices'
+  | 'garments' | 'home-decor' | 'furniture' | 'tech-devices'
   | 'food' | 'beverages' | 'supplements-wellness' | 'other'
   | 'lingerie' | 'swimwear' | 'activewear' | 'kidswear'
   | 'dresses' | 'hoodies' | 'streetwear' | 'jeans' | 'jackets'

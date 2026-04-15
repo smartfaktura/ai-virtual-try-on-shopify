@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 const CATEGORY_LABELS: Record<string, string> = {
   garments: 'Clothing & Apparel', 'beauty-skincare': 'Beauty & Skincare',
   'makeup-lipsticks': 'Makeup & Lipsticks', fragrance: 'Fragrance',
-  food: 'Food & Snacks', beverages: 'Beverages', 'home-decor': 'Home & Interior',
+  food: 'Food & Snacks', beverages: 'Beverages', furniture: 'Furniture', 'home-decor': 'Home Decor',
   'supplements-wellness': 'Supplements & Wellness', shoes: 'Shoes',
   'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
   other: 'Other / Custom', backpacks: 'Backpacks',
@@ -76,7 +76,8 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'hats-small': ['hat', 'cap', 'beanie', 'fedora', 'beret', 'headband', 'visor', 'bucket hat'],
   'shoes': ['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford', 'derby', 'flat'],
   'garments': ['shirt', 'pants', 'sweater', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'clothing', 'apparel', 'garment', 'jersey', 'tank', 'polo', 'uniform', 'tracksuit', 'jogger', 'vest', 'cardigan', 'suit', 'romper', 'jumpsuit'],
-  'home-decor': ['candle', 'vase', 'pillow', 'blanket', 'lamp', 'decor', 'home', 'interior', 'furniture', 'rug', 'curtain', 'mirror', 'frame', 'planter', 'ceramic'],
+  'furniture': ['sofa', 'couch', 'sectional', 'loveseat', 'armchair', 'recliner', 'dining chair', 'office chair', 'accent chair', 'lounge chair', 'rocking chair', 'folding chair', 'bar stool', 'counter stool', 'stool', 'bench', 'ottoman', 'pouf', 'bean bag', 'dining table', 'coffee table', 'side table', 'end table', 'console table', 'accent table', 'nightstand', 'bedside table', 'desk', 'standing desk', 'writing desk', 'vanity', 'bed frame', 'headboard', 'bunk bed', 'daybed', 'futon', 'mattress', 'crib', 'bookshelf', 'bookcase', 'floating shelf', 'wall shelf', 'shelving unit', 'cabinet', 'filing cabinet', 'display cabinet', 'hutch', 'sideboard', 'buffet', 'credenza', 'dresser', 'chest of drawers', 'wardrobe', 'armoire', 'closet organizer', 'tv stand', 'media console', 'entertainment center', 'shoe rack', 'coat rack', 'wine rack', 'pantry', 'kitchen island', 'bar cart', 'furniture'],
+  'home-decor': ['candle', 'vase', 'pillow', 'blanket', 'lamp', 'decor', 'home', 'interior', 'rug', 'curtain', 'mirror', 'frame', 'planter', 'ceramic', 'tray', 'coaster', 'diffuser', 'figurine', 'ornament', 'sculpture', 'cushion', 'throw', 'tapestry', 'wall art', 'bookend'],
   'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'monitor', 'console', 'controller', 'drone', 'wearable'],
   'food': ['food', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'candy', 'chips', 'cookie', 'protein bar', 'organic', 'artisan', 'olive oil'],
   'beverages': ['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'kombucha', 'smoothie', 'energy drink', 'drink', 'lemonade', 'milk'],
@@ -98,7 +99,7 @@ const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
   { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
   { label: 'Food & Drink', ids: ['food', 'beverages'] },
-  { label: 'Home & Lifestyle', ids: ['home-decor', 'tech-devices', 'supplements-wellness'] },
+  { label: 'Home & Lifestyle', ids: ['home-decor', 'furniture', 'tech-devices', 'supplements-wellness'] },
 ];
 
 /** Refine generic parent categories to specific child when title strongly matches */

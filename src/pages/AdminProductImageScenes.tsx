@@ -36,6 +36,7 @@ const CATEGORIES = [
   { value: 'shoes', label: 'Shoes' },
   { value: 'garments', label: 'Clothing & Apparel' },
   { value: 'home-decor', label: 'Home Decor' },
+  { value: 'furniture', label: 'Furniture' },
   { value: 'tech-devices', label: 'Tech / Devices' },
   { value: 'food', label: 'Food & Snacks' },
   { value: 'beverages', label: 'Beverages' },
