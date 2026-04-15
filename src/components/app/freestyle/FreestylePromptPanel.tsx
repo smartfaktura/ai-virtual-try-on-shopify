@@ -203,6 +203,7 @@ export function FreestylePromptPanel({
   const [quizOpen, setQuizOpen] = useState(false);
   const dragCounterRef = useRef(0);
   const touchStartY = useRef<number | null>(null);
+  const promptAreaRef = useRef<HTMLDivElement>(null);
 
   // Clipboard paste support for images
   useEffect(() => {
@@ -341,12 +342,13 @@ export function FreestylePromptPanel({
       {!(isMobile && isCollapsed) && (
         <>
           {/* Row 1 — Prompt Input */}
-          <div className={`relative px-3 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-2 sm:pb-3`}>
+          <div ref={promptAreaRef} className={`relative px-3 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-2 sm:pb-3`}>
             <TypewriterPlaceholder
               prompt={prompt}
               sourceImagePreview={sourceImagePreview}
               imageRole={imageRole}
               hasAssets={hasAssets}
+              containerRef={promptAreaRef}
             />
             <textarea
               value={prompt}
