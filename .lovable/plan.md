@@ -1,37 +1,38 @@
 
 
-# Add Skeleton Loading State for Product Grid
+# Optimize Step 2 & 3 Scene Images — Quality Only
 
-## Problem
-When products are loading (`isLoading = true`), the current UI shows a single centered spinner — this feels abrupt and doesn't hint at the grid layout that's about to appear.
+## The Rule (from `mem://style/image-optimization-no-crop`)
 
-## Fix
+**Never use `width` parameter** on `getOptimizedUrl` for scene preview cards, hover popups, or any image displayed with `object-cover` / `object-contain` in a flexible container. The `width` param triggers Supabase server-side cropping which causes the zoomed-in issue we fixed on workflow cards.
 
-**File: `src/components/app/product-images/ProductImagesStep1Products.tsx`**
+The **only** safe use of `width` is for tiny fixed-size avatars (24-28px product chips in category tabs) where the container is a known small square.
 
-Replace the simple `Loader2` spinner (lines 92-95) with a skeleton grid that mirrors the real product card layout:
+## Changes
 
-```tsx
-{isLoading ? (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-    {Array.from({ length: 8 }).map((_, i) => (
-      <div key={i} className="rounded-xl border-2 border-border overflow-hidden">
-        <Skeleton className="aspect-square" />
-        <div className="h-[52px] flex flex-col justify-center px-2.5 gap-1.5">
-          <Skeleton className="h-3 w-3/4" />
-          <Skeleton className="h-2.5 w-1/2" />
-        </div>
-      </div>
-    ))}
-  </div>
-)
-```
+### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-This shows 8 placeholder cards with the same aspect-square image area + title/type text lines, using the existing `Skeleton` component with its `animate-pulse` effect. Matches the real grid dimensions exactly so there's zero layout shift when products load in.
+1. **Scene card previews** — Replace raw `<img>` with `ShimmerImage` + `getOptimizedUrl(url, { quality: 60 })`. No width. Add `loading="lazy"`.
+2. **Category tab product thumbnails (24px avatars)** — These are tiny fixed squares, safe to use `width: 40, quality: 40`.
+3. Add imports for `ShimmerImage` and `getOptimizedUrl`.
 
-Add `Skeleton` to the imports from `@/components/ui/skeleton`.
+### File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-## Impact
-- 1 file changed
-- Smooth, polished loading state that previews the grid layout
+1. **24px scene icons** — `width: 40, quality: 40` (fixed tiny thumbnail, safe).
+2. **120px hover popups** — `quality: 60` only. No width.
+3. **Scene cards** — `quality: 60` only. No width.
+
+### File: `src/components/app/product-images/ProductImagesStep3Details.tsx`
+
+1. Same pattern — `quality: 60` for previews, `width: 40` only for ≤28px icons.
+
+## Summary
+
+| Image type | Width param? | Quality | Why |
+|---|---|---|---|
+| Scene card (~150-200px) | **NO** | 60 | Flexible container, would crop |
+| Hover popup (~120px) | **NO** | 60 | Flexible container, would crop |
+| 24px avatar/icon | Yes, 40 | 40 | Fixed tiny square, safe |
+
+3 files updated. Zero risk of the zoom/crop issue.
 
