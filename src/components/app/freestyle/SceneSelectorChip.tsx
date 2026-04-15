@@ -194,7 +194,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                         <Check className="w-2.5 h-2.5 text-primary-foreground" />
                       </div>
                     )}
-                    <div className="px-2 py-2 bg-background">
+                    <div className="px-2 py-2 bg-background min-h-[2.75rem] flex items-start">
                       <p className={cn('font-medium text-foreground leading-tight line-clamp-2', expanded ? 'text-[11px]' : 'text-[11px]')}>{pose.name}</p>
                     </div>
                   </button>
@@ -282,7 +282,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
         <PopoverTrigger asChild>
           {triggerButton}
         </PopoverTrigger>
-        <PopoverContent className="w-[520px] p-4 rounded-xl border-border/50 shadow-xl shadow-black/8" align="start">
+        <PopoverContent className="w-[min(520px,calc(100vw-2rem))] p-4 rounded-xl border-border/50 shadow-xl shadow-black/8" align="start">
           {pickerContent}
         </PopoverContent>
       </Popover>
