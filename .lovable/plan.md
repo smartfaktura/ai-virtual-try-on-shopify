@@ -1,35 +1,30 @@
 
 
-# Upload 24 Bracelet Editorial Scenes
+# Upload 24 Dresses Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `bracelets` category collection (currently empty — no existing scenes). Organized into 4 sub-categories (families).
+Insert 24 new editorial scenes for the `dresses` category collection (currently has 18 "Essential Shots"). Organized into 4 sub-categories. Update `category_sort_order` from 22 to 21 per RTF spec.
 
 ## Scene Mapping
 
 | Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| On-Wrist Editorial (01-06) | 1 | wrist-clean-portrait, wrist-collarbone, fingers-face-editorial, sleeve-wrist-detail, two-wrist-composition, bent-arm-beauty |
-| Daily Wear UGC (07-12) | 2 | ugc-coffee-cup, ugc-desk-hand, ugc-phone-hand, ugc-book-journal, ugc-travel-wrist, ugc-mirror-wrist |
-| Styled Surface Still Life (13-18) | 3 | still-stone-surface, still-silk-linen, still-box-tray, still-book-paper, still-glass-reflection, still-sculptural-object |
-| Aesthetic Color Bracelet Stories (19-24) | 4 | color-wrist-editorial, color-desk-story, color-surface-still, color-reflection-story, color-fabric-mood, color-hero-campaign |
+| Editorial Dress Portraits (01-06) | 1 | front-portrait, seated-legline, side-profile-study, collarbone-neckline-crop, standing-leg-accent, back-view |
+| Lifestyle / Social Dress Moments (07-12) | 2 | sidewalk-walk, wall-lean, cafe-terrace, stair-corridor, resort-outdoor, hands-adjusting |
+| Styled Dress Still Life (13-18) | 3 | hanger-rail, chair-drape, folded-surface, wardrobe-placement, detail-neckline-hem, one-object-style |
+| Aesthetic Color Dress Stories (19-24) | 4 | color-wall-portrait, color-lounge-chair-story, color-surface-still, color-entry-corridor, color-reflection-mood, color-hero-campaign |
 
 ## Technical Details
-- **sort_order**: starts at 2573 (current max is 2572)
-- **category_collection**: `bracelets`
-- **category_sort_order**: needs to be determined — will check existing collections and assign next available
-- **trigger_blocks**: Scenes 1-12 use `personDetails`, scenes 13-18 are still life (no person), scenes 19-24 use `aestheticColor`
-- **Aesthetic color scenes** (19-24): Each has a unique `suggested_colors`:
-  - 19: Soft Rose Clay `#D7B6AE`
-  - 20: Warm Stone Taupe `#B7A79A`
-  - 21: Pistachio Smoke `#B9C3AE`
-  - 22: Smoky Lilac Grey `#B8AFBF`
-  - 23: Champagne Sand `#D9C8B2`
-  - 24: Deep Olive Slate `#7D8774`
-- **No outfit_hint** on any scene (jewelry category)
-- Full prompt templates extracted from RTF
+
+- **sort_order**: starts at 2597 (current global max is 2596)
+- **category_collection**: `dresses`
+- **category_sort_order**: update all dresses scenes to `21` (currently 22)
+- **Aesthetic color scenes** (19-24): `suggested_colors` = `[{"name":"Rosewood Sand","hex":"#B88F84"}]`
+- **outfit_hint**: scenes 1-12, 19-20, 22, 24 have outfit directions; scenes 13-18, 21, 23 are still life or no outfit hint
+- **trigger_blocks**: mapped per scene from RTF
+- Full prompt templates extracted from document
 
 ## Execution
-1. Single batch INSERT of 24 rows with full prompt templates, trigger blocks, and suggested colors
-2. No UPDATE needed (no existing bracelet scenes)
+1. UPDATE existing 18 dresses scenes: set `category_sort_order = 21`
+2. Single batch INSERT of 24 new rows
 
