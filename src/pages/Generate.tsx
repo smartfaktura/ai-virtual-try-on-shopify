@@ -4528,6 +4528,17 @@ export default function Generate() {
         onOpenChange={setShowAddProduct}
         onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
       />
+      <UpgradeValueDrawer
+        open={conversionState.layer2Open}
+        onClose={conversionState.dismissLayer2}
+        category={conversionCategory}
+        generationContext={{
+          productThumbnail: selectedProduct?.image_url || scratchUpload?.productInfo.image,
+          productTitle: selectedProduct?.title || scratchUpload?.productInfo.title,
+          sceneName: Array.from(selectedPoseMap.values())[0]?.name,
+          modelName: Array.from(selectedModelMap.values())[0]?.name,
+        }}
+      />
       <FeedbackBanner />
     </PageHeader>
   );
