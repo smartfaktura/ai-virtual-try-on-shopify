@@ -1,37 +1,23 @@
 
 
-# Add "More Tools" Section to New User Dashboard
+# Match "More tools" cards to dashboard card style
 
 ## Summary
-Insert a compact utility section with 3 cards (Picture Perspectives, Image Upscaling, Catalog Studio) between the "Your Products, In Motion" video showcase and the Feedback Banner on the new user dashboard.
+Restyle the 3 "More tools" cards to match the "Start here" and "Create Video" card design — same rounded-2xl, p-6, icon sizing, typography, hover effects, and button style.
 
-## File changed
-**`src/pages/Dashboard.tsx`**
+## Changes
 
-### Location
-Insert between line 454 (end of video showcase) and line 456 (FeedbackBanner).
+**File: `src/pages/Dashboard.tsx` (lines 470-488)**
 
-### Section structure
-- Section header: "More tools" (`text-xl font-bold`) + subtitle "Specialized tools for angles, quality, and catalog creation." (`text-base text-muted-foreground`)
-- 3 cards in a `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4` layout
+For each tool card, update from the current compact utility style to match the dashboard card pattern:
 
-### Card design
-Each card uses a `border border-border/60 rounded-xl p-5` container — compact utility style, visually lighter than the hero cards above:
-
-| Card | Icon | Title | Muted label | Description | Route |
-|------|------|-------|-------------|-------------|-------|
-| 1 | `RotateCw` | Picture Perspectives | More angles | Turn one product image into a complete set of alternate views. | `/app/generate/product-images` |
-| 2 | `Sparkles` | Image Upscaling | Higher resolution | Upscale images to 2K or 4K while improving clarity and detail. | `/app/workflows` |
-| 3 | `LayoutGrid` | Catalog Studio | Bulk creation | Create catalog visuals in bulk with consistent styling. | `/app/workflows` |
-
-### Card layout (per card)
-- Small icon in a `w-8 h-8 rounded-lg bg-muted/50` container
-- Title: `text-sm font-semibold`
-- Muted label: `text-[11px] text-muted-foreground/60` inline after title
-- Description: `text-sm text-muted-foreground` — 1-2 lines max
-- CTA: `<Button variant="outline" size="sm" className="rounded-full">Open</Button>` at bottom
-- Hover: `hover:border-border hover:shadow-sm transition-all`
-
-### Imports
-Add `RotateCw`, `LayoutGrid` from lucide-react (Sparkles likely already imported).
+| Property | Current | Updated |
+|----------|---------|---------|
+| Container | `border-border/60 rounded-xl p-5` | `rounded-2xl border border-border bg-card p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300` |
+| Icon box | `w-8 h-8 bg-muted/50`, icon `w-4 h-4 text-muted-foreground` | `w-10 h-10 rounded-lg bg-primary/10 mb-4`, icon `w-5 h-5 text-primary` |
+| Title | `text-sm font-semibold` | `text-lg font-bold` |
+| Muted label | inline `text-[11px]` next to title | keep as `text-xs text-muted-foreground/60 mt-3` below description (like "Best place to start" pattern) |
+| Description | `text-sm mt-1` | `text-sm text-muted-foreground mt-1.5 leading-relaxed` |
+| Button | `variant="outline" size="sm"` | `variant="outline" className="w-full rounded-full font-semibold gap-2 mt-3 min-h-[44px]"` with ArrowRight icon |
+| Layout | `flex flex-col gap-3` | `flex flex-col` with flex-1 wrapper around text content |
 
