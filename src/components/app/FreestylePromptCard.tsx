@@ -1,11 +1,17 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { ArrowRight, ArrowUp } from 'lucide-react';
+import { ArrowRight, ArrowUp, Camera, User, Package, Zap } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEXT = 'Shoot my crop top on a court, studio, and café';
-const RESULT_PILLS = ['Studio', 'Court', 'Café'] as const;
+
+const WORKFLOW_STEPS = [
+  { label: 'Scene', icon: Camera },
+  { label: 'Model', icon: User },
+  { label: 'Product', icon: Package },
+  { label: 'Generate', icon: Zap },
+] as const;
 
 const TYPING_SPEED = 55;
 const SEND_DELAY = 400;
@@ -26,7 +32,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
   const [isVisible, setIsVisible] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [charIndex, setCharIndex] = useState(0);
-  const [pillsVisible, setPillsVisible] = useState([false, false, false]);
+  const [pillsVisible, setPillsVisible] = useState([false, false, false, false]);
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const clearAllTimeouts = useCallback(() => {
@@ -59,7 +65,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
     const startCycle = () => {
       setPhase('idle');
       setCharIndex(0);
-      setPillsVisible([false, false, false]);
+      setPillsVisible([false, false, false, false]);
 
       // Brief idle pause then start typing
       addTimeout(() => {
@@ -77,7 +83,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
               // Pills phase
               addTimeout(() => {
                 setPhase('pills');
-                RESULT_PILLS.forEach((_, i) => {
+                WORKFLOW_STEPS.forEach((_, i) => {
                   addTimeout(() => {
                     setPillsVisible(prev => {
                       const next = [...prev];
@@ -95,7 +101,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
                     // Restart
                     addTimeout(startCycle, RESTART_DELAY);
                   }, HOLD_DURATION);
-                }, RESULT_PILLS.length * PILL_STAGGER + 200);
+                }, WORKFLOW_STEPS.length * PILL_STAGGER + 200);
               }, SEND_DELAY);
             }, SEND_DELAY);
           }
@@ -173,21 +179,32 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           </div>
 
           {/* Result pills */}
-          <div className="flex items-center justify-center gap-2">
-            {RESULT_PILLS.map((label, i) => (
-              <span
-                key={label}
-                className={cn(
-                  'rounded-full border border-border/30 bg-muted/30 text-foreground/70 font-medium transition-all duration-400',
-                  mobileCompact ? 'px-2.5 py-0.5 text-[10px]' : 'px-3 py-0.5 text-xs',
-                  pillsVisible[i]
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-1.5',
-                )}
-              >
-                {label}
-              </span>
-            ))}
+          <div className={cn(
+            'flex flex-wrap items-center justify-center max-w-full overflow-hidden',
+            mobileCompact ? 'gap-1.5' : 'gap-2',
+          )}>
+            {WORKFLOW_STEPS.map((step, i) => {
+              const isGenerate = step.label === 'Generate';
+              const StepIcon = step.icon;
+              return (
+                <span
+                  key={step.label}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border font-medium transition-all duration-300',
+                    mobileCompact ? 'px-1.5 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs',
+                    isGenerate
+                      ? 'bg-primary/10 border-primary/20 text-primary'
+                      : 'bg-muted/30 border-border/30 text-foreground/70',
+                    pillsVisible[i]
+                      ? cn('opacity-100 translate-y-0', isGenerate && 'animate-in zoom-in-95 duration-300')
+                      : 'opacity-0 translate-y-1.5',
+                  )}
+                >
+                  <StepIcon className={cn(mobileCompact ? 'w-2.5 h-2.5' : 'w-3 h-3')} />
+                  {step.label}
+                </span>
+              );
+            })}
           </div>
         </div>
       </div>
