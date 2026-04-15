@@ -1,39 +1,34 @@
 
 
-# Upload 24 Supplements & Wellness Editorial Scenes
+# Upload 24 Swimwear Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `supplements-wellness` category collection (currently has 16 scenes with `category_sort_order: 11`). Organized into 4 sub-categories (6 scenes each). Update `category_sort_order` from 11 to 22 per RTF spec.
+Insert 24 new editorial scenes for the `swimwear` category collection (currently has 18 scenes with `category_sort_order: 28`). Organized into 4 sub-categories (6 scenes each). Keep `category_sort_order` at 28 (no change specified in RTF).
 
 ## Scene Mapping
 
 | Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| Editorial Wellness Routine (01-06) | 1 | wellness-editorial-morning-counter, wellness-editorial-hand-water-ritual, wellness-editorial-dose-prep, wellness-editorial-shelf-portrait, wellness-editorial-sinkside-composition, wellness-editorial-tray-ritual |
-| Kitchen / Gym / Daily UGC (07-12) | 2 | wellness-ugc-kitchen-counter, wellness-ugc-post-workout, wellness-ugc-workday-break, wellness-ugc-mix-prep, wellness-ugc-travel-go, wellness-ugc-handheld-moment |
-| Ingredient / Capsule Still Life (13-18) | 3 | wellness-still-capsule-spill, wellness-still-powder-scoop, wellness-still-ingredient-pairing, wellness-still-dish-tray-dose, wellness-still-water-glass, wellness-still-macro-detail |
-| Aesthetic Color Wellness Stories (19-24) | 4 | wellness-color-counter-ritual, wellness-color-kitchen-story, wellness-color-surface-still, wellness-color-reflection-mood, wellness-color-tray-hero, wellness-color-hero-campaign |
+| Editorial Resort Poses (01-06) | 1 | swimwear-editorial-lounger-resort, swimwear-editorial-poolside-standing, swimwear-editorial-balcony-seated, swimwear-editorial-cabana-curtain, swimwear-editorial-yacht-deck, swimwear-editorial-resort-stairs |
+| Pool / Beach Lifestyle UGC (07-12) | 2 | swimwear-ugc-towel-after-swim, swimwear-ugc-pool-edge-walk, swimwear-ugc-beach-towel-sit, swimwear-ugc-bag-essentials, swimwear-ugc-candid-friend-shot, swimwear-ugc-shoreline-pause |
+| Folded / Wet Surface Still (13-18) | 3 | swimwear-still-folded-towel, swimwear-still-wet-tile, swimwear-still-chair-ladder-drape, swimwear-still-sandy-surface, swimwear-still-water-reflection, swimwear-still-resort-essentials |
+| Aesthetic Color Swim Stories (19-24) | 4 | swimwear-color-resort-wall, swimwear-color-poolside-story, swimwear-color-towel-fabric, swimwear-color-sunset-mood, swimwear-color-water-reflection, swimwear-color-editorial-hero |
 
 ## Technical Details
-- **sort_order**: uses RTF-specified values 2201-2224 (within current global max 2908, but these are category-specific sort values consistent with pattern)
-- **category_collection**: `supplements-wellness`
-- **category_sort_order**: update all existing from `11` to `22` per RTF
-- **Scenes 1, 4-6**: product-only editorial; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`, no `outfit_hint`
-- **Scene 2**: editorial + `personDetails`; outfit_hint: minimal wellness styling in soft neutrals
-- **Scene 3**: editorial + `personDetails` + `detailFocus`; outfit_hint: minimal wellness-clean styling
-- **Scenes 7, 9, 11**: lifestyle product-only; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`
-- **Scene 8**: lifestyle + `personDetails`; outfit_hint: clean active-lifestyle styling
-- **Scene 10**: lifestyle + `personDetails`; outfit_hint: relaxed home-wellness styling
-- **Scene 12**: lifestyle + `personDetails`; outfit_hint: understated daily styling
-- **Scenes 13-14**: stilllife + `detailFocus`; no `personDetails`
-- **Scenes 15-17**: stilllife; no `detailFocus` (except 18); no `personDetails`
-- **Scene 18**: stilllife + `detailFocus`
-- **Scenes 19-23**: `aestheticColor` + `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`; `suggested_colors` = `[{"name":"Muted Sage Mineral","hex":"#A8B29F"}]`
-- **Scene 24**: `aestheticColor` campaign + `detailFocus`; `suggested_colors`; `scene_type: campaign`
-- No outfit_hint for any aesthetic color scene (product-only wellness)
+- **sort_order**: starts at 2909 (current global max is 2908)
+- **category_collection**: `swimwear`
+- **category_sort_order**: 28 (unchanged — no new value specified in RTF)
+- **Scenes 1-6**: editorial; `personDetails` + `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; outfit_hint for all (swimwear resort styling)
+- **Scenes 7-12**: lifestyle; `personDetails` + `productDetails` + `sceneEnvironment` + `stylingDetails` + `visualDirection` + `layout`; outfit_hint for all
+- **Scenes 13-18**: stilllife; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`, no `outfit_hint`
+- **Scenes 19-20**: `aestheticColor` + `personDetails`; `suggested_colors` includes all 5 colors: Lagoon Soft Blue #9FCFD4, Seafoam Mist #BFD8D2, Apricot Sand #E9B89A, Aqua Glass #9FD6D2, Shell Beige #DCCBB8; outfit_hint
+- **Scene 21**: `aestheticColor` still life (no `personDetails`, no outfit_hint); same `suggested_colors`
+- **Scene 22**: `aestheticColor` + `personDetails`; outfit_hint; same `suggested_colors`
+- **Scene 23**: `aestheticColor` product-only (no `personDetails`, no outfit_hint); same `suggested_colors`
+- **Scene 24**: `aestheticColor` + `personDetails`; outfit_hint; same `suggested_colors`; `scene_type: campaign`
+- Scene types: editorial (1-6, 19), lifestyle (7-12, 20, 22), stilllife (13-18, 21, 23), campaign (24)
 - Full prompt templates extracted from RTF
 
 ## Execution
-1. UPDATE existing 16 supplements-wellness scenes: set `category_sort_order = 22`
-2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and suggested colors
+1. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, outfit hints, and suggested colors (no category_sort_order update needed)
 
