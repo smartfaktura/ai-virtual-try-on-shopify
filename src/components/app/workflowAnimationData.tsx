@@ -52,9 +52,51 @@ const flatProduct1 = s('products/powder-setting.jpg');
 const flatProduct2 = s('products/lipstick-matte.jpg');
 const flatResult = s('workflows/workflow-flat-lay.jpg');
 
+/* ── Product Visuals carousel images ── */
+const pvImages = [
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776102174244-t76i6k.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776246636844-kncti9.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776018015756-3xfquh.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776247119049-lf7m5l.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776247506258-6b04vh.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776242338433-udj68f.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776231533081-xseb48.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776242105052-bbfbbi.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776246331485-jyrtgf.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776245246217-jljjbt.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776077326937-u6phcv.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776241838463-g2kf3q.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776234986206-eoojpu.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776245234615-2k3z4r.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776241834565-y4pnxc.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776240027736-70t2xl.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239808408-vtml62.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776247128903-9h0roc.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776242902466-rddosj.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776247110274-3q6cvs.jpg',
+];
+
 /* ── Scene definitions ── */
 
 export const workflowScenes: Record<string, WorkflowScene> = {
+
+  'Product Visuals': {
+    mode: 'carousel',
+    background: pvImages[0],
+    objectPosition: 'center',
+    interval: 500,
+    backgrounds: pvImages,
+    elements: [
+      {
+        type: 'badge', label: '1000+ Scenes', icon: <Sparkles className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'Full Control', icon: <Layers className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+      },
+    ],
+  },
 
   'Virtual Try-On Set': {
     mode: 'carousel',
