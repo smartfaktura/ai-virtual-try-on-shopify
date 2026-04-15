@@ -376,8 +376,8 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                       if (next.has(i)) { next.delete(i); }
                       else {
                         if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
-                          toast.error(isFreeUser ? undefined : `Free plan allows 1 scene per generation. Upgrade to unlock more.`);
-                          if (isFreeUser && onFreeLimit) { onFreeLimit('scene_limit'); return prev; }
+                          if (onFreeLimit) onFreeLimit('scene_limit');
+                          else toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
                           return prev;
                         }
                         if (!isFreeUser && isFlatLay && next.size >= FLAT_LAY_SURFACE_LIMIT) {
