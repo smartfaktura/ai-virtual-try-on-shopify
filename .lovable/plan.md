@@ -1,70 +1,41 @@
 
 
-# Fix: Re-upload Seedream CDN URLs to Permanent Storage
+# Merge Wallets in Admin Product Image Scenes
 
 ## Problem
-When Seedream 4.5 generates an image, it returns a temporary CDN URL (~24h expiry). The upload-to-storage logic in `generate-workflow/index.ts` (line 1271) only triggers for `data:` base64 URLs, so Seedream results are saved with expiring URLs. This causes:
-1. Images disappear from results after ~24 hours
-2. ZIP download silently skips expired images
-
-## Root Cause
-Line 1271: `if (imageUrl.startsWith("data:"))` — only re-uploads base64 images. Seedream CDN URLs pass through as-is.
+`AdminProductImageScenes.tsx` groups scenes by raw `category_collection` values without normalizing through `COLLECTION_MERGE`, so `wallets` and `wallets-cardholders` appear as separate sections.
 
 ## Solution
 
-**File: `supabase/functions/generate-workflow/index.ts`** (lines 1268-1304)
+**File: `src/pages/AdminProductImageScenes.tsx`**
 
-Expand the upload logic to also handle external URLs (non-base64, non-storage). After the existing `data:` check, add an `else if` branch that:
-1. Detects if the URL is an external CDN URL (not from our Supabase storage)
-2. Fetches the image bytes from the temporary URL
-3. Uploads to `workflow-previews` bucket
-4. Replaces `finalUrl` with the permanent public URL
+Apply the same `COLLECTION_MERGE` normalization used elsewhere in three locations:
 
+1. **Line 159** — In the grouping logic, normalize the key:
+   ```typescript
+   const key = COLLECTION_MERGE[s.category_collection || ''] ?? s.category_collection || 'other';
+   ```
+
+2. **Line 150** — In the filter logic, match via normalized value:
+   ```typescript
+   scenes = scenes.filter(s => (COLLECTION_MERGE[s.category_collection || ''] ?? s.category_collection) === previewCategory);
+   ```
+
+3. **Lines 114-120** — In `subCategoriesByCategory`, normalize the key before building the map.
+
+4. **Line 281** — In `handleMove`, normalize the key for reorder operations.
+
+Add the `COLLECTION_MERGE` constant at the top of the file (or import from `useProductImageScenes`):
 ```typescript
-if (imageUrl.startsWith("data:")) {
-  // existing base64 upload logic...
-} else if (!imageUrl.includes("supabase.co/storage")) {
-  // External URL (Seedream CDN etc.) — fetch and re-upload to permanent storage
-  try {
-    const extResp = await fetch(imageUrl);
-    if (extResp.ok) {
-      const bytes = new Uint8Array(await extResp.arrayBuffer());
-      const fmt = detectImageFormat(bytes);
-      const userId = body.user_id || "anonymous";
-      const jobId = body.job_id || crypto.randomUUID();
-      const storagePath = `${userId}/${jobId}/${i}-${a}.${fmt.ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("workflow-previews")
-        .upload(storagePath, bytes, {
-          contentType: fmt.contentType,
-          cacheControl: "3600",
-        });
-      if (!uploadError) {
-        const { data: publicUrlData } = supabase.storage
-          .from("workflow-previews")
-          .getPublicUrl(storagePath);
-        finalUrl = publicUrlData.publicUrl;
-        console.log(`[generate-workflow] Re-uploaded external URL to storage: ${storagePath}`);
-      }
-    }
-  } catch (reuploadErr) {
-    console.error("[generate-workflow] External URL re-upload error:", reuploadErr);
-  }
-}
+const COLLECTION_MERGE: Record<string, string> = {
+  "snacks-food": "food",
+  "food-beverage": "food",
+  "wallets": "wallets-cardholders",
+};
 ```
 
-**Same fix needed in**:
-- `supabase/functions/generate-text-product/index.ts` — same pattern
-- `supabase/functions/generate-tryon/index.ts` — same pattern  
-- `supabase/functions/generate-freestyle/index.ts` — same pattern
-
 ## Impact
-- All Seedream-generated images will be permanently stored in the `workflow-previews` bucket
-- ZIP downloads will always work regardless of when the user downloads
-- No change to the user-facing flow — just ensures URL permanence
-
-## Technical Detail
-- 4 edge function files modified with the same re-upload logic
-- Adds ~1-3 seconds per Seedream image for the fetch+upload, but this happens during generation (not user-facing)
-- Existing images with expired Seedream URLs cannot be recovered retroactively
+- All wallet scenes appear under a single "Wallets & Cardholders" section in the admin panel
+- No duplicate scenes — just unified grouping
+- Reorder and sub-category features continue to work correctly
 
