@@ -224,6 +224,8 @@ export default function ImportFromScenesModal({
     setSelected(new Set());
     setConfigs(new Map());
     setNewSubCatInputs(new Map());
+    setBulkSubCategory('__none__');
+    setBulkNewSubCat('');
     onOpenChange(false);
   };
 
