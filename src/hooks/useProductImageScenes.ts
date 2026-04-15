@@ -98,13 +98,18 @@ async function fetchScenesExcludingCategories(categories: string[]): Promise<DbS
 
 // ── Collection builder ──
 
+const COLLECTION_MERGE: Record<string, string> = {
+  "snacks-food": "food",
+  "food-beverage": "food",
+};
+
 function buildCollections(scenes: DbScene[]): CategoryCollection[] {
   const catMap = new Map<string, DbScene[]>();
   const catSortOrder = new Map<string, number>();
 
   for (const s of scenes) {
     if (!s.category_collection) continue;
-    const cat = s.category_collection;
+    const cat = COLLECTION_MERGE[s.category_collection] ?? s.category_collection;
     if (!catMap.has(cat)) {
       catMap.set(cat, []);
       catSortOrder.set(cat, s.category_sort_order ?? 0);
