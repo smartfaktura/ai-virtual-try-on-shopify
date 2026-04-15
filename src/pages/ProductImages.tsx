@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
+import { DemoProductPicker } from '@/components/app/product-images/DemoProductPicker';
 
 // Lazy-load step components for faster initial render
 const ProductImagesStep2Scenes = lazy(() => import('@/components/app/product-images/ProductImagesStep2Scenes'));
