@@ -171,7 +171,7 @@ export default function Freestyle() {
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const isFreeUser = plan === 'free';
   const conversionState = useConversionState();
   const { data: freestyleProfileCats } = useQuery({
