@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
+import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { useNavigate } from 'react-router-dom';
 import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
