@@ -4028,7 +4028,7 @@ export default function Generate() {
             creditCost={creditCost}
             upscaleImageCount={upscaleImageCount}
             balance={balance}
-            openBuyModal={openBuyModal}
+            openBuyModal={() => setNoCreditsModalOpen(true)}
             handleGenerateClick={handleGenerateClick}
             setCurrentStep={setCurrentStep}
           />
@@ -4095,7 +4095,7 @@ export default function Generate() {
             interiorType={interiorType}
             isAdmin={isAdmin}
             isGeneratingPreviews={isGeneratingPreviews}
-            openBuyModal={openBuyModal}
+            openBuyModal={() => setNoCreditsModalOpen(true)}
             handleGenerateClick={handleGenerateClick}
             handleGenerateScenePreviews={handleGenerateScenePreviews}
             setCurrentStep={setCurrentStep}
@@ -4132,7 +4132,7 @@ export default function Generate() {
             multiProductCount={multiProductCount}
             productQueue={productQueue}
             tryOnSceneCount={tryOnSceneCount}
-            openBuyModal={openBuyModal}
+            openBuyModal={() => setNoCreditsModalOpen(true)}
             handleGenerateClick={handleGenerateClick}
             setCurrentStep={setCurrentStep}
           />
