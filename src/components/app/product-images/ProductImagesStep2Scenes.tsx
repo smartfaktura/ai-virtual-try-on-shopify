@@ -7,6 +7,24 @@ import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
 import { cn } from '@/lib/utils';
 
+/** Category label lookup */
+const CATEGORY_LABELS: Record<string, string> = {
+  garments: 'Clothing & Apparel', 'beauty-skincare': 'Beauty & Skincare',
+  'makeup-lipsticks': 'Makeup & Lipsticks', fragrance: 'Fragrance',
+  food: 'Food & Snacks', beverages: 'Beverages', 'home-decor': 'Home & Interior',
+  'supplements-wellness': 'Supplements & Wellness', shoes: 'Shoes',
+  'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
+  other: 'Other / Custom', backpacks: 'Backpacks',
+  'wallets-cardholders': 'Wallets & Cardholders', belts: 'Belts', scarves: 'Scarves',
+  'hats-small': 'Hats & Headwear', 'jewellery-necklaces': 'Necklaces',
+  'jewellery-earrings': 'Earrings', 'jewellery-bracelets': 'Bracelets',
+  'jewellery-rings': 'Rings', watches: 'Watches', dresses: 'Dresses', skirts: 'Skirts',
+  hoodies: 'Hoodies', streetwear: 'Streetwear', sneakers: 'Sneakers',
+  boots: 'Boots', 'high-heels': 'High Heels', activewear: 'Activewear',
+  eyewear: 'Eyewear', swimwear: 'Swimwear', lingerie: 'Lingerie',
+  kidswear: 'Kidswear', jeans: 'Jeans', jackets: 'Jackets',
+};
+
 interface Step2Props {
   selectedSceneIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
@@ -375,7 +393,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
             <UnifiedCategorySectionWithSelectAll
               key={cat.id}
               catId={cat.id}
-              catTitle={cat.title}
+              catTitle={CATEGORY_LABELS[cat.id] || cat.title}
               essentialScenes={[]}
               categoryScenes={cat.scenes}
               categorySubGroups={cat.subGroups}
@@ -411,7 +429,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
             <UnifiedCategorySectionWithSelectAll
               key={cat.id}
               catId={cat.id}
-              catTitle={cat.title}
+              catTitle={CATEGORY_LABELS[cat.id] || cat.title}
               essentialScenes={cat.essentialScenes}
               categoryScenes={cat.scenes}
               categorySubGroups={cat.subGroups}
@@ -471,7 +489,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
                                   <CategoryRowTrigger
                                     key={cat.id}
                                     catId={cat.id}
-                                    catTitle={cat.title}
+                                    catTitle={CATEGORY_LABELS[cat.id] || cat.title}
                                     allScenes={[...cat.essentialScenes, ...cat.scenes]}
                                     selectedSceneIds={selectedSceneIds}
                                     isOpen={expandedCategories.has(cat.id)}
@@ -505,7 +523,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
                   <UnifiedCategorySectionWithSelectAll
                     key={cat.id}
                     catId={cat.id}
-                    catTitle={cat.title}
+                    catTitle={CATEGORY_LABELS[cat.id] || cat.title}
                     essentialScenes={cat.essentialScenes}
                     categoryScenes={cat.scenes}
                     categorySubGroups={cat.subGroups}
@@ -792,23 +810,6 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
   );
 }
 
-/** Category label lookup */
-const CATEGORY_LABELS: Record<string, string> = {
-  garments: 'Clothing & Apparel', 'beauty-skincare': 'Beauty & Skincare',
-  'makeup-lipsticks': 'Makeup & Lipsticks', fragrance: 'Fragrance',
-  food: 'Food & Snacks', beverages: 'Beverages', 'home-decor': 'Home & Interior',
-  'supplements-wellness': 'Supplements & Wellness', shoes: 'Shoes',
-  'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
-  other: 'Other / Custom', backpacks: 'Backpacks',
-  'wallets-cardholders': 'Wallets & Cardholders', belts: 'Belts', scarves: 'Scarves',
-  'hats-small': 'Hats & Headwear', 'jewellery-necklaces': 'Necklaces',
-  'jewellery-earrings': 'Earrings', 'jewellery-bracelets': 'Bracelets',
-  'jewellery-rings': 'Rings', watches: 'Watches', dresses: 'Dresses',
-  hoodies: 'Hoodies', streetwear: 'Streetwear', sneakers: 'Sneakers',
-  boots: 'Boots', 'high-heels': 'High Heels', activewear: 'Activewear',
-  eyewear: 'Eyewear', swimwear: 'Swimwear', lingerie: 'Lingerie',
-  kidswear: 'Kidswear', jeans: 'Jeans', jackets: 'Jackets',
-};
 
 export function ProductImagesStep2Scenes(props: Step2Props) {
   const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed } = props;
