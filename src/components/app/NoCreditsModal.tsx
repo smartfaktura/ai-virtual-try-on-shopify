@@ -1,16 +1,19 @@
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUpRight, AlertCircle } from 'lucide-react';
+import { ArrowUpRight, AlertCircle, Sparkles } from 'lucide-react';
 import { creditPacks } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
+import { type ConversionCategory, getLayer3Headline, getLayer3Subline } from '@/lib/conversionCopy';
 
 interface NoCreditsModalProps {
   open: boolean;
   onClose: () => void;
+  category?: ConversionCategory;
+  generationCount?: number;
 }
 
-export function NoCreditsModal({ open, onClose }: NoCreditsModalProps) {
+export function NoCreditsModal({ open, onClose, category = 'fallback', generationCount = 0 }: NoCreditsModalProps) {
   const { startCheckout } = useCredits();
 
   const handlePurchase = (stripePriceId: string | undefined) => {
@@ -19,20 +22,27 @@ export function NoCreditsModal({ open, onClose }: NoCreditsModalProps) {
     onClose();
   };
 
+  const headline = getLayer3Headline(category);
+  const subline = generationCount > 0 ? getLayer3Subline(generationCount) : undefined;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden border-border/50 shadow-2xl">
         {/* Header */}
         <div className="px-8 pt-8 pb-5 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-destructive/10">
-              <AlertCircle className="w-5 h-5 text-destructive" />
+            <div className="p-2 rounded-xl bg-primary/10">
+              <Sparkles className="w-5 h-5 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold tracking-tight">You're out of credits</h2>
+            <h2 className="text-lg font-semibold tracking-tight">{headline}</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Purchase credits to continue generating professional product images.
-          </p>
+          {subline ? (
+            <p className="text-sm text-muted-foreground">{subline}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Purchase credits to continue generating professional product images.
+            </p>
+          )}
         </div>
 
         {/* Packs */}
