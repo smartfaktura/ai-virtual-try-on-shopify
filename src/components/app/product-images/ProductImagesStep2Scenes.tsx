@@ -411,9 +411,16 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
         </div>
       )}
 
-      {unifiedOther.length > 0 && (
+      {(unifiedOther.length > 0 || isLoadingRest) && (
         <div className="space-y-4">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
+          {isLoadingRest && unifiedOther.length === 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />
+              ))}
+            </div>
+          )}
           {(() => {
             const otherIds = new Set(unifiedOther.map(c => c.id));
             const rendered = new Set<string>();
