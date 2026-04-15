@@ -309,6 +309,7 @@ export default function TextToProduct() {
   const [completedJobs, setCompletedJobs] = useState<Map<string, { images: { url: string; label: string }[]; productTitle: string }>>(new Map());
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
   const { refreshBalance, plan } = useCredits();
   const { user } = useAuth();
   const isFreeUser = plan === 'free';
