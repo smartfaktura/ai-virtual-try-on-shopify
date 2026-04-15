@@ -4533,7 +4533,7 @@ export default function Generate() {
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
         generationContext={{
-          productThumbnail: selectedProduct?.image_url || scratchUpload?.productInfo.image,
+          productThumbnail: selectedProduct?.images?.[0]?.url || scratchUpload?.previewUrl,
           productTitle: selectedProduct?.title || scratchUpload?.productInfo.title,
           sceneName: Array.from(selectedPoseMap.values())[0]?.name,
           modelName: Array.from(selectedModelMap.values())[0]?.name,
