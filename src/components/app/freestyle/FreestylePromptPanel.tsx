@@ -168,7 +168,7 @@ function TypewriterPlaceholder({
   );
 }
 
-
+export function FreestylePromptPanel({
   prompt, onPromptChange,
   hasAssets,
   sourceImagePreview, onUploadClick, onRemoveImage,
