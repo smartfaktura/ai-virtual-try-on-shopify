@@ -539,7 +539,7 @@ export default function Dashboard() {
               </Button>
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/discover')}>
                 <Compass className="w-3.5 h-3.5" />
-                Explore Presets
+                Explore
               </Button>
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/library')}>
                 <Image className="w-3.5 h-3.5" />
