@@ -1,32 +1,30 @@
 
 
-# Move Product Visuals to Top & Add Fast Carousel
+# Add "Furniture" as Valid Category in Product Analysis
 
-## What We're Doing
-1. Move the "Product Visuals" card to the top of the Workflows page (above Virtual Try-On)
-2. Add a fast-rotating image carousel (0.5s interval) showing 20 editorial scene preview images on the Product Visuals card thumbnail
+## Problem
+The `analyze-product-category` edge function has no `furniture` category in its valid categories list or title fallback patterns. Armchairs, sofas, tables etc. incorrectly fall into `home-decor`. The frontend already fully supports `furniture` as a separate category with correct keyword matching.
 
 ## Changes
 
-### 1. Database Migration — Update sort_order
-Set Product Visuals `sort_order` to `0` so it appears first:
-```sql
-UPDATE workflows SET sort_order = 0 WHERE slug = 'product-images';
+### 1. Edge Function: `supabase/functions/analyze-product-category/index.ts`
+
+**Add `furniture` to `VALID_CATEGORIES` set** (line 16, alongside `home-decor`)
+
+**Add furniture title fallback pattern** to `TITLE_CATEGORY_PATTERNS` — before the `home-decor` pattern so furniture items match first:
+```
+[/armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"]
 ```
 
-### 2. Add workflowScenes entry for Product Visuals
-**File:** `src/components/app/workflowAnimationData.tsx`
+**Add specificity override**: `home-decor` → `furniture` when title matches furniture keywords (catches cases where AI returns `home-decor` for a sofa)
 
-Add a new `'Product Visuals'` key to `workflowScenes` with:
-- `mode: 'carousel'`
-- `interval: 500` (0.5 second rotation, same as Catalog Studio)
-- `backgrounds`: 20 scene preview URLs from `product_image_scenes` (editorial/campaign/stilllife types)
-- Badges: "1000+ Scenes" and "Full Control" overlay badges
-- No recipe section needed
+**Update the system prompt** `VALID CATEGORIES` list to include `furniture`
 
-This will make the WorkflowCard and WorkflowCardCompact automatically pick up the animated thumbnail instead of the static preview image, matching the existing carousel behavior used by Catalog Studio.
+### 2. No frontend changes needed
+The frontend (`ProductImagesStep2Scenes.tsx`, `useProductImageScenes.ts`, admin pages) already has full `furniture` support with labels, keyword arrays, and tab grouping.
 
-## Files Changed
-- `src/components/app/workflowAnimationData.tsx` — add `'Product Visuals'` scene entry with 20 images
-- Database migration — set `sort_order = 0`
+## Impact
+- 1 edge function file changed
+- Existing products won't auto-reclassify (analysis runs at upload time) — user would need to re-upload or we could add a manual re-analyze button later
+- New uploads of furniture items will correctly land in the Furniture recommended tab
 
