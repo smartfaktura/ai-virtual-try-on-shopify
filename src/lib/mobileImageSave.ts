@@ -20,7 +20,8 @@ function isIOS(): boolean {
  */
 export async function saveOrShareImage(imageUrl: string, filename: string): Promise<void> {
   try {
-    const response = await fetch(imageUrl);
+    const proxyUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+    const response = await fetch(proxyUrl);
     const contentType = response.headers.get('content-type') || 'image/png';
     const ext = getExtensionFromContentType(contentType);
     const blob = await response.blob();
