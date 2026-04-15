@@ -1,40 +1,39 @@
 
 
-# Upload 24 Streetwear Editorial Scenes
+# Upload 24 Supplements & Wellness Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `streetwear` category collection (currently has 18 scenes with `category_sort_order: 24`). Organized into 4 sub-categories (6 scenes each). Update `category_sort_order` from 24 to 22 per RTF spec.
+Insert 24 new editorial scenes for the `supplements-wellness` category collection (currently has 16 scenes with `category_sort_order: 11`). Organized into 4 sub-categories (6 scenes each). Update `category_sort_order` from 11 to 22 per RTF spec.
 
 ## Scene Mapping
 
 | Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| Editorial Street Portraits (01-06) | 1 | streetwear-editorial-front-portrait, streetwear-editorial-seated-chair, streetwear-editorial-side-profile, streetwear-editorial-detail-crop, streetwear-editorial-open-layer-look, streetwear-editorial-back-view |
-| Off-Duty / City UGC (07-12) | 2 | streetwear-ugc-sidewalk-walk, streetwear-ugc-wall-lean, streetwear-ugc-coffee-run, streetwear-ugc-stairs-corridor, streetwear-ugc-travel-city, streetwear-ugc-hands-adjusting |
-| Styled Rack / Floor / Interior Still (13-18) | 3 | streetwear-still-hanger-rail, streetwear-still-chair-drape, streetwear-still-folded-floor, streetwear-still-shelf-placement, streetwear-still-detail-closure-graphic, streetwear-still-one-object-style |
-| Aesthetic Color Street Stories (19-24) | 4 | streetwear-color-wall-portrait, streetwear-color-lounge-chair-story, streetwear-color-surface-still, streetwear-color-entry-corridor, streetwear-color-reflection-mood, streetwear-color-hero-campaign |
+| Editorial Wellness Routine (01-06) | 1 | wellness-editorial-morning-counter, wellness-editorial-hand-water-ritual, wellness-editorial-dose-prep, wellness-editorial-shelf-portrait, wellness-editorial-sinkside-composition, wellness-editorial-tray-ritual |
+| Kitchen / Gym / Daily UGC (07-12) | 2 | wellness-ugc-kitchen-counter, wellness-ugc-post-workout, wellness-ugc-workday-break, wellness-ugc-mix-prep, wellness-ugc-travel-go, wellness-ugc-handheld-moment |
+| Ingredient / Capsule Still Life (13-18) | 3 | wellness-still-capsule-spill, wellness-still-powder-scoop, wellness-still-ingredient-pairing, wellness-still-dish-tray-dose, wellness-still-water-glass, wellness-still-macro-detail |
+| Aesthetic Color Wellness Stories (19-24) | 4 | wellness-color-counter-ritual, wellness-color-kitchen-story, wellness-color-surface-still, wellness-color-reflection-mood, wellness-color-tray-hero, wellness-color-hero-campaign |
 
 ## Technical Details
-- **sort_order**: starts at 2885 (current global max is 2884)
-- **category_collection**: `streetwear`
-- **category_sort_order**: update all streetwear scenes from `24` to `22` per RTF
-- **Scenes 1-3, 5-6**: editorial; `personDetails` + `sceneEnvironment`/`stylingDetails` + `visualDirection` + `layout`; outfit_hint for all
-- **Scene 4**: editorial; `personDetails` + `visualDirection` + `layout` + `detailFocus`; outfit_hint
-- **Scene 5**: editorial; `personDetails` + `stylingDetails` + `visualDirection` + `layout`; no `sceneEnvironment`; outfit_hint
-- **Scenes 7-11**: lifestyle; all have `personDetails` + `sceneEnvironment` + `stylingDetails` + `visualDirection` + `layout`; outfit_hint for all
-- **Scene 8**: lifestyle; same triggers as 7 (parsed from compact format); outfit_hint
-- **Scene 12**: lifestyle; `personDetails` + `visualDirection` + `layout` + `detailFocus`; no `sceneEnvironment`; outfit_hint
-- **Scenes 13-16**: still life; no `personDetails`, no `outfit_hint`; various combos of `sceneEnvironment`, `visualDirection`, `layout`, `detailFocus`
-- **Scene 17**: still life; `productDetails` + `visualDirection` + `layout` + `detailFocus`; no `sceneEnvironment`
-- **Scene 18**: still life; adds `stylingDetails` + `sceneEnvironment`
-- **Scenes 19-20**: `aestheticColor` + `personDetails` + `sceneEnvironment` + `stylingDetails`; outfit_hint; `suggested_colors` = `[{"name":"Urban Moss Slate","hex":"#6F7568"}]`
-- **Scene 21**: `aestheticColor` still life (no `personDetails`, no outfit_hint); `suggested_colors`
-- **Scene 22**: `aestheticColor` lifestyle + `personDetails` + `stylingDetails`; outfit_hint; `suggested_colors`
-- **Scene 23**: `aestheticColor` editorial + `personDetails`; no `stylingDetails`; outfit_hint; `suggested_colors`
-- **Scene 24**: `aestheticColor` campaign + `personDetails` + `stylingDetails` + `detailFocus`; outfit_hint; `suggested_colors`
+- **sort_order**: uses RTF-specified values 2201-2224 (within current global max 2908, but these are category-specific sort values consistent with pattern)
+- **category_collection**: `supplements-wellness`
+- **category_sort_order**: update all existing from `11` to `22` per RTF
+- **Scenes 1, 4-6**: product-only editorial; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`, no `outfit_hint`
+- **Scene 2**: editorial + `personDetails`; outfit_hint: minimal wellness styling in soft neutrals
+- **Scene 3**: editorial + `personDetails` + `detailFocus`; outfit_hint: minimal wellness-clean styling
+- **Scenes 7, 9, 11**: lifestyle product-only; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`
+- **Scene 8**: lifestyle + `personDetails`; outfit_hint: clean active-lifestyle styling
+- **Scene 10**: lifestyle + `personDetails`; outfit_hint: relaxed home-wellness styling
+- **Scene 12**: lifestyle + `personDetails`; outfit_hint: understated daily styling
+- **Scenes 13-14**: stilllife + `detailFocus`; no `personDetails`
+- **Scenes 15-17**: stilllife; no `detailFocus` (except 18); no `personDetails`
+- **Scene 18**: stilllife + `detailFocus`
+- **Scenes 19-23**: `aestheticColor` + `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; no `personDetails`; `suggested_colors` = `[{"name":"Muted Sage Mineral","hex":"#A8B29F"}]`
+- **Scene 24**: `aestheticColor` campaign + `detailFocus`; `suggested_colors`; `scene_type: campaign`
+- No outfit_hint for any aesthetic color scene (product-only wellness)
 - Full prompt templates extracted from RTF
 
 ## Execution
-1. UPDATE existing 18 streetwear scenes: set `category_sort_order = 22`
-2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, outfit hints, and suggested colors
+1. UPDATE existing 16 supplements-wellness scenes: set `category_sort_order = 22`
+2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and suggested colors
 
