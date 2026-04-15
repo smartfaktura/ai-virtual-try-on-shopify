@@ -54,12 +54,22 @@ export function useProductImageScenes() {
   const { data: rawScenes, isLoading } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('product_image_scenes' as any)
-        .select('*')
-        .order('sort_order', { ascending: true });
-      if (error) throw error;
-      return (data || []) as unknown as DbScene[];
+      const PAGE = 1000;
+      let all: DbScene[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('product_image_scenes' as any)
+          .select('*')
+          .order('sort_order', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const batch = (data || []) as unknown as DbScene[];
+        all = all.concat(batch);
+        if (batch.length < PAGE) break;
+        from += PAGE;
+      }
+      return all;
     },
     staleTime: 5 * 60 * 1000,
   });
