@@ -3,6 +3,7 @@ import { Sparkles, Download, Check, Heart, MoreHorizontal, Shield, Send, RotateC
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
+import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -218,7 +219,7 @@ export function LibraryImageCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                downloadImage(item.imageUrl, `${item.label}-${item.id.slice(0, 8)}.png`);
+                downloadImage(item.imageUrl, `${buildLibraryFileName(item)}.png`);
               }}
               className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors"
             >

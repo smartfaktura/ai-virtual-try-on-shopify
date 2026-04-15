@@ -92,7 +92,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   if (!open || !activeItem) return null;
 
   const handleDownload = async () => {
-    await saveOrShareImage(activeItem.imageUrl, `${activeItem.label.replace(/\s+/g, '-').toLowerCase()}-${activeItem.id.slice(0, 8)}`);
+    await saveOrShareImage(activeItem.imageUrl, buildLibraryFileName(activeItem));
   };
 
   const handleDelete = async () => {
