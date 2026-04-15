@@ -1,42 +1,41 @@
 
 
-# QA Debug — Conversion System (Layers 1–3)
+# QA Debug — "Post-Gen Conversion" System
 
-## Bugs Found
+**Feature name for future reference: "Post-Gen Conversion"** (covers Layers 1–3: inline upgrade card, value drawer, enhanced no-credits modal).
 
-### Bug 1: Layer 1 dismiss is broken — card can't be hidden
-**Root cause**: Pages render the card based on `conversionState.canShowLayer1`, which is a `useMemo` with only `[isFreeUser]` as dependency. When the user clicks dismiss:
-- `dismissLayer1()` sets `layer1Visible = false` (but pages never read `layer1Visible`)
-- `dismissLayer1()` increments `localStorage` counter (but `useMemo` doesn't re-run because `isFreeUser` didn't change)
-- Result: card stays rendered, and its internal `visible` state is already `true`, so it remains visible after dismiss
+## QA Results
 
-### Bug 2: Session tracking never activates
-`showLayer1()` is never called by any page. This means `sessionStorage.setItem('vovv_l1_shown', 'true')` never happens. So `canShowLayer1` will keep returning `true` for the entire session, even after the card is shown.
+### Status: Hook & Components — CLEAN
+The previous fix to `useConversionState.ts` resolved the reactivity bugs. The hook now uses `useState` for `layer1Dismissed` and `layer2DismissedAt`, so dismiss actions immediately trigger re-renders. All three pages (Generate, Freestyle, TextToProduct) correctly consume `canShowLayer1` and `layer2Open`.
 
-### Bug 3: `canShowLayer2` has the same stale-memo problem
-`canShowLayer2` is also `useMemo([isFreeUser])`. After `openUpgradeDrawer` increments the session counter, the memo doesn't recompute.
+### Bug Found: NoCreditsModal missing category/generationCount props
 
-### Bug 4: PostGenerationUpgradeCard has no re-mount reset
-The card's internal `visible` state uses a one-shot `useEffect` with a 3s timer. If the parent unmounts/remounts the card (e.g., navigating steps), the timer restarts — fine. But since dismiss doesn't actually unmount it (Bug 1), the 3s fade-in only happens once and then it's permanently visible.
+**File**: `src/pages/Generate.tsx` line 4526
 
-## Fix Plan
+**Current**:
+```tsx
+<NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} />
+```
 
-### Fix `useConversionState.ts`
-Replace `useMemo` with reactive state that actually updates on dismiss/show:
+**Problem**: The `NoCreditsModal` accepts `category` and `generationCount` props (added during the Layer 3 enhancement), but Generate.tsx never passes them. The modal always falls back to `'fallback'` category and `0` generation count, so the category-aware headline and usage context line never display.
 
-1. **Add a `layer1Dismissed` state** (`useState(false)`) that `dismissLayer1` sets to `true`. Pages use this combined with the initial eligibility check.
-2. **Remove `showLayer1` / `layer1Visible`** — the card manages its own internal visibility (3s delay). The hook just needs to answer "should the card be mounted?"
-3. **Replace `canShowLayer1` useMemo** with a computed value that includes the `layer1Dismissed` state:
-   ```ts
-   const [layer1Dismissed, setLayer1Dismissed] = useState(false);
-   const canShowLayer1 = isFreeUser && !layer1Dismissed && dismissCount < 3 && !sessionShown;
-   ```
-4. **Fix `dismissLayer1`** to set `layer1Dismissed = true` AND mark session.
-5. **Same fix for Layer 2**: Add `layer2Dismissed` state with cooldown, so `canShowLayer2` reacts properly.
+**Fix**: Pass `conversionCategory` and the count of generated images:
+```tsx
+<NoCreditsModal 
+  open={noCreditsModalOpen} 
+  onClose={() => setNoCreditsModalOpen(false)}
+  category={conversionCategory}
+  generationCount={generatedImages.length}
+/>
+```
 
-### Fix pages (Generate.tsx, Freestyle.tsx, TextToProduct.tsx)
-No changes needed — they already use `canShowLayer1` which will now be reactive.
+### Minor Enhancement: Save feature name to memory
 
-### Files to modify
-- `src/hooks/useConversionState.ts` — fix all reactivity bugs
+Create `mem://features/post-gen-conversion` so future conversations can reference this system by name.
+
+## Files to modify
+- `src/pages/Generate.tsx` — pass `category` and `generationCount` to `NoCreditsModal`
+- `mem://features/post-gen-conversion` — new memory file
+- `mem://index.md` — add reference
 
