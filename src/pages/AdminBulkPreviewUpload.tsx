@@ -147,7 +147,10 @@ export default function AdminBulkPreviewUpload() {
   const categories = useMemo(() => {
     const catSet = new Set<string>();
     for (const s of rawScenes) {
-      if (s.is_active && s.category_collection) catSet.add(s.category_collection);
+      if (s.is_active && s.category_collection) {
+        const merged = COLLECTION_MERGE[s.category_collection] ?? s.category_collection;
+        catSet.add(merged);
+      }
     }
     return Array.from(catSet)
       .sort((a, b) => {
