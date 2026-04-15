@@ -1,73 +1,53 @@
 
 
-# Redesign Freestyle Studio Card — ChatGPT-Style Prompt Bar
+# Fix Freestyle Studio Card — Better Animations and Sizing
 
-## Summary
-Replace the current branching/direction cards design with a clean, ChatGPT-inspired prompt bar as the hero element. The card centers around a single elegant text input simulation with a typewriter animation and a subtle blinking cursor — minimal, premium, no icons as decorative labels.
+## Problem
+The current card has issues visible in the screenshot:
+- Text is too small (`text-xs` / `text-[10px]`)
+- Typewriter animation doesn't work properly — the `white-space: nowrap` + `width: 0→100%` technique fails because the card constrains the width, so the text either overflows or doesn't animate visibly
+- Too much empty space above the prompt bar (the visual area uses `aspect-[3/4]` with centered content)
+- Pills are tiny and barely visible
+- Overall feels flat and lifeless
 
-## Creative Concept
+## Root Cause of Animation Failure
+The CSS typewriter technique using `width` + `steps()` + `overflow: hidden` + `white-space: nowrap` requires the text to be on a single line that expands. But the prompt text is long and the card is narrow, so it wraps or gets clipped incorrectly. The `white-space: nowrap` forces a single line that overflows the container.
 
-The entire visual area is dominated by one thing: a premium dark prompt bar (like ChatGPT's input field) with text typing itself out. Below it, 3 small "result" pills fade in to suggest multiple outputs. No branching SVGs, no direction cards with icons, no emojis.
+## Solution
+Rewrite the animation approach and tighten the layout:
 
-```text
-┌─────────────────────────────────────┐
-│                                     │
-│   ┌─────────────────────────────┐   │
-│   │                             │   │
-│   │  Shoot my crop top on a     │   │
-│   │  court, studio, and café▌   │   │  ← dark input bar, typewriter + cursor
-│   │                             │   │
-│   │                     ↗       │   │  ← send arrow, subtle
-│   └─────────────────────────────┘   │
-│                                     │
-│     Studio    Court    Café         │  ← 3 minimal text pills fade in
-│                                     │
-├─────────────────────────────────────┤
-│  Freestyle Studio                   │
-│  Type anything. Get styled visuals. │
-│  ┌─────────────────────────────┐    │
-│  │      Start Creating    →    │    │
-│  └─────────────────────────────┘    │
-└─────────────────────────────────────┘
-```
+**File: `src/components/app/FreestylePromptCard.tsx`**
 
-## Changes
+### 1. Fix typewriter — use `max-width` + `ch` units
+- Set text in a container with `white-space: nowrap` but use `max-width` animating from `0ch` to `${CHAR_COUNT}ch` instead of `width: 0 → 100%`
+- Wrap the text container in an overflow-hidden div that constrains properly
+- This ensures character-by-character reveal regardless of card width
 
-**File: `src/components/app/FreestylePromptCard.tsx` — Full rewrite**
+### 2. Increase text sizes
+- Prompt text: `text-sm` (was `text-xs`), mobile: `text-xs` (was `text-[10px]`)
+- Pills: `text-xs` (was `text-[10px]`), mobile: `text-[10px]` (was `text-[8px]`)
+- Title: `text-base font-bold` (was `text-sm`)
 
-### Visual area
-1. **Prompt input bar** — A rounded-2xl container styled like a modern AI chat input:
-   - Dark surface (`bg-muted/40` with `border border-border/30`)
-   - Multi-line text area feel (taller, ~80px)
-   - Typewriter animation on the prompt text using CSS `steps()` + `overflow: hidden` + `border-right` blinking cursor
-   - Small send/arrow-up icon in bottom-right corner (muted, not a real button)
-   - Prompt text: "Shoot my crop top on a court, studio, and café"
+### 3. Reduce dead space
+- Change visual area from `aspect-[3/4]` to a fixed padding approach (`py-8 px-5`) so it sizes to content naturally instead of forcing a tall empty box
+- Move prompt bar higher with `justify-end` or tighter padding
 
-2. **Result pills** — 3 minimal rounded-full pills below the input bar:
-   - Just text labels: "Studio", "Court", "Café"
-   - `bg-muted/20 border border-border/20` — very subtle
-   - Staggered fade-in after typewriter completes
-   - No icons, no sub-labels
+### 4. Improve prompt bar styling
+- Slightly darker background: `bg-muted/50` with stronger border `border-border/50`
+- Add a subtle `shadow-sm` for depth
+- Make send button more visible: `bg-primary/15` with `text-primary/70`
 
-3. **Ambient glow** — Soft radial gradient behind the prompt bar (primary/5)
+### 5. Add a looping reset
+- After pills appear (at ~4s), hold for 2s, then fade everything out and restart
+- Total loop: ~7s with `animation-iteration-count: infinite`
+- Use a wrapper animation that controls opacity of the entire visual area
 
-### Animations (CSS-only, no JS)
-- **Typewriter**: `width` animates from 0 to 100% using `steps(42, end)` over ~3s, with `border-right: 2px solid` as blinking cursor
-- **Cursor blink**: separate `@keyframes blink` toggling `border-color` opacity
-- **Result pills**: `opacity 0→1, translateY 4px→0`, staggered at 3.2s, 3.5s, 3.8s (after typing completes)
-- **8s total loop**: everything fades out at ~7s, resets at 8s with `infinite` iteration
+### 6. Ambient glow improvement
+- Make the glow larger (`w-60 h-60`) and slightly more visible (`bg-primary/8`)
+- Add a slow pulse animation to the glow
 
-### Content area (below)
-- Title: "Freestyle Studio" (no Sparkles icon — cleaner)
-- Subtitle: "Type anything. Get styled visuals."
-- CTA: "Start Creating" with ArrowRight, same rounded-full button style
-
-### What's removed
-- Branching SVG lines
-- Direction cards with Sun/Zap/Coffee icons
-- Sparkles icon from title
-- Shimmer text effect on prompt (replaced by typewriter)
-
-### Responsive
-- `mobileCompact`: smaller prompt bar height, tighter text, pills may shrink
+## Technical approach
+- All CSS-only, no JS timers
+- Use `@keyframes` with proper `forwards` and `infinite` where appropriate
+- The typewriter uses `max-width` in `ch` units for reliable character reveal
 
