@@ -235,13 +235,17 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   const scenes = rawScenes.length > 0 ? rawScenes : null;
   const activeScenes: DbScene[] = scenes?.filter(s => s.is_active) ?? [];
 
+  // When priority loading is active, return empty arrays instead of hardcoded fallback
+  // to prevent flash of stale data before real data arrives
+  const useFallback = !hasPriority && !scenes;
+
   const categoryCollections: CategoryCollection[] = scenes
     ? buildCollections(activeScenes)
-    : CATEGORY_COLLECTIONS;
+    : useFallback ? CATEGORY_COLLECTIONS : [];
 
   const allScenes: ProductImageScene[] = scenes
     ? activeScenes.map(dbToFrontend)
-    : FALLBACK_ALL;
+    : useFallback ? FALLBACK_ALL : [];
 
   // ── Admin CRUD ──
 

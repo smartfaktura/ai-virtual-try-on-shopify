@@ -280,7 +280,7 @@ interface UnifiedCategorySectionProps {
 function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses'>) {
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const priorityCats = useMemo(() => Array.from(relevantCatIds), [relevantCatIds]);
-  const { categoryCollections: hookCategoryCollections, isLoadingRest } = useProductImageScenes({
+  const { categoryCollections: hookCategoryCollections, isLoading: isLoadingScenes, isLoadingRest } = useProductImageScenes({
     priorityCategories: priorityCats.length > 0 ? priorityCats : undefined,
   });
   const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
