@@ -1,32 +1,34 @@
 
 
-# Upload 24 Skirts Editorial Scenes
+# Upload 24 Snacks/Food Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `skirts` category collection (currently has 12 scenes with `category_sort_order: 34`). Organized into 4 sub-categories (6 each). Update `category_sort_order` from 34 to 24 per RTF spec.
+Insert 24 new editorial scenes for a new `snacks-food` category collection (no existing scenes). Organized into 4 sub-categories (6 scenes each). Set `category_sort_order = 23` per RTF spec.
 
 ## Scene Mapping
 
-| Sub-Category | Sub Sort | Scenes |
+| Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| Editorial Skirt Portraits (01-06) | 1 | skirt-editorial-front-portrait, skirt-editorial-seated-legline, skirt-editorial-side-profile, skirt-editorial-waist-detail-crop, skirt-editorial-standing-slit-accent, skirt-editorial-back-view |
-| Street / Social Skirt Moments (07-12) | 2 | skirt-lifestyle-sidewalk-walk, skirt-lifestyle-wall-lean, skirt-lifestyle-cafe-terrace, skirt-lifestyle-stair-corridor, skirt-lifestyle-resort-outdoor, skirt-lifestyle-hands-adjusting |
-| Styled Skirt Still Life (13-18) | 3 | skirt-still-hanger-rail, skirt-still-chair-drape, skirt-still-folded-surface, skirt-still-wardrobe-placement, skirt-still-detail-waist-hem, skirt-still-one-object-style |
-| Aesthetic Color Skirt Stories (19-24) | 4 | skirt-color-wall-portrait, skirt-color-lounge-chair-story, skirt-color-surface-still, skirt-color-entry-corridor, skirt-color-reflection-mood, skirt-color-hero-campaign |
+| Editorial Snack Product Studio (01-06) | 1 | snack-editorial-front-hero, snack-editorial-open-pack-detail, snack-editorial-snack-closeup, snack-editorial-ingredient-world, snack-editorial-floating-piece-story, snack-editorial-grouping-hero |
+| Handheld / Eating Editorial (07-12) | 2 | snack-handheld-product-hero, snack-eating-bite-moment, snack-inhand-and-bowl, snack-face-adjacent-crop, snack-sharing-hands-story, snack-pickup-gesture-detail |
+| Tabletop / Pantry / Daily UGC (13-18) | 3 | snack-tabletop-daily-use, snack-pantry-shelf-routine, snack-lunchbox-or-bag-story, snack-cafe-desk-break, snack-bowl-pour-lifestyle, snack-evening-movie-night |
+| Aesthetic Color Snack Stories (19-24) | 4 | snack-color-surface-still, snack-color-handheld-story, snack-color-tabletop-story, snack-color-sculptural-set, snack-color-sharing-story, snack-color-hero-campaign |
 
 ## Technical Details
-- **sort_order**: starts at 2837 (current global max is 2836)
-- **category_collection**: `skirts`
-- **category_sort_order**: update all skirts scenes from `34` to `24` per RTF
-- **Scenes 1-6**: editorial; `personDetails` + `stylingDetails/sceneEnvironment` + `visualDirection` + `layout`; scene 4 includes `detailFocus`; outfit_hint for all 6
-- **Scenes 7-12**: lifestyle; all have `personDetails` + `sceneEnvironment` + `stylingDetails` + `visualDirection` + `layout`; scene 12 swaps `sceneEnvironment`+`stylingDetails` for `detailFocus`; outfit_hint for all 6
-- **Scenes 13-18**: still life, no `personDetails`, no `outfit_hint`; various combos of `sceneEnvironment`, `visualDirection`, `layout`, `detailFocus`, `stylingDetails`
-- **Scenes 19-20, 22-23**: `aestheticColor` + `personDetails` + outfit_hint; `suggested_colors` = `[{"name":"Dusty Fig Stone","hex":"#9C7A74"}]`
-- **Scene 21**: `aestheticColor` still life (no `personDetails`, no outfit_hint)
-- **Scene 24**: `aestheticColor` campaign with `personDetails` + `detailFocus` + outfit_hint; scene_type = `campaign`
+- **sort_order**: starts at 2861 (current global max is 2860)
+- **category_collection**: `snacks-food`
+- **category_sort_order**: 23
+- **Scenes 1-6**: product-only stills; `productDetails` + various combos of `sceneEnvironment`, `visualDirection`, `layout`, `detailFocus`; no `personDetails`, no `outfit_hint`
+- **Scenes 7-12**: handheld/eating with `personDetails` + `productDetails`; scenes 9 adds `sceneEnvironment`; scenes 8, 12 include `detailFocus`; no `outfit_hint`
+- **Scenes 13-18**: lifestyle; `productDetails` + `sceneEnvironment` + `visualDirection` + `layout`; scene 15 adds `stylingDetails`; scene 17 adds `detailFocus`; no `personDetails` (product-only), no `outfit_hint`
+- **Scenes 19, 22**: `aestheticColor` + still life (no `personDetails`); `suggested_colors` = `[{"name":"Toasted Apricot Clay","hex":"#D98A5E"}]`
+- **Scenes 20, 23**: `aestheticColor` + `personDetails`; `suggested_colors` = `[{"name":"Toasted Apricot Clay","hex":"#D98A5E"}]`
+- **Scene 21**: `aestheticColor` lifestyle (no `personDetails`); `suggested_colors`
+- **Scene 24**: `aestheticColor` campaign (no `personDetails`); `suggested_colors`; `scene_type: campaign`
+- Scene types: editorial (1-12, 19-20, 22), lifestyle (13-18, 21, 23), campaign (24)
+- Note: uses `productDetails` trigger instead of typical fashion triggers; no `outfit_hint` for any scene (food category)
 - Full prompt templates extracted from RTF
 
 ## Execution
-1. UPDATE existing 12 skirts scenes: set `category_sort_order = 24`
-2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, outfit hints, and suggested colors
+1. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and suggested colors (no existing rows to update)
 
