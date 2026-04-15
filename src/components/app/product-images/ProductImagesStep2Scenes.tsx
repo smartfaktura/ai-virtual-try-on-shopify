@@ -84,12 +84,13 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
 };
 
-type GridSize = 'small' | 'medium' | 'large';
+type GridSize = 'xs' | 'small' | 'medium' | 'large';
 
 const GRID_CLASSES: Record<GridSize, string> = {
   small: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7',
   medium: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6',
   large: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+  xs: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4',
 };
 
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
@@ -259,25 +260,44 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
   );
 }
 
+/** Small SVG grid-dot icon to represent column density */
+function GridDots({ cols, rows }: { cols: number; rows: number }) {
+  const gap = 5;
+  const r = 1.5;
+  const w = (cols - 1) * gap + r * 2;
+  const h = (rows - 1) * gap + r * 2;
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="block">
+      {Array.from({ length: rows }, (_, ry) =>
+        Array.from({ length: cols }, (_, cx) => (
+          <circle key={`${cx}-${ry}`} cx={r + cx * gap} cy={r + ry * gap} r={r} fill="currentColor" />
+        ))
+      )}
+    </svg>
+  );
+}
+
 function GridSizeToggle({ value, onChange }: { value: GridSize; onChange: (v: GridSize) => void }) {
-  const sizes: { id: GridSize; label: string }[] = [
-    { id: 'small', label: 'S' },
-    { id: 'medium', label: 'M' },
-    { id: 'large', label: 'L' },
+  const sizes: { id: GridSize; dots: [number, number]; title: string }[] = [
+    { id: 'small', dots: [4, 3], title: '7 columns' },
+    { id: 'medium', dots: [3, 3], title: '6 columns' },
+    { id: 'large', dots: [3, 2], title: '5 columns' },
+    { id: 'xs', dots: [2, 2], title: '4 columns' },
   ];
   return (
     <div className="flex items-center border border-border rounded-md overflow-hidden">
       {sizes.map(s => (
         <button
           key={s.id}
+          title={s.title}
           onClick={() => onChange(s.id)}
-          className={`px-2 py-1 text-[10px] font-semibold transition-colors ${
+          className={`px-2 py-1.5 transition-colors ${
             value === s.id
               ? 'bg-accent text-accent-foreground'
               : 'text-muted-foreground hover:bg-muted'
           }`}
         >
-          {s.label}
+          <GridDots cols={s.dots[0]} rows={s.dots[1]} />
         </button>
       ))}
     </div>
