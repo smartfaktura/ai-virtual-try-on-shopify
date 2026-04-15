@@ -1,52 +1,31 @@
 
 
-# Optimized Scene Loading: Best Architecture
+# Fix: Smooth Loading State for Priority Scene Fetch
 
-## Current State
-The pagination fix (already deployed) fetches all 1,056 scenes in 2 batches. This works but loads ~1MB of data upfront, even though users only need 1-3 categories (20-60 scenes) when picking shots.
+## Problem
+When the two-tier loading kicks in, there's a brief moment where `isLoadingPriority` is `true` but no skeleton/spinner is shown for the recommended section. The component renders with empty `categoryCollections` (or falls back to hardcoded `CATEGORY_COLLECTIONS`), then snaps to the real data — causing a visible "chop chop" flash.
 
-## Best Approach: Two-Tier Query with Shared Cache
+## Root Cause
+1. In `useProductImageScenes.ts` line 238: when `scenes` is null (priority still loading), it falls back to `CATEGORY_COLLECTIONS` (hardcoded data), then switches to DB data — causing a layout jump
+2. In `ProductImagesStep2Scenes.tsx`: there's no loading skeleton for the **recommended** section during initial fetch, only for the "Explore more" section
 
-Instead of one monolithic fetch, split into a fast primary query and a deferred background query. This gives instant UI for the relevant category while still making all scenes available.
+## Fix
 
-### How It Works
+### 1. `src/hooks/useProductImageScenes.ts`
+- When `hasPriority` and `isLoadingPriority` is true, return empty arrays instead of falling back to hardcoded `CATEGORY_COLLECTIONS` — this prevents the flash of stale/wrong data
+- Return `isLoading: true` properly so the UI can show a skeleton
 
-**`useProductImageScenes.ts`** accepts an optional `priorityCategories` parameter:
+### 2. `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+- Destructure `isLoading` from the hook (not just `isLoadingRest`)
+- When `isLoading` is true, show a compact skeleton placeholder for the recommended section: 2-3 pulsing rows mimicking collapsed category headers
+- This replaces the current behavior of showing nothing or flashing fallback data
 
-- **When provided** (Step 2 scene picker): runs two React Query calls
-  - Query A: `WHERE category_collection = ANY(priorityCategories)` — instant, ~20-60 rows
-  - Query B: `WHERE category_collection != ALL(priorityCategories)` — deferred, loads after Query A renders
-  - Merges both into the same `categoryCollections` and `allScenes` return shape
-  - Returns `isLoadingRest` so the UI can show a subtle skeleton for "Other Categories"
+## Result
+- User sees a subtle pulse animation for ~100ms while priority scenes load
+- Recommended category appears smoothly without any layout shift
+- "Explore more" section continues to show its own skeleton while background data loads
 
-- **When not provided** (admin pages, review step, results step): single paginated fetch as today — no change for those consumers
-
-### Files Modified
-
-1. **`src/hooks/useProductImageScenes.ts`**
-   - Add `priorityCategories?: string[]` option
-   - Split into two `useQuery` calls when priority categories are given
-   - Query A uses `.in('category_collection', categories)` — no pagination needed (small result)
-   - Query B uses `.not('category_collection', 'in', categories)` with pagination loop
-   - Merge results into unified return, add `isLoadingRest` flag
-
-2. **`src/components/app/product-images/ProductImagesStep2Scenes.tsx`**
-   - Pass `relevantCatIds` to `useProductImageScenes({ priorityCategories: [...relevantCatIds] })`
-   - Show a compact skeleton row under "Other Categories" while `isLoadingRest` is true
-   - No structural changes — recommended sections render instantly
-
-### Why This Is Best
-
-- **Instant perceived speed**: recommended scenes appear in ~100ms instead of waiting for 1,056 rows
-- **Zero complexity for other consumers**: admin, review, results pages are unchanged
-- **Same total data**: everything loads, just prioritized
-- **No database changes**: pure frontend optimization
-- **React Query deduplication**: if another component calls the hook without priority, the cached data from both queries is already warm
-
-### What Users See
-
-1. Open Step 2 → recommended category scenes appear immediately
-2. "Other Categories" section shows a subtle loading indicator for ~1-2 seconds
-3. After background load completes, all categories are browsable
-4. Navigate to Step 4/6 → all data already cached, zero delay
+## Files Changed
+- `src/hooks/useProductImageScenes.ts` — return empty arrays during priority loading instead of fallback
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — add loading skeleton for recommended section
 
