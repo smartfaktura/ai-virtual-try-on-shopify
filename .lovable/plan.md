@@ -1,31 +1,31 @@
 
 
-# Upload 24 Lingerie Editorial Scenes
+# Upload 24 Makeup & Lipsticks Editorial Scenes
 
 ## Summary
-Insert 24 new editorial scenes for the `lingerie` category collection (currently has 18 scenes with `category_sort_order: 29`). Organized into 6 sub-categories (4 scenes each). Keep `category_sort_order` at 29 (no change specified in RTF).
+Insert 24 new editorial scenes for the `makeup-lipsticks` category collection (currently has 18 scenes with `category_sort_order: 3`). Organized into 4 sub-categories (6 scenes each). Update `category_sort_order` from 3 to 18 per RTF spec.
 
 ## Scene Mapping
 
-| Sub-Category | Sub Sort | Scenes (4 each) |
+| Sub-Category | Sub Sort | Scenes (6 each) |
 |---|---|---|
-| Clean Intimate Studio (01-04) | 1 | lingerie-clean-soft-standing, lingerie-clean-seated-contour, lingerie-clean-side-profile, lingerie-clean-floor-folded |
-| Editorial Boudoir Minimal (05-08) | 2 | lingerie-boudoir-bed-edge-shadow, lingerie-boudoir-sheet-wrap, lingerie-boudoir-curtain-corner, lingerie-boudoir-vanity-mirror |
-| Soft Lifestyle / Bedroom UGC (09-12) | 3 | lingerie-ugc-morning-mirror, lingerie-ugc-coffee-bed, lingerie-ugc-robe-layer, lingerie-ugc-reading-soft |
-| Fabric / Detail / Flat Lay Still (13-16) | 4 | lingerie-still-folded-linen, lingerie-still-drawer-hanger, lingerie-still-macro-detail, lingerie-still-gift-tissue |
-| Aesthetic Color Intimate Stories (17-20) | 5 | lingerie-color-dusty-rose, lingerie-color-sage-calm, lingerie-color-cocoa-story, lingerie-color-icy-satin |
-| Campaign Sensual Statements (21-24) | 6 | lingerie-campaign-sunlit-hero, lingerie-campaign-deep-shadow, lingerie-campaign-silk-motion, lingerie-campaign-iconic-portrait |
+| Editorial Beauty Product Studio (01-06) | 1 | beauty-editorial-floating-hero, beauty-editorial-surface-shadow-hero, beauty-editorial-texture-closeup, beauty-editorial-swatch-surface, beauty-editorial-reflection-surface, beauty-editorial-grouping-story |
+| On-Face / In-Hand Beauty Editorial (07-12) | 2 | beauty-onface-lip-closeup, beauty-inhand-product-portrait, beauty-application-moment, beauty-eye-cheek-crop, beauty-clean-beauty-portrait, beauty-hand-face-gesture |
+| Vanity / Daily Beauty UGC (13-18) | 3 | beauty-vanity-mirror-moment, beauty-desk-bag-daily-use, beauty-sunlit-bathroom-routine, beauty-touchup-on-the-go, beauty-flatlay-vanity-essentials, beauty-evening-touchup-lifestyle |
+| Aesthetic Color Beauty Stories (19-24) | 4 | beauty-color-surface-still, beauty-color-inhand-story, beauty-color-beauty-portrait, beauty-color-sculptural-set, beauty-color-liquid-energy, beauty-color-hero-campaign |
 
 ## Technical Details
-- **sort_order**: starts at 2717 (current global max is 2716)
-- **category_collection**: `lingerie`
-- **category_sort_order**: remains `29` (no change needed)
-- **Scenes 1-12**: `trigger_blocks` include `personDetails`, have `outfit_hint` (minimal styling directions for lingerie-appropriate layering)
-- **Scenes 13-16**: still life, no `personDetails`, no `outfit_hint`; scene 15 includes `detailFocus`
-- **Scenes 17-20**: `aestheticColor` + `personDetails` + outfit hint; `suggested_colors` = `[{"name":"Dusty Rose Blush","hex":"#C9A0A0"}]`
-- **Scenes 21-24**: campaign with `personDetails` + outfit hint
+- **sort_order**: starts at 2741 (current global max is 2740)
+- **category_collection**: `makeup-lipsticks`
+- **category_sort_order**: update all makeup-lipsticks scenes from `3` to `18` per RTF
+- **Scenes 1-6**: still life / product-only, `detailFocus` trigger on most, no `personDetails`, no `outfit_hint`
+- **Scenes 7-12**: on-face/in-hand with `personDetails`, no `outfit_hint` (beauty category)
+- **Scenes 13-18**: lifestyle UGC, mix of `personDetails` and product-only; scene 14 uses `stylingDetails` instead of `personDetails`, scene 17 also `stylingDetails`
+- **Scenes 19-24**: `aestheticColor` trigger; `suggested_colors` = `[{"name":"Soft Poppy Coral","hex":"#F47C5C"}]`; scenes 19, 22 are product-only stills; scenes 20, 21, 23, 24 include `personDetails`
+- Scene 24 scene_type is `campaign`; scenes 13-18 are `lifestyle`; all others are `editorial`
 - Full prompt templates extracted from RTF
 
 ## Execution
-1. Single batch INSERT of 24 new rows (no UPDATE needed since `category_sort_order` is already 29)
+1. UPDATE existing 18 makeup-lipsticks scenes: set `category_sort_order = 18`
+2. Single batch INSERT of 24 new rows with full prompt templates, trigger blocks, and suggested colors
 
