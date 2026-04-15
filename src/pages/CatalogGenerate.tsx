@@ -22,7 +22,7 @@ import { CatalogStepBackgroundsV2 } from '@/components/app/catalog/CatalogStepBa
 import { CatalogStepShots } from '@/components/app/catalog/CatalogStepShots';
 import { CatalogStepProps } from '@/components/app/catalog/CatalogStepProps';
 import { CatalogStepReviewV2 } from '@/components/app/catalog/CatalogStepReviewV2';
-import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
@@ -61,7 +61,8 @@ export default function CatalogGenerate() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { balance, refreshBalance, openBuyModal } = useCredits();
+  const { balance, refreshBalance } = useCredits();
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
 
   // Step 1
@@ -793,7 +794,7 @@ export default function CatalogGenerate() {
               totalImages={totalImages}
               totalCredits={totalCredits}
               balance={balance}
-              onOpenBuyModal={openBuyModal}
+              onOpenBuyModal={() => setNoCreditsModalOpen(true)}
               onPreselectRecommended={handlePreselectRecommended}
               productCount={selectedProductIds.size}
               modelCount={modelCount}
@@ -835,7 +836,7 @@ export default function CatalogGenerate() {
               isGenerating={isGenerating}
               onBack={() => setStep(6)}
               onGenerate={handleGenerate}
-              onOpenBuyModal={openBuyModal}
+              onOpenBuyModal={() => setNoCreditsModalOpen(true)}
               onStepClick={setStep}
             />
           )}
@@ -897,7 +898,7 @@ export default function CatalogGenerate() {
         )}
       </div>
 
-      <BuyCreditsModal />
+      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category="fallback" />
       <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct} onProductAdded={() => setShowAddProduct(false)} />
     </div>
   );
