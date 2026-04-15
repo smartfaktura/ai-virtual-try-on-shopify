@@ -145,7 +145,7 @@ function TypewriterPlaceholder({
       ? "Describe what to change — remove a detail, swap background, adjust colors…"
       : "Optional — describe extra details, or leave empty to auto-generate";
     return (
-      <div className="absolute inset-0 pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
+      <div className="absolute pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
         {text}
       </div>
     );
@@ -153,7 +153,7 @@ function TypewriterPlaceholder({
 
   if (isFocused) {
     return (
-      <div className="absolute inset-0 pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
+      <div className="absolute pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
         Describe what you want to create…
       </div>
     );
@@ -162,7 +162,7 @@ function TypewriterPlaceholder({
   const displayText = TYPEWRITER_PHRASES[phraseIdx].slice(0, charIdx);
 
   return (
-    <div className="absolute inset-0 pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
+    <div className="absolute pointer-events-none text-base leading-relaxed text-muted-foreground/50 pr-10">
       {displayText}
       <span className="animate-pulse">|</span>
     </div>
