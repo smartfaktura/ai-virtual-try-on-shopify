@@ -404,31 +404,74 @@ export default function Dashboard() {
             Welcome, {firstName} 👋
           </h1>
           <p className="text-lg text-muted-foreground mt-2 max-w-xl">
-            Your AI photography studio is ready. Let's create your first visual set.
+            Your AI photography studio is ready. Choose how you want to start.
           </p>
 
           {/* Credit badge */}
-          <div className="flex items-center gap-4 mt-5 flex-wrap">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span><strong className="text-foreground">{balance}</strong> credits available</span>
-            </div>
-            <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={() => setStartModalOpen(true)}>
-              Start with a Template
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-5">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span><strong className="text-foreground">{balance}</strong> credits available</span>
           </div>
         </div>
 
-        {/* Onboarding Checklist */}
+        {/* Start here — 3-card grid */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">Get Started</h2>
-          <OnboardingChecklist
-            productCount={productCount}
-            brandProfileCount={brandProfileCount}
-            jobCount={totalJobCount}
-            freestyleCount={freestyleCount}
-          />
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Start here</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Card 1 — Product Visuals */}
+            <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Layers className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground">Create Product Visuals</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Main guided flow with templates and workflows.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground/60 mt-3">Best place to start</p>
+              <Button className="w-full rounded-full font-semibold gap-2 mt-3 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
+                Open
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Card 2 — Freestyle */}
+            <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Wand2 className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground">Create with Prompt</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Describe any shot, scene, or style you want.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground/60 mt-3">More creative control</p>
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-3 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
+                Open
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Card 3 — Explore */}
+            <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Compass className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground">Explore Examples</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Browse real examples and inspiration.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground/60 mt-3">Good first look around</p>
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-3 min-h-[44px]" onClick={() => navigate('/app/discover')}>
+                Open
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         <DashboardDiscoverSection />
@@ -439,42 +482,6 @@ export default function Dashboard() {
         {/* What You Can Create — showcase gallery */}
         <RecentCreationsGallery />
 
-        {/* Two Ways to Create */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Layers className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-foreground">Templates</h3>
-                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Pick a template like Try-On, Product Listing, UGC or Flat Lay and get a full visual set in one click.
-                </p>
-              </div>
-              <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
-                Visual Studio
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-foreground">Freestyle Studio</h3>
-                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Full creative control - mix prompts, products, models, scenes, and brand profiles to generate any image you imagine.
-                </p>
-              </div>
-              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
-                Open Studio
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
 
         {/* Explore Workflows — compact animated cards */}
         {workflows.length > 0 && (
