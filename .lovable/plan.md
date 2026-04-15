@@ -1,47 +1,43 @@
 
 
-# Freestyle Studio Card — Brand New React-Driven Approach
+# Freestyle Card — Workflow Step Pills with Responsive Fit
 
-## Why previous attempts failed
-The CSS-only approach is fundamentally broken: `animation-fill-mode: forwards` (typewriter plays once) conflicts with `animation-iteration-count: infinite` (loop wrapper). The `max-width: ch` technique also doesn't work reliably in narrow card containers with `white-space: nowrap`. No amount of CSS tweaking will fix this — it needs a different architecture.
+## What changes
 
-## New approach: React state machine + CSS transitions
+**File: `src/components/app/FreestylePromptCard.tsx`**
 
-Replace all CSS keyframe animations with a simple React `useEffect` interval that drives a phase state machine. The typewriter becomes `text.substring(0, charIndex)` — guaranteed to work at any width. CSS handles only transitions (opacity, transform), not sequencing.
+### 1. Replace result pills with workflow step pills
+Replace `RESULT_PILLS = ['Studio', 'Court', 'Café']` with 4 workflow steps, each with a Lucide icon:
 
-**File: `src/components/app/FreestylePromptCard.tsx` — Full rewrite**
-
-### Structure (matches WorkflowCardCompact exactly)
-- Same `Card` wrapper, same classes
-- `aspect-[3/4]` thumbnail area (or `aspect-[2/3]` on mobileCompact)
-- Content area: same padding, font sizes, filled primary CTA button (not outline)
-
-### Animation state machine (React-driven)
 ```
-Phase 0: Empty prompt bar, cursor blinking
-Phase 1: Typewriter — charIndex increments every 60ms via setInterval
-Phase 2: Send button pulses briefly  
-Phase 3: Pills fade in (staggered 200ms each)
-Phase 4: Hold for 2s
-Phase 5: Everything fades out, reset to Phase 0
+Scene (Camera) → Model (User) → Product (Package) → Generate (Zap)
 ```
 
-Total loop: ~8s. All sequencing via `setTimeout` chains in a single `useEffect`. IntersectionObserver pauses/resumes when card is off-screen.
+- First 3 pills: `bg-muted/30 border-border/30 text-foreground/70`
+- "Generate" pill: `bg-primary/10 border-primary/20 text-primary` — visually distinct as the action
+- Each pill shows icon + label side by side
 
-### Typewriter implementation
-- `const visibleText = PROMPT_TEXT.substring(0, charIndex)`
-- Rendered as regular `<span>` — no `white-space: nowrap`, no `overflow: hidden`, no `max-width`
-- Text wraps naturally within the prompt bar — looks like real typing
-- Blinking cursor: a `<span>` after the text with CSS `opacity` toggle via `animate-pulse`
+### 2. Animation timing
+- After typewriter completes and send icon appears, pills fade in sequentially (300ms stagger)
+- Update `pillsVisible` state to track 4 items instead of 3
+- "Generate" pill gets a brief scale bump (`scale-105` → `scale-100`) on appear
+- Hold duration stays 2.2s, total loop ~8–9s
 
-### Visual details
-- Prompt bar: `rounded-xl bg-muted/40 border border-border/40 p-3`
-- Pills use CSS `transition: opacity 0.4s, transform 0.4s` triggered by state boolean
-- Send icon transitions `opacity` and `scale` via inline style
-- Ambient glow: simple static radial gradient (no animation needed)
+### 3. Responsive layout — guaranteed fit on all screens
+The key issue: 4 pills with icons must not overflow on narrow cards.
 
-### Content area
-- Title: "Freestyle Studio" — `text-sm font-bold` (matches other cards)
-- Description: "Type anything. Get styled visuals." — `text-xs text-muted-foreground`
-- CTA: filled primary `Button` with "Start Creating" — same as WorkflowCardCompact
+- **Desktop** (`!mobileCompact`): `flex-wrap justify-center gap-2`, pills use `text-xs px-2.5 py-1`, icons `w-3 h-3`
+- **Mobile compact** (`mobileCompact`): `flex-wrap justify-center gap-1.5`, pills use `text-[10px] px-1.5 py-0.5`, icons `w-2.5 h-2.5`. Layout wraps into 2×2 grid naturally via flex-wrap
+- Pills container: `max-w-full` with `overflow-hidden` as safety net
+- Icon labels hide on extremely narrow cards: use `hidden xs:inline` on label text if needed — but with `flex-wrap` the 2×2 layout should handle it
+
+### 4. No structural changes
+Card wrapper, aspect ratios, prompt bar, content area, and CTA button all remain identical. Only the pills section markup changes.
+
+## Technical details
+- Import `Camera, User, Package, Zap` from lucide-react (remove unused imports)
+- `WORKFLOW_STEPS` array replaces `RESULT_PILLS`
+- `pillsVisible` initial state becomes `[false, false, false, false]`
+- `PILL_STAGGER` stays at 250ms (4 × 250 = 1s total reveal)
+- Adjust the hold timeout calc: `WORKFLOW_STEPS.length * PILL_STAGGER + 200`
 
