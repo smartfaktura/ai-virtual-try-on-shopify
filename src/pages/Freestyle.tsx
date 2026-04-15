@@ -171,6 +171,20 @@ export default function Freestyle() {
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
+  const { user } = useAuth();
+  const isFreeUser = plan === 'free';
+  const conversionState = useConversionState();
+  const { data: freestyleProfileCats } = useQuery({
+    queryKey: ['profile-categories', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase.from('profiles').select('product_categories').eq('user_id', user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id && isFreeUser,
+    staleTime: Infinity,
+  });
+  const conversionCategory = resolveConversionCategory(freestyleProfileCats?.product_categories);
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customScenePoses } = useCustomScenes();
   const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
