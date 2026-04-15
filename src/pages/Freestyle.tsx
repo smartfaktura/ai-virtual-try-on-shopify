@@ -28,6 +28,10 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
+import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
+import { useConversionState } from '@/hooks/useConversionState';
+import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses, mockModels } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
@@ -167,6 +171,20 @@ export default function Freestyle() {
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
+  const { user: authUser } = useAuth();
+  const isFreeUser = plan === 'free';
+  const conversionState = useConversionState();
+  const { data: freestyleProfileCats } = useQuery({
+    queryKey: ['profile-categories', authUser?.id],
+    queryFn: async () => {
+      if (!authUser?.id) return null;
+      const { data } = await supabase.from('profiles').select('product_categories').eq('user_id', authUser.id).maybeSingle();
+      return data;
+    },
+    enabled: !!authUser?.id && isFreeUser,
+    staleTime: Infinity,
+  });
+  const conversionCategory = resolveConversionCategory(freestyleProfileCats?.product_categories);
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customScenePoses } = useCustomScenes();
   const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
@@ -1029,6 +1047,19 @@ export default function Freestyle() {
                 </div>
               </div>
             )}
+            {/* Layer 1: Post-generation upgrade card */}
+            {isFreeUser && conversionState.canShowLayer1 && galleryImages.length > 0 && (
+              <div className="px-3 lg:px-1 pt-1 pb-2">
+                <PostGenerationUpgradeCard
+                  category={conversionCategory}
+                  onSeeMore={() => {
+                    conversionState.dismissLayer1();
+                    conversionState.openUpgradeDrawer('layer1_cta');
+                  }}
+                  onDismiss={conversionState.dismissLayer1}
+                />
+              </div>
+            )}
             <FreestyleGallery
               images={galleryImages}
               onDownload={handleDownload}
@@ -1191,6 +1222,11 @@ export default function Freestyle() {
           />
         );
       })()}
+      <UpgradeValueDrawer
+        open={conversionState.layer2Open}
+        onClose={conversionState.dismissLayer2}
+        category={conversionCategory}
+      />
     </div>
   );
 }

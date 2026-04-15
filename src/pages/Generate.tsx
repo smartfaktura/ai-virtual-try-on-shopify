@@ -44,6 +44,10 @@ import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
+import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
+import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
+import { useConversionState } from '@/hooks/useConversionState';
+import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 const MAX_IMAGES_PER_JOB = 4;
@@ -235,6 +239,20 @@ export default function Generate() {
   const isFreeUser = plan === 'free';
   const { isAdmin } = useIsAdmin();
   const [isGeneratingPreviews, setIsGeneratingPreviews] = useState(false);
+
+  // ── Conversion flow ──────────────────────────────────────────
+  const conversionState = useConversionState();
+  const { data: profileCats } = useQuery({
+    queryKey: ['profile-categories', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase.from('profiles').select('product_categories').eq('user_id', user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id && isFreeUser,
+    staleTime: Infinity,
+  });
+  const conversionCategory = resolveConversionCategory(profileCats?.product_categories);
 
   // Merge mock + custom + user models, sorted consistently
   const allModels = useMemo(() => {
@@ -984,7 +1002,7 @@ export default function Generate() {
         nextMap.delete(model.modelId);
       } else {
         if (isFreeUser && next.size >= 1) {
-          toast.info('Free plan allows 1 model per generation. Upgrade for more.');
+          conversionState.openUpgradeDrawer('model_limit');
           return prev;
         }
         next.add(model.modelId);
@@ -1019,7 +1037,7 @@ export default function Generate() {
         nextMap.delete(pose.poseId);
       } else {
         if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
-          toast.info(`Free plan allows 1 scene per generation. Upgrade for more.`);
+          conversionState.openUpgradeDrawer('scene_limit');
           return prev;
         }
         next.add(pose.poseId);
@@ -4081,6 +4099,7 @@ export default function Generate() {
             handleGenerateClick={handleGenerateClick}
             handleGenerateScenePreviews={handleGenerateScenePreviews}
             setCurrentStep={setCurrentStep}
+            onFreeLimit={(reason) => conversionState.openUpgradeDrawer(reason)}
           />
         )}
 
@@ -4389,6 +4408,18 @@ export default function Generate() {
               </CardContent>
             </Card>
 
+            {/* Layer 1: Post-generation upgrade card */}
+            {isFreeUser && conversionState.canShowLayer1 && (
+              <PostGenerationUpgradeCard
+                category={conversionCategory}
+                onSeeMore={() => {
+                  conversionState.dismissLayer1();
+                  conversionState.openUpgradeDrawer('layer1_cta');
+                }}
+                onDismiss={conversionState.dismissLayer1}
+              />
+            )}
+
             <Card><CardContent className="p-5 space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
@@ -4497,6 +4528,17 @@ export default function Generate() {
         open={showAddProduct}
         onOpenChange={setShowAddProduct}
         onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+      />
+      <UpgradeValueDrawer
+        open={conversionState.layer2Open}
+        onClose={conversionState.dismissLayer2}
+        category={conversionCategory}
+        generationContext={{
+          productThumbnail: selectedProduct?.images?.[0]?.url || scratchUpload?.previewUrl,
+          productTitle: selectedProduct?.title || scratchUpload?.productInfo.title,
+          sceneName: Array.from(selectedPoseMap.values())[0]?.name,
+          modelName: Array.from(selectedModelMap.values())[0]?.name,
+        }}
       />
       <FeedbackBanner />
     </PageHeader>
