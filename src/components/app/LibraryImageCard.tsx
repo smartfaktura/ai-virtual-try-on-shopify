@@ -49,7 +49,8 @@ interface LibraryImageCardProps {
 }
 
 async function downloadImage(url: string, filename: string) {
-  const res = await fetch(url);
+  const proxyUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(url)}`;
+  const res = await fetch(proxyUrl);
   const contentType = res.headers.get('content-type');
   const ext = getExtensionFromContentType(contentType);
   const baseName = filename.replace(/\.[^.]+$/, '');
