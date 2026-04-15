@@ -1037,7 +1037,7 @@ export default function Generate() {
         nextMap.delete(pose.poseId);
       } else {
         if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
-          toast.info(`Free plan allows 1 scene per generation. Upgrade for more.`);
+          conversionState.openUpgradeDrawer('scene_limit');
           return prev;
         }
         next.add(pose.poseId);
