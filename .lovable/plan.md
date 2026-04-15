@@ -1,67 +1,59 @@
 
 
-# Post-Gen Conversion — Full Platform Audit (Round 9)
+# Admin Conversion Preview Page
 
-## Coverage Matrix (Current State)
+Create a new admin page at `/app/admin/conversion` that renders all 3 Post-Gen Conversion components in an interactive sandbox so you can preview, compare, and request design changes.
 
-| Page | Route | Layer 1 (Card) | Layer 2 (Drawer) | Layer 3 (Modal) | Credit Gate |
-|------|-------|:-:|:-:|:-:|:-:|
-| Generate (Workflows) | `/app/generate/:slug` | Yes | Yes | Yes | Yes |
-| Freestyle | `/app/freestyle` | Yes | Yes | Yes | Yes |
-| Text-to-Product | `/app/generate/text-to-product` | Yes | Yes | Yes | Yes |
-| Product Images | `/app/generate/product-images` | — | — | Yes | Yes |
-| Perspectives | `/app/perspectives` | — | — | Yes | Yes |
-| Animate Video | `/app/video/animate` | — | — | Yes | Yes |
-| Brand Models | `/app/models` | — | — | Yes | Yes |
-| Catalog Studio | `/app/catalog/generate` | — | — | Yes | Yes |
-| Short Film | `/app/video/short-film` | — | — | Yes | Yes |
-| Creative Drops | wizard component | — | — | Yes | Yes |
-| Upscale Modal | in-page modal | — | — | Yes | Yes |
+## What You'll See
 
-**All 11 generation surfaces now use `NoCreditsModal` for credit gates.**
+The page will display all 3 layers side-by-side with controls:
 
-## Component Design Audit
+- **Layer 1 — PostGenerationUpgradeCard**: Inline card with category dropdown to preview all 9 category variants (fashion, beauty, jewelry, etc.)
+- **Layer 2 — UpgradeValueDrawer**: Opens from a button, showing the value drawer with category switcher and optional generation context preview
+- **Layer 3 — NoCreditsModal**: Opens from a button, showing the credit pack purchase modal with category switcher
 
-| Check | Status |
-|-------|--------|
-| Layer 1: 44px dismiss tap target (p-2.5 + min-w/min-h) | Pass |
-| Layer 1: chip alignment pl-7 sm:pl-9 | Pass |
-| Layer 1: 3s delayed fade-in | Pass |
-| Layer 2: sm:!max-w-[480px] width override | Pass |
-| Layer 2: p-0 pt-2 + inner pt-10 close clearance | Pass |
-| Layer 2: "Most Popular" badge -top-2.5 with pt-3 | Pass |
-| Layer 3: px-5 sm:px-8 mobile padding | Pass |
-| Layer 3: overflow-visible + pt-4 for "Best Value" badge | Pass |
-| Layer 3: grid-cols-1 sm:grid-cols-3 pack layout | Pass |
-| Layer 3: min-h-[44px] on all buttons | Pass |
-| Layer 3: View Plans → /app/settings (internal) | Pass |
+Each section will have:
+- Category selector dropdown (all 9 categories)
+- Desktop/mobile viewport toggle (renders in a constrained container to simulate breakpoints)
+- Open/close controls for drawer and modal
+- The 3-second fade-in delay on Layer 1 will be bypassed for instant preview
 
-## Remaining Items (Minor — No User Impact)
+## Technical Plan
 
-### 1. Residual toast in useShortFilmProject.ts (dead code)
+| Step | Details |
+|------|---------|
+| **Create page** | `src/pages/AdminConversion.tsx` — standalone admin page with all 3 components rendered in preview containers |
+| **Add route** | `src/App.tsx` — add `<Route path="/admin/conversion" element={<AdminConversion />} />` |
+| **Add nav link** | `src/components/app/AppShell.tsx` — add "Conversion" button in admin menu |
 
-`useShortFilmProject.ts` line 749–751 still has `toast.error("Not enough credits...")` + return. Since `ShortFilm.tsx` now intercepts at the page level before calling `startGeneration()`, this code path is unreachable. It serves as defense-in-depth but the toast will never fire.
+### Page Layout
 
-**Recommendation**: Remove the toast and early return from the hook to avoid confusion. Low priority — no user-facing impact.
+```text
+┌─────────────────────────────────────────────┐
+│  Post-Gen Conversion Preview     [Category ▼]│
+├─────────────────────────────────────────────┤
+│  LAYER 1 — Inline Upgrade Card              │
+│  ┌─────────────────────────────────┐        │
+│  │ [PostGenerationUpgradeCard]     │        │
+│  └─────────────────────────────────┘        │
+│  [Desktop] [Mobile 375px]                   │
+├─────────────────────────────────────────────┤
+│  LAYER 2 — Value Drawer                     │
+│  [Open Drawer]                              │
+├─────────────────────────────────────────────┤
+│  LAYER 3 — No Credits Modal                 │
+│  [Open Modal]                               │
+├─────────────────────────────────────────────┤
+│  COPY REFERENCE TABLE                       │
+│  Category | Headline | Subline | Chips      │
+└─────────────────────────────────────────────┘
+```
 
-### 2. `openBuyModal` still used in non-generation contexts (correct behavior)
+The copy reference table at the bottom will show all category copy variants from `conversionCopy.ts` in a scannable table format.
 
-These surfaces correctly use the legacy `openBuyModal` because they are navigation/info surfaces, not credit gates:
-
-- `CreditIndicator.tsx` (sidebar) — opens pricing modal for browsing plans
-- `LowCreditsBanner.tsx` — persistent banner with "Top up" button
-- `Dashboard.tsx` — credit balance card click
-- `BrandModels.tsx` UpgradeHero — "Upgrade to Growth" button for plan-gated feature
-
-No changes needed for these.
-
-## Verdict
-
-**The Post-Gen Conversion system is fully functional across all generation surfaces.** All credit gates open `NoCreditsModal`. All three conversion layers (Card, Drawer, Modal) pass design and accessibility checks at desktop, tablet, and mobile breakpoints.
-
-Only one optional cleanup remains: removing the dead toast in `useShortFilmProject.ts`.
-
-| Priority | File | Fix |
-|----------|------|-----|
-| Optional | `src/hooks/useShortFilmProject.ts` | Remove redundant toast.error + return at line 749–751 (dead code — page-level gate already prevents this path) |
+### Key Details
+- Layer 1 card will bypass the 3-second delay by rendering with `visible` forced to `true` (we'll render it directly using the copy functions rather than wrapping in the component, or pass a `forceVisible` prop)
+- Layer 2 and Layer 3 open via buttons — they use their real components so you see exactly what users see
+- Mobile preview wraps the Layer 1 card in a `max-w-[375px]` container to simulate mobile
+- Admin-only: protected behind `useIsAdmin` check
 
