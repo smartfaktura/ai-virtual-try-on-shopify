@@ -997,6 +997,12 @@ export default function TextToProduct() {
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
       />
+      <NoCreditsModal
+        open={noCreditsModalOpen}
+        onClose={() => setNoCreditsModalOpen(false)}
+        category={conversionCategory}
+        generationCount={allResults.reduce((sum, r) => sum + r.images.length, 0)}
+      />
     </div>
   );
 }
