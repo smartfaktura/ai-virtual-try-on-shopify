@@ -4099,6 +4099,7 @@ export default function Generate() {
             handleGenerateClick={handleGenerateClick}
             handleGenerateScenePreviews={handleGenerateScenePreviews}
             setCurrentStep={setCurrentStep}
+            onFreeLimit={(reason) => conversionState.openUpgradeDrawer(reason)}
           />
         )}
 
