@@ -335,7 +335,7 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-foreground">Create Product Visuals</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Main guided flow with templates and workflows.
+                  Create brand-ready visuals tailored to your product and category.
                 </p>
               </div>
               <p className="text-xs text-muted-foreground/60 mt-3">Best place to start</p>
@@ -353,7 +353,7 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-foreground">Create with Prompt</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Describe any shot, scene, or style you want.
+                  Describe any shot, scene, or style you want to create.
                 </p>
               </div>
               <p className="text-xs text-muted-foreground/60 mt-3">More creative control</p>
@@ -371,7 +371,7 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-foreground">Explore Examples</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Browse real examples and inspiration.
+                  Browse real examples and recreate them with your product.
                 </p>
               </div>
               <p className="text-xs text-muted-foreground/60 mt-3">Good first look around</p>
