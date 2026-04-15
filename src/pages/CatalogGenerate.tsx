@@ -898,7 +898,7 @@ export default function CatalogGenerate() {
         )}
       </div>
 
-      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category="catalog" />
+      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category="fallback" />
       <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct} onProductAdded={() => setShowAddProduct(false)} />
     </div>
   );
