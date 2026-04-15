@@ -1,53 +1,47 @@
 
 
-# Fix Freestyle Studio Card — Better Animations and Sizing
+# Freestyle Studio Card — Brand New React-Driven Approach
 
-## Problem
-The current card has issues visible in the screenshot:
-- Text is too small (`text-xs` / `text-[10px]`)
-- Typewriter animation doesn't work properly — the `white-space: nowrap` + `width: 0→100%` technique fails because the card constrains the width, so the text either overflows or doesn't animate visibly
-- Too much empty space above the prompt bar (the visual area uses `aspect-[3/4]` with centered content)
-- Pills are tiny and barely visible
-- Overall feels flat and lifeless
+## Why previous attempts failed
+The CSS-only approach is fundamentally broken: `animation-fill-mode: forwards` (typewriter plays once) conflicts with `animation-iteration-count: infinite` (loop wrapper). The `max-width: ch` technique also doesn't work reliably in narrow card containers with `white-space: nowrap`. No amount of CSS tweaking will fix this — it needs a different architecture.
 
-## Root Cause of Animation Failure
-The CSS typewriter technique using `width` + `steps()` + `overflow: hidden` + `white-space: nowrap` requires the text to be on a single line that expands. But the prompt text is long and the card is narrow, so it wraps or gets clipped incorrectly. The `white-space: nowrap` forces a single line that overflows the container.
+## New approach: React state machine + CSS transitions
 
-## Solution
-Rewrite the animation approach and tighten the layout:
+Replace all CSS keyframe animations with a simple React `useEffect` interval that drives a phase state machine. The typewriter becomes `text.substring(0, charIndex)` — guaranteed to work at any width. CSS handles only transitions (opacity, transform), not sequencing.
 
-**File: `src/components/app/FreestylePromptCard.tsx`**
+**File: `src/components/app/FreestylePromptCard.tsx` — Full rewrite**
 
-### 1. Fix typewriter — use `max-width` + `ch` units
-- Set text in a container with `white-space: nowrap` but use `max-width` animating from `0ch` to `${CHAR_COUNT}ch` instead of `width: 0 → 100%`
-- Wrap the text container in an overflow-hidden div that constrains properly
-- This ensures character-by-character reveal regardless of card width
+### Structure (matches WorkflowCardCompact exactly)
+- Same `Card` wrapper, same classes
+- `aspect-[3/4]` thumbnail area (or `aspect-[2/3]` on mobileCompact)
+- Content area: same padding, font sizes, filled primary CTA button (not outline)
 
-### 2. Increase text sizes
-- Prompt text: `text-sm` (was `text-xs`), mobile: `text-xs` (was `text-[10px]`)
-- Pills: `text-xs` (was `text-[10px]`), mobile: `text-[10px]` (was `text-[8px]`)
-- Title: `text-base font-bold` (was `text-sm`)
+### Animation state machine (React-driven)
+```
+Phase 0: Empty prompt bar, cursor blinking
+Phase 1: Typewriter — charIndex increments every 60ms via setInterval
+Phase 2: Send button pulses briefly  
+Phase 3: Pills fade in (staggered 200ms each)
+Phase 4: Hold for 2s
+Phase 5: Everything fades out, reset to Phase 0
+```
 
-### 3. Reduce dead space
-- Change visual area from `aspect-[3/4]` to a fixed padding approach (`py-8 px-5`) so it sizes to content naturally instead of forcing a tall empty box
-- Move prompt bar higher with `justify-end` or tighter padding
+Total loop: ~8s. All sequencing via `setTimeout` chains in a single `useEffect`. IntersectionObserver pauses/resumes when card is off-screen.
 
-### 4. Improve prompt bar styling
-- Slightly darker background: `bg-muted/50` with stronger border `border-border/50`
-- Add a subtle `shadow-sm` for depth
-- Make send button more visible: `bg-primary/15` with `text-primary/70`
+### Typewriter implementation
+- `const visibleText = PROMPT_TEXT.substring(0, charIndex)`
+- Rendered as regular `<span>` — no `white-space: nowrap`, no `overflow: hidden`, no `max-width`
+- Text wraps naturally within the prompt bar — looks like real typing
+- Blinking cursor: a `<span>` after the text with CSS `opacity` toggle via `animate-pulse`
 
-### 5. Add a looping reset
-- After pills appear (at ~4s), hold for 2s, then fade everything out and restart
-- Total loop: ~7s with `animation-iteration-count: infinite`
-- Use a wrapper animation that controls opacity of the entire visual area
+### Visual details
+- Prompt bar: `rounded-xl bg-muted/40 border border-border/40 p-3`
+- Pills use CSS `transition: opacity 0.4s, transform 0.4s` triggered by state boolean
+- Send icon transitions `opacity` and `scale` via inline style
+- Ambient glow: simple static radial gradient (no animation needed)
 
-### 6. Ambient glow improvement
-- Make the glow larger (`w-60 h-60`) and slightly more visible (`bg-primary/8`)
-- Add a slow pulse animation to the glow
-
-## Technical approach
-- All CSS-only, no JS timers
-- Use `@keyframes` with proper `forwards` and `infinite` where appropriate
-- The typewriter uses `max-width` in `ch` units for reliable character reveal
+### Content area
+- Title: "Freestyle Studio" — `text-sm font-bold` (matches other cards)
+- Description: "Type anything. Get styled visuals." — `text-xs text-muted-foreground`
+- CTA: filled primary `Button` with "Start Creating" — same as WorkflowCardCompact
 
