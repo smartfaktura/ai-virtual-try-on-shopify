@@ -238,22 +238,22 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
     () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60, width: 600 })),
     [rawBackgrounds],
   );
-
-  // Preload next 2 images ahead for smooth carousel transitions
-  useEffect(() => {
-    if (!isActive || backgrounds.length <= 1) return;
-    const next1 = (current + 1) % backgrounds.length;
-    const next2 = (current + 2) % backgrounds.length;
-    [next1, next2].forEach((i) => {
-      const img = new Image();
-      img.src = backgrounds[i];
-    });
-  }, [current, isActive, backgrounds]);
   const INTERVAL = scene.interval ?? 2500;
   const [current, setCurrent] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const currentRef = useRef(0);
+
+  // Preload next 2 images ahead for smooth carousel transitions
+  useEffect(() => {
+    if (!isActive || backgrounds.length <= 1) return;
+    const next1 = (currentRef.current + 1) % backgrounds.length;
+    const next2 = (currentRef.current + 2) % backgrounds.length;
+    [next1, next2].forEach((i) => {
+      const img = new Image();
+      img.src = backgrounds[i];
+    });
+  }, [current, isActive, backgrounds]);
 
   // Preload only the element images (small chips)
   const elementUrls = useMemo(
