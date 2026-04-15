@@ -101,6 +101,7 @@ async function fetchScenesExcludingCategories(categories: string[]): Promise<DbS
 const COLLECTION_MERGE: Record<string, string> = {
   "snacks-food": "food",
   "food-beverage": "food",
+  "wallets": "wallets-cardholders",
 };
 
 function buildCollections(scenes: DbScene[]): CategoryCollection[] {
