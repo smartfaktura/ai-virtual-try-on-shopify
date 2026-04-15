@@ -11,7 +11,7 @@ import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
-import { OnboardingChecklist } from '@/components/app/OnboardingChecklist';
+
 
 
 import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
