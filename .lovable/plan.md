@@ -1,30 +1,46 @@
 
 
-# Add "Furniture" as Valid Category in Product Analysis
+# Fix Generation State Contamination Between Rapid Generations
 
 ## Problem
-The `analyze-product-category` edge function has no `furniture` category in its valid categories list or title fallback patterns. Armchairs, sofas, tables etc. incorrectly fall into `home-decor`. The frontend already fully supports `furniture` as a separate category with correct keyword matching.
+When a user starts a new generation immediately after a previous one, the old polling loop is never cancelled. Two polling loops run simultaneously — both calling `setCompletedJobs()` — causing the counter to show results from the previous generation (e.g., "39 of 24 images completed", 163% progress).
 
-## Changes
+**Root cause in `handleGenerate`** (ProductImages.tsx line 508):
+- Resets `completedJobs`, `expectedJobCount`, etc.
+- Does NOT cancel the previous `pollingRef.current` timer
+- Does NOT clear the old `jobMap`
+- `startPolling` creates a new loop, but the old one is still firing
 
-### 1. Edge Function: `supabase/functions/analyze-product-category/index.ts`
+## Fix
 
-**Add `furniture` to `VALID_CATEGORIES` set** (line 16, alongside `home-decor`)
+### File: `src/pages/ProductImages.tsx`
 
-**Add furniture title fallback pattern** to `TITLE_CATEGORY_PATTERNS` — before the `home-decor` pattern so furniture items match first:
+**At the start of `handleGenerate` (after the `canAfford` check, ~line 510), add a full reset:**
+
+```typescript
+// Cancel any in-flight polling from a previous generation
+if (pollingRef.current) { clearTimeout(pollingRef.current); pollingRef.current = null; }
+setJobMap(new Map());
 ```
-[/armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"]
+
+This ensures:
+1. The old polling loop is stopped before the new one starts
+2. The old jobMap is cleared so `totalJobs` (which reads `jobMap.size`) shows 0 until the new jobs are enqueued
+3. No stale `completedJobs` values leak from the previous poll cycle
+
+**Also clamp the display values in `ProductImagesStep5Generating.tsx` to prevent >100% even if a race condition slips through:**
+
+Line 83: Cap `pct` at 100:
+```typescript
+const pct = effectiveTotal > 0 ? Math.min(100, Math.round((completedJobs / effectiveTotal) * 100)) : 0;
 ```
 
-**Add specificity override**: `home-decor` → `furniture` when title matches furniture keywords (catches cases where AI returns `home-decor` for a sofa)
+Line 151: Cap `completedOk` display:
+```typescript
+`${Math.min(completedOk, effectiveTotal)} of ${effectiveTotal} image${effectiveTotal !== 1 ? 's' : ''} completed`
+```
 
-**Update the system prompt** `VALID CATEGORIES` list to include `furniture`
-
-### 2. No frontend changes needed
-The frontend (`ProductImagesStep2Scenes.tsx`, `useProductImageScenes.ts`, admin pages) already has full `furniture` support with labels, keyword arrays, and tab grouping.
-
-## Impact
-- 1 edge function file changed
-- Existing products won't auto-reclassify (analysis runs at upload time) — user would need to re-upload or we could add a manual re-analyze button later
-- New uploads of furniture items will correctly land in the Furniture recommended tab
+## Files Changed
+- `src/pages/ProductImages.tsx` — cancel old polling + clear jobMap at start of `handleGenerate`
+- `src/components/app/product-images/ProductImagesStep5Generating.tsx` — clamp display values as safety net
 
