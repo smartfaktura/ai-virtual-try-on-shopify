@@ -1,49 +1,33 @@
 
 
-# Add 6 Example Freestyle Images Using Same Image Cards
-
-## Overview
-Add a "Get Inspired" section to the Freestyle empty state showing 6 pre-made example images rendered with the **exact same `ImageCard`** component from `FreestyleGallery.tsx` — same shimmer loading, hover gradient overlay, and action buttons.
+# Bigger Preset Cards + Typing Effect in Prompt Bar
 
 ## Changes
 
-### 1. Extract `ImageCard` for reuse
-**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+### 1. Enlarge quick-start scene cards
+**File: `src/components/app/freestyle/FreestyleQuickPresets.tsx`**
 
-Export the existing `ImageCard` component (currently a private function at line 322). Just add `export` in front of `function ImageCard`.
+- Increase thumbnail from `w-11 h-11` to `w-14 h-14` (lines 218-219)
+- Increase card padding from `px-3.5 py-2.5` to `px-4 py-3` (line 209)
+- Bump scene name text from `text-xs` to `text-sm` (line 222)
+- Bump category text from `text-[10px]` to `text-xs` (line 223)
 
-### 2. New component: `src/components/app/freestyle/FreestyleExamples.tsx`
+### 2. Add typing placeholder effect to prompt textarea
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
 
-- Import the exported `ImageCard` from `FreestyleGallery`
-- Define 6 hardcoded examples with the provided image URLs + realistic prompts
-- Render in a `grid-cols-2 md:grid-cols-3` grid
-- Each card uses `ImageCard` with:
-  - `onExpand` → opens a lightbox or just does nothing (no gallery context)
-  - `onDownload` → downloads the example image
-  - `onCopySettings` → copies the full prompt into the editor via `onUsePrompt` callback
-- No delete, no share, no admin buttons — just download + copy settings
-- Section header: "Get Inspired" with Sparkles icon, subtitle: "Copy a prompt to try it yourself"
+When the prompt is empty and the user hasn't focused the textarea yet, cycle through example prompts with a typewriter effect in the placeholder area:
 
-### 3. Update Freestyle page empty state
-**File: `src/pages/Freestyle.tsx`** (lines 1053-1065)
+- Add a small custom hook/state inside `FreestylePromptPanel` that cycles through 3-4 example phrases:
+  - "A luxury perfume on marble with golden hour lighting..."
+  - "Streetwear jacket on a model in an industrial warehouse..."
+  - "Minimalist skincare flat-lay with botanicals and morning light..."
+  - "Sneakers on concrete with dramatic shadow play..."
+- The effect types one character at a time, pauses, then erases and moves to the next phrase
+- Disappears immediately when user focuses the textarea or starts typing (set a `hasInteracted` flag)
+- Implementation: overlay a `<span>` with the animated text on top of the textarea (since native `placeholder` can't animate), hide it when `prompt.length > 0` or focused
 
-- Import `FreestyleExamples`
-- Add it above `FreestyleQuickPresets` in the empty state block
-- Pass `onUsePrompt` callback that sets the prompt text + shows toast
-
-### Example prompts (to be refined after image analysis during implementation)
-
-| # | Image | Prompt |
-|---|-------|--------|
-| 1 | `e6a330f2` (freestyle) | "Luxurious perfume bottle on sculpted marble, warm golden hour lighting, shallow depth of field, editorial beauty campaign" |
-| 2 | `ba13c796` (tryon) | "Fashion model in oversized streetwear jacket, industrial warehouse, dramatic side lighting, raw concrete, editorial photography" |
-| 3 | `642c61fa` (tryon) | "Elegant model in minimalist outfit, clean white studio, soft diffused lighting, full body, high-end lookbook" |
-| 4 | `596ae7d1` (freestyle) | "Premium skincare on natural stone with botanicals, morning window light, clean beauty editorial, soft earth tones" |
-| 5 | `7fb523ac` (tryon) | "Model with statement accessories on urban rooftop at golden hour, city skyline bokeh, warm cinematic tones, lifestyle campaign" |
-| 6 | `aac4c8f5` (freestyle) | "Artisanal candle collection on textured linen, dried flowers and ceramics, warm ambient glow, home décor editorial" |
-
-## Technical details
-- Images use `getOptimizedUrl(url, { quality: 70 })` — no width param (per memory rules)
-- `ImageCard` expects a `GalleryImage` shape — we'll construct minimal objects with `id`, `url`, `prompt`, `aspectRatio`
-- 3 files total: 1 export change, 1 new component, 1 integration point
+### Technical notes
+- Typing speed: ~40ms per character, pause 2s at full text, erase at ~20ms
+- The overlay span uses same font/size/color as the placeholder (`text-base text-muted-foreground/50`)
+- 2 files changed, no new files
 
