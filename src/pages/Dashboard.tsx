@@ -4,7 +4,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Euro, Clock, Play, Palette, Wand2, Film, Clapperboard } from 'lucide-react';
+import { Image, Wallet, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Euro, Clock, Play, Palette, Wand2, Film, Clapperboard, RotateCw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
