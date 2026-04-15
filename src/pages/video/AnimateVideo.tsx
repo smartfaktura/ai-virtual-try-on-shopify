@@ -1467,5 +1467,7 @@ export default function AnimateVideo() {
         />
       )}
     </div>
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
+    </>
   );
 }

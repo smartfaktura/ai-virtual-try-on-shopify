@@ -1075,5 +1075,7 @@ export default function Perspectives() {
         </div>
       </div>
     </div>
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
+    </>
   );
 }
