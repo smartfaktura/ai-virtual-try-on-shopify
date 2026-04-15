@@ -1,43 +1,52 @@
 
 
-# Fix Product Images on Review Page (Step 4)
+# Redesign Grid Column Options for Step 2 Shots
 
 ## Problem
-The product thumbnails in the Review page's "Products" summary card use raw image URLs without optimization, and the single-product layout needs the image to properly fill its container.
+Current grid sizes map to confusing column counts (7/6/5/4) and don't match the user's desired defaults or breakpoints.
 
 ## Changes
 
-**File: `src/components/app/product-images/ProductImagesStep4Review.tsx`**
+**File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`**
 
-1. **Add import** for `getOptimizedUrl` from `@/lib/imageOptimization`.
+### 1. Update `GridSize` type and `GRID_CLASSES` (lines 89-96)
 
-2. **Single product image (line 344)** — Add quality-only optimization:
+Replace with 4 options that map to the user's spec:
+
+| Option | Desktop (lg) | Tablet (md) | Mobile (default) |
+|--------|-------------|-------------|-----------------|
+| `6col` | 6 | 4 | 3 |
+| `5col` | 5 | 4 | 3 |
+| `4col` (default) | 4 | 3 | 2 |
+| `3col` | 3 | 2 | 2 |
+
 ```tsx
-// Before
-<ShimmerImage src={selectedProducts[0].image_url} ...
-// After  
-<ShimmerImage src={getOptimizedUrl(selectedProducts[0].image_url, { quality: 70 })} ...
+type GridSize = '6col' | '5col' | '4col' | '3col';
+
+const GRID_CLASSES: Record<GridSize, string> = {
+  '6col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6',
+  '5col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+  '4col': 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+  '3col': 'grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3',
+};
 ```
 
-3. **Multi-product grid images (line 353)** — Same fix:
-```tsx
-// Before
-<ShimmerImage src={p.image_url} ...
-// After
-<ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 70 })} ...
-```
+### 2. Update default state (line 334)
 
-4. **Prop thumbnails in Advanced Scene Controls (line 300)** — Tiny 16px avatars, safe for width:
-```tsx
-// Before
-<img src={product.image_url} ...
-// After
-<img src={getOptimizedUrl(product.image_url, { width: 32, quality: 40 })} ...
-```
+Change from `'medium'` to `'4col'`.
 
-Quality-only for the product cards (flexible `object-contain` containers). Width only for the 16px prop chips.
+### 3. Update `GridSizeToggle` (lines 283-288)
+
+```tsx
+const sizes = [
+  { id: '6col', dots: [4, 3], title: '6 columns' },
+  { id: '5col', dots: [3, 3], title: '5 columns' },
+  { id: '4col', dots: [3, 2], title: '4 columns' },
+  { id: '3col', dots: [2, 2], title: '3 columns' },
+];
+```
 
 ## Impact
-- 1 file, 3 image sources optimized
-- No width param on flexible containers — zero crop/zoom risk
+- 1 file changed
+- Default view becomes 4 columns on desktop (was 6), better for larger scene previews
 
