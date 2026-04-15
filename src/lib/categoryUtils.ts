@@ -35,7 +35,8 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'bronzer', 'highlighter', 'primer', 'eyeliner', 'lip gloss', 'lip liner', 'contour', 'rouge', 'cheek'], 'makeup-lipsticks' as TemplateCategory],
   [['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'shampoo', 'conditioner', 'body wash', 'lotion', 'retinol'], 'beauty-skincare' as TemplateCategory],
   // Generic parents
-  [['sweater', 'shirt', 'apparel', 'pants', 'coat', 'blouse', 'skirt', 'suit', 't-shirt', 'clothing', 'tank', 'jogger', 'shorts', 'top', 'cardigan', 'vest', 'romper', 'jumpsuit', 'sweatshirt', 'pullover'], 'garments' as TemplateCategory],
+  [['skirt', 'mini skirt', 'maxi skirt', 'midi skirt', 'pleated skirt', 'pencil skirt', 'a-line skirt', 'wrap skirt', 'tulle skirt', 'tennis skirt'], 'skirts' as TemplateCategory],
+  [['sweater', 'shirt', 'apparel', 'pants', 'coat', 'blouse', 'top', 'shorts', 'clothing', 'tank', 'jogger', 'cardigan', 'vest', 'romper', 'jumpsuit', 'sweatshirt', 'pullover'], 'garments' as TemplateCategory],
   [['perfume', 'cologne', 'fragrance', 'eau de', 'parfum'], 'fragrance' as TemplateCategory],
   [['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'kombucha', 'smoothie', 'energy drink', 'drink', 'lemonade', 'milk'], 'beverages' as TemplateCategory],
   [['cereal', 'granola', 'chocolate', 'honey', 'jam', 'sauce', 'snack', 'candy', 'chips', 'protein bar', 'cookie', 'food', 'olive oil'], 'food' as TemplateCategory],
@@ -104,6 +105,7 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   kidswear: 'Kidswear',
   jeans: 'Jeans',
   jackets: 'Jackets',
+  skirts: 'Skirts',
 };
 
 /**

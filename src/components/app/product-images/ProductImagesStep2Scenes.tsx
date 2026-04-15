@@ -40,6 +40,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'high-heels': ['high heel', 'stiletto', 'pump', 'platform heel', 'kitten heel', 'wedge heel', 'strappy heel', 'mule heel'],
   // Fashion (before garments)
   'dresses': ['dress', 'gown', 'maxi dress', 'midi dress', 'mini dress', 'sundress', 'cocktail dress', 'evening dress', 'wrap dress'],
+  'skirts': ['skirt', 'mini skirt', 'maxi skirt', 'midi skirt', 'pleated skirt', 'pencil skirt', 'a-line skirt', 'wrap skirt', 'tulle skirt', 'tennis skirt'],
   'hoodies': ['hoodie', 'hooded sweatshirt', 'zip-up hoodie', 'pullover hoodie', 'oversized hoodie'],
   'streetwear': ['streetwear', 'graphic tee', 'oversized tee', 'graphic print', 'urban wear', 'skate', 'hypebeast'],
   'jeans': ['jeans', 'denim', 'skinny jeans', 'wide-leg jeans', 'straight-leg jeans', 'mom jeans', 'boyfriend jeans', 'distressed jeans'],
@@ -73,7 +74,7 @@ const GRID_CLASSES: Record<GridSize, string> = {
 };
 
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'] },
+  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'skirts', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'] },
   { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
   { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small', 'watches', 'eyewear'] },
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
@@ -92,6 +93,7 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["garments", /hoodie|hooded sweatshirt/i, "hoodies"],
   ["garments", /\bjeans\b|denim/i, "jeans"],
   ["garments", /jacket|blazer|bomber|puffer/i, "jackets"],
+  ["garments", /\bskirt\b|\bskirts\b/i, "skirts"],
   ["shoes", /sneaker|trainer/i, "sneakers"],
   ["shoes", /\bboot\b|\bboots\b/i, "boots"],
   ["shoes", /high heel|stiletto|pump/i, "high-heels"],
