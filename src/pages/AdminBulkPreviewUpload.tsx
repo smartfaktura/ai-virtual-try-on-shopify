@@ -12,6 +12,11 @@ import { toast } from 'sonner';
 import { Upload, Check, X, ArrowLeft, ImageIcon, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+const COLLECTION_MERGE: Record<string, string> = {
+  "snacks-food": "food",
+  "food-beverage": "food",
+};
+
 const TITLE_MAP: Record<string, string> = {
   fragrance: 'Fragrance',
   'beauty-skincare': 'Beauty & Skincare',
