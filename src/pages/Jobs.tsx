@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { useNavigate } from 'react-router-dom';
 import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -228,9 +229,7 @@ export default function Jobs() {
           if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
           else if (contentType.includes('webp')) ext = '.webp';
           const blob = await res.blob();
-          const safeLabel = item.label.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
-          const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 8);
-          zip.file(`${safeLabel}_${safeId}${ext}`, blob);
+          zip.file(`${buildLibraryFileName(item)}${ext}`, blob);
           succeeded++;
         } catch {
           failed++;
