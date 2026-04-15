@@ -1,45 +1,73 @@
 
 
-# Redesign Freestyle Studio Card — Motion-Led, No Images
+# Redesign Freestyle Studio Card — ChatGPT-Style Prompt Bar
 
 ## Summary
-Replace the current image-collage-based FreestylePromptCard with a motion-led, typography-driven card that uses animated branching from a prompt strip into 3 text-based output direction cards. No photography or imagery.
+Replace the current branching/direction cards design with a clean, ChatGPT-inspired prompt bar as the hero element. The card centers around a single elegant text input simulation with a typewriter animation and a subtle blinking cursor — minimal, premium, no icons as decorative labels.
+
+## Creative Concept
+
+The entire visual area is dominated by one thing: a premium dark prompt bar (like ChatGPT's input field) with text typing itself out. Below it, 3 small "result" pills fade in to suggest multiple outputs. No branching SVGs, no direction cards with icons, no emojis.
+
+```text
+┌─────────────────────────────────────┐
+│                                     │
+│   ┌─────────────────────────────┐   │
+│   │                             │   │
+│   │  Shoot my crop top on a     │   │
+│   │  court, studio, and café▌   │   │  ← dark input bar, typewriter + cursor
+│   │                             │   │
+│   │                     ↗       │   │  ← send arrow, subtle
+│   └─────────────────────────────┘   │
+│                                     │
+│     Studio    Court    Café         │  ← 3 minimal text pills fade in
+│                                     │
+├─────────────────────────────────────┤
+│  Freestyle Studio                   │
+│  Type anything. Get styled visuals. │
+│  ┌─────────────────────────────┐    │
+│  │      Start Creating    →    │    │
+│  └─────────────────────────────┘    │
+└─────────────────────────────────────┘
+```
 
 ## Changes
 
 **File: `src/components/app/FreestylePromptCard.tsx` — Full rewrite**
 
-### Structure (top to bottom)
-1. **Title area** — Sparkles icon + "Freestyle Studio" (font-bold) + subtitle "Turn a simple prompt into styled, brand-ready visuals"
-2. **Visual area** (replaces image collage) — dark/muted background panel:
-   - **Prompt strip** — frosted glass bar with Sparkles icon + typing shimmer on the text "Shoot my crop top on a court, studio, and café"
-   - **Branching lines** — 3 SVG lines animating outward from prompt center to 3 cards below, with staggered draw-on animation via CSS `stroke-dashoffset`
-   - **3 output direction cards** — small bordered cards with text only, activating in sequence:
-     - "Clean Studio" / subtle light icon
-     - "Sport Motion" / bold energy
-     - "Warm Social" / lifestyle feel
-   - Soft ambient glow behind the prompt strip (radial gradient pseudo-element)
-3. **CTA** — "Create with Prompt" button with ArrowRight, matching existing button style
+### Visual area
+1. **Prompt input bar** — A rounded-2xl container styled like a modern AI chat input:
+   - Dark surface (`bg-muted/40` with `border border-border/30`)
+   - Multi-line text area feel (taller, ~80px)
+   - Typewriter animation on the prompt text using CSS `steps()` + `overflow: hidden` + `border-right` blinking cursor
+   - Small send/arrow-up icon in bottom-right corner (muted, not a real button)
+   - Prompt text: "Shoot my crop top on a court, studio, and café"
 
-### Animations (CSS keyframes in component via Tailwind arbitrary or inline styles)
-- Prompt strip: subtle shimmer/gradient sweep across text (like a typing highlight)
-- SVG branching lines: `stroke-dasharray` + `stroke-dashoffset` animation, staggered 0.3s apart
-- Output cards: fade-in + slight translateY, staggered 0.5s, 0.8s, 1.1s
-- CTA arrow: `group-hover:translate-x-0.5` shift
-- All animations trigger on mount, CSS-only (no JS intervals)
+2. **Result pills** — 3 minimal rounded-full pills below the input bar:
+   - Just text labels: "Studio", "Court", "Café"
+   - `bg-muted/20 border border-border/20` — very subtle
+   - Staggered fade-in after typewriter completes
+   - No icons, no sub-labels
 
-### Responsive
-- `mobileCompact` mode: reduce padding, smaller text, tighter spacing, shorter visual area
-- Non-compact: more spacious padding (p-5/p-6), generous gaps between sections
+3. **Ambient glow** — Soft radial gradient behind the prompt bar (primary/5)
+
+### Animations (CSS-only, no JS)
+- **Typewriter**: `width` animates from 0 to 100% using `steps(42, end)` over ~3s, with `border-right: 2px solid` as blinking cursor
+- **Cursor blink**: separate `@keyframes blink` toggling `border-color` opacity
+- **Result pills**: `opacity 0→1, translateY 4px→0`, staggered at 3.2s, 3.5s, 3.8s (after typing completes)
+- **8s total loop**: everything fades out at ~7s, resets at 8s with `infinite` iteration
+
+### Content area (below)
+- Title: "Freestyle Studio" (no Sparkles icon — cleaner)
+- Subtitle: "Type anything. Get styled visuals."
+- CTA: "Start Creating" with ArrowRight, same rounded-full button style
 
 ### What's removed
-- All `RESULT_IMAGES`, `ShimmerImage` imports, `getLandingAssetUrl`, `getOptimizedUrl` imports
-- The 3-column image grid
-- The frosted prompt overlay on images
+- Branching SVG lines
+- Direction cards with Sun/Zap/Coffee icons
+- Sparkles icon from title
+- Shimmer text effect on prompt (replaced by typewriter)
 
-### Visual style
-- Visual area: `bg-muted/10` or `bg-gradient-to-b from-muted/20 to-background` — soft, not heavy
-- Output cards: `border border-border/40 rounded-lg` with subtle `bg-muted/30`
-- Branching lines: `stroke-primary/20` with thin 1px strokes
-- Overall card keeps existing `Card` wrapper with same hover behavior
+### Responsive
+- `mobileCompact`: smaller prompt bar height, tighter text, pills may shrink
 
