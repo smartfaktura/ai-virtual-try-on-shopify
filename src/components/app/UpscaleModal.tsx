@@ -20,6 +20,7 @@ const TIERS: { id: UpscaleResolution; label: string; desc: string; cost: number 
 
 export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalProps) {
   const [resolution, setResolution] = useState<UpscaleResolution>('2k');
+  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
   const { balance } = useCredits();
   const { upscaleImages, isUpscaling, getCreditCost } = useUpscaleImages();
 
@@ -119,11 +120,10 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
           </div>
         </div>
 
-        {/* CTA */}
         <div className="px-6 py-5">
           <Button
-            onClick={handleUpscale}
-            disabled={isUpscaling || !hasEnough}
+            onClick={hasEnough ? handleUpscale : () => setNoCreditsOpen(true)}
+            disabled={isUpscaling}
             className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/20"
           >
             {isUpscaling ? (
@@ -132,7 +132,10 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
                 Upscaling…
               </>
             ) : !hasEnough ? (
-              'Insufficient credits'
+              <>
+                <Zap className="w-4 h-4 mr-2" />
+                Get Credits to Upscale
+              </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -141,6 +144,8 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
             )}
           </Button>
         </div>
+
+        <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
       </div>
     </div>
   );
