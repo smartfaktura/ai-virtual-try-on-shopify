@@ -47,13 +47,13 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
 
         {/* Packs */}
         <div className="px-5 sm:px-8 py-7 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-visible">
             {creditPacks.map((pack) => (
               <div
                 key={pack.packId}
                 className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
                   pack.popular
-                    ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5'
+                    ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
                     : 'border-border/60 hover:border-primary/30 bg-background'
                 }`}
               >

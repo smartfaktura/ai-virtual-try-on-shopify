@@ -56,7 +56,7 @@ export function PostGenerationUpgradeCard({ category, onSeeMore, onDismiss }: Po
             <Badge
               key={chip}
               variant="outline"
-              className="text-[10px] font-medium px-2 py-0.5 bg-background border-border/60"
+              className="text-[11px] sm:text-[10px] font-medium px-2 py-0.5 bg-background border-border/60"
             >
               <Plus className="w-2.5 h-2.5 mr-1 text-primary" />
               {chip}
