@@ -278,10 +278,12 @@ interface UnifiedCategorySectionProps {
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
 function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses'>) {
-  const { categoryCollections: hookCategoryCollections } = useProductImageScenes();
-  const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
-
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
+  const priorityCats = useMemo(() => Array.from(relevantCatIds), [relevantCatIds]);
+  const { categoryCollections: hookCategoryCollections, isLoadingRest } = useProductImageScenes({
+    priorityCategories: priorityCats.length > 0 ? priorityCats : undefined,
+  });
+  const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
 
