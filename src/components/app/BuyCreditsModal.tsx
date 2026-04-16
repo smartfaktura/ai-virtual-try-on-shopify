@@ -336,8 +336,8 @@ export function BuyCreditsModal() {
                 )}
 
                 {/* Plan cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                  {mainPlans.map((p) => {
+                <div className={`grid grid-cols-1 ${plansToShow.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-2.5 sm:gap-3`}>
+                  {plansToShow.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
                     const targetIdx = PLAN_ORDER.indexOf(p.planId);
