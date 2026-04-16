@@ -2,69 +2,47 @@
 
 ## Goal
 
-Explore better visual treatments for the credits indicator in the sidebar — specifically the icon — and remove the "Your credits" label since the icon + number already communicate the meaning.
+Replace the small `+` icon button in the sidebar credits indicator with a proper labeled CTA ("Upgrade" for free users, "Top up" for paid users), give it a subtle animated gradient (non-purple), and stop the entire credits card from being clickable.
 
-## Current state
+## Changes in `src/components/app/CreditIndicator.tsx`
 
-In `src/components/app/CreditIndicator.tsx`:
-- Tiny uppercase label "YOUR CREDITS"
-- A 28×28 rounded square with `Coins` icon inside
-- Balance number + `/ max`
-- Plus button to buy
-- Progress bar
+### 1. Remove card-wide click target
+- Remove `onClick={() => navigate('/app/settings')}` and `cursor-pointer` / hover bg from the outer container.
+- The card becomes informational only. Actions live on the buttons.
 
-Removing the label gives more breathing room and lets the icon + number do the talking.
+### 2. Replace the `+` icon button with a labeled CTA
+- Free plan (or any plan with `nextPlanId`): label = `Upgrade`, action = navigate to `/app/settings`.
+- Paid plan with no upgrade path: label = `Top up`, action = `openBuyModal()`.
+- Remove the separate inline "Upgrade ↗" text link — the new button replaces it, so the row is cleaner.
 
-## Icon options
-
-Here are concrete directions for the credits icon:
-
-### Option A — Coin stack (Layers / Coins icon, refined)
-Keep `Coins` but make it feel more premium: monochrome, no colored background tile, just the icon at slightly larger size next to the number. Minimalist, matches the "luxury restraint" aesthetic.
-
-### Option B — Sparkles / Spark
-Use `Sparkles` (lucide). Reads as "AI credits / generations" rather than money. Fits a creative AI tool better than a coin metaphor.
-
-### Option C — Zap / Bolt
-Use `Zap`. Reads as "energy / power to generate". Common pattern in AI tools (Midjourney "fast hours", Vercel credits, etc.). Feels modern and active.
-
-### Option D — Gem / Diamond
-Use `Gem`. Premium feel, treats credits as a precious resource. Great for a luxury-positioned product.
-
-### Option E — Circular progress ring around the number (no icon at all)
-Replace the icon tile entirely with a small circular progress ring wrapping the balance number. The ring itself becomes the visual — shows usage % at a glance. Most information-dense, very "premium dashboard".
-
-## My recommendation
-
-**Option C (Zap)** or **Option B (Sparkles)** — both map to "AI generation fuel" much better than `Coins`, which implies money. Combined with removing the label, it becomes a cleaner, more product-native indicator.
-
-If we want to go further, **Option E (progress ring)** is the most elegant but a bit more work.
-
-## Proposed change (pending your pick)
-
-In `src/components/app/CreditIndicator.tsx`:
-
-1. Remove the "YOUR CREDITS" label row entirely (keep "Upgrade" pill, move it to align right with the balance row).
-2. Swap the `Coins` icon for the chosen icon (`Zap`, `Sparkles`, `Gem`, or progress ring).
-3. Slightly tighten vertical spacing now that the label is gone.
-
-Layout after change:
-
-```text
-[icon]  1,240 / 1,500           [Upgrade]  [+]
-─────────── progress bar ───────────
+Result on the row:
+```
+[⚡] 0 / 20                  [ Upgrade ]
+──── progress ────
 ```
 
-No logic changes, styling only.
+### 3. Animated gradient (non-purple)
+Use a warm/neutral premium gradient instead of brand purple. Direction:
 
-## Question for you
+- Gradient: amber → rose → orange (warm, premium, non-purple), using `bg-gradient-to-r from-amber-400 via-rose-400 to-orange-400`.
+- Animate background position with the existing `animate-shimmer` pattern (already in the codebase, see `progress.tsx`) by using `bg-[length:200%_100%]` + `animate-shimmer`.
+- Text: white, semibold, small (`text-xs`), tight padding (`h-7 px-3 rounded-lg`).
+- Subtle hover: slight brightness increase, no scale.
 
-Which icon direction do you want?
-- A: refined Coins (no tile)
-- B: Sparkles
-- C: Zap (recommended)
-- D: Gem
-- E: circular progress ring (no icon)
+### 4. Keep behavior
+- No logic/pricing changes.
+- `openBuyModal` and `navigate('/app/settings')` already exist in the component.
+- Progress bar unchanged.
 
-Once you pick, I'll apply it together with removing the "Your credits" label.
+## Technical details
+
+- File: `src/components/app/CreditIndicator.tsx`
+- Reuse existing `animate-shimmer` keyframe (already defined in Tailwind config and used by `progress.tsx`).
+- No new dependencies, no new tailwind config changes.
+
+## Expected result
+
+- Sidebar credits card is no longer a giant click target.
+- The action is a clear, labeled button: `Upgrade` for free users, `Top up` for paid users.
+- The button has a soft animated warm gradient (amber/rose/orange), not purple, matching the premium aesthetic without competing with primary CTAs elsewhere.
 
