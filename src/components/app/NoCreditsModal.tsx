@@ -280,7 +280,7 @@ function UpgradeCard({
         <Sparkles className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight">Or upgrade for more monthly credits</h3>
       </div>
-      <div className="rounded-2xl border-2 border-primary/40 bg-primary/[0.02] p-5 sm:p-6">
+      <div className="rounded-2xl border-2 border-primary bg-primary/[0.02] p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
