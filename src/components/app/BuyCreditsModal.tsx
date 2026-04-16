@@ -127,7 +127,7 @@ export function BuyCreditsModal() {
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={(open) => { if (!open && !anyLoading) closeBuyModal(); }}>
-        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100">
+        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 bg-muted/50">
 
           {/* Header */}
           <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 flex items-start justify-between">
@@ -182,7 +182,7 @@ export function BuyCreditsModal() {
           )}
 
           {/* Content */}
-          <div className="px-4 sm:px-6 pb-6 pt-5 overflow-y-auto flex-1 min-h-0 bg-muted/50">
+          <div className="px-4 sm:px-6 pb-6 pt-5 overflow-y-auto flex-1 min-h-0">
 
             {/* === TOP UP TAB === */}
             {activeTab === 'topup' && (() => {
@@ -329,7 +329,7 @@ export function BuyCreditsModal() {
                     >
                       Annual
                       <span className={`inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none ${
-                        billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
+                        billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary text-primary-foreground'
                       }`}>
                         SAVE 20%
                       </span>
@@ -471,7 +471,7 @@ export function BuyCreditsModal() {
                           {unifiedBullets.map((feat, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                               <span className="text-[15px] leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
+                               <span className="text-sm leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
                                  <span className="font-normal">{feat.text}</span>
                                  {feat.badge && (
                                    <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-primary text-primary-foreground">
