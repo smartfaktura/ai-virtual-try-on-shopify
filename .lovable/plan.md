@@ -1,38 +1,26 @@
 
 
-# Compact Mobile Dashboard
+# Fix Filter Dropdown Cut Off on Mobile
 
 ## Problem
-The returning user dashboard has excessive whitespace on mobile — large section gaps, tall metric cards, and oversized heading text waste vertical space, pushing content below the fold (visible in the screenshot: 4 metric cards + quick actions fill the entire screen).
+The filter dropdown (Type/Sort popover) is positioned with `right-0`, meaning its right edge aligns with the filter button's right edge. On mobile, the filter button sits on the left side of the screen, so the 224px-wide dropdown extends to the LEFT — off-screen. This causes the dropdown to be clipped/hidden on the left side.
 
-## Changes
+## Fix
 
-### File: `src/pages/Dashboard.tsx`
+### File: `src/pages/Jobs.tsx` (line 448)
 
-**1. Reduce outer spacing on mobile**
-- Line 508: `space-y-8 sm:space-y-10` → `space-y-5 sm:space-y-10`
+Change the dropdown positioning from `right-0` to `left-0` on mobile so it opens to the right of the filter button (staying on-screen), and keep `right-0` on desktop:
 
-**2. Shrink welcome heading on mobile**
-- Line 512: `text-3xl sm:text-4xl` → `text-2xl sm:text-4xl`
-- Line 515-516: `text-lg` → `text-sm sm:text-lg`, add `mt-1 sm:mt-2`
+```tsx
+// Before
+<div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl bg-popover border border-border shadow-xl p-4 space-y-4">
 
-**3. Tighten quick actions row**
-- Line 519: `mt-5` → `mt-3 sm:mt-5`
+// After
+<div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 z-50 w-56 rounded-2xl bg-popover border border-border shadow-xl p-4 space-y-4">
+```
 
-**4. Reduce metric grid gap on mobile**
-- Line 551: `gap-3 sm:gap-4` → `gap-2 sm:gap-4`
-
-### File: `src/components/app/MetricCard.tsx`
-
-**5. Compact card height on mobile**
-- Line 53 (loading skeleton): `h-[120px] sm:h-[140px]` → `h-[100px] sm:h-[140px]`, reduce padding `p-2.5 sm:p-5`
-- Line 65 (card content): `h-[120px] sm:h-[140px]` → `h-[100px] sm:h-[140px]`, padding `p-2.5 sm:p-5`
-- Line 71: icon `w-3 h-3` on mobile, title text stays `text-[10px]`
-- Line 75: value `text-base sm:text-xl`, reduce `mt-1.5 sm:mt-2`
-
-These changes save ~80-100px of vertical space on the metric row alone, plus ~40px from tighter section gaps and heading, bringing more content above the fold.
+On mobile (`left-0`), the popup opens rightward from the filter button — fully visible. On `sm+` (`right-0 left-auto`), it stays right-aligned as before.
 
 ### Files
-- `src/pages/Dashboard.tsx` — spacing, heading size
-- `src/components/app/MetricCard.tsx` — compact card height and padding on mobile
+- `src/pages/Jobs.tsx` — 1 class change on line 448
 
