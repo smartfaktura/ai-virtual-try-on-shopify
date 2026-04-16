@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -135,12 +136,38 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
             </div>
           )}
 
+          {/* Billing toggle */}
+          <div className="flex justify-center pb-3">
+            <div className="inline-flex items-center p-0.5 rounded-full bg-muted/60 border border-border/40">
+              <button
+                onClick={() => setBilling('monthly')}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-colors ${
+                  !isAnnual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBilling('annual')}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-colors flex items-center gap-1 ${
+                  isAnnual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                }`}
+              >
+                Annual
+                <span className="bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0 rounded-full">
+                  -20%
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Plan Cards — fills remaining height */}
           <div className="flex-1 flex flex-col gap-3 pb-5">
             {PLAN_CARDS.map(({ planId, centsPerCredit, savingsLabel, recommended }) => {
               const plan = pricingPlans.find(p => p.planId === planId);
               if (!plan) return null;
 
+              const price = isAnnual ? Math.round(plan.annualPrice / 12) : plan.monthlyPrice;
               const creditsDisplay = typeof plan.credits === 'number' ? plan.credits.toLocaleString() : plan.credits;
               const features = DRAWER_PLAN_FEATURES[planId] ?? [];
 
@@ -165,8 +192,13 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
                   {/* Price */}
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold tracking-tight">${plan.monthlyPrice}</span>
+                    <span className="text-2xl font-bold tracking-tight">${price}</span>
                     <span className="text-xs text-muted-foreground">/mo</span>
+                    {isAnnual && (
+                      <span className="text-[10px] font-medium text-green-600 dark:text-green-400 ml-1">
+                        Save 20%
+                      </span>
+                    )}
                   </div>
 
                   {/* Credits pill + savings */}
@@ -174,7 +206,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                     <Badge variant="outline" className="text-[10px] font-medium">
                       {creditsDisplay} cr · {centsPerCredit}
                     </Badge>
-                    {savingsLabel && (
+                    {savingsLabel && !isAnnual && (
                       <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full">
                         {savingsLabel}
                       </span>
@@ -203,7 +235,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                     variant={recommended ? 'default' : 'outline'}
                     size="sm"
                     className="w-full rounded-xl h-10 text-sm"
-                    onClick={() => handleCheckout(plan.stripePriceIdMonthly)}
+                    onClick={() => handleCheckout(plan)}
                   >
                     {recommended ? `Choose ${plan.name}` : `Start with ${plan.name}`}
                   </Button>
