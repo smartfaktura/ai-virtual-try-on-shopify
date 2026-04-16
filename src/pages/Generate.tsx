@@ -4426,20 +4426,20 @@ export default function Generate() {
                   <h2 className="text-base font-semibold">Generated Images</h2>
                   <p className="text-xs text-muted-foreground">Click images to select them</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => {
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
+                  <Button variant="outline" size="sm" className="h-9" onClick={() => {
                     if (selectedForPublish.size === generatedImages.length) {
                       setSelectedForPublish(new Set());
                     } else {
                       setSelectedForPublish(new Set(generatedImages.map((_, i) => i)));
                     }
                   }}>{selectedForPublish.size === generatedImages.length ? 'Deselect All' : 'Select All'}</Button>
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => handleDownloadZip()} disabled={zipDownloading}>
+                  <Button variant="outline" size="sm" className="h-9" onClick={() => handleDownloadZip()} disabled={zipDownloading}>
                     {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" /> Download All</>}
                   </Button>
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => setCurrentStep('settings')}>Adjust</Button>
+                  <Button variant="outline" size="sm" className="h-9" onClick={() => setCurrentStep('settings')}>Adjust</Button>
                   {isInteriorDesign && (
-                    <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => {
+                    <Button variant="outline" size="sm" className="h-9" onClick={() => {
                       setGeneratedImages([]);
                       setSelectedForPublish(new Set());
                       setSelectedVariationIndices(new Set());
@@ -4448,7 +4448,7 @@ export default function Generate() {
                       <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Try Another Style
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); setProductQueue([]); setCurrentProductIndex(0); setMultiProductResults(new Map()); }}>Start Over</Button>
+                  <Button variant="outline" size="sm" className="h-9" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); setProductQueue([]); setCurrentProductIndex(0); setMultiProductResults(new Map()); }}>Start Over</Button>
                 </div>
               </div>
 
