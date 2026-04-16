@@ -1,39 +1,36 @@
 
-# Remove `/app/admin/conversion` Route and Page
 
-## Overview
-Remove the AdminConversion page component and all references to it since it will be redesigned from scratch.
+# Fix Survey Feedback Card Spacing in Freestyle
 
-## Files to Delete
-- `src/pages/AdminConversion.tsx` — the entire page component
+## Problem
+The `ContextualFeedbackCard` on `/app/freestyle` sits too close to the prompt bar, has no horizontal padding on mobile, and doesn't align with the prompt bar edges on desktop.
 
-## Files to Modify
+## Fix
 
-### `src/App.tsx`
-**Line 60** — Remove the lazy import:
+### `src/pages/Freestyle.tsx` — Lines 1148-1160
+
+Change the wrapper div from absolute positioning to a normal flow `mb-3` div so it naturally creates a gap above the prompt bar. Add mobile horizontal padding (`px-3 sm:px-0`) so the card is inset on small screens but flush with the prompt bar on desktop.
+
+**Before:**
 ```tsx
-const AdminConversion = lazy(() => import('@/pages/AdminConversion'));
+<div className="absolute -top-14 left-0 right-0 px-2 z-10">
+  <ContextualFeedbackCard ... />
+</div>
 ```
 
-**Line 217** — Remove the route definition:
+**After:**
 ```tsx
-<Route path="/admin/conversion" element={<AdminConversion />} />
+<div className="mb-3 px-3 sm:px-0">
+  <ContextualFeedbackCard ... />
+</div>
 ```
 
-### `src/components/app/AppShell.tsx`
-**Lines 384-390** — Remove the navigation button in the admin user menu:
-```tsx
-<button
-  onClick={() => { navigate('/app/admin/conversion'); setUserMenuOpen(false); }}
-  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
->
-  <Sparkles className="w-4 h-4" />
-  Conversion
-</button>
-```
+This gives:
+- **Desktop**: card matches prompt bar width (no extra padding)
+- **Mobile**: `px-3` insets it from screen edges
+- **Gap**: `mb-3` creates consistent spacing between card and prompt bar
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/pages/AdminConversion.tsx` | Delete |
-| `src/App.tsx` | Remove import (line 60) and route (line 217) |
-| `src/components/app/AppShell.tsx` | Remove menu button (lines 384-390) |
+| `src/pages/Freestyle.tsx` | Change feedback card wrapper from absolute to flow layout with responsive padding |
+
