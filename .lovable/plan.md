@@ -1,14 +1,15 @@
 
 
-# No Credits Modal — Differentiated Plan Features
+# Upgrade Value Drawer — Differentiated Plans + Dynamic Copy
 
 ## Problem
-The modal renders `p.features.slice(0, 3)` — the first 3 features from each plan. Since all plans share the same first 6 items ("All workflows", "Bulk generations", "Freestyle", "All Models & Scenes", "Upscale", "Video"), every card looks identical. The real differentiators (credits, profiles, products, Brand Models, Priority queue) are never shown.
+1. The drawer's plan cards use a single `differentiator` string per plan — all three look similar (just credit counts + a short note)
+2. The headline/subline ("Scale your fashion visual library" / "From 1 direction to a full campaign-ready collection") is static L2 copy that doesn't feel personal or dynamic
 
-## Solution
-Instead of pulling generic features from the shared `features` array, define **modal-specific differentiators** directly in `NoCreditsModal.tsx` — a small lookup map per plan that highlights what makes each tier unique.
+## Changes
 
-### Per-plan highlights (3 lines each):
+### 1. Differentiated plan features — `UpgradeValueDrawer.tsx`
+Replace the single `differentiator` string with the same `MODAL_PLAN_FEATURES` pattern from `NoCreditsModal` — a checklist of 3 unique items per plan with check icons:
 
 | Starter | Growth | Pro |
 |---------|--------|-----|
@@ -16,21 +17,24 @@ Instead of pulling generic features from the shared `features` array, define **m
 | 3 Brand Profiles | Priority queue | Priority queue |
 | Up to 100 products | Brand Models · NEW | Unlimited products & profiles |
 
-### Implementation — `NoCreditsModal.tsx`
+Each feature rendered as a `Check` icon + text row instead of the current plain text line.
 
-1. Add a `MODAL_PLAN_FEATURES` map above the component:
-```ts
-const MODAL_PLAN_FEATURES: Record<string, string[]> = {
-  starter: ['500 credits every month', '3 Brand Profiles', 'Up to 100 products'],
-  growth: ['1,500 credits every month', 'Priority generation queue', 'Brand Models'],
-  pro: ['4,500 credits every month', 'Priority generation queue', 'Unlimited products & profiles'],
-};
-```
+### 2. Dynamic headline + subline — `conversionCopy.ts`
+Update L2 copy to be more personal and action-oriented. Change from generic "Scale your X library" to copy that references the user's momentum:
 
-2. Replace `p.features.slice(0, 3)` with `MODAL_PLAN_FEATURES[p.planId]` in the free-user plan cards section.
+| Category | New Headline | New Subline |
+|----------|-------------|-------------|
+| fashion | Your fashion visuals, unlimited | Go from one direction to a full campaign-ready collection |
+| beauty | Your beauty content, unlimited | Cover every channel — studio to lifestyle and beyond |
+| jewelry | Your jewelry catalog, unlimited | Every angle, detail, and setting — no limits |
+| fragrances | Your fragrance visuals, unlimited | Conceptual to editorial — every direction covered |
+| food | Your food visuals, unlimited | Packshots to styled scenes — cover every listing |
+| electronics | Your product visuals, unlimited | Feature shots to lifestyle — all in one place |
+| home | Your home visuals, unlimited | Room scenes to catalogs — every surface styled |
+| accessories | Your accessories content, unlimited | Studio to lifestyle — every angle and context |
+| fallback | Your visual production, unlimited | Create the complete set your brand needs |
 
-3. For Growth's "Brand Models" line, add a small `NEW` badge inline (simple `<Badge>` after text).
-
-## Single file change
-`src/components/app/NoCreditsModal.tsx`
+### Files changed
+- `src/components/app/UpgradeValueDrawer.tsx` — add `DRAWER_PLAN_FEATURES` map, render check-list items, remove `differentiator` string
+- `src/lib/conversionCopy.ts` — update L2 headline/subline copy for all categories
 
