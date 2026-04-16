@@ -18,6 +18,12 @@ export function getRandomStatusMessage(member: TeamMember): string {
   return msgs[Math.floor(Math.random() * msgs.length)];
 }
 
+/** Pick a stable status message tied to a tick index (no randomness per render) */
+export function getStableStatusMessage(member: TeamMember, tick: number): string {
+  const msgs = member.statusMessages;
+  return msgs[Math.abs(tick) % msgs.length];
+}
+
 const VIDEO_BASE = getLandingAssetUrl('team-videos');
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
