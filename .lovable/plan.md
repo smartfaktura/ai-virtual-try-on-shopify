@@ -1,16 +1,24 @@
 
 
-# Light Grey Badges + Smaller Bullet Text in NoCreditsModal
+# Fix Badge Colors + Smaller Bullets in NoCreditsModal
 
-## Changes in `src/components/app/NoCreditsModal.tsx`
+## Problem
+The `bg-muted` / `text-muted-foreground` tokens resolve to dark colors in the app's dark theme context, so the SAVE/NEW badges still appear dark despite the previous change.
 
-### 1. Badge color → light grey
-Change the inline badges (SAVE %, NEW) from `bg-primary text-primary-foreground` to `bg-muted text-muted-foreground` on:
-- **Line 179** — FreePlanSection bullet badges
-- **Line 316** — UpgradeCard feature badges
+## Fix
+Replace semantic theme tokens with explicit Tailwind utility colors that are always light grey:
 
-### 2. Bullet text 1px smaller
-- **Line 176** — Change `text-sm` → `text-[13px]` on the bullet `<span>` wrapper
+### In `src/components/app/NoCreditsModal.tsx`
 
-Two lines of badge color + one line of font size. No logic changes.
+**Line 179** — Plan card feature badges:
+```
+bg-muted text-muted-foreground → bg-gray-100 text-gray-500
+```
+
+**Line 316** — Upgrade strip feature badges:
+```
+bg-muted text-muted-foreground → bg-gray-100 text-gray-500
+```
+
+This ensures badges are light grey regardless of the surrounding theme context. No logic changes.
 
