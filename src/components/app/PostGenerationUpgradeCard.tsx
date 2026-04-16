@@ -78,20 +78,21 @@ export function PostGenerationUpgradeCard({
             <AvatarImage src={avatarUrl} alt={avatar.name} />
             <AvatarFallback className="text-[9px]">{avatar.name[0]}</AvatarFallback>
           </Avatar>
-          <p className={cn(
-            'text-sm font-medium tracking-tight leading-snug',
-            compact ? 'line-clamp-2' : 'line-clamp-2 md:truncate md:line-clamp-none'
-          )}>{copy.headline}</p>
+          <div className="flex flex-col min-w-0">
+            <p className={cn(
+              'text-sm font-medium tracking-tight leading-snug',
+              compact ? 'line-clamp-2' : 'line-clamp-2 md:truncate md:line-clamp-none'
+            )}>{copy.headline}</p>
+            <p className="text-xs text-muted-foreground leading-snug line-clamp-1">{copy.subline}</p>
+          </div>
         </div>
 
-        {/* Middle: chips — hidden on mobile / compact */}
-        {!compact && (
-          <div className="hidden md:flex items-center gap-1.5 shrink-0">
-            {copy.valueBlocks.map((block) => (
-              <ValueChip key={block.title} block={block} />
-            ))}
-          </div>
-        )}
+        {/* Middle: chips */}
+        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+          {copy.valueBlocks.map((block) => (
+            <ValueChip key={block.title} block={block} />
+          ))}
+        </div>
 
         {/* Right: CTA + dismiss */}
         <div className={cn(
