@@ -1,43 +1,35 @@
 
 
-# Layer 3 Modal — Unified for All Users with Personalized Copy
+# No Credits Modal — Differentiated Plan Features
 
-## Current problem
-- Free users get **redirected** to a generic `BuyCreditsModal` — the personalized L3 headline ("Build your full fashion visual set") and subline ("You've created 3 images so far…") are never shown
-- Admin preview for "Free User" also triggers the redirect, making it impossible to preview
-- Paid users see the L3 copy but the modal could be more compelling
+## Problem
+The modal renders `p.features.slice(0, 3)` — the first 3 features from each plan. Since all plans share the same first 6 items ("All workflows", "Bulk generations", "Freestyle", "All Models & Scenes", "Upscale", "Video"), every card looks identical. The real differentiators (credits, profiles, products, Brand Models, Priority queue) are never shown.
 
-## Changes — `NoCreditsModal.tsx`
+## Solution
+Instead of pulling generic features from the shared `features` array, define **modal-specific differentiators** directly in `NoCreditsModal.tsx` — a small lookup map per plan that highlights what makes each tier unique.
 
-### 1. Remove free-user redirect
-Delete the `useEffect` that calls `openBuyModal()` and the `if (isFree) return null` guard. All users now see the same modal with the personalized L3 header.
+### Per-plan highlights (3 lines each):
 
-### 2. Conditional content body
-- **Free users** → Show 3 subscription plan cards (Starter / Growth / Pro) using `pricingPlans` data. Each card: plan name, price, credits count, CTA button. Growth highlighted as recommended.
-- **Paid users** → Keep the existing credit top-up packs grid (no change)
+| Starter | Growth | Pro |
+|---------|--------|-----|
+| 500 credits/mo | 1,500 credits/mo | 4,500 credits/mo |
+| 3 Brand Profiles | Priority queue | Priority queue |
+| Up to 100 products | Brand Models · NEW | Unlimited products & profiles |
 
-### 3. Layout
+### Implementation — `NoCreditsModal.tsx`
 
-```text
-┌─────────────────────────────────────────────┐
-│  ✦  Build your full fashion visual set      │  ← L3 headline (category-aware)
-│  You've created 3 images so far. Brands...  │  ← L3 subline (generation-aware)
-├─────────────────────────────────────────────┤
-│  [Starter $39]  [Growth $79★]  [Pro $179]   │  ← Free users: plan cards
-│   500 credits    1,500 credits  4,500 creds  │
-│   [Get Starter]  [Get Growth]  [Get Pro]     │
-│                                             │
-│  ── OR for paid users: ──                   │
-│  [100 credits]  [500 credits★]  [1000 creds]│  ← Credit top-up packs
-├─────────────────────────────────────────────┤
-│  ⚡ Upgrade to Growth for 3× more credits   │  ← Upgrade nudge (starter/growth only)
-├─────────────────────────────────────────────┤
-│                            [Maybe Later]     │
-└─────────────────────────────────────────────┘
+1. Add a `MODAL_PLAN_FEATURES` map above the component:
+```ts
+const MODAL_PLAN_FEATURES: Record<string, string[]> = {
+  starter: ['500 credits every month', '3 Brand Profiles', 'Up to 100 products'],
+  growth: ['1,500 credits every month', 'Priority generation queue', 'Brand Models'],
+  pro: ['4,500 credits every month', 'Priority generation queue', 'Unlimited products & profiles'],
+};
 ```
 
-### 4. Admin preview fix
-No changes needed in `AdminConversion.tsx` — removing the redirect means the "Free User" dropdown naturally renders the modal with plan cards.
+2. Replace `p.features.slice(0, 3)` with `MODAL_PLAN_FEATURES[p.planId]` in the free-user plan cards section.
+
+3. For Growth's "Brand Models" line, add a small `NEW` badge inline (simple `<Badge>` after text).
 
 ## Single file change
 `src/components/app/NoCreditsModal.tsx`
