@@ -4470,30 +4470,7 @@ export default function Generate() {
 
             </CardContent></Card>
 
-            {/* Crafted by team */}
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <div className="flex items-center">
-                {[avatarSophia, avatarZara, avatarKenji, avatarLuna].map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt="Team member"
-                    className="w-7 h-7 rounded-full border-2 border-background object-cover"
-                    style={{ marginLeft: i === 0 ? 0 : '-0.4rem' }}
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">Crafted by your studio team</p>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <Button className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => navigate('/app/library')}>View in Library</Button>
-              </div>
-            </div>
-
-            {/* Contextual feedback card */}
+            {/* Contextual feedback card — right after images */}
             <ContextualFeedbackCard
               workflow={activeWorkflow?.slug || 'freestyle'}
               questionText={activeWorkflow?.slug
@@ -4512,6 +4489,32 @@ export default function Generate() {
               imageUrl={generatedImages[0]}
               triggerType="result_ready"
             />
+
+            {/* Combined crafted + saved + CTA */}
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center">
+                  {[avatarSophia, avatarZara, avatarKenji, avatarLuna].map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt="Team member"
+                      className="w-7 h-7 rounded-full border-2 border-background object-cover"
+                      style={{ marginLeft: i === 0 ? 0 : '-0.4rem' }}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  Crafted by your studio team
+                  <span className="mx-1">·</span>
+                  <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                  Saved to your library
+                </p>
+              </div>
+              <Button className="rounded-xl min-h-[44px]" onClick={() => navigate('/app/library')}>
+                View in Library
+              </Button>
+            </div>
 
             {/* Floating selection bar */}
             {selectedForPublish.size > 0 && (
