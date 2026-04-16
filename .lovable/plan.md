@@ -1,39 +1,27 @@
 
 
-# Show Feedback Card After Every Freestyle Generation
+# Hide Credit Banner on Settings Page
 
 ## Problem
-The `ContextualFeedbackCard` on the Freestyle page only appears after the 3rd generation (`newCount === 3`). You want it shown after every successful generation.
+The global `LowCreditsBanner` shows on `/app/settings`, which is redundant since Settings already contains the plan/credits management UI.
 
 ## Fix
 
-### `src/pages/Freestyle.tsx`
+### `src/components/app/AppShell.tsx`
 
-**1. Line 404** — Always show feedback when a generation completes, not just at count 3:
+Add `/app/settings` to the exclusion list:
+
+**Before:**
 ```tsx
-// Before:
-const [showFreestyleFeedback, setShowFreestyleFeedback] = useState(freestyleGenCountRef.current === 3);
-
-// After:
-const [showFreestyleFeedback, setShowFreestyleFeedback] = useState(false);
+{location.pathname !== '/app' && location.pathname !== '/app/' && !location.pathname.startsWith('/app/freestyle') && <LowCreditsBanner />}
 ```
 
-**2. Lines 788-791** — Remove the `=== 3` condition, always trigger feedback on completion:
+**After:**
 ```tsx
-// Before:
-if (newCount === 3) {
-  setCompletedFeedbackJobId(activeJob.id);
-  setShowFreestyleFeedback(true);
-}
-
-// After:
-setCompletedFeedbackJobId(activeJob.id);
-setShowFreestyleFeedback(true);
+{location.pathname !== '/app' && location.pathname !== '/app/' && !location.pathname.startsWith('/app/freestyle') && !location.pathname.startsWith('/app/settings') && <LowCreditsBanner />}
 ```
-
-The generation counter tracking can stay (useful for analytics), but the feedback card will now appear after every successful generation.
 
 | File | Change |
 |------|--------|
-| `src/pages/Freestyle.tsx` | Remove count === 3 gate, show feedback after every generation |
+| `src/components/app/AppShell.tsx` | Exclude `/app/settings` from global banner |
 
