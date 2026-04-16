@@ -1,24 +1,70 @@
 
 
-# Add "Help Us Improve" Label + Reposition Survey Before Actions
+# Improve Mobile Feedback Survey Layout
 
-## Changes
+## Problem
+On mobile (390px), the current layout has the "HELP US IMPROVE ·" label, question text, and dismiss X all crammed on one line, then buttons below. The text competes for space and the hierarchy isn't clear. From the screenshot: everything feels flat and same-weight.
 
-### 1. Add "Help Us Improve" micro-label (`ContextualFeedbackCard.tsx`)
-Add a small muted label above or inline with the question text in Step 1 to clarify purpose:
-- Before the question text, add `Help Us Improve ·` as a prefix span with `text-muted-foreground/50` — subtler than the question itself
-- This gives context without adding a separate line or breaking the compact layout
+## Solution
+Stack the content into three clear visual layers on mobile:
 
-### 2. Move survey before action buttons (`ProductImagesStep6Results.tsx`)
-Move the `ContextualFeedbackCard` block (lines 172-182) from after the actions Card to before it (between the image grid ending at line 155 and the actions Card at line 158). Flow becomes:
+### Layer 1 — Context label + dismiss
+- "HELP US IMPROVE" label on the left, X dismiss on the right — same row
+- Keeps the tiny uppercase muted style
 
-```text
-Header → Image Grid → Feedback Survey → Action Buttons
+### Layer 2 — Question text
+- Full-width on its own line: `text-sm font-medium text-foreground/80`
+- Slightly larger and darker than the label so it reads as the primary content
+
+### Layer 3 — Answer buttons
+- Full-width row, `flex gap-2`, each button `flex-1` with slightly taller touch targets (`py-1.5` instead of `py-1`)
+- Rounded-full, consistent sizing
+
+### Desktop (sm+)
+- Keep the single-row pill layout as-is — no changes needed
+
+## Technical detail
+Single file: `ContextualFeedbackCard.tsx`, lines 146-167
+
+```tsx
+// Mobile: stacked 3-layer card
+<div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3 px-4 py-3 sm:py-2 rounded-xl sm:rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm w-full sm:w-auto">
+  {/* Row 1: label + dismiss */}
+  <div className="flex items-center justify-between sm:contents">
+    <div className="flex items-center gap-1.5">
+      <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40">
+        Help Us Improve
+      </span>
+    </div>
+    <button onClick={dismiss} className="sm:hidden text-muted-foreground/40 hover:text-muted-foreground">
+      <X className="w-3.5 h-3.5" />
+    </button>
+  </div>
+
+  {/* Row 2: question (mobile only — inline on desktop) */}
+  <span className="text-sm sm:text-xs font-medium text-foreground/70 sm:text-muted-foreground sm:flex-1">
+    {questionText}
+  </span>
+
+  {/* Row 3: buttons */}
+  <div className="flex gap-2 sm:gap-1.5 w-full sm:w-auto">
+    {buttons with flex-1 sm:flex-initial, py-1.5 sm:py-1}
+  </div>
+
+  {/* Desktop dismiss */}
+  <button className="hidden sm:block ..."><X /></button>
+</div>
 ```
 
-## Files
-| File | Change |
-|------|--------|
-| `ContextualFeedbackCard.tsx` | Lines 148-149: Add "Help Us Improve ·" prefix span before questionText in Step 1 pill |
-| `ProductImagesStep6Results.tsx` | Move lines 172-182 to before line 157 (before the actions Card) |
+Key improvements:
+- Question text gets its own line on mobile — larger, readable
+- Label row with dismiss X creates clear header
+- Buttons fill width evenly with better touch targets
+- Clean 3-layer visual hierarchy instead of cramped single row
+
+## File
+| File | Lines |
+|------|-------|
+| `src/components/app/ContextualFeedbackCard.tsx` | 145-175 |
 
