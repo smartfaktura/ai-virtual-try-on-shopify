@@ -1,9 +1,8 @@
-import { useEffect } from 'react';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUpRight, Sparkles, Zap } from 'lucide-react';
-import { creditPacks } from '@/data/mockData';
+import { ArrowUpRight, Check, Sparkles, Zap } from 'lucide-react';
+import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { type ConversionCategory, getLayer3Headline, getLayer3Subline } from '@/lib/conversionCopy';
 
@@ -22,18 +21,14 @@ function getUpgradeNudge(plan: string): { text: string; targetPlan: string } | n
   return null;
 }
 
+const subscribablePlans = pricingPlans.filter(
+  (p) => p.planId !== 'free' && !p.isEnterprise,
+);
+
 export function NoCreditsModal({ open, onClose, category = 'fallback', generationCount = 0, previewPlan }: NoCreditsModalProps) {
-  const { startCheckout, plan: userPlan, openBuyModal } = useCredits();
+  const { startCheckout, plan: userPlan } = useCredits();
   const plan = previewPlan ?? userPlan;
   const isFree = plan === 'free';
-
-  // Free users: redirect to the full BuyCreditsModal (Plans tab) instead
-  useEffect(() => {
-    if (open && isFree) {
-      openBuyModal();
-      onClose();
-    }
-  }, [open, isFree, openBuyModal, onClose]);
 
   const handleCreditPurchase = (stripePriceId: string | undefined) => {
     if (!stripePriceId) return;
@@ -41,15 +36,20 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
     onClose();
   };
 
+  const handlePlanSelect = (stripePriceId: string | undefined) => {
+    if (!stripePriceId) return;
+    startCheckout(stripePriceId, 'subscription');
+    onClose();
+  };
+
   const headline = getLayer3Headline(category);
   const subline = generationCount > 0
     ? getLayer3Subline(generationCount)
-    : 'Top up credits to continue this session';
+    : isFree
+      ? 'Unlock more credits with a plan that fits your workflow'
+      : 'Top up credits to continue this session';
 
-  const upgradeNudge = getUpgradeNudge(plan);
-
-  // Don't render anything for free users — they get redirected to BuyCreditsModal
-  if (isFree) return null;
+  const upgradeNudge = !isFree ? getUpgradeNudge(plan) : null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -65,46 +65,111 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
           <p className="text-sm text-muted-foreground">{subline}</p>
         </div>
 
-        {/* Content — Paid User: Credit Top-up Packs */}
+        {/* Content */}
         <div className="px-5 sm:px-8 py-7 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-visible">
-            {creditPacks.map((pack) => (
-              <div
-                key={pack.packId}
-                className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
-                  pack.popular
-                    ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
-                    : 'border-border/60 hover:border-primary/30 bg-background'
-                }`}
-              >
-                {pack.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/20">
-                      Best Value
-                    </Badge>
-                  </div>
-                )}
-                <div className="p-6 sm:p-7 space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-3xl font-bold tracking-tight">{pack.credits.toLocaleString()}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-semibold">credits</p>
-                  </div>
-                  <div className="h-px bg-border/60 mx-3" />
-                  <div className="space-y-1">
-                    <p className="text-xl font-semibold tracking-tight">${pack.price}</p>
-                    <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢ each</p>
-                  </div>
-                  <Button
-                    variant={pack.popular ? 'default' : 'outline'}
-                    className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                    onClick={() => handleCreditPurchase(pack.stripePriceId)}
+          {isFree ? (
+            /* ── Free users: subscription plan cards ── */
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible">
+              {subscribablePlans.map((p) => {
+                const isHighlighted = p.highlighted;
+                return (
+                  <div
+                    key={p.planId}
+                    className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                      isHighlighted
+                        ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
+                        : 'border-border/60 hover:border-primary/30 bg-background'
+                    }`}
                   >
-                    Purchase
-                  </Button>
+                    {isHighlighted && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                        <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/20">
+                          {p.badge || 'Popular'}
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="p-5 sm:p-6 space-y-3">
+                      <p className="text-sm font-bold tracking-tight">{p.name}</p>
+
+                      <div className="space-y-0.5">
+                        <div className="flex items-baseline justify-center gap-0.5">
+                          <span className="text-2xl font-bold tracking-tight">${p.monthlyPrice}</span>
+                          <span className="text-xs text-muted-foreground">/mo</span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2">
+                        <p className="text-lg font-bold tracking-tight">
+                          {typeof p.credits === 'number' ? p.credits.toLocaleString() : p.credits}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">credits/mo</p>
+                      </div>
+
+                      {/* Top 3 features */}
+                      <div className="space-y-1.5 text-left">
+                        {p.features.slice(0, 3).map((feat, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                            <span className="text-[11px] text-muted-foreground leading-tight">
+                              {typeof feat === 'string' ? feat : feat.text}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        variant={isHighlighted ? 'default' : 'outline'}
+                        className="w-full min-h-[44px] rounded-xl text-sm font-medium"
+                        onClick={() => handlePlanSelect(p.stripePriceIdMonthly)}
+                      >
+                        {p.ctaText || `Get ${p.name}`}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* ── Paid users: credit top-up packs ── */
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-visible">
+              {creditPacks.map((pack) => (
+                <div
+                  key={pack.packId}
+                  className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                    pack.popular
+                      ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
+                      : 'border-border/60 hover:border-primary/30 bg-background'
+                  }`}
+                >
+                  {pack.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                      <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/20">
+                        Best Value
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="p-6 sm:p-7 space-y-4">
+                    <div className="space-y-1">
+                      <p className="text-3xl font-bold tracking-tight">{pack.credits.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-semibold">credits</p>
+                    </div>
+                    <div className="h-px bg-border/60 mx-3" />
+                    <div className="space-y-1">
+                      <p className="text-xl font-semibold tracking-tight">${pack.price}</p>
+                      <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢ each</p>
+                    </div>
+                    <Button
+                      variant={pack.popular ? 'default' : 'outline'}
+                      className="w-full min-h-[44px] rounded-xl text-sm font-medium"
+                      onClick={() => handleCreditPurchase(pack.stripePriceId)}
+                    >
+                      Purchase
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Upgrade nudge for Starter / Growth users */}
           {upgradeNudge && (
