@@ -216,9 +216,15 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
           : 'border-border hover:border-primary/30 hover:bg-muted/30'
       }`}
     >
-      <div className="aspect-[3/4] bg-muted flex items-center justify-center relative">
+      <div className="aspect-[3/4] bg-muted/60 flex items-center justify-center relative">
         {scene.previewUrl ? (
-          <ShimmerImage src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene.title} className="w-full h-full object-cover" loading="lazy" />
+          <ShimmerImage
+            src={getOptimizedUrl(scene.previewUrl, { quality: 60 })}
+            alt={scene.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            wrapperClassName="bg-gradient-to-r from-muted/30 via-muted/80 to-muted/30 bg-[length:200%_100%] animate-shimmer"
+          />
         ) : (
           <Camera className="w-6 h-6 text-muted-foreground/30" />
         )}
