@@ -35,7 +35,7 @@ import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { balance, openBuyModal } = useCredits();
+  const { balance, isEmpty, openBuyModal } = useCredits();
   const [startModalOpen, setStartModalOpen] = useState(false);
   const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);
 
