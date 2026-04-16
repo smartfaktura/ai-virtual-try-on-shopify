@@ -505,7 +505,7 @@ export default function Perspectives() {
   const genTotalCount = generatingJobs.length;
   const genAllDone = genTotalCount > 0 && Object.values(jobStatuses).every(s => s.status === 'completed' || s.status === 'failed' || s.status === 'cancelled');
   const genProgressPercent = genTotalCount > 0 ? (genCompletedCount / genTotalCount) * 100 : 0;
-  const estimatedSecondsPerImage = 35;
+  const estimatedSecondsPerImage = 5;
   const estimatedTotal = genTotalCount * estimatedSecondsPerImage;
 
   function formatTime(s: number) {
