@@ -1,37 +1,27 @@
 
 
-# Fix Buy Credits Button in Freestyle
+# Improve Arrow Styling & Remove Counter
 
-## Problems
-1. **Button doesn't work with no prompt**: When credits are zero and there's no prompt, the "Buy Credits" button calls `onGenerate` which maps to `handleGenerate`. That function checks `if (!canSubmit) return` first — since there's no prompt or assets, `canSubmit` is false and nothing happens.
+## What's Changing
 
-2. **Wrong popup when prompt exists**: When there IS a prompt but no credits, `handleGenerate` opens `NoCreditsModal` (the smaller conversion modal) instead of the main `BuyCreditsModal` (the full pricing popup with Plans + Top-Up tabs).
+1. **LibraryDetailModal arrows** (used in both `/app/freestyle` and `/app/library`): Upgrade arrow styling to match the polished `ImageLightbox` design — semi-transparent white/dark circles with blur, slightly larger, smooth hover transitions.
 
-## Fix
+2. **Remove the "2/3" counter badge** from the bottom of the image area in `LibraryDetailModal`.
 
-### `src/components/app/freestyle/FreestylePromptPanel.tsx`
+## Technical Changes
 
-Add an `onBuyCredits` prop and wire the "Buy Credits" button to call it directly instead of `onGenerate`:
+### `src/components/app/LibraryDetailModal.tsx` — Lines 166-184
 
-```tsx
-// Props: add onBuyCredits
-onBuyCredits?: () => void;
+**Arrows (lines 169-180)**: Replace the current `bg-background/60 backdrop-blur border border-border/30` styling with a more refined glass-morphism style matching `ImageLightbox`:
+- `w-11 h-11` (slightly larger)
+- `bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10`
+- `hover:bg-black/30 dark:hover:bg-white/25`
+- Always visible on mobile, fade on hover on desktop (keep existing `md:opacity-0 md:group-hover/img:opacity-100`)
+- Icon size bumped to `w-5 h-5`
 
-// Button onClick: change from onGenerate to onBuyCredits
-<Button onClick={onBuyCredits} ...>
-  Buy Credits
-</Button>
-```
-
-### `src/pages/Freestyle.tsx`
-
-1. Import `openBuyModal` from `useCredits()`
-2. Pass `onBuyCredits={openBuyModal}` to `FreestylePromptPanel` via `panelProps`
-
-This opens the main `BuyCreditsModal` (already mounted in `App.tsx`) directly — no prompt validation needed.
+**Counter (lines 181-183)**: Delete the `2/3` counter `<div>` entirely.
 
 | File | Change |
 |------|--------|
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Add `onBuyCredits` prop, wire Buy Credits button to it |
-| `src/pages/Freestyle.tsx` | Destructure `openBuyModal` from `useCredits`, pass as `onBuyCredits` |
+| `src/components/app/LibraryDetailModal.tsx` | Restyle nav arrows, remove counter badge |
 
