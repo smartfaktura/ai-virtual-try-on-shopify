@@ -151,7 +151,7 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
 
   const handleSeeAll = () => {
     onClose();
-    navigate('/app/settings');
+    navigate('/app/pricing');
   };
 
   const HeaderIcon = isTopup ? Zap : ArrowUpRight;
