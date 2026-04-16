@@ -1,39 +1,39 @@
 
 
-# Fix Invisible Shimmer on Scene Card Preview Images
+# Auto-Close Other Categories in Explore More (Accordion Behavior)
 
 ## Problem
-Scene cards in the Shots step use `ShimmerImage` for preview images, but the shimmer animation is invisible because:
-- The parent container has `bg-muted` background
-- The shimmer gradient uses `from-muted/40 via-muted/70 to-muted/40` — nearly identical to the parent, making the loading animation invisible
-- While images load, cards appear as static grey boxes indistinguishable from scenes without previews
+In the "Explore More" section, opening a second category (e.g., "Dresses") keeps the first one ("Clothing & Apparel") expanded above. The newly opened content is pushed below the viewport and the user can't see it without scrolling.
 
 ## Fix
 
-### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (line 219-221)
+### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-Replace the static `bg-muted` container with a shimmer-aware approach — add an `animate-pulse` fallback on the container and use a more visible shimmer gradient on the `ShimmerImage`:
+**1. Change `toggleCategory` to accordion behavior** — when opening a new category, close all others. Then scroll the newly opened category into view:
 
 ```tsx
-// Before (line 219-221)
-<div className="aspect-[3/4] bg-muted flex items-center justify-center relative">
-  {scene.previewUrl ? (
-    <ShimmerImage src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene.title} className="w-full h-full object-cover" loading="lazy" />
-
-// After
-<div className="aspect-[3/4] bg-muted/60 flex items-center justify-center relative">
-  {scene.previewUrl ? (
-    <ShimmerImage
-      src={getOptimizedUrl(scene.previewUrl, { quality: 60 })}
-      alt={scene.title}
-      className="w-full h-full object-cover"
-      loading="lazy"
-      wrapperClassName="bg-gradient-to-r from-muted/30 via-muted/80 to-muted/30 bg-[length:200%_100%] animate-shimmer"
-    />
+const toggleCategory = (catId: string) => {
+  if (expandedCategories.has(catId)) {
+    // Closing: just remove it
+    const next = new Set(expandedCategories);
+    next.delete(catId);
+    setExpandedCategories(next);
+  } else {
+    // Opening: close all others, open only this one
+    setExpandedCategories(new Set([catId]));
+    // Scroll to the opened category after render
+    requestAnimationFrame(() => {
+      document.getElementById(`explore-cat-${catId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+};
 ```
 
-The `wrapperClassName` on `ShimmerImage` gives its wrapper a higher-contrast shimmer sweep that's visible against the lighter `bg-muted/60` parent, providing a clear loading state while images load.
+**2. Add `id` attribute to `CategoryRowTrigger` containers** so scroll targeting works — add `id={`explore-cat-${cat.id}`}` to the trigger buttons in the Explore More section (line ~529).
+
+### Result
+Only one category can be expanded at a time. Opening "Dresses" auto-closes "Clothing & Apparel" and scrolls to show the Dresses scenes.
 
 ### Files
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — 1 small change to SceneCard image area
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — accordion toggle + scroll-into-view
 
