@@ -1,68 +1,37 @@
 
 
-# Simplify Value Drawer — Fit Everything in One Screen
+# Fix Layer 1 CTA + Enrich Value Drawer
 
-## Problem
-The drawer has 4 heavy sections (header, unlock block, "why brands upgrade" grid, 3 plan cards + compare link) that overflow the viewport. Too much text, too many visual styles, too many separators. It should be a clean, single-screen decision surface — not a sales brochure.
+## Problems
 
-## Strategy
-Merge sections 2 and 3 into the header area as a compact subline. Remove separators. Compress plan cards into a tighter single-row-per-plan layout. The entire drawer should fit in one viewport (~700px) on desktop without scrolling.
+1. **Layer 1 CTA "Compare Plans" is wrong** — User just created their first visual, they're excited. "Compare Plans" is cold and transactional. Should be warmer, action-oriented — something like "See Plans" or "Unlock More".
 
-## File: `src/components/app/UpgradeValueDrawer.tsx`
+2. **Value Drawer is too flat** — We stripped too much. It went from overcrowded to bare. The header + 3 plan cards + compare link feels like a pricing table, not a conversion surface. Need to add back a light value message without going overboard.
 
-### Remove Section 2 ("What You Unlock") entirely
-The "Select from 1,000+ personalized editorial shots" + chips section takes ~120px. Move the key message into the header subline instead:
-- Subline becomes: `{copy.subline} · 1,000+ editorial shots · Monthly campaign drops`
+## Files to Change
 
-### Remove Section 3 ("Why brands upgrade") entirely  
-The 2×2 grid with 4 icon rows is redundant — the plan cards already show credits, pricing, and features. Cut it completely.
+| File | Change |
+|------|--------|
+| `src/components/app/PostGenerationUpgradeCard.tsx` | Change CTA from "Compare Plans" to "See Plans" — shorter, softer, curiosity-driven |
+| `src/components/app/UpgradeValueDrawer.tsx` | Add a compact value line between header and plan cards: the "1,000+ editorial shots · Monthly campaign drops" message as a subtle highlighted row. Also add a small "What's included" list (3 bullet points) below subline to give the drawer more substance without bloat |
 
-### Remove all `<Separator />` components
-They add visual weight and vertical space. The sections are clear enough without them.
+## Detailed Changes
 
-### Compress plan cards
-- Remove the `positioning` text line under each plan (saves ~20px per card)
-- Make each card a single horizontal row: `[Name + price] [credits badge + ¢/cr] [CTA button]`
-- Reduce card padding from `p-3.5` to `p-3`
-- Keep the "Recommended" badge on Growth
-- Keep full-width CTA only for the recommended plan; other plans get a compact inline button
+### PostGenerationUpgradeCard.tsx
+- Line 107: `Compare Plans` → `See Plans`
 
-### Result layout (single viewport):
+### UpgradeValueDrawer.tsx
+Between the header and "Choose your plan", add:
 
-```text
-┌─────────────────────────────────────────┐
-│ [av] Scale your fashion visual library  │
-│      From 1 direction to a full         │
-│      campaign-ready collection          │
-│                                         │
-│  Choose your plan                       │
-│  ┌─────────────────────────────────┐    │
-│  │ Starter  $39/mo  500cr  7.8¢/cr│    │
-│  │         [Get Starter →]        │    │
-│  └─────────────────────────────────┘    │
-│       ── RECOMMENDED ──                 │
-│  ┌─────────────────────────────────┐    │
-│  │ Growth  $79/mo  1,500cr  5.3¢/cr│   │
-│  │         [👑 Get Growth]         │    │
-│  └─────────────────────────────────┘    │
-│  ┌─────────────────────────────────┐    │
-│  │ Pro  $179/mo  4,500cr  4.0¢/cr │    │
-│  │         [Get Pro →]            │    │
-│  └─────────────────────────────────┘    │
-│         Compare all plans →             │
-└─────────────────────────────────────────┘
-```
+1. **Value highlight row** — a soft background row with the key selling points:
+   - "1,000+ editorial shots · Monthly campaign drops · Priority generation"
+   - Style: `rounded-xl bg-muted/20 border border-border/40 p-3`, single line of `text-xs text-muted-foreground`
 
-## File: `src/lib/conversionCopy.ts`
+2. **3 compact benefit lines** under the subline (inside header area):
+   - "1,000+ personalized editorial shots"
+   - "Monthly campaign drops for social and marketing"  
+   - "Priority processing and batch generation"
+   - Style: small check icons + `text-xs`, no cards, no borders — just clean icon+text rows with `space-y-1.5`
 
-No structural changes needed. The `unlockHeadline`/`unlockSubline`/`unlockItems` fields stay for potential future use but won't be rendered in the drawer anymore.
-
-## Summary of what gets removed
-- Section 2 (unlock headline + chips) — ~120px saved
-- Section 3 (why brands upgrade 2×2 grid) — ~140px saved  
-- 3 Separator components — ~36px saved
-- Positioning text per plan card — ~60px saved
-- Product context row stays (only shows when thumbnail exists)
-
-Total: ~350px reclaimed. Drawer fits in one screen.
+This adds ~80px of useful context without overwhelming the single-screen layout.
 
