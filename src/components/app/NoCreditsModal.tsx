@@ -75,7 +75,7 @@ function FreePlanSection({
     <div className="space-y-5">
       {/* Subtitle */}
       <p className="text-sm text-muted-foreground text-center">
-        Scale faster with more credits and better value per image
+        Pick a plan that fits your creative ambitions
       </p>
 
       {/* Billing toggle */}

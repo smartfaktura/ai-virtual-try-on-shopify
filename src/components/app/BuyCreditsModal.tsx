@@ -129,20 +129,17 @@ export function BuyCreditsModal() {
       <Dialog open={buyModalOpen} onOpenChange={(open) => { if (!open && !anyLoading) closeBuyModal(); }}>
         <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100">
 
-          {/* Balance header */}
-          <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-border/40 flex items-start justify-between">
+          {/* Header */}
+          <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 flex items-start justify-between">
             <div>
               <p className="text-xl font-bold tracking-tight">
-                {balance.toLocaleString()} credits remaining
+                Unlock your visual potential
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Choose a plan to keep creating
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Scale faster with more credits and better value per image
+                Pick a plan that fits your creative ambitions
               </p>
               {isPaidUser && currentPeriodEnd && (
-                <p className={`text-[11px] mt-1 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                <p className={`text-[11px] mt-1.5 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
                   {subscriptionStatus === 'canceling'
                     ? `Cancels ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
                     : `Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · billed ${effectiveInterval || 'monthly'}`
