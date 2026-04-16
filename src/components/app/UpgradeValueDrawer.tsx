@@ -1,9 +1,8 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowRight, Crown, Layers, TrendingUp, Zap, Target, Sparkles } from 'lucide-react';
+import { ArrowRight, Crown } from 'lucide-react';
 
 import { type ConversionCategory, getLayer2Copy, getLayer1Avatar } from '@/lib/conversionCopy';
 import { pricingPlans } from '@/data/mockData';
@@ -26,29 +25,19 @@ interface UpgradeValueDrawerProps {
   generationContext?: GenerationContext;
 }
 
-const VALUE_ROWS = [
-  { icon: Layers, metric: '500–4,500 monthly credits', detail: 'Keep creating without stopping' },
-  { icon: TrendingUp, metric: 'Up to 48% lower cost per credit', detail: 'Bigger plans = better value' },
-  { icon: Zap, metric: 'Priority processing', detail: 'Faster generation on Growth+' },
-  { icon: Target, metric: 'Brand Models & scale', detail: 'Custom models and unlimited products on Pro' },
-];
-
 const PLAN_CARDS = [
   {
     planId: 'starter' as const,
-    positioning: 'Start scaling beyond free',
     centsPerCredit: '7.8¢/cr',
     recommended: false,
   },
   {
     planId: 'growth' as const,
-    positioning: 'Best value for active brands',
     centsPerCredit: '5.3¢/cr',
     recommended: true,
   },
   {
     planId: 'pro' as const,
-    positioning: 'Brand Models · Unlimited products',
     centsPerCredit: '4.0¢/cr',
     recommended: false,
   },
@@ -73,29 +62,29 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" className="w-full sm:!max-w-[480px] overflow-y-auto p-0 pt-2">
-        <div className="p-6 pt-10 space-y-4">
+      <SheetContent side="right" className="w-full sm:!max-w-[440px] overflow-y-auto p-0 pt-2">
+        <div className="p-5 pt-10 space-y-4">
 
-          {/* Section 1: Category-Aware Header */}
-          <SheetHeader className="space-y-2">
+          {/* Header */}
+          <SheetHeader className="space-y-1.5">
             <div className="flex items-center gap-2.5">
               <Avatar className="w-7 h-7 ring-1 ring-border/40">
                 <AvatarImage src={avatarUrl} alt={avatar.name} />
                 <AvatarFallback className="text-[10px]">{avatar.name[0]}</AvatarFallback>
               </Avatar>
-              <SheetTitle className="text-lg font-semibold tracking-tight">
+              <SheetTitle className="text-base font-semibold tracking-tight">
                 {copy.headline}
               </SheetTitle>
             </div>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <SheetDescription className="text-sm text-muted-foreground leading-relaxed">
               {copy.subline}
             </SheetDescription>
           </SheetHeader>
 
           {/* Product context row */}
           {generationContext?.productThumbnail && (
-            <div className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-muted/20">
-              <div className="w-10 h-10 rounded-lg overflow-hidden border border-border bg-muted/30 flex-shrink-0">
+            <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border/60 bg-muted/20">
+              <div className="w-9 h-9 rounded-lg overflow-hidden border border-border bg-muted/30 flex-shrink-0">
                 <img
                   src={getOptimizedUrl(generationContext.productThumbnail, { quality: 60 })}
                   alt=""
@@ -113,63 +102,18 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
             </div>
           )}
 
-          <Separator />
-
-          {/* Section 2: What You Unlock */}
+          {/* Plan Cards */}
           <div className="space-y-2">
-            <div className="flex items-start gap-2.5">
-              <Sparkles className="w-4 h-4 text-primary/70 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold tracking-tight">{copy.unlockHeadline}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{copy.unlockSubline}</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-1.5 pl-6.5">
-              {copy.unlockItems.map((item) => (
-                <span
-                  key={item}
-                  className="text-[10px] text-muted-foreground bg-muted/40 px-2 py-1 rounded-md"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Section 3: Why Brands Upgrade — compact 2×2 grid */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold tracking-tight">Why brands upgrade</p>
-            <div className="grid grid-cols-2 gap-2.5">
-              {VALUE_ROWS.map(({ icon: Icon, metric, detail }) => (
-                <div key={metric} className="flex items-start gap-2">
-                  <div className="mt-0.5 p-1 rounded-md bg-primary/5 flex-shrink-0">
-                    <Icon className="w-3 h-3 text-primary/70" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium leading-snug">{metric}</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">{detail}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Section 4: Plan Comparison */}
-          <div className="space-y-2.5">
             <p className="text-sm font-semibold tracking-tight">Choose your plan</p>
 
-            {PLAN_CARDS.map(({ planId, positioning, centsPerCredit, recommended }) => {
+            {PLAN_CARDS.map(({ planId, centsPerCredit, recommended }) => {
               const plan = pricingPlans.find(p => p.planId === planId);
               if (!plan) return null;
 
               return (
                 <div
                   key={planId}
-                  className={`relative rounded-xl p-3.5 space-y-2.5 transition-colors ${
+                  className={`relative rounded-xl p-3 space-y-2 transition-colors ${
                     recommended
                       ? 'border-2 border-primary/40 bg-primary/[0.02] pt-3'
                       : 'border border-border/60 hover:border-primary/30'
@@ -198,12 +142,10 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                     </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground">{positioning}</p>
-
                   <Button
                     variant={recommended ? 'default' : 'outline'}
                     size="sm"
-                    className="w-full rounded-xl min-h-[38px] text-sm"
+                    className="w-full rounded-xl min-h-[36px] text-sm"
                     onClick={() => handleCheckout(plan.stripePriceIdMonthly)}
                   >
                     {recommended && <Crown className="w-3.5 h-3.5 mr-1.5" />}
