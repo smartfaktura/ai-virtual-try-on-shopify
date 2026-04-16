@@ -137,36 +137,6 @@ export default function AppPricing() {
   const planConfig = pricingPlans.find(p => p.planId === plan);
   const isFreeUser = plan === 'free';
 
-  // Default selection: current plan if paid, else Growth
-  const defaultSelected = useMemo(() => {
-    if (currentIdx > 0) return plan;
-    return 'growth';
-  }, [plan, currentIdx]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>(defaultSelected);
-
-  const selectedPlan = mainPlans.find(p => p.planId === selectedPlanId) ?? mainPlans[0];
-  const selectedIdx = PLAN_ORDER.indexOf(selectedPlanId);
-
-  // Determine CTA state for the single button
-  let ctaLabel = 'Continue to checkout';
-  let ctaDisabled = false;
-  if (selectedPlanId === plan && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate plan';
-  else if (selectedPlanId === plan) { ctaLabel = 'Current plan'; ctaDisabled = true; }
-  else if (selectedPlanId === 'free') ctaLabel = 'Cancel subscription';
-  else if (selectedIdx < currentIdx) ctaLabel = `Downgrade to ${selectedPlan.name}`;
-
-  const handleConfirmSelection = () => {
-    if (ctaDisabled) return;
-    const targetPlan = mainPlans.find(p => p.planId === selectedPlanId);
-    if (!targetPlan) return;
-    if (selectedPlanId === plan && subscriptionStatus === 'canceling') setDialogMode('reactivate');
-    else if (selectedPlanId === 'free') setDialogMode('cancel');
-    else if (selectedIdx > currentIdx) setDialogMode('upgrade');
-    else setDialogMode('downgrade');
-    setSelectedDialogPlan(targetPlan);
-    setDialogOpen(true);
-  };
-
   const handleDialogConfirm = async () => {
     setLoading(true);
     try {
