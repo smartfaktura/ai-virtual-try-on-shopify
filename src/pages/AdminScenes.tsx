@@ -1093,7 +1093,9 @@ function SceneRow({
   };
 
   return (
-    <div className="flex items-center gap-2.5 px-3 py-2 group">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 px-3 py-2.5 group">
+      {/* Top row: thumbnail + metadata */}
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
       {/* Thumbnail */}
       <div className="relative w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
         <img
@@ -1222,8 +1224,8 @@ function SceneRow({
             </Tooltip>
           )}
         </div>
-        {/* Admin debug info */}
-        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+        {/* Admin debug info — hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-1.5 mt-0.5 flex-wrap">
           <span
             className="text-[9px] font-mono text-muted-foreground/60 cursor-pointer hover:text-foreground truncate max-w-[120px]"
             onClick={() => { navigator.clipboard.writeText(pose.poseId); toast.success('ID copied'); }}
@@ -1298,9 +1300,10 @@ function SceneRow({
           </div>
         )}
       </div>
+      </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-0.5 flex-shrink-0">
+      <div className="flex items-center gap-0.5 flex-shrink-0 flex-wrap sm:flex-nowrap self-end sm:self-auto">
         {/* Change preview for custom scenes */}
         {isCustom && (
           <Tooltip>

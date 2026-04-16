@@ -4,7 +4,7 @@ import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
-  TrendingUp, BookOpen, Clock,
+  TrendingUp, BookOpen, Clock, Camera,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
@@ -358,6 +358,13 @@ export function AppShell({ children }: AppShellProps) {
                     >
                       <Eye className="w-4 h-4" />
                       Scenes
+                    </button>
+                    <button
+                      onClick={() => { navigate('/app/admin/product-image-scenes'); setUserMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <Camera className="w-4 h-4" />
+                      Product Visuals Scenes
                     </button>
                     <button
                       onClick={() => { navigate('/app/admin/trend-watch'); setUserMenuOpen(false); }}
