@@ -184,19 +184,15 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           </div>
 
           {/* Right — Info panel */}
-          <div className="relative w-full md:w-[40%] h-[55vh] md:h-full flex flex-col bg-background/95 backdrop-blur-xl border-l border-border/20">
-            {/* Sticky close button */}
-            <div className="sticky top-0 z-20 flex justify-end p-4 pb-0">
-              <button
-                onClick={onClose}
-                className="text-foreground/70 hover:text-foreground transition-colors"
-              >
-                <X className="w-7 h-7" strokeWidth={2} />
-              </button>
-            </div>
+          <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-20 text-foreground/70 hover:text-foreground transition-colors"
+            >
+              <X className="w-7 h-7" strokeWidth={2} />
+            </button>
 
-            <div className="flex-1 overflow-y-auto">
-            <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-2 md:pt-2">
+            <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
               {/* Source + label */}
               <div className="space-y-2">
               {(() => {
