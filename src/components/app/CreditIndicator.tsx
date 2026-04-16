@@ -1,4 +1,4 @@
-import { Coins, ArrowUpRight, Plus } from 'lucide-react';
+import { Zap, ArrowUpRight, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
@@ -18,48 +18,41 @@ export function CreditIndicator() {
   return (
     <div
       onClick={() => navigate('/app/settings')}
-      className="p-4 rounded-xl bg-white/[0.06] space-y-3 cursor-pointer active:scale-[0.98] transition-all duration-150 hover:bg-white/[0.09]"
+      className="p-3.5 rounded-xl bg-white/[0.06] space-y-2.5 cursor-pointer active:scale-[0.98] transition-all duration-150 hover:bg-white/[0.09]"
     >
-      {/* Plan name + Upgrade */}
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/40">
-          Your credits
-        </span>
-        {planConfig.nextPlanId && (
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate('/app/settings'); }}
-            className={`flex items-center gap-0.5 text-[10px] font-semibold transition-colors ${
-              isFree
-                ? 'text-primary hover:text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-md'
-                : 'text-primary hover:text-primary/80'
-            }`}
-          >
-            Upgrade
-            <ArrowUpRight className="w-3 h-3" />
-          </button>
-        )}
-      </div>
-
-      {/* Balance + Buy */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-            <Coins className="w-3.5 h-3.5 text-sidebar-foreground/70" />
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-sm font-bold text-sidebar-foreground">{balance.toLocaleString()}</span>
-            <span className="text-[10px] text-sidebar-foreground/40">
+      {/* Balance + actions */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Zap className="w-4 h-4 text-sidebar-foreground/70 shrink-0" strokeWidth={2.25} />
+          <div className="flex items-baseline gap-1 min-w-0">
+            <span className="text-sm font-bold text-sidebar-foreground truncate">{balance.toLocaleString()}</span>
+            <span className="text-[10px] text-sidebar-foreground/40 shrink-0">
               / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
             </span>
           </div>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); openBuyModal(); }}
-          className="w-6 h-6 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
-          title="Buy credits"
-        >
-          <Plus className="w-3 h-3" />
-        </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {planConfig.nextPlanId && (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate('/app/settings'); }}
+              className={`flex items-center gap-0.5 text-[10px] font-semibold transition-colors ${
+                isFree
+                  ? 'text-primary hover:text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-md'
+                  : 'text-primary hover:text-primary/80'
+              }`}
+            >
+              Upgrade
+              <ArrowUpRight className="w-3 h-3" />
+            </button>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); openBuyModal(); }}
+            className="w-6 h-6 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
+            title="Buy credits"
+          >
+            <Plus className="w-3 h-3" />
+          </button>
+        </div>
       </div>
 
       {/* Progress bar */}
