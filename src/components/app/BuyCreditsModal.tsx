@@ -384,25 +384,24 @@ export function BuyCreditsModal() {
                       growth: 'Get Growth',
                       pro: 'Get Pro',
                     };
-                    const PLAN_DIFFERENTIATORS: Record<string, { text: string; badge?: string }[]> = {
-                      starter: [
-                        { text: 'Bulk generations' },
-                        { text: 'Up to 100 products' },
-                      ],
-                      growth: [
-                        { text: 'Faster generation' },
-                        { text: 'Up to 250 products' },
-                        { text: 'Brand Models', badge: 'NEW' },
-                      ],
-                      pro: [
-                        { text: 'Fastest generation' },
-                        { text: 'Unlimited products' },
-                        { text: 'Brand Models', badge: 'NEW' },
-                      ],
-                    };
-
                     const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
-                    const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
+
+                    // Build unified bullet list
+                    const unifiedBullets: { text: string; badge?: string; color?: string }[] = [];
+                    if (imageEstimate) {
+                      unifiedBullets.push({ text: `~${imageEstimate} images / month` });
+                      unifiedBullets.push({ text: `${credits.toLocaleString()} credits / month` });
+                      if (displayPrice > 0) {
+                        const ppc = `$${(displayPrice / credits).toFixed(3)} per credit`;
+                        unifiedBullets.push({ text: ppc, color: 'text-primary', ...(isAnnual ? { badge: 'SAVE 20%' } : {}) });
+                      }
+                    }
+                    const PLAN_EXTRAS: Record<string, { text: string; badge?: string }[]> = {
+                      starter: [{ text: 'Bulk generations' }, { text: 'Up to 100 products' }],
+                      growth: [{ text: 'Faster generation' }, { text: 'Up to 250 products' }, { text: 'Brand Models', badge: 'NEW' }],
+                      pro: [{ text: 'Fastest generation' }, { text: 'Unlimited products' }, { text: 'Brand Models', badge: 'NEW' }],
+                    };
+                    unifiedBullets.push(...(PLAN_EXTRAS[p.planId] ?? []));
 
                     let ctaLabel = PLAN_CTA_MAP[p.planId] ?? `Choose ${p.name}`;
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
@@ -413,7 +412,7 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-5 sm:p-6 pt-6 flex flex-col transition-all duration-200 ${
+                      className={`relative rounded-2xl p-5 sm:p-6 flex flex-col transition-all duration-200 ${
                           isCurrent && p.planId !== 'free'
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
@@ -421,13 +420,11 @@ export function BuyCreditsModal() {
                               : 'border border-border/40 bg-card hover:shadow-sm'
                         }`}
                       >
-                        {/* Most Popular badge for highlighted */}
+                        {/* Most Popular badge — top-right corner */}
                         {p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) && (
-                          <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
-                            <Badge className="bg-primary text-primary-foreground text-[10px] font-medium px-3 py-0.5 border-0 shadow-sm">
-                              Most popular
-                            </Badge>
-                          </div>
+                          <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-medium px-3 py-0.5 border-0 shadow-sm z-10">
+                            Most popular
+                          </Badge>
                         )}
 
                         {/* Name + descriptor */}
@@ -444,46 +441,29 @@ export function BuyCreditsModal() {
                         </div>
 
                         {/* Price */}
-                        <div className="mb-6">
+                        <div className="mb-5">
                           {isFree ? (
-                            <span className="text-2xl font-bold tracking-tight">Free</span>
+                            <span className="text-3xl font-bold tracking-tight">Free</span>
                           ) : (
-                            <>
-                              <p className="tracking-tight">
-                                {isAnnual && p.monthlyPrice > displayPrice && (
-                                  <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
-                                )}
-                                <span className="text-2xl font-bold">${displayPrice}</span>
-                                <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                              </p>
-                            </>
-                          )}
-                        </div>
-
-                        {/* Metrics — 3 clean lines */}
-                        <div className="mb-6 space-y-1">
-                          {imageEstimate ? (
-                            <>
-                              <p className="text-sm text-muted-foreground">~{imageEstimate} images / month</p>
-                              <p className="text-sm text-muted-foreground">{credits.toLocaleString()} credits / month</p>
-                              {displayPrice > 0 && (
-                                <p className="text-sm text-primary font-semibold">${(displayPrice / credits).toFixed(3)} per credit</p>
+                            <p className="tracking-tight">
+                              {isAnnual && p.monthlyPrice > displayPrice && (
+                                <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                               )}
-                            </>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">{p.credits} credits</p>
+                              <span className="text-3xl font-bold">${displayPrice}</span>
+                              <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                            </p>
                           )}
                         </div>
 
-                        {/* Differentiators */}
+                        {/* Unified bullet list */}
                         <div className="space-y-2 flex-1 mb-4">
-                          {differentiators.map((feat, i) => (
+                          {unifiedBullets.map((feat, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                              <span className="text-xs text-muted-foreground leading-snug inline-flex items-center gap-1.5">
+                              <span className={`text-[13px] leading-snug inline-flex items-center gap-1.5 ${feat.color || 'text-muted-foreground'}`}>
                                 {feat.text}
                                 {feat.badge && (
-                                  <Badge className="text-[10px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+                                  <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-emerald-500/15 text-emerald-600 border-0">
                                     {feat.badge}
                                   </Badge>
                                 )}
