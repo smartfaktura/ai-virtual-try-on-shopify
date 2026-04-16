@@ -69,6 +69,7 @@ export default function AdminConversion() {
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalPlanPreview, setModalPlanPreview] = useState<string>('free');
 
   if (isLoading) return null;
   if (!isAdmin) return <Navigate to="/app" replace />;
