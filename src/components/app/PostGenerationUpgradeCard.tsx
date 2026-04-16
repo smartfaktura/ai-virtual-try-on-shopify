@@ -53,7 +53,7 @@ export function PostGenerationUpgradeCard({
 
   useEffect(() => {
     if (forceVisible) return;
-    const timer = setTimeout(() => setVisible(true), 3000);
+    const timer = setTimeout(() => setVisible(true), 7000);
     return () => clearTimeout(timer);
   }, [forceVisible]);
 
@@ -79,7 +79,7 @@ export function PostGenerationUpgradeCard({
       {/* Desktop: single row | Mobile: two rows */}
       <div className={cn(
         'flex py-3 pl-4 pr-8',
-        compact ? 'flex-col gap-2' : 'flex-col gap-2 md:flex-row md:items-center md:gap-3 md:pr-3'
+        compact ? 'flex-col gap-2' : 'flex-col gap-2 md:flex-row md:items-center md:gap-3 md:pr-10'
       )}>
         {/* Left: avatar + headline */}
         <div className="flex items-center gap-2.5 min-w-0">
