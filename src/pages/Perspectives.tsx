@@ -27,6 +27,7 @@ import { toSignedUrls } from '@/lib/signedUrl';
 import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 
 type UserProduct = Tables<'user_products'>;
 type SourceType = 'library' | 'product' | 'scratch';
