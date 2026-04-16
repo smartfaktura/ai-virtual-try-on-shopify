@@ -1,70 +1,29 @@
 
 
-# Improve Mobile Feedback Survey Layout
+# Improve Desktop & Tablet Feedback Survey
 
-## Problem
-On mobile (390px), the current layout has the "HELP US IMPROVE ·" label, question text, and dismiss X all crammed on one line, then buttons below. The text competes for space and the hierarchy isn't clear. From the screenshot: everything feels flat and same-weight.
+## Current State
+The desktop pill (screenshot) already works well as a single horizontal row. The improvements focus on visual refinement and tablet breakpoint handling.
 
-## Solution
-Stack the content into three clear visual layers on mobile:
+## Changes
 
-### Layer 1 — Context label + dismiss
-- "HELP US IMPROVE" label on the left, X dismiss on the right — same row
-- Keeps the tiny uppercase muted style
+### Desktop refinements
+- Add a subtle vertical divider (`border-l border-border/30 h-4`) between the "HELP US IMPROVE" label and the question text — creates clearer visual separation in the pill
+- Slightly increase button padding on desktop (`px-3.5`) for better click targets
+- Add `hover:border-border/80` to buttons for a more polished hover state
+- Add subtle `hover:shadow-sm` transition on the entire pill for depth
 
-### Layer 2 — Question text
-- Full-width on its own line: `text-sm font-medium text-foreground/80`
-- Slightly larger and darker than the label so it reads as the primary content
+### Tablet breakpoint (md)
+- Currently jumps from mobile stack (`flex-col`) to desktop pill (`sm:flex-row`) at 640px — too early for tablets
+- Change the responsive breakpoint from `sm:` to `md:` (768px) so tablets in portrait (820px, 768px) get the proper pill layout, while smaller tablet widths still get the stacked card
+- This prevents the pill from being cramped on narrow tablets
 
-### Layer 3 — Answer buttons
-- Full-width row, `flex gap-2`, each button `flex-1` with slightly taller touch targets (`py-1.5` instead of `py-1`)
-- Rounded-full, consistent sizing
-
-### Desktop (sm+)
-- Keep the single-row pill layout as-is — no changes needed
-
-## Technical detail
-Single file: `ContextualFeedbackCard.tsx`, lines 146-167
-
-```tsx
-// Mobile: stacked 3-layer card
-<div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3 px-4 py-3 sm:py-2 rounded-xl sm:rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm w-full sm:w-auto">
-  {/* Row 1: label + dismiss */}
-  <div className="flex items-center justify-between sm:contents">
-    <div className="flex items-center gap-1.5">
-      <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40">
-        Help Us Improve
-      </span>
-    </div>
-    <button onClick={dismiss} className="sm:hidden text-muted-foreground/40 hover:text-muted-foreground">
-      <X className="w-3.5 h-3.5" />
-    </button>
-  </div>
-
-  {/* Row 2: question (mobile only — inline on desktop) */}
-  <span className="text-sm sm:text-xs font-medium text-foreground/70 sm:text-muted-foreground sm:flex-1">
-    {questionText}
-  </span>
-
-  {/* Row 3: buttons */}
-  <div className="flex gap-2 sm:gap-1.5 w-full sm:w-auto">
-    {buttons with flex-1 sm:flex-initial, py-1.5 sm:py-1}
-  </div>
-
-  {/* Desktop dismiss */}
-  <button className="hidden sm:block ..."><X /></button>
-</div>
-```
-
-Key improvements:
-- Question text gets its own line on mobile — larger, readable
-- Label row with dismiss X creates clear header
-- Buttons fill width evenly with better touch targets
-- Clean 3-layer visual hierarchy instead of cramped single row
+### Button hover states
+- Add `active:scale-[0.97]` for tactile feedback on click
+- Slightly more visible hover: `hover:bg-muted hover:border-border/80`
 
 ## File
-| File | Lines |
-|------|-------|
-| `src/components/app/ContextualFeedbackCard.tsx` | 145-175 |
+| File | Change |
+|------|--------|
+| `src/components/app/ContextualFeedbackCard.tsx` | Lines 146-188: Update breakpoints from `sm:` to `md:`, add divider, improve button hover states |
 
