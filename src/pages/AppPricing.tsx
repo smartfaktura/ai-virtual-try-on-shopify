@@ -346,6 +346,9 @@ export default function AppPricing() {
         </div>
       </div>
 
+      {/* Cost comparison */}
+      <CompetitorComparison />
+
       {/* Enterprise section */}
       <div className="rounded-2xl border border-border bg-muted/10 p-6 sm:p-8 text-center space-y-4">
         <h2 className="text-xl font-bold tracking-tight">Need more scale?</h2>
