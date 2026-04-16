@@ -328,7 +328,7 @@ export function BuyCreditsModal() {
                       onClick={() => setBillingPeriod('annual')}
                     >
                       Annual
-                      <span className="inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none bg-gray-100 text-gray-500">
+                      <span className="inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none bg-muted text-muted-foreground">
                         SAVE 20%
                       </span>
                     </button>
