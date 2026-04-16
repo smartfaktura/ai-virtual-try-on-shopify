@@ -2,7 +2,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Check } from 'lucide-react';
 
 import { type ConversionCategory, getLayer2Copy, getLayer1Avatar } from '@/lib/conversionCopy';
 import { pricingPlans } from '@/data/mockData';
@@ -30,18 +29,21 @@ const PLAN_CARDS = [
     centsPerCredit: '7.8¢',
     savingsLabel: null,
     recommended: false,
+    differentiator: '500 credits · Up to 100 products',
   },
   {
     planId: 'growth' as const,
     centsPerCredit: '5.3¢',
     savingsLabel: 'Save 32%',
     recommended: true,
+    differentiator: '1,500 credits · Priority queue · Brand Models',
   },
   {
     planId: 'pro' as const,
     centsPerCredit: '4.0¢',
     savingsLabel: 'Save 49%',
     recommended: false,
+    differentiator: '4,500 credits · Unlimited everything',
   },
 ];
 
@@ -63,47 +65,42 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" className="w-full sm:!max-w-[440px] overflow-y-auto p-0 pt-2">
-        <div className="p-5 pt-10 space-y-3">
+      <SheetContent side="right" className="w-full sm:!max-w-[460px] overflow-y-auto p-0 pt-2">
+        <div className="flex flex-col h-full p-5 pt-10">
 
           {/* Header */}
-          <SheetHeader className="space-y-1.5 border-b border-border/30 pb-3">
-            <div className="flex items-center gap-2.5">
-              <Avatar className="w-7 h-7 ring-1 ring-border/40">
+          <SheetHeader className="space-y-2 pb-5">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-10 h-10 ring-1 ring-border/40">
                 <AvatarImage src={avatarUrl} alt={avatar.name} />
-                <AvatarFallback className="text-[10px]">{avatar.name[0]}</AvatarFallback>
+                <AvatarFallback className="text-xs">{avatar.name[0]}</AvatarFallback>
               </Avatar>
-              <SheetTitle className="text-base font-semibold tracking-tight">
-                {copy.headline}
-              </SheetTitle>
+              <div className="min-w-0">
+                <SheetTitle className="text-lg font-semibold tracking-tight">
+                  {copy.headline}
+                </SheetTitle>
+                <SheetDescription className="text-sm text-foreground/60 leading-relaxed mt-0.5">
+                  {copy.subline}
+                </SheetDescription>
+              </div>
             </div>
-            <SheetDescription className="text-sm text-muted-foreground/80 leading-relaxed">
-              {copy.subline}
-            </SheetDescription>
           </SheetHeader>
 
-          {/* Benefits */}
-          <div className="space-y-1.5">
-            {[
-              '1,000+ personalized editorial shots',
-              'Monthly campaign drops for social & marketing',
-              'Priority processing and batch generation',
-            ].map((text) => (
-              <div key={text} className="flex items-center gap-2">
-                <Check className="w-3 h-3 text-primary shrink-0" />
-                <span className="text-xs text-muted-foreground">{text}</span>
-              </div>
+          {/* Category feature pills */}
+          <div className="flex flex-wrap gap-1.5 pb-5">
+            {copy.unlockItems.map((item) => (
+              <span
+                key={item}
+                className="inline-flex items-center rounded-full bg-muted/60 border border-border/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+              >
+                {item}
+              </span>
             ))}
           </div>
 
-          {/* Trust line */}
-          <p className="text-xs text-muted-foreground/60 text-center">
-            Join 2,000+ brands creating with VOVV
-          </p>
-
           {/* Product context row */}
           {generationContext?.productThumbnail && (
-            <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border/60 bg-muted/20">
+            <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border/40 bg-muted/20 mb-5">
               <div className="w-9 h-9 rounded-lg overflow-hidden border border-border bg-muted/30 flex-shrink-0">
                 <img
                   src={getOptimizedUrl(generationContext.productThumbnail, { quality: 60 })}
@@ -122,11 +119,9 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
             </div>
           )}
 
-          {/* Plan Cards */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold tracking-tight">Choose your plan</p>
-
-            {PLAN_CARDS.map(({ planId, centsPerCredit, savingsLabel, recommended }) => {
+          {/* Plan Cards — fills remaining height */}
+          <div className="flex-1 flex flex-col justify-between gap-3 pb-8">
+            {PLAN_CARDS.map(({ planId, centsPerCredit, savingsLabel, recommended, differentiator }) => {
               const plan = pricingPlans.find(p => p.planId === planId);
               if (!plan) return null;
 
@@ -135,38 +130,48 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
               return (
                 <div
                   key={planId}
-                  className={`rounded-xl p-3 space-y-2 transition-all ${
+                  className={`rounded-2xl p-4 space-y-3 transition-all ${
                     recommended
-                      ? 'border-2 border-primary/40 bg-primary/[0.03] shadow-sm'
-                      : 'border border-border/60 hover:border-primary/30'
+                      ? 'border-2 border-primary/50 bg-gradient-to-b from-primary/[0.06] to-primary/[0.02] ring-1 ring-primary/20 shadow-sm'
+                      : 'border border-border/40 hover:border-border/60'
                   }`}
                 >
-                  {/* Plan header: name · price + credits pill */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold">{plan.name} · ${plan.monthlyPrice}/mo</p>
-                      {recommended && (
-                        <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0">
-                          Recommended
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[10px]">
-                        {creditsDisplay} cr · {centsPerCredit}
+                  {/* Plan name + recommended badge */}
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-semibold tracking-tight">{plan.name}</p>
+                    {recommended && (
+                      <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0">
+                        Recommended
                       </Badge>
-                      {savingsLabel && (
-                        <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full">
-                          {savingsLabel}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
 
+                  {/* Price */}
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold tracking-tight">${plan.monthlyPrice}</span>
+                    <span className="text-xs text-muted-foreground">/mo</span>
+                  </div>
+
+                  {/* Credits pill + savings */}
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px] font-medium">
+                      {creditsDisplay} cr · {centsPerCredit}
+                    </Badge>
+                    {savingsLabel && (
+                      <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+                        {savingsLabel}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Differentiator */}
+                  <p className="text-xs text-muted-foreground">{differentiator}</p>
+
+                  {/* CTA */}
                   <Button
                     variant={recommended ? 'default' : 'outline'}
                     size="sm"
-                    className="w-full rounded-xl min-h-[36px] text-sm"
+                    className="w-full rounded-xl h-10 text-sm"
                     onClick={() => handleCheckout(plan.stripePriceIdMonthly)}
                   >
                     {recommended ? `Get ${creditsDisplay} credits` : `Start with ${creditsDisplay} credits`}
