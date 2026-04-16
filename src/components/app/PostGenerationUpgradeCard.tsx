@@ -83,12 +83,12 @@ export function PostGenerationUpgradeCard({
               'text-sm font-medium tracking-tight leading-snug',
               compact ? 'line-clamp-2' : 'line-clamp-2 md:truncate md:line-clamp-none'
             )}>{copy.headline}</p>
-            <p className="text-xs text-muted-foreground leading-snug line-clamp-1">{copy.subline}</p>
+            <p className="text-xs text-muted-foreground leading-snug sm:line-clamp-1">{copy.subline}</p>
           </div>
         </div>
 
         {/* Middle: chips */}
-        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+        <div className="hidden sm:flex flex-wrap items-center gap-1.5 shrink-0">
           {copy.valueBlocks.map((block) => (
             <ValueChip key={block.title} block={block} />
           ))}
