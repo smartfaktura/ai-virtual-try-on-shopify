@@ -342,7 +342,7 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
           ) : (
             <>
               <Button variant="outline" onClick={handleSeeAll} disabled={loading} className="rounded-xl min-h-[44px]">
-                See all plans
+                Compare plans
               </Button>
               <Button onClick={handleConfirm} disabled={loading} className="rounded-xl min-h-[44px] gap-2">
                 {loading ? (
