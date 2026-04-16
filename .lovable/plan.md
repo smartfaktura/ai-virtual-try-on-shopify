@@ -1,50 +1,68 @@
 
 
-# Clean Up Layer 1 Inline Card — Compact & Minimal
+# Simplify Value Drawer — Fit Everything in One Screen
 
 ## Problem
-The card is too heavy for an inline soft nudge. Too many text sizes, verbose detail text in value blocks, redundant dismiss (X button + "Dismiss" text), and on mobile the 3 value blocks + subline + badge make it too tall.
+The drawer has 4 heavy sections (header, unlock block, "why brands upgrade" grid, 3 plan cards + compare link) that overflow the viewport. Too much text, too many visual styles, too many separators. It should be a clean, single-screen decision surface — not a sales brochure.
 
-## Solution
-Strip it down to the essentials: headline, one subline, inline value chips (icon + short title only on all screens), single CTA row. Remove the full desktop value block cards with detail text entirely — use the compact chip style everywhere.
+## Strategy
+Merge sections 2 and 3 into the header area as a compact subline. Remove separators. Compress plan cards into a tighter single-row-per-plan layout. The entire drawer should fit in one viewport (~700px) on desktop without scrolling.
 
-## Files to Change
+## File: `src/components/app/UpgradeValueDrawer.tsx`
 
-| File | Change |
-|------|--------|
-| `src/components/app/PostGenerationUpgradeCard.tsx` | Remove `ValueBlockFull` component entirely. Use compact inline chips on all screen sizes. Remove duplicate "Dismiss" text button (keep only X). Remove avatar name/role line (keep avatar image). Tighten padding. Remove "Growth — most chosen" badge. Simplify to: avatar + headline + subline → chips row → CTA button + X. |
+### Remove Section 2 ("What You Unlock") entirely
+The "Select from 1,000+ personalized editorial shots" + chips section takes ~120px. Move the key message into the header subline instead:
+- Subline becomes: `{copy.subline} · 1,000+ editorial shots · Monthly campaign drops`
 
-## New Layout
+### Remove Section 3 ("Why brands upgrade") entirely  
+The 2×2 grid with 4 icon rows is redundant — the plan cards already show credits, pricing, and features. Cut it completely.
+
+### Remove all `<Separator />` components
+They add visual weight and vertical space. The sections are clear enough without them.
+
+### Compress plan cards
+- Remove the `positioning` text line under each plan (saves ~20px per card)
+- Make each card a single horizontal row: `[Name + price] [credits badge + ¢/cr] [CTA button]`
+- Reduce card padding from `p-3.5` to `p-3`
+- Keep the "Recommended" badge on Growth
+- Keep full-width CTA only for the recommended plan; other plans get a compact inline button
+
+### Result layout (single viewport):
 
 ```text
-Desktop:
-┌────────────────────────────────────────────────────┐
-│ [av] Your first fashion direction is ready      [X]│
-│      Keep creating with more credits and speed     │
-│      [⚡More Looks] [↗Better Value] [⚡Faster]      │
-│      [Compare Plans]                               │
-└────────────────────────────────────────────────────┘
-
-Mobile (same, just wraps):
-┌──────────────────────────────┐
-│ [av] Your first fashion   [X]│
-│      direction is ready      │
-│      Keep creating with...   │
-│ [More Looks][Better Val][Fas]│
-│ [Compare Plans]              │
-└──────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ [av] Scale your fashion visual library  │
+│      From 1 direction to a full         │
+│      campaign-ready collection          │
+│                                         │
+│  Choose your plan                       │
+│  ┌─────────────────────────────────┐    │
+│  │ Starter  $39/mo  500cr  7.8¢/cr│    │
+│  │         [Get Starter →]        │    │
+│  └─────────────────────────────────┘    │
+│       ── RECOMMENDED ──                 │
+│  ┌─────────────────────────────────┐    │
+│  │ Growth  $79/mo  1,500cr  5.3¢/cr│   │
+│  │         [👑 Get Growth]         │    │
+│  └─────────────────────────────────┘    │
+│  ┌─────────────────────────────────┐    │
+│  │ Pro  $179/mo  4,500cr  4.0¢/cr │    │
+│  │         [Get Pro →]            │    │
+│  └─────────────────────────────────┘    │
+│         Compare all plans →             │
+└─────────────────────────────────────────┘
 ```
 
-## Specific Changes
+## File: `src/lib/conversionCopy.ts`
 
-1. **Remove `ValueBlockFull`** — delete the component and the `isMobile` conditional. Use `ValueBlockCompact` for all screens.
-2. **Remove avatar name/role text** — the avatar image is enough personality. Drop the "Sophia, E-commerce Photographer" line.
-3. **Remove duplicate Dismiss** — keep only the X button (top-right). Remove the "Dismiss" text link from the CTA row.
-4. **Remove "Growth — most chosen" badge** — too salesy for a soft nudge.
-5. **Tighten padding** — `p-4 sm:p-5` instead of `p-5 sm:p-6`. Remove `pl-10` alignment on desktop (no longer needed without full blocks).
-6. **Reduce spacing** — `space-y-2.5` instead of `space-y-3 sm:space-y-4`.
-7. **Keep**: shimmer border, fade-in animation, staggered chip entry, Compare Plans button.
+No structural changes needed. The `unlockHeadline`/`unlockSubline`/`unlockItems` fields stay for potential future use but won't be rendered in the drawer anymore.
 
-## Result
-A compact, clean inline nudge that's ~40% shorter on both desktop and mobile. No heavy selling — just a gentle prompt with the key value props as scannable chips.
+## Summary of what gets removed
+- Section 2 (unlock headline + chips) — ~120px saved
+- Section 3 (why brands upgrade 2×2 grid) — ~140px saved  
+- 3 Separator components — ~36px saved
+- Positioning text per plan card — ~60px saved
+- Product context row stays (only shows when thumbnail exists)
+
+Total: ~350px reclaimed. Drawer fits in one screen.
 
