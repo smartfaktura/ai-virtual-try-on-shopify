@@ -102,13 +102,14 @@ export default function AdminConversion() {
           <span className="text-xs text-muted-foreground">— appears 3s after first generation</span>
         </div>
         <div className="border border-border/60 rounded-xl p-6 bg-muted/10">
-          <div className={viewport === 'mobile' ? 'max-w-[375px]' : 'max-w-[600px]'}>
+          <div className={viewport === 'mobile' ? 'max-w-[375px]' : ''}>
             <PostGenerationUpgradeCard
               category={category}
               behaviorHint={behaviorHint}
               onSeeMore={() => setDrawerOpen(true)}
               onDismiss={() => {}}
               forceVisible
+              compact={viewport === 'mobile'}
             />
           </div>
         </div>
