@@ -2,29 +2,21 @@
 
 ## Problem
 
-`UpgradePlanModal` returns `null` when the logged-in user has no higher tier available (line 41: `if (!upgradePlans.length) return null;`). On the admin showroom, you're likely on the top tier (or admin), so the dialog mounts but renders nothing — looks like the button is broken.
+Looking at the screenshot: sidebar shows `8,571 / 4,500` credits with an "Upgrade" button. Clicking it does nothing.
 
-The admin page already has a "Preview as plan" selector but it's not wired into `UpgradePlanModal` (which reads `plan` from `useCredits()` directly).
+The user is over their plan's max credits (8,571 > 4,500), which means they're on a paid plan (likely `pro` or admin override). `UpgradePlanModal` returns `null` when there's no higher tier — so the modal mounts but renders nothing. Same root cause as the admin showroom issue we just fixed, but now hitting it in production sidebar.
 
-## Fix
+Let me verify by checking `CreditIndicator.tsx` to confirm how Upgrade is wired.
 
-Add an optional `previewPlan` prop to `UpgradePlanModal` that overrides the user's real plan **for display only** — checkout still uses the real Stripe price IDs.
+## Likely fix
 
-### 1. `src/components/app/UpgradePlanModal.tsx`
-- Add prop: `previewPlan?: string`.
-- Use `const effectivePlan = previewPlan ?? plan;` in the `upgradePlans` memo.
-- Everything else stays identical (real checkout, real `startCheckout`).
+In `src/components/app/CreditIndicator.tsx`:
+- If user's plan has no higher tier (e.g. `pro`), the "Upgrade" button shouldn't render at all — OR it should open `BuyCreditsModal` (top-up tab) instead, since they can still buy credit packs.
 
-### 2. `src/pages/AdminPlanPopups.tsx`
-- Pass `previewPlan={previewPlan}` to the mounted `<UpgradePlanModal />`.
-- Update the card's meta line from "Lists plans above current user's plan" to `Lists plans above previewPlan=${previewPlan}` so it's clear the global control drives it.
+Best UX: **swap the button label/action based on tier**:
+- Has higher tier → "Upgrade" → opens `UpgradePlanModal` (current behavior)
+- Top tier (pro) → "Top up" → opens `BuyCreditsModal` on the credits tab
+- This way the button is never dead.
 
-### 3. Same fix for `BuyCreditsModal` opening (optional, low effort)
-Out of scope — `BuyCreditsModal` already shows all plans via tabs, so it works regardless of current plan.
-
-## Expected result
-
-- On admin page with "Preview as plan" = `free` → clicking Open shows Starter / Growth / Pro options.
-- On admin page with "Preview as plan" = `pro` → clicking Open still shows nothing (correct — there's nothing above Pro). I'll add a small toast/note in that case so it's not silently dead: render a tiny dialog saying "No higher tier available for previewPlan=pro" instead of `null` when in admin preview mode.
-- Production sidebar behavior is unchanged (no `previewPlan` passed → real plan used).
+I need to read `CreditIndicator.tsx` to confirm the exact wiring before finalizing.
 
