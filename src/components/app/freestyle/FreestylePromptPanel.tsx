@@ -436,25 +436,32 @@ export function FreestylePromptPanel({
           <div className="px-3 sm:px-5 py-2 sm:py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             {(() => {
               const hasEnoughCredits = hideCreditCost || creditBalance === undefined || creditBalance >= creditCost;
+              const isZeroCredits = !hideCreditCost && creditBalance !== undefined && creditBalance <= 0;
               const showInsufficientCredits = !hideCreditCost && canGenerate && !hasEnoughCredits;
+              const showBuyCredits = isZeroCredits || showInsufficientCredits;
 
               return (
                 <>
-                  {!canGenerate && !isLoading ? (
+                  {showBuyCredits ? (
+                     <p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
+                       {creditBalance === 0 
+                         ? 'You have no credits remaining'
+                         : <>
+                             <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
+                             <span className="sm:hidden">Need {creditCost - (creditBalance ?? 0)} more credits ({creditBalance ?? 0}/{creditCost})</span>
+                           </>
+                       }
+                     </p>
+                  ) : !canGenerate && !isLoading ? (
                     <p className="text-xs text-muted-foreground mr-auto truncate hidden sm:block">
                       Type a prompt or add a reference to start
                     </p>
-                   ) : showInsufficientCredits ? (
-                     <p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
-                       <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
-                       <span className="sm:hidden">Need {creditCost - (creditBalance ?? 0)} more credits ({creditBalance ?? 0}/{creditCost})</span>
-                     </p>
                   ) : null}
 
                   <TooltipProvider delayDuration={300}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        {showInsufficientCredits ? (
+                        {showBuyCredits ? (
                           <Button
                             onClick={onGenerate}
                             size="lg"
