@@ -1,24 +1,31 @@
 
 
-# Fix Contact Form Dialog Mobile Spacing
+# Fix Library Filter Controls Mobile Layout
 
 ## Problem
-The "Message Our Team" dialog has no left/right margin on mobile — it stretches edge-to-edge because the base `DialogContent` uses `w-full` without mobile insets.
+On mobile, the filter row (filter icon, grid columns selector, Select button) below the search bar appears cut off on the left side — the controls are not properly contained within the page padding.
 
-## Change
+## Root Cause
+The controls wrapper (`div.flex.items-center.gap-2` at line 424) wraps below the full-width search bar on mobile. The parent uses `flex-wrap` with `justify-between`, which can cause the second row of wrapped items to sit at the start without proper alignment, and the filter popover's `relative` positioning may cause overflow.
 
-### File: `src/components/app/ContactFormDialog.tsx` (line 80)
+## Changes
 
-Add `mx-4 sm:mx-0` to the `DialogContent` className so it gets 16px horizontal margin on mobile while remaining centered on desktop:
+### File: `src/pages/Jobs.tsx` (lines 412, 424)
+
+1. **Make the controls row full-width on mobile** so it doesn't get clipped. Add `w-full sm:w-auto` to the controls container (line 424) so it stretches across on mobile and aligns naturally.
+
+2. **Adjust justify** on the controls row: add `justify-between sm:justify-end` so on mobile the filter icon and Select button spread evenly across the full width.
 
 ```tsx
-// Before
-<DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+// Line 424 — Before:
+<div className="flex items-center gap-2">
 
-// After
-<DialogContent className="max-w-md p-0 gap-0 overflow-hidden mx-4 sm:mx-0">
+// After:
+<div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
 ```
 
+This ensures the filter controls span the full width on mobile with even spacing, and collapse back to auto-width right-aligned on desktop.
+
 ### Files
-- `src/components/app/ContactFormDialog.tsx` — 1 class addition
+- `src/pages/Jobs.tsx` — 1 class change on line 424
 
