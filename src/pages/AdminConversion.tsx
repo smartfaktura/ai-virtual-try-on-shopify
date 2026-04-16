@@ -230,7 +230,8 @@ export default function AdminConversion() {
               <TableRow>
                 <TableHead className="w-[100px]">Category</TableHead>
                 <TableHead>L2 Headline</TableHead>
-                <TableHead>Unlock Items</TableHead>
+          <TableHead>Unlock Headline</TableHead>
+          <TableHead>Unlock Items</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -240,6 +241,7 @@ export default function AdminConversion() {
                   <TableRow key={cat} className={cat === category ? 'bg-primary/5' : ''}>
                     <TableCell className="font-medium capitalize text-xs">{cat}</TableCell>
                     <TableCell className="text-xs">{l2.headline}</TableCell>
+                    <TableCell className="text-xs">{l2.unlockHeadline}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{l2.unlockItems.join(' · ')}</TableCell>
                   </TableRow>
                 );
