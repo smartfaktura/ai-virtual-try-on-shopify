@@ -1,34 +1,44 @@
 
 
-# Missing Items from Pricing Update
+# Missing Design Fixes
 
-## What was already done
-- ✅ mockData.ts — features + ctaText updated
-- ✅ Brand Models NEW badge on Growth/Pro
-- ✅ NoCreditsModal — subline + "Choose {name}" CTAs
-- ✅ BuyCreditsModal — Choose/Downgrade CTA logic
-- ✅ UpgradeValueDrawer — Choose/Start with CTAs
-- ✅ LandingPricing — renders badge from data
-- ✅ Settings — intro line added
-- ✅ AppPricing — new page with all sections
-- ✅ App.tsx — route registered
+After reviewing all files against the original requirements, here are the design issues that weren't implemented:
 
-## What's missing
+## 1. PlanCard (Settings) — Wrong CTA emphasis
+The current plan button uses `variant="default"` (strongest visual weight), but per the spec it should be `secondary`/disabled. Higher plans should get the strongest emphasis, lower plans should be `outline` (visually weaker).
 
-### 1. NoCreditsModal — Mobile Growth-first reorder
-The user's wireframe clearly shows Growth card appearing first on mobile. Currently `subscribablePlans` renders Starter → Growth → Pro in fixed order. Need to reorder on mobile so Growth appears first.
+**File**: `src/components/app/PlanCard.tsx` line 127
+- Change: `variant={isCurrentPlan ? 'default' : 'outline'}` → use upgrade/downgrade logic: `default` for higher plans, `outline` for lower/current.
 
-### 2. NoCreditsModal — Missing "Compare all features" + "Contact Sales" footer links
-The user's prompt specifies footer should have "Compare all features →" (linking to `/app/pricing`) and "Contact Sales →". Currently the footer only has "Maybe Later".
+## 2. LandingPricing — Missing price-per-credit line
+The public `/pricing` page shows credits and image estimates but no price-per-credit line like "$0.053 per credit". The prompt explicitly requested this.
 
-### 3. NoCreditsModal — Missing billing toggle (Monthly/Annual)
-The user's wireframe shows `[Monthly] [Annual -20%]` toggle inside the popup. Currently the modal only shows monthly prices with no toggle.
+**File**: `src/components/landing/LandingPricing.tsx` ~line 122-126
+- Add: `{price > 0 && credits > 0 && <p className="text-[10px]">${(price/credits).toFixed(3)} per credit</p>}`
 
-### 4. AppPricing — Missing SEO/PageHeader wrapper
-The page renders raw content without the app shell's `PageHeader` component. Should add a proper page header for consistency.
+## 3. AppPricing — Non-reactive mobile detection
+Line 173 uses `typeof window !== 'undefined' && window.innerWidth < 640` which doesn't respond to resizes. Should use `useIsMobile()` hook.
 
-### 5. CompetitorComparison component — Not integrated anywhere
-The plan mentioned price-per-credit value messaging. The existing `CompetitorComparison.tsx` component exists but isn't used in any pricing surface. Could be added to `/app/pricing` to reinforce value.
+**File**: `src/pages/AppPricing.tsx`
+- Import `useIsMobile`, replace the inline check.
+
+## 4. Detailed features accordion — Brand Models missing NEW badge
+In the `DETAILED_FEATURES` constant (lines 42/54), "Brand Models" is a plain string. Should render with a NEW badge like the plan cards do.
+
+**File**: `src/pages/AppPricing.tsx`
+- Change `DETAILED_FEATURES` Growth/Pro entries to use `{ text: 'Brand Models', badge: 'NEW' }` objects and update the render logic to handle mixed types.
+
+## 5. NoCreditsModal cards — Missing ~images and price-per-credit
+The popup plan cards show credits but not the `~images/mo` estimate or the price-per-credit line that the wireframe shows (e.g., "~300 images", "$0.053 per credit").
+
+**File**: `src/components/app/NoCreditsModal.tsx` ~line 166-171
+- Add image estimate (`Math.round(credits/5)`) and price-per-credit display below the credits pill.
+
+## 6. UpgradeValueDrawer — No annual billing toggle
+The drawer only shows monthly prices with no toggle, unlike the NoCreditsModal which now has one.
+
+**File**: `src/components/app/UpgradeValueDrawer.tsx`
+- Not explicitly required but inconsistent. Will skip unless you want it.
 
 ---
 
@@ -36,14 +46,8 @@ The plan mentioned price-per-credit value messaging. The existing `CompetitorCom
 
 | File | Change |
 |------|--------|
-| `src/components/app/NoCreditsModal.tsx` | Add mobile Growth-first reorder, billing toggle, footer links |
-| `src/pages/AppPricing.tsx` | Add PageHeader for app shell consistency |
-
-## Technical Details
-
-**Mobile reorder** — Same pattern as AppPricing: sort `subscribablePlans` so `highlighted` plan comes first on `< sm` viewports.
-
-**Billing toggle** — Add `useState<'monthly' | 'annual'>` state, show toggle above plan cards, pass correct `stripePriceIdMonthly` vs `stripePriceIdAnnual` to checkout. Show annual price as `Math.round(annualPrice / 12)` with "SAVE 20%" badge.
-
-**Footer links** — Add "Compare all features" as `<a href="/app/pricing">` and "Contact Sales" next to "Maybe Later" button.
+| `src/components/app/PlanCard.tsx` | Fix CTA variant: `default` for upgrades, `outline` for downgrades, `secondary` for current |
+| `src/components/landing/LandingPricing.tsx` | Add price-per-credit line below image estimate |
+| `src/pages/AppPricing.tsx` | Use `useIsMobile()` hook; add NEW badge to Brand Models in accordion |
+| `src/components/app/NoCreditsModal.tsx` | Add ~images estimate + price-per-credit to plan cards |
 
