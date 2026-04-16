@@ -1,27 +1,39 @@
 
 
-# Unify Feedback Survey Styling Across All Steps
+# Restyle Contextual Survey to Match FeedbackBanner Design
 
 ## Problem
-Step 2 (expanded panel) uses `bg-card/95 shadow-lg` — a white card with heavy shadow — while Step 1 uses `bg-muted/80 shadow-sm`. This creates a jarring visual shift when clicking "No" or "Almost". The container also has `hover:shadow-md` which isn't needed since only the buttons should have hover states.
+The contextual survey (pill with "HELP US IMPROVE" + Yes/Almost/No) uses a different visual style than the FeedbackBanner at the bottom ("Help us improve VOVV.AI" + "Share feedback" button). The user wants them to match.
 
-## Changes
+## Target Style (from FeedbackBanner)
+- `bg-primary/5 border border-primary/20 rounded-xl px-4 py-3`
+- Left side: icon + text in `text-muted-foreground`
+- Right side: `Button variant="outline" size="sm" className="rounded-full"`
+- Clean banner bar layout, not a floating pill
 
-### 1. Match Step 2 container to Step 1 style
-- Change `bg-card/95 shadow-lg` → `bg-muted/80 shadow-sm` to match Step 1's muted treatment
-- Keep `rounded-xl border border-border/50 backdrop-blur-sm`
-- Add "Help Us Improve" label header consistent with Step 1
+## Changes to `ContextualFeedbackCard.tsx`
 
-### 2. Remove container hover on Step 1
-- Remove `hover:shadow-md transition-shadow` from the Step 1 outer div — buttons already have their own hover states
+### Step 1 — Restyle to banner bar
+Replace the current muted pill with the FeedbackBanner's card style:
+- Container: `bg-primary/5 border border-primary/20 rounded-xl px-4 py-3` (instead of `bg-muted/80 backdrop-blur-sm border-border/50 rounded-full`)
+- Left: `MessageSquarePlus` icon (matching FeedbackBanner) + question text in `text-sm text-muted-foreground`
+- Right: Yes/Almost/No buttons styled as outline pills matching the "Share feedback" button aesthetic
+- Remove the floating centered layout (`flex justify-center`) — make it full-width like FeedbackBanner
+- Remove the "HELP US IMPROVE" uppercase label (the banner style conveys this implicitly)
+- Keep dismiss X button on the right
 
-### 3. Tone down Step 2 chips and buttons
-- Selected chips: keep `bg-primary text-primary-foreground` (these are interactive selections, appropriate)
-- "Send feedback" button: change from `bg-primary text-primary-foreground` to a subtler style matching the muted theme — `bg-foreground/90 text-background` (dark but not branded-primary)
-- Or keep primary if it matches the brand — but ensure it doesn't clash with the muted container
+### Step 2 — Match banner style  
+- Same `bg-primary/5 border border-primary/20 rounded-xl` container
+- Chips and textarea inside, consistent with the banner aesthetic
+
+### Success state
+- Same banner container style with the thank you message
+
+### Mobile
+- Stack naturally within the banner card (question on top, buttons below) — same responsive pattern as current but with new colors
 
 ## File
 | File | Change |
 |------|--------|
-| `src/components/app/ContextualFeedbackCard.tsx` | Line 146: remove `hover:shadow-md transition-shadow`; Lines 199: change `bg-card/95 shadow-lg` → `bg-muted/80 shadow-sm`; Line 203: add "Help Us Improve" prefix to header |
+| `src/components/app/ContextualFeedbackCard.tsx` | Lines 130-252: Restyle all steps to use `bg-primary/5 border-primary/20 rounded-xl` banner style matching FeedbackBanner |
 
