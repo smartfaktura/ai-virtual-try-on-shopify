@@ -130,13 +130,16 @@ export function BuyCreditsModal() {
         <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100">
 
           {/* Balance header */}
-          <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border/40 flex items-start justify-between">
+          <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-border/40 flex items-start justify-between">
             <div>
               <p className="text-xl font-bold tracking-tight">
                 {balance.toLocaleString()} credits remaining
               </p>
               <p className="text-sm text-muted-foreground mt-1">
                 Choose a plan to keep creating
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Scale faster with more credits and better value per image
               </p>
               {isPaidUser && currentPeriodEnd && (
                 <p className={`text-[11px] mt-1 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
@@ -300,14 +303,7 @@ export function BuyCreditsModal() {
 
             {/* === PLANS TAB === */}
             {activeTab === 'upgrade' && (
-              <div className="space-y-4">
-
-                {/* Contextual subtitle for free users */}
-                {isFreeUser(plan) && (
-                  <p className="text-xs text-muted-foreground">
-                    Better value on larger plans
-                  </p>
-                )}
+              <div className="space-y-3">
 
                 {/* Billing toggle — directly above cards */}
                 <div className="flex justify-center">
@@ -418,44 +414,44 @@ export function BuyCreditsModal() {
                           isCurrent && p.planId !== 'free'
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
-                              ? 'border-2 border-primary/70 bg-primary/[0.03] shadow-md shadow-primary/5'
+                              ? 'border-2 border-primary/60 bg-primary/[0.03] shadow-lg shadow-primary/5'
                               : 'border border-border bg-card hover:shadow-sm'
                         }`}
                       >
                         {/* Most Popular badge for highlighted */}
                         {p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) && (
                           <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
-                            <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-3 py-0.5 shadow-lg shadow-primary/20">
+                            <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-0.5 shadow-lg shadow-primary/20">
                               Most Popular
                             </Badge>
                           </div>
                         )}
 
                         {/* Name + descriptor */}
-                        <div className="mb-4">
+                        <div className="mb-5">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="text-base font-bold">{p.name}</h4>
+                            <h4 className="text-lg font-semibold">{p.name}</h4>
                             {isCurrent && (
-                              <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
+                              <Badge variant="secondary" className="text-[10px] tracking-wider uppercase">Current</Badge>
                             )}
                           </div>
                           {descriptor && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{descriptor}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{descriptor}</p>
                           )}
                         </div>
 
                         {/* Price */}
-                        <div className="mb-5">
+                        <div className="mb-6">
                           {isFree ? (
-                            <span className="text-2xl font-bold tracking-tight">Free</span>
+                            <span className="text-3xl font-bold tracking-tight">Free</span>
                           ) : (
                             <>
                               <p className="tracking-tight">
                                 {isAnnual && p.monthlyPrice > displayPrice && (
                                   <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                                 )}
-                                <span className="text-2xl font-bold">${displayPrice}</span>
-                                <span className="text-base font-medium text-muted-foreground">/mo</span>
+                                <span className="text-3xl font-bold">${displayPrice}</span>
+                                <span className="text-lg font-medium text-muted-foreground">/mo</span>
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {isAnnual ? 'Billed annually' : 'Billed monthly'}
@@ -465,7 +461,7 @@ export function BuyCreditsModal() {
                         </div>
 
                         {/* Metrics — 3 clean lines */}
-                        <div className="mb-5 space-y-1">
+                        <div className="mb-6 space-y-1">
                           {imageEstimate ? (
                             <>
                               <p className="text-sm text-muted-foreground">~{imageEstimate} images / month</p>
@@ -487,7 +483,7 @@ export function BuyCreditsModal() {
                               <span className="text-xs text-muted-foreground leading-snug inline-flex items-center gap-1.5">
                                 {feat.text}
                                 {feat.badge && (
-                                  <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+                                  <Badge className="text-[10px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
                                     {feat.badge}
                                   </Badge>
                                 )}
@@ -512,7 +508,7 @@ export function BuyCreditsModal() {
 
                 {/* Reassurance + links */}
                 <div className="space-y-2 pt-1">
-                  <p className="text-[11px] text-muted-foreground text-center">
+                  <p className="text-xs text-muted-foreground text-center">
                     All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
                   </p>
                   <div className="flex items-center justify-center gap-3">

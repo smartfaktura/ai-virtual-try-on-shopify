@@ -75,7 +75,7 @@ function FreePlanSection({
     <div className="space-y-5">
       {/* Subtitle */}
       <p className="text-sm text-muted-foreground text-center">
-        Better value as you scale — all plans include 1,000+ scenes
+        Scale faster with more credits and better value per image
       </p>
 
       {/* Billing toggle */}
@@ -121,34 +121,34 @@ function FreePlanSection({
               key={p.planId}
               className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col ${
                 isHighlighted
-                  ? 'border-2 border-primary/70 bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
+                  ? 'border-2 border-primary/60 bg-primary/[0.03] shadow-lg shadow-primary/5 pt-4'
                   : 'border-2 border-border/60 hover:border-primary/30 bg-background'
               }`}
             >
               {isHighlighted && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/20">
+                  <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/10">
                     Most Popular
                   </Badge>
                 </div>
               )}
               <div className="p-5 sm:p-6 pt-6 flex flex-col flex-1">
                 {/* Plan name + descriptor */}
-                <div className="mb-4">
-                  <p className="text-base font-bold tracking-tight">{p.name}</p>
+                <div className="mb-5">
+                  <p className="text-lg font-semibold tracking-tight">{p.name}</p>
                   {descriptor && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{descriptor}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{descriptor}</p>
                   )}
                 </div>
 
                 {/* Price */}
-                <div className="mb-5 text-center">
+                <div className="mb-6 text-center">
                   <p className="tracking-tight">
                     {isAnnual && p.monthlyPrice > displayPrice && (
                       <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                     )}
-                    <span className="text-2xl font-bold">${displayPrice}</span>
-                    <span className="text-base font-medium text-muted-foreground">/mo</span>
+                    <span className="text-3xl font-bold">${displayPrice}</span>
+                    <span className="text-lg font-medium text-muted-foreground">/mo</span>
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {isAnnual ? 'Billed annually' : 'Billed monthly'}
@@ -156,7 +156,7 @@ function FreePlanSection({
                 </div>
 
                 {/* Metrics — 3 clean lines */}
-                <div className="mb-5 space-y-1 text-center">
+                <div className="mb-6 space-y-1 text-center">
                   {imageEstimate && (
                     <p className="text-sm text-muted-foreground">~{imageEstimate} images / month</p>
                   )}
@@ -176,7 +176,7 @@ function FreePlanSection({
                       <span className="text-xs text-muted-foreground leading-snug inline-flex items-center gap-1.5">
                         {feat.text}
                         {feat.badge && (
-                          <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+                          <Badge className="text-[10px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
                             {feat.badge}
                           </Badge>
                         )}
@@ -202,7 +202,7 @@ function FreePlanSection({
       </div>
 
       {/* Reassurance */}
-      <p className="text-[11px] text-muted-foreground text-center">
+      <p className="text-xs text-muted-foreground text-center">
         All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
       </p>
     </div>
