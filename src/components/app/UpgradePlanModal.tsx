@@ -138,13 +138,14 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
     }
   };
 
-  const handleTopUp = async (packId: string, stripePriceId: string | undefined) => {
-    if (!stripePriceId || topUpLoadingId) return;
-    setTopUpLoadingId(packId);
+  const handleTopUp = async () => {
+    const pack = creditPacks.find((p) => p.packId === selectedPackId);
+    if (!pack?.stripePriceId || topUpLoading) return;
+    setTopUpLoading(true);
     try {
-      await startCheckout(stripePriceId, 'payment');
+      await startCheckout(pack.stripePriceId, 'payment');
     } finally {
-      setTopUpLoadingId(null);
+      setTopUpLoading(false);
     }
   };
 
