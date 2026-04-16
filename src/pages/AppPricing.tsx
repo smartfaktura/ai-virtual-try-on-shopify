@@ -5,6 +5,7 @@ import { Check, ChevronDown, ArrowUpRight, Loader2 } from 'lucide-react';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
+import { CompetitorComparison } from '@/components/app/CompetitorComparison';
 import { toast } from '@/lib/brandedToast';
 import type { PricingPlan } from '@/types';
 
