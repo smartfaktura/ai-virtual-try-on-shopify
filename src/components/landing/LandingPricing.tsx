@@ -125,7 +125,7 @@ export function LandingPricing() {
                         ≈ {Math.round(plan.credits / 5)} images
                       </p>
                       {price > 0 && plan.credits > 0 && (
-                        <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                        <p className="text-[10px] text-primary/70 font-medium mt-0.5">
                           ${(price / plan.credits).toFixed(3)} per credit
                         </p>
                       )}
@@ -152,7 +152,11 @@ export function LandingPricing() {
                 </ul>
 
                 <Button
-                  variant={isCurrentPlan || (!user && plan.highlighted) ? 'default' : 'outline'}
+                  variant={
+                    user
+                      ? (isCurrentPlan ? 'secondary' : isHigher ? 'default' : 'outline')
+                      : (plan.highlighted ? 'default' : 'outline')
+                  }
                   className="rounded-full font-semibold w-full gap-2"
                   disabled={isDisabled}
                   onClick={() => navigate(ctaRoute)}
