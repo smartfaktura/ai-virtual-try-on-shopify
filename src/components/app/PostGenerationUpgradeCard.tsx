@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Layers, TrendingUp, Zap, X } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -10,7 +10,6 @@ import {
   type BehaviorHint,
   type Layer1ValueBlock,
   getLayer1Copy,
-  getLayer1Subline,
   getLayer1Avatar,
 } from '@/lib/conversionCopy';
 
@@ -28,13 +27,10 @@ interface PostGenerationUpgradeCardProps {
   forceVisible?: boolean;
 }
 
-function ValueChip({ block, index }: { block: Layer1ValueBlock; index: number }) {
+function ValueChip({ block }: { block: Layer1ValueBlock }) {
   const Icon = ICON_MAP[block.icon];
   return (
-    <div
-      className="flex items-center gap-1.5 rounded-lg bg-muted/30 px-2.5 py-1.5 animate-in fade-in fill-mode-both"
-      style={{ animationDelay: `${600 + index * 100}ms`, animationDuration: '300ms' }}
-    >
+    <div className="flex items-center gap-1 rounded-md bg-muted/30 px-2 py-1">
       <Icon className="w-3 h-3 text-primary/70 shrink-0" />
       <span className="text-[11px] font-medium tracking-tight whitespace-nowrap">{block.title}</span>
     </div>
@@ -50,7 +46,6 @@ export function PostGenerationUpgradeCard({
 }: PostGenerationUpgradeCardProps) {
   const [visible, setVisible] = useState(forceVisible);
   const copy = getLayer1Copy(category);
-  const subline = getLayer1Subline(category, behaviorHint);
   const avatar = getLayer1Avatar(category);
   const avatarUrl = getLandingAssetUrl(`team/avatar-${avatar.avatarKey}.jpg`);
 
@@ -64,50 +59,56 @@ export function PostGenerationUpgradeCard({
 
   return (
     <Card className={cn(
-      'relative overflow-hidden border-border/40 bg-background',
-      'animate-in fade-in slide-in-from-bottom-2 duration-500'
+      'relative overflow-hidden border-border/30 bg-muted/5',
+      'animate-in fade-in duration-500'
     )}>
-      <div className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-primary/80 via-primary/30 to-primary/80 animate-shimmer-border" />
+      {/* Left accent */}
+      <div className="absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-primary/60 via-primary/20 to-primary/60" />
 
-      <button
-        onClick={onDismiss}
-        className="absolute top-2.5 right-2.5 p-2 rounded-full hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground min-w-[36px] min-h-[36px] flex items-center justify-center"
-        aria-label="Dismiss"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
-
-      <CardContent className="p-4 sm:p-5 space-y-2.5">
-        {/* Header */}
-        <div className="flex items-start gap-3 pr-8">
-          <Avatar className="h-7 w-7 ring-1 ring-border/50 mt-0.5 shrink-0">
+      {/* Desktop: single row | Mobile: two rows */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-2.5 pl-4 pr-3">
+        {/* Left: avatar + headline */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Avatar className="h-6 w-6 ring-1 ring-border/50 shrink-0">
             <AvatarImage src={avatarUrl} alt={avatar.name} />
-            <AvatarFallback className="text-[10px]">{avatar.name[0]}</AvatarFallback>
+            <AvatarFallback className="text-[9px]">{avatar.name[0]}</AvatarFallback>
           </Avatar>
-          <div className="space-y-0.5 min-w-0">
-            <p className="text-sm font-medium tracking-tight leading-snug">{copy.headline}</p>
-            <p className="text-xs text-muted-foreground/80 leading-relaxed font-normal">{subline}</p>
-          </div>
+          <p className="text-sm font-medium tracking-tight leading-snug truncate">{copy.headline}</p>
         </div>
 
-        {/* Value chips — same on all screens */}
-        <div className="flex flex-wrap gap-1.5">
-          {copy.valueBlocks.map((block, i) => (
-            <ValueChip key={block.title} block={block} index={i} />
+        {/* Middle: chips */}
+        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+          {copy.valueBlocks.map((block) => (
+            <ValueChip key={block.title} block={block} />
           ))}
         </div>
 
-        {/* CTA */}
-        <div>
+        {/* Right: CTA + dismiss */}
+        <div className="flex items-center gap-2 sm:ml-auto shrink-0">
+          {/* Mobile chips inline with CTA */}
+          <div className="flex sm:hidden items-center gap-1.5 mr-auto">
+            {copy.valueBlocks.map((block) => (
+              <ValueChip key={block.title} block={block} />
+            ))}
+          </div>
+
           <Button
             size="sm"
-            className="min-h-[36px] text-xs font-medium px-5"
+            className="h-7 text-xs font-medium px-4"
             onClick={onSeeMore}
           >
             See Plans
           </Button>
+
+          <button
+            onClick={onDismiss}
+            className="p-1.5 rounded-full hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
+            aria-label="Dismiss"
+          >
+            <X className="w-3 h-3" />
+          </button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }
