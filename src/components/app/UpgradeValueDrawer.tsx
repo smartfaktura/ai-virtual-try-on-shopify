@@ -182,7 +182,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                 >
                   {/* Plan name + recommended badge */}
                   <div className="flex items-center gap-2">
-                    <p className="text-base font-semibold tracking-tight">{plan.name}</p>
+                    <p className="text-lg font-semibold tracking-tight">{plan.name}</p>
                     {recommended && (
                       <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0">
                         Recommended
@@ -192,8 +192,8 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
                   {/* Price */}
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold tracking-tight">${price}</span>
-                    <span className="text-xs text-muted-foreground">/mo</span>
+                    <span className="text-3xl font-bold tracking-tight">${price}</span>
+                    <span className="text-lg font-medium text-muted-foreground">/mo</span>
                     {isAnnual && (
                       <span className="text-[10px] font-medium text-green-600 dark:text-green-400 ml-1">
                         Save 20%
