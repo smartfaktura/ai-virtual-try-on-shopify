@@ -1,30 +1,19 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
-  Check, ChevronDown, ArrowUpRight, Lock,
+  Check, ChevronDown, ArrowUpRight, Lock, Minus,
   Image, Video, RefreshCw,
-  Camera, Users, Film, Wand2, Palette, Layers,
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
-import { toast } from '@/lib/brandedToast';
 import type { PricingPlan } from '@/types';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 const CREDITS_PER_IMAGE = 5;
-
-const VALUE_PILLARS = [
-  { icon: Camera, title: 'Replace your photo studio', desc: '1,000+ scenes, lighting setups, and props — no booking, no setup, no waiting.' },
-  { icon: Users, title: 'Models without the model fee', desc: 'Diverse AI Models and custom Brand Models trained on your aesthetic.' },
-  { icon: Layers, title: 'From product to ad in minutes', desc: 'Bulk generation, multi-angle shots, and 4K upscaling in a single flow.' },
-  { icon: Film, title: 'Video, not just stills', desc: 'Short Films and product videos powered by AI cinematography.' },
-  { icon: Palette, title: 'On-brand, every time', desc: 'Brand Profiles lock your colors, tone, and visual language across every asset.' },
-  { icon: Wand2, title: 'Edit anything, anytime', desc: 'Freestyle prompts, background swaps, and intelligent retouching built in.' },
-];
 
 const COMPARISON = [
   { role: 'Product photographer', traditional: '$500–2,000/day' },
@@ -33,14 +22,104 @@ const COMPARISON = [
   { role: 'Retouching', traditional: '$5–25/image' },
 ];
 
-const FAQS = [
-  { q: 'Is there a free trial?', a: 'Every account starts with 20 free credits — no credit card required. Generate your first visuals before committing to a plan.' },
-  { q: 'How much does a single image cost?', a: 'Each image typically costs 4–6 credits depending on workflow. On the Growth plan that works out to around 5¢ per credit, or roughly $0.25 per image.' },
-  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from settings in one click — no commitment, no cancellation fees. Your plan stays active until the end of the billing period.' },
-  { q: 'What is a Brand Profile?', a: 'A saved set of brand rules — colors, tone, photography references, do-not lists — that VOVV applies automatically to every generation for visual consistency.' },
-  { q: 'What formats and resolutions do I get?', a: 'High-resolution PNG and JPG, with 1:1, 4:5, 3:4, 16:9, and 9:16 aspect ratios. Upscale anything to print-ready 4K when you need it.' },
-  { q: 'What can I create with VOVV?', a: 'Product photography, lifestyle scenes, on-model imagery, editorial campaigns, ad creative, and short product videos — all from a single product photo.' },
+// ── Feature comparison matrix ──
+// value true = ✓ · false = — · string = text value
+type Cell = boolean | string;
+type FeatureRow = { label: string; values: Record<string, Cell> };
+type FeatureGroup = { title: string; rows: FeatureRow[] };
+
+const FEATURE_MATRIX: FeatureGroup[] = [
+  {
+    title: 'Generation',
+    rows: [
+      { label: 'Product photography scenes (1,000+)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Lifestyle & editorial scenes', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'AI Models (on-model imagery)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Brand Models (custom trained)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Bulk generation', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Multi-angle / perspectives', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Freestyle (text-to-image)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Image editing & background swap', values: { free: true, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Video',
+    rows: [
+      { label: 'Product videos', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Short Films (AI Director)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Audio & dialog', values: { free: false, starter: false, growth: false, pro: true } },
+    ],
+  },
+  {
+    title: 'Quality & output',
+    rows: [
+      { label: '2K resolution', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: '4K upscaling', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'All aspect ratios (1:1, 4:5, 3:4, 16:9, 9:16)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'PNG / JPG export', values: { free: true, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Brand & workflow',
+    rows: [
+      { label: 'Brand Profiles', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Saved aesthetics & color systems', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Catalog Studio', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Trend Watch (curated drops)', values: { free: false, starter: false, growth: false, pro: true } },
+      { label: 'Bulk export (ZIP)', values: { free: false, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Account',
+    rows: [
+      { label: 'Generation queue speed', values: { free: 'Standard', starter: 'Standard', growth: 'Priority', pro: 'Fastest' } },
+      { label: 'Monthly credits', values: { free: '20', starter: '500', growth: '1,500', pro: '5,000' } },
+      { label: 'Support', values: { free: 'Community', starter: 'Email', growth: 'Email', pro: 'Priority' } },
+    ],
+  },
 ];
+
+const FAQS = [
+  {
+    q: 'How does VOVV compare to a real photoshoot?',
+    a: 'A traditional product shoot runs $4,500–22,000+ once you factor in photographer, studio, models, props, and retouching — and takes 2–4 weeks. VOVV delivers comparable visuals in minutes for a fraction of the cost, with unlimited iterations included in your plan.',
+  },
+  {
+    q: 'What exactly counts as 1 credit?',
+    a: 'A standard image is ~4–6 credits depending on complexity. Video generation runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model training is a one-time ~50 credits per model. You always see the cost before you generate.',
+  },
+  {
+    q: 'Do unused credits roll over?',
+    a: 'Monthly plan credits reset at the end of each billing cycle (use-it-or-lose-it). Top-up credits, however, never expire — buy them once, use them whenever.',
+  },
+  {
+    q: 'Can I use the images commercially?',
+    a: 'Yes. Every paid plan includes a full commercial license — use generations in ads, ecommerce, packaging, social, print, anywhere. You own the output.',
+  },
+  {
+    q: 'What happens if I cancel mid-cycle?',
+    a: 'Your plan stays active until the end of the current billing period, then drops to Free automatically. No prorated refunds, no surprise charges, no lock-in.',
+  },
+  {
+    q: 'How accurate are AI Models for on-model shots?',
+    a: 'Built-in AI Models cover diverse looks out of the box. For full identity consistency — same face, same hands, same product fit across every shot — train a Brand Model on your own references (Growth plan and up).',
+  },
+  {
+    q: 'Can I switch plans anytime?',
+    a: 'Yes. Upgrades take effect immediately with prorated credits added to your balance. Downgrades apply at the next renewal so you keep what you paid for.',
+  },
+  {
+    q: 'Is my product data private?',
+    a: 'Your uploads, generations, and Brand Profiles are private to your workspace. We never train shared models on your data, and we never expose your assets to other users.',
+  },
+];
+
+// Helper to render a comparison cell
+function renderCell(val: Cell) {
+  if (val === true) return <Check className="w-4 h-4 text-primary mx-auto" strokeWidth={2.5} />;
+  if (val === false) return <Minus className="w-4 h-4 text-muted-foreground/40 mx-auto" />;
+  return <span className="text-xs font-medium text-foreground">{val}</span>;
+}
 
 export default function AppPricing() {
   const navigate = useNavigate();
@@ -48,7 +127,7 @@ export default function AppPricing() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+  const [selectedDialogPlan, setSelectedDialogPlan] = useState<PricingPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [topupOpen, setTopupOpen] = useState(false);
 
@@ -56,20 +135,35 @@ export default function AppPricing() {
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
   const currentIdx = PLAN_ORDER.indexOf(plan);
   const planConfig = pricingPlans.find(p => p.planId === plan);
+  const isFreeUser = plan === 'free';
 
-  const handlePlanSelect = (planId: string) => {
-    if (planId === 'enterprise') {
-      navigate('/contact');
-      return;
-    }
-    const targetPlan = pricingPlans.find(p => p.planId === planId);
+  // Default selection: current plan if paid, else Growth
+  const defaultSelected = useMemo(() => {
+    if (currentIdx > 0) return plan;
+    return 'growth';
+  }, [plan, currentIdx]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(defaultSelected);
+
+  const selectedPlan = mainPlans.find(p => p.planId === selectedPlanId) ?? mainPlans[0];
+  const selectedIdx = PLAN_ORDER.indexOf(selectedPlanId);
+
+  // Determine CTA state for the single button
+  let ctaLabel = 'Continue to checkout';
+  let ctaDisabled = false;
+  if (selectedPlanId === plan && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate plan';
+  else if (selectedPlanId === plan) { ctaLabel = 'Current plan'; ctaDisabled = true; }
+  else if (selectedPlanId === 'free') ctaLabel = 'Cancel subscription';
+  else if (selectedIdx < currentIdx) ctaLabel = `Downgrade to ${selectedPlan.name}`;
+
+  const handleConfirmSelection = () => {
+    if (ctaDisabled) return;
+    const targetPlan = mainPlans.find(p => p.planId === selectedPlanId);
     if (!targetPlan) return;
-    const targetIdx = PLAN_ORDER.indexOf(planId);
-    if (planId === plan && subscriptionStatus === 'canceling') setDialogMode('reactivate');
-    else if (planId === 'free') setDialogMode('cancel');
-    else if (targetIdx > currentIdx) setDialogMode('upgrade');
+    if (selectedPlanId === plan && subscriptionStatus === 'canceling') setDialogMode('reactivate');
+    else if (selectedPlanId === 'free') setDialogMode('cancel');
+    else if (selectedIdx > currentIdx) setDialogMode('upgrade');
     else setDialogMode('downgrade');
-    setSelectedPlan(targetPlan);
+    setSelectedDialogPlan(targetPlan);
     setDialogOpen(true);
   };
 
@@ -78,11 +172,11 @@ export default function AppPricing() {
     try {
       if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
         await openCustomerPortal();
-      } else if (selectedPlan) {
+      } else if (selectedDialogPlan) {
         if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
           await openCustomerPortal();
         } else {
-          const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+          const priceId = isAnnual ? selectedDialogPlan.stripePriceIdAnnual : selectedDialogPlan.stripePriceIdMonthly;
           if (priceId) await startCheckout(priceId, 'subscription');
         }
       }
@@ -91,8 +185,12 @@ export default function AppPricing() {
     }
   };
 
+  const scrollToPlans = () => {
+    document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-16 pb-20 space-y-20 sm:space-y-24">
+    <div className="max-w-5xl mx-auto px-4 py-10 sm:py-16 pb-20 space-y-20 sm:space-y-24">
 
       {/* ── Hero ── */}
       <header className="text-center space-y-4 max-w-2xl mx-auto">
@@ -104,7 +202,7 @@ export default function AppPricing() {
           Pick the plan that matches your output. Cancel anytime — no commitment.
         </p>
 
-        {/* Billing toggle (modal pill style) */}
+        {/* Billing toggle */}
         <div className="flex justify-center pt-3">
           <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/40 text-xs">
             <button
@@ -128,152 +226,156 @@ export default function AppPricing() {
         </div>
       </header>
 
-      {/* ── Plan Cards ── */}
-      <section className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* ── Compact selectable plan rows (modal style) ── */}
+      <section id="plans-section" className="space-y-5 max-w-2xl mx-auto w-full">
+        <div className="space-y-2.5">
           {mainPlans.map((p) => {
             const isCurrent = p.planId === plan;
-            const targetIdx = PLAN_ORDER.indexOf(p.planId);
+            const isSelected = p.planId === selectedPlanId;
             const isFree = p.planId === 'free';
             const isRecommended = p.planId === 'growth';
             const credits = typeof p.credits === 'number' ? p.credits : 0;
-            const imageEstimate = credits > 0 ? Math.round(credits / CREDITS_PER_IMAGE) : null;
+            const imageEstimate = credits > 0 ? Math.round(credits / CREDITS_PER_IMAGE) : 0;
             const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
             const annualSavings = isAnnual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
-
-            const features = p.features.map(f => typeof f === 'string' ? f : f.text);
-            const topFeatures = features.slice(0, 4);
-            const extraFeatures = features.slice(4);
-
-            let ctaLabel: string;
-            if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
-            else if (isCurrent) ctaLabel = 'Current plan';
-            else if (targetIdx > currentIdx) ctaLabel = isFree ? 'Get started free' : 'Continue to checkout';
-            else ctaLabel = `Downgrade to ${p.name}`;
-
-            const isDisabled = isCurrent && subscriptionStatus !== 'canceling';
+            const centsPerCredit = displayPrice > 0 && credits > 0 ? (displayPrice / credits * 100).toFixed(1) : null;
 
             return (
-              <div
+              <button
                 key={p.planId}
-                className={`relative rounded-2xl border p-5 flex flex-col transition-all ${
-                  isRecommended
-                    ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30 shadow-lg'
-                    : isCurrent
-                      ? 'border-primary/60 bg-card shadow-sm'
-                      : 'border-border/50 bg-card hover:border-border'
+                type="button"
+                onClick={() => setSelectedPlanId(p.planId)}
+                className={`w-full text-left rounded-2xl border p-4 transition-all ${
+                  isSelected
+                    ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30'
+                    : 'border-border/50 hover:border-border bg-card'
                 }`}
               >
-                {/* Badge row */}
-                <div className="flex items-center gap-2 mb-4 min-h-[18px] flex-wrap">
-                  {isRecommended && (
-                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
-                      Recommended for You
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <span
+                      className={`mt-0.5 inline-flex w-4 h-4 rounded-full border items-center justify-center shrink-0 ${
+                        isSelected ? 'border-primary' : 'border-muted-foreground/40'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />}
                     </span>
-                  )}
-                  {isCurrent && (
-                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
-                      Current plan
-                    </span>
-                  )}
-                </div>
-
-                {/* Name */}
-                <h3 className="text-base font-semibold tracking-tight mb-3">{p.name}</h3>
-
-                {/* Price */}
-                <div className="mb-4">
-                  {isFree ? (
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-semibold tracking-tight">$0</span>
-                      <span className="text-xs text-muted-foreground">/mo</span>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-semibold tracking-tight">${displayPrice}</span>
-                        <span className="text-xs text-muted-foreground">/mo</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-foreground">{p.name}</span>
+                        {isCurrent && (
+                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold whitespace-nowrap">
+                            Current plan
+                          </span>
+                        )}
+                        {isRecommended && !isCurrent && (
+                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
+                            Recommended for You
+                          </span>
+                        )}
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {isAnnual ? `billed yearly · save $${annualSavings}` : 'billed monthly'}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {isFree
+                          ? `${credits} credits to try the platform`
+                          : `${credits.toLocaleString()} credits · ~${imageEstimate.toLocaleString()} images/mo${centsPerCredit ? ` · ${centsPerCredit}¢/credit` : ''}`}
                       </p>
-                    </>
-                  )}
-                </div>
-
-                {/* Credits */}
-                {imageEstimate ? (
-                  <div className="mb-4 pb-4 border-b border-border/40">
-                    <p className="text-sm font-medium text-foreground">{credits.toLocaleString()} credits/mo</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">~{imageEstimate.toLocaleString()} images</p>
-                    {displayPrice > 0 && (
-                      <p className="text-[10px] text-primary font-medium mt-1">
-                        {(displayPrice / credits * 100).toFixed(1)}¢ per credit
-                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end shrink-0">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-xl font-semibold tracking-tight">${isFree ? 0 : displayPrice}</span>
+                      <span className="text-[11px] text-muted-foreground">/mo</span>
+                    </div>
+                    {isAnnual && annualSavings > 0 && (
+                      <span className="text-[10px] text-primary font-medium mt-0.5">save ${annualSavings}/yr</span>
                     )}
                   </div>
-                ) : (
-                  <div className="mb-4 pb-4 border-b border-border/40">
-                    <p className="text-sm font-medium text-foreground">{credits} credits</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">to try the platform</p>
-                  </div>
-                )}
-
-                {/* Features */}
-                <ul className="space-y-2 flex-1 mb-5">
-                  {topFeatures.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary" strokeWidth={2.5} />
-                      <span className="text-[12px] text-foreground/80 leading-snug">{f}</span>
-                    </li>
-                  ))}
-                  {extraFeatures.length > 0 && (
-                    <li className="text-[11px] text-muted-foreground pl-5.5">+ {extraFeatures.length} more</li>
-                  )}
-                </ul>
-
-                {/* CTA */}
-                <Button
-                  variant={isDisabled ? 'secondary' : isRecommended || (targetIdx > currentIdx && !isFree) ? 'default' : 'outline'}
-                  className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
-                  onClick={() => handlePlanSelect(p.planId)}
-                  disabled={isDisabled}
-                >
-                  {ctaLabel}
-                </Button>
-              </div>
+                </div>
+              </button>
             );
           })}
         </div>
 
-        {/* Trust line */}
-        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-1">
-          <Lock className="w-3 h-3" />
-          <span>Cancel anytime · No commitment · Secure checkout</span>
-        </div>
-      </section>
-
-      {/* ── Value pillars ── */}
-      <section className="space-y-8">
-        <div className="text-center space-y-3 max-w-xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">What you actually get</h2>
-          <p className="text-sm text-muted-foreground">
-            Six things that replace the rest of your creative production stack.
+        {/* Trust block — left-aligned, modal-style */}
+        <div className="flex flex-col gap-1.5 pt-2">
+          <p className="text-[13px] text-muted-foreground">
+            Cancel anytime · No commitment
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
+            <Lock className="w-3 h-3" />
+            <span>You'll be securely redirected to complete checkout</span>
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {VALUE_PILLARS.map((pillar) => (
-            <div
-              key={pillar.title}
-              className="rounded-2xl border border-border/50 bg-card p-5 space-y-3"
-            >
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <pillar.icon className="w-4 h-4 text-primary" />
-              </div>
-              <h3 className="text-sm font-semibold tracking-tight">{pillar.title}</h3>
-              <p className="text-[12px] text-muted-foreground leading-relaxed">{pillar.desc}</p>
-            </div>
-          ))}
+
+        {/* Single CTA */}
+        <Button
+          className="w-full rounded-xl min-h-[48px] gap-2 text-sm font-medium"
+          onClick={handleConfirmSelection}
+          disabled={ctaDisabled}
+        >
+          {ctaLabel}
+          {!ctaDisabled && <ArrowUpRight className="w-3.5 h-3.5" />}
+        </Button>
+      </section>
+
+      {/* ── Feature comparison table ── */}
+      <section className="space-y-8">
+        <div className="text-center space-y-3 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Compare every feature</h2>
+          <p className="text-sm text-muted-foreground">
+            Everything that's included on each plan — no fine print.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-border/50 overflow-hidden bg-card">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead className="bg-muted/40 sticky top-0">
+                <tr>
+                  <th className="text-left px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[34%]">
+                    Feature
+                  </th>
+                  {mainPlans.map((p) => {
+                    const isRec = p.planId === 'growth';
+                    const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                    return (
+                      <th key={p.planId} className="px-3 py-4 text-center min-w-[110px]">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className={`text-xs font-semibold ${isRec ? 'text-primary' : 'text-foreground'}`}>
+                            {p.name}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground font-normal">
+                            ${displayPrice}/mo
+                          </span>
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_MATRIX.map((group) => (
+                  <>
+                    <tr key={`${group.title}-header`} className="bg-muted/20 border-t border-border/40">
+                      <td colSpan={mainPlans.length + 1} className="px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {group.title}
+                      </td>
+                    </tr>
+                    {group.rows.map((row) => (
+                      <tr key={row.label} className="border-t border-border/30 hover:bg-muted/10 transition-colors">
+                        <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
+                        {mainPlans.map((p) => (
+                          <td key={p.planId} className="px-3 py-3 text-center">
+                            {renderCell(row.values[p.planId] ?? false)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -286,7 +388,6 @@ export default function AppPricing() {
           </p>
         </div>
 
-        {/* Stat row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { stat: '~$0.04', label: 'per credit on Pro plan' },
@@ -300,7 +401,6 @@ export default function AppPricing() {
           ))}
         </div>
 
-        {/* Compact comparison */}
         <div className="rounded-2xl border border-border/50 overflow-hidden">
           <div className="grid grid-cols-3 bg-muted/40 px-5 py-3">
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Role</span>
@@ -354,7 +454,7 @@ export default function AppPricing() {
           {FAQS.map((faq) => (
             <Collapsible key={faq.q}>
               <CollapsibleTrigger className="w-full flex items-center justify-between rounded-2xl border border-border/50 bg-card px-5 py-4 hover:border-border transition-colors text-left group">
-                <span className="text-sm font-medium">{faq.q}</span>
+                <span className="text-sm font-medium pr-4">{faq.q}</span>
                 <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="px-5 pt-2 pb-4">
@@ -368,24 +468,28 @@ export default function AppPricing() {
       {/* ── Final CTA strip ── */}
       <section className="rounded-2xl border border-border/50 bg-card p-8 sm:p-10 text-center space-y-5">
         <div className="space-y-2 max-w-xl mx-auto">
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Need credits sooner?</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
+            {isFreeUser ? 'Ready to start creating?' : 'Need credits sooner?'}
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Top up instantly without changing plans, or talk to us about custom volume.
+            {isFreeUser
+              ? 'Pick a plan above to unlock the full platform, or talk to us about custom volume.'
+              : 'Top up instantly without changing plans, or talk to us about custom volume.'}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button
-            onClick={() => setTopupOpen(true)}
-            className="rounded-xl min-h-[44px] gap-2"
-          >
-            Top up credits
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/contact')}
-            className="rounded-xl min-h-[44px]"
-          >
+          {isFreeUser ? (
+            <Button onClick={scrollToPlans} className="rounded-xl min-h-[44px] gap-2">
+              Choose a plan
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Button>
+          ) : (
+            <Button onClick={() => setTopupOpen(true)} className="rounded-xl min-h-[44px] gap-2">
+              Top up credits
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => navigate('/contact')} className="rounded-xl min-h-[44px]">
             Talk to sales
           </Button>
         </div>
@@ -396,7 +500,7 @@ export default function AppPricing() {
         onClose={() => { setDialogOpen(false); setLoading(false); }}
         onConfirm={handleDialogConfirm}
         mode={dialogMode}
-        targetPlan={selectedPlan || undefined}
+        targetPlan={selectedDialogPlan || undefined}
         currentPlanName={planConfig?.name || 'Free'}
         isAnnual={isAnnual}
         currentBalance={0}
