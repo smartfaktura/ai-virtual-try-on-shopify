@@ -1,42 +1,38 @@
 
 
-# BuyCreditsModal — Plan-Aware Redesign
+# Fix BuyCreditsModal — Tab Reset + Pro User Experience
 
 ## Problem
-The BuyCreditsModal (opened from Settings/sidebar) still shows all 4 plans including Free for all users. A Pro user sees "Downgrade to Free", "Downgrade to Starter", "Downgrade to Growth" which is unhelpful when they ran out of credits.
+The `activeTab` state persists across modal open/close cycles (React `useState` only initializes once). A Pro user who was previously on the "Plans" tab gets stuck there when reopening — they see only their own Pro card with a disabled button. No top-up packs, no enterprise CTA, and no tab switcher (hidden for Pro users by design).
 
-## Changes
+## Root Cause
+Line 26: `useState<'topup' | 'upgrade'>(() => defaultTab)` — the initializer runs once on mount, not on every modal open.
+
+## Fix
 
 ### File: `src/components/app/BuyCreditsModal.tsx`
 
-**1. Free users — hide "Top Up" tab entirely**
-Free users can't top up (no subscription). Show only the "Plans" tab with 3 subscribable plans (Starter/Growth/Pro), no Free card. Remove the tab switcher for free users.
-
-**2. Starter/Growth users — keep both tabs as-is, but improve "Plans" tab**
-- "Top Up" tab: unchanged (credit packs)
-- "Plans" tab: only show plans at or above current tier. Hide Free plan and plans below current. Show upgrade CTAs with `variant="default"`, current plan with `variant="secondary"`.
-
-**3. Pro users — hide "Plans" tab, show Top Up + Enterprise CTA**
-Pro users have no upgrade path. Remove the tab switcher. Show only credit packs + an Enterprise CTA bar at the bottom (same `EnterpriseCTA` pattern from NoCreditsModal).
-
-**4. Tab default logic**
-- Free: force `upgrade` tab (plans), hide tab switcher
-- Starter/Growth: default to `topup`, show both tabs
-- Pro: force `topup`, hide tab switcher, add Enterprise CTA below packs
-
-### Implementation detail
-
-```
-// Plans tab filtering
-const plansToShow = mainPlans.filter(p => {
-  if (plan === 'free') return p.planId !== 'free';
-  const currentIdx = PLAN_ORDER.indexOf(plan);
-  const targetIdx = PLAN_ORDER.indexOf(p.planId);
-  return targetIdx >= currentIdx;
-});
+**1. Reset activeTab when modal opens**
+Add a `useEffect` that watches `buyModalOpen` and resets `activeTab` to the correct default:
+```typescript
+useEffect(() => {
+  if (buyModalOpen) {
+    setActiveTab(isFreeUser(plan) ? 'upgrade' : 'topup');
+  }
+}, [buyModalOpen, plan]);
 ```
 
-- For Pro users, add `<EnterpriseCTA />` (reuse from NoCreditsModal or extract shared component) below the top-up grid
-- Tab switcher conditionally rendered: hidden for free users (only Plans) and pro users (only Top Up)
-- Billing toggle still shown on Plans tab when visible
+**2. Force topup for Pro users**
+Even if somehow `activeTab` is 'upgrade' for a Pro user, add a guard: if `isPro(plan)` and `activeTab === 'upgrade'`, force it to 'topup'. Or simpler — the useEffect above handles it since Pro defaults to 'topup'.
+
+**3. Add "Compare all features" link to the topup tab footer (for Pro users)**
+Below the Enterprise CTA, add a link to `/app/pricing` so Pro users can still browse plans if curious.
+
+This is a small targeted fix — no layout redesign needed.
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `src/components/app/BuyCreditsModal.tsx` | Add `useEffect` to reset `activeTab` on modal open; add footer link for Pro topup view |
 
