@@ -1,26 +1,30 @@
 
 
-# Hide Clear Button When No Products Selected
+# Move Badge Pills Lower on Workflow Cards
 
 ## Problem
-On the product-images flow (Step 1), the "Clear" button is always visible even when nothing is selected — it's unnecessary clutter on mobile.
+The badge pills ("1000+ Scenes", "Full Control", "40+ Models", "Auto Fit") on the Product Visuals and Virtual Try-On cards sit too high on the image. User wants them closer to the bottom with a more spacious but not overly gapped feel.
 
-## Change
+## Changes
 
-### File: `src/pages/ProductImages.tsx` (line 1027)
+### File: `src/components/app/workflowAnimationData.tsx`
 
-Wrap the Clear button in a conditional so it only renders when `selectedProductIds.size > 0`:
+Adjust the `position` values for all badge elements across the main workflow scenes. Move them from `bottom: 28%/16%` to `bottom: 14%/4%` so they sit near the bottom of the card image with comfortable spacing between them (~10% gap instead of 12%).
 
-```tsx
-// Before
-<Button ...>Clear</Button>
+**Product Visuals** (lines 80-86):
+- "1000+ Scenes": `bottom: '28%'` → `bottom: '14%'`
+- "Full Control": `bottom: '16%'` → `bottom: '4%'`
 
-// After
-{selectedProductIds.size > 0 && (
-  <Button ...>Clear</Button>
-)}
-```
+**Virtual Try-On Set** (lines 102-108):
+- "40+ Models": `bottom: '28%'` → `bottom: '14%'`
+- "Auto Fit": `bottom: '16%'` → `bottom: '4%'`
+
+**Product Listing Set** (lines 123-129):
+- "30+ Scenes": `bottom: '28%'` → `bottom: '14%'`
+- "1 Click": `bottom: '16%'` → `bottom: '4%'`
+
+Apply the same pattern to any remaining workflow scenes with badge elements at the old positions.
 
 ### Files
-- `src/pages/ProductImages.tsx` — 1 line wrapped in conditional
+- `src/components/app/workflowAnimationData.tsx` — update badge position values
 
