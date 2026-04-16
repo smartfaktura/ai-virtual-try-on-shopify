@@ -15,6 +15,7 @@ import {
   type BehaviorHint,
   getLayer1Copy,
   getLayer1Subline,
+  getLayer1Avatar,
   getLayer2Copy,
   getLayer3Headline,
   getLayer3Subline,

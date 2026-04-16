@@ -37,6 +37,30 @@ export interface Layer1ValueBlock {
   detail: string;
 }
 
+// ── Layer 1: Category → Avatar mapping ────────────────────────────
+
+export interface Layer1Avatar {
+  name: string;
+  role: string;
+  avatarKey: string; // e.g. 'sophia' — resolved to URL in component
+}
+
+const AVATAR_MAP: Record<ConversionCategory, Layer1Avatar> = {
+  fashion:     { name: 'Sophia', role: 'E-commerce Photographer', avatarKey: 'sophia' },
+  beauty:      { name: 'Luna', role: 'Retouch Specialist', avatarKey: 'luna' },
+  jewelry:     { name: 'Sophia', role: 'Studio Lighting Expert', avatarKey: 'sophia' },
+  fragrances:  { name: 'Amara', role: 'Lifestyle Photographer', avatarKey: 'amara' },
+  food:        { name: 'Amara', role: 'Scene Specialist', avatarKey: 'amara' },
+  electronics: { name: 'Kenji', role: 'Tech Product Specialist', avatarKey: 'kenji' },
+  home:        { name: 'Amara', role: 'Lifestyle Photographer', avatarKey: 'amara' },
+  accessories: { name: 'Sophia', role: 'E-commerce Photographer', avatarKey: 'sophia' },
+  fallback:    { name: 'Sophia', role: 'Studio Lead', avatarKey: 'sophia' },
+};
+
+export function getLayer1Avatar(category: ConversionCategory): Layer1Avatar {
+  return AVATAR_MAP[category];
+}
+
 export interface Layer1Copy {
   headline: string;
   subline: string;
