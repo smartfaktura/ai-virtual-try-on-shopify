@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { TEAM_MEMBERS } from '@/data/teamData';
+import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -563,7 +563,7 @@ export default function CatalogGenerate() {
                     <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[teamIndex].name[0]}</AvatarFallback>
                   </Avatar>
                   <p className="text-xs text-muted-foreground italic">
-                    {TEAM_MEMBERS[teamIndex].name} is {TEAM_MEMBERS[teamIndex].statusMessage.toLowerCase()}
+                    {TEAM_MEMBERS[teamIndex].name} is {getRandomStatusMessage(TEAM_MEMBERS[teamIndex]).toLowerCase()}
                   </p>
                 </div>
 

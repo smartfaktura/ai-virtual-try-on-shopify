@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TEAM_MEMBERS } from '@/data/teamData';
+import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { BatchGroup } from '@/lib/batchGrouping';
 
@@ -161,7 +161,7 @@ const ActiveGroupCard = React.memo(function ActiveGroupCard({
               {isProcessing && (
                 <p className="text-[11px] text-primary/80 font-medium mt-0.5 flex items-center gap-1 animate-fade-in" key={currentAgent.name}>
                   <Sparkles className="w-3 h-3 shrink-0" />
-                  <span className="truncate">{currentAgent.name}: "{currentAgent.statusMessage}"</span>
+                  <span className="truncate">{currentAgent.name}: "{getRandomStatusMessage(currentAgent)}"</span>
                 </p>
               )}
             </div>
