@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { X, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +46,6 @@ export function ContextualFeedbackCard({
   const [textNote, setTextNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Show after 2s delay if not dismissed
   useEffect(() => {
     if (sessionStorage.getItem(dismissKey)) {
       setStep('dismissed');
@@ -60,26 +58,6 @@ export function ContextualFeedbackCard({
   const dismiss = () => {
     sessionStorage.setItem(dismissKey, '1');
     setStep('dismissed');
-  };
-
-  const handleAnswer = async (a: Answer) => {
-    setAnswer(a);
-    if (a === 'yes' || isFreeUser) {
-      // Submit immediately for "yes" or free users
-      await submitFeedback(a, [], '');
-      setStep('success');
-      setTimeout(dismiss, 3000);
-    } else {
-      setStep('step2');
-    }
-  };
-
-  const toggleReason = (r: string) => {
-    setSelectedReasons(prev => {
-      const next = new Set(prev);
-      next.has(r) ? next.delete(r) : next.add(r);
-      return next;
-    });
   };
 
   const submitFeedback = async (
@@ -109,13 +87,32 @@ export function ContextualFeedbackCard({
     }
   };
 
+  const handleAnswer = async (a: Answer) => {
+    setAnswer(a);
+    if (a === 'yes' || isFreeUser) {
+      await submitFeedback(a, [], '');
+      setStep('success');
+      setTimeout(dismiss, 2500);
+    } else {
+      setStep('step2');
+    }
+  };
+
+  const toggleReason = (r: string) => {
+    setSelectedReasons(prev => {
+      const next = new Set(prev);
+      next.has(r) ? next.delete(r) : next.add(r);
+      return next;
+    });
+  };
+
   const handleSubmit = async () => {
     if (!answer) return;
     setSubmitting(true);
     await submitFeedback(answer, Array.from(selectedReasons), textNote);
     setSubmitting(false);
     setStep('success');
-    setTimeout(dismiss, 3000);
+    setTimeout(dismiss, 2500);
   };
 
   const handleSkip = async () => {
@@ -125,98 +122,110 @@ export function ContextualFeedbackCard({
       setSubmitting(false);
     }
     setStep('success');
-    setTimeout(dismiss, 3000);
+    setTimeout(dismiss, 2500);
   };
 
   if (step === 'idle' || step === 'dismissed') return null;
 
-  return (
-    <div className={cn(
-      'relative border border-border rounded-xl bg-card p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300',
-      className,
-    )}>
-      {/* Dismiss X */}
-      <button
-        onClick={dismiss}
-        className="absolute top-3 right-3 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
-      >
-        <X className="w-3.5 h-3.5 text-muted-foreground" />
-      </button>
+  // Success pill
+  if (step === 'success') {
+    return (
+      <div className={cn('flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/95 backdrop-blur-sm border border-border/50 shadow-lg text-xs text-muted-foreground">
+          <MessageSquare className="w-3 h-3" />
+          Thanks — this helps us improve
+        </div>
+      </div>
+    );
+  }
 
-      {step === 'success' ? (
-        <p className="text-sm text-muted-foreground pr-6">
-          Thanks — this helps us improve your results
-        </p>
-      ) : (
-        <>
-          {/* Header */}
-          <div className="pr-6">
-            <div className="flex items-center gap-1.5 mb-1">
-              <MessageSquare className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Help us improve</span>
-            </div>
-            <p className="text-sm font-medium">{questionText}</p>
+  // Step 1: Compact pill
+  if (step === 'step1') {
+    return (
+      <div className={cn('flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
+        <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-card/95 backdrop-blur-sm border border-border/50 shadow-lg">
+          <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0" />
+          <span className="text-xs text-foreground/80 whitespace-nowrap">{questionText}</span>
+          <div className="flex items-center gap-1">
+            {(['yes', 'almost', 'no'] as const).map(key => (
+              <button
+                key={key}
+                onClick={() => handleAnswer(key)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
+                  key === 'yes' && 'border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400',
+                  key === 'almost' && 'border-amber-500/30 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400',
+                  key === 'no' && 'border-destructive/30 text-destructive hover:bg-destructive/10',
+                )}
+              >
+                {buttonLabels[key]}
+              </button>
+            ))}
           </div>
+          <button
+            onClick={dismiss}
+            className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity shrink-0"
+          >
+            <X className="w-3 h-3 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-          {step === 'step1' && (
-            <div className="flex flex-wrap gap-2">
-              {(['yes', 'almost', 'no'] as const).map(key => (
-                <Button
-                  key={key}
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    'rounded-full text-xs h-8',
-                    key === 'yes' && 'hover:border-emerald-500/50 hover:text-emerald-600',
-                    key === 'almost' && 'hover:border-amber-500/50 hover:text-amber-600',
-                    key === 'no' && 'hover:border-destructive/50 hover:text-destructive',
-                  )}
-                  onClick={() => handleAnswer(key)}
-                >
-                  {buttonLabels[key]}
-                </Button>
-              ))}
-            </div>
-          )}
-
-          {step === 'step2' && (
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-1.5">
-                {reasonChips.map(chip => (
-                  <Badge
-                    key={chip}
-                    variant={selectedReasons.has(chip) ? 'default' : 'outline'}
-                    className={cn(
-                      'text-[11px] cursor-pointer transition-colors select-none',
-                      selectedReasons.has(chip)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted',
-                    )}
-                    onClick={() => toggleReason(chip)}
-                  >
-                    {chip}
-                  </Badge>
-                ))}
-              </div>
-              <textarea
-                value={textNote}
-                onChange={e => setTextNote(e.target.value.slice(0, 160))}
-                placeholder={textPlaceholder}
-                rows={2}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-              />
-              <div className="flex items-center justify-end gap-2">
-                <Button variant="ghost" size="sm" className="text-xs h-8" onClick={handleSkip}>
-                  Skip
-                </Button>
-                <Button size="sm" className="text-xs h-8 rounded-full" onClick={handleSubmit} disabled={submitting}>
-                  Send feedback
-                </Button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+  // Step 2: Expanded panel
+  return (
+    <div className={cn('flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
+      <div className="w-full max-w-md rounded-xl bg-card/95 backdrop-blur-sm border border-border/50 shadow-lg p-3 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-3 h-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">What could be better?</span>
+          </div>
+          <button onClick={dismiss} className="opacity-50 hover:opacity-100 transition-opacity">
+            <X className="w-3 h-3 text-muted-foreground" />
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {reasonChips.map(chip => (
+            <Badge
+              key={chip}
+              variant={selectedReasons.has(chip) ? 'default' : 'outline'}
+              className={cn(
+                'text-[11px] cursor-pointer transition-colors select-none',
+                selectedReasons.has(chip)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted',
+              )}
+              onClick={() => toggleReason(chip)}
+            >
+              {chip}
+            </Badge>
+          ))}
+        </div>
+        <textarea
+          value={textNote}
+          onChange={e => setTextNote(e.target.value.slice(0, 160))}
+          placeholder={textPlaceholder}
+          rows={2}
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+        />
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={handleSkip}
+            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+          >
+            Skip
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="text-[11px] font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            Send feedback
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
