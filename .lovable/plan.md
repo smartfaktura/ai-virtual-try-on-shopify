@@ -1,32 +1,24 @@
 
 
-# Fix Feedback Survey — Mobile Layout + Reposition in Product Images
+# Add "Help Us Improve" Label + Reposition Survey Before Actions
 
 ## Changes
 
-### 1. Mobile-responsive Step 1 layout (`ContextualFeedbackCard.tsx`)
-The current pill uses `rounded-full` with `whitespace-nowrap` and horizontal layout — on mobile it overflows or gets cramped. Fix:
+### 1. Add "Help Us Improve" micro-label (`ContextualFeedbackCard.tsx`)
+Add a small muted label above or inline with the question text in Step 1 to clarify purpose:
+- Before the question text, add `Help Us Improve ·` as a prefix span with `text-muted-foreground/50` — subtler than the question itself
+- This gives context without adding a separate line or breaking the compact layout
 
-- **Step 1**: Switch from single-row pill to a stacked card on mobile:
-  - Outer: `rounded-xl` instead of `rounded-full` (pills can't wrap nicely)
-  - Question text: remove `whitespace-nowrap`, allow natural wrapping
-  - Buttons row: `flex flex-wrap gap-1.5` with `flex-1 min-w-[70px] text-center` so they fill available width evenly
-  - Keep the same muted styling (`bg-muted/80 backdrop-blur-sm border-border/50 shadow-sm`)
+### 2. Move survey before action buttons (`ProductImagesStep6Results.tsx`)
+Move the `ContextualFeedbackCard` block (lines 172-182) from after the actions Card to before it (between the image grid ending at line 155 and the actions Card at line 158). Flow becomes:
 
-- **Success pill**: stays as-is (short text, always fits)
-
-### 2. Move feedback below action buttons in Product Images (`ProductImagesStep6Results.tsx`)
-Currently at line 112, the `ContextualFeedbackCard` sits between the header and the image grid. Move it after the action buttons Card (after line 181), so the flow is:
-
+```text
+Header → Image Grid → Feedback Survey → Action Buttons
 ```
-Header → Image Grid → Action Buttons → Feedback Survey
-```
-
-This puts it in a natural "post-action" position where users have already seen their results and decided what to do.
 
 ## Files
 | File | Change |
 |------|--------|
-| `ContextualFeedbackCard.tsx` | Lines 145-167: Replace pill layout with mobile-friendly stacked card — `rounded-xl`, no whitespace-nowrap, flex-wrap buttons with flex-1 |
-| `ProductImagesStep6Results.tsx` | Move lines 111-121 (feedback card) to after line 181 (after the actions Card) |
+| `ContextualFeedbackCard.tsx` | Lines 148-149: Add "Help Us Improve ·" prefix span before questionText in Step 1 pill |
+| `ProductImagesStep6Results.tsx` | Move lines 172-182 to before line 157 (before the actions Card) |
 
