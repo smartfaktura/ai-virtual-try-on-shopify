@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
@@ -387,6 +388,18 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   {deleting ? 'Deleting…' : 'Delete'}
                 </Button>
               </div>
+
+              {/* Survey feedback — per image */}
+              <ContextualFeedbackCard
+                workflow="freestyle"
+                questionText="How was this result?"
+                buttonLabels={{ yes: 'Nailed it', almost: 'Almost', no: 'Not quite' }}
+                reasonChips={['Prompt ignored', 'Product changed', 'Model/look off', 'Scene/style off', 'Bad composition', 'Not realistic', 'Low quality', 'Too slow']}
+                textPlaceholder="What did you expect instead?"
+                resultId={activeItem?.id}
+                imageUrl={activeItem?.imageUrl}
+                triggerType="result_ready"
+              />
 
               {/* Share to Discover */}
               <div className="rounded-xl border border-border/40 bg-primary/5 p-5 space-y-3">
