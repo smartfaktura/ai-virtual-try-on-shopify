@@ -280,12 +280,19 @@ function GridDots({ cols, rows }: { cols: number; rows: number }) {
 }
 
 function GridSizeToggle({ value, onChange }: { value: GridSize; onChange: (v: GridSize) => void }) {
-  const sizes: { id: GridSize; dots: [number, number]; title: string }[] = [
-    { id: '6col', dots: [4, 3], title: '6 columns' },
-    { id: '5col', dots: [3, 3], title: '5 columns' },
-    { id: '4col', dots: [3, 2], title: '4 columns' },
-    { id: '3col', dots: [2, 2], title: '3 columns' },
-  ];
+  const isMobile = useIsMobile();
+  
+  const sizes: { id: GridSize; dots: [number, number]; title: string }[] = isMobile
+    ? [
+        { id: '5col', dots: [3, 3], title: '3 columns' },
+        { id: '3col', dots: [2, 2], title: '2 columns' },
+      ]
+    : [
+        { id: '6col', dots: [4, 3], title: '6 columns' },
+        { id: '5col', dots: [3, 3], title: '5 columns' },
+        { id: '4col', dots: [3, 2], title: '4 columns' },
+        { id: '3col', dots: [2, 2], title: '3 columns' },
+      ];
   return (
     <div className="flex items-center border border-border rounded-md overflow-hidden">
       {sizes.map(s => (
