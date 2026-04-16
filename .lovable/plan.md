@@ -1,42 +1,56 @@
 
 
-# Enable Arrow Navigation in Library Lightbox
+# Add Price-Per-Credit to Plan Cards in BuyCreditsModal
 
 ## Problem
-The Library page (`/app/library`) opens the detail modal for a single image — no left/right arrows appear. The `LibraryDetailModal` already has full multi-image navigation built in (arrows + keyboard), it just needs `items` and `initialIndex` props.
+The main pricing popup (BuyCreditsModal, Plans tab) shows monthly price and credits count but doesn't show the per-credit cost. This metric helps users see the value increase with higher plans and encourages upgrades.
+
+## Calculated Values
+- **Free**: 20 credits → N/A (free)
+- **Starter**: 500 credits / $39 = **7.8¢** per credit
+- **Growth**: 1,500 credits / $79 = **5.3¢** per credit
+- **Pro**: 4,500 credits / $179 = **4.0¢** per credit
 
 ## Fix
 
-### `src/pages/Jobs.tsx` — Line ~723-728
+### `src/components/app/BuyCreditsModal.tsx` — Lines 369-379
 
-1. Track clicked index instead of (or alongside) the selected item
-2. Pass `items={allItems}` and `initialIndex={clickedIndex}` to `LibraryDetailModal`
+Add a price-per-credit line below the credits count in the "Image estimate" section of each plan card. Compute it dynamically: `(displayPrice / credits * 100).toFixed(1)` cents per credit. Skip for the Free plan.
 
 **Before:**
 ```tsx
-<LibraryDetailModal
-  item={selectedItem}
-  open={!!selectedItem}
-  onClose={() => setSelectedItem(null)}
-  isUpscaling={...}
-/>
+<div className="mb-4">
+  {imageEstimate ? (
+    <>
+      <p className="text-sm font-medium text-foreground">~{imageEstimate} images/mo</p>
+      <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
+    </>
+  ) : (
+    <p className="text-sm text-muted-foreground">{p.credits} credits</p>
+  )}
+</div>
 ```
 
 **After:**
 ```tsx
-<LibraryDetailModal
-  item={selectedItem}
-  open={!!selectedItem}
-  onClose={() => setSelectedItem(null)}
-  isUpscaling={...}
-  items={allItems}
-  initialIndex={selectedItem ? allItems.findIndex(i => i.id === selectedItem.id) : 0}
-/>
+<div className="mb-4">
+  {imageEstimate ? (
+    <>
+      <p className="text-sm font-medium text-foreground">~{imageEstimate} images/mo</p>
+      <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
+      {displayPrice > 0 && (
+        <p className="text-[10px] text-primary font-medium mt-0.5">
+          {(displayPrice / credits * 100).toFixed(1)}¢ per credit
+        </p>
+      )}
+    </>
+  ) : (
+    <p className="text-sm text-muted-foreground">{p.credits} credits</p>
+  )}
+</div>
 ```
-
-The arrows already render on mobile (always visible) and desktop (visible on hover) — no additional mobile work needed. The component handles keyboard arrows and wrap-around navigation automatically.
 
 | File | Change |
 |------|--------|
-| `src/pages/Jobs.tsx` | Pass `items` and `initialIndex` to `LibraryDetailModal` |
+| `src/components/app/BuyCreditsModal.tsx` | Add computed ¢-per-credit line under credits count for paid plans |
 
