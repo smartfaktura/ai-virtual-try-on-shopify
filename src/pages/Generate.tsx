@@ -1791,7 +1791,7 @@ export default function Generate() {
         setGeneratedImages(batchState.aggregatedImages);
         setWorkflowVariationLabels(batchState.aggregatedLabels);
         setGeneratingProgress(100);
-        setCompletedFeedbackJobId(batchState.completedJobs?.[0] || null);
+        setCompletedFeedbackJobId(batchState.jobs.find(j => j.status === 'completed')?.jobId || null);
         setCurrentStep('results');
         if (batchState.hasPartialFailure) {
           toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
