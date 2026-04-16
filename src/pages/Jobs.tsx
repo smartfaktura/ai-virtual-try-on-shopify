@@ -725,6 +725,8 @@ export default function Jobs() {
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         isUpscaling={selectedItem ? upscalingSourceIds.has(selectedItem.id) : false}
+        items={items}
+        initialIndex={selectedItem ? items.findIndex(i => i.id === selectedItem.id) : 0}
       />
 
       <FeedbackBanner />
