@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Check, ArrowUpRight, ArrowRight, X, Loader2 } from 'lucide-react';
+import { Wallet, Check, ArrowUpRight, ArrowRight, X, Loader2, Building2 } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
@@ -11,6 +11,8 @@ import { toast } from '@/lib/brandedToast';
 import type { PricingPlan } from '@/types';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+const isPro = (p: string) => p === 'pro';
+const isFreeUser = (p: string) => p === 'free';
 
 export function BuyCreditsModal() {
   const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, billingInterval, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
@@ -19,7 +21,9 @@ export function BuyCreditsModal() {
   const effectiveInterval = billingInterval || (plan !== 'free' ? 'monthly' : null);
   const isPaidUser = plan !== 'free';
 
-  const [activeTab, setActiveTab] = useState<'topup' | 'upgrade'>(() => plan === 'free' ? 'upgrade' : 'topup');
+  const showTabs = !isFreeUser(plan) && !isPro(plan);
+  const defaultTab = isFreeUser(plan) ? 'upgrade' : 'topup';
+  const [activeTab, setActiveTab] = useState<'topup' | 'upgrade'>(() => defaultTab);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>(effectiveInterval === 'annual' ? 'annual' : 'monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
@@ -31,6 +35,12 @@ export function BuyCreditsModal() {
   const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
+  const plansToShow = mainPlans.filter(p => {
+    if (isFreeUser(plan)) return p.planId !== 'free';
+    const currentIdx = PLAN_ORDER.indexOf(plan);
+    const targetIdx = PLAN_ORDER.indexOf(p.planId);
+    return targetIdx >= currentIdx;
+  });
   const currentPlanData = pricingPlans.find(p => p.planId === plan);
 
   // Show the focused "switch to annual" card when a monthly paid user toggles to annual
@@ -149,21 +159,25 @@ export function BuyCreditsModal() {
 
           {/* Tab switcher + billing toggle — single row */}
           <div className="px-4 sm:px-6 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
-            <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
-              {(['topup', 'upgrade'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all ${
-                    activeTab === tab
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground/70'
-                  }`}
-                >
-                  {tab === 'topup' ? 'Top Up' : 'Plans'}
-                </button>
-              ))}
-            </div>
+            {showTabs ? (
+              <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+                {(['topup', 'upgrade'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all ${
+                      activeTab === tab
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground/70'
+                    }`}
+                  >
+                    {tab === 'topup' ? 'Top Up' : 'Plans'}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div />
+            )}
             {activeTab === 'upgrade' && (
               <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
                 <button
@@ -263,12 +277,35 @@ export function BuyCreditsModal() {
                     })}
                   </div>
 
-                  <button
-                    onClick={() => setActiveTab('upgrade')}
-                    className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-                  >
-                    Or upgrade your plan for monthly credits →
-                  </button>
+                  {showTabs && (
+                    <button
+                      onClick={() => setActiveTab('upgrade')}
+                      className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+                    >
+                      Or upgrade your plan for monthly credits →
+                    </button>
+                  )}
+
+                  {/* Enterprise CTA for Pro users */}
+                  {isPro(plan) && (
+                    <div className="rounded-2xl border border-border/50 bg-muted/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-primary/10">
+                          <Building2 className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm tracking-tight">Need more? Talk to our team</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Custom credit volumes, dedicated support & integrations</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" className="min-h-[44px] rounded-xl text-xs font-medium shrink-0" asChild>
+                        <a href="mailto:hello@vovv.ai">
+                          Contact Sales
+                          <ArrowUpRight className="w-3.5 h-3.5 ml-1.5" />
+                        </a>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })()}
@@ -305,8 +342,8 @@ export function BuyCreditsModal() {
                 )}
 
                 {/* Plan cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                  {mainPlans.map((p) => {
+                <div className={`grid grid-cols-1 ${plansToShow.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-2.5 sm:gap-3`}>
+                  {plansToShow.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
                     const targetIdx = PLAN_ORDER.indexOf(p.planId);
