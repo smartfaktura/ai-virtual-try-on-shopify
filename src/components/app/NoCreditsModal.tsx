@@ -22,7 +22,7 @@ const subscribablePlans = pricingPlans.filter(
 
 const PLAN_DESCRIPTORS: Record<string, string> = {
   starter: 'Best to start',
-  growth: 'Best value for growing brands',
+  growth: 'Most popular for consistent content',
   pro: 'Best for high-volume production',
 };
 
@@ -33,9 +33,9 @@ const PLAN_VALUE_LABELS: Record<string, string> = {
 };
 
 const PLAN_CTA_LABELS: Record<string, string> = {
-  starter: 'Start with Starter',
+  starter: 'Get Starter',
   growth: 'Get Growth',
-  pro: 'Choose Pro',
+  pro: 'Get Pro',
 };
 
 const PLAN_DIFFERENTIATORS: Record<string, { text: string; badge?: string }[]> = {
@@ -75,7 +75,7 @@ function FreePlanSection({
     <div className="space-y-5">
       {/* Subtitle */}
       <p className="text-sm text-muted-foreground text-center">
-        Pick a plan that fits your creative ambitions
+        Choose a plan to keep creating
       </p>
 
       {/* Billing toggle */}
@@ -202,7 +202,10 @@ function FreePlanSection({
       </div>
 
       {/* Reassurance */}
-      <p className="text-xs text-muted-foreground text-center">
+      <p className="text-xs text-muted-foreground font-medium text-center">
+        Cancel anytime · No commitment
+      </p>
+      <p className="text-xs text-muted-foreground text-center mt-1">
         All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
       </p>
     </div>

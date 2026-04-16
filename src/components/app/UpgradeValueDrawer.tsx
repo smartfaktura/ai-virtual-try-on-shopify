@@ -237,7 +237,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                     className="w-full rounded-xl h-10 text-sm"
                     onClick={() => handleCheckout(plan)}
                   >
-                    {recommended ? `Choose ${plan.name}` : `Start with ${plan.name}`}
+                    {`Get ${plan.name}`}
                   </Button>
                 </div>
               );
