@@ -26,17 +26,17 @@ interface UpgradeValueDrawerProps {
 
 const DRAWER_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> = {
   starter: [
-    { text: '500 credits every month' },
+    { text: '7.8¢ per credit' },
     { text: '3 Brand Profiles' },
     { text: 'Up to 100 products' },
   ],
   growth: [
-    { text: '1,500 credits every month' },
+    { text: '5.3¢ per credit' },
     { text: 'Priority generation queue' },
     { text: 'Brand Models', badge: 'NEW' },
   ],
   pro: [
-    { text: '4,500 credits every month' },
+    { text: '4.0¢ per credit' },
     { text: 'Priority generation queue' },
     { text: 'Unlimited products & profiles' },
   ],
