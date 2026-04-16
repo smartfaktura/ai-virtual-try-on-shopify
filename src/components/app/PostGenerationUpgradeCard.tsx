@@ -83,7 +83,7 @@ export function PostGenerationUpgradeCard({
               'text-sm font-medium tracking-tight leading-snug',
               compact ? 'line-clamp-2' : 'line-clamp-2 md:truncate md:line-clamp-none'
             )}>{copy.headline}</p>
-            <p className="text-xs text-muted-foreground leading-snug sm:line-clamp-1">{copy.subline}</p>
+            <p className="text-xs text-muted-foreground leading-snug">{copy.subline}</p>
           </div>
         </div>
 
