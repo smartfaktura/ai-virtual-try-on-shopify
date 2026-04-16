@@ -632,33 +632,60 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          image_url: string | null
           message: string
           page_url: string | null
+          primary_answer: string | null
+          priority: string | null
+          question_key: string | null
+          reasons: string[] | null
+          result_id: string | null
           status: string
+          trigger_type: string | null
           type: string
           user_id: string
+          user_plan: string | null
+          workflow: string | null
         }
         Insert: {
           admin_notes?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          image_url?: string | null
           message: string
           page_url?: string | null
+          primary_answer?: string | null
+          priority?: string | null
+          question_key?: string | null
+          reasons?: string[] | null
+          result_id?: string | null
           status?: string
+          trigger_type?: string | null
           type?: string
           user_id: string
+          user_plan?: string | null
+          workflow?: string | null
         }
         Update: {
           admin_notes?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          image_url?: string | null
           message?: string
           page_url?: string | null
+          primary_answer?: string | null
+          priority?: string | null
+          question_key?: string | null
+          reasons?: string[] | null
+          result_id?: string | null
           status?: string
+          trigger_type?: string | null
           type?: string
           user_id?: string
+          user_plan?: string | null
+          workflow?: string | null
         }
         Relationships: []
       }

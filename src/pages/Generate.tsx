@@ -10,6 +10,7 @@ import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Pale
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -4491,6 +4492,26 @@ export default function Generate() {
                 <Button className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => navigate('/app/library')}>View in Library</Button>
               </div>
             </div>
+
+            {/* Contextual feedback card */}
+            <ContextualFeedbackCard
+              workflow={activeWorkflow?.slug || 'freestyle'}
+              questionText={activeWorkflow?.slug
+                ? 'Does this result look right for your product?'
+                : 'Did this generation match what you had in mind?'}
+              buttonLabels={activeWorkflow?.slug
+                ? { yes: 'Yes', almost: 'Almost', no: 'No' }
+                : { yes: 'Yes', almost: 'Almost', no: 'No' }}
+              reasonChips={activeWorkflow?.slug
+                ? ['Fit looks wrong', 'Product not preserved', 'Model doesn\'t match', 'Pose variety is weak', 'Styling feels off', 'Scene/background off', 'Needs more realism', 'Other']
+                : ['Prompt too hard to control', 'Product not preserved', 'Model/look is off', 'Scene/style is off', 'Composition is wrong', 'Not realistic enough', 'Needs better quality', 'Too slow', 'Other']}
+              textPlaceholder={activeWorkflow?.slug
+                ? 'What should improve? e.g. better fit, more natural pose'
+                : 'What were you hoping to get instead?'}
+              resultId={activeJob?.id}
+              imageUrl={generatedImages[0]}
+              triggerType="result_ready"
+            />
 
             {/* Floating selection bar */}
             {selectedForPublish.size > 0 && (
