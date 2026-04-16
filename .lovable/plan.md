@@ -1,52 +1,42 @@
 
 
-# Redesign NoCreditsModal — Plan-Aware Logic
+# BuyCreditsModal — Plan-Aware Redesign
 
-## Summary
-Completely rework the modal to show different content based on user's current plan, matching the wireframe layout. Free plan is never shown. The modal becomes a unified experience with plan-aware sections.
+## Problem
+The BuyCreditsModal (opened from Settings/sidebar) still shows all 4 plans including Free for all users. A Pro user sees "Downgrade to Free", "Downgrade to Starter", "Downgrade to Growth" which is unhelpful when they ran out of credits.
 
-## Logic by Plan
+## Changes
 
-| Current Plan | What Modal Shows |
-|---|---|
-| **Free** | 3 subscription cards (Starter, Growth, Pro) + billing toggle. No top-up packs. No free plan card. |
-| **Starter** | Credit top-up packs + upgrade nudge to Growth (with plan card preview) |
-| **Growth** | Credit top-up packs + upgrade nudge to Pro (with plan card preview) |
-| **Pro** | Credit top-up packs + Enterprise contact CTA (no upgrade cards) |
+### File: `src/components/app/BuyCreditsModal.tsx`
 
-## Header (all states)
-Match wireframe: show credit balance in header (`{balance} credits remaining`), headline ("Choose a plan to keep creating with VOVV"), subline ("Create more visuals, faster — with better value on larger plans"), billing toggle (for free users).
+**1. Free users — hide "Top Up" tab entirely**
+Free users can't top up (no subscription). Show only the "Plans" tab with 3 subscribable plans (Starter/Growth/Pro), no Free card. Remove the tab switcher for free users.
 
-## Layout per state
+**2. Starter/Growth users — keep both tabs as-is, but improve "Plans" tab**
+- "Top Up" tab: unchanged (credit packs)
+- "Plans" tab: only show plans at or above current tier. Hide Free plan and plans below current. Show upgrade CTAs with `variant="default"`, current plan with `variant="secondary"`.
 
-### Free users
-- Billing toggle (Monthly / Annual -20%)
-- 3-col grid: Starter → Growth (highlighted) → Pro
-- Each card: Plan name, price/mo, credits, ~images, key differentiators (2-3 bullets), "Choose" CTA
-- Footer: "Compare all features →" and "Contact Sales →"
+**3. Pro users — hide "Plans" tab, show Top Up + Enterprise CTA**
+Pro users have no upgrade path. Remove the tab switcher. Show only credit packs + an Enterprise CTA bar at the bottom (same `EnterpriseCTA` pattern from NoCreditsModal).
 
-### Starter/Growth users (has upgrade path)
-- **Top section**: Credit top-up packs (3 cards, same as now)
-- **Bottom section**: Upgrade nudge — but instead of just a text bar, show a compact plan card for the next tier with key stats (price, credits, ~images, 2 bullets) and "Upgrade to {Plan}" CTA
-- Footer: "Compare all features →" and "Contact Sales →"
+**4. Tab default logic**
+- Free: force `upgrade` tab (plans), hide tab switcher
+- Starter/Growth: default to `topup`, show both tabs
+- Pro: force `topup`, hide tab switcher, add Enterprise CTA below packs
 
-### Pro users (top tier)
-- **Top section**: Credit top-up packs (3 cards)
-- **Bottom section**: Enterprise CTA bar ("Need more? Talk to our team" + "Contact Sales" button linking to mailto:hello@vovv.ai)
-- Footer: "Compare all features →" and "Contact Sales →"
+### Implementation detail
 
-## Files Changed
+```
+// Plans tab filtering
+const plansToShow = mainPlans.filter(p => {
+  if (plan === 'free') return p.planId !== 'free';
+  const currentIdx = PLAN_ORDER.indexOf(plan);
+  const targetIdx = PLAN_ORDER.indexOf(p.planId);
+  return targetIdx >= currentIdx;
+});
+```
 
-| File | Change |
-|---|---|
-| `src/components/app/NoCreditsModal.tsx` | Full rewrite of content sections with plan-aware logic, show balance in header, upgrade card for starter/growth, enterprise CTA for pro |
-
-## Technical Details
-
-- Use `balance` from `useCredits()` for the header line
-- For starter/growth upgrade section: filter `subscribablePlans` to find the next plan using `PLAN_CONFIG[plan].nextPlanId`
-- For pro: render a simple enterprise contact bar instead of upgrade nudge
-- Free users: keep existing billing toggle + 3-plan grid (already excludes free plan)
-- Remove the old `upgradeNudge` text-only bar, replace with richer upgrade card
-- Mobile: Growth-first reorder stays for free users; for paid users top-up packs stack naturally
+- For Pro users, add `<EnterpriseCTA />` (reuse from NoCreditsModal or extract shared component) below the top-up grid
+- Tab switcher conditionally rendered: hidden for free users (only Plans) and pro users (only Top Up)
+- Billing toggle still shown on Plans tab when visible
 
