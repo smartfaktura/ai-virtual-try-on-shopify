@@ -976,7 +976,27 @@ export default function Freestyle() {
       {/* Scrollable content area */}
       <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
         <div className="px-3 lg:px-1 space-y-2 mb-2">
-          
+          {balance < 4 && (
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm">
+                    {balance === 0 ? "You're out of credits" : "Running low on credits"}
+                  </p>
+                  <p className="text-sm text-muted-foreground hidden sm:block">
+                    {balance === 0
+                      ? "Top up to keep creating with VOVV.AI"
+                      : `Only ${balance} credits left — top up to avoid interruptions`}
+                  </p>
+                </div>
+              </div>
+              <Button onClick={openBuyModal} size="sm" className="rounded-lg font-semibold shrink-0">
+                Get Credits
+              </Button>
+            </div>
+          )}
+
           {recreateSource && (
             <Alert className="border-primary/20 bg-primary/5 mb-2">
               <AlertDescription>
