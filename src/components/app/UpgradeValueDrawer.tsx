@@ -174,9 +174,9 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
               return (
                 <div
                   key={planId}
-                  className={`rounded-2xl p-3 space-y-2 transition-all ${
+                  className={`rounded-2xl p-4 space-y-3 transition-all ${
                     recommended
-                      ? 'border-2 border-primary/50 bg-gradient-to-b from-primary/[0.06] to-primary/[0.02] ring-1 ring-primary/20 shadow-sm'
+                      ? 'border-2 border-primary/60 bg-gradient-to-b from-primary/[0.06] to-primary/[0.02] ring-1 ring-primary/20 shadow-lg shadow-primary/5'
                       : 'border border-border/40 hover:border-border/60'
                   }`}
                 >
