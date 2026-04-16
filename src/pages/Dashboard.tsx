@@ -579,7 +579,11 @@ export default function Dashboard() {
           description={(lastJob?.workflows as any)?.name || 'No recent workflow'}
           action={lastJob ? {
             label: 'Continue',
-            onClick: () => navigate(`/app/generate/${(lastJob.workflows as any)?.slug || 'product-on-model'}`),
+            onClick: () => {
+              const slug = (lastJob.workflows as any)?.slug || 'product-images';
+              const routeMap: Record<string, string> = { 'product-on-model': 'product-images' };
+              navigate(`/app/generate/${routeMap[slug] || slug}`);
+            },
           } : undefined}
           tooltip={{ text: "Pick up where you left off", memberName: "Sophia", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 }) }}
         />
@@ -607,43 +611,42 @@ export default function Dashboard() {
       {/* Recent Creations Gallery */}
       <RecentCreationsGallery />
 
-      {/* Create */}
+      {/* Tools */}
       <div className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Create</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-              <Layers className="w-5 h-5 text-primary" />
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Tools</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-2xl border border-border bg-card p-5 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+              <Layers className="w-4.5 h-4.5 text-primary" />
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-foreground">Templates</h3>
-              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                Outcome-driven visual sets — Try-On, Product Listing, UGC, Flat Lay. Pick a template and get a complete set.
-              </p>
-            </div>
-            <Button className="w-full rounded-full font-semibold gap-2 mt-4 shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
-              Visual Studio
-              <ArrowRight className="w-4 h-4" />
+            <h3 className="text-sm font-bold text-foreground">Create Product Visuals</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed flex-1">Brand-ready visuals tailored to your product and category.</p>
+            <Button className="w-full rounded-full font-semibold gap-1.5 mt-3 h-9 text-xs shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
+              Open <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
-          <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-              <Sparkles className="w-5 h-5 text-primary" />
+          <div className="rounded-2xl border border-border bg-card p-5 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+              <Wand2 className="w-4.5 h-4.5 text-primary" />
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-foreground">Freestyle Studio</h3>
-              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                Full creative control - mix prompts, products, models, scenes, and brand profiles to generate any image you imagine.
-              </p>
+            <h3 className="text-sm font-bold text-foreground">Create with Prompt</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed flex-1">Describe any shot, scene, or style you want to create.</p>
+            <Button variant="outline" className="w-full rounded-full font-semibold gap-1.5 mt-3 h-9 text-xs" onClick={() => navigate('/app/freestyle')}>
+              Open <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-5 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+              <Compass className="w-4.5 h-4.5 text-primary" />
             </div>
-            <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4" onClick={() => navigate('/app/freestyle')}>
-              Open Studio
-              <ArrowRight className="w-4 h-4" />
+            <h3 className="text-sm font-bold text-foreground">Explore Examples</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed flex-1">Browse real examples and recreate them with your product.</p>
+            <Button variant="outline" className="w-full rounded-full font-semibold gap-1.5 mt-3 h-9 text-xs" onClick={() => navigate('/app/discover')}>
+              Open <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
       </div>
-
 
 
       {/* Recent Jobs */}
@@ -761,8 +764,6 @@ export default function Dashboard() {
       </div>
       </div>
 
-      {/* Activity Feed */}
-      <ActivityFeed />
 
 
       {/* Feedback Banner */}
