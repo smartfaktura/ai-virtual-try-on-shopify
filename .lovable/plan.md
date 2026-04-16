@@ -1,21 +1,30 @@
 
 
-## Changes
+## Change
 
-### 1. `UpgradePlanModal.tsx`
-- Rename **"See all plans"** button → **"Compare plans"**
-- Change `handleSeeAll` to navigate to `/app/pricing` instead of `/app/settings`
-- Apply to both variants (upgrade + topup) for consistency — currently only upgrade variant shows it; topup variant shows "Maybe later". Keep "Maybe later" for topup, only rename in upgrade variant.
+Center the "You'll be securely redirected to complete checkout" line (with lock icon) so it visually matches the centered "Cancel anytime · No commitment" line above it.
 
-### 2. Hide `LowCreditsBanner` on `/app/pricing`
-The banner ("You're out of credits / Get Credits") is rendered somewhere in the app shell. Need to find where `LowCreditsBanner` is mounted and conditionally hide it when `location.pathname === '/app/pricing'`.
+## File
 
-Quick discovery needed: search for `<LowCreditsBanner` to find mount point, then add a `useLocation()` check to skip rendering on `/app/pricing`.
+`src/components/app/UpgradePlanModal.tsx`
 
-## Files to edit
-- `src/components/app/UpgradePlanModal.tsx` — button text + navigate target
-- Wherever `LowCreditsBanner` is mounted (likely `AppShell` or similar) — add pathname guard
+Currently (around line 326):
+```tsx
+<div className="px-6 sm:px-8 pb-5 pt-0 flex items-center gap-1.5 text-xs text-muted-foreground">
+  <Lock className="w-3 h-3" />
+  <span>You'll be securely redirected to complete checkout</span>
+</div>
+```
 
-## Out of scope
-- No data, Stripe, or other modal logic changes.
+Change to add `justify-center`:
+```tsx
+<div className="px-6 sm:px-8 pb-5 pt-0 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+  <Lock className="w-3 h-3" />
+  <span>You'll be securely redirected to complete checkout</span>
+</div>
+```
+
+## Result
+
+Both reassurance lines (Cancel anytime + secure redirect) are centered and visually aligned, applied to both upgrade and topup variants since they share this footer block.
 
