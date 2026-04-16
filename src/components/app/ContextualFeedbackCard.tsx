@@ -143,29 +143,42 @@ export function ContextualFeedbackCard({
   if (step === 'step1') {
     return (
       <div className={cn('flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 px-4 py-3 sm:py-2 rounded-xl sm:rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm w-full sm:w-auto">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 whitespace-nowrap">Help Us Improve ·</span>
-            <span className="text-xs font-medium text-muted-foreground flex-1">{questionText}</span>
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3 px-4 py-3 sm:py-2 rounded-xl sm:rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm w-full sm:w-auto">
+          {/* Row 1: label + dismiss */}
+          <div className="flex items-center justify-between sm:contents">
+            <div className="flex items-center gap-1.5">
+              <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40">
+                Help Us Improve
+              </span>
+            </div>
             <button
               onClick={dismiss}
-              className="sm:hidden text-muted-foreground/50 hover:text-muted-foreground transition-opacity shrink-0"
+              className="sm:hidden text-muted-foreground/40 hover:text-muted-foreground transition-opacity"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+
+          {/* Row 2: question */}
+          <span className="text-sm sm:text-xs font-medium text-foreground/70 sm:text-muted-foreground sm:flex-1">
+            {questionText}
+          </span>
+
+          {/* Row 3: buttons */}
+          <div className="flex gap-2 sm:gap-1.5 w-full sm:w-auto">
             {(['yes', 'almost', 'no'] as const).map(key => (
               <button
                 key={key}
                 onClick={() => handleAnswer(key)}
-                className="flex-1 min-w-[70px] sm:flex-initial px-2.5 py-1 rounded-full text-[11px] font-medium border border-border text-foreground/60 hover:bg-background hover:text-foreground transition-colors text-center"
+                className="flex-1 sm:flex-initial px-2.5 py-1.5 sm:py-1 rounded-full text-[11px] font-medium border border-border text-foreground/60 hover:bg-background hover:text-foreground transition-colors text-center"
               >
                 {buttonLabels[key]}
               </button>
             ))}
           </div>
+
+          {/* Desktop dismiss */}
           <button
             onClick={dismiss}
             className="hidden sm:block ml-0.5 text-muted-foreground/50 hover:text-muted-foreground transition-opacity shrink-0"
