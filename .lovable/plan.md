@@ -1,46 +1,39 @@
 
 
-# Inline Upgrade Card — Responsive Fix + Accent Color
+# Value Drawer — Adaptive Height Fix
 
-## Problems from screenshots
+## Problem
+The drawer uses `h-full` on the inner container and `flex-1` with `justify-between` on the plan cards section, but the `SheetContent` has `overflow-y-auto` which prevents `h-full` from resolving to the viewport height. The cards don't stretch to fill the screen — they cluster with whitespace below.
 
-1. **Headline text truncates** — "Your first f..." is cut off because `truncate` clips it and the chips + CTA compete for horizontal space
-2. **Left accent line uses `primary/60` gradient** — fades to near-invisible; should be solid `primary` for brand presence
-3. **Mobile layout breaks** — chips and CTA overflow on narrow screens; all 3 chips + button + X don't fit in one row
-4. **No responsive breakpoint between phone and desktop** — jumps from stacked (< sm) to single row (≥ sm) with no intermediate
+## Fix — `UpgradeValueDrawer.tsx`
 
-## Changes — `PostGenerationUpgradeCard.tsx`
+1. **Make inner container fill viewport** — Change wrapper from `h-full` to `min-h-full` so it expands properly within the scrollable sheet. The SheetContent already handles overflow.
 
-### 1. Accent line → solid primary
-Replace the gradient `from-primary/60 via-primary/20 to-primary/60` with a simple `bg-primary` for a clean, visible brand accent
+2. **Plan cards section adapts** — Keep `flex-1` on the cards container but replace `justify-between` with `gap-3` only. On tall screens the cards naturally spread; on short screens they stack without forcing awkward gaps.
 
-### 2. Headline — allow wrapping on mobile, truncate only on desktop
-- Mobile: remove `truncate`, let headline wrap to 2 lines with `line-clamp-2`
-- Desktop (sm+): keep `truncate` for single-line compactness
+3. **Remove fixed `pb-8`** — Replace with `pb-safe` or just `pb-5` so it doesn't eat space on small screens.
 
-### 3. Chips — hide on mobile, show from `md` up
-- The 3 chips don't fit on small screens alongside the CTA. Hide them below `md` breakpoint entirely
-- On mobile, the headline itself ("Your first fashion direction is ready") provides enough context
-- Remove the duplicate mobile chips section completely
+4. **Compact plan cards on small viewports** — Reduce `space-y-3` to `space-y-2` and `p-4` to `p-3` inside each card. Price font stays `text-2xl`. This saves ~40px total across 3 cards.
 
-### 4. CTA row — always visible, right-aligned
-- Mobile: headline on row 1, CTA button + X on row 2, right-aligned
-- Desktop: everything in one row as designed
+5. **Header tightening** — Reduce `pt-10` to `pt-6` and `pb-5` on header/pills to `pb-3` — reclaims ~30px for the cards.
 
-### 5. Button — ensure minimum touch target
-- Keep `h-7 text-xs px-4` but add `whitespace-nowrap` to prevent button text from wrapping
+6. **SheetContent height** — Add `h-full` to SheetContent so the flex column resolves against the actual viewport, not content height. Remove `overflow-y-auto` from SheetContent and instead put `overflow-y-auto` on the inner wrapper so flex layout works against the fixed viewport height.
 
-### Layout structure after fix:
-
+### Resulting structure:
 ```text
-Mobile (< md):
-[accent] [avatar] [headline — wraps to 2 lines if needed]
-         [                    ] [See Plans] [×]
-
-Desktop (≥ md):
-[accent] [avatar] [headline] [chip · chip · chip] ——— [See Plans] [×]
+SheetContent (h-full, no scroll)
+  └─ div.flex.flex-col.h-full.overflow-y-auto  ← scrolls if needed
+       ├─ Header (compact pt-6)
+       ├─ Pills (pb-3)
+       ├─ Context row (optional)
+       └─ Cards section (flex-1, gap-3)
+            ├─ Starter card (p-3)
+            ├─ Growth card (p-3)
+            └─ Pro card (p-3, mb-5)
 ```
 
-## No other files change
-Parent wrappers in Freestyle, Generate, and TextToProduct remain as-is.
+On tall screens: cards distribute with natural spacing. On short screens: content scrolls gracefully. No wasted whitespace.
+
+## Single file change
+`src/components/app/UpgradeValueDrawer.tsx`
 
