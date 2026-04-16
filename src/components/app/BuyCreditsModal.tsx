@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Check, ArrowUpRight, ArrowRight, X, Loader2, Building2 } from 'lucide-react';
+import { Check, ArrowUpRight, ArrowRight, X, Loader2, Building2 } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
@@ -130,43 +130,35 @@ export function BuyCreditsModal() {
         <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100">
 
           {/* Balance header */}
-          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border/40 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-muted">
-                <Wallet className="w-4 h-4 text-foreground" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold tracking-tight">{balance.toLocaleString()}</span>
-                  <span className="text-xs text-muted-foreground">credits</span>
-                </div>
-                {isPaidUser && currentPeriodEnd && (
-                  <p className={`text-[11px] mt-0.5 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
-                    {subscriptionStatus === 'canceling'
-                      ? `Cancels ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                      : `Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · billed ${effectiveInterval || 'monthly'}`
-                    }
-                  </p>
-                )}
-              </div>
+          <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border/40 flex items-start justify-between">
+            <div>
+              <p className="text-xl font-bold tracking-tight">
+                {balance.toLocaleString()} credits remaining
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Choose a plan to keep creating
+              </p>
+              {isPaidUser && currentPeriodEnd && (
+                <p className={`text-[11px] mt-1 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                  {subscriptionStatus === 'canceling'
+                    ? `Cancels ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                    : `Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · billed ${effectiveInterval || 'monthly'}`
+                  }
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-3 py-1">
-                {planConfig.name}
-              </Badge>
-              <button
-                onClick={() => { if (!anyLoading) closeBuyModal(); }}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
-                disabled={anyLoading}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            <button
+              onClick={() => { if (!anyLoading) closeBuyModal(); }}
+              className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
+              disabled={anyLoading}
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Tab switcher + billing toggle — single row */}
-          <div className="px-4 sm:px-6 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
-            {showTabs ? (
+          {/* Tab switcher only */}
+          {showTabs && (
+            <div className="px-4 sm:px-6 pt-3 pb-1">
               <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
                 {(['topup', 'upgrade'] as const).map(tab => (
                   <button
@@ -182,39 +174,8 @@ export function BuyCreditsModal() {
                   </button>
                 ))}
               </div>
-            ) : (
-              <div />
-            )}
-            {activeTab === 'upgrade' && (
-              <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
-                <button
-                  className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all ${
-                    billingPeriod === 'monthly'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  onClick={() => setBillingPeriod('monthly')}
-                >
-                  Monthly
-                </button>
-                <button
-                  className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1 ${
-                    billingPeriod === 'annual'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  onClick={() => setBillingPeriod('annual')}
-                >
-                  Annual
-                  <span className={`inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none ${
-                    billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
-                  }`}>
-                    SAVE 20%
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Content */}
           <div className="px-4 sm:px-6 pb-6 pt-5 overflow-y-auto flex-1 min-h-0">
@@ -343,10 +304,41 @@ export function BuyCreditsModal() {
 
                 {/* Contextual subtitle for free users */}
                 {isFreeUser(plan) && (
-                  <p className="text-sm text-muted-foreground">
-                    Pick a plan to keep creating with better value as you scale
+                  <p className="text-xs text-muted-foreground">
+                    Better value on larger plans
                   </p>
                 )}
+
+                {/* Billing toggle — directly above cards */}
+                <div className="flex justify-center">
+                  <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+                    <button
+                      className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all ${
+                        billingPeriod === 'monthly'
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      onClick={() => setBillingPeriod('monthly')}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1 ${
+                        billingPeriod === 'annual'
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      onClick={() => setBillingPeriod('annual')}
+                    >
+                      Annual
+                      <span className={`inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none ${
+                        billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
+                      }`}>
+                        SAVE 20%
+                      </span>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Focused "Switch to Annual" card for monthly users viewing annual prices */}
                 {showAnnualSwitchCard && (
@@ -478,21 +470,19 @@ export function BuyCreditsModal() {
                           )}
                         </div>
 
-                        {/* Metrics block */}
-                        <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2.5 mb-3 space-y-1">
+                        {/* Metrics — flat, no inner box */}
+                        <div className="mb-3 space-y-0.5">
                           {imageEstimate ? (
                             <>
-                              <p className="text-sm font-semibold tracking-tight">~{imageEstimate} images/mo</p>
+                              <p className="text-sm font-medium">~{imageEstimate} images/mo</p>
                               <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
                               {displayPrice > 0 && (
-                                <div className="pt-0.5">
-                                  <span className="inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
+                                <p className="text-[11px] text-primary font-semibold mt-1">
+                                  ${(displayPrice / credits).toFixed(3)}/credit
+                                  <span className="ml-1.5 inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
                                     {valueLabel}
                                   </span>
-                                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                                    ${(displayPrice / credits).toFixed(3)}/credit
-                                  </p>
-                                </div>
+                                </p>
                               )}
                             </>
                           ) : (
