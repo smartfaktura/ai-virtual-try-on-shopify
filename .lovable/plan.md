@@ -1,23 +1,26 @@
 
 
-# Show Feedback Form After Every Product Images Generation
+# Show Feedback Survey Every 3rd Generation + Add "Survey" Badge
 
 ## Problem
-The `ContextualFeedbackCard` uses `sessionStorage` with a fixed key (`vovv_fb_dismiss_product-visuals`) to suppress re-display after dismissal or submission. Once a user interacts with it once, it never appears again for the entire browser session. Since every generation produces different results, the feedback form should appear fresh each time.
-
-## Solution
-Make the dismiss key unique per generation batch by appending the `resultId` (first product key from results). This way each new generation gets its own dismiss state and the card always appears.
+1. The feedback card shows after **every** generation — too repetitive for Freestyle/Product Images where users generate many times per session
+2. The new banner design lost the "Survey" or "HELP US IMPROVE" label that the old design had — it just shows the icon + question with no context badge
 
 ## Changes
 
-### `src/components/app/product-images/ProductImagesStep6Results.tsx`
-- Pass a unique `resultId` that changes per generation — already using `Array.from(results.keys())[0]`, which should differ per batch. No change needed here if that value changes per generation.
+### 1. Show only on every 3rd generation (`ContextualFeedbackCard.tsx`)
+- Add a `sessionStorage` counter per workflow: `vovv_fb_gen_count_{workflow}`
+- On mount, increment the counter. Only show the card when `count % 3 === 0` (i.e., 3rd, 6th, 9th generation)
+- First two generations: skip silently. Third: show the survey
+- This keeps the per-resultId dismiss logic intact — if shown and dismissed, it stays dismissed for that specific result
 
-### `src/components/app/ContextualFeedbackCard.tsx`
-- Change the dismiss key from `vovv_fb_dismiss_{workflow}` to `vovv_fb_dismiss_{workflow}_{resultId}` so each generation gets a fresh card
-- If `resultId` is provided, include it in the key; otherwise fall back to workflow-only key for other usages
+### 2. Add "Survey" badge to Step 1 banner
+- Add a small `Badge` with text "Survey" (or "HELP US IMPROVE") next to the `MessageSquarePlus` icon, before the question text
+- Style: `variant="secondary"` with `text-[10px] uppercase tracking-wider font-semibold` to match the platform's label aesthetic
+- This gives users context that it's a quick survey, not a random UI element
 
+## File
 | File | Change |
 |------|--------|
-| `src/components/app/ContextualFeedbackCard.tsx` | Line 46: Include `resultId` in dismiss key |
+| `src/components/app/ContextualFeedbackCard.tsx` | Add generation counter logic (lines 50-57), add "Survey" badge to Step 1 (line 156-158) and Step 2 header |
 
