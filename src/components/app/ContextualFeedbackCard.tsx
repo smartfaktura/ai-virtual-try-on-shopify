@@ -52,13 +52,15 @@ export function ContextualFeedbackCard({
       setStep('dismissed');
       return;
     }
-    // Show only on every 3rd generation per workflow
-    const countKey = `vovv_fb_gen_count_${workflow}`;
-    const count = parseInt(sessionStorage.getItem(countKey) || '0', 10) + 1;
-    sessionStorage.setItem(countKey, String(count));
-    if (count !== 3) {
-      setStep('dismissed');
-      return;
+    // Freestyle: only show on the 3rd generation, then never again
+    if (workflow === 'freestyle') {
+      const countKey = `vovv_fb_gen_count_freestyle`;
+      const count = parseInt(sessionStorage.getItem(countKey) || '0', 10) + 1;
+      sessionStorage.setItem(countKey, String(count));
+      if (count !== 3) {
+        setStep('dismissed');
+        return;
+      }
     }
     const t = setTimeout(() => setStep('step1'), 2000);
     return () => clearTimeout(t);
