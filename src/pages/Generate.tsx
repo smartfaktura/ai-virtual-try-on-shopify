@@ -4561,7 +4561,7 @@ export default function Generate() {
           modelName: Array.from(selectedModelMap.values())[0]?.name,
         }}
       />
-      <FeedbackBanner />
+      
     </PageHeader>
   );
 }
