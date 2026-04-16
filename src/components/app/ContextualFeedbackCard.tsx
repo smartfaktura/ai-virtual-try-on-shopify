@@ -151,44 +151,35 @@ export function ContextualFeedbackCard({
   if (step === 'step1') {
     return (
       <div className={cn('animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
-        <div className={cn(bannerClass, 'flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:gap-3 md:px-4 md:py-3')}>
-          {/* Row 1: icon + badge + dismiss */}
-          <div className="flex items-center justify-between md:justify-start md:gap-2.5 md:min-w-0 md:flex-1">
+      <div className={cn(bannerClass, 'flex flex-col gap-3 px-4 py-4')}>
+          {/* Header: icon + badge + dismiss */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
-              {/* Desktop: question inline */}
-              <p className="hidden md:block text-sm text-muted-foreground">{questionText}</p>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Help us improve</Badge>
             </div>
             <button
               onClick={dismiss}
-              className="text-muted-foreground/50 hover:text-muted-foreground transition-colors shrink-0 md:hidden"
+              className="text-muted-foreground/50 hover:text-muted-foreground transition-colors shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Row 2 (mobile only): question text */}
-          <p className="text-sm text-muted-foreground md:hidden">{questionText}</p>
+          {/* Question text */}
+          <p className="text-sm text-muted-foreground">{questionText}</p>
 
-          {/* Row 3: answer buttons */}
+          {/* Answer buttons */}
           <div className="flex items-center gap-2">
             {(['yes', 'almost', 'no'] as const).map(key => (
               <button
                 key={key}
                 onClick={() => handleAnswer(key)}
-                className="flex-1 md:flex-initial inline-flex items-center justify-center rounded-full border border-input bg-background px-4 min-h-[44px] md:min-h-0 md:h-8 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground active:scale-[0.97] transition-all"
+                className="flex-1 inline-flex items-center justify-center rounded-full border border-input bg-background px-4 min-h-[36px] text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground active:scale-[0.97] transition-all"
               >
                 {buttonLabels[key]}
               </button>
             ))}
-            {/* Desktop dismiss */}
-            <button
-              onClick={dismiss}
-              className="hidden md:block ml-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors shrink-0"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       </div>
@@ -198,12 +189,12 @@ export function ContextualFeedbackCard({
   // Step 2: Expanded panel
   return (
     <div className={cn('animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
-      <div className={cn(bannerClass, 'space-y-3.5 px-4 py-4 md:space-y-3 md:px-4 md:py-3')}>
+      <div className={cn(bannerClass, 'space-y-3 px-4 py-4')}>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Help us improve</Badge>
             </div>
             <button onClick={dismiss} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
               <X className="w-4 h-4" />
@@ -217,7 +208,7 @@ export function ContextualFeedbackCard({
               key={chip}
               variant={selectedReasons.has(chip) ? 'default' : 'outline'}
               className={cn(
-                'text-[11px] cursor-pointer transition-colors select-none min-h-[36px] px-3 py-1.5 md:min-h-0 md:px-2.5 md:py-0.5',
+                'text-[11px] cursor-pointer transition-colors select-none min-h-[32px] px-3 py-1',
                 selectedReasons.has(chip)
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-accent',
@@ -233,19 +224,19 @@ export function ContextualFeedbackCard({
           onChange={e => setTextNote(e.target.value.slice(0, 160))}
           placeholder={textPlaceholder}
           rows={2}
-          className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm md:text-xs md:py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
         />
-        <div className="flex items-center justify-center md:justify-end gap-2">
+        <div className="flex items-center justify-end gap-2">
           <button
             onClick={handleSkip}
-            className="inline-flex items-center justify-center min-h-[44px] md:min-h-0 text-xs text-muted-foreground hover:text-foreground transition-colors px-4 py-1"
+            className="inline-flex items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors px-4 py-1"
           >
             Skip
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="inline-flex items-center justify-center rounded-full border border-input bg-background px-6 min-h-[44px] md:min-h-0 md:h-8 md:px-5 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-full border border-input bg-background px-5 h-8 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
           >
             Send feedback
           </button>
