@@ -341,6 +341,12 @@ export function BuyCreditsModal() {
             {activeTab === 'upgrade' && (
               <div className="space-y-4">
 
+                {/* Contextual subtitle for free users */}
+                {isFreeUser(plan) && (
+                  <p className="text-sm text-muted-foreground">
+                    Pick a plan to keep creating with better value as you scale
+                  </p>
+                )}
 
                 {/* Focused "Switch to Annual" card for monthly users viewing annual prices */}
                 {showAnnualSwitchCard && (
@@ -379,41 +385,83 @@ export function BuyCreditsModal() {
                     const credits = typeof p.credits === 'number' ? p.credits : 0;
                     const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
 
-                    let ctaLabel = targetIdx > currentIdx ? `Choose ${p.name}` : targetIdx < currentIdx ? `Downgrade to ${p.name}` : `Choose ${p.name}`;
+                    const PLAN_DESCRIPTORS: Record<string, string> = {
+                      starter: 'Best to start',
+                      growth: 'Best value for growing brands',
+                      pro: 'Best for high-volume production',
+                    };
+                    const PLAN_VALUE_LABELS: Record<string, string> = {
+                      starter: 'Better than Free',
+                      growth: 'Better value',
+                      pro: 'Best value',
+                    };
+                    const PLAN_CTA_MAP: Record<string, string> = {
+                      starter: 'Start with Starter',
+                      growth: 'Get Growth',
+                      pro: 'Choose Pro',
+                    };
+                    const PLAN_DIFFERENTIATORS: Record<string, { text: string; badge?: string }[]> = {
+                      starter: [
+                        { text: 'Bulk generations' },
+                        { text: 'Up to 100 products' },
+                      ],
+                      growth: [
+                        { text: 'Faster generation queue' },
+                        { text: 'Brand Models', badge: 'NEW' },
+                      ],
+                      pro: [
+                        { text: 'Fastest generation queue' },
+                        { text: 'Brand Models', badge: 'NEW' },
+                      ],
+                    };
+
+                    const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
+                    const valueLabel = PLAN_VALUE_LABELS[p.planId] ?? '';
+                    const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
+
+                    let ctaLabel = PLAN_CTA_MAP[p.planId] ?? `Choose ${p.name}`;
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
                     else if (isCurrent) ctaLabel = 'Current Plan';
+                    else if (targetIdx < currentIdx) ctaLabel = `Downgrade to ${p.name}`;
                     const isDisabled = isCurrent && subscriptionStatus !== 'canceling';
 
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-4 sm:p-5 flex flex-col transition-all duration-200 ${
+                        className={`relative rounded-2xl p-4 sm:p-5 pt-6 flex flex-col transition-all duration-200 ${
                           isCurrent && p.planId !== 'free'
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
-                              ? 'border-2 border-primary/60 bg-card'
+                              ? 'border-2 border-primary bg-primary/[0.03] shadow-md shadow-primary/5'
                               : 'border border-border bg-card hover:shadow-sm'
                         }`}
                       >
-                        {/* Name + badges inline */}
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          <h4 className="text-base font-semibold">{p.name}</h4>
-                          {p.badge && (plan === 'free' || targetIdx > currentIdx) && (
-                            <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-2 py-0.5">
-                              {p.badge}
+                        {/* Most Popular badge for highlighted */}
+                        {p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) && (
+                          <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
+                            <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-3 py-0.5 shadow-lg shadow-primary/20">
+                              Most Popular
                             </Badge>
-                          )}
-                          {isCurrent && (
-                            <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
+                          </div>
+                        )}
+
+                        {/* Name + descriptor */}
+                        <div className="mb-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-base font-semibold">{p.name}</h4>
+                            {isCurrent && (
+                              <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
+                            )}
+                          </div>
+                          {descriptor && (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{descriptor}</p>
                           )}
                         </div>
 
                         {/* Price */}
-                        <div className="mb-1">
+                        <div className="mb-3">
                           {isFree ? (
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-2xl sm:text-3xl font-bold tracking-tight">Free</span>
-                            </div>
+                            <span className="text-2xl sm:text-3xl font-bold tracking-tight">Free</span>
                           ) : (
                             <>
                               <div className="flex items-baseline gap-1">
@@ -430,16 +478,21 @@ export function BuyCreditsModal() {
                           )}
                         </div>
 
-                        {/* Image estimate */}
-                        <div className="mb-4">
+                        {/* Metrics block */}
+                        <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2.5 mb-3 space-y-1">
                           {imageEstimate ? (
                             <>
-                              <p className="text-sm font-medium text-foreground">~{imageEstimate} images/mo</p>
+                              <p className="text-sm font-semibold tracking-tight">~{imageEstimate} images/mo</p>
                               <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
                               {displayPrice > 0 && (
-                                <p className="text-[10px] text-primary font-medium mt-0.5">
-                                  {(displayPrice / credits * 100).toFixed(1)}¢ per credit
-                                </p>
+                                <div className="pt-0.5">
+                                  <span className="inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
+                                    {valueLabel}
+                                  </span>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    ${(displayPrice / credits).toFixed(3)}/credit
+                                  </p>
+                                </div>
                               )}
                             </>
                           ) : (
@@ -447,21 +500,17 @@ export function BuyCreditsModal() {
                           )}
                         </div>
 
-                        {/* Features */}
-                        <div className="space-y-2 flex-1 mb-4">
-                          {p.features.map((f, i) => (
+                        {/* Differentiators */}
+                        <div className="space-y-1.5 flex-1 mb-4">
+                          {differentiators.map((feat, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                              <span className="text-[11px] text-muted-foreground leading-snug">
-                                {typeof f === 'string' ? f : (
-                                  <span className="inline-flex items-center gap-1.5">
-                                    {f.text}
-                                    {f.badge && (
-                                      <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
-                                        {f.badge}
-                                      </Badge>
-                                    )}
-                                  </span>
+                              <span className="text-[11px] text-muted-foreground leading-snug inline-flex items-center gap-1.5">
+                                {feat.text}
+                                {feat.badge && (
+                                  <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+                                    {feat.badge}
+                                  </Badge>
                                 )}
                               </span>
                             </div>
@@ -470,7 +519,7 @@ export function BuyCreditsModal() {
 
                         {/* CTA */}
                         <Button
-                          variant={isDisabled ? 'secondary' : targetIdx > currentIdx ? 'default' : 'outline'}
+                          variant={isDisabled ? 'secondary' : (p.highlighted && (plan === 'free' || targetIdx > currentIdx)) ? 'default' : 'outline'}
                           className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
                           onClick={() => handlePlanSelect(p.planId)}
                           disabled={isDisabled}
@@ -482,15 +531,25 @@ export function BuyCreditsModal() {
                   })}
                 </div>
 
-                {/* Bottom links */}
-                <div>
-                  <button
-                    onClick={() => handlePlanSelect('enterprise')}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                  >
-                    Need more? Contact Sales
-                    <ArrowUpRight className="w-3 h-3" />
-                  </button>
+                {/* Reassurance + links */}
+                <div className="space-y-2 pt-1">
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
+                  </p>
+                  <div className="flex items-center justify-center gap-3">
+                    <a href="/app/pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+                      Compare all features
+                      <ArrowUpRight className="w-3 h-3" />
+                    </a>
+                    <span className="text-muted-foreground/30">·</span>
+                    <button
+                      onClick={() => handlePlanSelect('enterprise')}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                    >
+                      Contact Sales
+                      <ArrowUpRight className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

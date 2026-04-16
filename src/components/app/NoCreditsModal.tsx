@@ -20,18 +20,36 @@ const subscribablePlans = pricingPlans.filter(
   (p) => p.planId !== 'free' && !p.isEnterprise,
 );
 
-const MODAL_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> = {
+const PLAN_DESCRIPTORS: Record<string, string> = {
+  starter: 'Best to start',
+  growth: 'Best value for growing brands',
+  pro: 'Best for high-volume production',
+};
+
+const PLAN_VALUE_LABELS: Record<string, string> = {
+  starter: 'Better than Free',
+  growth: 'Better value',
+  pro: 'Best value',
+};
+
+const PLAN_CTA_LABELS: Record<string, string> = {
+  starter: 'Start with Starter',
+  growth: 'Get Growth',
+  pro: 'Choose Pro',
+};
+
+const PLAN_DIFFERENTIATORS: Record<string, { text: string; badge?: string }[]> = {
   starter: [
-    { text: '$0.078 per credit' },
+    { text: 'Bulk generations' },
     { text: 'Up to 100 products' },
   ],
   growth: [
-    { text: '$0.053 per credit' },
+    { text: 'Faster generation queue' },
     { text: 'Brand Models', badge: 'NEW' },
   ],
   pro: [
-    { text: '$0.040 per credit' },
-    { text: 'Unlimited products & profiles' },
+    { text: 'Fastest generation queue' },
+    { text: 'Brand Models', badge: 'NEW' },
   ],
 };
 
@@ -55,6 +73,11 @@ function FreePlanSection({
 
   return (
     <div className="space-y-5">
+      {/* Subtitle */}
+      <p className="text-sm text-muted-foreground text-center">
+        Better value as you scale — all plans include 1,000+ scenes
+      </p>
+
       {/* Billing toggle */}
       <div className="flex justify-center">
         <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
@@ -86,13 +109,20 @@ function FreePlanSection({
         {displayPlans.map((p) => {
           const isHighlighted = p.highlighted;
           const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+          const credits = typeof p.credits === 'number' ? p.credits : 0;
+          const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
+          const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
+          const valueLabel = PLAN_VALUE_LABELS[p.planId] ?? '';
+          const ctaLabel = PLAN_CTA_LABELS[p.planId] ?? `Choose ${p.name}`;
+          const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
+
           return (
             <div
               key={p.planId}
-              className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+              className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col ${
                 isHighlighted
-                  ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
-                  : 'border-border/60 hover:border-primary/30 bg-background'
+                  ? 'border-2 border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
+                  : 'border-2 border-border/60 hover:border-primary/30 bg-background'
               }`}
             >
               {isHighlighted && (
@@ -102,9 +132,16 @@ function FreePlanSection({
                   </Badge>
                 </div>
               )}
-              <div className="p-5 sm:p-6 space-y-3">
-                <p className="text-sm font-bold tracking-tight">{p.name}</p>
+              <div className="p-5 sm:p-6 pt-6 flex flex-col flex-1 space-y-3">
+                {/* Plan name + descriptor */}
+                <div>
+                  <p className="text-sm font-bold tracking-tight">{p.name}</p>
+                  {descriptor && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{descriptor}</p>
+                  )}
+                </div>
 
+                {/* Price */}
                 <div className="space-y-0.5">
                   <div className="flex items-baseline justify-center gap-0.5">
                     {isAnnual && p.monthlyPrice > displayPrice && (
@@ -118,25 +155,29 @@ function FreePlanSection({
                   )}
                 </div>
 
-                <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2 space-y-0.5">
-                  <p className="text-lg font-bold tracking-tight">
-                    {typeof p.credits === 'number' ? p.credits.toLocaleString() : p.credits}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">credits/mo</p>
-                  {typeof p.credits === 'number' && p.credits > 0 && (
-                    <p className="text-[10px] text-muted-foreground">
-                      ≈ {Math.round(p.credits / 5)} images
-                    </p>
+                {/* Metrics block */}
+                <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2.5 space-y-1">
+                  {imageEstimate && (
+                    <p className="text-sm font-semibold tracking-tight">~{imageEstimate} images/mo</p>
                   )}
-                  {displayPrice > 0 && typeof p.credits === 'number' && p.credits > 0 && (
-                    <p className="text-[10px] text-primary/80 font-medium">
-                      ${(displayPrice / p.credits).toFixed(3)}/credit
-                    </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {credits > 0 ? credits.toLocaleString() : p.credits} credits/mo
+                  </p>
+                  {displayPrice > 0 && credits > 0 && (
+                    <div className="pt-0.5">
+                      <span className="inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
+                        {valueLabel}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        ${(displayPrice / credits).toFixed(3)}/credit
+                      </p>
+                    </div>
                   )}
                 </div>
 
-                <div className="space-y-1.5 text-left">
-                  {(MODAL_PLAN_FEATURES[p.planId] ?? []).map((feat, i) => (
+                {/* Differentiators */}
+                <div className="space-y-1.5 text-left flex-1">
+                  {differentiators.map((feat, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
                       <span className="text-[11px] text-muted-foreground leading-tight inline-flex items-center gap-1.5">
@@ -151,18 +192,26 @@ function FreePlanSection({
                   ))}
                 </div>
 
-                <Button
-                  variant={isHighlighted ? 'default' : 'outline'}
-                  className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                  onClick={() => onPlanSelect(p, isAnnual)}
-                >
-                  Choose {p.name}
-                </Button>
+                {/* CTA */}
+                <div className="pt-3">
+                  <Button
+                    variant={isHighlighted ? 'default' : 'outline'}
+                    className="w-full min-h-[44px] rounded-xl text-sm font-medium"
+                    onClick={() => onPlanSelect(p, isAnnual)}
+                  >
+                    {ctaLabel}
+                  </Button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Reassurance */}
+      <p className="text-[11px] text-muted-foreground text-center">
+        All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
+      </p>
     </div>
   );
 }
