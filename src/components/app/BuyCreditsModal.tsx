@@ -271,12 +271,35 @@ export function BuyCreditsModal() {
                     })}
                   </div>
 
-                  <button
-                    onClick={() => setActiveTab('upgrade')}
-                    className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-                  >
-                    Or upgrade your plan for monthly credits →
-                  </button>
+                  {showTabs && (
+                    <button
+                      onClick={() => setActiveTab('upgrade')}
+                      className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+                    >
+                      Or upgrade your plan for monthly credits →
+                    </button>
+                  )}
+
+                  {/* Enterprise CTA for Pro users */}
+                  {isPro(plan) && (
+                    <div className="rounded-2xl border border-border/50 bg-muted/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-primary/10">
+                          <Building2 className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm tracking-tight">Need more? Talk to our team</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Custom credit volumes, dedicated support & integrations</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" className="min-h-[44px] rounded-xl text-xs font-medium shrink-0" asChild>
+                        <a href="mailto:hello@vovv.ai">
+                          Contact Sales
+                          <ArrowUpRight className="w-3.5 h-3.5 ml-1.5" />
+                        </a>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })()}
