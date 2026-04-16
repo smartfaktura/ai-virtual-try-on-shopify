@@ -1,4 +1,4 @@
-import { Sparkles, ArrowUpRight, Plus } from 'lucide-react';
+import { Coins, ArrowUpRight, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
@@ -23,7 +23,7 @@ export function CreditIndicator() {
       {/* Plan name + Upgrade */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/40">
-          Your plan: {planConfig.name}
+          Your credits
         </span>
         {planConfig.nextPlanId && (
           <button
@@ -44,7 +44,7 @@ export function CreditIndicator() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-sidebar-foreground/70" />
+            <Coins className="w-3.5 h-3.5 text-sidebar-foreground/70" />
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-sm font-bold text-sidebar-foreground">{balance.toLocaleString()}</span>
