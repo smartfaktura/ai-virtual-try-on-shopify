@@ -817,7 +817,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             }}>Back</Button>
             <Button
               onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-              disabled={selectedVariationIndices.size === 0 || selectedAspectRatios.size === 0}
+              disabled={selectedVariationIndices.size === 0 || (!isInteriorDesign && selectedAspectRatios.size === 0)}
               className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
             >
               {balance >= creditCost ? 'Generate' : 'Buy Credits'}
