@@ -1024,7 +1024,9 @@ export default function ProductImages() {
                   );
                   setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
                 }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
-                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
+                {selectedProductIds.size > 0 && (
+                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
+                )}
               </div>
               )}
 
