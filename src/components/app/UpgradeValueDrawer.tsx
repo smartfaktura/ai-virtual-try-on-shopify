@@ -82,7 +82,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
         <div className="flex flex-col h-full overflow-y-auto p-5 pt-6">
 
           {/* Header */}
-          <SheetHeader className="space-y-2 pb-3">
+          <SheetHeader className="space-y-2 pb-3 text-left">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 ring-1 ring-border/40">
                 <AvatarImage src={avatarUrl} alt={avatar.name} />
