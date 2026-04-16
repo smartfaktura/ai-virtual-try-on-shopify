@@ -9,7 +9,7 @@ import { AddProductModal } from '@/components/app/AddProductModal';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Search, LayoutGrid, ChevronDown, Clock } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
-import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+
 import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
