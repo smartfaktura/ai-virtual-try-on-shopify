@@ -62,10 +62,13 @@ const PLAN_CARDS = [
 
 export function UpgradeValueDrawer({ open, onClose, category, generationContext }: UpgradeValueDrawerProps) {
   const { startCheckout } = useCredits();
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const copy = getLayer2Copy(category);
   const avatar = getLayer1Avatar(category);
+  const isAnnual = billing === 'annual';
 
-  const handleCheckout = (priceId: string | undefined) => {
+  const handleCheckout = (plan: typeof pricingPlans[number]) => {
+    const priceId = isAnnual ? plan.stripePriceIdAnnual : plan.stripePriceIdMonthly;
     if (!priceId) return;
     startCheckout(priceId, 'subscription');
     onClose();

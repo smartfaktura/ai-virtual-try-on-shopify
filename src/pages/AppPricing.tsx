@@ -12,7 +12,7 @@ import type { PricingPlan } from '@/types';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 
-const DETAILED_FEATURES: Record<string, string[]> = {
+const DETAILED_FEATURES: Record<string, (string | { text: string; badge: string })[]> = {
   free: [
     '20 credits / month',
     '~4 images',
@@ -40,7 +40,7 @@ const DETAILED_FEATURES: Record<string, string[]> = {
     '~300 images',
     '$0.053 per credit',
     'Faster generation queue',
-    'Brand Models',
+    { text: 'Brand Models', badge: 'NEW' },
     'All models & scenes',
     'Upscale to 2K & 4K',
     'Video generation',
@@ -52,7 +52,7 @@ const DETAILED_FEATURES: Record<string, string[]> = {
     '~900 images',
     '$0.040 per credit',
     'Fastest generation queue',
-    'Brand Models',
+    { text: 'Brand Models', badge: 'NEW' },
     'All models & scenes',
     'Upscale to 2K & 4K',
     'Video generation',
@@ -324,11 +324,6 @@ export default function AppPricing() {
                     {planId === plan && (
                       <Badge variant="secondary" className="text-[9px]">Current</Badge>
                     )}
-                    {(planId === 'growth' || planId === 'pro') && (
-                      <Badge className="text-[8px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
-                        NEW
-                      </Badge>
-                    )}
                   </div>
                   <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -337,7 +332,16 @@ export default function AppPricing() {
                     {features.map((feat, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                        <span className="text-sm text-muted-foreground">{feat}</span>
+                        <span className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
+                          {typeof feat === 'string' ? feat : (
+                            <>
+                              {feat.text}
+                              <Badge className="text-[8px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
+                                {feat.badge}
+                              </Badge>
+                            </>
+                          )}
+                        </span>
                       </div>
                     ))}
                   </div>
