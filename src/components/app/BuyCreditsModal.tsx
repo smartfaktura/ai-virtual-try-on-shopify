@@ -32,6 +32,13 @@ export function BuyCreditsModal() {
   const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
   const [switchLoading, setSwitchLoading] = useState(false);
 
+  // Reset tab when modal opens
+  useEffect(() => {
+    if (buyModalOpen) {
+      setActiveTab(isFreeUser(plan) ? 'upgrade' : 'topup');
+    }
+  }, [buyModalOpen, plan]);
+
   const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
