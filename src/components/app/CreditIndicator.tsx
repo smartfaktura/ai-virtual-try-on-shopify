@@ -16,7 +16,10 @@ export function CreditIndicator() {
   const isFree = plan === 'free';
 
   return (
-    <div className="p-3 rounded-xl bg-white/[0.06] space-y-3">
+    <div
+      onClick={() => navigate('/app/settings')}
+      className="p-4 rounded-xl bg-white/[0.06] space-y-3 cursor-pointer active:scale-[0.98] transition-all duration-150 hover:bg-white/[0.09]"
+    >
       {/* Plan name + Upgrade */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/40">
