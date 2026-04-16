@@ -405,9 +405,16 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
   };
 
   const toggleCategory = (catId: string) => {
-    const next = new Set(expandedCategories);
-    if (next.has(catId)) next.delete(catId); else next.add(catId);
-    setExpandedCategories(next);
+    if (expandedCategories.has(catId)) {
+      const next = new Set(expandedCategories);
+      next.delete(catId);
+      setExpandedCategories(next);
+    } else {
+      setExpandedCategories(new Set([catId]));
+      requestAnimationFrame(() => {
+        document.getElementById(`explore-cat-${catId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   };
 
 
@@ -596,6 +603,7 @@ function CategoryRowTrigger({ catId, catTitle, allScenes, selectedSceneIds, isOp
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
   return (
     <button
+      id={`explore-cat-${catId}`}
       onClick={onToggleOpen}
       className={`flex items-center justify-between w-full p-3 rounded-lg border transition-colors cursor-pointer ${
         isOpen ? 'border-primary/30 bg-primary/[0.03]' : 'border-border hover:bg-muted/30'
