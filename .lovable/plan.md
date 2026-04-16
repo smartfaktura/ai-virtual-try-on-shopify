@@ -1,39 +1,39 @@
 
 
-# Value Drawer — Adaptive Height Fix
+# Inline Upgrade Card — Admin Preview Width + Mobile Responsive Fix
 
-## Problem
-The drawer uses `h-full` on the inner container and `flex-1` with `justify-between` on the plan cards section, but the `SheetContent` has `overflow-y-auto` which prevents `h-full` from resolving to the viewport height. The cards don't stretch to fill the screen — they cluster with whitespace below.
+## Two problems
 
-## Fix — `UpgradeValueDrawer.tsx`
+1. **Admin preview is too narrow** — Desktop preview uses `max-w-[600px]`, which squeezes the card and truncates the headline ("Your first f..."). In real usage, Freestyle/Product Images containers are much wider. Should remove the max-width constraint on desktop so it stretches realistically.
 
-1. **Make inner container fill viewport** — Change wrapper from `h-full` to `min-h-full` so it expands properly within the scrollable sheet. The SheetContent already handles overflow.
+2. **Mobile preview doesn't actually trigger responsive breakpoints** — The admin page wraps the card in `max-w-[375px]` to simulate mobile, but the viewport is still desktop-width. So `md:flex` (chips), `md:truncate` (headline), and `md:flex-row` all still fire at desktop width. The card looks broken on "mobile" preview because chips show + headline gets pushed out. Fix: use container queries (`@container`) on the card so layout responds to the card's own width, not the viewport.
 
-2. **Plan cards section adapts** — Keep `flex-1` on the cards container but replace `justify-between` with `gap-3` only. On tall screens the cards naturally spread; on short screens they stack without forcing awkward gaps.
+## Changes
 
-3. **Remove fixed `pb-8`** — Replace with `pb-safe` or just `pb-5` so it doesn't eat space on small screens.
+### `PostGenerationUpgradeCard.tsx`
+- Wrap the card in a container query context (`@container`)
+- Replace all `md:` breakpoints with `@md:` (container query variants) so the card responds to its own width, not the viewport
+- This means: when the card is placed in a 375px wrapper (admin mobile preview) OR on an actual phone, chips hide and layout stacks — correctly
 
-4. **Compact plan cards on small viewports** — Reduce `space-y-3` to `space-y-2` and `p-4` to `p-3` inside each card. Price font stays `text-2xl`. This saves ~40px total across 3 cards.
+Tailwind CSS v3 supports container queries via `@tailwindcss/container-queries` plugin. Check if it's already installed; if not, use a simpler approach: pass a `compact` prop from the admin preview and use that to toggle classes.
 
-5. **Header tightening** — Reduce `pt-10` to `pt-6` and `pb-5` on header/pills to `pb-3` — reclaims ~30px for the cards.
+**Simpler approach (no plugin dependency):** Add an optional `compact` prop. When the admin page selects "mobile", pass `compact={true}`. The card uses `compact` to conditionally hide chips and stack layout. For real mobile usage, keep `md:` breakpoints as-is — they work on actual phones.
 
-6. **SheetContent height** — Add `h-full` to SheetContent so the flex column resolves against the actual viewport, not content height. Remove `overflow-y-auto` from SheetContent and instead put `overflow-y-auto` on the inner wrapper so flex layout works against the fixed viewport height.
+### `AdminConversion.tsx`
+- Desktop: remove `max-w-[600px]`, let the card stretch to full container width (realistic)
+- Mobile: keep `max-w-[375px]`, pass `compact` prop to the card
 
-### Resulting structure:
+### Layout per mode:
+
 ```text
-SheetContent (h-full, no scroll)
-  └─ div.flex.flex-col.h-full.overflow-y-auto  ← scrolls if needed
-       ├─ Header (compact pt-6)
-       ├─ Pills (pb-3)
-       ├─ Context row (optional)
-       └─ Cards section (flex-1, gap-3)
-            ├─ Starter card (p-3)
-            ├─ Growth card (p-3)
-            └─ Pro card (p-3, mb-5)
+Desktop (no compact):
+[accent] [avatar] [headline ————————————————] [chip · chip · chip] [See Plans] [×]
+
+Mobile / compact:
+[accent] [avatar] [headline wraps to 2 lines]
+                              [See Plans] [×]
 ```
 
-On tall screens: cards distribute with natural spacing. On short screens: content scrolls gracefully. No wasted whitespace.
-
-## Single file change
-`src/components/app/UpgradeValueDrawer.tsx`
+## Single concern
+Two files: `PostGenerationUpgradeCard.tsx` (add `compact` prop) and `AdminConversion.tsx` (remove max-width, pass prop).
 
