@@ -106,7 +106,7 @@ function FreePlanSection({
           const credits = typeof p.credits === 'number' ? p.credits : 0;
           const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
           const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
-          const valueLabel = PLAN_VALUE_LABELS[p.planId] ?? '';
+          
           const ctaLabel = PLAN_CTA_LABELS[p.planId] ?? `Choose ${p.name}`;
           const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
 
