@@ -25,6 +25,24 @@ const subscribablePlans = pricingPlans.filter(
   (p) => p.planId !== 'free' && !p.isEnterprise,
 );
 
+const MODAL_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> = {
+  starter: [
+    { text: '500 credits every month' },
+    { text: '3 Brand Profiles' },
+    { text: 'Up to 100 products' },
+  ],
+  growth: [
+    { text: '1,500 credits every month' },
+    { text: 'Priority generation queue' },
+    { text: 'Brand Models', badge: 'NEW' },
+  ],
+  pro: [
+    { text: '4,500 credits every month' },
+    { text: 'Priority generation queue' },
+    { text: 'Unlimited products & profiles' },
+  ],
+};
+
 export function NoCreditsModal({ open, onClose, category = 'fallback', generationCount = 0, previewPlan }: NoCreditsModalProps) {
   const { startCheckout, plan: userPlan } = useCredits();
   const plan = previewPlan ?? userPlan;
