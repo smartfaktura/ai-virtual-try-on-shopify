@@ -1134,7 +1134,7 @@ export default function Freestyle() {
                   buttonLabels={{ yes: 'Nailed it', almost: 'Almost', no: 'Not quite' }}
                   reasonChips={['Prompt ignored', 'Product changed', 'Model/look off', 'Scene/style off', 'Bad composition', 'Not realistic', 'Low quality', 'Too slow']}
                   textPlaceholder="What did you expect instead?"
-                  resultId={activeJob?.id}
+                  resultId={completedFeedbackJobId || activeJob?.id}
                   imageUrl={savedImages[0]?.url}
                   triggerType="result_ready"
                 />
