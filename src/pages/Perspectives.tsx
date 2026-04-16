@@ -313,10 +313,7 @@ export default function Perspectives() {
 
           if (completed > 0) {
             toast.success(`${completed} perspective${completed > 1 ? 's' : ''} ready! ${failed > 0 ? `(${failed} failed)` : ''}`);
-            setTimeout(() => {
-              setIsGeneratingView(false);
-              navigate('/app/library');
-            }, 1500);
+            // Don't auto-navigate — let user see feedback card + manual nav button
           } else {
             toast.error('All generations failed. Credits have been refunded.');
           }
@@ -635,17 +632,28 @@ export default function Perspectives() {
 
           {/* All done — manual nav */}
           {genAllDone && genCompletedCount > 0 && (
-            <div className="text-center">
-              <Button
-                onClick={() => {
-                  setIsGeneratingView(false);
-                  navigate('/app/library');
-                }}
-                className="h-11 px-6 rounded-xl"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                View in Library
-              </Button>
+            <div className="space-y-4">
+              <ContextualFeedbackCard
+                workflow="perspectives"
+                questionText="Are these angles useful for your product?"
+                buttonLabels={{ yes: 'Yes', almost: 'Almost', no: 'No' }}
+                reasonChips={['Angles too similar', 'Product not preserved', 'Quality too low', 'Missing key angle', 'Background issues', 'Other']}
+                textPlaceholder="What angles or quality would help most?"
+                resultId={generatingJobs[0]?.jobId}
+                triggerType="result_ready"
+              />
+              <div className="text-center">
+                <Button
+                  onClick={() => {
+                    setIsGeneratingView(false);
+                    navigate('/app/library');
+                  }}
+                  className="h-11 px-6 rounded-xl"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  View in Library
+                </Button>
+              </div>
             </div>
           )}
 

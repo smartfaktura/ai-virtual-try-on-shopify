@@ -361,6 +361,7 @@ export default function Generate() {
   });
 
   const [currentStep, setCurrentStep] = useState<Step>('source');
+  const [completedFeedbackJobId, setCompletedFeedbackJobId] = useState<string | null>(null);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [tryOnSearchQuery, setTryOnSearchQuery] = useState('');
@@ -1769,6 +1770,7 @@ export default function Generate() {
         setGeneratedImages(result.images);
         setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
         setGeneratingProgress(100);
+        setCompletedFeedbackJobId(activeJob.id);
         setCurrentStep('results');
         toast.success(`Generated ${result.images.length} images!`);
         refreshBalance();
@@ -1789,6 +1791,7 @@ export default function Generate() {
         setGeneratedImages(batchState.aggregatedImages);
         setWorkflowVariationLabels(batchState.aggregatedLabels);
         setGeneratingProgress(100);
+        setCompletedFeedbackJobId(batchState.completedJobIds?.[0] || null);
         setCurrentStep('results');
         if (batchState.hasPartialFailure) {
           toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
@@ -1914,6 +1917,7 @@ export default function Generate() {
           setGeneratedImages(allImages);
           setWorkflowVariationLabels(allLabels);
           setIsFinalizingResults(false);
+          setCompletedFeedbackJobId(completedIds[0] || null);
           setCurrentStep('results');
           if (failedCount > 0) {
             toast.warning(`Completed with ${failedCount} failure${failedCount > 1 ? 's' : ''}. ${allImages.length} images generated.`);
@@ -4485,7 +4489,7 @@ export default function Generate() {
               textPlaceholder={activeWorkflow?.slug
                 ? 'What should improve? e.g. better fit, more natural pose'
                 : 'What were you hoping to get instead?'}
-              resultId={activeJob?.id}
+              resultId={completedFeedbackJobId || activeJob?.id}
               imageUrl={generatedImages[0]}
               triggerType="result_ready"
             />
