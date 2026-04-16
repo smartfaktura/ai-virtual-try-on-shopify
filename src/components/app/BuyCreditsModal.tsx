@@ -133,10 +133,13 @@ export function BuyCreditsModal() {
           <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 flex items-start justify-between">
             <div>
               <p className="text-xl font-bold tracking-tight">
-                Unlock your visual potential
+                You're out of credits
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Pick a plan that fits your creative ambitions
+                Choose a plan to keep creating
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                More credits = lower cost per image
               </p>
               {isPaidUser && currentPeriodEnd && (
                 <p className={`text-[11px] mt-1.5 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
@@ -372,13 +375,13 @@ export function BuyCreditsModal() {
 
                     const PLAN_DESCRIPTORS: Record<string, string> = {
                       starter: 'Best to start',
-                      growth: 'Best value for growing brands',
+                      growth: 'Most popular for consistent content',
                       pro: 'Best for high-volume production',
                     };
                     const PLAN_CTA_MAP: Record<string, string> = {
-                      starter: 'Start with Starter',
+                      starter: 'Get Starter',
                       growth: 'Get Growth',
-                      pro: 'Choose Pro',
+                      pro: 'Get Pro',
                     };
                     const PLAN_DIFFERENTIATORS: Record<string, { text: string; badge?: string }[]> = {
                       starter: [
@@ -505,6 +508,9 @@ export function BuyCreditsModal() {
 
                 {/* Reassurance + links */}
                 <div className="space-y-2 pt-1">
+                  <p className="text-xs text-muted-foreground font-medium text-center">
+                    Cancel anytime · No commitment
+                  </p>
                   <p className="text-xs text-muted-foreground text-center">
                     All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
                   </p>
