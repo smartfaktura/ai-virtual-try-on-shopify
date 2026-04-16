@@ -1,37 +1,58 @@
 
 
-# Fix Survey Card Layout in Image Detail Panel
+# Fix Feedback Card Delay + Sticky Close Button
 
-## Problem
-The survey feedback card overflows the sidebar panel on desktop/tablet because it tries to fit icon + badge + question text + 3 buttons in one horizontal row. The panel is only ~380px wide — not enough for an inline layout.
+## Issues
+
+1. **2-second delay**: `ContextualFeedbackCard` has a `setTimeout(() => setStep('step1'), 2000)` on line 55. The card starts as `'idle'` (invisible) and only appears after 2 seconds. In the Freestyle page this made sense as a gentle reveal, but inside the image detail modal it feels like a bug since the user is already engaged with the image.
+
+2. **Close button scrolls away**: The `X` close button on the info panel uses `absolute top-5 right-5` (line 189-194) but the panel itself is `overflow-y-auto`, so when the user scrolls down the close button scrolls out of view.
 
 ## Changes
 
-### `src/components/app/ContextualFeedbackCard.tsx`
+### `src/components/app/ContextualFeedbackCard.tsx` — Line 55
 
-**Step 1 layout** — Force vertical (stacked) layout at all sizes. Remove `md:flex-row md:items-center md:justify-between` which causes the overflow. The card will always stack: header row → question → buttons.
+Reduce the delay from 2000ms to 300ms so the card appears almost instantly but still has a subtle entrance animation.
 
-Also change the badge text from "Survey" to "Help us improve" on `md:` screens while keeping "Survey" on mobile (or just use "Help us improve" everywhere since it fits).
+```tsx
+// Before
+const t = setTimeout(() => setStep('step1'), 2000);
 
-Specific changes:
-- **Line 154**: Remove `md:flex-row md:items-center md:justify-between md:gap-3 md:px-4 md:py-3` — keep it always `flex-col`
-- **Line 159**: Change badge text — use a responsive approach: show "Survey" on mobile, "Help us improve" on desktop. Or simplify to just "Help us improve" everywhere.
-- **Line 161**: Remove `hidden md:block` from the inline question text (since we're always stacking, the question goes on its own row)
-- **Line 172**: Remove `md:hidden` from the mobile question text (or consolidate into one always-visible line)
-- **Line 180**: Remove `md:flex-initial md:min-h-0 md:h-8` from buttons so they stay touch-friendly
+// After
+const t = setTimeout(() => setStep('step1'), 300);
+```
 
-Similarly update Step 2 expanded panel to remove desktop-specific overrides.
+### `src/components/app/LibraryDetailModal.tsx` — Lines 186-196
 
-**Badge text options:**
-1. "Help us improve" — clear, friendly
-2. "Quick feedback" — action-oriented
-3. "Your opinion" — personal
+Make the close button sticky by moving it outside the scrollable content area. Change the info panel to have a sticky header with the close button, then the scrollable content below.
 
-I'll go with **"Help us improve"** on `sm:` and up, keeping "Survey" on mobile for brevity.
+**Before:**
+```tsx
+<div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+  {/* Close */}
+  <button onClick={onClose} className="absolute top-5 right-5 z-20 ...">
+    <X className="w-7 h-7" strokeWidth={2} />
+  </button>
+  <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
+```
 
-### Summary
+**After:**
+```tsx
+<div className="relative w-full md:w-[40%] h-[55vh] md:h-full flex flex-col bg-background/95 backdrop-blur-xl border-l border-border/20">
+  {/* Sticky close button */}
+  <div className="sticky top-0 z-20 flex justify-end p-4 pb-0">
+    <button onClick={onClose} className="text-foreground/70 hover:text-foreground transition-colors">
+      <X className="w-7 h-7" strokeWidth={2} />
+    </button>
+  </div>
+  <div className="flex-1 overflow-y-auto">
+    <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-2 md:pt-2">
+```
+
+And close the new wrapper `</div>` before the panel's closing tag.
 
 | File | Change |
 |------|--------|
-| `src/components/app/ContextualFeedbackCard.tsx` | Force vertical layout always; change badge to "Help us improve" on desktop/tablet |
+| `src/components/app/ContextualFeedbackCard.tsx` | Reduce show delay from 2000ms to 300ms |
+| `src/components/app/LibraryDetailModal.tsx` | Make close button sticky at top of info panel |
 
