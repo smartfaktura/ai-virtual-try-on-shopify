@@ -1,21 +1,31 @@
 
 
-# Make Credit Indicator Clickable with Bigger Tap Area
+# Remove Redundant "Compare all plans" Button
 
 ## Problem
-On mobile, the plan/credits section at the bottom of the sidebar is small and not easily tappable. The user wants a bigger clickable area to navigate to plans/settings.
+The "Compare all plans" link appears at the bottom of the Plans tab inside the Buy Credits modal. The user is already viewing and comparing plans — this button is pointless and just closes the modal to navigate to `/app/settings`.
 
 ## Change
 
-### File: `src/components/app/CreditIndicator.tsx`
+### File: `src/components/app/BuyCreditsModal.tsx` (lines 417-431)
 
-Wrap the entire outer `div` (line 19) in a clickable container that navigates to `/app/settings` on tap. The `+` buy button will keep its own `onClick` with `stopPropagation` so it still opens the buy modal independently.
+Remove the "Compare all plans" button from the bottom links row. Keep only the "Need more? Contact Sales" link, and center it or keep it left-aligned.
 
-- Change the outer `div` to a `button` (or add `onClick` + `cursor-pointer`) that navigates to `/app/settings`
-- Increase padding from `p-3` to `p-4` for a larger touch target
-- Add `active:scale-[0.98]` for tactile feedback
-- Add `stopPropagation` on the `+` button and Upgrade button so they don't trigger the outer navigation
+**Before:**
+```
+<div className="flex items-center justify-between">
+  <button>Need more? Contact Sales ↗</button>
+  <button>Compare all plans</button>  ← remove
+</div>
+```
+
+**After:**
+```
+<div>
+  <button>Need more? Contact Sales ↗</button>
+</div>
+```
 
 ### Files
-- `src/components/app/CreditIndicator.tsx` — 1 file, ~4 line changes
+- `src/components/app/BuyCreditsModal.tsx` — remove 1 button (~6 lines)
 
