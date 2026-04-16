@@ -63,38 +63,31 @@ export function PostGenerationUpgradeCard({
       'animate-in fade-in duration-500'
     )}>
       {/* Left accent */}
-      <div className="absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-primary/60 via-primary/20 to-primary/60" />
+      <div className="absolute inset-y-0 left-0 w-[2px] bg-primary" />
 
       {/* Desktop: single row | Mobile: two rows */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-2.5 pl-4 pr-3">
+      <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-3 py-2.5 pl-4 pr-3">
         {/* Left: avatar + headline */}
         <div className="flex items-center gap-2.5 min-w-0">
           <Avatar className="h-6 w-6 ring-1 ring-border/50 shrink-0">
             <AvatarImage src={avatarUrl} alt={avatar.name} />
             <AvatarFallback className="text-[9px]">{avatar.name[0]}</AvatarFallback>
           </Avatar>
-          <p className="text-sm font-medium tracking-tight leading-snug truncate">{copy.headline}</p>
+          <p className="text-sm font-medium tracking-tight leading-snug line-clamp-2 md:truncate md:line-clamp-none">{copy.headline}</p>
         </div>
 
-        {/* Middle: chips */}
-        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+        {/* Middle: chips — hidden on mobile */}
+        <div className="hidden md:flex items-center gap-1.5 shrink-0">
           {copy.valueBlocks.map((block) => (
             <ValueChip key={block.title} block={block} />
           ))}
         </div>
 
         {/* Right: CTA + dismiss */}
-        <div className="flex items-center gap-2 sm:ml-auto shrink-0">
-          {/* Mobile chips inline with CTA */}
-          <div className="flex sm:hidden items-center gap-1.5 mr-auto">
-            {copy.valueBlocks.map((block) => (
-              <ValueChip key={block.title} block={block} />
-            ))}
-          </div>
-
+        <div className="flex items-center gap-2 md:ml-auto shrink-0 justify-end">
           <Button
             size="sm"
-            className="h-7 text-xs font-medium px-4"
+            className="h-7 text-xs font-medium px-4 whitespace-nowrap"
             onClick={onSeeMore}
           >
             See Plans
