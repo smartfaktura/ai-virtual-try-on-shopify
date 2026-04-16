@@ -155,23 +155,21 @@ function FreePlanSection({
                   )}
                 </div>
 
-                {/* Metrics block */}
-                <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2.5 space-y-1">
+                {/* Metrics — flat, no inner box */}
+                <div className="space-y-0.5">
                   {imageEstimate && (
-                    <p className="text-sm font-semibold tracking-tight">~{imageEstimate} images/mo</p>
+                    <p className="text-sm font-medium">~{imageEstimate} images/mo</p>
                   )}
                   <p className="text-[11px] text-muted-foreground">
                     {credits > 0 ? credits.toLocaleString() : p.credits} credits/mo
                   </p>
                   {displayPrice > 0 && credits > 0 && (
-                    <div className="pt-0.5">
-                      <span className="inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
+                    <p className="text-[11px] text-primary font-semibold mt-1">
+                      ${(displayPrice / credits).toFixed(3)}/credit
+                      <span className="ml-1.5 inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
                         {valueLabel}
                       </span>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        ${(displayPrice / credits).toFixed(3)}/credit
-                      </p>
-                    </div>
+                    </p>
                   )}
                 </div>
 
