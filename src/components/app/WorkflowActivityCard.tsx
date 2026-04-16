@@ -161,7 +161,7 @@ const ActiveGroupCard = React.memo(function ActiveGroupCard({
               {isProcessing && (
                 <p className="text-[11px] text-primary/80 font-medium mt-0.5 flex items-center gap-1 animate-fade-in" key={currentAgent.name}>
                   <Sparkles className="w-3 h-3 shrink-0" />
-                  <span className="truncate">{currentAgent.name}: "{currentAgent.statusMessage}"</span>
+                  <span className="truncate">{currentAgent.name}: "{getRandomStatusMessage(currentAgent)}"</span>
                 </p>
               )}
             </div>

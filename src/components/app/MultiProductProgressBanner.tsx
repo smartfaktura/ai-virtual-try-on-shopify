@@ -176,7 +176,7 @@ export function MultiProductProgressBanner({
             <AvatarFallback className="text-[10px]">{currentMember.name[0]}</AvatarFallback>
           </Avatar>
           <p className="text-xs text-muted-foreground italic">
-            {currentMember.name} is {currentMember.statusMessage.toLowerCase()}
+            {currentMember.name} is {getRandomStatusMessage(currentMember).toLowerCase()}
           </p>
         </div>
       )}

@@ -300,7 +300,7 @@ export function GlobalGenerationBar() {
                           {group.product_name ? ` — ${group.product_name}` : ''}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5 italic">
-                          "{member.statusMessage}"
+                          "{getRandomStatusMessage(member)}"
                         </p>
                         <div className="flex items-center gap-1.5 mt-1">
                           <Clock className="w-3 h-3 text-muted-foreground/60" />
@@ -388,7 +388,7 @@ export function GlobalGenerationBar() {
                     <AvatarFallback className="text-[6px]">{rotatingMember.name[0]}</AvatarFallback>
                   </Avatar>
                   <p className="text-[10px] text-muted-foreground italic truncate transition-all duration-300">
-                    {rotatingMember.name}: "{rotatingMember.statusMessage}"
+                    {rotatingMember.name}: "{getRandomStatusMessage(rotatingMember)}"
                   </p>
                 </div>
               </div>
