@@ -1,29 +1,52 @@
 
 
-# Fix: Survey Card Not Showing in Virtual Try-On Set Results
+# Reorganize Virtual Try-On Results Layout
 
-## Problem
-The previous change to limit feedback to the 3rd generation was applied to **all workflows** instead of only Freestyle. Lines 55-62 in `ContextualFeedbackCard.tsx` still have the blanket `count !== 3` check, which means the card only appears on the 3rd generation for every workflow — including virtual-try-on-set.
+## Current Layout (lines 4473-4514)
+1. Crafted by your studio team (avatars + text, centered)
+2. Saved to your library (separate block with checkmark)
+3. View in Library button (left-aligned)
+4. Survey feedback card
 
-## Fix
+## New Layout
+1. **Survey feedback card** — moved right after the images grid (line ~4471)
+2. **Combined line**: Avatars + "Crafted by your studio team · Saved to your library" (centered, single row)
+3. **View in Library** button — centered below the combined line
 
-### `src/components/app/ContextualFeedbackCard.tsx` — Lines 54-62
-Wrap the generation counter logic in a `workflow === 'freestyle'` check so only Freestyle is throttled. All other workflows skip the counter and always show:
+## Changes
+
+### `src/pages/Generate.tsx` — Lines 4473-4514
+
+Reorder and merge:
 
 ```tsx
-// Freestyle: only show on the 3rd generation, then never again
-if (workflow === 'freestyle') {
-  const countKey = `vovv_fb_gen_count_freestyle`;
-  const count = parseInt(sessionStorage.getItem(countKey) || '0', 10) + 1;
-  sessionStorage.setItem(countKey, String(count));
-  if (count !== 3) {
-    setStep('dismissed');
-    return;
-  }
-}
-const t = setTimeout(() => setStep('step1'), 2000);
-return () => clearTimeout(t);
+{/* Contextual feedback card — right after images */}
+<ContextualFeedbackCard ... />
+
+{/* Combined crafted + saved */}
+<div className="flex flex-col items-center gap-2 pt-2">
+  <div className="flex items-center gap-3">
+    <div className="flex items-center">
+      {[avatarSophia, avatarZara, avatarKenji, avatarLuna].map((src, i) => (
+        <img key={i} src={src} alt="Team member"
+          className="w-7 h-7 rounded-full border-2 border-background object-cover"
+          style={{ marginLeft: i === 0 ? 0 : '-0.4rem' }} />
+      ))}
+    </div>
+    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+      Crafted by your studio team
+      <span className="mx-1">·</span>
+      <CheckCircle className="w-3.5 h-3.5 text-primary" />
+      Saved to your library
+    </p>
+  </div>
+  <Button className="rounded-xl min-h-[44px]" onClick={() => navigate('/app/library')}>
+    View in Library
+  </Button>
+</div>
 ```
 
-Single file, single block change.
+| File | Change |
+|------|--------|
+| `src/pages/Generate.tsx` | Lines 4473-4514: Move feedback card before crafted section, merge crafted + saved into one centered line, center View in Library CTA |
 
