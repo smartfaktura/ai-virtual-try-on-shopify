@@ -21,21 +21,21 @@ export function CreditIndicator() {
   };
 
   return (
-    <div className="p-3.5 rounded-xl bg-white/[0.06] space-y-2.5">
+    <div className="p-3.5 rounded-xl bg-white/[0.06] space-y-3">
       {/* Balance + CTA */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Sparkles className="w-4 h-4 text-sidebar-foreground/80 shrink-0" strokeWidth={1.75} />
+          <Sparkles className="w-[18px] h-[18px] text-sidebar-foreground/80 shrink-0" strokeWidth={2} />
           <div className="flex items-baseline gap-1 min-w-0">
-            <span className="text-sm font-bold text-sidebar-foreground truncate">{balance.toLocaleString()}</span>
-            <span className="text-[10px] text-sidebar-foreground/40 shrink-0">
+            <span className="text-base font-semibold text-sidebar-foreground truncate">{balance.toLocaleString()}</span>
+            <span className="text-[11px] text-sidebar-foreground/40 shrink-0">
               / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
             </span>
           </div>
         </div>
         <button
           onClick={handleCta}
-          className="relative overflow-hidden shrink-0 h-7 px-3 rounded-full text-[11px] font-semibold bg-white text-[hsl(var(--sidebar-background))] hover:brightness-105 transition-[filter] shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]"
+          className="relative overflow-hidden shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold bg-white text-[hsl(var(--sidebar-background))] hover:brightness-105 transition-[filter] shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]"
         >
           <span className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent)] bg-[length:200%_100%] animate-shimmer mix-blend-overlay pointer-events-none" />
           <span className="relative">{ctaLabel}</span>
