@@ -372,13 +372,13 @@ export default function Jobs() {
         </div>
 
         {/* Smart Views */}
-        <div className="flex items-center gap-1.5 overflow-x-auto">
+        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide">
           {SMART_VIEWS.map(v => (
             <button
               key={v.id}
               onClick={() => setSmartView(v.id)}
               className={cn(
-                'px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap',
+                'px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap',
                 smartView === v.id
                   ? 'bg-foreground text-background shadow-sm'
                   : 'text-muted-foreground hover:bg-muted/50'
