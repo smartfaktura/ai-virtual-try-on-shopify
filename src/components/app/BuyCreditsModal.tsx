@@ -153,8 +153,6 @@ export function BuyCreditsModal() {
 
           {/* Tab switcher + billing toggle — single row */}
           <div className="px-4 sm:px-6 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
-          {/* Tab switcher + billing toggle — single row */}
-          <div className="px-4 sm:px-6 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
             {showTabs ? (
               <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
                 {(['topup', 'upgrade'] as const).map(tab => (
