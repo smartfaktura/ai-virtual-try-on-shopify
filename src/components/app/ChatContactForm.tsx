@@ -60,10 +60,10 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
     );
   }
 
-  const inputClass = "w-full bg-background border border-border rounded-lg px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring";
+  const inputClass = "w-full bg-muted/40 border border-border rounded-lg px-3 py-2.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring";
 
   return (
-    <div className="space-y-2.5 p-3 rounded-xl bg-muted/50 border border-border">
+    <div className="space-y-2.5">
       <p className="text-xs font-medium text-foreground">Send a message to our team</p>
 
       <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} className={inputClass} disabled={state === 'sending'} />
