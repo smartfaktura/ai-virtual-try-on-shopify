@@ -397,11 +397,26 @@ export default function Freestyle() {
   const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage, refreshImages, fetchNextPage, hasNextPage, isFetchingNextPage } = useFreestyleImages();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Auto-refresh images while processing to self-heal stuck queue state
-  const imageCountRef = useRef(savedImages.length);
-  useEffect(() => {
-    imageCountRef.current = savedImages.length;
-  }, [savedImages.length]);
+   // Track freestyle generation count for survey feedback
+   const freestyleGenCountRef = useRef(
+     parseInt(sessionStorage.getItem('vovv_fb_gen_count_freestyle') || '0', 10)
+   );
+   const [showFreestyleFeedback, setShowFreestyleFeedback] = useState(freestyleGenCountRef.current === 3);
+
+   // Auto-refresh images while processing to self-heal stuck queue state
+   const imageCountRef = useRef(savedImages.length);
+   useEffect(() => {
+     // Detect new images arriving → increment generation counter
+     if (savedImages.length > imageCountRef.current) {
+       const newCount = freestyleGenCountRef.current + 1;
+       freestyleGenCountRef.current = newCount;
+       sessionStorage.setItem('vovv_fb_gen_count_freestyle', String(newCount));
+       if (newCount === 3) {
+         setShowFreestyleFeedback(true);
+       }
+     }
+     imageCountRef.current = savedImages.length;
+   }, [savedImages.length]);
 
   useEffect(() => {
     if (!isProcessing) return;
@@ -1107,7 +1122,7 @@ export default function Freestyle() {
         <div className={cn("px-0 sm:px-8 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20", isPromptCollapsed ? "pb-2" : "pb-4 sm:pb-6")}>
           <div className="lg:max-w-2xl lg:mx-auto lg:pointer-events-auto relative z-20">
             {/* Contextual feedback pill — once per session */}
-            {hasImages && !isProcessing && !isLoading && !showSceneHint && (
+            {hasImages && !isProcessing && !isLoading && !showSceneHint && showFreestyleFeedback && (
               <div className="absolute -top-14 left-0 right-0 px-2 z-10">
                 <ContextualFeedbackCard
                   workflow="freestyle"
