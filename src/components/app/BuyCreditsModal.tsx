@@ -414,19 +414,13 @@ export function BuyCreditsModal() {
                 </div>
 
                 {/* Bottom links */}
-                <div className="flex items-center justify-between">
+                <div>
                   <button
                     onClick={() => handlePlanSelect('enterprise')}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                   >
                     Need more? Contact Sales
                     <ArrowUpRight className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={handleViewAllPlans}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
-                  >
-                    Compare all plans
                   </button>
                 </div>
               </div>
