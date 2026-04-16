@@ -47,7 +47,7 @@ const PLATFORM_FEATURES = [
 const CREDIT_CARDS = [
   { icon: Image, title: 'Images', detail: '5 credits per image on average. Templates cost 6, Freestyle costs 4.' },
   { icon: Video, title: 'Video & Upscale', detail: 'Short films and 4K upscaling deducted from the same credit pool.' },
-  { icon: Clock, title: 'Monthly Refresh', detail: 'Credits reset each billing cycle. Unused credits don't roll over. Top-ups never expire.' },
+  { icon: Clock, title: 'Monthly Refresh', detail: "Credits reset each billing cycle. Unused credits don't roll over. Top-ups never expire." },
 ];
 
 const FAQS = [
