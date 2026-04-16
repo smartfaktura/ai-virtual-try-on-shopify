@@ -1,64 +1,70 @@
 
 
-# Typography & Hierarchy Cleanup — Pricing Cards
+# Typography & Visual Rhythm Cleanup — Pricing Cards (Final Polish)
 
 ## Problem
-Cards use ~11 different text sizes/weights creating visual noise. The `/mo` is too small, metrics mix with value badges, and vertical spacing is too compressed. Feels like a dashboard widget, not a premium offer.
+Cards still have slightly random text sizes, weak header hierarchy, disconnected supporting text, and compressed spacing. The modal reads like a structured table rather than three clean premium offers.
 
 ## Changes
 
-### Both files: `BuyCreditsModal.tsx` (Plans tab cards, lines 420-519) and `NoCreditsModal.tsx` (FreePlanSection cards, lines 119-205)
+### Both files: `BuyCreditsModal.tsx` and `NoCreditsModal.tsx`
 
-**1. Fix price block — `/mo` on same line, proper size**
-```
-$39/mo          ← price: text-2xl font-bold, /mo: text-base font-medium (not text-xs)
-Billed monthly  ← text-xs text-muted-foreground
-```
-Remove the `items-baseline gap-1` flex approach. Use inline text instead so `/mo` feels connected.
+**1. Fix header hierarchy (BuyCreditsModal lines 132-157)**
+- Title: `text-xl font-bold` — `{balance} credits remaining` (keep as-is)
+- Subtitle: `text-sm text-muted-foreground` — `Choose a plan to keep creating` (keep as-is)
+- Replace "Better value on larger plans" (line 307-309) with: **"Scale faster with more credits and better value per image"** — move it right under the subtitle in the header area (not floating separately below). Use `text-xs text-muted-foreground` for this line.
+- Remove the gap between header and content — tighten `pb-4` to `pb-3` on header.
 
-**2. Clean metrics block — 3 uniform lines, no badges**
-Remove the inline value pill (`Better than Free` / `Better value` / `Best value`) from the metrics area entirely. Replace with 3 clean lines at consistent `text-sm` size:
-```
-~100 images / month
-500 credits / month
-$0.078 per credit
-```
-All `text-sm text-muted-foreground`, with price-per-credit in `text-primary` for emphasis. No badges, no pills.
+**2. Tighten billing toggle placement**
+- Reduce `space-y-4` on the plans container to `space-y-3` so toggle sits closer to cards.
+- Remove the separate contextual subtitle `<p>` for free users (line 306-310) — it's now in the header.
 
-**3. Increase vertical spacing between card zones**
-Four clear zones with `mb-4` or `mb-5` gaps:
-- Zone 1: Plan name + descriptor (`mb-4`)
-- Zone 2: Price + billing note (`mb-5`)
-- Zone 3: Metrics — 3 lines (`mb-5`)
-- Zone 4: Bullets + CTA (`flex-1` + `mt-auto`)
+**3. Card typography — strict 4-level system**
 
-Current `mb-3` everywhere is too compressed.
+| Level | Style | Used for |
+|-------|-------|----------|
+| A | `text-lg font-semibold` | Plan name (bump from `text-base font-bold`) |
+| B | `text-3xl font-bold` + `/mo` at `text-lg font-medium` | Price (bump from `text-2xl` + `text-base`) |
+| C | `text-sm text-muted-foreground` | Metrics (images, credits, price-per-credit) — already correct |
+| D | `text-xs text-muted-foreground` | Descriptor, billing note, bullets |
 
-**4. Quiet the bullets**
-Keep `text-xs text-muted-foreground` (not `text-[11px]`). Consistent with metrics size but visually lighter.
+Key changes:
+- Plan name: `text-base font-bold` → `text-lg font-semibold` (stronger anchor)
+- Price: `text-2xl font-bold` → `text-3xl font-bold` (dominant visual element)
+- `/mo`: `text-base font-medium` → `text-lg font-medium` (less fragmented)
+- Price-per-credit: keep `text-sm text-primary font-semibold` (consistent with other metrics but emphasized)
 
-**5. Refine Growth card border**
-Change from `border-primary` to `border-primary/70` — still clearly highlighted but not heavy.
+**4. Increase vertical spacing between card zones**
+Current `mb-4` / `mb-5` is close but needs refinement:
+- Zone 1 (name + descriptor): `mb-5` (was `mb-4`)
+- Zone 2 (price + billing): `mb-6` (was `mb-5`)
+- Zone 3 (metrics): `mb-6` (was `mb-5`)
+- Zone 4 (differentiators): `flex-1 mb-4` (keep)
+- Zone 5 (CTA): `pt-4 mt-auto` (keep)
 
-**6. Clean header in BuyCreditsModal (lines 132-157)**
-Keep current text but ensure only 3 levels:
-- `text-xl font-bold` — balance line
-- `text-sm text-muted-foreground` — subtitle
-- `text-xs text-muted-foreground` — "Better value" line (already exists, just ensure spacing is clean)
+**5. Growth card refinement**
+- Border: `border-primary/60` (soften from `border-primary/70`)
+- Background: keep `bg-primary/[0.03]`
+- Shadow: `shadow-lg shadow-primary/5` (slightly elevated)
+- Badge text: `text-[10px]` (was `text-[9px]` — normalize up)
 
-### Typography Scale (4 levels only inside cards)
+**6. Footer cleanup**
+- Reassurance line: bump from `text-[11px]` to `text-xs` (readable, not tiny)
+- Footer links: keep `text-xs` but ensure consistent spacing
 
-| Level | Usage | Style |
-|-------|-------|-------|
-| A | Plan name | `text-base font-bold` |
-| B | Price | `text-2xl font-bold` + `/mo` at `text-base font-medium` |
-| C | Metrics | `text-sm text-muted-foreground` |
-| D | Descriptor, bullets, billing | `text-xs text-muted-foreground` |
+**7. NoCreditsModal FreePlanSection**
+- Same card typography changes (plan name, price, metrics sizing)
+- Same spacing adjustments
+- Subtitle line 77-79: change to "Scale faster with more credits and better value per image"
+
+### Also apply to `UpgradeValueDrawer.tsx`
+- Same typography scale for plan name, price, metrics inside drawer cards
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `BuyCreditsModal.tsx` | Flatten price block, remove value pills, uniform metrics, increase card padding |
-| `NoCreditsModal.tsx` | Same card typography cleanup in FreePlanSection |
+| `BuyCreditsModal.tsx` | Header hierarchy fix, move supporting line up, bump plan name/price sizes, increase card zone spacing, soften Growth border, normalize footer text |
+| `NoCreditsModal.tsx` | Same card typography and spacing changes in FreePlanSection, update subtitle copy |
+| `UpgradeValueDrawer.tsx` | Align card typography to same 4-level system |
 
