@@ -292,7 +292,7 @@ export default function AdminPlanPopups() {
       </Card>
 
       {/* Mounted popups */}
-      <UpgradePlanModal open={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} />
+      <UpgradePlanModal open={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} previewPlan={previewPlan} />
       <PlanChangeDialog
         open={planChangeOpen}
         onClose={() => setPlanChangeOpen(false)}
