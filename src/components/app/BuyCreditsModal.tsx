@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,13 @@ export function BuyCreditsModal() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
   const [switchLoading, setSwitchLoading] = useState(false);
+
+  // Reset tab when modal opens
+  useEffect(() => {
+    if (buyModalOpen) {
+      setActiveTab(isFreeUser(plan) ? 'upgrade' : 'topup');
+    }
+  }, [buyModalOpen, plan]);
 
   const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';
