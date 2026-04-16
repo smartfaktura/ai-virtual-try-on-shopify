@@ -1,26 +1,41 @@
 
 
-# Fix Perspectives Estimated Generation Time
+# Improve Results Screen Button Layout for Mobile
 
 ## Problem
-The Perspectives generation screen shows "Est. 4m 12s – 6m 18s total" for 9 images, but they actually complete in ~37 seconds. The estimate uses `35 seconds per image` calculated sequentially, but jobs run in parallel so effective per-image time is much lower.
+On mobile, the action buttons (Select All, Download All, Adjust, Start Over) in the Generated Images results card wrap into an awkward 2-row layout with inconsistent sizing and too much visual weight above the actual images.
 
-## Fix
+## Changes
 
-### File: `src/pages/Perspectives.tsx` (line 508)
+### File: `src/pages/Generate.tsx` (lines 4429-4452)
 
-Change `estimatedSecondsPerImage` from `35` to `5` to reflect actual parallel throughput (~4-5s effective per image):
+Restructure the buttons area:
+
+1. **Stack header and buttons vertically on mobile** — keep current `flex-col` / `sm:flex-row` on the outer wrapper
+2. **Make buttons a full-width grid on mobile** — use `grid grid-cols-2 sm:flex sm:flex-wrap` so buttons fill evenly in a 2-column grid on small screens and flow naturally on desktop
+3. **Remove `min-h-[44px]`** from individual buttons (the grid layout already gives enough touch target) and use consistent `w-full sm:w-auto` sizing
+4. **Group primary actions** — keep Select All and Download All prominent, make Adjust and Start Over secondary
 
 ```tsx
-// Before
-const estimatedSecondsPerImage = 35;
+// Lines 4429-4452 — Before:
+<div className="flex flex-wrap gap-2">
+  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" ...>Select All</Button>
+  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" ...>Download All</Button>
+  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" ...>Adjust</Button>
+  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" ...>Start Over</Button>
+</div>
 
-// After
-const estimatedSecondsPerImage = 5;
+// After:
+<div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
+  <Button variant="outline" size="sm" className="h-9" ...>Select All</Button>
+  <Button variant="outline" size="sm" className="h-9" ...>Download All</Button>
+  <Button variant="outline" size="sm" className="h-9" ...>Adjust</Button>
+  <Button variant="outline" size="sm" className="h-9" ...>Start Over</Button>
+</div>
 ```
 
-For 9 images this gives: `Est. 36s – 54s total` — much closer to the real ~37s observed.
+This gives a clean 2x2 grid on mobile with equal button widths, and flows inline on desktop.
 
 ### Files
-- `src/pages/Perspectives.tsx` — 1 constant change
+- `src/pages/Generate.tsx` — button container class change (~line 4429)
 
