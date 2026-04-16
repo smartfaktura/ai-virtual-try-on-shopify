@@ -72,6 +72,7 @@ interface FreestylePromptPanelProps {
   // Reset
   onReset?: () => void;
   isDirty?: boolean;
+  onBuyCredits?: () => void;
 }
 
 const TYPEWRITER_PHRASES = [
@@ -197,6 +198,7 @@ export function FreestylePromptPanel({
   highlightedChip,
   onReset,
   isDirty,
+  onBuyCredits,
 }: FreestylePromptPanelProps) {
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -463,7 +465,7 @@ export function FreestylePromptPanel({
                       <TooltipTrigger asChild>
                         {showBuyCredits ? (
                           <Button
-                            onClick={onGenerate}
+                            onClick={onBuyCredits}
                             size="lg"
                             className="h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25"
                           >
