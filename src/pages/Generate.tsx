@@ -1430,11 +1430,12 @@ export default function Generate() {
           injectActiveJob(queryClient, { jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: baseImageCount });
         } else { setCurrentStep('settings'); }
       } else {
-        const success = await startBatch({
+        const batchResult = await startBatch({
           payload, selectedVariationIndices: remapVariationIndices(Array.from(selectedVariationIndices)).remapped, angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: modelsToGenerate.length > 0, hasScene: false,
           onJobEnqueued: (jobId) => injectActiveJob(queryClient, { jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 }),
         });
-        if (!success) { setCurrentStep('settings'); }
+        if (batchResult.success && batchResult.newBalance !== null) { setBalanceFromServer(batchResult.newBalance); }
+        if (!batchResult.success) { setCurrentStep('settings'); }
       }
     } else {
       // Multiple combos or multiple models — enqueue each as a separate job
