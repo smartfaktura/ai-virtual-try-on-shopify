@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
+import { UpgradePlanModal } from './UpgradePlanModal';
 
 export function CreditIndicator() {
-  const { balance, plan, planConfig, openBuyModal } = useCredits();
-  const navigate = useNavigate();
+  const { balance, planConfig, openBuyModal } = useCredits();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const monthlyCredits = planConfig.monthlyCredits;
   const isInfinite = monthlyCredits === Infinity;
@@ -16,7 +17,7 @@ export function CreditIndicator() {
   const canUpgrade = !!planConfig.nextPlanId;
   const ctaLabel = canUpgrade ? 'Upgrade' : 'Top up';
   const handleCta = () => {
-    if (canUpgrade) navigate('/app/settings');
+    if (canUpgrade) setUpgradeOpen(true);
     else openBuyModal();
   };
 
@@ -49,6 +50,7 @@ export function CreditIndicator() {
           style={{ width: `${usagePercent}%` }}
         />
       </div>
+      <UpgradePlanModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 }
