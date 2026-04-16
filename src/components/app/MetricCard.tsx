@@ -48,7 +48,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-border/40 bg-card p-3 sm:p-5 h-[120px] sm:h-[140px] space-y-3">
+      <div className="rounded-xl border border-border/40 bg-card p-2.5 sm:p-5 h-[100px] sm:h-[140px] space-y-3">
         <div className="h-3 w-16 bg-muted rounded animate-pulse" />
         <div className="h-6 w-20 bg-muted rounded animate-pulse" />
         <div className="h-3 w-24 bg-muted rounded animate-pulse" />
@@ -60,20 +60,20 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   const cardContent = (
     <div
-      className={`rounded-xl border border-border/40 bg-card p-3 sm:p-5 h-[120px] sm:h-[140px] flex flex-col justify-between transition-all duration-200 hover:border-border/80 hover:shadow-sm ${onClick ? 'cursor-pointer' : ''}`}
+      className={`rounded-xl border border-border/40 bg-card p-2.5 sm:p-5 h-[100px] sm:h-[140px] flex flex-col justify-between transition-all duration-200 hover:border-border/80 hover:shadow-sm ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <div>
         <div className="flex items-center gap-1.5">
-          {Icon && <Icon className="w-3.5 h-3.5 text-muted-foreground/60" />}
+          {Icon && <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground/60" />}
           <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">{title}</span>
         </div>
 
         {value !== undefined ? (
-          <div className="mt-2">
-            <p className="text-lg sm:text-xl font-bold text-foreground tracking-tight leading-none whitespace-nowrap">{value}</p>
+          <div className="mt-1.5 sm:mt-2">
+            <p className="text-base sm:text-xl font-bold text-foreground tracking-tight leading-none whitespace-nowrap">{value}</p>
             {suffix && (
               <p className="text-xs text-muted-foreground/70 leading-snug mt-1">{suffix}</p>
             )}

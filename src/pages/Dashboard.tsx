@@ -505,18 +505,18 @@ export default function Dashboard() {
 
   // --- RETURNING USER DASHBOARD ---
   return (
-    <div className="space-y-8 sm:space-y-10">
+    <div className="space-y-5 sm:space-y-10">
       <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
       {/* Welcome greeting + CTA */}
       <div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+        <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
-        <p className="text-lg text-muted-foreground mt-2 max-w-xl">
+        <p className="text-sm sm:text-lg text-muted-foreground mt-1 sm:mt-2 max-w-xl">
           Your next visuals are just a click away
         </p>
 
-        <div className="flex flex-col gap-3 mt-5">
+        <div className="flex flex-col gap-3 mt-3 sm:mt-5">
           <div className="relative">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:overflow-visible sm:flex-wrap sm:[mask-image:none]">
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
@@ -548,7 +548,7 @@ export default function Dashboard() {
       <LowCreditsBanner />
 
       {/* Metrics Row — 5 value-driven cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         <MetricCard
           title="Cost Saved"
           value={`€${(generatedCount * 30).toLocaleString()}`}
