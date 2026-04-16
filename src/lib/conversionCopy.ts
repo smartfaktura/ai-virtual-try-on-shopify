@@ -28,64 +28,130 @@ export function resolveConversionCategory(raw?: string[] | string | null): Conve
   return 'fallback';
 }
 
-// ── Layer 1: Inline card copy ─────────────────────────────────────
+// ── Layer 1: Success + Scale card copy ────────────────────────────
 
-interface Layer1Copy {
+export interface Layer1ValueBlock {
+  /** Lucide icon name — resolved to component in the card */
+  icon: 'layers' | 'trending-up' | 'zap';
+  title: string;
+  detail: string;
+}
+
+export interface Layer1Copy {
   headline: string;
   subline: string;
-  chips: string[];
+  valueBlocks: Layer1ValueBlock[];
+}
+
+export type BehaviorHint =
+  | 'low-credits'
+  | 'repeated-product'
+  | 'model-heavy'
+  | 'export-intent'
+  | 'video-usage'
+  | 'general';
+
+const CATEGORY_LABELS: Record<ConversionCategory, string> = {
+  fashion: 'fashion',
+  beauty: 'beauty',
+  jewelry: 'jewelry',
+  fragrances: 'fragrance',
+  food: 'food',
+  electronics: 'product',
+  home: 'home',
+  accessories: 'accessories',
+  fallback: 'visual',
+};
+
+function makeValueBlocks(categoryLabel: string): Layer1ValueBlock[] {
+  return [
+    {
+      icon: 'layers',
+      title: 'Create More',
+      detail: `Monthly credits to keep creating ${categoryLabel} visuals`,
+    },
+    {
+      icon: 'trending-up',
+      title: 'Better Value',
+      detail: 'Higher plans improve your cost per visual',
+    },
+    {
+      icon: 'zap',
+      title: 'Faster Workflow',
+      detail: 'Priority processing and bulk generation',
+    },
+  ];
 }
 
 const LAYER1_COPY: Record<ConversionCategory, Layer1Copy> = {
   fashion: {
-    headline: 'You just created your first fashion direction',
-    subline: 'This is 1 of the 8–12 looks brands typically need per product',
-    chips: ['More Scenes', 'More Models', 'Batch Export', 'Video'],
+    headline: 'First fashion direction — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('fashion'),
   },
   beauty: {
-    headline: 'You just created your first beauty visual',
-    subline: 'Skincare brands run 6+ scene variations per SKU for social, ads, and e-commerce',
-    chips: ['More Scenes', 'Close-ups & Detail', 'Batch Export', 'Video'],
+    headline: 'First beauty visual — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('beauty'),
   },
   jewelry: {
-    headline: 'You just created your first jewelry shot',
-    subline: 'Jewelry brands need 8+ angles and lighting setups per piece',
-    chips: ['More Angles', 'Detail Shots', 'Batch Export', 'Studio Lighting'],
+    headline: 'First jewelry shot — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('jewelry'),
   },
   fragrances: {
-    headline: 'You just created your first fragrance visual',
-    subline: 'Fragrance campaigns need 6+ conceptual directions per bottle',
-    chips: ['More Scenes', 'Close-ups & Detail', 'Batch Export', 'Video'],
+    headline: 'First fragrance visual — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('fragrance'),
   },
   food: {
-    headline: 'You just created your first food shot',
-    subline: 'Food brands typically shoot 6–10 styled scenes per product',
-    chips: ['More Scenes', 'Styled Settings', 'Batch Export', 'Seasonal Sets'],
+    headline: 'First food shot — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('food'),
   },
   electronics: {
-    headline: 'You just created your first product visual',
-    subline: 'Tech brands need 5+ lifestyle and detail shots per device',
-    chips: ['More Angles', 'Lifestyle Context', 'Batch Export', 'Feature Shots'],
+    headline: 'First product visual — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('product'),
   },
   home: {
-    headline: 'You just created your first home visual',
-    subline: 'Home brands showcase products in 4–8 styled room settings',
-    chips: ['More Scenes', 'Styled Settings', 'Batch Export', 'Seasonal Sets'],
+    headline: 'First home visual — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('home'),
   },
   accessories: {
-    headline: 'You just created your first accessories shot',
-    subline: 'Accessory brands need 6+ styled and lifestyle shots per piece',
-    chips: ['More Scenes', 'More Models', 'Batch Export', 'Video'],
+    headline: 'First accessories shot — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('accessories'),
   },
   fallback: {
-    headline: 'You just created your first visual direction',
-    subline: 'Professional brands create full visual sets — not single shots',
-    chips: ['More Scenes', 'More Looks', 'Batch Export', 'Video'],
+    headline: 'First visual direction — complete',
+    subline: 'Keep creating with more credits and stronger tools',
+    valueBlocks: makeValueBlocks('visual'),
   },
 };
 
 export function getLayer1Copy(category: ConversionCategory): Layer1Copy {
   return LAYER1_COPY[category];
+}
+
+/** Behavior-aware subline override */
+export function getLayer1Subline(category: ConversionCategory, hint?: BehaviorHint): string {
+  const label = CATEGORY_LABELS[category];
+  switch (hint) {
+    case 'low-credits':
+      return 'You\'re running low — paid plans include monthly credits';
+    case 'repeated-product':
+      return `Scale your ${label} catalog with monthly credits`;
+    case 'model-heavy':
+      return 'Paid plans support faster, larger creation workflows';
+    case 'export-intent':
+      return 'Unlock batch export and bulk generation with a plan';
+    case 'video-usage':
+      return 'Create video content faster with a paid plan';
+    default:
+      return LAYER1_COPY[category].subline;
+  }
 }
 
 // ── Layer 2: Value drawer copy ────────────────────────────────────
@@ -186,18 +252,7 @@ export function getLayer2Copy(category: ConversionCategory): Layer2Copy {
 
 export function getLayer3Headline(category: ConversionCategory): string {
   if (category === 'fallback') return 'Your visuals are just getting started';
-  const labels: Record<ConversionCategory, string> = {
-    fashion: 'fashion',
-    beauty: 'beauty',
-    jewelry: 'jewelry',
-    fragrances: 'fragrance',
-    food: 'food',
-    electronics: 'product',
-    home: 'home',
-    accessories: 'accessories',
-    fallback: '',
-  };
-  return `Your ${labels[category]} visuals are just getting started`;
+  return `Your ${CATEGORY_LABELS[category]} visuals are just getting started`;
 }
 
 export function getLayer3Subline(generationCount: number): string {
