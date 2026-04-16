@@ -4453,7 +4453,7 @@ export default function Generate() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
                     <ShimmerImage src={url} alt={`Generated ${index + 1}`} className="w-full object-cover aspect-auto rounded" wrapperClassName="bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
