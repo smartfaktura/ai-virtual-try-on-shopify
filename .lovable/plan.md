@@ -1,26 +1,39 @@
 
+# Remove `/app/admin/conversion` Route and Page
 
-# Add Mobile Subtitle to Out-of-Credits Banner
+## Overview
+Remove the AdminConversion page component and all references to it since it will be redesigned from scratch.
 
-## Problem
-The subtitle text on `LowCreditsBanner` is hidden on mobile (`hidden sm:block`). The user wants a visible subtitle on mobile when out of credits: "Keep creating in minutes".
+## Files to Delete
+- `src/pages/AdminConversion.tsx` — the entire page component
 
-## Fix
+## Files to Modify
 
-### `src/components/app/LowCreditsBanner.tsx` — Line 28
-
-Replace the single subtitle line with two variants:
-- **Mobile** (shown only on small screens): "Keep creating in minutes"
-- **Desktop** (shown on `sm:` and up): the full `message` text
-
+### `src/App.tsx`
+**Line 60** — Remove the lazy import:
 ```tsx
-<p className="text-sm opacity-80 sm:hidden">{isEmpty ? 'Keep creating in minutes' : message}</p>
-<p className="text-sm opacity-80 hidden sm:block">{message}</p>
+const AdminConversion = lazy(() => import('@/pages/AdminConversion'));
 ```
 
-Only the empty-credits state gets the short mobile subtitle; the low-credits state shows the same `message` on both.
+**Line 217** — Remove the route definition:
+```tsx
+<Route path="/admin/conversion" element={<AdminConversion />} />
+```
 
-| File | Change |
+### `src/components/app/AppShell.tsx`
+**Lines 384-390** — Remove the navigation button in the admin user menu:
+```tsx
+<button
+  onClick={() => { navigate('/app/admin/conversion'); setUserMenuOpen(false); }}
+  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+>
+  <Sparkles className="w-4 h-4" />
+  Conversion
+</button>
+```
+
+| File | Action |
 |------|--------|
-| `src/components/app/LowCreditsBanner.tsx` | Add mobile-visible subtitle line |
-
+| `src/pages/AdminConversion.tsx` | Delete |
+| `src/App.tsx` | Remove import (line 60) and route (line 217) |
+| `src/components/app/AppShell.tsx` | Remove menu button (lines 384-390) |
