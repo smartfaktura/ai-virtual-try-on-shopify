@@ -1,31 +1,26 @@
 
 
-# Fix Library Filter Controls Mobile Layout
+# Fix Interior/Exterior Staging Generate Button Always Disabled
 
 ## Problem
-On mobile, the filter row (filter icon, grid columns selector, Select button) below the search bar appears cut off on the left side — the controls are not properly contained within the page padding.
+The Generate button stays grey (disabled) even after selecting styles because the disabled condition checks `selectedAspectRatios.size === 0`. For interior design, the aspect ratio selector is hidden (replaced by a static "Original" badge), so `selectedAspectRatios` remains an empty Set — the button can never be enabled.
 
-## Root Cause
-The controls wrapper (`div.flex.items-center.gap-2` at line 424) wraps below the full-width search bar on mobile. The parent uses `flex-wrap` with `justify-between`, which can cause the second row of wrapped items to sit at the start without proper alignment, and the filter popover's `relative` positioning may cause overflow.
+## Fix
 
-## Changes
+### File: `src/components/app/generate/WorkflowSettingsPanel.tsx` (line 820)
 
-### File: `src/pages/Jobs.tsx` (lines 412, 424)
-
-1. **Make the controls row full-width on mobile** so it doesn't get clipped. Add `w-full sm:w-auto` to the controls container (line 424) so it stretches across on mobile and aligns naturally.
-
-2. **Adjust justify** on the controls row: add `justify-between sm:justify-end` so on mobile the filter icon and Select button spread evenly across the full width.
+Skip the `selectedAspectRatios.size === 0` check when `isInteriorDesign` is true, since aspect ratio is locked to "Original" and not user-selectable:
 
 ```tsx
-// Line 424 — Before:
-<div className="flex items-center gap-2">
+// Before (line 820)
+disabled={selectedVariationIndices.size === 0 || selectedAspectRatios.size === 0}
 
-// After:
-<div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+// After
+disabled={selectedVariationIndices.size === 0 || (!isInteriorDesign && selectedAspectRatios.size === 0)}
 ```
 
-This ensures the filter controls span the full width on mobile with even spacing, and collapse back to auto-width right-aligned on desktop.
+This is a one-line logic fix. The interior design flow correctly uses the original image ratio at generation time (line 1208 fallback: `selectedAspectRatios.size > 0 ? ... : [aspectRatio]`), so this is purely a UI gate issue.
 
 ### Files
-- `src/pages/Jobs.tsx` — 1 class change on line 424
+- `src/components/app/generate/WorkflowSettingsPanel.tsx` — 1 condition update on line 820
 
