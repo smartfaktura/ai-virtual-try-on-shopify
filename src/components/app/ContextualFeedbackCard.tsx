@@ -39,7 +39,7 @@ export function ContextualFeedbackCard({
   const { plan } = useCredits();
   const isFreeUser = plan === 'free';
 
-  const dismissKey = `${DISMISS_PREFIX}${workflow}`;
+  const dismissKey = `${DISMISS_PREFIX}${workflow}${resultId ? `_${resultId}` : ''}`;
 
   const [step, setStep] = useState<Step>('idle');
   const [answer, setAnswer] = useState<Answer | null>(null);
