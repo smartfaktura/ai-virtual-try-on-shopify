@@ -1,50 +1,36 @@
 
 
-# Unified Bullet Points + Badge Repositioning + Size Tweaks
+# White Cards, Save % Badges, Badge Styling & Size Tweaks
 
 ## Changes (both `BuyCreditsModal.tsx` and `NoCreditsModal.tsx`)
 
-### 1. Move "Most popular" badge inside card — top-right corner
-Replace the centered `absolute -top-2.5 left-1/2 -translate-x-1/2` positioning with `absolute top-3 right-3` so it sits inside the card at the top-right corner. Remove the outer `pt-4` padding that was compensating for the external badge.
+### 1. White card backgrounds with darker container
+- Card containers: add `bg-white dark:bg-card` (force white in light mode)
+- Outer wrapper/container behind the cards: add `bg-muted/50 rounded-2xl p-4` to create a subtle darker backdrop that makes white cards pop
 
-### 2. Slightly bigger price
-Change price from `text-2xl` to `text-3xl`. Keep `/mo` at `text-sm`.
+### 2. Save % badge on per-credit price (vs Starter baseline)
+Calculate savings relative to Starter's per-credit cost. Starter is the baseline (no badge unless annual). Growth and Pro show e.g. "SAVE 32%" comparing their per-credit cost to Starter's. When annual billing is active, show the annual-adjusted savings instead.
 
-### 3. Merge metrics + differentiators into one unified bullet list with check marks
-Instead of two separate sections (plain text metrics, then check-mark differentiators), combine everything into a single list where every line gets the same `Check` icon. Order per plan:
+Formula: `savePercent = Math.round((1 - thisPPC / starterPPC) * 100)`
 
-**Starter:**
-- ~100 images / month
-- 500 credits / month
-- $0.078 per credit (no bold — use badge style like "SAVE 20%" for annual savings)
-- Bulk generations
-- Up to 100 products
+- Starter: no save badge (unless annual → "SAVE 20%")
+- Growth: e.g. "SAVE 32%" (monthly) or "SAVE 46%" (annual)
+- Pro: e.g. "SAVE 49%" (monthly) or "SAVE 59%" (annual)
 
-**Growth:**
-- ~300 images / month
-- 1,500 credits / month
-- $0.053 per credit
-- Faster generation
-- Up to 250 products
-- Brand Models `NEW`
+### 3. Badge styling — primary color with white text
+Change all inline badges (NEW, SAVE %) from `bg-emerald-500/15 text-emerald-600` to `bg-primary text-primary-foreground` for brand consistency.
 
-**Pro:**
-- ~900 images / month  
-- 4,500 credits / month
-- $0.040 per credit
-- Fastest generation
-- Unlimited products
-- Brand Models `NEW`
-
-All items rendered with `Check` icon, `text-xs text-muted-foreground`. Price-per-credit line: no `font-semibold`, just regular weight with `text-primary` color. When annual billing is active, add a small badge like `SAVE 20%` next to the per-credit line.
-
-### 4. Slightly bigger bullet text
-Change bullet text from `text-xs` to `text-[13px]` for better readability.
+### 4. Typography size bumps
+| Element | Current | New |
+|---------|---------|-----|
+| Bullet text | `text-[13px]` | `text-sm` (14px) |
+| Price number | `text-3xl` | `text-4xl` |
+| "/mo" suffix | `text-sm` | `text-base` |
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `BuyCreditsModal.tsx` | Badge position, price size, unified bullet list |
-| `NoCreditsModal.tsx` | Same changes |
+| `BuyCreditsModal.tsx` | All 4 changes above |
+| `NoCreditsModal.tsx` | Same |
 
