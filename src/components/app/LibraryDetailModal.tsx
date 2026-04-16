@@ -168,19 +168,16 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
               <>
                 <button
                   onClick={goPrev}
-                  className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur border border-border/30 flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                  className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/30 dark:hover:bg-white/25 hover:text-white transition-all md:opacity-0 md:group-hover/img:opacity-100"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={goNext}
-                  className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur border border-border/30 flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/30 dark:hover:bg-white/25 hover:text-white transition-all md:opacity-0 md:group-hover/img:opacity-100"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
-                <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur rounded-full px-3 py-1 text-xs font-medium text-foreground/80">
-                  {currentIndex + 1} / {items.length}
-                </div>
               </>
             )}
           </div>
