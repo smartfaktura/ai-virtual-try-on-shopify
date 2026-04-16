@@ -21,7 +21,9 @@ export function BuyCreditsModal() {
   const effectiveInterval = billingInterval || (plan !== 'free' ? 'monthly' : null);
   const isPaidUser = plan !== 'free';
 
-  const [activeTab, setActiveTab] = useState<'topup' | 'upgrade'>(() => plan === 'free' ? 'upgrade' : 'topup');
+  const showTabs = !isFreeUser(plan) && !isPro(plan);
+  const defaultTab = isFreeUser(plan) ? 'upgrade' : 'topup';
+  const [activeTab, setActiveTab] = useState<'topup' | 'upgrade'>(() => defaultTab);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>(effectiveInterval === 'annual' ? 'annual' : 'monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
