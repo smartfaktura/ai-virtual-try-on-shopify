@@ -109,47 +109,47 @@ function makeValueBlocks(categoryLabel: string): Layer1ValueBlock[] {
 
 const LAYER1_COPY: Record<ConversionCategory, Layer1Copy> = {
   fashion: {
-    headline: 'First fashion direction — complete',
+    headline: 'Nice — your first fashion visual is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('fashion'),
   },
   beauty: {
-    headline: 'First beauty visual — complete',
+    headline: 'Nice — your first beauty visual is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('beauty'),
   },
   jewelry: {
-    headline: 'First jewelry shot — complete',
+    headline: 'Nice — your first jewelry shot is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('jewelry'),
   },
   fragrances: {
-    headline: 'First fragrance visual — complete',
+    headline: 'Nice — your first fragrance visual is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('fragrance'),
   },
   food: {
-    headline: 'First food shot — complete',
+    headline: 'Nice — your first food shot is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('food'),
   },
   electronics: {
-    headline: 'First product visual — complete',
+    headline: 'Nice — your first product visual is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('product'),
   },
   home: {
-    headline: 'First home visual — complete',
+    headline: 'Nice — your first home visual is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('home'),
   },
   accessories: {
-    headline: 'First accessories shot — complete',
+    headline: 'Nice — your first accessories shot is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('accessories'),
   },
   fallback: {
-    headline: 'First visual direction — complete',
+    headline: 'Nice — your first visual is ready',
     subline: 'Keep creating with more credits and stronger tools',
     valueBlocks: makeValueBlocks('visual'),
   },
