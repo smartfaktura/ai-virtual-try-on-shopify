@@ -1,39 +1,46 @@
 
 
-# Value Drawer — Premium Branded Redesign
+# Inline Upgrade Card — Responsive Fix + Accent Color
 
-## What changes
+## Problems from screenshots
 
-**`src/components/app/UpgradeValueDrawer.tsx`** — full layout restructure:
+1. **Headline text truncates** — "Your first f..." is cut off because `truncate` clips it and the chips + CTA compete for horizontal space
+2. **Left accent line uses `primary/60` gradient** — fades to near-invisible; should be solid `primary` for brand presence
+3. **Mobile layout breaks** — chips and CTA overflow on narrow screens; all 3 chips + button + X don't fit in one row
+4. **No responsive breakpoint between phone and desktop** — jumps from stacked (< sm) to single row (≥ sm) with no intermediate
 
-1. **Remove fake trust line** — Delete "Join 2,000+ brands creating with VOVV"
+## Changes — `PostGenerationUpgradeCard.tsx`
 
-2. **Header redesign** — Larger avatar (w-10 h-10), headline in `text-lg font-semibold`, subline as `text-sm` with better contrast (`text-foreground/70` instead of `text-muted-foreground/80`). Remove the border-b separator — let spacing breathe instead
+### 1. Accent line → solid primary
+Replace the gradient `from-primary/60 via-primary/20 to-primary/60` with a simple `bg-primary` for a clean, visible brand accent
 
-3. **Benefits → feature pills** — Replace the 3 checkmark lines with a horizontal row of subtle pills/chips (using the `unlockItems` from conversionCopy, e.g. "Studio", "On-Model", "Lifestyle", "Campaign", "Detail", "Video"). This is more visual, more branded, and category-specific
+### 2. Headline — allow wrapping on mobile, truncate only on desktop
+- Mobile: remove `truncate`, let headline wrap to 2 lines with `line-clamp-2`
+- Desktop (sm+): keep `truncate` for single-line compactness
 
-4. **"Choose your plan" label** — Remove it. The plan cards speak for themselves
+### 3. Chips — hide on mobile, show from `md` up
+- The 3 chips don't fit on small screens alongside the CTA. Hide them below `md` breakpoint entirely
+- On mobile, the headline itself ("Your first fashion direction is ready") provides enough context
+- Remove the duplicate mobile chips section completely
 
-5. **Plan cards — taller, more spacious, full-height usage**:
-   - Each card gets more vertical space: `p-4` padding, `space-y-3`
-   - Plan name prominent: `text-base font-semibold`
-   - Price on its own line below name: `text-2xl font-bold` for the dollar amount + `text-xs text-muted-foreground` for "/mo"
-   - Credits + rate pill centered below price
-   - Savings badge stays inline with credits pill
-   - CTA button `h-10` with `rounded-xl`
-   - Growth card: subtle gradient background (`bg-gradient-to-b from-primary/[0.06] to-primary/[0.02]`), `border-primary/50`, and `ring-1 ring-primary/20` for elevation
-   - Starter/Pro cards: `border-border/40` with `hover:border-border/60`
-   - Key differentiator line per card in `text-xs text-muted-foreground`:
-     - Starter: "500 credits · Up to 100 products"
-     - Growth: "1,500 credits · Priority queue · Brand Models"
-     - Pro: "4,500 credits · Unlimited everything"
+### 4. CTA row — always visible, right-aligned
+- Mobile: headline on row 1, CTA button + X on row 2, right-aligned
+- Desktop: everything in one row as designed
 
-6. **Use full drawer height** — Change wrapper from `space-y-3` to `flex flex-col` with the plan cards section using `flex-1` to expand and fill remaining space. Add `justify-between` on the cards container so they distribute evenly
+### 5. Button — ensure minimum touch target
+- Keep `h-7 text-xs px-4` but add `whitespace-nowrap` to prevent button text from wrapping
 
-7. **Drawer width** — Bump from `sm:!max-w-[440px]` to `sm:!max-w-[460px]` for slightly more room
+### Layout structure after fix:
 
-8. **Bottom padding** — `pb-8` to give the last card breathing room from the drawer edge
+```text
+Mobile (< md):
+[accent] [avatar] [headline — wraps to 2 lines if needed]
+         [                    ] [See Plans] [×]
 
-## Result
-Premium, spacious feel. Category-aware content chips replace generic text. Plan cards are scannable with clear price hierarchy. No lies, no clutter, full vertical space used.
+Desktop (≥ md):
+[accent] [avatar] [headline] [chip · chip · chip] ——— [See Plans] [×]
+```
+
+## No other files change
+Parent wrappers in Freestyle, Generate, and TextToProduct remain as-is.
 
