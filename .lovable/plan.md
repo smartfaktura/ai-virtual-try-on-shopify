@@ -1,30 +1,24 @@
 
 
-# Move Badge Pills Lower on Workflow Cards
+# Fix Contact Form Dialog Mobile Spacing
 
 ## Problem
-The badge pills ("1000+ Scenes", "Full Control", "40+ Models", "Auto Fit") on the Product Visuals and Virtual Try-On cards sit too high on the image. User wants them closer to the bottom with a more spacious but not overly gapped feel.
+The "Message Our Team" dialog has no left/right margin on mobile — it stretches edge-to-edge because the base `DialogContent` uses `w-full` without mobile insets.
 
-## Changes
+## Change
 
-### File: `src/components/app/workflowAnimationData.tsx`
+### File: `src/components/app/ContactFormDialog.tsx` (line 80)
 
-Adjust the `position` values for all badge elements across the main workflow scenes. Move them from `bottom: 28%/16%` to `bottom: 14%/4%` so they sit near the bottom of the card image with comfortable spacing between them (~10% gap instead of 12%).
+Add `mx-4 sm:mx-0` to the `DialogContent` className so it gets 16px horizontal margin on mobile while remaining centered on desktop:
 
-**Product Visuals** (lines 80-86):
-- "1000+ Scenes": `bottom: '28%'` → `bottom: '14%'`
-- "Full Control": `bottom: '16%'` → `bottom: '4%'`
+```tsx
+// Before
+<DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
 
-**Virtual Try-On Set** (lines 102-108):
-- "40+ Models": `bottom: '28%'` → `bottom: '14%'`
-- "Auto Fit": `bottom: '16%'` → `bottom: '4%'`
-
-**Product Listing Set** (lines 123-129):
-- "30+ Scenes": `bottom: '28%'` → `bottom: '14%'`
-- "1 Click": `bottom: '16%'` → `bottom: '4%'`
-
-Apply the same pattern to any remaining workflow scenes with badge elements at the old positions.
+// After
+<DialogContent className="max-w-md p-0 gap-0 overflow-hidden mx-4 sm:mx-0">
+```
 
 ### Files
-- `src/components/app/workflowAnimationData.tsx` — update badge position values
+- `src/components/app/ContactFormDialog.tsx` — 1 class addition
 
