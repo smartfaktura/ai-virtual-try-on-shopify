@@ -78,11 +78,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     elements: [
       {
         type: 'badge', label: '1000+ Scenes', icon: <Sparkles className="w-3 h-3" />,
-        position: { bottom: '28%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '14%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
       {
         type: 'badge', label: 'Full Control', icon: <Layers className="w-3 h-3" />,
-        position: { bottom: '16%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '4%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
@@ -100,11 +100,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     elements: [
       {
         type: 'badge', label: '40+ Models', icon: <Users className="w-3 h-3" />,
-        position: { bottom: '28%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '14%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
       {
         type: 'badge', label: 'Auto Fit', icon: <Maximize2 className="w-3 h-3" />,
-        position: { bottom: '16%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '4%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
@@ -121,11 +121,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     elements: [
       {
         type: 'badge', label: '30+ Scenes', icon: <Sparkles className="w-3 h-3" />,
-        position: { bottom: '28%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '14%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
       {
         type: 'badge', label: '1 Click', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '16%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '4%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
@@ -144,11 +144,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       {
         type: 'product', image: ugcProduct, label: 'Ice Roller', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
-        position: { bottom: '28%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '14%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
       {
         type: 'badge', label: 'UGC Style', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '16%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '4%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
