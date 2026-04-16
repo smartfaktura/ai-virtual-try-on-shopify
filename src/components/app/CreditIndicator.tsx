@@ -20,14 +20,21 @@ export function CreditIndicator() {
     else openBuyModal();
   };
 
+  const balanceDigits = Math.max(1, Math.floor(Math.abs(balance))).toString().length;
+  const balanceSizeClass =
+    balanceDigits <= 3 ? 'text-2xl' : balanceDigits === 4 ? 'text-xl' : 'text-lg';
+
+  const formatMax = (n: number) =>
+    n >= 10000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K` : n.toLocaleString();
+
   return (
     <div className="p-3.5 rounded-xl bg-white/[0.06] space-y-3">
       {/* Balance + CTA */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-baseline gap-1.5 min-w-0">
-          <span className="text-2xl font-semibold tracking-tight text-sidebar-foreground truncate">{balance.toLocaleString()}</span>
+        <div className="flex items-baseline gap-1 min-w-0 flex-1">
+          <span className={`${balanceSizeClass} font-semibold tracking-tight text-sidebar-foreground whitespace-nowrap`}>{balance.toLocaleString()}</span>
           <span className="text-[11px] text-sidebar-foreground/50 shrink-0">
-            / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
+            / {isInfinite ? '∞' : formatMax(monthlyCredits)}
           </span>
         </div>
         <button
