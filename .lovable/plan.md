@@ -1,28 +1,22 @@
 
 
-# Replace Redundant Credit Counts with Price-Per-Credit
+# Slim Down Plan Feature Checklists
 
 ## Problem
-Both the modal and drawer already show credit counts prominently (in the credits pill / badge). The first checklist item ("500 credits every month") repeats this info. Better to show **price per credit** as the first differentiator — it's the actual value signal.
+3 checklist lines per plan card makes the drawer too tall to fit on one page. "3 Brand Profiles" and "Up to 100 products" aren't compelling differentiators.
 
-## Changes
+## Solution
+Reduce to **2 lines per plan** in both `UpgradeValueDrawer.tsx` and `NoCreditsModal.tsx`:
 
-### Both files: `NoCreditsModal.tsx` + `UpgradeValueDrawer.tsx`
+| Plan | Line 1 | Line 2 |
+|------|--------|--------|
+| Starter | 7.8¢ per credit | Up to 100 products |
+| Growth | 5.3¢ per credit | Brand Models · NEW |
+| Pro | 4.0¢ per credit | Unlimited products & profiles |
 
-Update `MODAL_PLAN_FEATURES` / `DRAWER_PLAN_FEATURES` — replace the first item in each plan:
+Removes "3 Brand Profiles" entirely and "Priority generation queue" from Growth/Pro (since the credits pill + savings badge already distinguish tiers).
 
-| Plan | Old | New |
-|------|-----|-----|
-| Starter | 500 credits every month | 7.8¢ per credit |
-| Growth | 1,500 credits every month | 5.3¢ per credit |
-| Pro | 4,500 credits every month | 4.0¢ per credit |
-
-The remaining 2 items stay unchanged:
-- **Starter**: 3 Brand Profiles, Up to 100 products
-- **Growth**: Priority generation queue, Brand Models · NEW
-- **Pro**: Priority generation queue, Unlimited products & profiles
-
-### Files changed
-- `src/components/app/NoCreditsModal.tsx` — lines 30, 35, 40
-- `src/components/app/UpgradeValueDrawer.tsx` — lines 29, 34, 39
+### Files
+- `src/components/app/UpgradeValueDrawer.tsx` — trim `DRAWER_PLAN_FEATURES`
+- `src/components/app/NoCreditsModal.tsx` — trim `MODAL_PLAN_FEATURES`
 
