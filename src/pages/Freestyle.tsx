@@ -1073,12 +1073,13 @@ export default function Freestyle() {
                   reasonChips={['Prompt too hard to control', 'Product not preserved', 'Model/look is off', 'Scene/style is off', 'Composition is wrong', 'Not realistic enough', 'Needs better quality', 'Too slow']}
                   textPlaceholder="What were you hoping to get instead?"
                   resultId={activeJob?.id}
-                  imageUrl={savedImages[0]?.image_url}
+                  imageUrl={savedImages[0]?.url}
                   triggerType="result_ready"
                 />
               </div>
             )}
             <FreestyleGallery
+              images={galleryImages}
               onDownload={handleDownload}
               onExpand={openLightbox}
               onDelete={handleDelete}
