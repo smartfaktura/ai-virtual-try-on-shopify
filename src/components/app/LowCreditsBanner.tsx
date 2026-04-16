@@ -25,6 +25,7 @@ export function LowCreditsBanner() {
         <Sparkles className="h-5 w-5 shrink-0 text-primary" />
         <div className="min-w-0">
           <p className="font-semibold text-sm">{title}</p>
+          <p className="text-sm opacity-80 sm:hidden">{isEmpty ? 'Keep creating in minutes' : message}</p>
           <p className="text-sm opacity-80 hidden sm:block">{message}</p>
         </div>
       </div>
