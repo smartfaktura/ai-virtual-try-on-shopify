@@ -1,61 +1,64 @@
 
 
-# Redesign Layer 1 — Success + Scale Card
+# Brand-Refine Layer 1 Card + Add VOVV Avatar
 
-## What Changes
+## Problem
+The current card looks clean but generic — it could belong to any SaaS. It lacks VOVV identity and feels impersonal. The value blocks are visually heavy with thick borders, and the overall card doesn't connect to the "AI studio team" brand that VOVV uses elsewhere.
 
-Replace the current "feature pills" card with a "success + scale" card built around 3 value pillars: creation capacity, value at scale, and workflow efficiency.
+## Solution
+Add a VOVV team avatar to the card header and refine the visual design to match VOVV's luxury restraint aesthetic.
 
-## Files to Modify
+### 1. Add Team Avatar to Header
 
-| File | Change |
-|------|--------|
-| `src/lib/conversionCopy.ts` | Replace `chips: string[]` with `valueBlocks: { icon: string; title: string; detail: string }[]` in Layer1Copy. Rewrite all 9 category entries with new headlines, behavior-aware subline function, and 3 value blocks per category |
-| `src/components/app/PostGenerationUpgradeCard.tsx` | Full redesign — replace Sparkles with CheckCircle2, replace chips with 3 compact value blocks, replace "See what you can unlock" with solid primary CTA ("See Plans & Features"), add ghost secondary ("Maybe Later"), add `forceVisible` prop, add left accent border |
-| `src/pages/AdminConversion.tsx` | Update `Layer1Preview` to render the new value blocks layout instead of chips. Update copy reference table columns to show value block titles instead of chips |
-
-## New Card Layout
+Use the existing `TEAM_MEMBERS` data — pick a contextually relevant avatar based on category. For example, Sophia (E-commerce Photographer) for product shots, Amara (Lifestyle Scene Photographer) for lifestyle categories. The avatar appears as a small 28px circle next to the success message, making it feel like a team member is congratulating them.
 
 ```text
 ┌──────────────────────────────────────────────────┐
-│ ✓ {category headline}                   [dismiss]│
-│   {behavior-aware subline}                       │
+│ [avatar] First fashion direction — complete   [×]│
+│          Keep creating with more credits...      │
 │                                                  │
-│   ┌──────────┐ ┌──────────┐ ┌──────────┐        │
-│   │ ∞ icon   │ │ ↗ icon   │ │ ⚡ icon   │        │
-│   │ Create   │ │ Better   │ │ Faster   │        │
-│   │ More     │ │ Value    │ │ Workflow │        │
-│   │ 1-line   │ │ 1-line   │ │ 1-line   │        │
-│   └──────────┘ └──────────┘ └──────────┘        │
+│   Create More    ·   Better Value   ·  Faster    │
+│   Monthly credits    Lower cost/img    Priority  │
 │                                                  │
 │   [See Plans & Features]          Maybe Later    │
 └──────────────────────────────────────────────────┘
 ```
 
-## Copy Strategy
+### 2. Visual Refinements
 
-**Headlines** — reframed from "You just created your first X" to "First {category} direction — complete" (success-first tone)
+- **Avatar**: 28px rounded-full with subtle ring, pulled from `TEAM_MEMBERS` based on category mapping (fashion → Sophia, beauty → Luna, etc.)
+- **Value blocks**: Remove visible borders, use subtler `bg-muted/30` backgrounds with no border — feels lighter, more premium
+- **Icon containers**: Reduce to `bg-primary/5` (currently `/8`), smaller padding
+- **Typography**: Ensure Inter 400-500 weights only (no 600/semibold on detail text)
+- **Card border**: Keep left accent but soften to `border-l-primary/60` instead of full primary
+- **Spacing**: Tighten value block internal padding slightly for a more compact, editorial feel
 
-**Sublines** — new `getLayer1Subline(category, behaviorHint?)` function that returns different copy based on optional behavior signal:
-- Default: "Keep creating with more credits and stronger tools"
-- `low-credits`: "You're running low — paid plans include monthly credits"
-- `repeated-product`: "Scale your {category} catalog with monthly credits"
-- `model-heavy`: "Paid plans support faster, larger creation workflows"
+### 3. Category → Avatar Mapping
 
-**Value blocks** (3 per category, same structure across all):
-1. **More Creation Power** — icon: Layers, detail varies by category (e.g., "Monthly credits to keep creating {category} visuals")
-2. **Better Value at Scale** — icon: TrendingUp, detail: "Higher plans improve your cost per visual"
-3. **Faster Workflow** — icon: Zap, detail varies (e.g., "Priority processing and bulk generation")
+Add a simple mapping in `conversionCopy.ts`:
 
-**CTA**: Primary solid button "See Plans & Features" — secondary ghost "Maybe Later"
+| Category | Team Member | Reason |
+|----------|-------------|--------|
+| fashion | Sophia | E-commerce Photographer |
+| beauty | Luna | Retouch Specialist |
+| jewelry | Sophia | Studio lighting expert |
+| fragrances | Amara | Lifestyle scenes |
+| food | Amara | Lifestyle scene specialist |
+| electronics | Kenji | Tech product specialist |
+| home | Amara | Lifestyle contexts |
+| accessories | Sophia | E-commerce focus |
+| fallback | Sophia | Default studio lead |
 
-## Design Changes
-- Left 2px accent border (primary gradient) instead of full gradient background wash
-- CheckCircle2 icon (muted green) instead of Sparkles
-- Value blocks: small bordered cards with icon, title, one-line detail — horizontal on desktop, vertical stack on mobile
-- More breathing room (p-6 instead of p-5, gap-4 instead of gap-3)
-- `forceVisible` prop bypasses 3s delay for admin preview
+### Files to Change
 
-## Props Change
-Add optional `behaviorHint?: string` prop to `PostGenerationUpgradeCard` for subline personalization. Pages that already render the card can pass it or omit it (falls back to default subline).
+| File | Change |
+|------|--------|
+| `src/components/app/PostGenerationUpgradeCard.tsx` | Add avatar from team data, refine value block styling (remove borders, lighter bg), soften card accent, adjust typography weights |
+| `src/lib/conversionCopy.ts` | Add `getLayer1Avatar(category)` function returning team member name + avatar URL |
+| `src/pages/AdminConversion.tsx` | Update preview to show which avatar is selected for current category |
+
+### Design Details
+- Avatar uses `getLandingAssetUrl('team/avatar-sophia.jpg')` etc. — same CDN as the team carousel
+- Quality-only optimization via `getOptimizedUrl(url, { quality: 60 })` per existing image optimization rules
+- On mobile, same layout — avatar is small enough to not cause reflow issues
 
