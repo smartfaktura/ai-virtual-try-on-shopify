@@ -314,7 +314,7 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
         </div>
 
         {/* Redirect hint */}
-        <div className="px-6 sm:px-8 pb-5 pt-0 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="px-6 sm:px-8 pb-5 pt-0 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="w-3 h-3" />
           <span>You'll be securely redirected to complete checkout</span>
         </div>
