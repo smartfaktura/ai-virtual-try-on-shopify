@@ -1,27 +1,47 @@
 
+# Fix loading avatar message hopping + freestyle survey trigger
 
-# Fix: Freestyle Survey Not Showing on 3rd Generation
+## What I found
+- Avatar message hopping is caused by render-time randomness. In generation banners like `QueuePositionIndicator`, the code calls `getRandomStatusMessage(currentMember)` during render, but the component rerenders every second because elapsed time updates. So the same avatar can show different lines before the avatar itself rotates.
+- The same anti-pattern exists in several other progress/loading UIs, so this is a shared issue rather than a one-off.
+- Freestyle survey counting is still inaccurate because `src/pages/Freestyle.tsx` increments the survey counter from `savedImages.length`. When old freestyle history loads, it can count that as a “new generation”.
+- The Freestyle survey also loses its job-specific identity because it passes `resultId={activeJob?.id}`. After completion, `activeJob` is reset, so the card can fall back to a global freestyle dismiss key and suppress later surveys.
 
-## Root Cause
+## Plan
+1. Make avatar + message rotation stable
+- Replace render-time random message selection with a stable message tied to the same rotation tick as the avatar.
+- Update the shared helper in `src/data/teamData.ts` (or add a tiny shared helper) so messages only change when rotation changes, not on every rerender.
+- Apply that fix to all current generation/progress UIs using `getRandomStatusMessage(...)` in render:
+  - `src/components/app/QueuePositionIndicator.tsx`
+  - `src/components/app/MultiProductProgressBanner.tsx`
+  - `src/pages/Perspectives.tsx`
+  - `src/pages/CatalogGenerate.tsx`
+  - `src/components/app/WorkflowActivityCard.tsx`
+  - `src/components/app/GlobalGenerationBar.tsx`
 
-The generation counter (`vovv_fb_gen_count_freestyle`) is incremented inside `useEffect` every time the component mounts or `dismissKey` changes. Since `dismissKey` includes `resultId` (which is `activeJob?.id`), any change to the active job — including intermediate state transitions — increments the counter. The component can also unmount/remount when `showSceneHint` toggles. By the user's actual 3rd generation, the counter has likely already exceeded 3.
+2. Fix Freestyle “3rd generation” counting
+- Remove the `savedImages.length`-based survey counter effect from `src/pages/Freestyle.tsx`.
+- Increment `vovv_fb_gen_count_freestyle` only when a freestyle job actually transitions to `completed`, once per job id.
+- Preserve the current intended rule: show feedback on the true 3rd completed freestyle generation.
 
-## Fix
+3. Keep the survey attached to the completed result
+- In `src/pages/Freestyle.tsx`, store the completed freestyle job id in local state before the queue resets.
+- Render `ContextualFeedbackCard` with that stored id instead of `activeJob?.id`.
+- Gate the card on both `showFreestyleFeedback` and the stored completed result id so initial history loads cannot trigger or suppress the survey incorrectly.
 
-Move the generation counting **out of the feedback component** and into the Freestyle page itself. The page already knows when a new generation completes. Increment a `sessionStorage` counter there (once per completed generation), then pass a `showFeedback` prop to the card instead of having the card count internally.
+## QA to verify
+- On loading/progress screens, the same avatar keeps the same message while the timer updates; avatar and text rotate together on the intended interval.
+- Opening Freestyle with existing old images does not increment the survey count.
+- After 1 and 2 new Freestyle completions, no survey appears.
+- After the 3rd new Freestyle completion, the survey appears reliably.
+- After queue reset, rerender, and scene-hint transitions, the survey still remains tied to the correct completed result.
 
-### Changes
-
-**`src/pages/Freestyle.tsx`**
-- After a generation completes (when `savedImages` updates with new results), increment `sessionStorage` counter `vovv_fb_gen_count_freestyle`
-- Compute `showFreestyleFeedback = count === 3` and only render `ContextualFeedbackCard` when true
-
-**`src/components/app/ContextualFeedbackCard.tsx`**
-- Remove the freestyle-specific counting logic from `useEffect` (lines 56-63)
-- The freestyle gating is now handled by the parent — the component just checks `dismissKey` and shows after the 2s delay
-
-| File | Change |
-|------|--------|
-| `src/pages/Freestyle.tsx` | Add generation counter logic, gate feedback card rendering on count === 3 |
-| `src/components/app/ContextualFeedbackCard.tsx` | Remove freestyle counter from useEffect |
-
+## Files
+- `src/data/teamData.ts`
+- `src/components/app/QueuePositionIndicator.tsx`
+- `src/components/app/MultiProductProgressBanner.tsx`
+- `src/pages/Perspectives.tsx`
+- `src/pages/CatalogGenerate.tsx`
+- `src/components/app/WorkflowActivityCard.tsx`
+- `src/components/app/GlobalGenerationBar.tsx`
+- `src/pages/Freestyle.tsx`
