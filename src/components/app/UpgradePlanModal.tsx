@@ -73,7 +73,9 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
   const effectivePlan = previewPlan ?? plan;
   const [isAnnual, setIsAnnual] = useState(billingInterval === 'annual');
   const [loading, setLoading] = useState(false);
-  const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
+  const [topUpLoading, setTopUpLoading] = useState(false);
+  const defaultPackId = creditPacks.find((p) => p.popular)?.packId ?? creditPacks[0]?.packId ?? '';
+  const [selectedPackId, setSelectedPackId] = useState<string>(defaultPackId);
 
   // All plans strictly higher than current, excluding enterprise (no checkout)
   const upgradePlans = useMemo(() => {
