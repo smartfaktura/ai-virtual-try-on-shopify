@@ -1,59 +1,50 @@
 
 
-# Fix Value Drawer + Update All Copy
+# Clean Up Layer 1 Inline Card — Compact & Minimal
 
-## 3 Problems to Fix
+## Problem
+The card is too heavy for an inline soft nudge. Too many text sizes, verbose detail text in value blocks, redundant dismiss (X button + "Dismiss" text), and on mobile the 3 value blocks + subline + badge make it too tall.
 
-1. **Value Drawer doesn't fit** — too much content for a single view. The 4 sections (header, unlock grid, why upgrade, plan cards) push below the fold.
-2. **"What you can create next" is weak** — generic chips like "Studio", "On-Model" don't convey the scale. Should reference 1,000+ personalized shots and monthly campaign drops.
-3. **Price label says `¢/img` but should say `¢/cr`** — it's per credit, not per image.
-
-## Additional: Full Copy Update
-
-Update all L1 headlines, sublines, value block titles, and L3 headlines per the provided category-specific copy.
+## Solution
+Strip it down to the essentials: headline, one subline, inline value chips (icon + short title only on all screens), single CTA row. Remove the full desktop value block cards with detail text entirely — use the compact chip style everywhere.
 
 ## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/lib/conversionCopy.ts` | Update all L1 headlines/sublines/value block titles per new copy. Update L3 headlines. Replace L2 unlock section with stronger messaging about 1,000+ shots + campaign drops. |
-| `src/components/app/UpgradeValueDrawer.tsx` | Fix `¢/img` → `¢/cr`. Make drawer scrollable and more compact — tighten spacing, reduce plan card padding, collapse "Why brands upgrade" into 2×2 grid instead of 4 rows. Replace "What you can create next" chips with a stronger 2-line message about 1,000+ personalized editorial shots + monthly campaign drops. |
-| `src/pages/AdminConversion.tsx` | Update reference table to reflect new copy |
+| `src/components/app/PostGenerationUpgradeCard.tsx` | Remove `ValueBlockFull` component entirely. Use compact inline chips on all screen sizes. Remove duplicate "Dismiss" text button (keep only X). Remove avatar name/role line (keep avatar image). Tighten padding. Remove "Growth — most chosen" badge. Simplify to: avatar + headline + subline → chips row → CTA button + X. |
 
-## Detailed Changes
+## New Layout
 
-### Copy Updates (conversionCopy.ts)
+```text
+Desktop:
+┌────────────────────────────────────────────────────┐
+│ [av] Your first fashion direction is ready      [X]│
+│      Keep creating with more credits and speed     │
+│      [⚡More Looks] [↗Better Value] [⚡Faster]      │
+│      [Compare Plans]                               │
+└────────────────────────────────────────────────────┘
 
-**L1 per category** (removing "Nice —" prefix, updating sublines and value block titles):
+Mobile (same, just wraps):
+┌──────────────────────────────┐
+│ [av] Your first fashion   [X]│
+│      direction is ready      │
+│      Keep creating with...   │
+│ [More Looks][Better Val][Fas]│
+│ [Compare Plans]              │
+└──────────────────────────────┘
+```
 
-| Cat | Headline | Subline | Value Blocks |
-|-----|----------|---------|--------------|
-| fashion | Your first fashion direction is ready | Keep creating with more credits, better value, and faster workflows | More Looks · Better Value · Faster Launches |
-| beauty | Your first beauty visual is ready | Create more skincare content with stronger value and faster production | More Placements · Better Value · Faster Campaigns |
-| jewelry | Your first jewelry visual is ready | Scale into more angles, more assets, and better production value | More Angles · Better Value · Faster Output |
-| fragrances | Your first fragrance visual is ready | Create more concepts with better value and faster campaign production | More Concepts · Better Value · Faster Campaigns |
-| food | Your first food visual is ready | Create more content for menus, ads, and social with better efficiency | More Content · Better Value · Faster Refreshes |
-| electronics | Your first product visual is ready | Create more launch-ready assets with better value and faster workflows | More Assets · Better Value · Faster Launches |
-| home | Your first home visual is ready | Create more room and catalog content with better value and speed | More Scenes · Better Value · Faster Refreshes |
-| accessories | Your first accessory visual is ready | Create more variations with better value and faster brand production | More Variations · Better Value · Faster Output |
-| fallback | Your first visual is ready | Keep creating with more credits, better value, and faster workflows | More Content · Better Value · Faster Workflow |
+## Specific Changes
 
-**L3 headlines**: "Build your full [category] visual set" (e.g., "Build your full fashion visual set").
+1. **Remove `ValueBlockFull`** — delete the component and the `isMobile` conditional. Use `ValueBlockCompact` for all screens.
+2. **Remove avatar name/role text** — the avatar image is enough personality. Drop the "Sophia, E-commerce Photographer" line.
+3. **Remove duplicate Dismiss** — keep only the X button (top-right). Remove the "Dismiss" text link from the CTA row.
+4. **Remove "Growth — most chosen" badge** — too salesy for a soft nudge.
+5. **Tighten padding** — `p-4 sm:p-5` instead of `p-5 sm:p-6`. Remove `pl-10` alignment on desktop (no longer needed without full blocks).
+6. **Reduce spacing** — `space-y-2.5` instead of `space-y-3 sm:space-y-4`.
+7. **Keep**: shimmer border, fade-in animation, staggered chip entry, Compare Plans button.
 
-**L2 "What you can create next"**: Replace the 6-chip grid with a stronger text block:
-- Primary: "Select from 1,000+ personalized editorial shots"
-- Secondary: "Plus monthly campaign drops for your social and marketing"
-- Keep the category-specific chips below as a compact supporting row (not the headline)
-
-### Drawer Layout Fix (UpgradeValueDrawer.tsx)
-
-- Fix all `¢/img` → `¢/cr` in PLAN_CARDS
-- Replace "What you can create next" section: strong headline about 1,000+ shots, keep chips as a subtle supporting grid
-- Tighten section spacing from `space-y-5` to `space-y-4`
-- Reduce plan card internal padding from `p-4` to `p-3.5`
-- "Why brands upgrade" — compact into tighter rows with less vertical gap
-
-### Value Block Detail Text Update
-
-Each `makeValueBlocks` call currently uses generic detail text. The detail text will update to match the new titles (e.g., "More Looks" with detail "Monthly credits to keep creating fashion looks").
+## Result
+A compact, clean inline nudge that's ~40% shorter on both desktop and mobile. No heavy selling — just a gentle prompt with the key value props as scannable chips.
 
