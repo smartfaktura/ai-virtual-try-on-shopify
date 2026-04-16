@@ -5,6 +5,7 @@ import { Check, ChevronDown, ArrowUpRight, Loader2 } from 'lucide-react';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
+import { CompetitorComparison } from '@/components/app/CompetitorComparison';
 import { toast } from '@/lib/brandedToast';
 import type { PricingPlan } from '@/types';
 
@@ -344,6 +345,9 @@ export default function AppPricing() {
           })}
         </div>
       </div>
+
+      {/* Cost comparison */}
+      <CompetitorComparison />
 
       {/* Enterprise section */}
       <div className="rounded-2xl border border-border bg-muted/10 p-6 sm:p-8 text-center space-y-4">

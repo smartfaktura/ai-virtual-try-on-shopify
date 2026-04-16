@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpRight, Check, Sparkles, Zap } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { type ConversionCategory, getLayer3Headline, getLayer3Subline } from '@/lib/conversionCopy';
 
 interface NoCreditsModalProps {
@@ -27,15 +29,15 @@ const subscribablePlans = pricingPlans.filter(
 
 const MODAL_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> = {
   starter: [
-    { text: '7.8¢ per credit' },
+    { text: '$0.078 per credit' },
     { text: 'Up to 100 products' },
   ],
   growth: [
-    { text: '5.3¢ per credit' },
+    { text: '$0.053 per credit' },
     { text: 'Brand Models', badge: 'NEW' },
   ],
   pro: [
-    { text: '4.0¢ per credit' },
+    { text: '$0.040 per credit' },
     { text: 'Unlimited products & profiles' },
   ],
 };
@@ -44,6 +46,9 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
   const { startCheckout, plan: userPlan } = useCredits();
   const plan = previewPlan ?? userPlan;
   const isFree = plan === 'free';
+  const isMobile = useIsMobile();
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const isAnnual = billingCycle === 'annual';
 
   const handleCreditPurchase = (stripePriceId: string | undefined) => {
     if (!stripePriceId) return;
@@ -51,9 +56,10 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
     onClose();
   };
 
-  const handlePlanSelect = (stripePriceId: string | undefined) => {
-    if (!stripePriceId) return;
-    startCheckout(stripePriceId, 'subscription');
+  const handlePlanSelect = (p: typeof subscribablePlans[0]) => {
+    const priceId = isAnnual ? p.stripePriceIdAnnual : p.stripePriceIdMonthly;
+    if (!priceId) return;
+    startCheckout(priceId, 'subscription');
     onClose();
   };
 
@@ -65,6 +71,15 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
       : 'Top up credits to continue this session';
 
   const upgradeNudge = !isFree ? getUpgradeNudge(plan) : null;
+
+  // On mobile, show Growth first
+  const displayPlans = isMobile
+    ? [...subscribablePlans].sort((a, b) => {
+        if (a.highlighted) return -1;
+        if (b.highlighted) return 1;
+        return 0;
+      })
+    : subscribablePlans;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -84,71 +99,107 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
         <div className="px-5 sm:px-8 py-7 space-y-6">
           {isFree ? (
             /* ── Free users: subscription plan cards ── */
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible">
-              {subscribablePlans.map((p) => {
-                const isHighlighted = p.highlighted;
-                return (
-                  <div
-                    key={p.planId}
-                    className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
-                      isHighlighted
-                        ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
-                        : 'border-border/60 hover:border-primary/30 bg-background'
+            <>
+              {/* Billing toggle */}
+              <div className="flex justify-center">
+                <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+                  <button
+                    className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${
+                      !isAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
+                    onClick={() => setBillingCycle('monthly')}
                   >
-                    {isHighlighted && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                        <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/20">
-                          {p.badge || 'Popular'}
-                        </Badge>
-                      </div>
-                    )}
-                    <div className="p-5 sm:p-6 space-y-3">
-                      <p className="text-sm font-bold tracking-tight">{p.name}</p>
+                    Monthly
+                  </button>
+                  <button
+                    className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-1.5 ${
+                      isAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={() => setBillingCycle('annual')}
+                  >
+                    Annual
+                    <span className={`inline-flex rounded-full text-[8px] font-bold px-1.5 py-0.5 leading-none ${
+                      isAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
+                    }`}>
+                      -20%
+                    </span>
+                  </button>
+                </div>
+              </div>
 
-                      <div className="space-y-0.5">
-                        <div className="flex items-baseline justify-center gap-0.5">
-                          <span className="text-2xl font-bold tracking-tight">${p.monthlyPrice}</span>
-                          <span className="text-xs text-muted-foreground">/mo</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible">
+                {displayPlans.map((p) => {
+                  const isHighlighted = p.highlighted;
+                  const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                  return (
+                    <div
+                      key={p.planId}
+                      className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                        isHighlighted
+                          ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
+                          : 'border-border/60 hover:border-primary/30 bg-background'
+                      }`}
+                    >
+                      {isHighlighted && (
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                          <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/20">
+                            Most Popular
+                          </Badge>
                         </div>
-                      </div>
+                      )}
+                      <div className="p-5 sm:p-6 space-y-3">
+                        <p className="text-sm font-bold tracking-tight">{p.name}</p>
 
-                      <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2">
-                        <p className="text-lg font-bold tracking-tight">
-                          {typeof p.credits === 'number' ? p.credits.toLocaleString() : p.credits}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">credits/mo</p>
-                      </div>
-
-                      {/* Plan-specific differentiators */}
-                      <div className="space-y-1.5 text-left">
-                        {(MODAL_PLAN_FEATURES[p.planId] ?? []).map((feat, i) => (
-                          <div key={i} className="flex items-start gap-2">
-                            <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-                            <span className="text-[11px] text-muted-foreground leading-tight inline-flex items-center gap-1.5">
-                              {feat.text}
-                              {feat.badge && (
-                                <Badge className="text-[8px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
-                                  {feat.badge}
-                                </Badge>
-                              )}
-                            </span>
+                        <div className="space-y-0.5">
+                          <div className="flex items-baseline justify-center gap-0.5">
+                            {isAnnual && p.monthlyPrice > displayPrice && (
+                              <span className="text-xs text-muted-foreground line-through mr-1">${p.monthlyPrice}</span>
+                            )}
+                            <span className="text-2xl font-bold tracking-tight">${displayPrice}</span>
+                            <span className="text-xs text-muted-foreground">/mo</span>
                           </div>
-                        ))}
-                      </div>
+                          {isAnnual && (
+                            <p className="text-[10px] text-muted-foreground">billed annually</p>
+                          )}
+                        </div>
 
-                      <Button
-                        variant={isHighlighted ? 'default' : 'outline'}
-                        className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                        onClick={() => handlePlanSelect(p.stripePriceIdMonthly)}
-                      >
-                        Choose {p.name}
-                      </Button>
+                        <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2">
+                          <p className="text-lg font-bold tracking-tight">
+                            {typeof p.credits === 'number' ? p.credits.toLocaleString() : p.credits}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">credits/mo</p>
+                        </div>
+
+                        {/* Plan-specific differentiators */}
+                        <div className="space-y-1.5 text-left">
+                          {(MODAL_PLAN_FEATURES[p.planId] ?? []).map((feat, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                              <span className="text-[11px] text-muted-foreground leading-tight inline-flex items-center gap-1.5">
+                                {feat.text}
+                                {feat.badge && (
+                                  <Badge className="text-[8px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
+                                    {feat.badge}
+                                  </Badge>
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <Button
+                          variant={isHighlighted ? 'default' : 'outline'}
+                          className="w-full min-h-[44px] rounded-xl text-sm font-medium"
+                          onClick={() => handlePlanSelect(p)}
+                        >
+                          Choose {p.name}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           ) : (
             /* ── Paid users: credit top-up packs ── */
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-visible">
@@ -213,7 +264,17 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
           )}
         </div>
 
-        <DialogFooter className="px-5 sm:px-8 pb-7 pt-0">
+        <DialogFooter className="px-5 sm:px-8 pb-7 pt-0 flex-col sm:flex-row gap-2">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mr-auto">
+            <a href="/app/pricing" className="hover:text-foreground transition-colors inline-flex items-center gap-1">
+              Compare all features
+              <ArrowUpRight className="w-3 h-3" />
+            </a>
+            <a href="mailto:hello@vovv.ai" className="hover:text-foreground transition-colors inline-flex items-center gap-1">
+              Contact Sales
+              <ArrowUpRight className="w-3 h-3" />
+            </a>
+          </div>
           <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px] w-full sm:w-auto">
             Maybe Later
           </Button>
