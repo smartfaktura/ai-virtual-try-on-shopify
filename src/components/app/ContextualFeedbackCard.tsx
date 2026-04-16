@@ -146,6 +146,7 @@ export function ContextualFeedbackCard({
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 px-4 py-3 sm:py-2 rounded-xl sm:rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm w-full sm:w-auto">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 whitespace-nowrap">Help Us Improve ·</span>
             <span className="text-xs font-medium text-muted-foreground flex-1">{questionText}</span>
             <button
               onClick={dismiss}
