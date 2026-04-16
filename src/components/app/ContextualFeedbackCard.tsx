@@ -56,7 +56,7 @@ export function ContextualFeedbackCard({
     const countKey = `vovv_fb_gen_count_${workflow}`;
     const count = parseInt(sessionStorage.getItem(countKey) || '0', 10) + 1;
     sessionStorage.setItem(countKey, String(count));
-    if (count % 3 !== 0) {
+    if (count !== 3) {
       setStep('dismissed');
       return;
     }
