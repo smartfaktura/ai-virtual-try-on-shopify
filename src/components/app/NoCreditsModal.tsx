@@ -71,7 +71,7 @@ function FreePlanSection({
   return (
     <div className="space-y-5">
       {/* Subtitle */}
-      <p className="text-[15px] text-muted-foreground text-center">
+      <p className="text-sm text-muted-foreground text-center">
         Pick a plan to keep creating
       </p>
 
@@ -94,7 +94,7 @@ function FreePlanSection({
           >
             Annual
             <span className={`inline-flex rounded-full text-[8px] font-bold px-1.5 py-0.5 leading-none ${
-              isAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
+              isAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary text-primary-foreground'
             }`}>
               -20%
             </span>
@@ -173,7 +173,7 @@ function FreePlanSection({
                     return bullets.map((feat, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                        <span className="text-[15px] leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
+                        <span className="text-sm leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
                           <span className="font-normal">{feat.text}</span>
                           {feat.badge && (
                             <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-primary text-primary-foreground">
@@ -402,7 +402,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:max-h-full max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:rounded-none p-0 gap-0 overflow-hidden max-sm:overflow-y-auto border-border/50 shadow-2xl bg-muted/50">
         {/* Header */}
-        <div className="px-5 sm:px-8 pt-8 pb-5 border-b border-border/50">
+        <div className="px-5 sm:px-8 pt-8 pb-5">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-xl bg-primary/10">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -410,7 +410,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
             <h2 className="text-xl font-semibold tracking-tight">{headline}</h2>
           </div>
           <div className="flex items-center gap-3">
-            <p className="text-[15px] text-muted-foreground">{subline}</p>
+            <p className="text-sm text-muted-foreground">{subline}</p>
             {isPaid && (
               <Badge variant="secondary" className="text-[10px] font-medium shrink-0">
                 {balance} credits remaining
@@ -449,7 +449,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
                       >
                         Annual
                         <span className={`inline-flex rounded-full text-[7px] font-bold px-1 py-0.5 leading-none ${
-                          isUpgradeAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
+                          isUpgradeAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary text-primary-foreground'
                         }`}>
                           -20%
                         </span>
