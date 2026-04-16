@@ -50,6 +50,7 @@ export function CreditIndicator() {
           style={{ width: `${usagePercent}%` }}
         />
       </div>
+      <UpgradePlanModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 }
