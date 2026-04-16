@@ -1,26 +1,37 @@
 
 
-# Rename "Templates" Back Button to "Visual Studio"
+# Hide Non-Functional Grid Size Buttons on Mobile
 
 ## Problem
-Workflow pages show a back button labeled "Templates" but the destination page (`/app/workflows`) is now called "Visual Studio". The label is outdated.
+The shots grid selector shows 4 column options (6, 5, 4, 3) on mobile, but on mobile screens they only produce 2 actual layouts: `grid-cols-3` (for 6col/5col) and `grid-cols-2` (for 4col/3col). Two pairs of buttons do the same thing, which is confusing.
 
-## Changes
+## Fix
 
-### 1. `src/pages/Generate.tsx` (line 2151)
-Change `'Templates'` to `'Visual Studio'` in the backAction content:
+### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+
+**1. Update `GridSizeToggle` to filter options on mobile** — use `useIsMobile()` to show only 2 options (`3col` and `5col`) on mobile, representing the actual 2-col and 3-col layouts:
+
 ```tsx
-backAction={{ content: activeWorkflow ? 'Visual Studio' : 'Dashboard', ... }}
+function GridSizeToggle({ value, onChange }: { value: GridSize; onChange: (v: GridSize) => void }) {
+  const isMobile = useIsMobile();
+  
+  const sizes: { id: GridSize; dots: [number, number]; title: string }[] = isMobile
+    ? [
+        { id: '5col', dots: [3, 3], title: '3 columns' },
+        { id: '3col', dots: [2, 2], title: '2 columns' },
+      ]
+    : [
+        { id: '6col', dots: [4, 3], title: '6 columns' },
+        { id: '5col', dots: [3, 3], title: '5 columns' },
+        { id: '4col', dots: [3, 2], title: '4 columns' },
+        { id: '3col', dots: [2, 2], title: '3 columns' },
+      ];
+  // ... rest unchanged
+}
 ```
 
-### 2. `src/pages/Perspectives.tsx` (line 680)
-Change the button text from `Templates` to `Visual Studio`:
-```tsx
-<ArrowLeft className="w-4 h-4" />
-Visual Studio
-```
+This reduces the toggle to 2 meaningful options on mobile (2-col vs 3-col grid), matching actual behavior.
 
 ### Files
-- `src/pages/Generate.tsx` — 1 string change
-- `src/pages/Perspectives.tsx` — 1 string change
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — filter grid toggle options by device
 
