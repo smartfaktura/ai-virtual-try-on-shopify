@@ -1,65 +1,70 @@
 
-## What’s happening
 
-I checked the code and found the mismatch.
+## Goal
 
-The styles were already updated in `src/components/app/NoCreditsModal.tsx`, but the popup you’re likely looking at on your current screen is `src/components/app/BuyCreditsModal.tsx`.
+Explore better visual treatments for the credits indicator in the sidebar — specifically the icon — and remove the "Your credits" label since the icon + number already communicate the meaning.
 
-That second modal still has the old styling:
-- selected `Monthly / Annual` pills still use primary colors
-- the annual `SAVE 20%` chip is still primary-colored
-- inline `SAVE` / `NEW` badges in the plan bullets are still primary-colored
+## Current state
 
-So you didn’t see the change because the earlier update went into the wrong plans popup.
+In `src/components/app/CreditIndicator.tsx`:
+- Tiny uppercase label "YOUR CREDITS"
+- A 28×28 rounded square with `Coins` icon inside
+- Balance number + `/ max`
+- Plus button to buy
+- Progress bar
 
-## Plan
+Removing the label gives more breathing room and lets the icon + number do the talking.
 
-### 1. Update the actual plans popup you’re seeing
-Edit `src/components/app/BuyCreditsModal.tsx` and restyle the billing toggle so it looks like a neutral segmented control instead of a main CTA.
+## Icon options
 
-Change selected state from:
-- `bg-primary text-primary-foreground shadow-sm`
+Here are concrete directions for the credits icon:
 
-To something like:
-- `bg-card text-foreground shadow-sm border border-border/60`
+### Option A — Coin stack (Layers / Coins icon, refined)
+Keep `Coins` but make it feel more premium: monochrome, no colored background tile, just the icon at slightly larger size next to the number. Minimalist, matches the "luxury restraint" aesthetic.
 
-Keep unselected state muted:
-- `text-muted-foreground hover:text-foreground`
+### Option B — Sparkles / Spark
+Use `Sparkles` (lucide). Reads as "AI credits / generations" rather than money. Fits a creative AI tool better than a coin metaphor.
 
-### 2. Make the savings and feature badges light grey in that same popup
-In `src/components/app/BuyCreditsModal.tsx`, change:
-- annual `SAVE 20%` chip
-- inline `SAVE ...%` badges
-- inline `NEW` badges
+### Option C — Zap / Bolt
+Use `Zap`. Reads as "energy / power to generate". Common pattern in AI tools (Midjourney "fast hours", Vercel credits, etc.). Feels modern and active.
 
-To a quiet light-grey treatment such as:
-- `bg-gray-100 text-gray-500`
+### Option D — Gem / Diamond
+Use `Gem`. Premium feel, treats credits as a precious resource. Great for a luxury-positioned product.
 
-### 3. Keep CTA hierarchy intact
-Do not change:
-- `Get Starter`
-- `Get Growth`
-- `Get Pro`
+### Option E — Circular progress ring around the number (no icon at all)
+Replace the icon tile entirely with a small circular progress ring wrapping the balance number. The ring itself becomes the visual — shows usage % at a glance. Most information-dense, very "premium dashboard".
 
-Those stay as the strongest actions.
+## My recommendation
 
-### 4. Leave logic untouched
-No pricing, checkout, modal behavior, or plan logic changes.
-This is a styling-only correction.
+**Option C (Zap)** or **Option B (Sparkles)** — both map to "AI generation fuel" much better than `Coins`, which implies money. Combined with removing the label, it becomes a cleaner, more product-native indicator.
 
-## Technical details
+If we want to go further, **Option E (progress ring)** is the most elegant but a bit more work.
 
-- Main file to update: `src/components/app/BuyCreditsModal.tsx`
-- Key areas:
-  - billing toggle around lines `309–337`
-  - plan bullet badges around lines `471–480`
+## Proposed change (pending your pick)
 
-`src/components/app/NoCreditsModal.tsx` already has the neutral toggle / grey badge styling, so the fix is mainly to bring `BuyCreditsModal` in line with it.
+In `src/components/app/CreditIndicator.tsx`:
 
-## Expected result
+1. Remove the "YOUR CREDITS" label row entirely (keep "Upgrade" pill, move it to align right with the balance row).
+2. Swap the `Coins` icon for the chosen icon (`Zap`, `Sparkles`, `Gem`, or progress ring).
+3. Slightly tighten vertical spacing now that the label is gone.
 
-After this fix:
-- `Monthly / Annual` looks like a selector, not a primary button
-- `SAVE` and `NEW` badges appear light grey
-- the actual plan CTA buttons remain the main visual focus
-- the popup finally matches what you asked for
+Layout after change:
+
+```text
+[icon]  1,240 / 1,500           [Upgrade]  [+]
+─────────── progress bar ───────────
+```
+
+No logic changes, styling only.
+
+## Question for you
+
+Which icon direction do you want?
+- A: refined Coins (no tile)
+- B: Sparkles
+- C: Zap (recommended)
+- D: Gem
+- E: circular progress ring (no icon)
+
+Once you pick, I'll apply it together with removing the "Your credits" label.
+
