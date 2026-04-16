@@ -1,91 +1,56 @@
 
 
+## Understanding
+
+The user is right — `/app/pricing` currently shows plan selection rows AND a comparison table = same plans shown twice. For a dedicated pricing/comparison page, the **comparison table IS the primary plan selector**. No need for separate selectable rows above it.
+
 ## Goal
 
-Refine `/app/pricing` to feel like the upgrade modal: compact selectable plan rows, a full SaaS-style feature comparison table with checkmarks, smarter CTA logic for users with no plan, and sharper FAQs.
+Remove the duplicate "compact plan rows" section. Make the **comparison table the hero of plan selection** with:
+- Plan names + prices in sticky header columns
+- "Recommended for You" badge on Growth column
+- A CTA button per plan column at the bottom of the table (and sticky in the header)
+- Free user / current plan states reflected in the header
 
 ## File
-- `src/pages/AppPricing.tsx` only
+- `src/pages/AppPricing.tsx`
 
 ## Changes
 
-### 1. Plan cards → compact rows (modal style)
-Replace the current 4 large stacked cards with the **same selectable row pattern** used in `UpgradePlanModal` (lines 250–306 of the modal):
-- One row per plan, `rounded-2xl border p-4`
-- Left: radio circle + plan name + badge ("Recommended for You" on Growth, "Current plan" on user's plan) + small line `1,500 credits · ~300 images/mo · 5.3¢/credit`
-- Right: `$79` `/mo` (annual shows monthly equiv + tiny "save $X")
-- Selected state: `border-primary bg-primary/[0.04] ring-1 ring-primary/30`
-- Click row → selects it (highlights). Single CTA below: **"Continue to checkout"** (or "Current plan" disabled / "Reactivate" / "Downgrade to X" depending on selected vs current)
-- Default selection: Growth (or current plan if user has one higher)
-- Stack vertically — no more 4-column grid. Same compact feel as modal.
-- Drop the per-card "+ N more" feature lists (the comparison table below replaces them)
+### 1. Remove the compact plan rows section entirely
+Delete the current selectable row block (radio + plan name + price). Also remove:
+- The `selectedPlanId` state
+- The single dynamic CTA below the rows
+- The "Choose your plan" mini-header
 
-### 2. Full feature comparison table (new section, replaces "What you actually get" pillars)
-Premium SaaS-style table with **checkmarks across every plan** for every platform feature. Grouped by category for scannability:
+The comparison table replaces all of it.
 
-**Generation**
-- Product photography scenes (1,000+)
-- Lifestyle & editorial scenes
-- AI Models (on-model imagery)
-- Brand Models (custom trained) — Growth+
-- Bulk generation — Starter+
-- Multi-angle / perspectives
-- Freestyle (text-to-image)
-- Image editing & background swap
+### 2. Promote the comparison table to be THE plan picker
+Restructure `FEATURE_MATRIX` table:
+- **Sticky header row** per plan column containing:
+  - Plan name (Growth gets "Recommended for You" badge above name)
+  - Price `$X/mo` + small annual savings text
+  - Credits/month line
+  - **CTA button** ("Choose Starter" / "Continue with Growth" / "Current plan" / "Reactivate")
+- First column: feature name + category group headers (Generation, Video, etc.)
+- Cell values: ✓ / — / text
+- Mobile: horizontal scroll wrapper with the first column pinned (sticky left)
+- Bottom of table: repeat the CTA row so users don't have to scroll back up
 
-**Video**
-- Product videos — Starter+
-- Short Films (AI Director) — Growth+
-- Audio & dialog — Pro
+### 3. Hero stays compact (from previous round)
+Keep the tightened hero, billing toggle, free-user value strip — all still relevant. Billing toggle moves to sit directly above the comparison table (controls the prices in the table header).
 
-**Quality & output**
-- 2K resolution — all
-- 4K upscaling — Starter+
-- All aspect ratios (1:1, 4:5, 3:4, 16:9, 9:16)
-- PNG / JPG export
+### 4. Trust block placement
+Move the "Cancel anytime · No commitment" + lock line to sit directly under the comparison table (below the bottom CTA row), left-aligned to match the table.
 
-**Brand & workflow**
-- Brand Profiles — Starter+
-- Saved aesthetics & color systems — Growth+
-- Catalog Studio — Growth+
-- Trend Watch (curated drops) — Pro
-- Bulk export (ZIP)
-
-**Account**
-- Generation queue speed (Standard / Priority / Fastest)
-- Monthly credits (number)
-- Per-credit cost
-- Support (Community / Email / Priority)
-
-Layout: sticky header row with plan names + prices. First column = feature name. Other columns = ✓ (primary color) / — (muted) / text value. Mobile: horizontal scroll wrapper. Same `rounded-2xl border-border/50` shell as the rest.
-
-Keeps the existing "ROI snapshot" section (math/comparison vs traditional) — that one stays.
-
-### 3. CTA logic for users with no plan (Free users)
-In the **final CTA strip** (currently "Top up credits" + "Talk to sales"):
-- If `plan === 'free'` (no active subscription) → **hide "Top up credits"**, show only **"Choose a plan"** (scrolls to plan section) + "Talk to sales"
-- If `plan !== 'free'` (paid user) → keep current "Top up credits" + "Talk to sales"
-
-Rationale: top-ups are a paid-user feature; new users must subscribe first.
-
-### 4. Improved FAQs (rewrite all 6 + add 2)
-Replace generic copy with sharper, objection-handling answers. New set:
-
-1. **How does VOVV compare to a real photoshoot?** — Side-by-side comparison: cost, time, iterations.
-2. **What exactly counts as 1 credit?** — Breakdown per workflow (image 4–6, video 30–60, upscale 5, Brand Model training X).
-3. **Do unused credits roll over?** — No, credits reset monthly (use-it-or-lose-it). Top-ups never expire.
-4. **Can I use the images commercially?** — Yes, full commercial license on all paid plans.
-5. **What happens if I cancel mid-cycle?** — Plan stays active until period end, then drops to Free. No prorated refund, no surprise charges.
-6. **How accurate are AI Models for on-model shots?** — Brand Models train on your real product/people for full identity consistency.
-7. **Can I switch plans anytime?** — Yes. Upgrades take effect immediately with prorated credits; downgrades at next renewal.
-8. **Is my product data private?** — Your uploads, generations, and Brand Profiles are private to your workspace. We never train shared models on your data.
+### 5. Sticky mobile CTA
+Update mobile sticky bar to show the **recommended plan** (Growth) by default with a "Continue" button → opens checkout for Growth. No more "selected plan" tracking needed.
 
 ## Out of scope
-- No backend, Stripe, or data file changes
-- `UpgradePlanModal` untouched
-- Public `/pricing` (LandingPricing) untouched
-- Hero, billing toggle, ROI snapshot, How credits work, Enterprise CTA — unchanged
+- ROI snapshot, How credits work, FAQs, Enterprise CTA — unchanged
+- Plan data, Stripe wiring, modal — unchanged
 
-## Expected result
-Plans feel like the modal (selectable rows, single CTA), users get a scannable feature comparison table to justify upgrading, free users see a "Choose a plan" CTA instead of "Top up", and FAQs handle real objections.
+## Result
+
+One unified plan section: a premium comparison table where each column is a complete plan (name, price, badge, CTA, feature checkmarks). No duplication. Users compare and pick in one place — exactly how Linear, Notion, Framer, Vercel pricing pages work.
 
