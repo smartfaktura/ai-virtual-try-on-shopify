@@ -1,39 +1,35 @@
 
 
-# Add Product Limit Bullets to Growth & Pro Cards
+# Fix Growth Card Border, Badge Color & Premium Footer
+
+## Problem
+The previous plan for these fixes was never executed. Growth card still has `border-primary/40` (faded), badge still uses `bg-primary/10 text-primary` (subtle), and footer still feels dense.
 
 ## Changes
 
-### All 3 files: `BuyCreditsModal.tsx`, `NoCreditsModal.tsx`, `UpgradeValueDrawer.tsx`
+### 1. Growth card border — solid primary
 
-Add one extra bullet to Growth and Pro in `PLAN_DIFFERENTIATORS` / `DRAWER_PLAN_FEATURES`:
+**BuyCreditsModal.tsx line 420:** `border-primary/40` → `border-primary`
+**NoCreditsModal.tsx line 120:** `border-primary/40` → `border-primary`
 
-| Plan | New bullet |
-|------|-----------|
-| Growth | `Up to 250 products` |
-| Pro | `Unlimited products` |
+### 2. "Most popular" badge — solid brand, white text
 
-**BuyCreditsModal.tsx (lines 392-399):**
-```
-growth: [
-  { text: 'Faster generation' },
-  { text: 'Up to 250 products' },
-  { text: 'Brand Models', badge: 'NEW' },
-],
-pro: [
-  { text: 'Fastest generation' },
-  { text: 'Unlimited products' },
-  { text: 'Brand Models', badge: 'NEW' },
-],
-```
+**BuyCreditsModal.tsx line 427:** `bg-primary/10 text-primary` → `bg-primary text-primary-foreground`
+**NoCreditsModal.tsx line 126:** same change
 
-Same change in `NoCreditsModal.tsx` (lines 40-47) and `UpgradeValueDrawer.tsx` (lines 34-41).
+### 3. Footer — more premium spacing and typography
+
+Both files, footer section:
+
+- Container: `space-y-2.5 pt-5 border-t border-border/15` (more breathing room, lighter separator)
+- "Cancel anytime · No commitment": `text-xs text-muted-foreground/60 tracking-wide uppercase font-normal` (elegant small-caps feel)
+- "All paid plans include...": `text-[11px] text-muted-foreground/50` (softer fine print)
+- Links row: `text-[11px]`, increase gap to `gap-4`, keep arrow icons
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `BuyCreditsModal.tsx` | Add product limit bullets to Growth & Pro |
+| `BuyCreditsModal.tsx` | Solid border, solid badge, premium footer |
 | `NoCreditsModal.tsx` | Same |
-| `UpgradeValueDrawer.tsx` | Same |
 
