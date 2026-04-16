@@ -420,7 +420,10 @@ export default function Settings() {
 
         {/* ─── Choose Your Plan ─── */}
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold">Choose Your Plan</h3>
+          <div>
+            <h3 className="text-base font-semibold">Choose Your Plan</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
+          </div>
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button
               className={`px-4 py-2 text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}

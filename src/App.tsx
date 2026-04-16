@@ -59,6 +59,7 @@ const AdminPromptTokens = lazy(() => import('@/pages/AdminPromptTokens'));
 const AdminBulkPreviewUpload = lazy(() => import('@/pages/AdminBulkPreviewUpload'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
+const AppPricing = lazy(() => import('@/pages/AppPricing'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
 const BlogPost = lazy(() => import('@/pages/BlogPost'));
@@ -215,6 +216,7 @@ const App = () => {
                         <Route path="/admin/prompt-tokens" element={<AdminPromptTokens />} />
                         <Route path="/admin/bulk-preview-upload" element={<AdminBulkPreviewUpload />} />
                         
+                        <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
