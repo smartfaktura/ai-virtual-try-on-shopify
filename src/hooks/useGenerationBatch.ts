@@ -30,8 +30,13 @@ interface UseGenerationBatchOptions {
   onCreditRefresh?: () => Promise<void> | void;
 }
 
+interface StartBatchResult {
+  success: boolean;
+  newBalance: number | null;
+}
+
 interface UseGenerationBatchReturn {
-  startBatch: (params: BatchParams) => Promise<boolean>;
+  startBatch: (params: BatchParams) => Promise<StartBatchResult>;
   batchState: BatchState | null;
   isBatching: boolean;
   resetBatch: () => void;
@@ -184,10 +189,10 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
     pollingRef.current = setInterval(poll, 3000);
   }, [stopPolling]);
 
-  const startBatch = useCallback(async (params: BatchParams): Promise<boolean> => {
+  const startBatch = useCallback(async (params: BatchParams): Promise<StartBatchResult> => {
     if (!user) {
       toast.error('Sign in to start generating');
-      return false;
+      return { success: false, newBalance: null };
     }
 
     const { payload, selectedVariationIndices, angleMultiplier, quality, imageCount } = params;
@@ -217,11 +222,11 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
       toast.error('Please sign in first');
       setIsBatching(false);
       setBatchState(null);
-      return false;
+      return { success: false, newBalance: null };
     }
 
     const jobIds: string[] = [];
-    let firstNewBalance: number | null = null;
+    let lastNewBalance: number | null = null;
 
     // Enqueue chunks sequentially with pacing + retry
     for (let c = 0; c < chunks.length; c++) {
@@ -261,7 +266,7 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
       }
 
       jobIds.push(result.jobId);
-      if (firstNewBalance === null) firstNewBalance = result.newBalance;
+      lastNewBalance = result.newBalance;
       params.onJobEnqueued?.(result.jobId);
     }
 
@@ -273,7 +278,7 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
     if (jobIds.length === 0) {
       setIsBatching(false);
       setBatchState(null);
-      return false;
+      return { success: false, newBalance: null };
     }
 
     jobIdsRef.current = jobIds;
@@ -290,7 +295,7 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
     pollAllJobs();
 
     setIsBatching(false);
-    return true;
+    return { success: true, newBalance: lastNewBalance };
   }, [user, pollAllJobs]);
 
   const resetBatch = useCallback(() => {
