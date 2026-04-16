@@ -101,7 +101,7 @@ function FreePlanSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible bg-muted/50 rounded-2xl p-4">
         {displayPlans.map((p) => {
           const isHighlighted = p.highlighted;
           const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
@@ -112,13 +112,23 @@ function FreePlanSection({
           const ctaLabel = PLAN_CTA_LABELS[p.planId] ?? `Choose ${p.name}`;
           const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
 
+          // Starter baseline for save % calculation
+          const starterPlan = subscribablePlans.find(sp => sp.planId === 'starter');
+          const starterCredits = typeof starterPlan?.credits === 'number' ? starterPlan.credits : 0;
+          const starterPrice = isAnnual && starterPlan ? Math.round(starterPlan.annualPrice / 12) : (starterPlan?.monthlyPrice ?? 0);
+          const starterPPC = starterCredits > 0 ? starterPrice / starterCredits : 0;
+          const currentPPC = credits > 0 && displayPrice > 0 ? displayPrice / credits : 0;
+          const savePct = starterPPC > 0 && currentPPC > 0 && p.planId !== 'starter'
+            ? Math.round((1 - currentPPC / starterPPC) * 100)
+            : 0;
+
           return (
             <div
               key={p.planId}
-              className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col ${
+              className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col bg-white dark:bg-card ${
                 isHighlighted
-                  ? 'border-2 border-primary bg-primary/[0.02] shadow-md shadow-primary/5'
-                  : 'border-2 border-border/40 hover:border-primary/30 bg-background'
+                  ? 'border-2 border-primary shadow-md shadow-primary/5'
+                  : 'border-2 border-border/40 hover:border-primary/30'
               }`}
             >
               {isHighlighted && (
@@ -141,8 +151,8 @@ function FreePlanSection({
                     {isAnnual && p.monthlyPrice > displayPrice && (
                       <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                     )}
-                    <span className="text-3xl font-bold">${displayPrice}</span>
-                    <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                    <span className="text-4xl font-bold">${displayPrice}</span>
+                    <span className="text-base font-normal text-muted-foreground">/mo</span>
                   </p>
                 </div>
 
@@ -154,17 +164,18 @@ function FreePlanSection({
                       bullets.push({ text: `~${imageEstimate} images / month` });
                       bullets.push({ text: `${credits.toLocaleString()} credits / month` });
                       if (displayPrice > 0) {
-                        bullets.push({ text: `$${(displayPrice / credits).toFixed(3)} per credit`, color: 'text-primary', ...(isAnnual ? { badge: 'SAVE 20%' } : {}) });
+                        const saveBadge = savePct > 0 ? `SAVE ${savePct}%` : (isAnnual ? 'SAVE 20%' : undefined);
+                        bullets.push({ text: `$${(displayPrice / credits).toFixed(3)} per credit`, color: 'text-primary', badge: saveBadge });
                       }
                     }
                     bullets.push(...differentiators);
                     return bullets.map((feat, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <Check className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" />
-                        <span className={`text-[13px] leading-snug inline-flex items-center gap-1.5 ${feat.color || 'text-muted-foreground'}`}>
+                        <span className={`text-sm leading-snug inline-flex items-center gap-1.5 ${feat.color || 'text-muted-foreground'}`}>
                           {feat.text}
                           {feat.badge && (
-                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-emerald-500/15 text-emerald-600 border-0">
+                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground border-0">
                               {feat.badge}
                             </Badge>
                           )}
