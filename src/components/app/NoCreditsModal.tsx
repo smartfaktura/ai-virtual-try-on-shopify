@@ -117,13 +117,13 @@ function FreePlanSection({
               key={p.planId}
               className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col ${
                 isHighlighted
-                  ? 'border-2 border-primary/40 bg-primary/[0.02] shadow-md shadow-primary/5 pt-4'
+                  ? 'border-2 border-primary bg-primary/[0.02] shadow-md shadow-primary/5 pt-4'
                   : 'border-2 border-border/40 hover:border-primary/30 bg-background'
               }`}
             >
               {isHighlighted && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-primary/10 text-primary text-[10px] font-medium px-4 py-0.5 border-0 shadow-sm">
+                  <Badge className="bg-primary text-primary-foreground text-[10px] font-medium px-4 py-0.5 border-0 shadow-sm">
                     Most popular
                   </Badge>
                 </div>
@@ -195,11 +195,11 @@ function FreePlanSection({
       </div>
 
       {/* Reassurance */}
-      <div className="space-y-3 pt-4 border-t border-border/20">
-        <p className="text-[13px] text-muted-foreground font-medium text-center">
+      <div className="space-y-2.5 pt-5 border-t border-border/15">
+        <p className="text-xs text-muted-foreground/60 tracking-wide uppercase font-normal text-center">
           Cancel anytime · No commitment
         </p>
-        <p className="text-xs text-muted-foreground text-center mt-1">
+        <p className="text-[11px] text-muted-foreground/50 text-center">
           All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
         </p>
       </div>
@@ -464,7 +464,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
         </div>
 
         <DialogFooter className="px-5 sm:px-8 pb-7 pt-0 flex-col sm:flex-row gap-2">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mr-auto">
+          <div className="flex items-center gap-4 text-[11px] text-muted-foreground mr-auto">
             <a href="/app/pricing" className="hover:text-foreground transition-colors inline-flex items-center gap-1">
               Compare all features
               <ArrowUpRight className="w-3 h-3" />
