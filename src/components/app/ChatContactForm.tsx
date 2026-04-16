@@ -51,7 +51,7 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
 
   if (state === 'sent') {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 animate-in fade-in duration-300">
+      <div className="flex items-center gap-2 py-2 rounded-lg bg-emerald-500/10 animate-in fade-in duration-300">
         <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
         <p className="text-xs text-foreground">
           Message sent! We'll get back to you within 24 hours at <strong>{email}</strong>.
@@ -60,10 +60,10 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
     );
   }
 
-  const inputClass = "w-full bg-background border border-border rounded-lg px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring";
+  const inputClass = "w-full bg-muted/40 border border-border rounded-lg px-3 py-2.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring";
 
   return (
-    <div className="space-y-2.5 p-3 rounded-xl bg-muted/50 border border-border">
+    <div className="space-y-2.5">
       <p className="text-xs font-medium text-foreground">Send a message to our team</p>
 
       <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} className={inputClass} disabled={state === 'sending'} />

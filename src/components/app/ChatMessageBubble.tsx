@@ -99,7 +99,7 @@ export function ChatMessageBubble({ content, role, isStreaming, onMinimize }: Ch
       )}
 
       {showContactForm && (
-        <div className="mt-2.5">
+        <div className="mt-2">
           <ChatContactForm onSent={() => setShowContactForm(false)} />
         </div>
       )}
