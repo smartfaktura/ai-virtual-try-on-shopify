@@ -1,20 +1,26 @@
 
 
-# Improve Step 2 (Expanded Panel) Mobile UX
+# Show 2-Column Grid for Generated Images on Mobile
 
 ## Problem
-Step 2 chips and action buttons don't match the improved Step 1 mobile layout — chips are small with tight gaps, action buttons are right-aligned and undersized for touch targets.
+On mobile (390px), the generated images grid uses `grid-cols-3`, making thumbnails cramped and hard to tap/preview.
 
-## Changes
+## Change
 
-### `src/components/app/ContextualFeedbackCard.tsx` — Step 2 (Lines 208-265)
+### `src/pages/Generate.tsx` — Line 4456
 
-1. **Chips**: Increase gap from `gap-1.5` to `gap-2`, add `min-h-[36px] px-3 py-1.5` for better touch targets on mobile
-2. **Textarea**: Increase to `text-sm` and `py-2.5` for comfortable typing on mobile
-3. **Action buttons**: Center on mobile (`justify-center md:justify-end`), increase "Send feedback" to `min-h-[44px] px-6` and "Skip" to `min-h-[44px]` for proper touch targets
-4. **Spacing**: Keep `space-y-3.5` which already works well
+Change the grid classes from:
+```
+grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6
+```
+to:
+```
+grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6
+```
+
+This gives 2 columns on mobile (<640px), 3 on small tablets, and keeps the existing 5/6 columns on larger screens.
 
 | File | Change |
 |------|--------|
-| `src/components/app/ContextualFeedbackCard.tsx` | Step 2: Larger chip touch targets, centered action buttons on mobile, proper min-h on Skip/Send |
+| `src/pages/Generate.tsx` | Line 4456: `grid-cols-3` → `grid-cols-2 sm:grid-cols-3` |
 
