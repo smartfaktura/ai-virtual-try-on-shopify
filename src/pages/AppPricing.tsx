@@ -1,90 +1,74 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
-  Check, ChevronDown, ArrowUpRight, Loader2,
-  Image, Video, ZoomIn, RefreshCw, Layers, Palette, Sparkles, Shield,
-  Camera, Users, Film, Wand2, FolderOpen, Download, ScanLine, Paintbrush, BookOpen,
-  DollarSign, Clock, UserX
+  Check, ChevronDown, ArrowUpRight, Lock,
+  Image, Video, RefreshCw,
+  Camera, Users, Film, Wand2, Palette, Layers,
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
-import { CompetitorComparison } from '@/components/app/CompetitorComparison';
+import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 import { toast } from '@/lib/brandedToast';
 import type { PricingPlan } from '@/types';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+const CREDITS_PER_IMAGE = 5;
 
-const VALUE_ROWS = [
-  { planId: 'starter', name: 'Starter', credits: '500', images: '~100', ppc: '$0.078' },
-  { planId: 'growth', name: 'Growth', credits: '1,500', images: '~300', ppc: '$0.053' },
-  { planId: 'pro', name: 'Pro', credits: '4,500', images: '~900', ppc: '$0.040' },
+const VALUE_PILLARS = [
+  { icon: Camera, title: 'Replace your photo studio', desc: '1,000+ scenes, lighting setups, and props — no booking, no setup, no waiting.' },
+  { icon: Users, title: 'Models without the model fee', desc: 'Diverse AI Models and custom Brand Models trained on your aesthetic.' },
+  { icon: Layers, title: 'From product to ad in minutes', desc: 'Bulk generation, multi-angle shots, and 4K upscaling in a single flow.' },
+  { icon: Film, title: 'Video, not just stills', desc: 'Short Films and product videos powered by AI cinematography.' },
+  { icon: Palette, title: 'On-brand, every time', desc: 'Brand Profiles lock your colors, tone, and visual language across every asset.' },
+  { icon: Wand2, title: 'Edit anything, anytime', desc: 'Freestyle prompts, background swaps, and intelligent retouching built in.' },
 ];
 
-const TEAM_COMPARISON = [
-  { role: 'Product Photographer', traditional: '$500–2,000/day', vovv: 'Included' },
-  { role: 'Photo Studio Rental', traditional: '$200–800/day', vovv: 'Included' },
-  { role: 'Styling & Props', traditional: '$300–1,000/shoot', vovv: 'Included' },
-  { role: 'Models & Talent', traditional: '$500–3,000/day', vovv: 'AI Models included' },
-  { role: 'Photo Retouching', traditional: '$5–25/image', vovv: 'Automatic' },
-  { role: 'Social Media Content', traditional: '$1,000–5,000/mo', vovv: 'Included' },
-  { role: 'Videography', traditional: '$2,000–10,000/project', vovv: 'Included' },
+const COMPARISON = [
+  { role: 'Product photographer', traditional: '$500–2,000/day' },
+  { role: 'Studio rental', traditional: '$200–800/day' },
+  { role: 'Models & talent', traditional: '$500–3,000/day' },
+  { role: 'Retouching', traditional: '$5–25/image' },
 ];
 
-const PLATFORM_FEATURES = [
-  { icon: Layers, title: '1,000+ Scenes', desc: 'Editorial, lifestyle, studio, seasonal, and custom scenes for every product category.' },
-  { icon: Users, title: 'AI Models', desc: 'Virtual models with consistent identity, diverse body types, and professional poses.' },
-  { icon: Sparkles, title: 'Brand Models', desc: 'Train custom AI models on your brand aesthetic for on-brand consistency. Growth+ plans.' },
-  { icon: Film, title: 'Video Generation', desc: 'Product videos, ad sequences, and short films powered by AI cinematography.' },
-  { icon: ZoomIn, title: '4K Upscaling', desc: 'Upscale any generation to print-ready 4K resolution with zero quality loss.' },
-  { icon: RefreshCw, title: 'Bulk Generation', desc: 'Generate hundreds of images in one batch across multiple products and scenes.' },
-  { icon: ScanLine, title: 'Multi-Angle Shots', desc: 'Front, back, side, and detail perspectives from a single product photo.' },
-  { icon: Wand2, title: 'Freestyle Studio', desc: 'Create anything with custom prompts — full creative control over every detail.' },
-  { icon: Paintbrush, title: 'Image Editing', desc: 'AI-powered retouching, background swap, and intelligent object removal.' },
-  { icon: Palette, title: 'Brand Profiles', desc: 'Save brand colors, tone, typography, and style preferences for consistency.' },
-  { icon: FolderOpen, title: 'Product Library', desc: 'Organize unlimited products with multi-angle references and metadata.' },
-  { icon: Download, title: 'Export & Download', desc: 'ZIP bulk downloads, individual high-res files, and direct sharing links.' },
+const FAQS = [
+  { q: 'Is there a free trial?', a: 'Every account starts with 20 free credits — no credit card required. Generate your first visuals before committing to a plan.' },
+  { q: 'How much does a single image cost?', a: 'Each image typically costs 4–6 credits depending on workflow. On the Growth plan that works out to around 5¢ per credit, or roughly $0.25 per image.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from settings in one click — no commitment, no cancellation fees. Your plan stays active until the end of the billing period.' },
+  { q: 'What is a Brand Profile?', a: 'A saved set of brand rules — colors, tone, photography references, do-not lists — that VOVV applies automatically to every generation for visual consistency.' },
+  { q: 'What formats and resolutions do I get?', a: 'High-resolution PNG and JPG, with 1:1, 4:5, 3:4, 16:9, and 9:16 aspect ratios. Upscale anything to print-ready 4K when you need it.' },
+  { q: 'What can I create with VOVV?', a: 'Product photography, lifestyle scenes, on-model imagery, editorial campaigns, ad creative, and short product videos — all from a single product photo.' },
 ];
 
 export default function AppPricing() {
+  const navigate = useNavigate();
   const { plan, subscriptionStatus, startCheckout, openCustomerPortal } = useCredits();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [topupOpen, setTopupOpen] = useState(false);
 
   const isAnnual = billingPeriod === 'annual';
-  const isMobile = useIsMobile();
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
-
-  const mobilePlans = [...mainPlans].sort((a, b) => {
-    if (a.highlighted) return -1;
-    if (b.highlighted) return 1;
-    return 0;
-  });
+  const currentIdx = PLAN_ORDER.indexOf(plan);
+  const planConfig = pricingPlans.find(p => p.planId === plan);
 
   const handlePlanSelect = (planId: string) => {
     if (planId === 'enterprise') {
-      toast.info('Our team will reach out to discuss your needs!');
+      navigate('/contact');
       return;
     }
     const targetPlan = pricingPlans.find(p => p.planId === planId);
     if (!targetPlan) return;
-    const currentIdx = PLAN_ORDER.indexOf(plan);
     const targetIdx = PLAN_ORDER.indexOf(planId);
-    if (planId === plan && subscriptionStatus === 'canceling') {
-      setDialogMode('reactivate');
-    } else if (planId === 'free') {
-      setDialogMode('cancel');
-    } else if (targetIdx > currentIdx) {
-      setDialogMode('upgrade');
-    } else {
-      setDialogMode('downgrade');
-    }
+    if (planId === plan && subscriptionStatus === 'canceling') setDialogMode('reactivate');
+    else if (planId === 'free') setDialogMode('cancel');
+    else if (targetIdx > currentIdx) setDialogMode('upgrade');
+    else setDialogMode('downgrade');
     setSelectedPlan(targetPlan);
     setDialogOpen(true);
   };
@@ -107,331 +91,305 @@ export default function AppPricing() {
     }
   };
 
-  const currentIdx = PLAN_ORDER.indexOf(plan);
-  const planConfig = pricingPlans.find(p => p.planId === plan);
-
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12 pb-16 space-y-24">
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-16 pb-20 space-y-20 sm:space-y-24">
 
-      {/* ── Hero Header ── */}
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-          Your complete visual production studio
+      {/* ── Hero ── */}
+      <header className="text-center space-y-4 max-w-2xl mx-auto">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">Pricing</p>
+        <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight leading-[1.05]">
+          Studio-grade visuals.<br className="hidden sm:block" /> Without the studio.
         </h1>
-        <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-          Replace photographers, stylists, studios, and videographers with one AI-powered platform. Professional product visuals in minutes, not weeks.
+        <p className="text-base text-muted-foreground leading-relaxed">
+          Pick the plan that matches your output. Cancel anytime — no commitment.
         </p>
 
-        {/* Billing toggle */}
-        <div className="flex justify-center pt-4">
-          <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+        {/* Billing toggle (modal pill style) */}
+        <div className="flex justify-center pt-3">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/40 text-xs">
             <button
-              className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
-                !isAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}
               onClick={() => setBillingPeriod('monthly')}
+              className={`px-4 py-1.5 rounded-full transition-colors ${
+                !isAnnual ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
+              }`}
             >
               Monthly
             </button>
             <button
-              className={`px-5 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
-                isAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}
               onClick={() => setBillingPeriod('annual')}
+              className={`px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
+                isAnnual ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
+              }`}
             >
               Annual
-              <span className={`inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 leading-none ${
-                isAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
-              }`}>
-                SAVE 20%
-              </span>
+              <span className="text-[10px] text-primary font-semibold">−20%</span>
             </button>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* ── Plan Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {(isMobile ? mobilePlans : mainPlans).map((p) => {
-          const isCurrent = p.planId === plan;
-          const targetIdx = PLAN_ORDER.indexOf(p.planId);
-          const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
-          const isFree = p.planId === 'free';
-          const credits = typeof p.credits === 'number' ? p.credits : 0;
-          const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
+      <section className="space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {mainPlans.map((p) => {
+            const isCurrent = p.planId === plan;
+            const targetIdx = PLAN_ORDER.indexOf(p.planId);
+            const isFree = p.planId === 'free';
+            const isRecommended = p.planId === 'growth';
+            const credits = typeof p.credits === 'number' ? p.credits : 0;
+            const imageEstimate = credits > 0 ? Math.round(credits / CREDITS_PER_IMAGE) : null;
+            const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+            const annualSavings = isAnnual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
 
-          let ctaLabel = targetIdx > currentIdx ? `Choose ${p.name}` : targetIdx < currentIdx ? `Downgrade to ${p.name}` : 'Current Plan';
-          if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
-          const isDisabled = isCurrent && subscriptionStatus !== 'canceling';
+            const features = p.features.map(f => typeof f === 'string' ? f : f.text);
+            const topFeatures = features.slice(0, 4);
+            const extraFeatures = features.slice(4);
 
-          return (
-            <div
-              key={p.planId}
-              className={`relative rounded-2xl p-5 flex flex-col transition-all ${
-                isCurrent && !isFree
-                  ? 'border-2 border-primary ring-1 ring-primary/10 bg-card shadow-sm'
-                  : p.highlighted && targetIdx > currentIdx
-                    ? 'border-2 border-primary/60 bg-card shadow-md'
-                    : 'border border-border bg-card shadow-sm hover:shadow-md'
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-3 flex-wrap">
-                <h4 className="text-base font-semibold">{p.name}</h4>
-                {p.badge && targetIdx > currentIdx && (
-                  <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-2 py-0.5">
-                    {p.badge}
-                  </Badge>
-                )}
-                {isCurrent && (
-                  <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
-                )}
-              </div>
+            let ctaLabel: string;
+            if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
+            else if (isCurrent) ctaLabel = 'Current plan';
+            else if (targetIdx > currentIdx) ctaLabel = isFree ? 'Get started free' : 'Continue to checkout';
+            else ctaLabel = `Downgrade to ${p.name}`;
 
-              <div className="mb-3">
-                {isFree ? (
-                  <span className="text-2xl font-bold tracking-tight">Free</span>
-                ) : (
-                  <>
-                    <div className="flex items-baseline gap-1">
-                      {isAnnual && p.monthlyPrice > displayPrice && (
-                        <span className="text-sm text-muted-foreground line-through">${p.monthlyPrice}</span>
-                      )}
-                      <span className="text-2xl font-bold tracking-tight">${displayPrice}</span>
-                      <span className="text-xs text-muted-foreground">/mo</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {isAnnual ? 'billed annually' : 'billed monthly'}
-                    </p>
-                  </>
-                )}
-              </div>
+            const isDisabled = isCurrent && subscriptionStatus !== 'canceling';
 
-              {imageEstimate ? (
-                <div className="mb-4">
-                  <p className="text-sm font-medium">~{imageEstimate} images/mo</p>
-                  <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
-                  {displayPrice > 0 && (
-                    <p className="text-[10px] text-primary font-medium mt-0.5">
-                      {(displayPrice / credits * 100).toFixed(1)}¢ per credit
-                    </p>
+            return (
+              <div
+                key={p.planId}
+                className={`relative rounded-2xl border p-5 flex flex-col transition-all ${
+                  isRecommended
+                    ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30 shadow-lg'
+                    : isCurrent
+                      ? 'border-primary/60 bg-card shadow-sm'
+                      : 'border-border/50 bg-card hover:border-border'
+                }`}
+              >
+                {/* Badge row */}
+                <div className="flex items-center gap-2 mb-4 min-h-[18px] flex-wrap">
+                  {isRecommended && (
+                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
+                      Recommended for You
+                    </span>
+                  )}
+                  {isCurrent && (
+                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
+                      Current plan
+                    </span>
                   )}
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground mb-4">{p.credits} credits</p>
-              )}
 
-              <div className="space-y-1.5 flex-1 mb-4">
-                {p.features.slice(0, 3).map((f, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                    <span className="text-[11px] text-muted-foreground leading-snug">
-                      {typeof f === 'string' ? f : (
-                        <span className="inline-flex items-center gap-1.5">
-                          {f.text}
-                          {f.badge && (
-                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
-                              {f.badge}
-                            </Badge>
-                          )}
-                        </span>
-                      )}
-                    </span>
+                {/* Name */}
+                <h3 className="text-base font-semibold tracking-tight mb-3">{p.name}</h3>
+
+                {/* Price */}
+                <div className="mb-4">
+                  {isFree ? (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-semibold tracking-tight">$0</span>
+                      <span className="text-xs text-muted-foreground">/mo</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-semibold tracking-tight">${displayPrice}</span>
+                        <span className="text-xs text-muted-foreground">/mo</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {isAnnual ? `billed yearly · save $${annualSavings}` : 'billed monthly'}
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Credits */}
+                {imageEstimate ? (
+                  <div className="mb-4 pb-4 border-b border-border/40">
+                    <p className="text-sm font-medium text-foreground">{credits.toLocaleString()} credits/mo</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">~{imageEstimate.toLocaleString()} images</p>
+                    {displayPrice > 0 && (
+                      <p className="text-[10px] text-primary font-medium mt-1">
+                        {(displayPrice / credits * 100).toFixed(1)}¢ per credit
+                      </p>
+                    )}
                   </div>
-                ))}
+                ) : (
+                  <div className="mb-4 pb-4 border-b border-border/40">
+                    <p className="text-sm font-medium text-foreground">{credits} credits</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">to try the platform</p>
+                  </div>
+                )}
+
+                {/* Features */}
+                <ul className="space-y-2 flex-1 mb-5">
+                  {topFeatures.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary" strokeWidth={2.5} />
+                      <span className="text-[12px] text-foreground/80 leading-snug">{f}</span>
+                    </li>
+                  ))}
+                  {extraFeatures.length > 0 && (
+                    <li className="text-[11px] text-muted-foreground pl-5.5">+ {extraFeatures.length} more</li>
+                  )}
+                </ul>
+
+                {/* CTA */}
+                <Button
+                  variant={isDisabled ? 'secondary' : isRecommended || (targetIdx > currentIdx && !isFree) ? 'default' : 'outline'}
+                  className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
+                  onClick={() => handlePlanSelect(p.planId)}
+                  disabled={isDisabled}
+                >
+                  {ctaLabel}
+                </Button>
               </div>
+            );
+          })}
+        </div>
 
-              <Button
-                variant={isDisabled ? 'secondary' : targetIdx > currentIdx ? 'default' : 'outline'}
-                className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
-                onClick={() => handlePlanSelect(p.planId)}
-                disabled={isDisabled}
-              >
-                {ctaLabel}
-              </Button>
-            </div>
-          );
-        })}
-      </div>
+        {/* Trust line */}
+        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-1">
+          <Lock className="w-3 h-3" />
+          <span>Cancel anytime · No commitment · Secure checkout</span>
+        </div>
+      </section>
 
-      {/* ── Team Replacement Comparison ── */}
-      <div className="space-y-8">
-        <div className="text-center space-y-3">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-            One platform replaces your entire creative team
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-            Stop paying for photographers, studios, models, and retouchers separately. VOVV.AI handles it all.
+      {/* ── Value pillars ── */}
+      <section className="space-y-8">
+        <div className="text-center space-y-3 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">What you actually get</h2>
+          <p className="text-sm text-muted-foreground">
+            Six things that replace the rest of your creative production stack.
           </p>
         </div>
-
-        <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
-          {/* Table header */}
-          <div className="grid grid-cols-3 bg-muted/50 px-4 sm:px-6 py-3">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Role</span>
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider text-center">Traditional Cost</span>
-            <span className="text-[11px] font-semibold text-primary uppercase tracking-wider text-right">VOVV.AI</span>
-          </div>
-          {/* Table rows */}
-          {TEAM_COMPARISON.map((row, i) => (
-            <div
-              key={row.role}
-              className={`grid grid-cols-3 px-4 sm:px-6 py-3.5 border-t border-border/50 ${
-                i % 2 === 0 ? 'bg-card' : 'bg-muted/20'
-              }`}
-            >
-              <span className="text-sm font-medium text-foreground">{row.role}</span>
-              <span className="text-sm text-muted-foreground text-center line-through decoration-muted-foreground/40">{row.traditional}</span>
-              <span className="text-sm font-medium text-primary text-right">{row.vovv}</span>
-            </div>
-          ))}
-          {/* Total row */}
-          <div className="grid grid-cols-3 px-4 sm:px-6 py-4 border-t-2 border-border bg-muted/30">
-            <span className="text-sm font-bold text-foreground">Total per shoot</span>
-            <span className="text-sm font-bold text-muted-foreground text-center line-through decoration-muted-foreground/40">$4,500–22,000+</span>
-            <span className="text-sm font-bold text-primary text-right">From $0/mo</span>
-          </div>
-        </div>
-
-        <p className="text-[11px] text-muted-foreground/60 text-center max-w-lg mx-auto">
-          Based on average US market rates for professional product photography and content creation services.
-        </p>
-      </div>
-
-      {/* ── Everything You Get — Platform Features ── */}
-      <div className="space-y-8">
-        <div className="text-center space-y-3">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-            Everything you get with VOVV.AI
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-            A complete visual production toolkit — from AI photography to video creation, all in one platform.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {PLATFORM_FEATURES.map((feat) => (
+          {VALUE_PILLARS.map((pillar) => (
             <div
-              key={feat.title}
-              className="rounded-xl border border-border bg-card p-5 space-y-2.5 shadow-sm hover:shadow-md transition-shadow"
+              key={pillar.title}
+              className="rounded-2xl border border-border/50 bg-card p-5 space-y-3"
             >
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <feat.icon className="w-4 h-4 text-primary" />
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <pillar.icon className="w-4 h-4 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold tracking-tight">{feat.title}</h3>
-              <p className="text-[12px] text-muted-foreground leading-relaxed">{feat.desc}</p>
+              <h3 className="text-sm font-semibold tracking-tight">{pillar.title}</h3>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">{pillar.desc}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ── Cost Comparison (existing) ── */}
-      <CompetitorComparison />
-
-      {/* ── How Credits Work ── */}
-      <div className="space-y-6">
-        <div className="text-center space-y-3">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">How credits work</h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Credits are the simple currency that powers all your visual creation.
+      {/* ── ROI snapshot ── */}
+      <section className="space-y-8">
+        <div className="text-center space-y-3 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">The math, simply</h2>
+          <p className="text-sm text-muted-foreground">
+            What a typical brand spends on production — and what VOVV replaces.
           </p>
+        </div>
+
+        {/* Stat row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { stat: '~$0.04', label: 'per credit on Pro plan' },
+            { stat: '$8,000+', label: 'saved per shoot vs traditional' },
+            { stat: '5 min', label: 'from upload to first visual' },
+          ].map((s) => (
+            <div key={s.label} className="rounded-2xl border border-border/50 bg-card p-6 text-center">
+              <p className="text-3xl font-semibold tracking-tight text-primary">{s.stat}</p>
+              <p className="text-xs text-muted-foreground mt-2">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Compact comparison */}
+        <div className="rounded-2xl border border-border/50 overflow-hidden">
+          <div className="grid grid-cols-3 bg-muted/40 px-5 py-3">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Role</span>
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-center">Traditional</span>
+            <span className="text-[10px] font-semibold text-primary uppercase tracking-wider text-right">VOVV</span>
+          </div>
+          {COMPARISON.map((row) => (
+            <div key={row.role} className="grid grid-cols-3 px-5 py-3.5 border-t border-border/40 bg-card">
+              <span className="text-sm font-medium">{row.role}</span>
+              <span className="text-sm text-muted-foreground text-center line-through decoration-muted-foreground/40">{row.traditional}</span>
+              <span className="text-sm font-medium text-primary text-right">Included</span>
+            </div>
+          ))}
+          <div className="grid grid-cols-3 px-5 py-4 border-t border-border bg-muted/30">
+            <span className="text-sm font-semibold">Total</span>
+            <span className="text-sm font-semibold text-muted-foreground text-center line-through decoration-muted-foreground/40">$4,500–22,000+</span>
+            <span className="text-sm font-semibold text-primary text-right">From $0/mo</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How credits work ── */}
+      <section className="space-y-8">
+        <div className="text-center space-y-3 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">How credits work</h2>
+          <p className="text-sm text-muted-foreground">One simple currency powers everything you create.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            { icon: Image, title: 'Generate images', desc: '4–6 credits per image depending on the workflow and model selection — product shots, lifestyle, editorial, and more.' },
-            { icon: Video, title: 'Create videos & upscale', desc: 'Use credits for video generation, 2K and 4K upscaling, and brand model training.' },
+            { icon: Image, title: 'Generate images', desc: '4–6 credits per image depending on the workflow — product, lifestyle, editorial, or on-model.' },
+            { icon: Video, title: 'Video & upscaling', desc: 'Use credits for video generation, 2K and 4K upscaling, and Brand Model training.' },
             { icon: RefreshCw, title: 'Monthly refresh', desc: 'Credits refresh every billing cycle. Higher plans unlock better per-credit value and faster queues.' },
           ].map((item) => (
-            <div key={item.title} className="rounded-xl border border-border bg-card p-5 space-y-2.5 shadow-sm">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div key={item.title} className="rounded-2xl border border-border/50 bg-card p-5 space-y-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <item.icon className="w-4 h-4 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold">{item.title}</h3>
+              <h3 className="text-sm font-semibold tracking-tight">{item.title}</h3>
               <p className="text-[12px] text-muted-foreground leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* ── Value at a Glance ── */}
-      <div className="space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-center">Value at a glance</h2>
-        <div className="rounded-xl border border-border overflow-hidden shadow-sm">
-          <div className="grid grid-cols-4 bg-muted/50 px-4 sm:px-6 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            <span>Plan</span>
-            <span className="text-center">Credits/mo</span>
-            <span className="text-center">~Images</span>
-            <span className="text-right">Per credit</span>
-          </div>
-          {VALUE_ROWS.map((row) => (
-            <div
-              key={row.planId}
-              className={`grid grid-cols-4 px-4 sm:px-6 py-3 text-sm border-t border-border/50 ${
-                row.planId === plan ? 'bg-primary/5 font-medium' : ''
-              }`}
-            >
-              <span className="font-medium flex items-center gap-2">
-                {row.name}
-                {row.planId === 'growth' && (
-                  <Badge className="bg-primary text-primary-foreground text-[8px] px-1.5 py-0">Best value</Badge>
-                )}
-              </span>
-              <span className="text-center">{row.credits}</span>
-              <span className="text-center">{row.images}</span>
-              <span className="text-right text-primary font-medium">{row.ppc}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      </section>
 
       {/* ── FAQ ── */}
-      <div className="space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-center">Frequently asked questions</h2>
-        <div className="max-w-3xl mx-auto space-y-2">
-          {[
-            { q: 'What can I create with VOVV?', a: 'Product photography, lifestyle shots, editorial campaigns, on-model imagery, product videos, short films, and ad content — all from a single product photo.' },
-            { q: 'Do I need photography experience?', a: 'Not at all. VOVV.AI handles lighting, composition, styling, and retouching automatically. Just upload your product and choose a scene.' },
-            { q: 'Do unused credits roll over?', a: 'No — credits reset each billing cycle. Use them or lose them. This keeps plans affordable for everyone.' },
-            { q: 'Can I change plans anytime?', a: 'Yes. Upgrade instantly and get the new credit balance right away. Downgrades take effect at your next billing date.' },
-            { q: 'What happens when I run out of credits?', a: 'You can purchase one-time credit top-ups without changing your plan, or upgrade to a higher plan for more monthly credits.' },
-            { q: 'How does annual billing work?', a: 'Pay for 12 months upfront and save 20%. Credits are still refreshed monthly — you get the same amount each month.' },
-            { q: 'Is there a free trial?', a: 'Every account starts with 20 free credits — no credit card required. Generate images and see the quality before committing.' },
-            { q: 'How many images can I generate per credit?', a: 'Each image costs 4–6 credits depending on workflow — Freestyle starts at 4, Visual Studio scenes cost 6. Video generation, upscaling, and model training have their own credit costs displayed before each action.' },
-          ].map((faq) => (
+      <section className="space-y-6 max-w-3xl mx-auto w-full">
+        <div className="text-center space-y-3">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Questions, answered</h2>
+        </div>
+        <div className="space-y-2">
+          {FAQS.map((faq) => (
             <Collapsible key={faq.q}>
-              <CollapsibleTrigger className="w-full flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/30 transition-colors text-left shadow-sm">
+              <CollapsibleTrigger className="w-full flex items-center justify-between rounded-2xl border border-border/50 bg-card px-5 py-4 hover:border-border transition-colors text-left group">
                 <span className="text-sm font-medium">{faq.q}</span>
-                <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform data-[state=open]:rotate-180" />
+                <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent className="px-4 pt-1 pb-3">
+              <CollapsibleContent className="px-5 pt-2 pb-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
               </CollapsibleContent>
             </Collapsible>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ── Enterprise CTA ── */}
-      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 text-center space-y-4 shadow-sm">
-        <h2 className="text-xl font-bold tracking-tight">Need more scale?</h2>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Custom credit volume, dedicated support, custom integrations, and automated workflows for teams.
-        </p>
-        <Button
-          variant="outline"
-          className="min-h-[44px] rounded-xl text-sm font-medium gap-1.5"
-          onClick={() => handlePlanSelect('enterprise')}
-        >
-          Contact Sales
-          <ArrowUpRight className="w-3.5 h-3.5" />
-        </Button>
-      </div>
-
-      {/* Compare link */}
-      <div className="text-center">
-        <a href="/pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-          View public pricing page →
-        </a>
-      </div>
+      {/* ── Final CTA strip ── */}
+      <section className="rounded-2xl border border-border/50 bg-card p-8 sm:p-10 text-center space-y-5">
+        <div className="space-y-2 max-w-xl mx-auto">
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Need credits sooner?</h2>
+          <p className="text-sm text-muted-foreground">
+            Top up instantly without changing plans, or talk to us about custom volume.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button
+            onClick={() => setTopupOpen(true)}
+            className="rounded-xl min-h-[44px] gap-2"
+          >
+            Top up credits
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/contact')}
+            className="rounded-xl min-h-[44px]"
+          >
+            Talk to sales
+          </Button>
+        </div>
+      </section>
 
       <PlanChangeDialog
         open={dialogOpen}
@@ -444,6 +402,12 @@ export default function AppPricing() {
         currentBalance={0}
         hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
         loading={loading}
+      />
+
+      <UpgradePlanModal
+        open={topupOpen}
+        onClose={() => setTopupOpen(false)}
+        variant="topup"
       />
     </div>
   );
