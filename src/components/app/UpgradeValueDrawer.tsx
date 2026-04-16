@@ -100,7 +100,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
           </SheetHeader>
 
           {/* Category feature pills */}
-          <div className="flex flex-wrap gap-1.5 pb-3">
+          <div className="hidden sm:flex flex-wrap gap-1.5 pb-3">
             {copy.unlockItems.map((item) => (
               <span
                 key={item}
