@@ -3,10 +3,12 @@ import { Sparkles, X } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 
 export function LowCreditsBanner() {
-  const { balance, isLow, isCritical, isEmpty, openBuyModal } = useCredits();
+  const { balance, isEmpty, openBuyModal } = useCredits();
   const [dismissed, setDismissed] = useState(false);
   
-  if (dismissed || (!isLow && !isCritical && !isEmpty)) {
+  const shouldShow = isEmpty || balance < 4;
+  
+  if (dismissed || !shouldShow) {
     return null;
   }
   
