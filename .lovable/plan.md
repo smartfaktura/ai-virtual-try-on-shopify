@@ -1,59 +1,68 @@
 
 
-# Admin Conversion Preview Page
+# Fix NoCreditsModal — Plan-Aware Content
 
-Create a new admin page at `/app/admin/conversion` that renders all 3 Post-Gen Conversion components in an interactive sandbox so you can preview, compare, and request design changes.
+## The Problem
 
-## What You'll See
+Currently `NoCreditsModal` shows the same credit pack grid (200 / 500 / 1500 one-time packs) to all users. This is incorrect:
 
-The page will display all 3 layers side-by-side with controls:
+- **Free users** should see **subscription plans** (Starter / Growth / Pro) as their path to get credits — upgrading is the right action
+- **Paid users** (Starter/Growth/Pro) should see **credit top-up packs** — they already have a plan and just need more credits for this billing cycle
 
-- **Layer 1 — PostGenerationUpgradeCard**: Inline card with category dropdown to preview all 9 category variants (fashion, beauty, jewelry, etc.)
-- **Layer 2 — UpgradeValueDrawer**: Opens from a button, showing the value drawer with category switcher and optional generation context preview
-- **Layer 3 — NoCreditsModal**: Opens from a button, showing the credit pack purchase modal with category switcher
+## The Fix
 
-Each section will have:
-- Category selector dropdown (all 9 categories)
-- Desktop/mobile viewport toggle (renders in a constrained container to simulate breakpoints)
-- Open/close controls for drawer and modal
-- The 3-second fade-in delay on Layer 1 will be bypassed for instant preview
+**File**: `src/components/app/NoCreditsModal.tsx`
 
-## Technical Plan
+Read `plan` from `useCredits()`. Branch the modal content:
 
-| Step | Details |
-|------|---------|
-| **Create page** | `src/pages/AdminConversion.tsx` — standalone admin page with all 3 components rendered in preview containers |
-| **Add route** | `src/App.tsx` — add `<Route path="/admin/conversion" element={<AdminConversion />} />` |
-| **Add nav link** | `src/components/app/AppShell.tsx` — add "Conversion" button in admin menu |
+### When `plan === 'free'` (Free User)
 
-### Page Layout
+Show subscription plans instead of credit packs:
 
 ```text
 ┌─────────────────────────────────────────────┐
-│  Post-Gen Conversion Preview     [Category ▼]│
-├─────────────────────────────────────────────┤
-│  LAYER 1 — Inline Upgrade Card              │
-│  ┌─────────────────────────────────┐        │
-│  │ [PostGenerationUpgradeCard]     │        │
-│  └─────────────────────────────────┘        │
-│  [Desktop] [Mobile 375px]                   │
-├─────────────────────────────────────────────┤
-│  LAYER 2 — Value Drawer                     │
-│  [Open Drawer]                              │
-├─────────────────────────────────────────────┤
-│  LAYER 3 — No Credits Modal                 │
-│  [Open Modal]                               │
-├─────────────────────────────────────────────┤
-│  COPY REFERENCE TABLE                       │
-│  Category | Headline | Subline | Chips      │
+│ Upgrade to Keep Creating                    │
+│ Get monthly credits with a plan             │
+│                                             │
+│ ┌─────────┐ ┌───────────┐ ┌─────────┐      │
+│ │ Starter │ │ Growth ★  │ │   Pro   │      │
+│ │ $39/mo  │ │  $79/mo   │ │ $179/mo │      │
+│ │ 500 cr  │ │ 1,500 cr  │ │ 4,500   │      │
+│ │ 7.8¢/ea │ │  5.3¢/ea  │ │ 4.0¢/ea │      │
+│ │ [Get]   │ │ [Get ★]   │ │ [Get]   │      │
+│ └─────────┘ └───────────┘ └─────────┘      │
+│                                             │
+│ [Maybe Later]                               │
 └─────────────────────────────────────────────┘
 ```
 
-The copy reference table at the bottom will show all category copy variants from `conversionCopy.ts` in a scannable table format.
+- Growth highlighted as recommended (best value)
+- Show price-per-credit comparison
+- CTA triggers `startCheckout(stripePriceIdMonthly, 'subscription')`
+- No credit packs shown — free users should subscribe, not buy one-off packs
 
-### Key Details
-- Layer 1 card will bypass the 3-second delay by rendering with `visible` forced to `true` (we'll render it directly using the copy functions rather than wrapping in the component, or pass a `forceVisible` prop)
-- Layer 2 and Layer 3 open via buttons — they use their real components so you see exactly what users see
-- Mobile preview wraps the Layer 1 card in a `max-w-[375px]` container to simulate mobile
-- Admin-only: protected behind `useIsAdmin` check
+### When `plan !== 'free'` (Paid User)
+
+Keep the current credit packs view (200 / 500 / 1500 top-up packs) — this is correct for paid users who just need more credits.
+
+Additionally, show an upgrade nudge if they're on Starter or Growth:
+- Starter user sees: "Upgrade to Growth for 3× more monthly credits"
+- Growth user sees: "Upgrade to Pro for 3× more monthly credits"
+- Pro user sees no upgrade nudge
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `src/components/app/NoCreditsModal.tsx` | Read `plan` from `useCredits()`, conditionally render subscription plans (free) vs credit packs (paid), show next-plan upgrade nudge for Starter/Growth |
+| `src/pages/AdminConversion.tsx` | Add plan toggle to Layer 3 preview so you can test both free and paid variants |
+
+### Copy Adjustments
+
+**Free user headline**: "Upgrade to Keep Creating" (not "Purchase credits")
+**Free user subline**: "Get monthly credits and unlock premium features with a plan"
+**Paid user headline**: Keep current category-aware headline
+**Paid user subline**: "Top up credits to continue this session"
+
+No other files need changes — the modal is self-contained.
 
