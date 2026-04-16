@@ -433,7 +433,7 @@ export function BuyCreditsModal() {
                         {/* Name + descriptor */}
                         <div className="mb-5">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="text-lg font-semibold">{p.name}</h4>
+                            <h4 className="text-base font-semibold">{p.name}</h4>
                             {isCurrent && (
                               <Badge variant="secondary" className="text-[10px] tracking-wider uppercase">Current</Badge>
                             )}
@@ -446,15 +446,15 @@ export function BuyCreditsModal() {
                         {/* Price */}
                         <div className="mb-6">
                           {isFree ? (
-                            <span className="text-3xl font-bold tracking-tight">Free</span>
+                            <span className="text-2xl font-bold tracking-tight">Free</span>
                           ) : (
                             <>
                               <p className="tracking-tight">
                                 {isAnnual && p.monthlyPrice > displayPrice && (
                                   <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                                 )}
-                                <span className="text-3xl font-bold">${displayPrice}</span>
-                                <span className="text-lg font-medium text-muted-foreground">/mo</span>
+                                <span className="text-2xl font-bold">${displayPrice}</span>
+                                <span className="text-sm font-normal text-muted-foreground">/mo</span>
                               </p>
                             </>
                           )}
@@ -508,10 +508,10 @@ export function BuyCreditsModal() {
 
                 {/* Reassurance + links */}
                 <div className="space-y-2.5 pt-5 border-t border-border/15">
-                  <p className="text-xs text-muted-foreground/60 tracking-wide uppercase font-normal text-center">
+                  <p className="text-xs text-muted-foreground font-medium text-center">
                     Cancel anytime · No commitment
                   </p>
-                  <p className="text-[11px] text-muted-foreground/50 text-center">
+                  <p className="text-xs text-muted-foreground/70 text-center">
                     All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
                   </p>
                   <div className="flex items-center justify-center gap-4 pt-1">
