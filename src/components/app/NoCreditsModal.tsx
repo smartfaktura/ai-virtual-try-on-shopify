@@ -281,7 +281,7 @@ function UpgradeCard({
   onSelect: () => void;
 }) {
   const displayPrice = isAnnual ? Math.round(nextPlan.annualPrice / 12) : nextPlan.monthlyPrice;
-  const features = MODAL_PLAN_FEATURES[nextPlan.planId] ?? [];
+  const features = PLAN_DIFFERENTIATORS[nextPlan.planId] ?? [];
 
   return (
     <div className="space-y-3">
