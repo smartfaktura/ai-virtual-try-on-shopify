@@ -480,6 +480,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </div>
               )}
             </div>
+            </div>
           </div>
         </div>
       </div>
