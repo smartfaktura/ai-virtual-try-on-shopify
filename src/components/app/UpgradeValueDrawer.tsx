@@ -2,7 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowRight, Crown } from 'lucide-react';
+import { ArrowRight, Crown, Check } from 'lucide-react';
 
 import { type ConversionCategory, getLayer2Copy, getLayer1Avatar } from '@/lib/conversionCopy';
 import { pricingPlans } from '@/data/mockData';
@@ -80,6 +80,20 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
               {copy.subline}
             </SheetDescription>
           </SheetHeader>
+
+          {/* Benefits */}
+          <div className="space-y-1.5">
+            {[
+              '1,000+ personalized editorial shots',
+              'Monthly campaign drops for social & marketing',
+              'Priority processing and batch generation',
+            ].map((text) => (
+              <div key={text} className="flex items-center gap-2">
+                <Check className="w-3 h-3 text-primary shrink-0" />
+                <span className="text-xs text-muted-foreground">{text}</span>
+              </div>
+            ))}
+          </div>
 
           {/* Product context row */}
           {generationContext?.productThumbnail && (

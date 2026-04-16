@@ -104,7 +104,7 @@ export function PostGenerationUpgradeCard({
             className="min-h-[36px] text-xs font-medium px-5"
             onClick={onSeeMore}
           >
-            Compare Plans
+            See Plans
           </Button>
         </div>
       </CardContent>
