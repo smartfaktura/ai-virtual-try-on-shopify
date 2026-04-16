@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Sparkles } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 import { UpgradePlanModal } from './UpgradePlanModal';
 
@@ -25,14 +24,11 @@ export function CreditIndicator() {
     <div className="p-3.5 rounded-xl bg-white/[0.06] space-y-3">
       {/* Balance + CTA */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <Sparkles className="w-[18px] h-[18px] text-sidebar-foreground/80 shrink-0" strokeWidth={2} />
-          <div className="flex items-baseline gap-1 min-w-0">
-            <span className="text-base font-semibold text-sidebar-foreground truncate">{balance.toLocaleString()}</span>
-            <span className="text-[11px] text-sidebar-foreground/40 shrink-0">
-              / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
-            </span>
-          </div>
+        <div className="flex items-baseline gap-1.5 min-w-0">
+          <span className="text-2xl font-semibold tracking-tight text-sidebar-foreground truncate">{balance.toLocaleString()}</span>
+          <span className="text-[11px] text-sidebar-foreground/50 shrink-0">
+            / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
+          </span>
         </div>
         <button
           onClick={handleCta}
