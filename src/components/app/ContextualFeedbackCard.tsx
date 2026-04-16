@@ -161,28 +161,41 @@ export function ContextualFeedbackCard({
   if (step === 'step1') {
     return (
       <div className={cn('animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
-        <div className={cn(bannerClass, 'flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between md:gap-3')}>
-          {/* Left: icon + question */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
-            <p className="text-sm text-muted-foreground">{questionText}</p>
+        <div className={cn(bannerClass, 'flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:gap-3 md:px-4 md:py-3')}>
+          {/* Row 1: icon + badge + dismiss */}
+          <div className="flex items-center justify-between md:justify-start md:gap-2.5 md:min-w-0 md:flex-1">
+            <div className="flex items-center gap-2">
+              <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
+              {/* Desktop: question inline */}
+              <p className="hidden md:block text-sm text-muted-foreground">{questionText}</p>
+            </div>
+            <button
+              onClick={dismiss}
+              className="text-muted-foreground/50 hover:text-muted-foreground transition-colors shrink-0 md:hidden"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Right: buttons + dismiss */}
+          {/* Row 2 (mobile only): question text */}
+          <p className="text-sm text-muted-foreground md:hidden">{questionText}</p>
+
+          {/* Row 3: answer buttons */}
           <div className="flex items-center gap-2">
             {(['yes', 'almost', 'no'] as const).map(key => (
               <button
                 key={key}
                 onClick={() => handleAnswer(key)}
-                className="inline-flex items-center justify-center rounded-full border border-input bg-background px-4 h-8 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground active:scale-[0.97] transition-all"
+                className="flex-1 md:flex-initial inline-flex items-center justify-center rounded-full border border-input bg-background px-4 min-h-[44px] md:min-h-0 md:h-8 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground active:scale-[0.97] transition-all"
               >
                 {buttonLabels[key]}
               </button>
             ))}
+            {/* Desktop dismiss */}
             <button
               onClick={dismiss}
-              className="ml-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors shrink-0"
+              className="hidden md:block ml-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -195,16 +208,18 @@ export function ContextualFeedbackCard({
   // Step 2: Expanded panel
   return (
     <div className={cn('animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
-      <div className={cn(bannerClass, 'space-y-3')}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
-            <p className="text-sm text-muted-foreground">What could be better?</p>
+      <div className={cn(bannerClass, 'space-y-3.5 px-4 py-4 md:space-y-3 md:px-4 md:py-3')}>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
+            </div>
+            <button onClick={dismiss} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button onClick={dismiss} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-            <X className="w-3.5 h-3.5" />
-          </button>
+          <p className="text-sm text-muted-foreground">What could be better?</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {reasonChips.map(chip => (
