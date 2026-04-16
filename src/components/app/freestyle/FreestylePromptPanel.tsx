@@ -470,7 +470,7 @@ export function FreestylePromptPanel({
                             className="h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25"
                           >
                             <Sparkles className="w-4 h-4" />
-                            Buy Credits
+                            Get Credits
                           </Button>
                         ) : (
                           <Button
