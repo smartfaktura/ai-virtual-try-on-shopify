@@ -447,7 +447,7 @@ export function BuyCreditsModal() {
                             )}
                           </div>
                           {descriptor && (
-                            <p className="text-sm text-muted-foreground mt-1">{descriptor}</p>
+                            <p className={`text-sm mt-1 ${p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{descriptor}</p>
                           )}
                         </div>
 
@@ -458,10 +458,10 @@ export function BuyCreditsModal() {
                           ) : (
                             <p className="tracking-tight">
                               {isAnnual && p.monthlyPrice > displayPrice && (
-                                <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
+                                <span className={`text-sm line-through mr-1.5 ${p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) ? 'text-primary-foreground/50' : 'text-muted-foreground'}`}>${p.monthlyPrice}</span>
                               )}
                               <span className="text-4xl font-bold">${displayPrice}</span>
-                              <span className="text-base font-normal text-muted-foreground">/mo</span>
+                              <span className={`text-base font-normal ${p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>/mo</span>
                             </p>
                           )}
                         </div>
