@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { PageHeader } from '@/components/app/PageHeader';
 import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { useNavigate } from 'react-router-dom';
 import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal, Trash2, Heart } from 'lucide-react';
@@ -361,15 +362,10 @@ export default function Jobs() {
   const activeFilterCount = (sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0);
 
   return (
-    <div className="min-h-screen">
-      <div className="px-4 sm:px-6 py-8 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            All your visuals, organized for review, selection, and publishing.
-          </p>
-        </div>
+    <PageHeader
+      title="Library"
+      subtitle="All your visuals, organized for review, selection, and publishing"
+    >
 
         {/* Smart Views */}
         <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide">
@@ -634,7 +630,6 @@ export default function Jobs() {
             )}
           </>
         )}
-      </div>
 
       {/* Floating action bar */}
       {selectMode && selectedIds.size > 0 && (
@@ -767,6 +762,6 @@ export default function Jobs() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageHeader>
   );
 }
