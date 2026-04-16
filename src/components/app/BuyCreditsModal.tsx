@@ -138,9 +138,6 @@ export function BuyCreditsModal() {
               <p className="text-sm text-muted-foreground mt-1">
                 Choose a plan to keep creating
               </p>
-              <p className="text-xs text-muted-foreground/70 mt-1">
-                More credits = lower cost per image
-              </p>
               {isPaidUser && currentPeriodEnd && (
                 <p className={`text-[11px] mt-1.5 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
                   {subscriptionStatus === 'canceling'
@@ -375,8 +372,8 @@ export function BuyCreditsModal() {
 
                     const PLAN_DESCRIPTORS: Record<string, string> = {
                       starter: 'Best to start',
-                      growth: 'Most popular for consistent content',
-                      pro: 'Best for high-volume production',
+                      growth: 'Best value',
+                      pro: 'For scale',
                     };
                     const PLAN_CTA_MAP: Record<string, string> = {
                       starter: 'Get Starter',
@@ -389,11 +386,11 @@ export function BuyCreditsModal() {
                         { text: 'Up to 100 products' },
                       ],
                       growth: [
-                        { text: 'Faster generation queue' },
+                        { text: 'Faster generation' },
                         { text: 'Brand Models', badge: 'NEW' },
                       ],
                       pro: [
-                        { text: 'Fastest generation queue' },
+                        { text: 'Fastest generation' },
                         { text: 'Brand Models', badge: 'NEW' },
                       ],
                     };
@@ -452,9 +449,6 @@ export function BuyCreditsModal() {
                                 )}
                                 <span className="text-3xl font-bold">${displayPrice}</span>
                                 <span className="text-lg font-medium text-muted-foreground">/mo</span>
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {isAnnual ? 'Billed annually' : 'Billed monthly'}
                               </p>
                             </>
                           )}

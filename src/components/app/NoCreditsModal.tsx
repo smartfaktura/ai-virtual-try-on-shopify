@@ -22,14 +22,8 @@ const subscribablePlans = pricingPlans.filter(
 
 const PLAN_DESCRIPTORS: Record<string, string> = {
   starter: 'Best to start',
-  growth: 'Most popular for consistent content',
-  pro: 'Best for high-volume production',
-};
-
-const PLAN_VALUE_LABELS: Record<string, string> = {
-  starter: 'Better than Free',
-  growth: 'Better value',
-  pro: 'Best value',
+  growth: 'Best value',
+  pro: 'For scale',
 };
 
 const PLAN_CTA_LABELS: Record<string, string> = {
@@ -44,11 +38,11 @@ const PLAN_DIFFERENTIATORS: Record<string, { text: string; badge?: string }[]> =
     { text: 'Up to 100 products' },
   ],
   growth: [
-    { text: 'Faster generation queue' },
+    { text: 'Faster generation' },
     { text: 'Brand Models', badge: 'NEW' },
   ],
   pro: [
-    { text: 'Fastest generation queue' },
+    { text: 'Fastest generation' },
     { text: 'Brand Models', badge: 'NEW' },
   ],
 };
@@ -75,7 +69,7 @@ function FreePlanSection({
     <div className="space-y-5">
       {/* Subtitle */}
       <p className="text-sm text-muted-foreground text-center">
-        Choose a plan to keep creating
+        Pick a plan to keep creating
       </p>
 
       {/* Billing toggle */}
@@ -112,7 +106,7 @@ function FreePlanSection({
           const credits = typeof p.credits === 'number' ? p.credits : 0;
           const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
           const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
-          const valueLabel = PLAN_VALUE_LABELS[p.planId] ?? '';
+          
           const ctaLabel = PLAN_CTA_LABELS[p.planId] ?? `Choose ${p.name}`;
           const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
 
@@ -149,9 +143,6 @@ function FreePlanSection({
                     )}
                     <span className="text-3xl font-bold">${displayPrice}</span>
                     <span className="text-lg font-medium text-muted-foreground">/mo</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {isAnnual ? 'Billed annually' : 'Billed monthly'}
                   </p>
                 </div>
 
