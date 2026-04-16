@@ -77,7 +77,7 @@ export function ContactFormDialog({ open, onOpenChange, onSuccess }: ContactForm
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden mx-4 sm:mx-0">
         {state === 'sent' ? (
           <div className="flex flex-col items-center justify-center gap-4 p-8 text-center animate-in fade-in zoom-in-95 duration-300">
             <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
