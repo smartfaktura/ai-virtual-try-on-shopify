@@ -32,6 +32,7 @@ import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgrad
 import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useConversionState } from '@/hooks/useConversionState';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses, mockModels } from '@/data/mockData';
