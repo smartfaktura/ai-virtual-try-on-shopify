@@ -2,33 +2,47 @@
 
 ## Goal
 
-Make the credits indicator feel more premium by increasing the visual weight of the icon, balance number, and "Upgrade/Top up" CTA.
+Make the "Upgrade" button in the sidebar credits indicator open a modal (instead of navigating to `/app/settings`). "Top up" behavior stays the same (opens the existing buy modal).
 
-## Changes in `src/components/app/CreditIndicator.tsx`
+## Exploration needed
 
-### 1. Bigger icon
-- `Sparkles`: `w-4 h-4` → `w-[18px] h-[18px]`
-- Slightly stronger stroke: `1.75` → `2`
-- Color stays `text-sidebar-foreground/80`
+Need to confirm whether a plan-change/upgrade modal already exists I can reuse, or if I should open the existing `PlanChangeDialog` directly, or build a lightweight upgrade modal.
 
-### 2. Bigger balance number
-- Balance: `text-sm font-bold` → `text-base font-semibold` (16px, slightly tighter weight reads more premium than bold)
-- "/ max": `text-[10px]` → `text-[11px]`, keep muted color
+From context I already have:
+- `PlanChangeDialog.tsx` exists and supports `mode="upgrade"` with a `targetPlan`. It's the proper upgrade confirmation dialog used in settings.
+- `useCredits()` exposes `plan`, `planConfig`, and `planConfig.nextPlanId`.
 
-### 3. Bigger CTA pill
-- Height: `h-7` → `h-8`
-- Padding: `px-3` → `px-3.5`
-- Text: `text-[11px]` → `text-xs` (12px), keep `font-semibold`
-- Keep the white pill + animated shimmer overlay
+Best approach: open a small **"Upgrade your plan" modal** from the sidebar that previews the next plan tier and triggers the existing checkout flow — rather than dropping the user into Settings.
 
-### 4. Spacing tweaks
-- Icon ↔ number gap: `gap-2` stays
-- Slightly increase row vertical breathing inside the card: `space-y-2.5` → `space-y-3`
-- Outer card padding: `p-3.5` stays
+## Plan
 
-No logic changes. No layout restructure. Only sizing/weight refinement.
+### 1. New component: `UpgradePlanModal`
+Location: `src/components/app/UpgradePlanModal.tsx`
+
+- Built on existing `Dialog` primitives (matches `PlanChangeDialog` styling).
+- Shows:
+  - Title: "Upgrade your plan"
+  - Current plan → next plan summary (name, monthly credits, price)
+  - One primary CTA: "Continue to checkout" → triggers the same upgrade flow used in Settings (calls the existing `create-checkout` edge function via the same hook Settings uses).
+  - Secondary: "See all plans" → navigates to `/app/settings` for users who want to compare.
+  - "Go back" close button.
+- If `planConfig.nextPlanId` is missing (already on top plan), don't render — sidebar would show "Top up" instead anyway.
+
+### 2. Wire it into `CreditIndicator.tsx`
+- Add local `useState` `upgradeOpen`.
+- `handleCta`:
+  - if `canUpgrade` → `setUpgradeOpen(true)` (instead of `navigate('/app/settings')`)
+  - else → `openBuyModal()` (unchanged)
+- Render `<UpgradePlanModal open={upgradeOpen} onClose={…} />` at the bottom of the component.
+
+### 3. Reuse existing checkout logic
+Inspect Settings page to find the exact hook/handler used for upgrade checkout (likely a `useCheckout` hook or inline `supabase.functions.invoke('create-checkout', …)`). Reuse the same call inside `UpgradePlanModal` so behavior, pricing, and Stripe flow stay identical.
+
+### 4. No other changes
+- No styling/logic changes to the credits card itself beyond the button handler.
+- `PlanChangeDialog` stays untouched (still used in Settings for full upgrade/downgrade/cancel flows).
 
 ## Expected result
 
-The credits row reads with more presence in the sidebar — clearer balance, more confident CTA — while staying within the "luxury restraint" aesthetic.
+Clicking "Upgrade" in the sidebar opens a focused modal previewing the next tier with a single click to checkout — no full page navigation. "Top up" continues to open the existing credit pack modal.
 
