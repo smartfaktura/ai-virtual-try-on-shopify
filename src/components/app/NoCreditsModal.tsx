@@ -163,11 +163,21 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
                           )}
                         </div>
 
-                        <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2">
+                        <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2 space-y-0.5">
                           <p className="text-lg font-bold tracking-tight">
                             {typeof p.credits === 'number' ? p.credits.toLocaleString() : p.credits}
                           </p>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">credits/mo</p>
+                          {typeof p.credits === 'number' && p.credits > 0 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              ≈ {Math.round(p.credits / 5)} images
+                            </p>
+                          )}
+                          {displayPrice > 0 && typeof p.credits === 'number' && p.credits > 0 && (
+                            <p className="text-[10px] text-primary/80 font-medium">
+                              ${(displayPrice / p.credits).toFixed(3)}/credit
+                            </p>
+                          )}
                         </div>
 
                         {/* Plan-specific differentiators */}

@@ -120,9 +120,16 @@ export function LandingPricing() {
                       : 'Unlimited visuals'}
                   </p>
                   {typeof plan.credits === 'number' && (
-                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                      ≈ {Math.round(plan.credits / 5)} images
-                    </p>
+                    <>
+                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                        ≈ {Math.round(plan.credits / 5)} images
+                      </p>
+                      {price > 0 && plan.credits > 0 && (
+                        <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                          ${(price / plan.credits).toFixed(3)} per credit
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 

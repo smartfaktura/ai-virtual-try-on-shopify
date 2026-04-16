@@ -124,7 +124,7 @@ export function PlanCard({
 
           {/* CTA */}
           <Button
-            variant={isCurrentPlan ? 'default' : 'outline'}
+            variant={isCurrentPlan ? 'secondary' : (PLAN_ORDER.indexOf(plan.planId) > PLAN_ORDER.indexOf(currentPlanId || 'free') ? 'default' : 'outline')}
             className="w-full min-h-[44px]"
             onClick={() => onSelect(plan.planId)}
             disabled={isDisabled}
