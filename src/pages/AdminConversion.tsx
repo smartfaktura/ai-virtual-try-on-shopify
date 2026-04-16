@@ -170,6 +170,7 @@ export default function AdminConversion() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[100px]">Category</TableHead>
+                <TableHead className="w-[80px]">Avatar</TableHead>
                 <TableHead>L1 Headline</TableHead>
                 <TableHead>L1 Subline</TableHead>
                 <TableHead>Value Blocks</TableHead>
@@ -179,10 +180,12 @@ export default function AdminConversion() {
             <TableBody>
               {ALL_CATEGORIES.map((cat) => {
                 const l1 = getLayer1Copy(cat);
+                const av = getLayer1Avatar(cat);
                 const l3h = getLayer3Headline(cat);
                 return (
                   <TableRow key={cat} className={cat === category ? 'bg-primary/5' : ''}>
                     <TableCell className="font-medium capitalize text-xs">{cat}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{av.name}</TableCell>
                     <TableCell className="text-xs">{l1.headline}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{l1.subline}</TableCell>
                     <TableCell className="text-xs">{l1.valueBlocks.map(b => b.title).join(', ')}</TableCell>
