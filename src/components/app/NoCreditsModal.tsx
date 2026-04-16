@@ -117,18 +117,16 @@ function FreePlanSection({
               key={p.planId}
               className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col ${
                 isHighlighted
-                  ? 'border-2 border-primary bg-primary/[0.02] shadow-md shadow-primary/5 pt-4'
+                  ? 'border-2 border-primary bg-primary/[0.02] shadow-md shadow-primary/5'
                   : 'border-2 border-border/40 hover:border-primary/30 bg-background'
               }`}
             >
               {isHighlighted && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-primary text-primary-foreground text-[10px] font-medium px-4 py-0.5 border-0 shadow-sm">
-                    Most popular
-                  </Badge>
-                </div>
+                <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-medium px-3 py-0.5 border-0 shadow-sm z-10">
+                  Most popular
+                </Badge>
               )}
-              <div className="p-5 sm:p-6 pt-6 flex flex-col flex-1">
+              <div className="p-5 sm:p-6 flex flex-col flex-1">
                 {/* Plan name + descriptor */}
                 <div className="mb-5">
                   <p className="text-base font-semibold tracking-tight">{p.name}</p>
@@ -138,44 +136,42 @@ function FreePlanSection({
                 </div>
 
                 {/* Price */}
-                <div className="mb-6 text-center">
+                <div className="mb-5 text-center">
                   <p className="tracking-tight">
                     {isAnnual && p.monthlyPrice > displayPrice && (
                       <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                     )}
-                    <span className="text-2xl font-bold">${displayPrice}</span>
+                    <span className="text-3xl font-bold">${displayPrice}</span>
                     <span className="text-sm font-normal text-muted-foreground">/mo</span>
                   </p>
                 </div>
 
-                {/* Metrics — 3 clean lines */}
-                <div className="mb-6 space-y-1 text-center">
-                  {imageEstimate && (
-                    <p className="text-sm text-muted-foreground">~{imageEstimate} images / month</p>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    {credits > 0 ? credits.toLocaleString() : p.credits} credits / month
-                  </p>
-                  {displayPrice > 0 && credits > 0 && (
-                    <p className="text-sm text-primary font-semibold">${(displayPrice / credits).toFixed(3)} per credit</p>
-                  )}
-                </div>
-
-                {/* Differentiators */}
+                {/* Unified bullet list */}
                 <div className="space-y-2 text-left flex-1">
-                  {differentiators.map((feat, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <Check className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" />
-                      <span className="text-xs text-muted-foreground leading-snug inline-flex items-center gap-1.5">
-                        {feat.text}
-                        {feat.badge && (
-                          <Badge className="text-[10px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
-                            {feat.badge}
-                          </Badge>
-                        )}
-                      </span>
-                    </div>
-                  ))}
+                  {(() => {
+                    const bullets: { text: string; badge?: string; color?: string }[] = [];
+                    if (imageEstimate) {
+                      bullets.push({ text: `~${imageEstimate} images / month` });
+                      bullets.push({ text: `${credits.toLocaleString()} credits / month` });
+                      if (displayPrice > 0) {
+                        bullets.push({ text: `$${(displayPrice / credits).toFixed(3)} per credit`, color: 'text-primary', ...(isAnnual ? { badge: 'SAVE 20%' } : {}) });
+                      }
+                    }
+                    bullets.push(...differentiators);
+                    return bullets.map((feat, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <Check className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" />
+                        <span className={`text-[13px] leading-snug inline-flex items-center gap-1.5 ${feat.color || 'text-muted-foreground'}`}>
+                          {feat.text}
+                          {feat.badge && (
+                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-emerald-500/15 text-emerald-600 border-0">
+                              {feat.badge}
+                            </Badge>
+                          )}
+                        </span>
+                      </div>
+                    ));
+                  })()}
                 </div>
 
                 {/* CTA */}
