@@ -1,21 +1,29 @@
 
 
-# Fix Pricing Modal Visual Issues
+# Fix Modal Background, SAVE 20% Badge, and Bullet Size
 
-## Changes (both `BuyCreditsModal.tsx` and `NoCreditsModal.tsx`)
+## Problem
+1. **NoCreditsModal header** has a separate `border-b border-border/50` divider and different padding creating a visual two-tone effect — the header sits on the `bg-muted/50` but the border creates a visible seam.
+2. **BuyCreditsModal header** area (`px-4 pt-5 pb-3`) does NOT have `bg-muted/50` — only the content area below (`pt-5 bg-muted/50`) does. This creates a white header on a gray body.
+3. The "SAVE 20%" / "-20%" labels next to "Annual" use `bg-emerald-500/20 text-emerald-700` instead of primary colors with white text.
+4. Bullet points are `text-[15px]` — need to go down to `text-sm` (14px).
 
-### 1. Remove Growth card alternative color design
-Revert the highlighted Growth card from `bg-primary text-primary-foreground` back to `bg-white dark:bg-card` with a `border-2 border-primary` highlight. Remove all the conditional `isHighlighted` text color overrides (the ternaries checking for highlighted). The "MOST POPULAR" badge stays but uses `bg-primary text-primary-foreground` on a white card.
+## Changes
 
-### 2. Add "No watermarks on AI images" to Starter
-Add `{ text: 'No watermarks on AI images' }` to Starter's differentiators in `PLAN_EXTRAS` / `PLAN_DIFFERENTIATORS`.
+### 1. BuyCreditsModal — Unify background
+- Move `bg-muted/50` from the content `div` (line 185) up to the `DialogContent` wrapper (line 130). Remove `bg-muted/50` from the content div.
+- This makes header + tabs + content all share the same background tone.
 
-### 3. Unify popup background — single color throughout
-- **BuyCreditsModal**: The content area already has `bg-muted/50`. Remove the nested `bg-muted/50 rounded-2xl p-4` wrapper on the plan grid so cards sit directly in the content area. The whole popup uses one consistent background.
-- **NoCreditsModal**: Similarly, remove the `bg-muted/50` wrapper from the grid div. Apply `bg-muted/50` to the entire modal content area (header + body) so there's one uniform tone. Remove `bg-gradient-to-b from-muted/60 to-background` from the header.
+### 2. NoCreditsModal — Unify background  
+- Remove the `border-b border-border/50` from the header div (line 405). The whole modal already has `bg-muted/50` on `DialogContent`, so removing the border eliminates the visual seam.
 
-### 4. Remove special color on price-per-credit text
-Remove `color: 'text-primary'` from the per-credit bullet. All bullet points use the same `text-muted-foreground` color — no special coloring for any line.
+### 3. SAVE 20% badge — primary colors with white text
+In all three billing toggles (NoCreditsModal FreePlanSection, NoCreditsModal upgrade section, BuyCreditsModal Plans tab):
+- Change the non-active state from `bg-emerald-500/20 text-emerald-700` to `bg-primary text-primary-foreground`
+- Keep the active (selected) state as `bg-primary-foreground/25 text-primary-foreground`
+
+### 4. Bullet points 1px smaller
+- Both modals: change `text-[15px]` to `text-sm` (14px) for all bullet text spans.
 
 ## Files
 - `src/components/app/BuyCreditsModal.tsx`
