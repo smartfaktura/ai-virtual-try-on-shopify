@@ -293,6 +293,26 @@ export function BuyCreditsModal() {
                     </button>
                   )}
 
+                  {/* Your Plan card for paid users */}
+                  {isPaidUser && (
+                    <div className="rounded-2xl border border-border/50 bg-muted/20 p-4 flex items-center justify-between gap-4 mt-2">
+                      <div className="flex items-center gap-3">
+                        <Badge variant="secondary" className="uppercase text-[10px] font-bold tracking-wider px-2 py-0.5">{plan}</Badge>
+                        <div>
+                          <p className="text-sm font-semibold tracking-tight">Your Plan</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {planConfig.monthlyCredits === Infinity ? 'Unlimited' : planConfig.monthlyCredits.toLocaleString()} credits/mo
+                            {effectiveInterval && ` · Billed ${effectiveInterval}`}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-xs font-medium shrink-0" onClick={handleViewAllPlans}>
+                        Manage Plan
+                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Enterprise CTA for Pro users */}
                   {isPro(plan) && (
                     <div className="rounded-2xl border border-border/50 bg-muted/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
