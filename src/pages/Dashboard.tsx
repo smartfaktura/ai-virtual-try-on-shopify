@@ -316,11 +316,26 @@ export default function Dashboard() {
             Your AI photography studio is ready. Choose how you want to start.
           </p>
 
-          {/* Credit badge */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-5">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span><strong className="text-foreground">{balance}</strong> credits available</span>
-          </div>
+          {/* Credit badge or out-of-credits CTA */}
+          {isEmpty ? (
+            <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 flex items-center justify-between gap-4 mt-5">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                <div>
+                  <p className="font-semibold text-sm">You're out of credits</p>
+                  <p className="text-sm text-muted-foreground">Get credits to start creating.</p>
+                </div>
+              </div>
+              <Button onClick={openBuyModal} className="rounded-full font-semibold shrink-0">
+                Get Credits
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-5">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span><strong className="text-foreground">{balance}</strong> credits available</span>
+            </div>
+          )}
         </div>
 
         {/* Start here — 3-card grid */}
