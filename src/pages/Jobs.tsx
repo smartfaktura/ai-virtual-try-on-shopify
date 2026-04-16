@@ -372,13 +372,13 @@ export default function Jobs() {
         </div>
 
         {/* Smart Views */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
           {SMART_VIEWS.map(v => (
             <button
               key={v.id}
               onClick={() => setSmartView(v.id)}
               className={cn(
-                'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                'px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap',
                 smartView === v.id
                   ? 'bg-foreground text-background shadow-sm'
                   : 'text-muted-foreground hover:bg-muted/50'
@@ -414,10 +414,10 @@ export default function Jobs() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search by product, campaign, prompt, model, or scene..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full pl-11 pr-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
 
