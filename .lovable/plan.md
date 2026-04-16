@@ -1,27 +1,37 @@
 
 
-# Fix "credits/bonus" Label on Settings Page
+# Fix Buy Credits Button in Freestyle
 
-## Problem
-On `/app/settings`, the Current Plan section shows "20 credits/bonus" for free users. The word "bonus" is confusing and unclear — it should simply say "credits" without the "/bonus" or "/month" suffix for free plans.
+## Problems
+1. **Button doesn't work with no prompt**: When credits are zero and there's no prompt, the "Buy Credits" button calls `onGenerate` which maps to `handleGenerate`. That function checks `if (!canSubmit) return` first — since there's no prompt or assets, `canSubmit` is false and nothing happens.
+
+2. **Wrong popup when prompt exists**: When there IS a prompt but no credits, `handleGenerate` opens `NoCreditsModal` (the smaller conversion modal) instead of the main `BuyCreditsModal` (the full pricing popup with Plans + Top-Up tabs).
 
 ## Fix
 
-### `src/pages/Settings.tsx` — Line 377
+### `src/components/app/freestyle/FreestylePromptPanel.tsx`
 
-Change the label so free plan just shows "credits" without any suffix.
+Add an `onBuyCredits` prop and wire the "Buy Credits" button to call it directly instead of `onGenerate`:
 
-**Before:**
 ```tsx
-{creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
+// Props: add onBuyCredits
+onBuyCredits?: () => void;
+
+// Button onClick: change from onGenerate to onBuyCredits
+<Button onClick={onBuyCredits} ...>
+  Buy Credits
+</Button>
 ```
 
-**After:**
-```tsx
-{creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits{plan !== 'free' ? '/month' : ''}
-```
+### `src/pages/Freestyle.tsx`
+
+1. Import `openBuyModal` from `useCredits()`
+2. Pass `onBuyCredits={openBuyModal}` to `FreestylePromptPanel` via `panelProps`
+
+This opens the main `BuyCreditsModal` (already mounted in `App.tsx`) directly — no prompt validation needed.
 
 | File | Change |
 |------|--------|
-| `src/pages/Settings.tsx` | Remove "/bonus" suffix for free plan, show plain "credits" instead |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Add `onBuyCredits` prop, wire Buy Credits button to it |
+| `src/pages/Freestyle.tsx` | Destructure `openBuyModal` from `useCredits`, pass as `onBuyCredits` |
 
