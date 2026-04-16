@@ -401,7 +401,7 @@ export default function Freestyle() {
    const freestyleGenCountRef = useRef(
      parseInt(sessionStorage.getItem('vovv_fb_gen_count_freestyle') || '0', 10)
    );
-   const [showFreestyleFeedback, setShowFreestyleFeedback] = useState(freestyleGenCountRef.current === 3);
+   const [showFreestyleFeedback, setShowFreestyleFeedback] = useState(false);
    const [completedFeedbackJobId, setCompletedFeedbackJobId] = useState<string | null>(null);
    const lastCountedJobIdRef = useRef<string | null>(null);
 
@@ -785,9 +785,8 @@ export default function Freestyle() {
           const newCount = freestyleGenCountRef.current + 1;
           freestyleGenCountRef.current = newCount;
           sessionStorage.setItem('vovv_fb_gen_count_freestyle', String(newCount));
-          if (newCount === 3) {
-            setCompletedFeedbackJobId(activeJob.id);
-            setShowFreestyleFeedback(true);
+           setCompletedFeedbackJobId(activeJob.id);
+           setShowFreestyleFeedback(true);
           }
         }
         setTimeout(() => {
