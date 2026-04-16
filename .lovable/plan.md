@@ -1,41 +1,51 @@
 
 
-# Replace Header with Engaging Headline + Subheadline
+# Conversion-Optimized Pricing Popup — UX Copy & Reassurance
 
 ## Problem
-The current header shows "0 credits remaining" and utility text — not engaging or brand-aligned. The credit balance is irrelevant context for the subscription decision.
+The headline is generic marketing copy ("Unlock your visual potential") that doesn't match the user's mental state (they ran out of credits). CTAs are inconsistent across cards. No safety reassurance ("Cancel anytime") creates hesitation before clicking.
 
 ## Changes
 
-### File: `src/components/app/BuyCreditsModal.tsx` (lines 132-160)
+### File: `src/components/app/BuyCreditsModal.tsx`
 
-**Replace the entire header block** with a clean headline + subheadline, no border-b separator:
+**1. Header copy (lines 135-140)**
+- Replace "Unlock your visual potential" → **"You're out of credits"**
+- Replace "Pick a plan that fits your creative ambitions" → **"Choose a plan to keep creating"**
+- Add a third line: `text-xs text-muted-foreground` — **"More credits = lower cost per image"**
 
-- Remove: `{balance} credits remaining`, `Choose a plan to keep creating`, `Scale faster with...`
-- Remove: `border-b border-border/40` from the header div
-- Keep: close button, renewal info for paid users
+**2. Growth descriptor (line 375)**
+- Replace "Best value for growing brands" → **"Most popular for consistent content"**
 
-New header content:
-```
-Unlock your visual potential
-Pick a plan that fits your creative ambitions
-```
+**3. Consistent CTAs (lines 378-382)**
+- `starter: 'Get Starter'`
+- `growth: 'Get Growth'`
+- `pro: 'Get Pro'`
 
-- Headline: `text-xl font-bold tracking-tight`
-- Subheadline: `text-sm text-muted-foreground mt-1`
-- No separator line between header and content
+**4. Add "Cancel anytime" reassurance (after line 509)**
+- Insert before the "All paid plans include..." line:
+- `text-xs text-muted-foreground font-medium` — **"Cancel anytime · No commitment"**
 
-### File: `src/components/app/NoCreditsModal.tsx` (line 77-79)
+### File: `src/components/app/NoCreditsModal.tsx`
 
-Replace the subtitle with the same subheadline:
-```
-Pick a plan that fits your creative ambitions
-```
+**5. Same descriptor + CTA updates (lines 23-38)**
+- Growth descriptor → "Most popular for consistent content"
+- CTAs → `Get Starter` / `Get Growth` / `Get Pro`
+
+**6. Subtitle (line 78)**
+- Replace "Pick a plan that fits your creative ambitions" → **"Choose a plan to keep creating"**
+
+**7. Add "Cancel anytime" (after line 206)**
+- Insert before "All paid plans include..." — **"Cancel anytime · No commitment"**
+
+### File: `src/components/app/UpgradeValueDrawer.tsx`
+- Same CTA label consistency if present
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `BuyCreditsModal.tsx` | Replace credit-balance header with engaging headline + subheadline, remove separator |
-| `NoCreditsModal.tsx` | Update subtitle text to match |
+| `BuyCreditsModal.tsx` | Header copy, Growth descriptor, consistent CTAs, cancel reassurance |
+| `NoCreditsModal.tsx` | Subtitle, Growth descriptor, consistent CTAs, cancel reassurance |
+| `UpgradeValueDrawer.tsx` | Consistent CTAs if applicable |
 
