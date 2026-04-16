@@ -312,7 +312,7 @@ export function BuyCreditsModal() {
                     <button
                       className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all ${
                         billingPeriod === 'monthly'
-                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          ? 'bg-card text-foreground shadow-sm border border-border/60'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => setBillingPeriod('monthly')}
@@ -322,15 +322,13 @@ export function BuyCreditsModal() {
                     <button
                       className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1 ${
                         billingPeriod === 'annual'
-                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          ? 'bg-card text-foreground shadow-sm border border-border/60'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => setBillingPeriod('annual')}
                     >
                       Annual
-                      <span className={`inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none ${
-                        billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary text-primary-foreground'
-                      }`}>
+                      <span className="inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none bg-gray-100 text-gray-500">
                         SAVE 20%
                       </span>
                     </button>
