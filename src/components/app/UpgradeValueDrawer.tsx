@@ -2,6 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Check } from 'lucide-react';
 
 import { type ConversionCategory, getLayer2Copy, getLayer1Avatar } from '@/lib/conversionCopy';
 import { pricingPlans } from '@/data/mockData';
@@ -23,27 +24,42 @@ interface UpgradeValueDrawerProps {
   generationContext?: GenerationContext;
 }
 
+const DRAWER_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> = {
+  starter: [
+    { text: '500 credits every month' },
+    { text: '3 Brand Profiles' },
+    { text: 'Up to 100 products' },
+  ],
+  growth: [
+    { text: '1,500 credits every month' },
+    { text: 'Priority generation queue' },
+    { text: 'Brand Models', badge: 'NEW' },
+  ],
+  pro: [
+    { text: '4,500 credits every month' },
+    { text: 'Priority generation queue' },
+    { text: 'Unlimited products & profiles' },
+  ],
+};
+
 const PLAN_CARDS = [
   {
     planId: 'starter' as const,
     centsPerCredit: '7.8¢',
     savingsLabel: null,
     recommended: false,
-    differentiator: '500 credits · Up to 100 products',
   },
   {
     planId: 'growth' as const,
     centsPerCredit: '5.3¢',
     savingsLabel: 'Save 32%',
     recommended: true,
-    differentiator: '1,500 credits · Priority queue · Brand Models',
   },
   {
     planId: 'pro' as const,
     centsPerCredit: '4.0¢',
     savingsLabel: 'Save 49%',
     recommended: false,
-    differentiator: '4,500 credits · Unlimited everything',
   },
 ];
 
@@ -121,11 +137,12 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
           {/* Plan Cards — fills remaining height */}
           <div className="flex-1 flex flex-col gap-3 pb-5">
-            {PLAN_CARDS.map(({ planId, centsPerCredit, savingsLabel, recommended, differentiator }) => {
+            {PLAN_CARDS.map(({ planId, centsPerCredit, savingsLabel, recommended }) => {
               const plan = pricingPlans.find(p => p.planId === planId);
               if (!plan) return null;
 
               const creditsDisplay = typeof plan.credits === 'number' ? plan.credits.toLocaleString() : plan.credits;
+              const features = DRAWER_PLAN_FEATURES[planId] ?? [];
 
               return (
                 <div
@@ -164,8 +181,22 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                     )}
                   </div>
 
-                  {/* Differentiator */}
-                  <p className="text-xs text-muted-foreground">{differentiator}</p>
+                  {/* Plan-specific features checklist */}
+                  <div className="space-y-1.5">
+                    {features.map((feat, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="text-[11px] text-muted-foreground leading-tight inline-flex items-center gap-1.5">
+                          {feat.text}
+                          {feat.badge && (
+                            <Badge className="text-[8px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
+                              {feat.badge}
+                            </Badge>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
 
                   {/* CTA */}
                   <Button
