@@ -73,7 +73,9 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
   const effectivePlan = previewPlan ?? plan;
   const [isAnnual, setIsAnnual] = useState(billingInterval === 'annual');
   const [loading, setLoading] = useState(false);
-  const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
+  const [topUpLoading, setTopUpLoading] = useState(false);
+  const defaultPackId = creditPacks.find((p) => p.popular)?.packId ?? creditPacks[0]?.packId ?? '';
+  const [selectedPackId, setSelectedPackId] = useState<string>(defaultPackId);
 
   // All plans strictly higher than current, excluding enterprise (no checkout)
   const upgradePlans = useMemo(() => {
@@ -136,13 +138,14 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
     }
   };
 
-  const handleTopUp = async (packId: string, stripePriceId: string | undefined) => {
-    if (!stripePriceId || topUpLoadingId) return;
-    setTopUpLoadingId(packId);
+  const handleTopUp = async () => {
+    const pack = creditPacks.find((p) => p.packId === selectedPackId);
+    if (!pack?.stripePriceId || topUpLoading) return;
+    setTopUpLoading(true);
     try {
-      await startCheckout(stripePriceId, 'payment');
+      await startCheckout(pack.stripePriceId, 'payment');
     } finally {
-      setTopUpLoadingId(null);
+      setTopUpLoading(false);
     }
   };
 
@@ -176,36 +179,43 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
               {creditPacks.map((pack) => {
                 const centsPerCredit = (pack.pricePerCredit * 100).toFixed(1);
                 const imageEstimate = Math.round(pack.credits / CREDITS_PER_IMAGE);
-                const isPackLoading = topUpLoadingId === pack.packId;
+                const isSelected = pack.packId === selectedPackId;
                 return (
                   <button
                     key={pack.packId}
                     type="button"
-                    onClick={() => handleTopUp(pack.packId, pack.stripePriceId)}
-                    disabled={!!topUpLoadingId}
-                    className={`w-full text-left rounded-2xl border p-4 transition-all disabled:opacity-60 ${
-                      pack.popular
-                        ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30 hover:bg-primary/[0.06]'
+                    onClick={() => setSelectedPackId(pack.packId)}
+                    className={`w-full text-left rounded-2xl border p-4 transition-all ${
+                      isSelected
+                        ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30'
                         : 'border-border/50 hover:border-border bg-card'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-foreground">{pack.credits.toLocaleString()} credits</span>
-                          {pack.popular && (
-                            <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
-                              Best Value
-                            </span>
-                          )}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <span
+                          className={`mt-0.5 inline-flex w-4 h-4 rounded-full border items-center justify-center shrink-0 ${
+                            isSelected ? 'border-primary' : 'border-muted-foreground/40'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-foreground">{pack.credits.toLocaleString()} credits</span>
+                            {pack.popular && (
+                              <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
+                                Best Value
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            ~{imageEstimate} images · {centsPerCredit}¢/credit
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          ~{imageEstimate} images · {centsPerCredit}¢/credit
-                        </p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-baseline gap-1 shrink-0">
                         <span className="text-xl font-semibold tracking-tight">${pack.price}</span>
-                        {isPackLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
                       </div>
                     </div>
                   </button>
@@ -311,9 +321,24 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
 
         <DialogFooter className="px-6 sm:px-8 pb-7 sm:pb-8 pt-0 gap-3 sm:gap-3">
           {isTopup ? (
-            <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px] w-full">
-              Maybe later
-            </Button>
+            <>
+              <Button variant="outline" onClick={onClose} disabled={topUpLoading} className="rounded-xl min-h-[44px]">
+                Maybe later
+              </Button>
+              <Button onClick={handleTopUp} disabled={topUpLoading || !selectedPackId} className="rounded-xl min-h-[44px] gap-2">
+                {topUpLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Redirecting…
+                  </>
+                ) : (
+                  <>
+                    Continue to checkout
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="outline" onClick={handleSeeAll} disabled={loading} className="rounded-xl min-h-[44px]">
