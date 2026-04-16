@@ -221,13 +221,13 @@ export function ContextualFeedbackCard({
           </div>
           <p className="text-sm text-muted-foreground">What could be better?</p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {reasonChips.map(chip => (
             <Badge
               key={chip}
               variant={selectedReasons.has(chip) ? 'default' : 'outline'}
               className={cn(
-                'text-[11px] cursor-pointer transition-colors select-none',
+                'text-[11px] cursor-pointer transition-colors select-none min-h-[36px] px-3 py-1.5 md:min-h-0 md:px-2.5 md:py-0.5',
                 selectedReasons.has(chip)
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-accent',
@@ -243,19 +243,19 @@ export function ContextualFeedbackCard({
           onChange={e => setTextNote(e.target.value.slice(0, 160))}
           placeholder={textPlaceholder}
           rows={2}
-          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm md:text-xs md:py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
         />
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-center md:justify-end gap-2">
           <button
             onClick={handleSkip}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+            className="inline-flex items-center justify-center min-h-[44px] md:min-h-0 text-xs text-muted-foreground hover:text-foreground transition-colors px-4 py-1"
           >
             Skip
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="inline-flex items-center justify-center rounded-full border border-input bg-background px-5 h-8 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-full border border-input bg-background px-6 min-h-[44px] md:min-h-0 md:h-8 md:px-5 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
           >
             Send feedback
           </button>
