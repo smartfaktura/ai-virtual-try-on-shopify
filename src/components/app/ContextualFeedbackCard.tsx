@@ -52,9 +52,17 @@ export function ContextualFeedbackCard({
       setStep('dismissed');
       return;
     }
+    // Show only on every 3rd generation per workflow
+    const countKey = `vovv_fb_gen_count_${workflow}`;
+    const count = parseInt(sessionStorage.getItem(countKey) || '0', 10) + 1;
+    sessionStorage.setItem(countKey, String(count));
+    if (count % 3 !== 0) {
+      setStep('dismissed');
+      return;
+    }
     const t = setTimeout(() => setStep('step1'), 2000);
     return () => clearTimeout(t);
-  }, [dismissKey]);
+  }, [dismissKey, workflow]);
 
   const dismiss = () => {
     sessionStorage.setItem(dismissKey, '1');
@@ -153,8 +161,9 @@ export function ContextualFeedbackCard({
       <div className={cn('animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
         <div className={cn(bannerClass, 'flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between md:gap-3')}>
           {/* Left: icon + question */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
             <p className="text-sm text-muted-foreground">{questionText}</p>
           </div>
 
@@ -186,8 +195,9 @@ export function ContextualFeedbackCard({
     <div className={cn('animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
       <div className={cn(bannerClass, 'space-y-3')}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider shrink-0">Survey</Badge>
             <p className="text-sm text-muted-foreground">What could be better?</p>
           </div>
           <button onClick={dismiss} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
