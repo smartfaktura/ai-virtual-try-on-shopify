@@ -489,10 +489,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <FeedbackBanner />
-
         {/* What You Can Create — showcase gallery */}
         <RecentCreationsGallery />
+
+        <FeedbackBanner />
 
 
 
