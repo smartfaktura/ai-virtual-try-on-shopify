@@ -21,9 +21,9 @@ const subscribablePlans = pricingPlans.filter(
 );
 
 const PLAN_DESCRIPTORS: Record<string, string> = {
-  starter: 'Best to start',
-  growth: 'Best value',
-  pro: 'For scale',
+  starter: 'BEST TO START',
+  growth: 'BEST VALUE',
+  pro: 'FOR SCALE',
 };
 
 const PLAN_CTA_LABELS: Record<string, string> = {
@@ -70,7 +70,7 @@ function FreePlanSection({
   return (
     <div className="space-y-5">
       {/* Subtitle */}
-      <p className="text-sm text-muted-foreground text-center">
+      <p className="text-[15px] text-muted-foreground text-center">
         Pick a plan to keep creating
       </p>
 
@@ -125,23 +125,23 @@ function FreePlanSection({
           return (
             <div
               key={p.planId}
-              className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col bg-white dark:bg-card ${
+              className={`relative rounded-2xl text-center transition-all duration-200 flex flex-col ${
                 isHighlighted
-                  ? 'border-2 border-primary shadow-md shadow-primary/5'
-                  : 'border-2 border-border/40 hover:border-primary/30'
+                  ? 'bg-primary text-primary-foreground border-2 border-primary shadow-lg hover:shadow-xl'
+                  : 'bg-white dark:bg-card border-2 border-border/40 hover:border-primary/30 hover:shadow-lg'
               }`}
             >
               {isHighlighted && (
-                <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-medium px-3 py-0.5 border-0 shadow-sm z-10">
-                  Most popular
+                <Badge className="absolute top-3 right-3 bg-primary-foreground/20 text-primary-foreground text-[11px] font-bold uppercase tracking-wider px-3 py-1 border-0 shadow-sm z-10">
+                  MOST POPULAR
                 </Badge>
               )}
               <div className="p-5 sm:p-6 flex flex-col flex-1">
                 {/* Plan name + descriptor */}
                 <div className="mb-5">
-                  <p className="text-base font-semibold tracking-tight">{p.name}</p>
+                  <p className="text-lg font-semibold tracking-tight">{p.name}</p>
                   {descriptor && (
-                    <p className="text-xs text-muted-foreground mt-1">{descriptor}</p>
+                    <p className={`text-sm mt-1 ${isHighlighted ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{descriptor}</p>
                   )}
                 </div>
 
@@ -149,10 +149,10 @@ function FreePlanSection({
                 <div className="mb-5 text-center">
                   <p className="tracking-tight">
                     {isAnnual && p.monthlyPrice > displayPrice && (
-                      <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
+                      <span className={`text-sm line-through mr-1.5 ${isHighlighted ? 'text-primary-foreground/50' : 'text-muted-foreground'}`}>${p.monthlyPrice}</span>
                     )}
                     <span className="text-4xl font-bold">${displayPrice}</span>
-                    <span className="text-base font-normal text-muted-foreground">/mo</span>
+                    <span className={`text-base font-normal ${isHighlighted ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>/mo</span>
                   </p>
                 </div>
 
@@ -171,11 +171,19 @@ function FreePlanSection({
                     bullets.push(...differentiators);
                     return bullets.map((feat, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" />
-                        <span className={`text-sm leading-snug inline-flex items-center gap-1.5 ${feat.color || 'text-muted-foreground'}`}>
-                          {feat.text}
+                        <Check className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${isHighlighted ? 'text-primary-foreground/60' : 'text-primary/60'}`} />
+                        <span className={`text-[15px] leading-snug inline-flex items-center gap-1.5 ${
+                          isHighlighted
+                            ? (feat.color ? 'text-primary-foreground' : 'text-primary-foreground/80')
+                            : (feat.color || 'text-muted-foreground')
+                        }`}>
+                          <span className="font-normal">{feat.text}</span>
                           {feat.badge && (
-                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground border-0">
+                            <Badge className={`text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 ${
+                              isHighlighted
+                                ? 'bg-primary-foreground/20 text-primary-foreground'
+                                : 'bg-primary text-primary-foreground'
+                            }`}>
                               {feat.badge}
                             </Badge>
                           )}
@@ -188,7 +196,7 @@ function FreePlanSection({
                 {/* CTA */}
                 <div className="pt-4 mt-auto">
                   <Button
-                    variant={isHighlighted ? 'default' : 'outline'}
+                    variant={isHighlighted ? 'secondary' : 'outline'}
                     className="w-full min-h-[44px] rounded-xl text-sm font-medium"
                     onClick={() => onPlanSelect(p, isAnnual)}
                   >
@@ -399,17 +407,17 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:max-h-full max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:rounded-none p-0 gap-0 overflow-hidden max-sm:overflow-y-auto border-border/50 shadow-2xl">
+      <DialogContent className="sm:max-w-2xl max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:max-h-full max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:rounded-none p-0 gap-0 overflow-hidden max-sm:overflow-y-auto border-border/50 shadow-2xl bg-muted/50">
         {/* Header */}
         <div className="px-5 sm:px-8 pt-8 pb-5 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-xl bg-primary/10">
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold tracking-tight">{headline}</h2>
+            <h2 className="text-xl font-semibold tracking-tight">{headline}</h2>
           </div>
           <div className="flex items-center gap-3">
-            <p className="text-sm text-muted-foreground">{subline}</p>
+            <p className="text-[15px] text-muted-foreground">{subline}</p>
             {isPaid && (
               <Badge variant="secondary" className="text-[10px] font-medium shrink-0">
                 {balance} credits remaining
