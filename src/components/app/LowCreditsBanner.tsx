@@ -16,7 +16,7 @@ export function LowCreditsBanner() {
     ? "You're out of credits" 
     : 'Running low on credits';
   const message = isEmpty
-    ? 'Top up to keep creating with VOVV.AI'
+    ? 'Keep creating premium, brand-ready visuals for your products in minutes'
     : `Only ${balance} credits left — top up to avoid interruptions`;
   
   return (
