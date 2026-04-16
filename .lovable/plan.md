@@ -1,14 +1,23 @@
 
 
-# Remove Old FeedbackBanner from Virtual Try-On Set Page
+# Show Feedback Form After Every Product Images Generation
 
 ## Problem
-The `/app/generate/virtual-try-on-set` page shows both the `ContextualFeedbackCard` (new survey) and the `FeedbackBanner` (old "Help us improve VOVV.AI / Share feedback" popover) at the bottom. The user wants only the new `ContextualFeedbackCard` shown — remove the old `FeedbackBanner` from this page.
+The `ContextualFeedbackCard` uses `sessionStorage` with a fixed key (`vovv_fb_dismiss_product-visuals`) to suppress re-display after dismissal or submission. Once a user interacts with it once, it never appears again for the entire browser session. Since every generation produces different results, the feedback form should appear fresh each time.
 
-## Change
+## Solution
+Make the dismiss key unique per generation batch by appending the `resultId` (first product key from results). This way each new generation gets its own dismiss state and the card always appears.
 
-### `src/pages/Generate.tsx` — Line 4564
-Remove the `<FeedbackBanner />` call at the bottom of the page. The `ContextualFeedbackCard` (lines 4497-4514) already provides the feedback mechanism with the matching banner style.
+## Changes
 
-This is a single line removal.
+### `src/components/app/product-images/ProductImagesStep6Results.tsx`
+- Pass a unique `resultId` that changes per generation — already using `Array.from(results.keys())[0]`, which should differ per batch. No change needed here if that value changes per generation.
+
+### `src/components/app/ContextualFeedbackCard.tsx`
+- Change the dismiss key from `vovv_fb_dismiss_{workflow}` to `vovv_fb_dismiss_{workflow}_{resultId}` so each generation gets a fresh card
+- If `resultId` is provided, include it in the key; otherwise fall back to workflow-only key for other usages
+
+| File | Change |
+|------|--------|
+| `src/components/app/ContextualFeedbackCard.tsx` | Line 46: Include `resultId` in dismiss key |
 
