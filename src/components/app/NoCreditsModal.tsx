@@ -80,7 +80,7 @@ function FreePlanSection({
         <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
           <button
             className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${
-              !isAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              !isAnnual ? 'bg-card text-foreground shadow-sm border border-border/60' : 'text-muted-foreground hover:text-foreground'
             }`}
             onClick={() => setBillingCycle('monthly')}
           >
@@ -88,14 +88,12 @@ function FreePlanSection({
           </button>
           <button
             className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-1.5 ${
-              isAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              isAnnual ? 'bg-card text-foreground shadow-sm border border-border/60' : 'text-muted-foreground hover:text-foreground'
             }`}
             onClick={() => setBillingCycle('annual')}
           >
             Annual
-            <span className={`inline-flex rounded-full text-[8px] font-bold px-1.5 py-0.5 leading-none ${
-              isAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary text-primary-foreground'
-            }`}>
+            <span className="inline-flex rounded-full text-[8px] font-bold px-1.5 py-0.5 leading-none bg-gray-100 text-gray-500">
               -20%
             </span>
           </button>
@@ -435,7 +433,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
                     <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
                       <button
                         className={`px-3 py-1 text-[10px] font-medium rounded-full transition-all ${
-                          !isUpgradeAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                          !isUpgradeAnnual ? 'bg-card text-foreground shadow-sm border border-border/60' : 'text-muted-foreground hover:text-foreground'
                         }`}
                         onClick={() => setUpgradeBillingCycle('monthly')}
                       >
@@ -443,14 +441,12 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
                       </button>
                       <button
                         className={`px-3 py-1 text-[10px] font-medium rounded-full transition-all flex items-center gap-1 ${
-                          isUpgradeAnnual ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                          isUpgradeAnnual ? 'bg-card text-foreground shadow-sm border border-border/60' : 'text-muted-foreground hover:text-foreground'
                         }`}
                         onClick={() => setUpgradeBillingCycle('annual')}
                       >
                         Annual
-                        <span className={`inline-flex rounded-full text-[7px] font-bold px-1 py-0.5 leading-none ${
-                          isUpgradeAnnual ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary text-primary-foreground'
-                        }`}>
+                        <span className="inline-flex rounded-full text-[7px] font-bold px-1 py-0.5 leading-none bg-gray-100 text-gray-500">
                           -20%
                         </span>
                       </button>
