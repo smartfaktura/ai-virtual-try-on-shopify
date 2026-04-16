@@ -1,31 +1,29 @@
 
 
-# Show "Buy Credits" button when balance is 0 in Freestyle
+# Move Feedback Banner Below Recent Creations for New Users
 
 ## Problem
-When the user has 0 credits and no prompt entered, the Generate button is greyed out and disabled. There's no way to buy credits from this position — the "Buy Credits" variant only appears when a prompt is typed AND credits are insufficient.
+On the new-user `/app` dashboard, the "Help us improve VOVV.AI" feedback banner sits between the tool cards and the "Recent Creations" gallery. It should appear after Recent Creations instead.
 
 ## Fix
 
-### `src/components/app/freestyle/FreestylePromptPanel.tsx` — Lines 437-482
+### `src/pages/Dashboard.tsx` — Lines 492-495
 
-Change the logic so that when `creditBalance === 0` (and credits aren't hidden), always show the "Buy Credits" button — even if `canGenerate` is false.
+Swap the order of `<FeedbackBanner />` and `<RecentCreationsGallery />`:
 
-Current condition for showing "Buy Credits":
-```
-showInsufficientCredits = !hideCreditCost && canGenerate && !hasEnoughCredits
-```
-
-New condition:
-```
-const isZeroCredits = !hideCreditCost && creditBalance !== undefined && creditBalance <= 0;
-const showInsufficientCredits = !hideCreditCost && canGenerate && !hasEnoughCredits;
-const showBuyCredits = isZeroCredits || showInsufficientCredits;
+**Before:**
+```tsx
+<FeedbackBanner />
+<RecentCreationsGallery />
 ```
 
-Then use `showBuyCredits` instead of `showInsufficientCredits` for the button rendering branch. The "Buy Credits" button will be always active (not disabled), calling `onGenerate` which already opens the NoCreditsModal when balance is insufficient.
+**After:**
+```tsx
+<RecentCreationsGallery />
+<FeedbackBanner />
+```
 
 | File | Change |
 |------|--------|
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Add `isZeroCredits` check, show Buy Credits button when balance is 0 regardless of prompt state |
+| `src/pages/Dashboard.tsx` | Swap FeedbackBanner and RecentCreationsGallery in the new-user layout (line ~492) |
 
