@@ -404,7 +404,6 @@ export function BuyCreditsModal() {
 
                     const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
                     const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
-                    const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
 
                     let ctaLabel = PLAN_CTA_MAP[p.planId] ?? `Choose ${p.name}`;
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
