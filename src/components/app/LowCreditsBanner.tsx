@@ -35,7 +35,7 @@ export function LowCreditsBanner() {
           onClick={openBuyModal}
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap"
         >
-          Buy Credits
+          Get Credits
         </button>
         {!isEmpty && (
           <button onClick={() => setDismissed(true)} className="opacity-60 hover:opacity-100 transition-opacity">
