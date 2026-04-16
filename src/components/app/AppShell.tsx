@@ -438,7 +438,7 @@ export function AppShell({ children }: AppShellProps) {
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-colors',
                 isEmpty
-                  ? 'bg-destructive/30 border-destructive/40 text-red-400'
+                  ? 'bg-white border-transparent text-[hsl(var(--sidebar-background))] hover:brightness-95'
                   : isLow
                     ? 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 animate-pulse'
                     : 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 hover:bg-white/10'
