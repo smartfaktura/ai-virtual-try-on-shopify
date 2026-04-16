@@ -307,16 +307,17 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
             </>
           )}
 
-          {/* Trust line — same for both variants */}
-          <p className="text-xs text-muted-foreground text-center">
-            Cancel anytime · No commitment
-          </p>
         </div>
 
-        {/* Redirect hint */}
-        <div className="px-6 sm:px-8 pb-5 pt-0 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="w-3 h-3" />
-          <span>You'll be securely redirected to complete checkout</span>
+        {/* Trust block — left-aligned, grouped */}
+        <div className="px-6 sm:px-8 mt-4 sm:mt-5 mb-4 sm:mb-5 flex flex-col gap-1.5">
+          <p className="text-[13px] text-muted-foreground">
+            Cancel anytime · No commitment
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
+            <Lock className="w-3 h-3" />
+            <span>You'll be securely redirected to complete checkout</span>
+          </p>
         </div>
 
         <DialogFooter className="px-6 sm:px-8 pb-7 sm:pb-8 pt-0 gap-3 sm:gap-3">
