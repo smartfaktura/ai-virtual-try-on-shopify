@@ -2,78 +2,46 @@
 
 ## Goal
 
-Make `UpgradePlanModal` the single source of truth for all "buy/upgrade/top-up/out-of-credits" surfaces, with polished copy, Recommended badge, mobile centering with rounded edges and side spacing.
+Match top-up UX to upgrade UX: user **selects** a credit pack (no instant Stripe redirect on click), then confirms via a single CTA at the bottom.
 
-## Discovery (during implementation)
+## Current behavior
 
-Grep all callers of `openBuyModal`, `BuyCreditsModal`, `NoCreditsModal` and redirect them to `UpgradePlanModal`.
+In `UpgradePlanModal` topup variant: each credit-pack card has its own button that fires `startCheckout()` immediately on click. No selection state, no confirmation step. Risky (mis-clicks → Stripe redirect).
 
-## A. `UpgradePlanModal.tsx` polish
+## Proposed behavior (mirrors upgrade flow)
 
-**Dynamic title/subtitle** based on `effectivePlan` + `balance` + `variant`:
+1. Credit-pack cards become **selectable rows** (like upgrade plan cards).
+2. Clicking a card sets `selectedPackId` — visual ring/border/check indicator.
+3. Default preselected: the **"Best Value"** pack (currently middle one).
+4. Single **"Continue to checkout"** primary button at bottom (same component used by upgrade variant).
+5. Below CTA: existing `Cancel anytime · No commitment` + lock/redirect line stays.
 
-| State | Title | Subtitle |
-|---|---|---|
-| Free, balance ≥ 4 | Choose a plan to keep creating with VOVV | Create more visuals, faster — with better value on larger plans |
-| Free, balance 1–3 | Only {balance} credits left | Pick a plan to keep your visuals flowing |
-| Free, balance 0 | You've used all your credits | Choose a plan to keep creating with VOVV |
-| Paid upgrading (starter/growth) | Upgrade your plan | Unlock more credits and faster output each month |
-| Pro top-up variant | Top up your credits | Add credits instantly — no plan change needed |
+## Changes to `UpgradePlanModal.tsx`
 
-**Recommended badge**
-- Find Growth in `upgradePlans` → render **"Recommended for You"** pill with `bg-primary text-primary-foreground` instead of the existing `MOST POPULAR` badge.
-- Preselect Growth by default (currently picks first/Starter).
+- Add `selectedPackId` state (initialized to `creditPacks.find(p => p.bestValue)?.id` or first pack as fallback).
+- In topup variant card render:
+  - Remove per-card button.
+  - Wrap card in a clickable `<button>` / `<div onClick>` that sets `selectedPackId`.
+  - Add selected state styling (matches upgrade card selected look: `ring-2 ring-primary border-primary` + check icon).
+  - Keep "Best Value" badge.
+- Reuse the existing bottom CTA: when topup variant, label = `Continue to checkout` (or `Get {N} credits` for clarity). On click → `startCheckout(selectedPack.stripePriceId, 'payment')`.
+- Disable CTA if `!selectedPackId` (shouldn't happen due to default, but defensive).
 
-**Copy cleanup**
-- Remove: `Estimates based on ~5 credits per standard image.`
-- Add centered below cards: `Cancel anytime · No commitment` (`text-xs text-muted-foreground`).
-- Keep the lock/redirect line.
+## Visual parity check
 
-**Top-up variant** (new `variant="topup"` prop)
-- Reuses same modal shell (header, footer, trust line) but renders **credit pack cards** from `BuyCreditsModal`'s topup tab instead of plan cards.
-- So Pro users see the same compact, centered, rounded modal — just with credit packs.
+- Upgrade variant: cards are selectable rows + bottom CTA → ✅
+- Topup variant after change: cards are selectable rows + bottom CTA → ✅ (same pattern)
 
-## B. Mobile + centering fixes (applies via `dialog.tsx` since it's the shared shell)
+## Files touched
 
-Current `DialogContent` (line 41 of `dialog.tsx`):
-- Mobile: `top-[5%]` + full-width + no rounding → looks like a sheet stuck to top.
+- `src/components/app/UpgradePlanModal.tsx` only.
 
-**Fix in `dialog.tsx`** (affects all modals consistently — your stated goal):
-- Center vertically on all sizes: `top-[50%] translate-y-[-50%]`.
-- Add side spacing on mobile: `w-[calc(100%-2rem)]` + `mx-auto` so the modal floats with ~1rem gap each side.
-- Always rounded: `rounded-2xl` (matches platform elements).
-- Cap max-height: `max-h-[calc(100vh-2rem)]` with `overflow-y-auto`.
+## Out of scope
 
-This single change unifies modal behavior across the app.
-
-## C. Wire all entry points to `UpgradePlanModal`
-
-1. **`CreditIndicator.tsx`** Pro path → open `UpgradePlanModal` with `variant="topup"` instead of `openBuyModal()`.
-2. **`Dashboard.tsx`** "Get Credits" banner → open `UpgradePlanModal` instead of `openBuyModal()`.
-3. **`CreditContext.tsx`** → repoint global `openBuyModal()` to control `UpgradePlanModal` (keep API name for backward compat).
-4. **`App.tsx`** → mount `<UpgradePlanModal />` globally; remove (or stop using) global `<BuyCreditsModal />`.
-5. **`NoCreditsModal.tsx`** → delegate body to `<UpgradePlanModal variant="no-credits" />`. Keep the post-gen trigger logic intact.
-6. Grep for any remaining `BuyCreditsModal` / `openBuyModal` callers and redirect.
-
-`BuyCreditsModal.tsx` file stays in place (not deleted) but becomes unused — safe cleanup later.
-
-## Files to edit
-
-- `src/components/ui/dialog.tsx` (mobile centering, rounded edges, side spacing — global)
-- `src/components/app/UpgradePlanModal.tsx` (copy logic, badge, topup variant, trust line, preselect Growth)
-- `src/components/app/CreditIndicator.tsx`
-- `src/contexts/CreditContext.tsx`
-- `src/App.tsx`
-- `src/pages/Dashboard.tsx`
-- `src/components/app/NoCreditsModal.tsx`
-- Any other call sites discovered via grep
-
-## What stays unchanged
-
-- `pricingPlans` data, Stripe checkout flow, credit pack data, sidebar layout, RLS, edge functions.
-- `UpgradePlanModal` width stays compact (`max-w-lg`).
+- No changes to `creditPacks` data, Stripe edge function, pricing, or any other modal.
+- No changes to upgrade variant behavior.
 
 ## Expected result
 
-Every "buy/upgrade/top up/out of credits" surface opens the **same compact, centered, rounded UpgradePlanModal** with state-aware title/subtitle, Growth preselected with a primary "Recommended for You" badge, and "Cancel anytime · No commitment" reassurance. Mobile modals are centered with side spacing and rounded corners, matching the rest of the platform.
+Top-up modal feels identical to upgrade modal: tap pack → it highlights → tap "Continue to checkout" → Stripe. No more accidental redirects.
 
