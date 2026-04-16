@@ -111,7 +111,7 @@ export default function AppPricing() {
   const planConfig = pricingPlans.find(p => p.planId === plan);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12 space-y-16">
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12 pb-16 space-y-24">
 
       {/* ── Hero Header ── */}
       <div className="text-center space-y-4">
@@ -123,7 +123,7 @@ export default function AppPricing() {
         </p>
 
         {/* Billing toggle */}
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center pt-4">
           <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
             <button
               className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
@@ -254,8 +254,8 @@ export default function AppPricing() {
       </div>
 
       {/* ── Team Replacement Comparison ── */}
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
+      <div className="space-y-8">
+        <div className="text-center space-y-3">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
             One platform replaces your entire creative team
           </h2>
@@ -264,7 +264,7 @@ export default function AppPricing() {
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto rounded-2xl border border-border overflow-hidden shadow-sm">
+        <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
           {/* Table header */}
           <div className="grid grid-cols-3 bg-muted/50 px-4 sm:px-6 py-3">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Role</span>
@@ -298,8 +298,8 @@ export default function AppPricing() {
       </div>
 
       {/* ── Everything You Get — Platform Features ── */}
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
+      <div className="space-y-8">
+        <div className="text-center space-y-3">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
             Everything you get with VOVV.AI
           </h2>
@@ -328,8 +328,8 @@ export default function AppPricing() {
       <CompetitorComparison />
 
       {/* ── How Credits Work ── */}
-      <div className="space-y-4">
-        <div className="text-center space-y-2">
+      <div className="space-y-6">
+        <div className="text-center space-y-3">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">How credits work</h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Credits are the simple currency that powers all your visual creation.
@@ -337,7 +337,7 @@ export default function AppPricing() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            { icon: Image, title: 'Generate images', desc: '5 credits per image across all workflows — product shots, lifestyle, editorial, and more.' },
+            { icon: Image, title: 'Generate images', desc: '4–6 credits per image depending on the workflow and model selection — product shots, lifestyle, editorial, and more.' },
             { icon: Video, title: 'Create videos & upscale', desc: 'Use credits for video generation, 2K and 4K upscaling, and brand model training.' },
             { icon: RefreshCw, title: 'Monthly refresh', desc: 'Credits refresh every billing cycle. Higher plans unlock better per-credit value and faster queues.' },
           ].map((item) => (
@@ -353,9 +353,9 @@ export default function AppPricing() {
       </div>
 
       {/* ── Value at a Glance ── */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-center">Value at a glance</h2>
-        <div className="rounded-xl border border-border overflow-hidden shadow-sm max-w-3xl mx-auto">
+        <div className="rounded-xl border border-border overflow-hidden shadow-sm">
           <div className="grid grid-cols-4 bg-muted/50 px-4 sm:px-6 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             <span>Plan</span>
             <span className="text-center">Credits/mo</span>
@@ -384,9 +384,9 @@ export default function AppPricing() {
       </div>
 
       {/* ── FAQ ── */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-center">Frequently asked questions</h2>
-        <div className="max-w-2xl mx-auto space-y-1.5">
+        <div className="max-w-3xl mx-auto space-y-2">
           {[
             { q: 'What can I create with VOVV?', a: 'Product photography, lifestyle shots, editorial campaigns, on-model imagery, product videos, short films, and ad content — all from a single product photo.' },
             { q: 'Do I need photography experience?', a: 'Not at all. VOVV.AI handles lighting, composition, styling, and retouching automatically. Just upload your product and choose a scene.' },
@@ -395,7 +395,7 @@ export default function AppPricing() {
             { q: 'What happens when I run out of credits?', a: 'You can purchase one-time credit top-ups without changing your plan, or upgrade to a higher plan for more monthly credits.' },
             { q: 'How does annual billing work?', a: 'Pay for 12 months upfront and save 20%. Credits are still refreshed monthly — you get the same amount each month.' },
             { q: 'Is there a free trial?', a: 'Every account starts with 20 free credits — no credit card required. Generate images and see the quality before committing.' },
-            { q: 'How many images can I generate per credit?', a: 'Each image generation costs 5 credits. Video generation, upscaling, and model training have their own credit costs displayed before each action.' },
+            { q: 'How many images can I generate per credit?', a: 'Each image costs 4–6 credits depending on workflow — Freestyle starts at 4, Visual Studio scenes cost 6. Video generation, upscaling, and model training have their own credit costs displayed before each action.' },
           ].map((faq) => (
             <Collapsible key={faq.q}>
               <CollapsibleTrigger className="w-full flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/30 transition-colors text-left shadow-sm">
