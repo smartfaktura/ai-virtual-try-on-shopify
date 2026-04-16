@@ -1,57 +1,37 @@
 
 
-# Fix Survey Card Background + Move to Image Detail View
+# Fix Survey Card Layout in Image Detail Panel
 
-## Two Issues
-
-1. **Transparent background**: The `ContextualFeedbackCard` uses `bg-primary/5` which is nearly invisible when overlaying the image grid on Freestyle. Need to add a solid `bg-card` or `bg-background` to the card's banner class.
-
-2. **Move survey to image lightbox**: Remove the survey from the prompt bar area in Freestyle.tsx and add it inside `LibraryDetailModal.tsx` after the Delete button. This ties the survey to the specific image being viewed, passing the correct `resultId` (image ID) and `imageUrl`.
+## Problem
+The survey feedback card overflows the sidebar panel on desktop/tablet because it tries to fit icon + badge + question text + 3 buttons in one horizontal row. The panel is only ~380px wide — not enough for an inline layout.
 
 ## Changes
 
-### `src/components/app/ContextualFeedbackCard.tsx` — Line 131
+### `src/components/app/ContextualFeedbackCard.tsx`
 
-Change `bannerClass` from transparent to solid background:
+**Step 1 layout** — Force vertical (stacked) layout at all sizes. Remove `md:flex-row md:items-center md:justify-between` which causes the overflow. The card will always stack: header row → question → buttons.
 
-```tsx
-// Before
-const bannerClass = 'bg-primary/5 border border-primary/20 rounded-xl px-4 py-3';
+Also change the badge text from "Survey" to "Help us improve" on `md:` screens while keeping "Survey" on mobile (or just use "Help us improve" everywhere since it fits).
 
-// After
-const bannerClass = 'bg-card border border-primary/20 rounded-xl px-4 py-3';
-```
+Specific changes:
+- **Line 154**: Remove `md:flex-row md:items-center md:justify-between md:gap-3 md:px-4 md:py-3` — keep it always `flex-col`
+- **Line 159**: Change badge text — use a responsive approach: show "Survey" on mobile, "Help us improve" on desktop. Or simplify to just "Help us improve" everywhere.
+- **Line 161**: Remove `hidden md:block` from the inline question text (since we're always stacking, the question goes on its own row)
+- **Line 172**: Remove `md:hidden` from the mobile question text (or consolidate into one always-visible line)
+- **Line 180**: Remove `md:flex-initial md:min-h-0 md:h-8` from buttons so they stay touch-friendly
 
-### `src/pages/Freestyle.tsx` — Lines 1148-1161
+Similarly update Step 2 expanded panel to remove desktop-specific overrides.
 
-Remove the `ContextualFeedbackCard` block and its surrounding wrapper div entirely. Also remove the `showFreestyleFeedback` state/logic and the import if no longer used elsewhere.
+**Badge text options:**
+1. "Help us improve" — clear, friendly
+2. "Quick feedback" — action-oriented
+3. "Your opinion" — personal
 
-### `src/components/app/LibraryDetailModal.tsx` — After the Delete button (line 388)
+I'll go with **"Help us improve"** on `sm:` and up, keeping "Survey" on mobile for brevity.
 
-Add the `ContextualFeedbackCard` between the Delete button section and the "Share to Explore" section, using the current `activeItem.id` as `resultId` and `activeItem.imageUrl` as `imageUrl`. The dismiss key will be per-image so it only shows once per image.
-
-```tsx
-{/* Survey feedback — per image */}
-<ContextualFeedbackCard
-  workflow="freestyle"
-  questionText="How was this result?"
-  buttonLabels={{ yes: 'Nailed it', almost: 'Almost', no: 'Not quite' }}
-  reasonChips={['Prompt ignored', 'Product changed', 'Model/look off', 'Scene/style off', 'Bad composition', 'Not realistic', 'Low quality', 'Too slow']}
-  textPlaceholder="What did you expect instead?"
-  resultId={activeItem?.id}
-  imageUrl={activeItem?.imageUrl}
-  triggerType="result_ready"
-/>
-```
-
-This ensures:
-- Each image gets its own survey tied to its ID
-- The feedback record stores the correct `result_id` and `image_url`
-- The dismiss key is per-image (`vovv_fb_dismiss_freestyle_{imageId}`)
+### Summary
 
 | File | Change |
 |------|--------|
-| `src/components/app/ContextualFeedbackCard.tsx` | Change `bg-primary/5` to `bg-card` in bannerClass |
-| `src/pages/Freestyle.tsx` | Remove ContextualFeedbackCard from prompt bar area |
-| `src/components/app/LibraryDetailModal.tsx` | Add ContextualFeedbackCard after Delete button, passing activeItem ID/URL |
+| `src/components/app/ContextualFeedbackCard.tsx` | Force vertical layout always; change badge to "Help us improve" on desktop/tablet |
 
