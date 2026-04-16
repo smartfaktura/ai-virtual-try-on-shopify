@@ -391,10 +391,12 @@ export function BuyCreditsModal() {
                       ],
                       growth: [
                         { text: 'Faster generation' },
+                        { text: 'Up to 250 products' },
                         { text: 'Brand Models', badge: 'NEW' },
                       ],
                       pro: [
                         { text: 'Fastest generation' },
+                        { text: 'Unlimited products' },
                         { text: 'Brand Models', badge: 'NEW' },
                       ],
                     };

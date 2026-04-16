@@ -32,10 +32,12 @@ const DRAWER_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> =
   ],
   growth: [
     { text: 'Faster generation' },
+    { text: 'Up to 250 products' },
     { text: 'Brand Models', badge: 'NEW' },
   ],
   pro: [
     { text: 'Fastest generation' },
+    { text: 'Unlimited products' },
     { text: 'Brand Models', badge: 'NEW' },
   ],
 };
