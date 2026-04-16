@@ -1,26 +1,42 @@
 
 
-# Enable Arrow Navigation in Freestyle Lightbox
+# Enable Arrow Navigation in Library Lightbox
 
 ## Problem
-The Freestyle detail modal opens for a single image with no way to navigate to adjacent images. The `LibraryDetailModal` already supports multi-image navigation (left/right arrows + keyboard) via `items` and `initialIndex` props — they're just not being passed.
+The Library page (`/app/library`) opens the detail modal for a single image — no left/right arrows appear. The `LibraryDetailModal` already has full multi-image navigation built in (arrows + keyboard), it just needs `items` and `initialIndex` props.
 
 ## Fix
 
-### `src/pages/Freestyle.tsx` — Lines 1225-1261
+### `src/pages/Jobs.tsx` — Line ~723-728
 
-Pass the full `savedImages` array as `LibraryItem[]` and the current `lightboxIndex` to the modal:
+1. Track clicked index instead of (or alongside) the selected item
+2. Pass `items={allItems}` and `initialIndex={clickedIndex}` to `LibraryDetailModal`
 
-1. Build a `libraryItems` array from all `savedImages` (same mapping logic already used for the single item)
-2. Pass `items={libraryItems}` and `initialIndex={lightboxIndex}` to `LibraryDetailModal`
-3. Keep `item={libraryItems[lightboxIndex]}` as the fallback single item
+**Before:**
+```tsx
+<LibraryDetailModal
+  item={selectedItem}
+  open={!!selectedItem}
+  onClose={() => setSelectedItem(null)}
+  isUpscaling={...}
+/>
+```
 
-This enables:
-- Left/right arrow buttons in the modal
-- Keyboard arrow key navigation
-- Wrap-around at list boundaries
+**After:**
+```tsx
+<LibraryDetailModal
+  item={selectedItem}
+  open={!!selectedItem}
+  onClose={() => setSelectedItem(null)}
+  isUpscaling={...}
+  items={allItems}
+  initialIndex={selectedItem ? allItems.findIndex(i => i.id === selectedItem.id) : 0}
+/>
+```
+
+The arrows already render on mobile (always visible) and desktop (visible on hover) — no additional mobile work needed. The component handles keyboard arrows and wrap-around navigation automatically.
 
 | File | Change |
 |------|--------|
-| `src/pages/Freestyle.tsx` | Build `libraryItems` array from `savedImages`, pass `items` + `initialIndex` to `LibraryDetailModal` |
+| `src/pages/Jobs.tsx` | Pass `items` and `initialIndex` to `LibraryDetailModal` |
 
