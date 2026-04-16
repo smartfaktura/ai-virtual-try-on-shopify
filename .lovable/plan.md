@@ -1,29 +1,27 @@
 
 
-# Improve Desktop & Tablet Feedback Survey
+# Unify Feedback Survey Styling Across All Steps
 
-## Current State
-The desktop pill (screenshot) already works well as a single horizontal row. The improvements focus on visual refinement and tablet breakpoint handling.
+## Problem
+Step 2 (expanded panel) uses `bg-card/95 shadow-lg` — a white card with heavy shadow — while Step 1 uses `bg-muted/80 shadow-sm`. This creates a jarring visual shift when clicking "No" or "Almost". The container also has `hover:shadow-md` which isn't needed since only the buttons should have hover states.
 
 ## Changes
 
-### Desktop refinements
-- Add a subtle vertical divider (`border-l border-border/30 h-4`) between the "HELP US IMPROVE" label and the question text — creates clearer visual separation in the pill
-- Slightly increase button padding on desktop (`px-3.5`) for better click targets
-- Add `hover:border-border/80` to buttons for a more polished hover state
-- Add subtle `hover:shadow-sm` transition on the entire pill for depth
+### 1. Match Step 2 container to Step 1 style
+- Change `bg-card/95 shadow-lg` → `bg-muted/80 shadow-sm` to match Step 1's muted treatment
+- Keep `rounded-xl border border-border/50 backdrop-blur-sm`
+- Add "Help Us Improve" label header consistent with Step 1
 
-### Tablet breakpoint (md)
-- Currently jumps from mobile stack (`flex-col`) to desktop pill (`sm:flex-row`) at 640px — too early for tablets
-- Change the responsive breakpoint from `sm:` to `md:` (768px) so tablets in portrait (820px, 768px) get the proper pill layout, while smaller tablet widths still get the stacked card
-- This prevents the pill from being cramped on narrow tablets
+### 2. Remove container hover on Step 1
+- Remove `hover:shadow-md transition-shadow` from the Step 1 outer div — buttons already have their own hover states
 
-### Button hover states
-- Add `active:scale-[0.97]` for tactile feedback on click
-- Slightly more visible hover: `hover:bg-muted hover:border-border/80`
+### 3. Tone down Step 2 chips and buttons
+- Selected chips: keep `bg-primary text-primary-foreground` (these are interactive selections, appropriate)
+- "Send feedback" button: change from `bg-primary text-primary-foreground` to a subtler style matching the muted theme — `bg-foreground/90 text-background` (dark but not branded-primary)
+- Or keep primary if it matches the brand — but ensure it doesn't clash with the muted container
 
 ## File
 | File | Change |
 |------|--------|
-| `src/components/app/ContextualFeedbackCard.tsx` | Lines 146-188: Update breakpoints from `sm:` to `md:`, add divider, improve button hover states |
+| `src/components/app/ContextualFeedbackCard.tsx` | Line 146: remove `hover:shadow-md transition-shadow`; Lines 199: change `bg-card/95 shadow-lg` → `bg-muted/80 shadow-sm`; Line 203: add "Help Us Improve" prefix to header |
 
