@@ -312,7 +312,7 @@ export function BuyCreditsModal() {
                     <button
                       className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all ${
                         billingPeriod === 'monthly'
-                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          ? 'bg-card text-foreground shadow-sm border border-border/60'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => setBillingPeriod('monthly')}
@@ -322,15 +322,13 @@ export function BuyCreditsModal() {
                     <button
                       className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1 ${
                         billingPeriod === 'annual'
-                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          ? 'bg-card text-foreground shadow-sm border border-border/60'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => setBillingPeriod('annual')}
                     >
                       Annual
-                      <span className={`inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none ${
-                        billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary text-primary-foreground'
-                      }`}>
+                      <span className="inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none bg-muted text-muted-foreground">
                         SAVE 20%
                       </span>
                     </button>
@@ -474,7 +472,7 @@ export function BuyCreditsModal() {
                                <span className="text-sm leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
                                  <span className="font-normal">{feat.text}</span>
                                  {feat.badge && (
-                                   <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-primary text-primary-foreground">
+                                   <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-muted text-muted-foreground">
                                      {feat.badge}
                                    </Badge>
                                  )}
