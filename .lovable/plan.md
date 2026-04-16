@@ -1,37 +1,39 @@
 
 
-# Hide Non-Functional Grid Size Buttons on Mobile
+# Fix Invisible Shimmer on Scene Card Preview Images
 
 ## Problem
-The shots grid selector shows 4 column options (6, 5, 4, 3) on mobile, but on mobile screens they only produce 2 actual layouts: `grid-cols-3` (for 6col/5col) and `grid-cols-2` (for 4col/3col). Two pairs of buttons do the same thing, which is confusing.
+Scene cards in the Shots step use `ShimmerImage` for preview images, but the shimmer animation is invisible because:
+- The parent container has `bg-muted` background
+- The shimmer gradient uses `from-muted/40 via-muted/70 to-muted/40` — nearly identical to the parent, making the loading animation invisible
+- While images load, cards appear as static grey boxes indistinguishable from scenes without previews
 
 ## Fix
 
-### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (line 219-221)
 
-**1. Update `GridSizeToggle` to filter options on mobile** — use `useIsMobile()` to show only 2 options (`3col` and `5col`) on mobile, representing the actual 2-col and 3-col layouts:
+Replace the static `bg-muted` container with a shimmer-aware approach — add an `animate-pulse` fallback on the container and use a more visible shimmer gradient on the `ShimmerImage`:
 
 ```tsx
-function GridSizeToggle({ value, onChange }: { value: GridSize; onChange: (v: GridSize) => void }) {
-  const isMobile = useIsMobile();
-  
-  const sizes: { id: GridSize; dots: [number, number]; title: string }[] = isMobile
-    ? [
-        { id: '5col', dots: [3, 3], title: '3 columns' },
-        { id: '3col', dots: [2, 2], title: '2 columns' },
-      ]
-    : [
-        { id: '6col', dots: [4, 3], title: '6 columns' },
-        { id: '5col', dots: [3, 3], title: '5 columns' },
-        { id: '4col', dots: [3, 2], title: '4 columns' },
-        { id: '3col', dots: [2, 2], title: '3 columns' },
-      ];
-  // ... rest unchanged
-}
+// Before (line 219-221)
+<div className="aspect-[3/4] bg-muted flex items-center justify-center relative">
+  {scene.previewUrl ? (
+    <ShimmerImage src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene.title} className="w-full h-full object-cover" loading="lazy" />
+
+// After
+<div className="aspect-[3/4] bg-muted/60 flex items-center justify-center relative">
+  {scene.previewUrl ? (
+    <ShimmerImage
+      src={getOptimizedUrl(scene.previewUrl, { quality: 60 })}
+      alt={scene.title}
+      className="w-full h-full object-cover"
+      loading="lazy"
+      wrapperClassName="bg-gradient-to-r from-muted/30 via-muted/80 to-muted/30 bg-[length:200%_100%] animate-shimmer"
+    />
 ```
 
-This reduces the toggle to 2 meaningful options on mobile (2-col vs 3-col grid), matching actual behavior.
+The `wrapperClassName` on `ShimmerImage` gives its wrapper a higher-contrast shimmer sweep that's visible against the lighter `bg-muted/60` parent, providing a clear loading state while images load.
 
 ### Files
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — filter grid toggle options by device
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — 1 small change to SceneCard image area
 
