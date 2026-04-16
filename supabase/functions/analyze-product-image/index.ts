@@ -96,7 +96,17 @@ Return ONLY the JSON object, no markdown or explanation.`,
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Could not parse AI response");
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    // Sanitize: fix unescaped control characters inside JSON string values
+    const sanitized = jsonMatch[0].replace(/[\x00-\x1F\x7F]/g, (ch: string) => {
+      switch (ch) {
+        case '\n': return '\\n';
+        case '\r': return '\\r';
+        case '\t': return '\\t';
+        default: return '';
+      }
+    });
+
+    const parsed = JSON.parse(sanitized);
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
