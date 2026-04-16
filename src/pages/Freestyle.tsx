@@ -32,6 +32,7 @@ import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgrad
 import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useConversionState } from '@/hooks/useConversionState';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses, mockModels } from '@/data/mockData';
@@ -1059,6 +1060,21 @@ export default function Freestyle() {
                     conversionState.openUpgradeDrawer('layer1_cta');
                   }}
                   onDismiss={conversionState.dismissLayer1}
+                />
+              </div>
+            )}
+            {/* Contextual feedback — once per session */}
+            {hasImages && !isProcessing && !isLoading && (
+              <div className="px-3 lg:px-1 pt-1 pb-2">
+                <ContextualFeedbackCard
+                  workflow="freestyle"
+                  questionText="Did this generation match what you had in mind?"
+                  buttonLabels={{ yes: 'Yes', almost: 'Almost', no: 'No' }}
+                  reasonChips={['Prompt too hard to control', 'Product not preserved', 'Model/look is off', 'Scene/style is off', 'Composition is wrong', 'Not realistic enough', 'Needs better quality', 'Too slow']}
+                  textPlaceholder="What were you hoping to get instead?"
+                  resultId={activeJob?.id}
+                  imageUrl={savedImages[0]?.url}
+                  triggerType="result_ready"
                 />
               </div>
             )}
