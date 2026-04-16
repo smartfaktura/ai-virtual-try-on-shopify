@@ -67,10 +67,19 @@ export function PostGenerationUpgradeCard({
       {/* Left accent */}
       <div className="absolute inset-y-0 left-0 w-[2px] bg-primary" />
 
+      {/* Dismiss button — top-right corner */}
+      <button
+        onClick={onDismiss}
+        className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground z-10"
+        aria-label="Dismiss"
+      >
+        <X className="w-3 h-3" />
+      </button>
+
       {/* Desktop: single row | Mobile: two rows */}
       <div className={cn(
-        'flex gap-1.5 py-2.5 pl-4 pr-3',
-        compact ? 'flex-col' : 'flex-col md:flex-row md:items-center md:gap-3'
+        'flex py-3 pl-4 pr-8',
+        compact ? 'flex-col gap-2' : 'flex-col gap-2 md:flex-row md:items-center md:gap-3 md:pr-3'
       )}>
         {/* Left: avatar + headline */}
         <div className="flex items-center gap-2.5 min-w-0">
@@ -94,10 +103,10 @@ export function PostGenerationUpgradeCard({
           ))}
         </div>
 
-        {/* Right: CTA + dismiss */}
+        {/* Right: CTA */}
         <div className={cn(
-          'flex items-center gap-2 shrink-0 justify-end',
-          !compact && 'md:ml-auto'
+          'flex items-center shrink-0',
+          compact ? 'justify-start' : 'justify-end md:ml-auto'
         )}>
           <Button
             size="sm"
@@ -106,14 +115,6 @@ export function PostGenerationUpgradeCard({
           >
             See Plans
           </Button>
-
-          <button
-            onClick={onDismiss}
-            className="p-1.5 rounded-full hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
-            aria-label="Dismiss"
-          >
-            <X className="w-3 h-3" />
-          </button>
         </div>
       </div>
     </Card>
