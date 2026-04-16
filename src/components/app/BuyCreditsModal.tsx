@@ -382,11 +382,6 @@ export function BuyCreditsModal() {
                       growth: 'Best value for growing brands',
                       pro: 'Best for high-volume production',
                     };
-                    const PLAN_VALUE_LABELS: Record<string, string> = {
-                      starter: 'Better than Free',
-                      growth: 'Better value',
-                      pro: 'Best value',
-                    };
                     const PLAN_CTA_MAP: Record<string, string> = {
                       starter: 'Start with Starter',
                       growth: 'Get Growth',
@@ -408,7 +403,7 @@ export function BuyCreditsModal() {
                     };
 
                     const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
-                    const valueLabel = PLAN_VALUE_LABELS[p.planId] ?? '';
+                    const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
                     const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
 
                     let ctaLabel = PLAN_CTA_MAP[p.planId] ?? `Choose ${p.name}`;
