@@ -193,12 +193,14 @@ function FreePlanSection({
       </div>
 
       {/* Reassurance */}
-      <p className="text-xs text-muted-foreground font-medium text-center">
-        Cancel anytime · No commitment
-      </p>
-      <p className="text-xs text-muted-foreground text-center mt-1">
-        All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
-      </p>
+      <div className="space-y-3 pt-4 border-t border-border/30">
+        <p className="text-[13px] text-muted-foreground font-medium text-center">
+          Cancel anytime · No commitment
+        </p>
+        <p className="text-xs text-muted-foreground text-center mt-1">
+          All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
+        </p>
+      </div>
     </div>
   );
 }

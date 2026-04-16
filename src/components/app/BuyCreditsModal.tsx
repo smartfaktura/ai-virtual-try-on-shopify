@@ -501,14 +501,14 @@ export function BuyCreditsModal() {
                 </div>
 
                 {/* Reassurance + links */}
-                <div className="space-y-2 pt-1">
-                  <p className="text-xs text-muted-foreground font-medium text-center">
+                <div className="space-y-3 pt-4 border-t border-border/30">
+                  <p className="text-[13px] text-muted-foreground font-medium text-center">
                     Cancel anytime · No commitment
                   </p>
-                  <p className="text-xs text-muted-foreground text-center">
+                  <p className="text-xs text-muted-foreground text-center mt-1">
                     All paid plans include product visuals, freestyle creation, and 1,000+ scenes.
                   </p>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center justify-center gap-3 pt-1">
                     <a href="/app/pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
                       Compare all features
                       <ArrowUpRight className="w-3 h-3" />
