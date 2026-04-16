@@ -350,6 +350,7 @@ export default function Settings() {
     <PageHeader title="Settings">
       <div className="space-y-6">
         {/* ─── Current Plan ─── */}
+        {!(plan === 'free' && subscriptionStatus === 'none') && (
         <Card>
           <CardContent className="p-5 space-y-3">
             {/* Plan header */}
@@ -415,6 +416,7 @@ export default function Settings() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* ─── Choose Your Plan ─── */}
         <div className="flex items-center justify-between">
