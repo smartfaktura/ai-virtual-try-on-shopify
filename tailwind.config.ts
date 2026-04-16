@@ -89,6 +89,10 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "shimmer-border": {
+          "0%, 100%": { backgroundPosition: "0% 0%" },
+          "50%": { backgroundPosition: "0% 100%" },
+        },
         "fade-in": {
           from: { opacity: "0", transform: "scale(0.98)" },
           to: { opacity: "1", transform: "scale(1)" },
@@ -106,6 +110,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 1.5s infinite",
+        "shimmer-border": "shimmer-border 3s ease-in-out infinite",
         "fade-in": "fade-in 0.4s ease-out",
         "marquee-left": "marquee-left linear infinite",
         "marquee-right": "marquee-right linear infinite",
