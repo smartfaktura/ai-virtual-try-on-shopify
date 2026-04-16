@@ -1,27 +1,34 @@
 
 
-# Improve Arrow Styling & Remove Counter
+# Hide "Current Plan" Card for Free Users Who Never Subscribed
 
-## What's Changing
+## Rationale
+A brand-new free user already sees their plan info in the sidebar credit indicator and in the "Choose Your Plan" section below. The "Current Plan" card showing "$0, 20 credits, 0/20, View past invoices" adds no value and clutters the page.
 
-1. **LibraryDetailModal arrows** (used in both `/app/freestyle` and `/app/library`): Upgrade arrow styling to match the polished `ImageLightbox` design — semi-transparent white/dark circles with blur, slightly larger, smooth hover transitions.
+## Logic
+Hide the entire `<Card>` block (lines 353-417) when the user is on the free plan **and** has never had a subscription. The condition: `plan === 'free' && subscriptionStatus === 'none'`.
 
-2. **Remove the "2/3" counter badge** from the bottom of the image area in `LibraryDetailModal`.
+This means:
+- **New free users** → card hidden
+- **Users who cancelled a paid plan** (status = `canceling` or `past_due`) → card still shown so they can see renewal/access dates and manage billing
+- **Active paid users** → card shown as normal
 
-## Technical Changes
+## Change
 
-### `src/components/app/LibraryDetailModal.tsx` — Lines 166-184
+### `src/pages/Settings.tsx` — Lines 352-417
 
-**Arrows (lines 169-180)**: Replace the current `bg-background/60 backdrop-blur border border-border/30` styling with a more refined glass-morphism style matching `ImageLightbox`:
-- `w-11 h-11` (slightly larger)
-- `bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10`
-- `hover:bg-black/30 dark:hover:bg-white/25`
-- Always visible on mobile, fade on hover on desktop (keep existing `md:opacity-0 md:group-hover/img:opacity-100`)
-- Icon size bumped to `w-5 h-5`
+Wrap the `<Card>` in a conditional:
 
-**Counter (lines 181-183)**: Delete the `2/3` counter `<div>` entirely.
+```tsx
+{/* ─── Current Plan ─── */}
+{!(plan === 'free' && subscriptionStatus === 'none') && (
+  <Card>
+    ...existing card content unchanged...
+  </Card>
+)}
+```
 
 | File | Change |
 |------|--------|
-| `src/components/app/LibraryDetailModal.tsx` | Restyle nav arrows, remove counter badge |
+| `src/pages/Settings.tsx` | Conditionally hide Current Plan card for never-subscribed free users |
 
