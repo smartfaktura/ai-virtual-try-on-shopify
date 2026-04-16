@@ -445,7 +445,7 @@ export default function Jobs() {
               {filterOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl bg-popover border border-border shadow-xl p-4 space-y-4">
+                  <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 z-50 w-56 rounded-2xl bg-popover border border-border shadow-xl p-4 space-y-4">
                     <div>
                       <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Type</p>
                       <div className="flex flex-wrap gap-1.5">
