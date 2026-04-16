@@ -154,6 +154,18 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
         </div>
       ))}
 
+      {/* Contextual feedback — after images, before actions */}
+      <ContextualFeedbackCard
+        workflow="product-visuals"
+        questionText="Are these visuals ready to use?"
+        buttonLabels={{ yes: 'Yes, ready', almost: 'Almost', no: 'No' }}
+        reasonChips={['Need better background', 'Wrong angle / shot', 'Product details off', 'Lighting / shadows', 'Not consistent enough', 'Missing shot type', 'Needs higher realism', 'Other']}
+        textPlaceholder="What is missing? e.g. cleaner background, sharper details"
+        resultId={Array.from(results.keys())[0]}
+        imageUrl={allImages[0]?.url}
+        triggerType="result_ready"
+      />
+
       {/* Actions */}
       <Card>
         <CardContent className="p-4 flex flex-wrap gap-3 items-center justify-center">
@@ -168,18 +180,6 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           </Button>
         </CardContent>
       </Card>
-
-      {/* Contextual feedback — below actions */}
-      <ContextualFeedbackCard
-        workflow="product-visuals"
-        questionText="Are these visuals ready to use?"
-        buttonLabels={{ yes: 'Yes, ready', almost: 'Almost', no: 'No' }}
-        reasonChips={['Need better background', 'Wrong angle / shot', 'Product details off', 'Lighting / shadows', 'Not consistent enough', 'Missing shot type', 'Needs higher realism', 'Other']}
-        textPlaceholder="What is missing? e.g. cleaner background, sharper details"
-        resultId={Array.from(results.keys())[0]}
-        imageUrl={allImages[0]?.url}
-        triggerType="result_ready"
-      />
 
       {lightboxOpen && (
         <ImageLightbox
