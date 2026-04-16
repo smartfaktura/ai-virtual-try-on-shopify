@@ -1,16 +1,17 @@
 
 
-# Freestyle Feedback: Show Only Once on 3rd Generation
+# Fix: Survey Card Not Showing in Virtual Try-On Set Results
 
 ## Problem
-Current logic shows the survey every 3rd freestyle generation (3rd, 6th, 9th...). The user wants it to appear **only once** — on the user's 3rd freestyle generation — and never again in freestyle after that.
+The previous change to limit feedback to the 3rd generation was applied to **all workflows** instead of only Freestyle. Lines 55-62 in `ContextualFeedbackCard.tsx` still have the blanket `count !== 3` check, which means the card only appears on the 3rd generation for every workflow — including virtual-try-on-set.
 
-## Change
+## Fix
 
-### `src/components/app/ContextualFeedbackCard.tsx` — Lines 55-62
-Update the freestyle condition from `count % 3 !== 0` to `count !== 3`:
+### `src/components/app/ContextualFeedbackCard.tsx` — Lines 54-62
+Wrap the generation counter logic in a `workflow === 'freestyle'` check so only Freestyle is throttled. All other workflows skip the counter and always show:
 
 ```tsx
+// Freestyle: only show on the 3rd generation, then never again
 if (workflow === 'freestyle') {
   const countKey = `vovv_fb_gen_count_freestyle`;
   const count = parseInt(sessionStorage.getItem(countKey) || '0', 10) + 1;
@@ -20,11 +21,9 @@ if (workflow === 'freestyle') {
     return;
   }
 }
+const t = setTimeout(() => setStep('step1'), 2000);
+return () => clearTimeout(t);
 ```
 
-This shows the survey exactly once — on the 3rd freestyle generation — and silently skips it for all other generations. Other workflows remain unaffected (show every time).
-
-| File | Change |
-|------|--------|
-| `src/components/app/ContextualFeedbackCard.tsx` | Line 59: `count % 3 !== 0` → `count !== 3` |
+Single file, single block change.
 
