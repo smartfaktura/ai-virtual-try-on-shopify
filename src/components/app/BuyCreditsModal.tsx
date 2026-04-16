@@ -153,21 +153,27 @@ export function BuyCreditsModal() {
 
           {/* Tab switcher + billing toggle — single row */}
           <div className="px-4 sm:px-6 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
-            <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
-              {(['topup', 'upgrade'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all ${
-                    activeTab === tab
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground/70'
-                  }`}
-                >
-                  {tab === 'topup' ? 'Top Up' : 'Plans'}
-                </button>
-              ))}
-            </div>
+          {/* Tab switcher + billing toggle — single row */}
+          <div className="px-4 sm:px-6 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
+            {showTabs ? (
+              <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+                {(['topup', 'upgrade'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all ${
+                      activeTab === tab
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground/70'
+                    }`}
+                  >
+                    {tab === 'topup' ? 'Top Up' : 'Plans'}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div />
+            )}
             {activeTab === 'upgrade' && (
               <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
                 <button
