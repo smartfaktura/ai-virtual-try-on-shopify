@@ -2,47 +2,46 @@
 
 ## Goal
 
-Replace the small `+` icon button in the sidebar credits indicator with a proper labeled CTA ("Upgrade" for free users, "Top up" for paid users), give it a subtle animated gradient (non-purple), and stop the entire credits card from being clickable.
+Restyle the sidebar credits CTA so it matches vovv.ai brand colors instead of the warm amber/rose gradient, and swap the credits icon for one that reads better.
+
+## Brand context
+
+- Primary: deep navy (`217 33% 17%`), used as the strong CTA color
+- Sidebar: dark navy background, light foreground
+- No purple, no warm amber — palette is cool, neutral, premium
+- Brand stays restrained / "luxury restraint" per design memory
+
+So a loud warm gradient doesn't fit. The CTA should feel like a primary action on a dark sidebar — bright, clean, brand-aligned.
 
 ## Changes in `src/components/app/CreditIndicator.tsx`
 
-### 1. Remove card-wide click target
-- Remove `onClick={() => navigate('/app/settings')}` and `cursor-pointer` / hover bg from the outer container.
-- The card becomes informational only. Actions live on the buttons.
+### 1. Upgrade / Top up button — brand primary, subtle motion
+Replace the amber/rose/orange gradient with a brand-aligned treatment:
 
-### 2. Replace the `+` icon button with a labeled CTA
-- Free plan (or any plan with `nextPlanId`): label = `Upgrade`, action = navigate to `/app/settings`.
-- Paid plan with no upgrade path: label = `Top up`, action = `openBuyModal()`.
-- Remove the separate inline "Upgrade ↗" text link — the new button replaces it, so the row is cleaner.
+- Base: solid white pill on the dark sidebar (`bg-white text-[hsl(var(--sidebar-background))]`) — maximum contrast, reads as the primary action.
+- Subtle animated sheen: a faint white-to-transparent shimmer sweeping across the button using the existing `animate-shimmer` keyframe, but at very low opacity so it feels premium, not flashy. Implemented as an `::after`-style overlay via a child span with `bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent)] bg-[length:200%_100%] animate-shimmer mix-blend-overlay`.
+- Hover: very slight scale or brightness lift, no color change.
+- Keeps the same labels: `Upgrade` (free / has next plan) and `Top up` (max plan).
 
-Result on the row:
-```
-[⚡] 0 / 20                  [ Upgrade ]
-──── progress ────
-```
+This matches how premium dark UIs handle their primary CTA (clean white pill, soft sheen) and sits naturally inside the navy sidebar.
 
-### 3. Animated gradient (non-purple)
-Use a warm/neutral premium gradient instead of brand purple. Direction:
+### 2. Credits icon — switch from `Zap` to `Sparkles`
+`Zap` reads as "energy/lightning" and clashes with the new clean white CTA. Switch to `Sparkles` which:
+- Reads as "AI generations / credits" (industry standard for AI tools)
+- Is more elegant, fits the luxury-restraint aesthetic
+- Pairs better with the new white primary button than a hard lightning bolt
 
-- Gradient: amber → rose → orange (warm, premium, non-purple), using `bg-gradient-to-r from-amber-400 via-rose-400 to-orange-400`.
-- Animate background position with the existing `animate-shimmer` pattern (already in the codebase, see `progress.tsx`) by using `bg-[length:200%_100%]` + `animate-shimmer`.
-- Text: white, semibold, small (`text-xs`), tight padding (`h-7 px-3 rounded-lg`).
-- Subtle hover: slight brightness increase, no scale.
+Render at `w-4 h-4`, `strokeWidth={1.75}`, color `text-sidebar-foreground/80` for a refined look (not the heavier `2.25` stroke).
 
-### 4. Keep behavior
-- No logic/pricing changes.
-- `openBuyModal` and `navigate('/app/settings')` already exist in the component.
-- Progress bar unchanged.
-
-## Technical details
-
-- File: `src/components/app/CreditIndicator.tsx`
-- Reuse existing `animate-shimmer` keyframe (already defined in Tailwind config and used by `progress.tsx`).
-- No new dependencies, no new tailwind config changes.
+### 3. Keep everything else
+- No layout changes
+- No logic changes (`navigate('/app/settings')` and `openBuyModal()` stay)
+- Progress bar stays the same
+- Card still non-clickable; only the CTA is interactive
 
 ## Expected result
 
-- Sidebar credits card is no longer a giant click target.
-- The action is a clear, labeled button: `Upgrade` for free users, `Top up` for paid users.
-- The button has a soft animated warm gradient (amber/rose/orange), not purple, matching the premium aesthetic without competing with primary CTAs elsewhere.
+- The CTA looks like a real primary action — clean white pill with a soft moving sheen — fully on-brand for vovv.ai.
+- The icon shifts from a noisy bolt to a refined sparkle, reading clearly as "AI credits".
+- The whole credits card feels premium and quiet, with one clear focal action.
 
