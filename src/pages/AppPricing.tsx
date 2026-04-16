@@ -189,6 +189,30 @@ export default function AppPricing() {
     document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // Per-plan CTA used inside the comparison table header & footer
+  const getPlanCta = (p: PricingPlan) => {
+    const targetIdx = PLAN_ORDER.indexOf(p.planId);
+    const isCurrent = p.planId === plan;
+    if (isCurrent && subscriptionStatus === 'canceling') return { label: 'Reactivate', disabled: false, variant: 'default' as const };
+    if (isCurrent) return { label: 'Current plan', disabled: true, variant: 'outline' as const };
+    if (p.planId === 'free') return { label: 'Cancel plan', disabled: false, variant: 'outline' as const };
+    if (targetIdx < currentIdx) return { label: `Downgrade`, disabled: false, variant: 'outline' as const };
+    if (p.planId === 'growth') return { label: 'Continue with Growth', disabled: false, variant: 'default' as const };
+    return { label: `Choose ${p.name}`, disabled: false, variant: 'outline' as const };
+  };
+
+  const handlePlanSelect = (p: PricingPlan) => {
+    const targetIdx = PLAN_ORDER.indexOf(p.planId);
+    const isCurrent = p.planId === plan;
+    if (isCurrent && subscriptionStatus === 'canceling') setDialogMode('reactivate');
+    else if (isCurrent) return;
+    else if (p.planId === 'free') setDialogMode('cancel');
+    else if (targetIdx > currentIdx) setDialogMode('upgrade');
+    else setDialogMode('downgrade');
+    setSelectedDialogPlan(p);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 sm:py-16 pb-20 space-y-20 sm:space-y-24">
 
