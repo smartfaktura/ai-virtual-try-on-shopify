@@ -575,3 +575,8 @@
   80% { transform: translateY(-1px) rotate(0deg) scale(1.01); }
   100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 transparent); }
 }
+
+.animate-shimmer-border {
+  background-size: 100% 200%;
+  animation: shimmer-border 3s ease-in-out infinite;
+}
