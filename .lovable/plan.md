@@ -1,35 +1,38 @@
 
 
-# Replace Smart Views Slider with Better Mobile Layout
+# Compact Mobile Dashboard
 
 ## Problem
-The Library page Smart Views bar (All, Favorites, Brand Ready, Ready to Publish) renders as a horizontal scroll on mobile, producing an ugly visible scrollbar/track below the pills. On mobile there are only 4 items — they should fit without scrolling if styled properly.
+The returning user dashboard has excessive whitespace on mobile — large section gaps, tall metric cards, and oversized heading text waste vertical space, pushing content below the fold (visible in the screenshot: 4 metric cards + quick actions fill the entire screen).
 
-## Fix
+## Changes
 
-### File: `src/pages/Jobs.tsx` (lines 374-390)
+### File: `src/pages/Dashboard.tsx`
 
-Add `scrollbar-hide` class to the container and reduce gap/padding on mobile so all 4 pills fit in one row without overflow:
+**1. Reduce outer spacing on mobile**
+- Line 508: `space-y-8 sm:space-y-10` → `space-y-5 sm:space-y-10`
 
-```tsx
-// Before
-<div className="flex items-center gap-1.5 overflow-x-auto">
+**2. Shrink welcome heading on mobile**
+- Line 512: `text-3xl sm:text-4xl` → `text-2xl sm:text-4xl`
+- Line 515-516: `text-lg` → `text-sm sm:text-lg`, add `mt-1 sm:mt-2`
 
-// After
-<div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide">
-```
+**3. Tighten quick actions row**
+- Line 519: `mt-5` → `mt-3 sm:mt-5`
 
-Also tighten the pill padding on mobile to ensure all 4 fit:
-```tsx
-// Before
-'px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium ...'
+**4. Reduce metric grid gap on mobile**
+- Line 551: `gap-3 sm:gap-4` → `gap-2 sm:gap-4`
 
-// After  
-'px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium ...'
-```
+### File: `src/components/app/MetricCard.tsx`
 
-This hides the scrollbar track (using the existing `scrollbar-hide` utility already used elsewhere in the app) and tightens horizontal spacing so the 4 pills fit on most mobile screens without scrolling.
+**5. Compact card height on mobile**
+- Line 53 (loading skeleton): `h-[120px] sm:h-[140px]` → `h-[100px] sm:h-[140px]`, reduce padding `p-2.5 sm:p-5`
+- Line 65 (card content): `h-[120px] sm:h-[140px]` → `h-[100px] sm:h-[140px]`, padding `p-2.5 sm:p-5`
+- Line 71: icon `w-3 h-3` on mobile, title text stays `text-[10px]`
+- Line 75: value `text-base sm:text-xl`, reduce `mt-1.5 sm:mt-2`
+
+These changes save ~80-100px of vertical space on the metric row alone, plus ~40px from tighter section gaps and heading, bringing more content above the fold.
 
 ### Files
-- `src/pages/Jobs.tsx` — 2 small class changes on the Smart Views section
+- `src/pages/Dashboard.tsx` — spacing, heading size
+- `src/components/app/MetricCard.tsx` — compact card height and padding on mobile
 
