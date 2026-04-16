@@ -787,7 +787,6 @@ export default function Freestyle() {
           sessionStorage.setItem('vovv_fb_gen_count_freestyle', String(newCount));
            setCompletedFeedbackJobId(activeJob.id);
            setShowFreestyleFeedback(true);
-          }
         }
         setTimeout(() => {
           refreshImagesRef.current();
