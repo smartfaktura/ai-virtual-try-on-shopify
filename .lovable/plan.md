@@ -1,92 +1,80 @@
 
 
-# Polish Pricing Popup — Sharpen Hierarchy & Reduce Friction
+# Polish Pricing Popup — Premium Offer Cards
 
-Both `NoCreditsModal.tsx` (FreePlanSection) and `BuyCreditsModal.tsx` (Plans tab) need the same refinements. The screenshot is from BuyCreditsModal but the changes apply to both modals' plan card layouts.
+## Problem
+Plan cards still have a box-inside-box layout (inner gray metrics panel), the billing toggle floats away from the cards it controls, the header lacks hierarchy, and overall spacing doesn't feel premium.
 
 ## Changes
 
-### 1. Both modals — New plan card structure (deduplicated, tighter)
+### File: `src/components/app/BuyCreditsModal.tsx` — Plans tab
 
-Replace the current card content (which shows credits/images twice — once as metrics and again as bullets) with a cleaner layout:
+**1. Restructure header (lines 132-165)**
+- Remove the wallet icon box and plan badge from the top bar
+- Replace with a clean text hierarchy:
+  - `{balance} credits remaining` (bold)
+  - `Choose a plan to keep creating` (subtitle)
+  - `Better value on larger plans` (muted line)
+- Keep close button top-right
 
-**Per card:**
-- Plan name + descriptor line (e.g. "Best to start" / "Best value for growing brands" / "Best for high-volume production")
-- Price block
-- Metrics block: images/mo, credits/mo, price-per-credit with value label ("Better than Free" / "Better value" / "Best value")
-- Only 2 differentiating bullets (not the repeated credits/images/price ones):
-  - Starter: Bulk generations, Up to 100 products
-  - Growth: Faster generation queue, Brand Models NEW
-  - Pro: Fastest generation queue, Brand Models NEW
-- CTA with varied labels: "Start with Starter" / "Get Growth" / "Choose Pro"
+**2. Move billing toggle (lines 167-217)**
+- Remove the billing toggle from the tab-switcher row
+- Place it directly above the plan cards grid, centered, within the Plans tab content area
+- Structure becomes: header → subtitle → billing toggle → cards
 
-### 2. Growth card — visually stronger
-- Slightly darker border (`border-primary` instead of `border-primary/60`)
-- Subtle tinted background (`bg-primary/[0.03]`)
-- Elevated shadow (`shadow-md shadow-primary/5`)
-- "Most Popular" badge already exists — keep it
+**3. Flatten plan cards (lines 428-529)**
+- Remove the inner `rounded-xl bg-muted/60 border` metrics container (lines 482-501)
+- Place credits, images, price-per-credit directly in the card body as simple text lines:
+  - `500 credits / month` — text-sm
+  - `~100 images` — text-xs muted
+  - `$0.078 per credit` — text-xs primary with value label badge inline
+- Keep only 2 differentiator bullets below
+- Add `pt-3` before CTA for breathing room
 
-### 3. Header improvements
+**4. Refine Growth card styling**
+- Use `border-primary/80` (not full `border-primary`) for a cleaner highlight
+- Keep `bg-primary/[0.03]` and `shadow-md shadow-primary/5`
+- "Most Popular" badge stays
 
-**BuyCreditsModal** (free user on Plans tab):
-- Add contextual line below the balance header: "Pick a plan to keep creating with better value as you scale"
+**5. Add reassurance line**
+Already exists at bottom — keep as-is
 
-**NoCreditsModal** FreePlanSection:
-- Already has headline. Add a subtitle: "Better value as you scale — all plans include 1,000+ scenes"
+### File: `src/components/app/NoCreditsModal.tsx` — FreePlanSection
 
-### 4. Reassurance line at bottom
-Add below plan cards in both modals:
-> "All paid plans include product visuals, freestyle creation, and 1,000+ scenes"
+**Same card restructuring:**
+- Remove the inner `rounded-xl bg-muted/60` metrics container (lines 159-176)
+- Flatten metrics into card body directly
+- Keep billing toggle centered above cards (already in correct position)
+- Same spacing improvements
 
-With "Compare all features" and "Contact Sales" links.
+## Card Layout (both files)
 
-### 5. Vertical rhythm cleanup
-- More top padding inside cards (`pt-6`)
-- Tighten space between price and metrics
-- Increase space before CTA (`mt-auto` already, but add `pt-3` separator)
-- Align CTA buttons at same vertical baseline via `flex-col` with `flex-1` on content area
+```text
+┌─────────────────────┐
+│ Growth               │
+│ Best value for       │
+│ growing brands       │
+│                      │
+│ $79/mo               │
+│ billed monthly       │
+│                      │
+│ 1,500 credits/mo     │
+│ ~300 images           │
+│ $0.053/credit ▸Better│
+│                      │
+│ ✓ Faster queue       │
+│ ✓ Brand Models NEW   │
+│                      │
+│ [  Get Growth     ]  │
+└─────────────────────┘
+```
+
+No inner panel. Clean flat hierarchy.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/app/NoCreditsModal.tsx` | Rewrite `FreePlanSection` cards: deduplicate bullets, add descriptor, value labels, varied CTAs, Growth visual emphasis, reassurance footer |
-| `src/components/app/BuyCreditsModal.tsx` | Rewrite Plans tab cards with same structure; add contextual subtitle for free users; add reassurance line; improve Growth card styling |
-
-## Constants (shared across both files)
-
-```typescript
-const PLAN_DESCRIPTORS: Record<string, string> = {
-  starter: 'Best to start',
-  growth: 'Best value for growing brands',
-  pro: 'Best for high-volume production',
-};
-
-const PLAN_VALUE_LABELS: Record<string, string> = {
-  starter: 'Better than Free',
-  growth: 'Better value',
-  pro: 'Best value',
-};
-
-const PLAN_CTA_LABELS: Record<string, string> = {
-  starter: 'Start with Starter',
-  growth: 'Get Growth',
-  pro: 'Choose Pro',
-};
-
-const PLAN_DIFFERENTIATORS: Record<string, { text: string; badge?: string }[]> = {
-  starter: [
-    { text: 'Bulk generations' },
-    { text: 'Up to 100 products' },
-  ],
-  growth: [
-    { text: 'Faster generation queue' },
-    { text: 'Brand Models', badge: 'NEW' },
-  ],
-  pro: [
-    { text: 'Fastest generation queue' },
-    { text: 'Brand Models', badge: 'NEW' },
-  ],
-};
-```
+| `BuyCreditsModal.tsx` | Flatten header, move toggle above cards, remove inner metrics box, improve spacing |
+| `NoCreditsModal.tsx` | Remove inner metrics box in FreePlanSection, same flat card layout |
 
