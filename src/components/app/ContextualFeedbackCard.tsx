@@ -128,7 +128,7 @@ export function ContextualFeedbackCard({
 
   if (step === 'idle' || step === 'dismissed') return null;
 
-  const bannerClass = 'bg-primary/5 border border-primary/20 rounded-xl px-4 py-3';
+  const bannerClass = 'bg-card border border-primary/20 rounded-xl px-4 py-3';
 
   // Success state
   if (step === 'success') {

@@ -388,6 +388,18 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </Button>
               </div>
 
+              {/* Survey feedback — per image */}
+              <ContextualFeedbackCard
+                workflow="freestyle"
+                questionText="How was this result?"
+                buttonLabels={{ yes: 'Nailed it', almost: 'Almost', no: 'Not quite' }}
+                reasonChips={['Prompt ignored', 'Product changed', 'Model/look off', 'Scene/style off', 'Bad composition', 'Not realistic', 'Low quality', 'Too slow']}
+                textPlaceholder="What did you expect instead?"
+                resultId={activeItem?.id}
+                imageUrl={activeItem?.imageUrl}
+                triggerType="result_ready"
+              />
+
               {/* Share to Discover */}
               <div className="rounded-xl border border-border/40 bg-primary/5 p-5 space-y-3">
                 <div className="flex items-center gap-2.5">
