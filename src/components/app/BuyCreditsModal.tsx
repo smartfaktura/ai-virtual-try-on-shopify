@@ -364,7 +364,7 @@ export function BuyCreditsModal() {
                 )}
 
                 {/* Plan cards */}
-                <div className={`grid grid-cols-1 ${plansToShow.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-2.5 sm:gap-3`}>
+                <div className={`grid grid-cols-1 ${plansToShow.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-2.5 sm:gap-3 bg-muted/50 rounded-2xl p-4`}>
                   {plansToShow.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
@@ -386,6 +386,16 @@ export function BuyCreditsModal() {
                     };
                     const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
 
+                    // Starter baseline for save % calculation
+                    const starterPlan = plansToShow.find(sp => sp.planId === 'starter');
+                    const starterCredits = typeof starterPlan?.credits === 'number' ? starterPlan.credits : 0;
+                    const starterPrice = isAnnual && starterPlan ? Math.round(starterPlan.annualPrice / 12) : (starterPlan?.monthlyPrice ?? 0);
+                    const starterPPC = starterCredits > 0 ? starterPrice / starterCredits : 0;
+                    const currentPPC = credits > 0 && displayPrice > 0 ? displayPrice / credits : 0;
+                    const savePct = starterPPC > 0 && currentPPC > 0 && p.planId !== 'starter'
+                      ? Math.round((1 - currentPPC / starterPPC) * 100)
+                      : 0;
+
                     // Build unified bullet list
                     const unifiedBullets: { text: string; badge?: string; color?: string }[] = [];
                     if (imageEstimate) {
@@ -393,7 +403,8 @@ export function BuyCreditsModal() {
                       unifiedBullets.push({ text: `${credits.toLocaleString()} credits / month` });
                       if (displayPrice > 0) {
                         const ppc = `$${(displayPrice / credits).toFixed(3)} per credit`;
-                        unifiedBullets.push({ text: ppc, color: 'text-primary', ...(isAnnual ? { badge: 'SAVE 20%' } : {}) });
+                        const saveBadge = savePct > 0 ? `SAVE ${savePct}%` : (isAnnual && p.planId === 'starter' ? 'SAVE 20%' : undefined);
+                        unifiedBullets.push({ text: ppc, color: 'text-primary', badge: saveBadge });
                       }
                     }
                     const PLAN_EXTRAS: Record<string, { text: string; badge?: string }[]> = {
@@ -412,12 +423,12 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                      className={`relative rounded-2xl p-5 sm:p-6 flex flex-col transition-all duration-200 ${
+                      className={`relative rounded-2xl p-5 sm:p-6 flex flex-col transition-all duration-200 bg-white dark:bg-card ${
                           isCurrent && p.planId !== 'free'
-                            ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
+                            ? 'border-2 border-primary ring-1 ring-primary/10'
                             : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
-                            ? 'border-2 border-primary bg-primary/[0.02] shadow-md shadow-primary/5'
-                              : 'border border-border/40 bg-card hover:shadow-sm'
+                            ? 'border-2 border-primary shadow-md shadow-primary/5'
+                              : 'border border-border/40 hover:shadow-sm'
                         }`}
                       >
                         {/* Most Popular badge — top-right corner */}
@@ -443,14 +454,14 @@ export function BuyCreditsModal() {
                         {/* Price */}
                         <div className="mb-5">
                           {isFree ? (
-                            <span className="text-3xl font-bold tracking-tight">Free</span>
+                            <span className="text-4xl font-bold tracking-tight">Free</span>
                           ) : (
                             <p className="tracking-tight">
                               {isAnnual && p.monthlyPrice > displayPrice && (
                                 <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                               )}
-                              <span className="text-3xl font-bold">${displayPrice}</span>
-                              <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                              <span className="text-4xl font-bold">${displayPrice}</span>
+                              <span className="text-base font-normal text-muted-foreground">/mo</span>
                             </p>
                           )}
                         </div>
@@ -460,10 +471,10 @@ export function BuyCreditsModal() {
                           {unifiedBullets.map((feat, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                              <span className={`text-[13px] leading-snug inline-flex items-center gap-1.5 ${feat.color || 'text-muted-foreground'}`}>
+                              <span className={`text-sm leading-snug inline-flex items-center gap-1.5 ${feat.color || 'text-muted-foreground'}`}>
                                 {feat.text}
                                 {feat.badge && (
-                                  <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-emerald-500/15 text-emerald-600 border-0">
+                                  <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground border-0">
                                     {feat.badge}
                                   </Badge>
                                 )}
