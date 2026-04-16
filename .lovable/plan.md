@@ -1,29 +1,26 @@
 
 
-# Move Feedback Banner Below Recent Creations for New Users
+# Enable Arrow Navigation in Freestyle Lightbox
 
 ## Problem
-On the new-user `/app` dashboard, the "Help us improve VOVV.AI" feedback banner sits between the tool cards and the "Recent Creations" gallery. It should appear after Recent Creations instead.
+The Freestyle detail modal opens for a single image with no way to navigate to adjacent images. The `LibraryDetailModal` already supports multi-image navigation (left/right arrows + keyboard) via `items` and `initialIndex` props — they're just not being passed.
 
 ## Fix
 
-### `src/pages/Dashboard.tsx` — Lines 492-495
+### `src/pages/Freestyle.tsx` — Lines 1225-1261
 
-Swap the order of `<FeedbackBanner />` and `<RecentCreationsGallery />`:
+Pass the full `savedImages` array as `LibraryItem[]` and the current `lightboxIndex` to the modal:
 
-**Before:**
-```tsx
-<FeedbackBanner />
-<RecentCreationsGallery />
-```
+1. Build a `libraryItems` array from all `savedImages` (same mapping logic already used for the single item)
+2. Pass `items={libraryItems}` and `initialIndex={lightboxIndex}` to `LibraryDetailModal`
+3. Keep `item={libraryItems[lightboxIndex]}` as the fallback single item
 
-**After:**
-```tsx
-<RecentCreationsGallery />
-<FeedbackBanner />
-```
+This enables:
+- Left/right arrow buttons in the modal
+- Keyboard arrow key navigation
+- Wrap-around at list boundaries
 
 | File | Change |
 |------|--------|
-| `src/pages/Dashboard.tsx` | Swap FeedbackBanner and RecentCreationsGallery in the new-user layout (line ~492) |
+| `src/pages/Freestyle.tsx` | Build `libraryItems` array from `savedImages`, pass `items` + `initialIndex` to `LibraryDetailModal` |
 
