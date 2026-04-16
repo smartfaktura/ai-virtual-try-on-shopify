@@ -1,35 +1,43 @@
 
 
-# Show Credit Banner Globally Across /app (Except Dashboard)
+# Fix Library Page Layout to Match Other Pages
 
-## What Changes
+## Problem
+The Library page (`/app/library` — `src/pages/Jobs.tsx`) uses a custom layout wrapper with its own padding (`min-h-screen`, `px-4 sm:px-6 py-8`), while the AppShell already provides `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-8 pb-8`. This causes double padding and misaligned content compared to `/app/products`, `/app/video`, `/app/workflows` which all use the shared `<PageHeader>` component.
 
-1. **Move the `LowCreditsBanner` into `AppShell`** so it appears on every `/app` page automatically — no need for each page to import it individually.
+## Fix
 
-2. **Hide it on the dashboard** (`/app` or `/app/`) since the dashboard already has its own out-of-credits CTA card.
+### `src/pages/Jobs.tsx`
 
-3. **Lower the threshold** so the banner shows when `balance < 4` (not just the dynamic percentage-based `isLow`).
+1. Import `PageHeader` from `@/components/app/PageHeader`
+2. Replace the outer wrapper (lines 363-372):
 
-4. **Remove per-page `LowCreditsBanner` imports** from `Dashboard.tsx`, `Generate.tsx`, `Freestyle.tsx`, and `Perspectives.tsx` to avoid duplication.
-
-## Technical Details
-
-### `src/components/app/LowCreditsBanner.tsx`
-- Change visibility condition: show when `balance < 4` OR `isEmpty`, instead of relying on percentage-based `isLow`/`isCritical`.
-
-### `src/components/app/AppShell.tsx` — Line 469
-- Import `LowCreditsBanner`
-- Add it above `{children}`, wrapped in a route check:
+**Before:**
 ```tsx
-{!isDashboard && <LowCreditsBanner />}
+<div className="min-h-screen">
+  <div className="px-4 sm:px-6 py-8 space-y-6">
+    <div>
+      <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
+      <p className="text-muted-foreground mt-1 text-sm">...</p>
+    </div>
+    ...content...
+  </div>
+</div>
 ```
-Where `isDashboard` checks `location.pathname === '/app' || location.pathname === '/app/'`.
 
-### Remove per-page imports
+**After:**
+```tsx
+<PageHeader
+  title="Library"
+  subtitle="All your visuals, organized for review, selection, and publishing"
+>
+  ...content (smart views, toolbar, grid, modals)...
+</PageHeader>
+```
+
+3. Remove the closing `</div></div>` at the bottom that corresponded to the old wrapper.
+
 | File | Change |
 |------|--------|
-| `src/pages/Dashboard.tsx` | Remove `LowCreditsBanner` import and usage |
-| `src/pages/Generate.tsx` | Remove `LowCreditsBanner` import and usage |
-| `src/pages/Freestyle.tsx` | Remove `LowCreditsBanner` import and usage |
-| `src/pages/Perspectives.tsx` | Remove `LowCreditsBanner` import and usage |
+| `src/pages/Jobs.tsx` | Replace custom wrapper with `<PageHeader>` component to match other pages |
 
