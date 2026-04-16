@@ -1,68 +1,59 @@
 
 
-# 10 Improvements for Layer 1 Inline Upgrade Card + Mobile Fix
+# Fix Value Drawer + Update All Copy
 
-## Current Problems
-- On mobile, 3 value blocks stack vertically (`flex-col`) making the card very tall
-- The card is static — no motion, no social proof, no urgency, no personality
-- Copy feels informational but not compelling enough to click
+## 3 Problems to Fix
 
-## 10 Improvement Ideas
+1. **Value Drawer doesn't fit** — too much content for a single view. The 4 sections (header, unlock grid, why upgrade, plan cards) push below the fold.
+2. **"What you can create next" is weak** — generic chips like "Studio", "On-Model" don't convey the scale. Should reference 1,000+ personalized shots and monthly campaign drops.
+3. **Price label says `¢/img` but should say `¢/cr`** — it's per credit, not per image.
 
-### 1. Collapse value blocks into a single inline row on mobile
-Replace the 3 stacked cards with a compact horizontal scroll or a single condensed row showing just icon + title (no detail text) on mobile. Saves ~60% vertical space.
+## Additional: Full Copy Update
 
-### 2. Add avatar name + role as micro social proof
-Show "Sophia, E-commerce Photographer" under the avatar — makes it feel like a real team member is speaking, not a system banner. Already have the data in `getLayer1Avatar`.
-
-### 3. Add a subtle animated gradient shimmer on the left border
-Replace the static `border-l-2` with a slow-moving gradient animation (primary → purple → primary). Catches the eye without being loud.
-
-### 4. Add a dynamic stat/number
-Show something like "500+ brands creating this week" or "12 fashion scenes available" — a single compact data point that adds credibility and specificity.
-
-### 5. Change headline to feel more personal
-Instead of "First fashion direction — complete" (passive), try "Nice work — your first fashion visual is ready" (warmer, acknowledges the user).
-
-### 6. Add a tiny product thumbnail
-If available, show the user's actual generated image as a small 32px thumbnail next to the avatar — connects the card to their real result.
-
-### 7. Swap "Maybe Later" for a timed auto-dismiss
-Add a subtle countdown or auto-collapse after 30s. Removes the passive "Maybe Later" which feels weak, replaces with natural disappearance. Keep X button for manual dismiss.
-
-### 8. Make the CTA more action-specific
-"See Plans & Features" is generic. Try "See how brands scale" or "Compare plans" — shorter, more direct, more B2B.
-
-### 9. Add a micro-animation on entry
-The card currently fades in, but the value blocks could stagger-animate (appear one by one with 100ms delay) for a more polished feel.
-
-### 10. Add a "Most popular" or "Growth recommended" teaser chip
-Show a small badge like "Growth plan — most chosen by brands" near the CTA area. Plants the seed before they even open the drawer.
-
-## Mobile Fix (Priority)
-
-The main structural change: on screens < `sm`, render value blocks as a **single horizontal row** with icon + title only (drop the detail text). This changes the card from ~280px tall on mobile to ~160px.
-
-```text
-Desktop:
-┌──────────┐ ┌──────────┐ ┌──────────┐
-│ ∞ Create │ │ ↗ Better │ │ ⚡ Faster │
-│   More   │ │   Value  │ │ Workflow │
-│ detail..  │ │ detail.. │ │ detail.. │
-└──────────┘ └──────────┘ └──────────┘
-
-Mobile (new):
-[∞ Create More] · [↗ Better Value] · [⚡ Faster]
-```
+Update all L1 headlines, sublines, value block titles, and L3 headlines per the provided category-specific copy.
 
 ## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/PostGenerationUpgradeCard.tsx` | Mobile-compact value blocks (inline icons+titles), avatar name/role, shimmer border, stagger animation, stat chip, CTA text update |
-| `src/lib/conversionCopy.ts` | Warmer headline copy, add optional stat string per category |
+| `src/lib/conversionCopy.ts` | Update all L1 headlines/sublines/value block titles per new copy. Update L3 headlines. Replace L2 unlock section with stronger messaging about 1,000+ shots + campaign drops. |
+| `src/components/app/UpgradeValueDrawer.tsx` | Fix `¢/img` → `¢/cr`. Make drawer scrollable and more compact — tighten spacing, reduce plan card padding, collapse "Why brands upgrade" into 2×2 grid instead of 4 rows. Replace "What you can create next" chips with a stronger 2-line message about 1,000+ personalized editorial shots + monthly campaign drops. |
+| `src/pages/AdminConversion.tsx` | Update reference table to reflect new copy |
 
-## Recommended implementation scope
+## Detailed Changes
 
-Apply ideas **1, 2, 3, 5, 8, 9, 10** — these are all low-risk, high-impact, and purely UI/copy. Skip 4 (needs real data), 6 (needs generation context prop), 7 (auto-dismiss is risky for conversion).
+### Copy Updates (conversionCopy.ts)
+
+**L1 per category** (removing "Nice —" prefix, updating sublines and value block titles):
+
+| Cat | Headline | Subline | Value Blocks |
+|-----|----------|---------|--------------|
+| fashion | Your first fashion direction is ready | Keep creating with more credits, better value, and faster workflows | More Looks · Better Value · Faster Launches |
+| beauty | Your first beauty visual is ready | Create more skincare content with stronger value and faster production | More Placements · Better Value · Faster Campaigns |
+| jewelry | Your first jewelry visual is ready | Scale into more angles, more assets, and better production value | More Angles · Better Value · Faster Output |
+| fragrances | Your first fragrance visual is ready | Create more concepts with better value and faster campaign production | More Concepts · Better Value · Faster Campaigns |
+| food | Your first food visual is ready | Create more content for menus, ads, and social with better efficiency | More Content · Better Value · Faster Refreshes |
+| electronics | Your first product visual is ready | Create more launch-ready assets with better value and faster workflows | More Assets · Better Value · Faster Launches |
+| home | Your first home visual is ready | Create more room and catalog content with better value and speed | More Scenes · Better Value · Faster Refreshes |
+| accessories | Your first accessory visual is ready | Create more variations with better value and faster brand production | More Variations · Better Value · Faster Output |
+| fallback | Your first visual is ready | Keep creating with more credits, better value, and faster workflows | More Content · Better Value · Faster Workflow |
+
+**L3 headlines**: "Build your full [category] visual set" (e.g., "Build your full fashion visual set").
+
+**L2 "What you can create next"**: Replace the 6-chip grid with a stronger text block:
+- Primary: "Select from 1,000+ personalized editorial shots"
+- Secondary: "Plus monthly campaign drops for your social and marketing"
+- Keep the category-specific chips below as a compact supporting row (not the headline)
+
+### Drawer Layout Fix (UpgradeValueDrawer.tsx)
+
+- Fix all `¢/img` → `¢/cr` in PLAN_CARDS
+- Replace "What you can create next" section: strong headline about 1,000+ shots, keep chips as a subtle supporting grid
+- Tighten section spacing from `space-y-5` to `space-y-4`
+- Reduce plan card internal padding from `p-4` to `p-3.5`
+- "Why brands upgrade" — compact into tighter rows with less vertical gap
+
+### Value Block Detail Text Update
+
+Each `makeValueBlocks` call currently uses generic detail text. The detail text will update to match the new titles (e.g., "More Looks" with detail "Monthly credits to keep creating fashion looks").
 
