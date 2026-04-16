@@ -321,9 +321,24 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
 
         <DialogFooter className="px-6 sm:px-8 pb-7 sm:pb-8 pt-0 gap-3 sm:gap-3">
           {isTopup ? (
-            <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px] w-full">
-              Maybe later
-            </Button>
+            <>
+              <Button variant="outline" onClick={onClose} disabled={topUpLoading} className="rounded-xl min-h-[44px]">
+                Maybe later
+              </Button>
+              <Button onClick={handleTopUp} disabled={topUpLoading || !selectedPackId} className="rounded-xl min-h-[44px] gap-2">
+                {topUpLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Redirecting…
+                  </>
+                ) : (
+                  <>
+                    Continue to checkout
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="outline" onClick={handleSeeAll} disabled={loading} className="rounded-xl min-h-[44px]">
