@@ -52,7 +52,7 @@ export function ContextualFeedbackCard({
       setStep('dismissed');
       return;
     }
-    const t = setTimeout(() => setStep('step1'), 2000);
+    const t = setTimeout(() => setStep('step1'), 300);
     return () => clearTimeout(t);
   }, [dismissKey, workflow]);
 
