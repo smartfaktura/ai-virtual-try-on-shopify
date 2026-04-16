@@ -2,27 +2,29 @@
 
 ## Problem
 
-When balance is large (e.g. 8,000+), the number wraps/truncates as "8,..." in the sidebar credits card because `text-2xl` + the `/ max` suffix + the Upgrade pill don't fit the sidebar width.
+`UpgradePlanModal` returns `null` when the logged-in user has no higher tier available (line 41: `if (!upgradePlans.length) return null;`). On the admin showroom, you're likely on the top tier (or admin), so the dialog mounts but renders nothing — looks like the button is broken.
+
+The admin page already has a "Preview as plan" selector but it's not wired into `UpgradePlanModal` (which reads `plan` from `useCredits()` directly).
 
 ## Fix
 
-In `src/components/app/CreditIndicator.tsx`:
+Add an optional `previewPlan` prop to `UpgradePlanModal` that overrides the user's real plan **for display only** — checkout still uses the real Stripe price IDs.
 
-1. **Make balance shrink gracefully** — wrap the number in a `min-w-0 flex-1` container so flexbox can actually shrink it instead of overflowing.
-2. **Auto-scale font size by digit count**: 
-   - ≤3 digits → `text-2xl`
-   - 4 digits (1,000–9,999) → `text-xl`
-   - ≥5 digits (10,000+) → `text-lg`
-   This keeps the premium feel for normal balances and avoids truncation for large ones.
-3. **Compact large numbers in the `/ max` suffix only** when ≥10,000 (e.g. `/ 4.5K` instead of `/ 4,500`) to save horizontal space. Balance itself stays full ("8,231") because the actual number matters.
-4. **Remove `truncate`** from the balance — with proper sizing it shouldn't truncate. Add `whitespace-nowrap` instead so the comma-formatted number stays intact.
-5. **Tighten gap** between number and `/max`: `gap-1.5` → `gap-1` to reclaim a few px.
+### 1. `src/components/app/UpgradePlanModal.tsx`
+- Add prop: `previewPlan?: string`.
+- Use `const effectivePlan = previewPlan ?? plan;` in the `upgradePlans` memo.
+- Everything else stays identical (real checkout, real `startCheckout`).
 
-No changes to logic, CTA, modal, or progress bar.
+### 2. `src/pages/AdminPlanPopups.tsx`
+- Pass `previewPlan={previewPlan}` to the mounted `<UpgradePlanModal />`.
+- Update the card's meta line from "Lists plans above current user's plan" to `Lists plans above previewPlan=${previewPlan}` so it's clear the global control drives it.
+
+### 3. Same fix for `BuyCreditsModal` opening (optional, low effort)
+Out of scope — `BuyCreditsModal` already shows all plans via tabs, so it works regardless of current plan.
 
 ## Expected result
 
-- 20 / 20 → looks the same (large, premium)
-- 8,231 / 4,500 → balance renders fully, slightly smaller font, no truncation
-- 12,500 / 4,500 → balance renders as `12,500 / 4.5K`, fits cleanly
+- On admin page with "Preview as plan" = `free` → clicking Open shows Starter / Growth / Pro options.
+- On admin page with "Preview as plan" = `pro` → clicking Open still shows nothing (correct — there's nothing above Pro). I'll add a small toast/note in that case so it's not silently dead: render a tiny dialog saying "No higher tier available for previewPlan=pro" instead of `null` when in admin preview mode.
+- Production sidebar behavior is unchanged (no `previewPlan` passed → real plan used).
 
