@@ -230,7 +230,8 @@ export default function AdminConversion() {
               <TableRow>
                 <TableHead className="w-[100px]">Category</TableHead>
                 <TableHead>L2 Headline</TableHead>
-                <TableHead>Unlock Items</TableHead>
+          <TableHead>Unlock Headline</TableHead>
+          <TableHead>Unlock Items</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

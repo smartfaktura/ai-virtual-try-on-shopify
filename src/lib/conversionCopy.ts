@@ -42,7 +42,7 @@ export interface Layer1ValueBlock {
 export interface Layer1Avatar {
   name: string;
   role: string;
-  avatarKey: string; // e.g. 'sophia' — resolved to URL in component
+  avatarKey: string;
 }
 
 const AVATAR_MAP: Record<ConversionCategory, Layer1Avatar> = {
@@ -83,75 +83,91 @@ const CATEGORY_LABELS: Record<ConversionCategory, string> = {
   food: 'food',
   electronics: 'product',
   home: 'home',
-  accessories: 'accessories',
+  accessories: 'accessory',
   fallback: 'visual',
 };
 
-function makeValueBlocks(categoryLabel: string): Layer1ValueBlock[] {
-  return [
-    {
-      icon: 'layers',
-      title: 'Create More',
-      detail: `Monthly credits to keep creating ${categoryLabel} visuals`,
-    },
-    {
-      icon: 'trending-up',
-      title: 'Better Value',
-      detail: 'Higher plans improve your cost per visual',
-    },
-    {
-      icon: 'zap',
-      title: 'Faster Workflow',
-      detail: 'Priority processing and bulk generation',
-    },
-  ];
-}
-
 const LAYER1_COPY: Record<ConversionCategory, Layer1Copy> = {
   fashion: {
-    headline: 'Nice — your first fashion visual is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('fashion'),
+    headline: 'Your first fashion direction is ready',
+    subline: 'Keep creating with more credits, better value, and faster workflows.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Looks', detail: 'Monthly credits to keep creating fashion looks' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Launches', detail: 'Priority processing and bulk generation' },
+    ],
   },
   beauty: {
-    headline: 'Nice — your first beauty visual is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('beauty'),
+    headline: 'Your first beauty visual is ready',
+    subline: 'Create more skincare content with stronger value and faster production.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Placements', detail: 'Monthly credits for more beauty content' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Campaigns', detail: 'Priority processing and bulk generation' },
+    ],
   },
   jewelry: {
-    headline: 'Nice — your first jewelry shot is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('jewelry'),
+    headline: 'Your first jewelry visual is ready',
+    subline: 'Scale into more angles, more assets, and better production value.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Angles', detail: 'Monthly credits for more jewelry shots' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Output', detail: 'Priority processing and bulk generation' },
+    ],
   },
   fragrances: {
-    headline: 'Nice — your first fragrance visual is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('fragrance'),
+    headline: 'Your first fragrance visual is ready',
+    subline: 'Create more concepts with better value and faster campaign production.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Concepts', detail: 'Monthly credits for fragrance visuals' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Campaigns', detail: 'Priority processing and bulk generation' },
+    ],
   },
   food: {
-    headline: 'Nice — your first food shot is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('food'),
+    headline: 'Your first food visual is ready',
+    subline: 'Create more content for menus, ads, and social with better efficiency.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Content', detail: 'Monthly credits for food & beverage visuals' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Refreshes', detail: 'Priority processing and bulk generation' },
+    ],
   },
   electronics: {
-    headline: 'Nice — your first product visual is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('product'),
+    headline: 'Your first product visual is ready',
+    subline: 'Create more launch-ready assets with better value and faster workflows.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Assets', detail: 'Monthly credits for product visuals' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Launches', detail: 'Priority processing and bulk generation' },
+    ],
   },
   home: {
-    headline: 'Nice — your first home visual is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('home'),
+    headline: 'Your first home visual is ready',
+    subline: 'Create more room and catalog content with better value and speed.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Scenes', detail: 'Monthly credits for home & decor visuals' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Refreshes', detail: 'Priority processing and bulk generation' },
+    ],
   },
   accessories: {
-    headline: 'Nice — your first accessories shot is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('accessories'),
+    headline: 'Your first accessory visual is ready',
+    subline: 'Create more variations with better value and faster brand production.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Variations', detail: 'Monthly credits for accessory visuals' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Output', detail: 'Priority processing and bulk generation' },
+    ],
   },
   fallback: {
-    headline: 'Nice — your first visual is ready',
-    subline: 'Keep creating with more credits and stronger tools',
-    valueBlocks: makeValueBlocks('visual'),
+    headline: 'Your first visual is ready',
+    subline: 'Keep creating with more credits, better value, and faster workflows.',
+    valueBlocks: [
+      { icon: 'layers', title: 'More Content', detail: 'Monthly credits to keep creating visuals' },
+      { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
+      { icon: 'zap', title: 'Faster Workflow', detail: 'Priority processing and bulk generation' },
+    ],
   },
 };
 
@@ -183,6 +199,8 @@ export function getLayer1Subline(category: ConversionCategory, hint?: BehaviorHi
 export interface Layer2Copy {
   headline: string;
   subline: string;
+  unlockHeadline: string;
+  unlockSubline: string;
   unlockItems: string[];
 }
 
@@ -190,46 +208,64 @@ const LAYER2_COPY: Record<ConversionCategory, Layer2Copy> = {
   fashion: {
     headline: 'Scale your fashion visual library',
     subline: 'From 1 direction to a full campaign-ready collection',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Studio', 'On-Model', 'Lifestyle', 'Campaign', 'Detail', 'Video'],
   },
   beauty: {
     headline: 'Build your complete beauty content set',
     subline: 'Studio to lifestyle — cover every channel',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Studio', 'Close-up', 'Lifestyle', 'Flat Lay', 'Campaign', 'Video'],
   },
   jewelry: {
     headline: 'Complete your jewelry visual catalog',
     subline: 'Every angle, detail, and setting your listings need',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Macro', 'Editorial', 'Lifestyle', 'Gifting', 'PDP', 'Video'],
   },
   fragrances: {
     headline: 'Build your fragrance campaign library',
     subline: 'Conceptual to editorial — every direction covered',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Studio', 'Editorial', 'Lifestyle', 'Campaign', 'Detail', 'Video'],
   },
   food: {
     headline: 'Scale your food & beverage visuals',
     subline: 'Packshots to styled scenes — cover every listing',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Packshot', 'Styled Scene', 'Close-up', 'Social', 'Menu/Ad', 'Video'],
   },
   electronics: {
     headline: 'Build your full product visual library',
     subline: 'Feature shots to lifestyle — cover every listing',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Desk Setup', 'Close-up', 'Feature', 'PDP', 'Launch', 'Video'],
   },
   home: {
     headline: 'Complete your home & decor visual set',
     subline: 'Room scenes to catalogs — every surface styled',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Room Scene', 'Styled Surface', 'Catalog', 'Campaign', 'Social', 'Video'],
   },
   accessories: {
     headline: 'Scale your accessories content library',
     subline: 'Studio to lifestyle — every angle and context',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Studio', 'Worn', 'Lifestyle', 'Close-up', 'PDP', 'Video'],
   },
   fallback: {
     headline: 'Scale your visual production',
     subline: 'Create the complete set your brand needs',
+    unlockHeadline: 'Select from 1,000+ personalized editorial shots',
+    unlockSubline: 'Plus monthly campaign drops for your social and marketing',
     unlockItems: ['Studio', 'Lifestyle', 'Social', 'Campaign', 'Product Page', 'Video'],
   },
 };
@@ -240,14 +276,25 @@ export function getLayer2Copy(category: ConversionCategory): Layer2Copy {
 
 // ── Layer 3: Enhanced no-credits copy ─────────────────────────────
 
+const LAYER3_HEADLINES: Record<ConversionCategory, string> = {
+  fashion: 'Build your full fashion visual set',
+  beauty: 'Build your full beauty content set',
+  jewelry: 'Build your full jewelry visual set',
+  fragrances: 'Build your full fragrance visual set',
+  food: 'Build your full food content set',
+  electronics: 'Build your full electronics visual set',
+  home: 'Build your full home visual set',
+  accessories: 'Build your full accessory visual set',
+  fallback: 'Build your full visual set',
+};
+
 export function getLayer3Headline(category: ConversionCategory): string {
-  if (category === 'fallback') return 'Your visuals are just getting started';
-  return `Your ${CATEGORY_LABELS[category]} visuals are just getting started`;
+  return LAYER3_HEADLINES[category];
 }
 
 export function getLayer3Subline(generationCount: number): string {
   if (generationCount <= 1) {
-    return 'You\'ve created your first image. Brands at your stage typically need 50\u2013100+ per month.';
+    return 'You\'ve created your first image. Brands at your stage typically need 50–100+ per month.';
   }
-  return `You've created ${generationCount} images so far. Brands at your stage typically need 50\u2013100+ per month.`;
+  return `You've created ${generationCount} images so far. Brands at your stage typically need 50–100+ per month.`;
 }
