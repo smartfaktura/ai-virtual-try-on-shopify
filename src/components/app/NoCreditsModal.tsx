@@ -176,7 +176,7 @@ function FreePlanSection({
                         <span className="text-[13px] leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
                           <span className="font-normal">{feat.text}</span>
                           {feat.badge && (
-                            <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-muted text-muted-foreground">
+                            <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-gray-100 text-gray-500">
                               {feat.badge}
                             </Badge>
                           )}
@@ -313,7 +313,7 @@ function UpgradeCard({
                   <Check className="w-3 h-3 text-primary" />
                   {feat.text}
                   {feat.badge && (
-                    <Badge className="text-[7px] px-1 py-0 leading-tight bg-muted text-muted-foreground">
+                    <Badge className="text-[7px] px-1 py-0 leading-tight bg-gray-100 text-gray-500">
                       {feat.badge}
                     </Badge>
                   )}
