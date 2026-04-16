@@ -2,12 +2,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowRight, Crown, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 import { type ConversionCategory, getLayer2Copy, getLayer1Avatar } from '@/lib/conversionCopy';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
-import { useNavigate } from 'react-router-dom';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -28,24 +27,26 @@ interface UpgradeValueDrawerProps {
 const PLAN_CARDS = [
   {
     planId: 'starter' as const,
-    centsPerCredit: '7.8¢/cr',
+    centsPerCredit: '7.8¢',
+    savingsLabel: null,
     recommended: false,
   },
   {
     planId: 'growth' as const,
-    centsPerCredit: '5.3¢/cr',
+    centsPerCredit: '5.3¢',
+    savingsLabel: 'Save 32%',
     recommended: true,
   },
   {
     planId: 'pro' as const,
-    centsPerCredit: '4.0¢/cr',
+    centsPerCredit: '4.0¢',
+    savingsLabel: 'Save 49%',
     recommended: false,
   },
 ];
 
 export function UpgradeValueDrawer({ open, onClose, category, generationContext }: UpgradeValueDrawerProps) {
   const { startCheckout } = useCredits();
-  const navigate = useNavigate();
   const copy = getLayer2Copy(category);
   const avatar = getLayer1Avatar(category);
 
@@ -63,10 +64,10 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="right" className="w-full sm:!max-w-[440px] overflow-y-auto p-0 pt-2">
-        <div className="p-5 pt-10 space-y-4">
+        <div className="p-5 pt-10 space-y-3">
 
           {/* Header */}
-          <SheetHeader className="space-y-1.5">
+          <SheetHeader className="space-y-1.5 border-b border-border/30 pb-3">
             <div className="flex items-center gap-2.5">
               <Avatar className="w-7 h-7 ring-1 ring-border/40">
                 <AvatarImage src={avatarUrl} alt={avatar.name} />
@@ -76,7 +77,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                 {copy.headline}
               </SheetTitle>
             </div>
-            <SheetDescription className="text-sm text-muted-foreground leading-relaxed">
+            <SheetDescription className="text-sm text-muted-foreground/80 leading-relaxed">
               {copy.subline}
             </SheetDescription>
           </SheetHeader>
@@ -94,6 +95,11 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
               </div>
             ))}
           </div>
+
+          {/* Trust line */}
+          <p className="text-xs text-muted-foreground/60 text-center">
+            Join 2,000+ brands creating with VOVV
+          </p>
 
           {/* Product context row */}
           {generationContext?.productThumbnail && (
@@ -120,39 +126,40 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
           <div className="space-y-2">
             <p className="text-sm font-semibold tracking-tight">Choose your plan</p>
 
-            {PLAN_CARDS.map(({ planId, centsPerCredit, recommended }) => {
+            {PLAN_CARDS.map(({ planId, centsPerCredit, savingsLabel, recommended }) => {
               const plan = pricingPlans.find(p => p.planId === planId);
               if (!plan) return null;
+
+              const creditsDisplay = typeof plan.credits === 'number' ? plan.credits.toLocaleString() : plan.credits;
 
               return (
                 <div
                   key={planId}
-                  className={`relative rounded-xl p-3 space-y-2 transition-colors ${
+                  className={`rounded-xl p-3 space-y-2 transition-all ${
                     recommended
-                      ? 'border-2 border-primary/40 bg-primary/[0.02] pt-3'
+                      ? 'border-2 border-primary/40 bg-primary/[0.03] shadow-sm'
                       : 'border border-border/60 hover:border-primary/30'
                   }`}
                 >
-                  {recommended && (
-                    <div className="absolute -top-2.5 left-4">
-                      <Badge className="bg-primary text-primary-foreground text-[10px] tracking-wider uppercase px-3 py-0 shadow-sm">
-                        Recommended
-                      </Badge>
-                    </div>
-                  )}
-
-                  <div className={`flex items-center justify-between ${recommended ? 'pt-1' : ''}`}>
-                    <div>
-                      <p className="text-sm font-semibold">{plan.name}</p>
-                      <p className="text-xs text-muted-foreground">${plan.monthlyPrice}/mo</p>
-                    </div>
+                  {/* Plan header: name · price + credits pill */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold">{plan.name} · ${plan.monthlyPrice}/mo</p>
+                      {recommended && (
+                        <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0">
+                          Recommended
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
                       <Badge variant="outline" className="text-[10px]">
-                        {typeof plan.credits === 'number' ? plan.credits.toLocaleString() : plan.credits} credits
+                        {creditsDisplay} cr · {centsPerCredit}
                       </Badge>
-                      <span className="bg-primary/10 text-primary text-[11px] font-medium px-2 py-0.5 rounded-full">
-                        {centsPerCredit}
-                      </span>
+                      {savingsLabel && (
+                        <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+                          {savingsLabel}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -162,23 +169,11 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                     className="w-full rounded-xl min-h-[36px] text-sm"
                     onClick={() => handleCheckout(plan.stripePriceIdMonthly)}
                   >
-                    {recommended && <Crown className="w-3.5 h-3.5 mr-1.5" />}
-                    Get {plan.name}
-                    {!recommended && <ArrowRight className="w-3.5 h-3.5 ml-1.5" />}
+                    {recommended ? `Get ${creditsDisplay} credits` : `Start with ${creditsDisplay} credits`}
                   </Button>
                 </div>
               );
             })}
-
-            <Button
-              variant="link"
-              size="sm"
-              className="w-full text-xs text-muted-foreground"
-              onClick={() => { navigate('/app/settings'); onClose(); }}
-            >
-              Compare all plans
-              <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
           </div>
         </div>
       </SheetContent>
