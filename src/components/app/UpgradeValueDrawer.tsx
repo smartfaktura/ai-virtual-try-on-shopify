@@ -65,11 +65,11 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" className="w-full sm:!max-w-[460px] overflow-y-auto p-0 pt-2">
-        <div className="flex flex-col h-full p-5 pt-10">
+      <SheetContent side="right" className="w-full sm:!max-w-[460px] p-0 h-full">
+        <div className="flex flex-col h-full overflow-y-auto p-5 pt-6">
 
           {/* Header */}
-          <SheetHeader className="space-y-2 pb-5">
+          <SheetHeader className="space-y-2 pb-3">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 ring-1 ring-border/40">
                 <AvatarImage src={avatarUrl} alt={avatar.name} />
@@ -87,7 +87,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
           </SheetHeader>
 
           {/* Category feature pills */}
-          <div className="flex flex-wrap gap-1.5 pb-5">
+          <div className="flex flex-wrap gap-1.5 pb-3">
             {copy.unlockItems.map((item) => (
               <span
                 key={item}
@@ -120,7 +120,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
           )}
 
           {/* Plan Cards — fills remaining height */}
-          <div className="flex-1 flex flex-col justify-between gap-3 pb-8">
+          <div className="flex-1 flex flex-col gap-3 pb-5">
             {PLAN_CARDS.map(({ planId, centsPerCredit, savingsLabel, recommended, differentiator }) => {
               const plan = pricingPlans.find(p => p.planId === planId);
               if (!plan) return null;
@@ -130,7 +130,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
               return (
                 <div
                   key={planId}
-                  className={`rounded-2xl p-4 space-y-3 transition-all ${
+                  className={`rounded-2xl p-3 space-y-2 transition-all ${
                     recommended
                       ? 'border-2 border-primary/50 bg-gradient-to-b from-primary/[0.06] to-primary/[0.02] ring-1 ring-primary/20 shadow-sm'
                       : 'border border-border/40 hover:border-border/60'
