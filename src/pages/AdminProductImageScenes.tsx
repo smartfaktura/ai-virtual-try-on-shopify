@@ -598,15 +598,15 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
 }) {
   return (
     <div>
-      <div className={`flex items-start gap-3 p-2.5 rounded-lg border transition-colors ${
+      <div className={`flex flex-col sm:flex-row items-start gap-3 p-2.5 rounded-lg border transition-colors ${
         !scene.is_active ? 'opacity-50 border-dashed' : 'border-border'
       } ${editingId === scene.id ? 'border-primary/40 bg-primary/[0.02]' : 'hover:bg-muted/20'}`}>
-        {/* Thumbnail */}
-        <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0 border border-border/40 mt-0.5">
+        {/* Thumbnail — bigger on mobile */}
+        <div className="w-full sm:w-10 h-32 sm:h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0 border border-border/40">
           {scene.preview_image_url ? (
             <img src={scene.preview_image_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <Camera className="w-4 h-4 text-muted-foreground/40" />
+            <Camera className="w-6 h-6 sm:w-4 sm:h-4 text-muted-foreground/40" />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -626,25 +626,26 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
             {scene.category_sort_order > 0 && ` · Cat order: ${scene.category_sort_order}`}
           </p>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
+        {/* Actions — vertical grid on mobile, horizontal row on desktop */}
+        <div className="grid grid-cols-6 sm:flex sm:items-center gap-1 shrink-0 w-full sm:w-auto">
+          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
             <ArrowUp className="w-3.5 h-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(scene, 'down')} disabled={idx === total - 1}>
+          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onMove(scene, 'down')} disabled={idx === total - 1}>
             <ArrowDown className="w-3.5 h-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => editingId === scene.id ? onCancelEdit() : onStartEdit(scene)}>
+          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => editingId === scene.id ? onCancelEdit() : onStartEdit(scene)}>
             <Pencil className="w-3.5 h-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(scene)} title="Duplicate scene">
+          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onDuplicate(scene)} title="Duplicate scene">
             <Copy className="w-3.5 h-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleActive(scene)}>
+          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onToggleActive(scene)}>
             {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+              <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7 text-destructive hover:text-destructive">
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </AlertDialogTrigger>
