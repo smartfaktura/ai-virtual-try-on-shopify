@@ -121,7 +121,7 @@ function FreePlanSection({
               key={p.planId}
               className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col ${
                 isHighlighted
-                  ? 'border-2 border-primary bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
+                  ? 'border-2 border-primary/70 bg-primary/[0.03] shadow-md shadow-primary/5 pt-4'
                   : 'border-2 border-border/60 hover:border-primary/30 bg-background'
               }`}
             >
@@ -132,56 +132,51 @@ function FreePlanSection({
                   </Badge>
                 </div>
               )}
-              <div className="p-5 sm:p-6 pt-6 flex flex-col flex-1 space-y-3">
+              <div className="p-5 sm:p-6 pt-6 flex flex-col flex-1">
                 {/* Plan name + descriptor */}
-                <div>
-                  <p className="text-sm font-bold tracking-tight">{p.name}</p>
+                <div className="mb-4">
+                  <p className="text-base font-bold tracking-tight">{p.name}</p>
                   {descriptor && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{descriptor}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{descriptor}</p>
                   )}
                 </div>
 
                 {/* Price */}
-                <div className="space-y-0.5">
-                  <div className="flex items-baseline justify-center gap-0.5">
+                <div className="mb-5 text-center">
+                  <p className="tracking-tight">
                     {isAnnual && p.monthlyPrice > displayPrice && (
-                      <span className="text-xs text-muted-foreground line-through mr-1">${p.monthlyPrice}</span>
+                      <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                     )}
-                    <span className="text-2xl font-bold tracking-tight">${displayPrice}</span>
-                    <span className="text-xs text-muted-foreground">/mo</span>
-                  </div>
-                  {isAnnual && (
-                    <p className="text-[10px] text-muted-foreground">billed annually</p>
-                  )}
+                    <span className="text-2xl font-bold">${displayPrice}</span>
+                    <span className="text-base font-medium text-muted-foreground">/mo</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isAnnual ? 'Billed annually' : 'Billed monthly'}
+                  </p>
                 </div>
 
-                {/* Metrics — flat, no inner box */}
-                <div className="space-y-0.5">
+                {/* Metrics — 3 clean lines */}
+                <div className="mb-5 space-y-1 text-center">
                   {imageEstimate && (
-                    <p className="text-sm font-medium">~{imageEstimate} images/mo</p>
+                    <p className="text-sm text-muted-foreground">~{imageEstimate} images / month</p>
                   )}
-                  <p className="text-[11px] text-muted-foreground">
-                    {credits > 0 ? credits.toLocaleString() : p.credits} credits/mo
+                  <p className="text-sm text-muted-foreground">
+                    {credits > 0 ? credits.toLocaleString() : p.credits} credits / month
                   </p>
                   {displayPrice > 0 && credits > 0 && (
-                    <p className="text-[11px] text-primary font-semibold mt-1">
-                      ${(displayPrice / credits).toFixed(3)}/credit
-                      <span className="ml-1.5 inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
-                        {valueLabel}
-                      </span>
-                    </p>
+                    <p className="text-sm text-primary font-semibold">${(displayPrice / credits).toFixed(3)} per credit</p>
                   )}
                 </div>
 
                 {/* Differentiators */}
-                <div className="space-y-1.5 text-left flex-1">
+                <div className="space-y-2 text-left flex-1">
                   {differentiators.map((feat, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-[11px] text-muted-foreground leading-tight inline-flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" />
+                      <span className="text-xs text-muted-foreground leading-snug inline-flex items-center gap-1.5">
                         {feat.text}
                         {feat.badge && (
-                          <Badge className="text-[8px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
+                          <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
                             {feat.badge}
                           </Badge>
                         )}
@@ -191,7 +186,7 @@ function FreePlanSection({
                 </div>
 
                 {/* CTA */}
-                <div className="pt-3">
+                <div className="pt-4 mt-auto">
                   <Button
                     variant={isHighlighted ? 'default' : 'outline'}
                     className="w-full min-h-[44px] rounded-xl text-sm font-medium"
