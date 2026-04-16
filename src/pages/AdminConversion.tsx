@@ -69,6 +69,7 @@ export default function AdminConversion() {
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalPlanPreview, setModalPlanPreview] = useState<string>('free');
 
   if (isLoading) return null;
   if (!isAdmin) return <Navigate to="/app" replace />;
@@ -147,12 +148,26 @@ export default function AdminConversion() {
           <h2 className="text-sm font-semibold">No Credits Modal</h2>
           <span className="text-xs text-muted-foreground">— opens when user has 0 credits</span>
         </div>
-        <div className="border border-border/60 rounded-xl p-6 bg-muted/10">
-          <Button onClick={() => setModalOpen(true)} variant="outline" className="rounded-xl">
-            Open Modal Preview
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Currently showing: <span className="font-medium capitalize">{category}</span> category
+        <div className="border border-border/60 rounded-xl p-6 bg-muted/10 space-y-3">
+          <div className="flex items-center gap-3">
+            <Button onClick={() => setModalOpen(true)} variant="outline" className="rounded-xl">
+              Open Modal Preview
+            </Button>
+            <Select value={modalPlanPreview} onValueChange={setModalPlanPreview}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Free User</SelectItem>
+                <SelectItem value="starter">Starter User</SelectItem>
+                <SelectItem value="growth">Growth User</SelectItem>
+                <SelectItem value="pro">Pro User</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Category: <span className="font-medium capitalize">{category}</span> · Plan: <span className="font-medium capitalize">{modalPlanPreview}</span>
+            {modalPlanPreview === 'free' ? ' → Shows subscription plans' : ' → Shows credit top-up packs'}
           </p>
         </div>
       </section>
@@ -233,6 +248,7 @@ export default function AdminConversion() {
         onClose={() => setModalOpen(false)}
         category={category}
         generationCount={3}
+        previewPlan={modalPlanPreview}
       />
     </div>
   );
