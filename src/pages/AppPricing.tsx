@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, ChevronDown, ArrowUpRight, Loader2 } from 'lucide-react';
+import { Check, ChevronDown, ArrowUpRight, Loader2, Image, Video, ZoomIn, RefreshCw, Layers, Palette, Sparkles, Shield } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -354,6 +355,68 @@ export default function AppPricing() {
 
       {/* Cost comparison */}
       <CompetitorComparison />
+
+      {/* What are credits? */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight text-center">How credits work</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { icon: Image, title: 'Generate images', desc: '5 credits per image across all workflows — product shots, lifestyle, editorial, and more.' },
+            { icon: Video, title: 'Create videos & upscale', desc: 'Use credits for video generation, 2K and 4K upscaling, and brand model training.' },
+            { icon: RefreshCw, title: 'Monthly refresh', desc: 'Credits refresh every billing cycle. Higher plans unlock better per-credit value and faster queues.' },
+          ].map((item) => (
+            <div key={item.title} className="rounded-xl border border-border bg-card p-4 space-y-2">
+              <item.icon className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-semibold">{item.title}</h3>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Included in every plan */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight text-center">Included in every plan</h2>
+        <div className="flex flex-wrap justify-center gap-2">
+          {[
+            { icon: Layers, label: '1,000+ scenes' },
+            { icon: Palette, label: 'All AI models' },
+            { icon: ZoomIn, label: '2K & 4K upscale' },
+            { icon: Video, label: 'Video generation' },
+            { icon: Sparkles, label: 'Freestyle creation' },
+            { icon: Shield, label: 'No watermarks' },
+          ].map((f) => (
+            <div key={f.label} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5">
+              <f.icon className="w-3.5 h-3.5 text-primary/70" />
+              <span className="text-[12px] font-medium text-foreground">{f.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* FAQ */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold tracking-tight text-center">Frequently asked questions</h2>
+        <div className="max-w-2xl mx-auto space-y-1.5">
+          {[
+            { q: 'Do unused credits roll over?', a: 'No — credits reset each billing cycle. Use them or lose them. This keeps plans affordable for everyone.' },
+            { q: 'Can I change plans anytime?', a: 'Yes. Upgrade instantly and get the new credit balance right away. Downgrades take effect at your next billing date.' },
+            { q: 'What happens when I run out of credits?', a: 'You can purchase one-time credit top-ups without changing your plan, or upgrade to a higher plan for more monthly credits.' },
+            { q: 'How does annual billing work?', a: 'Pay for 12 months upfront and save 20%. Credits are still refreshed monthly — you get the same amount each month.' },
+            { q: 'Is there a free trial?', a: 'Every account starts with 20 free credits — no credit card required. Generate images and see the quality before committing.' },
+          ].map((faq) => (
+            <Collapsible key={faq.q}>
+              <CollapsibleTrigger className="w-full flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/30 transition-colors text-left">
+                <span className="text-sm font-medium">{faq.q}</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pt-1 pb-3">
+                <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+        </div>
+      </div>
 
       {/* Enterprise section */}
       <div className="rounded-2xl border border-border bg-muted/10 p-6 sm:p-8 text-center space-y-4">
