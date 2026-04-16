@@ -180,7 +180,7 @@ export default function AdminPlanPopups() {
         <ComponentCard
           title="2. UpgradePlanModal"
           subtitle="Compact next-tier picker"
-          meta="Lists plans above current user's plan"
+          meta={`Lists plans above previewPlan=${previewPlan}`}
         >
           <Button onClick={() => setUpgradeModalOpen(true)}>Open</Button>
         </ComponentCard>
@@ -292,7 +292,7 @@ export default function AdminPlanPopups() {
       </Card>
 
       {/* Mounted popups */}
-      <UpgradePlanModal open={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} />
+      <UpgradePlanModal open={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} previewPlan={previewPlan} />
       <PlanChangeDialog
         open={planChangeOpen}
         onClose={() => setPlanChangeOpen(false)}
