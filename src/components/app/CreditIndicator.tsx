@@ -16,7 +16,10 @@ export function CreditIndicator() {
   const isFree = plan === 'free';
 
   return (
-    <div className="p-3 rounded-xl bg-white/[0.06] space-y-3">
+    <div
+      onClick={() => navigate('/app/settings')}
+      className="p-4 rounded-xl bg-white/[0.06] space-y-3 cursor-pointer active:scale-[0.98] transition-all duration-150 hover:bg-white/[0.09]"
+    >
       {/* Plan name + Upgrade */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/40">
@@ -24,7 +27,7 @@ export function CreditIndicator() {
         </span>
         {planConfig.nextPlanId && (
           <button
-            onClick={() => navigate('/app/settings')}
+            onClick={(e) => { e.stopPropagation(); navigate('/app/settings'); }}
             className={`flex items-center gap-0.5 text-[10px] font-semibold transition-colors ${
               isFree
                 ? 'text-primary hover:text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-md'
@@ -51,7 +54,7 @@ export function CreditIndicator() {
           </div>
         </div>
         <button
-          onClick={openBuyModal}
+          onClick={(e) => { e.stopPropagation(); openBuyModal(); }}
           className="w-6 h-6 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
           title="Buy credits"
         >
