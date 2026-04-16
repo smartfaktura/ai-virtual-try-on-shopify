@@ -1,39 +1,26 @@
 
 
-# Auto-Close Other Categories in Explore More (Accordion Behavior)
+# Fix Contact Form Dialog Horizontal Spacing on Mobile
 
 ## Problem
-In the "Explore More" section, opening a second category (e.g., "Dresses") keeps the first one ("Clothing & Apparel") expanded above. The newly opened content is pushed below the viewport and the user can't see it without scrolling.
+The `ContactFormDialog` uses `mx-4` to add horizontal spacing on mobile, but since the dialog is `fixed` with `left-[50%] translate-x-[-50%]`, CSS margin doesn't create equal spacing from screen edges — it shifts the dialog off-center, leaving uneven gaps (more space on right than left).
 
 ## Fix
 
-### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+### File: `src/components/app/ContactFormDialog.tsx` (line 80)
 
-**1. Change `toggleCategory` to accordion behavior** — when opening a new category, close all others. Then scroll the newly opened category into view:
+Replace `mx-4 sm:mx-0` with a width constraint that works with the centered fixed positioning:
 
 ```tsx
-const toggleCategory = (catId: string) => {
-  if (expandedCategories.has(catId)) {
-    // Closing: just remove it
-    const next = new Set(expandedCategories);
-    next.delete(catId);
-    setExpandedCategories(next);
-  } else {
-    // Opening: close all others, open only this one
-    setExpandedCategories(new Set([catId]));
-    // Scroll to the opened category after render
-    requestAnimationFrame(() => {
-      document.getElementById(`explore-cat-${catId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
-};
+// Before
+<DialogContent className="max-w-md p-0 gap-0 overflow-hidden mx-4 sm:mx-0">
+
+// After
+<DialogContent className="max-w-md p-0 gap-0 overflow-hidden w-[calc(100%-2rem)] sm:w-full">
 ```
 
-**2. Add `id` attribute to `CategoryRowTrigger` containers** so scroll targeting works — add `id={`explore-cat-${cat.id}`}` to the trigger buttons in the Explore More section (line ~529).
-
-### Result
-Only one category can be expanded at a time. Opening "Dresses" auto-closes "Clothing & Apparel" and scrolls to show the Dresses scenes.
+This uses `w-[calc(100%-2rem)]` on mobile to achieve the same 16px inset on each side, but it works correctly with `left-[50%] translate-x-[-50%]` centering. On `sm+`, it reverts to `w-full` (capped by `max-w-md`).
 
 ### Files
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — accordion toggle + scroll-into-view
+- `src/components/app/ContactFormDialog.tsx` — 1 class change on line 80
 
