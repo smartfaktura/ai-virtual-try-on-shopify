@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Navigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -33,7 +32,7 @@ const CATEGORIES: ConversionCategory[] = [
   'fashion', 'beauty', 'jewelry', 'fragrances', 'food', 'electronics', 'home', 'accessories', 'fallback',
 ];
 const BEHAVIOR_HINTS: (BehaviorHint | 'none')[] = [
-  'none', 'multi_aspect', 'multi_scene', 'rapid_fire', 'returning',
+  'none', 'low-credits', 'repeated-product', 'model-heavy', 'export-intent', 'video-usage', 'general',
 ];
 const PLANS = ['free', 'starter', 'growth', 'pro'];
 const MODES: PlanChangeMode[] = ['upgrade', 'downgrade', 'cancel', 'reactivate'];
@@ -108,13 +107,10 @@ export default function AdminPlanPopups() {
   const targetPlan = pricingPlans.find((p) => p.planId === planChangeTarget);
   const hint: BehaviorHint | undefined = behaviorHint === 'none' ? undefined : behaviorHint;
 
+  if (typeof document !== 'undefined') document.title = 'Admin · Plan Pop-ups';
+
   return (
     <div className="container max-w-6xl py-8 space-y-6">
-      <Helmet>
-        <title>Admin · Plan Pop-ups</title>
-        <meta name="robots" content="noindex" />
-      </Helmet>
-
       {/* Header */}
       <header className="flex items-start justify-between gap-4">
         <div>
