@@ -559,6 +559,22 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Out-of-credits CTA */}
+      {isEmpty && (
+        <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-primary shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">You're out of credits</p>
+              <p className="text-sm text-muted-foreground">Get credits to start creating.</p>
+            </div>
+          </div>
+          <Button onClick={openBuyModal} className="rounded-full font-semibold shrink-0">
+            Get Credits
+          </Button>
+        </div>
+      )}
+
       {/* Low credits banner */}
       <LowCreditsBanner />
 
