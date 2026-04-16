@@ -1,31 +1,50 @@
 
 
-# Revert Oversized Typography & Fix Footer
+# Unified Bullet Points + Badge Repositioning + Size Tweaks
 
-## Problem
-The "premium" changes inflated font sizes (plan name `text-lg`, price `text-3xl`, "/mo" `text-lg`) beyond what matches the rest of the app. The footer "Cancel anytime" line uses uppercase tracking-wide which feels off. Need to restore proportional sizing and make footer feel clean but normal.
+## Changes (both `BuyCreditsModal.tsx` and `NoCreditsModal.tsx`)
 
-## Changes — `BuyCreditsModal.tsx`
+### 1. Move "Most popular" badge inside card — top-right corner
+Replace the centered `absolute -top-2.5 left-1/2 -translate-x-1/2` positioning with `absolute top-3 right-3` so it sits inside the card at the top-right corner. Remove the outer `pt-4` padding that was compensating for the external badge.
 
-### 1. Restore card typography to match app scale
+### 2. Slightly bigger price
+Change price from `text-2xl` to `text-3xl`. Keep `/mo` at `text-sm`.
 
-| Element | Current | Fix |
-|---------|---------|-----|
-| Plan name (line 436) | `text-lg font-semibold` | `text-base font-semibold` |
-| Price number (line 456) | `text-3xl font-bold` | `text-2xl font-bold` |
-| "/mo" suffix (line 457) | `text-lg font-medium` | `text-sm font-normal` |
-| "Free" text (line 449) | `text-3xl font-bold` | `text-2xl font-bold` |
+### 3. Merge metrics + differentiators into one unified bullet list with check marks
+Instead of two separate sections (plain text metrics, then check-mark differentiators), combine everything into a single list where every line gets the same `Check` icon. Order per plan:
 
-### 2. Footer — normal, clean text (not uppercase)
+**Starter:**
+- ~100 images / month
+- 500 credits / month
+- $0.078 per credit (no bold — use badge style like "SAVE 20%" for annual savings)
+- Bulk generations
+- Up to 100 products
 
-| Element | Current | Fix |
-|---------|---------|-----|
-| "Cancel anytime" (line 511) | `text-xs text-muted-foreground/60 tracking-wide uppercase font-normal` | `text-xs text-muted-foreground font-medium` (normal case, no tracking) |
-| "All paid plans include..." (line 514) | `text-[11px] text-muted-foreground/50` | `text-xs text-muted-foreground/70` (same size as above, slightly softer) |
+**Growth:**
+- ~300 images / month
+- 1,500 credits / month
+- $0.053 per credit
+- Faster generation
+- Up to 250 products
+- Brand Models `NEW`
 
-### 3. Same changes in `NoCreditsModal.tsx`
-Apply matching typography fixes to keep both modals consistent.
+**Pro:**
+- ~900 images / month  
+- 4,500 credits / month
+- $0.040 per credit
+- Fastest generation
+- Unlimited products
+- Brand Models `NEW`
 
-## Result
-Card text scales proportionally with the rest of the app. Footer reads naturally without forced uppercase styling.
+All items rendered with `Check` icon, `text-xs text-muted-foreground`. Price-per-credit line: no `font-semibold`, just regular weight with `text-primary` color. When annual billing is active, add a small badge like `SAVE 20%` next to the per-credit line.
+
+### 4. Slightly bigger bullet text
+Change bullet text from `text-xs` to `text-[13px]` for better readability.
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `BuyCreditsModal.tsx` | Badge position, price size, unified bullet list |
+| `NoCreditsModal.tsx` | Same changes |
 
