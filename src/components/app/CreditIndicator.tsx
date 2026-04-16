@@ -1,4 +1,4 @@
-import { Zap } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
@@ -25,7 +25,7 @@ export function CreditIndicator() {
       {/* Balance + CTA */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Zap className="w-4 h-4 text-sidebar-foreground/70 shrink-0" strokeWidth={2.25} />
+          <Sparkles className="w-4 h-4 text-sidebar-foreground/80 shrink-0" strokeWidth={1.75} />
           <div className="flex items-baseline gap-1 min-w-0">
             <span className="text-sm font-bold text-sidebar-foreground truncate">{balance.toLocaleString()}</span>
             <span className="text-[10px] text-sidebar-foreground/40 shrink-0">
@@ -35,9 +35,10 @@ export function CreditIndicator() {
         </div>
         <button
           onClick={handleCta}
-          className="shrink-0 h-7 px-3 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-400 to-orange-400 bg-[length:200%_100%] animate-shimmer hover:brightness-110 transition-[filter] shadow-[0_2px_8px_-2px_hsl(var(--background)/0.4)]"
+          className="relative overflow-hidden shrink-0 h-7 px-3 rounded-full text-[11px] font-semibold bg-white text-[hsl(var(--sidebar-background))] hover:brightness-105 transition-[filter] shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]"
         >
-          {ctaLabel}
+          <span className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent)] bg-[length:200%_100%] animate-shimmer mix-blend-overlay pointer-events-none" />
+          <span className="relative">{ctaLabel}</span>
         </button>
       </div>
 
