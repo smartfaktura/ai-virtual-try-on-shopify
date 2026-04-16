@@ -1,83 +1,30 @@
 
 
-# Complete Redesign of /app/pricing
+# Enhance Public /pricing Page
 
-## Overview
-Rebuild the entire AppPricing page as a premium, content-rich pricing experience that showcases the full platform capability, compares VOVV against traditional production workflows, and helps users understand what they're getting.
+## Problem
+The public `/pricing` page only shows plan cards and an enterprise banner. The `/app/pricing` page has rich content (team comparison, features grid, cost comparison, FAQ) that should also appear on the public page to engage visitors and explain the platform's value.
 
-## Page Structure (top to bottom)
+## Changes
 
-### 1. Hero Header
-- Bold headline: "Your complete visual production studio"
-- Subtitle explaining the platform replaces photographers, stylists, videographers
-- Billing toggle (monthly/annual) with SAVE 20% badge using `bg-primary text-primary-foreground`
+### 1. Add "One platform replaces your entire creative team" comparison table
+Same data as AppPricing — 7-row table comparing Traditional Production costs vs VOVV.AI (all included). Placed after the plan cards grid.
 
-### 2. Plan Cards (keep existing logic)
-- Same 4-column grid with Free/Starter/Growth/Pro
-- Same checkout/upgrade/downgrade logic — no functional changes
-- Clean up card styling slightly (consistent shadow treatment)
+### 2. Add "Everything you get with VOVV.AI" features grid
+12 feature cards (1,000+ Scenes, AI Models, Brand Models, Video Generation, 4K Upscaling, Bulk Generation, Multi-Angle Shots, Freestyle Studio, Image Editing, Brand Profiles, Product Library, Export & Download) in a responsive 3-col grid with icons.
 
-### 3. NEW — "One platform replaces your entire creative team" comparison section
-A two-column comparison table: **Traditional Production** vs **VOVV.AI**
-Rows:
-| Role | Traditional Cost | VOVV.AI |
-|---|---|---|
-| Product Photographer | $500-2,000/day | Included |
-| Photo Studio Rental | $200-800/day | Included |
-| Styling & Props | $300-1,000/shoot | Included |
-| Models & Talent | $500-3,000/day | AI Models included |
-| Photo Retouching | $5-25/image | Automatic |
-| Social Media Content | $1,000-5,000/mo | Included |
-| Videography | $2,000-10,000/project | Included |
-| **Total per shoot** | **$4,500-22,000+** | **From $0/mo** |
+### 3. Add cost comparison section
+Port the `CompetitorComparison` bar chart (VOVV $0.04 vs Traditional AI $0.10 vs Photo Studios $0.15+ per credit).
 
-Clean table with alternating rows, primary highlight on VOVV column.
+### 4. Add "How credits work" section
+3-card grid explaining credits (5 per image, video/upscale costs, monthly refresh).
 
-### 4. NEW — "Everything you get" full platform features grid
-A 3-column (2 on mobile) grid of feature cards with icons:
-- **1,000+ Scenes** — Editorial, lifestyle, studio, seasonal scenes
-- **AI Models** — Virtual models with consistent identity across shots
-- **Brand Models** — Train custom models on your brand aesthetic (Growth+)
-- **Video Generation** — Product videos, ad sequences, short films
-- **4K Upscaling** — Upscale any generation to print-ready resolution
-- **Bulk Generation** — Generate hundreds of images in one batch
-- **Multi-Angle Shots** — Front, back, side, detail perspectives
-- **Freestyle Studio** — Create anything with custom prompts
-- **Image Editing** — AI-powered retouching and background swap
-- **Brand Profiles** — Save brand colors, tone, and style preferences
-- **Product Library** — Organize unlimited products and assets
-- **Export & Download** — ZIP bulk downloads, individual high-res files
+### 5. Add expanded FAQ
+8 collapsible questions covering capabilities, credits, billing, and free trial.
 
-### 5. Credit cost comparison (existing CompetitorComparison, keep as-is)
-The horizontal bar chart comparing VOVV vs Traditional AI vs Photo Studios — already good.
+### 6. Add "Start free" CTA strip
+Clean callout: "Start with 20 free credits. No credit card required." with a Get Started button.
 
-### 6. How credits work (keep existing 3-card section, minor copy tweaks)
-
-### 7. Value at a glance table (keep existing)
-
-### 8. FAQ (expand with 2-3 more questions, keep collapsible format)
-Add: "What can I create with VOVV?", "Do I need photography experience?"
-
-### 9. Enterprise CTA (keep existing)
-
-## Files to edit
-- **`src/pages/AppPricing.tsx`** — complete rewrite of the page layout with new sections
-- **`src/components/app/CompetitorComparison.tsx`** — no changes needed
-
-## What stays the same
-- All plan selection, checkout, and billing logic
-- PlanChangeDialog integration
-- Plan data from mockData
-- CompetitorComparison component
-- Billing toggle functionality
-
-## What's removed
-- "Detailed feature comparison" expandable accordion (replaced by full feature grid)
-- "Included in every plan" pills (absorbed into the features grid)
-
-## Technical notes
-- All new sections are static/presentational — no new state or API calls
-- Icons from lucide-react (Camera, Users, Palette, Film, ZoomIn, Layers, etc.)
-- Responsive: 3-col on desktop, 2-col on tablet, 1-col on mobile for feature grid
-- Comparison table scrolls horizontally on mobile if needed
+## File
+- `src/components/landing/LandingPricing.tsx` — add all new sections after existing plan cards grid, before enterprise banner. Import icons from lucide-react and Collapsible components. All static/presentational, no new state or API calls.
 
