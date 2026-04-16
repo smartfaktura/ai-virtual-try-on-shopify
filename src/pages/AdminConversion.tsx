@@ -221,15 +221,16 @@ export default function AdminConversion() {
         </div>
       </section>
 
-      {/* L2 Outcomes Reference */}
+      {/* L2 Unlock Items Reference */}
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Layer 2 Outcomes — All Categories</h2>
+        <h2 className="text-sm font-semibold">Layer 2 — Headlines & Unlock Items</h2>
         <div className="border border-border/60 rounded-xl overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[100px]">Category</TableHead>
-                <TableHead>Outcomes</TableHead>
+                <TableHead>L2 Headline</TableHead>
+                <TableHead>Unlock Items</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -238,7 +239,8 @@ export default function AdminConversion() {
                 return (
                   <TableRow key={cat} className={cat === category ? 'bg-primary/5' : ''}>
                     <TableCell className="font-medium capitalize text-xs">{cat}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{l2.outcomes.join(' · ')}</TableCell>
+                    <TableCell className="text-xs">{l2.headline}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{l2.unlockItems.join(' · ')}</TableCell>
                   </TableRow>
                 );
               })}

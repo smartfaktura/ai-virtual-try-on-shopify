@@ -180,91 +180,57 @@ export function getLayer1Subline(category: ConversionCategory, hint?: BehaviorHi
 
 // ── Layer 2: Value drawer copy ────────────────────────────────────
 
-interface Layer2Copy {
-  outcomes: string[];
+export interface Layer2Copy {
+  headline: string;
+  subline: string;
+  unlockItems: string[];
 }
 
 const LAYER2_COPY: Record<ConversionCategory, Layer2Copy> = {
   fashion: {
-    outcomes: [
-      '8–12 campaign directions',
-      'Multiple models for diversity',
-      'Full scene coverage — studio to street',
-      'Batch export for social & ads',
-      'Video lookbook from same product',
-    ],
+    headline: 'Scale your fashion visual library',
+    subline: 'From 1 direction to a full campaign-ready collection',
+    unlockItems: ['Studio', 'On-Model', 'Lifestyle', 'Campaign', 'Detail', 'Video'],
   },
   beauty: {
-    outcomes: [
-      '6+ scene variations per SKU',
-      'Close-up and texture details',
-      'Lifestyle and studio coverage',
-      'Batch-ready for all channels',
-      'Video content for social',
-    ],
+    headline: 'Build your complete beauty content set',
+    subline: 'Studio to lifestyle — cover every channel',
+    unlockItems: ['Studio', 'Close-up', 'Lifestyle', 'Flat Lay', 'Campaign', 'Video'],
   },
   jewelry: {
-    outcomes: [
-      '8+ angles and lighting setups',
-      'Macro detail and texture shots',
-      'Editorial and e-commerce coverage',
-      'Batch export for marketplace listings',
-      '360° product video',
-    ],
+    headline: 'Complete your jewelry visual catalog',
+    subline: 'Every angle, detail, and setting your listings need',
+    unlockItems: ['Macro', 'Editorial', 'Lifestyle', 'Gifting', 'PDP', 'Video'],
   },
   fragrances: {
-    outcomes: [
-      '6+ conceptual directions per bottle',
-      'Close-up fragrance details',
-      'Lifestyle and editorial coverage',
-      'Campaign-ready batch exports',
-      'Video content for social',
-    ],
+    headline: 'Build your fragrance campaign library',
+    subline: 'Conceptual to editorial — every direction covered',
+    unlockItems: ['Studio', 'Editorial', 'Lifestyle', 'Campaign', 'Detail', 'Video'],
   },
   food: {
-    outcomes: [
-      '6–10 styled food scenes per product',
-      'Multiple angles and compositions',
-      'Seasonal and thematic sets',
-      'Batch export for menus & delivery apps',
-      'Video content for social',
-    ],
+    headline: 'Scale your food & beverage visuals',
+    subline: 'Packshots to styled scenes — cover every listing',
+    unlockItems: ['Packshot', 'Styled Scene', 'Close-up', 'Social', 'Menu/Ad', 'Video'],
   },
   electronics: {
-    outcomes: [
-      '5+ lifestyle and feature shots',
-      'Multiple angles and contexts',
-      'Detail and specification shots',
-      'Batch export for marketplace listings',
-      'Video demos from product images',
-    ],
+    headline: 'Build your full product visual library',
+    subline: 'Feature shots to lifestyle — cover every listing',
+    unlockItems: ['Desk Setup', 'Close-up', 'Feature', 'PDP', 'Launch', 'Video'],
   },
   home: {
-    outcomes: [
-      '4–8 styled room settings',
-      'Multiple angles and compositions',
-      'Seasonal and thematic coverage',
-      'Batch export for e-commerce',
-      'Video room tours from stills',
-    ],
+    headline: 'Complete your home & decor visual set',
+    subline: 'Room scenes to catalogs — every surface styled',
+    unlockItems: ['Room Scene', 'Styled Surface', 'Catalog', 'Campaign', 'Social', 'Video'],
   },
   accessories: {
-    outcomes: [
-      '6+ styled and lifestyle shots',
-      'Multiple models for diversity',
-      'Studio and editorial coverage',
-      'Batch export for all channels',
-      'Video lookbook from same product',
-    ],
+    headline: 'Scale your accessories content library',
+    subline: 'Studio to lifestyle — every angle and context',
+    unlockItems: ['Studio', 'Worn', 'Lifestyle', 'Close-up', 'PDP', 'Video'],
   },
   fallback: {
-    outcomes: [
-      'Full visual set across scenes and models',
-      'Multiple directions per product',
-      'Campaign-ready batch exports',
-      'Video content from existing shots',
-      'Consistent brand visuals',
-    ],
+    headline: 'Scale your visual production',
+    subline: 'Create the complete set your brand needs',
+    unlockItems: ['Studio', 'Lifestyle', 'Social', 'Campaign', 'Product Page', 'Video'],
   },
 };
 
