@@ -25,6 +25,24 @@ const subscribablePlans = pricingPlans.filter(
   (p) => p.planId !== 'free' && !p.isEnterprise,
 );
 
+const MODAL_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> = {
+  starter: [
+    { text: '500 credits every month' },
+    { text: '3 Brand Profiles' },
+    { text: 'Up to 100 products' },
+  ],
+  growth: [
+    { text: '1,500 credits every month' },
+    { text: 'Priority generation queue' },
+    { text: 'Brand Models', badge: 'NEW' },
+  ],
+  pro: [
+    { text: '4,500 credits every month' },
+    { text: 'Priority generation queue' },
+    { text: 'Unlimited products & profiles' },
+  ],
+};
+
 export function NoCreditsModal({ open, onClose, category = 'fallback', generationCount = 0, previewPlan }: NoCreditsModalProps) {
   const { startCheckout, plan: userPlan } = useCredits();
   const plan = previewPlan ?? userPlan;
@@ -105,13 +123,18 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
                         <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">credits/mo</p>
                       </div>
 
-                      {/* Top 3 features */}
+                      {/* Plan-specific differentiators */}
                       <div className="space-y-1.5 text-left">
-                        {p.features.slice(0, 3).map((feat, i) => (
+                        {(MODAL_PLAN_FEATURES[p.planId] ?? []).map((feat, i) => (
                           <div key={i} className="flex items-start gap-2">
                             <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-                            <span className="text-[11px] text-muted-foreground leading-tight">
-                              {typeof feat === 'string' ? feat : feat.text}
+                            <span className="text-[11px] text-muted-foreground leading-tight inline-flex items-center gap-1.5">
+                              {feat.text}
+                              {feat.badge && (
+                                <Badge className="text-[8px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
+                                  {feat.badge}
+                                </Badge>
+                              )}
                             </span>
                           </div>
                         ))}
