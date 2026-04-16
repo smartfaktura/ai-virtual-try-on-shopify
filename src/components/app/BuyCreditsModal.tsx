@@ -372,6 +372,11 @@ export function BuyCreditsModal() {
                             <>
                               <p className="text-sm font-medium text-foreground">~{imageEstimate} images/mo</p>
                               <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
+                              {displayPrice > 0 && (
+                                <p className="text-[10px] text-primary font-medium mt-0.5">
+                                  {(displayPrice / credits * 100).toFixed(1)}¢ per credit
+                                </p>
+                              )}
                             </>
                           ) : (
                             <p className="text-sm text-muted-foreground">{p.credits} credits</p>
