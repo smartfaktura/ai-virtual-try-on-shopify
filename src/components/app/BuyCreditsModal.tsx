@@ -364,7 +364,7 @@ export function BuyCreditsModal() {
                 )}
 
                 {/* Plan cards */}
-                <div className={`grid grid-cols-1 ${plansToShow.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-2.5 sm:gap-3 bg-muted/50 rounded-2xl p-4`}>
+                <div className={`grid grid-cols-1 ${plansToShow.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-2.5 sm:gap-3`}>
                   {plansToShow.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
@@ -404,11 +404,11 @@ export function BuyCreditsModal() {
                       if (displayPrice > 0) {
                         const ppc = `$${(displayPrice / credits).toFixed(3)} per credit`;
                         const saveBadge = savePct > 0 ? `SAVE ${savePct}%` : (isAnnual && p.planId === 'starter' ? 'SAVE 20%' : undefined);
-                        unifiedBullets.push({ text: ppc, color: 'text-primary', badge: saveBadge });
+                        unifiedBullets.push({ text: ppc, badge: saveBadge });
                       }
                     }
                     const PLAN_EXTRAS: Record<string, { text: string; badge?: string }[]> = {
-                      starter: [{ text: 'Bulk generations' }, { text: 'Up to 100 products' }],
+                      starter: [{ text: 'No watermarks on AI images' }, { text: 'Bulk generations' }, { text: 'Up to 100 products' }],
                       growth: [{ text: 'Faster generation' }, { text: 'Up to 250 products' }, { text: 'Brand Models', badge: 'NEW' }],
                       pro: [{ text: 'Fastest generation' }, { text: 'Unlimited products' }, { text: 'Brand Models', badge: 'NEW' }],
                     };
@@ -425,10 +425,10 @@ export function BuyCreditsModal() {
                         key={p.planId}
                       className={`relative rounded-2xl p-5 sm:p-6 flex flex-col transition-all duration-200 ${
                           p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx)
-                            ? 'bg-primary text-primary-foreground border-2 border-primary shadow-lg hover:shadow-xl'
+                            ? 'bg-card border-2 border-primary shadow-md hover:shadow-lg'
                             : isCurrent && p.planId !== 'free'
-                            ? 'bg-white dark:bg-card border-2 border-primary ring-1 ring-primary/10 hover:shadow-lg'
-                              : 'bg-white dark:bg-card border border-border/40 hover:shadow-lg'
+                            ? 'bg-card border-2 border-primary ring-1 ring-primary/10 hover:shadow-lg'
+                              : 'bg-card border border-border/40 hover:shadow-lg'
                         }`}
                       >
                         {/* Most Popular badge — top-right corner */}
@@ -447,7 +447,7 @@ export function BuyCreditsModal() {
                             )}
                           </div>
                           {descriptor && (
-                            <p className={`text-sm mt-1 ${p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{descriptor}</p>
+                            <p className="text-sm mt-1 text-muted-foreground">{descriptor}</p>
                           )}
                         </div>
 
@@ -458,10 +458,10 @@ export function BuyCreditsModal() {
                           ) : (
                             <p className="tracking-tight">
                               {isAnnual && p.monthlyPrice > displayPrice && (
-                                <span className={`text-sm line-through mr-1.5 ${p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) ? 'text-primary-foreground/50' : 'text-muted-foreground'}`}>${p.monthlyPrice}</span>
+                                <span className="text-sm line-through mr-1.5 text-muted-foreground">${p.monthlyPrice}</span>
                               )}
                               <span className="text-4xl font-bold">${displayPrice}</span>
-                              <span className={`text-base font-normal ${p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>/mo</span>
+                              <span className="text-base font-normal text-muted-foreground">/mo</span>
                             </p>
                           )}
                         </div>
@@ -470,19 +470,11 @@ export function BuyCreditsModal() {
                         <div className="space-y-2 flex-1 mb-4">
                           {unifiedBullets.map((feat, i) => (
                             <div key={i} className="flex items-start gap-2">
-                              <Check className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) ? 'text-primary-foreground/60' : 'text-primary/60'}`} />
-                               <span className={`text-[15px] leading-snug inline-flex items-center gap-1.5 ${
-                                 p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx)
-                                   ? (feat.color ? 'text-primary-foreground' : 'text-primary-foreground/80')
-                                   : (feat.color || 'text-muted-foreground')
-                               }`}>
-                                 <span className={feat.color ? 'font-normal' : ''}>{feat.text}</span>
+                              <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
+                               <span className="text-[15px] leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
+                                 <span className="font-normal">{feat.text}</span>
                                  {feat.badge && (
-                                   <Badge className={`text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 ${
-                                     p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx)
-                                       ? 'bg-primary-foreground/20 text-primary-foreground'
-                                       : 'bg-primary text-primary-foreground'
-                                   }`}>
+                                   <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-primary text-primary-foreground">
                                      {feat.badge}
                                    </Badge>
                                  )}
@@ -493,7 +485,7 @@ export function BuyCreditsModal() {
 
                         {/* CTA */}
                         <Button
-                          variant={isDisabled ? 'secondary' : (p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx)) ? 'secondary' : 'outline'}
+                          variant={isDisabled ? 'secondary' : (p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx)) ? 'default' : 'outline'}
                           className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
                           onClick={() => handlePlanSelect(p.planId)}
                           disabled={isDisabled}
