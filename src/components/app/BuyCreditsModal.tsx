@@ -472,7 +472,7 @@ export function BuyCreditsModal() {
                                <span className="text-sm leading-snug inline-flex items-center gap-1.5 text-muted-foreground">
                                  <span className="font-normal">{feat.text}</span>
                                  {feat.badge && (
-                                   <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-primary text-primary-foreground">
+                                   <Badge className="text-[10px] px-1.5 py-0.5 leading-tight font-bold border-0 bg-muted text-muted-foreground">
                                      {feat.badge}
                                    </Badge>
                                  )}
