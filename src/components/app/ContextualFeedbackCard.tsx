@@ -143,7 +143,7 @@ export function ContextualFeedbackCard({
   if (step === 'step1') {
     return (
       <div className={cn('flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
-        <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-3 px-4 py-3 md:py-2 rounded-xl md:rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md transition-shadow w-full md:w-auto">
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-3 px-4 py-3 md:py-2 rounded-xl md:rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm w-full md:w-auto">
           {/* Row 1: label + dismiss */}
           <div className="flex items-center justify-between md:contents">
             <div className="flex items-center gap-1.5">
@@ -196,11 +196,12 @@ export function ContextualFeedbackCard({
   // Step 2: Expanded panel
   return (
     <div className={cn('flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300', className)}>
-      <div className="w-full max-w-md rounded-xl bg-card/95 backdrop-blur-sm border border-border/50 shadow-lg p-3 space-y-2.5">
+      <div className="w-full max-w-md rounded-xl bg-muted/80 backdrop-blur-sm border border-border/50 shadow-sm p-3 space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-3 h-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">What could be better?</span>
+            <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40">Help Us Improve</span>
+            <span className="text-xs text-muted-foreground">· What could be better?</span>
           </div>
           <button onClick={dismiss} className="opacity-50 hover:opacity-100 transition-opacity">
             <X className="w-3 h-3 text-muted-foreground" />
@@ -240,7 +241,7 @@ export function ContextualFeedbackCard({
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="text-[11px] font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="text-[11px] font-medium bg-foreground/90 text-background px-3 py-1.5 rounded-full hover:bg-foreground transition-colors disabled:opacity-50"
           >
             Send feedback
           </button>
