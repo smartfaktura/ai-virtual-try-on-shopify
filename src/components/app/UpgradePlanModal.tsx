@@ -16,20 +16,21 @@ interface UpgradePlanModalProps {
 const CREDITS_PER_IMAGE = 5;
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 
-export function UpgradePlanModal({ open, onClose }: UpgradePlanModalProps) {
+export function UpgradePlanModal({ open, onClose, previewPlan }: UpgradePlanModalProps) {
   const navigate = useNavigate();
   const { plan, planConfig, billingInterval, startCheckout } = useCredits();
+  const effectivePlan = previewPlan ?? plan;
   const [isAnnual, setIsAnnual] = useState(billingInterval === 'annual');
   const [loading, setLoading] = useState(false);
 
   // All plans strictly higher than current, excluding enterprise (no checkout)
   const upgradePlans = useMemo(() => {
-    const currentIdx = PLAN_ORDER.indexOf(plan);
+    const currentIdx = PLAN_ORDER.indexOf(effectivePlan);
     return pricingPlans.filter((p) => {
       const idx = PLAN_ORDER.indexOf(p.planId);
       return idx > currentIdx && !p.isEnterprise && p.stripePriceIdMonthly;
     });
-  }, [plan]);
+  }, [effectivePlan]);
 
   const [selectedPlanId, setSelectedPlanId] = useState<string>(upgradePlans[0]?.planId ?? '');
 
@@ -40,7 +41,27 @@ export function UpgradePlanModal({ open, onClose }: UpgradePlanModalProps) {
     }
   }, [upgradePlans, selectedPlanId]);
 
-  if (!upgradePlans.length) return null;
+  if (!upgradePlans.length) {
+    // In admin preview mode, surface an explanatory dialog instead of silently rendering nothing
+    if (previewPlan) {
+      return (
+        <Dialog open={open} onOpenChange={onClose}>
+          <DialogContent className="max-w-sm">
+            <div className="py-4 space-y-2">
+              <h2 className="text-base font-semibold">No higher tier available</h2>
+              <p className="text-sm text-muted-foreground">
+                <code className="font-mono text-xs">previewPlan={previewPlan}</code> is already at the top tier — there's nothing above it to upgrade to.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button onClick={onClose} variant="outline">Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      );
+    }
+    return null;
+  }
 
   const selectedPlan = upgradePlans.find((p) => p.planId === selectedPlanId) ?? upgradePlans[0];
 
