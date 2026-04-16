@@ -382,11 +382,6 @@ export function BuyCreditsModal() {
                       growth: 'Best value for growing brands',
                       pro: 'Best for high-volume production',
                     };
-                    const PLAN_VALUE_LABELS: Record<string, string> = {
-                      starter: 'Better than Free',
-                      growth: 'Better value',
-                      pro: 'Best value',
-                    };
                     const PLAN_CTA_MAP: Record<string, string> = {
                       starter: 'Start with Starter',
                       growth: 'Get Growth',
@@ -408,7 +403,6 @@ export function BuyCreditsModal() {
                     };
 
                     const descriptor = PLAN_DESCRIPTORS[p.planId] ?? '';
-                    const valueLabel = PLAN_VALUE_LABELS[p.planId] ?? '';
                     const differentiators = PLAN_DIFFERENTIATORS[p.planId] ?? [];
 
                     let ctaLabel = PLAN_CTA_MAP[p.planId] ?? `Choose ${p.name}`;
@@ -420,11 +414,11 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-4 sm:p-5 pt-6 flex flex-col transition-all duration-200 ${
+                        className={`relative rounded-2xl p-5 sm:p-6 pt-6 flex flex-col transition-all duration-200 ${
                           isCurrent && p.planId !== 'free'
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
-                              ? 'border-2 border-primary bg-primary/[0.03] shadow-md shadow-primary/5'
+                              ? 'border-2 border-primary/70 bg-primary/[0.03] shadow-md shadow-primary/5'
                               : 'border border-border bg-card hover:shadow-sm'
                         }`}
                       >
@@ -438,51 +432,46 @@ export function BuyCreditsModal() {
                         )}
 
                         {/* Name + descriptor */}
-                        <div className="mb-3">
+                        <div className="mb-4">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="text-base font-semibold">{p.name}</h4>
+                            <h4 className="text-base font-bold">{p.name}</h4>
                             {isCurrent && (
                               <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
                             )}
                           </div>
                           {descriptor && (
-                            <p className="text-[11px] text-muted-foreground mt-0.5">{descriptor}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{descriptor}</p>
                           )}
                         </div>
 
                         {/* Price */}
-                        <div className="mb-3">
+                        <div className="mb-5">
                           {isFree ? (
-                            <span className="text-2xl sm:text-3xl font-bold tracking-tight">Free</span>
+                            <span className="text-2xl font-bold tracking-tight">Free</span>
                           ) : (
                             <>
-                              <div className="flex items-baseline gap-1">
+                              <p className="tracking-tight">
                                 {isAnnual && p.monthlyPrice > displayPrice && (
-                                  <span className="text-sm text-muted-foreground line-through">${p.monthlyPrice}</span>
+                                  <span className="text-sm text-muted-foreground line-through mr-1.5">${p.monthlyPrice}</span>
                                 )}
-                                <span className="text-2xl sm:text-3xl font-bold tracking-tight">${displayPrice}</span>
-                                <span className="text-xs text-muted-foreground">/mo</span>
-                              </div>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {isAnnual ? 'billed annually' : 'billed monthly'}
+                                <span className="text-2xl font-bold">${displayPrice}</span>
+                                <span className="text-base font-medium text-muted-foreground">/mo</span>
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {isAnnual ? 'Billed annually' : 'Billed monthly'}
                               </p>
                             </>
                           )}
                         </div>
 
-                        {/* Metrics — flat, no inner box */}
-                        <div className="mb-3 space-y-0.5">
+                        {/* Metrics — 3 clean lines */}
+                        <div className="mb-5 space-y-1">
                           {imageEstimate ? (
                             <>
-                              <p className="text-sm font-medium">~{imageEstimate} images/mo</p>
-                              <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
+                              <p className="text-sm text-muted-foreground">~{imageEstimate} images / month</p>
+                              <p className="text-sm text-muted-foreground">{credits.toLocaleString()} credits / month</p>
                               {displayPrice > 0 && (
-                                <p className="text-[11px] text-primary font-semibold mt-1">
-                                  ${(displayPrice / credits).toFixed(3)}/credit
-                                  <span className="ml-1.5 inline-flex rounded-full text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary">
-                                    {valueLabel}
-                                  </span>
-                                </p>
+                                <p className="text-sm text-primary font-semibold">${(displayPrice / credits).toFixed(3)} per credit</p>
                               )}
                             </>
                           ) : (
@@ -491,11 +480,11 @@ export function BuyCreditsModal() {
                         </div>
 
                         {/* Differentiators */}
-                        <div className="space-y-1.5 flex-1 mb-4">
+                        <div className="space-y-2 flex-1 mb-4">
                           {differentiators.map((feat, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                              <span className="text-[11px] text-muted-foreground leading-snug inline-flex items-center gap-1.5">
+                              <span className="text-xs text-muted-foreground leading-snug inline-flex items-center gap-1.5">
                                 {feat.text}
                                 {feat.badge && (
                                   <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
