@@ -1,36 +1,52 @@
 
 
-# White Cards, Save % Badges, Badge Styling & Size Tweaks
+# Plan Card Visual Polish — Both Modals
 
-## Changes (both `BuyCreditsModal.tsx` and `NoCreditsModal.tsx`)
+## Changes
 
-### 1. White card backgrounds with darker container
-- Card containers: add `bg-white dark:bg-card` (force white in light mode)
-- Outer wrapper/container behind the cards: add `bg-muted/50 rounded-2xl p-4` to create a subtle darker backdrop that makes white cards pop
+### 1. Descriptors in UPPERCASE
+Change `PLAN_DESCRIPTORS` values to uppercase: `'BEST TO START'`, `'BEST VALUE'`, `'FOR SCALE'`. Apply in both files.
 
-### 2. Save % badge on per-credit price (vs Starter baseline)
-Calculate savings relative to Starter's per-credit cost. Starter is the baseline (no badge unless annual). Growth and Pro show e.g. "SAVE 32%" comparing their per-credit cost to Starter's. When annual billing is active, show the annual-adjusted savings instead.
+### 2. Title & subtitle 2px bigger
+- Modal title: `text-lg` → `text-xl` (both modals)
+- Subtitle: `text-[13px]` → `text-sm` in BuyCreditsModal, `text-sm` → `text-[15px]` in NoCreditsModal
 
-Formula: `savePercent = Math.round((1 - thisPPC / starterPPC) * 100)`
+### 3. Bullet points 1px bigger
+- `text-sm` (14px) → `text-[15px]` for all bullet text in both modals
 
-- Starter: no save badge (unless annual → "SAVE 20%")
-- Growth: e.g. "SAVE 32%" (monthly) or "SAVE 46%" (annual)
-- Pro: e.g. "SAVE 49%" (monthly) or "SAVE 59%" (annual)
+### 4. Full popup background same color as card wrapper
+- BuyCreditsModal: add `bg-muted/50` to the outer `DialogContent` or content wrapper so the whole modal background matches the card grid area
+- NoCreditsModal: same — apply `bg-muted/50` to the content area, remove the separate `bg-muted/50` from just the grid wrapper since the whole popup is now that color
 
-### 3. Badge styling — primary color with white text
-Change all inline badges (NEW, SAVE %) from `bg-emerald-500/15 text-emerald-600` to `bg-primary text-primary-foreground` for brand consistency.
+### 5. Growth card — primary color alternative design
+For the Growth (highlighted) plan card only:
+- Background: `bg-primary text-primary-foreground` 
+- All text inside: white (`text-primary-foreground`, `text-primary-foreground/70`)
+- Check icons: `text-primary-foreground/60` instead of `text-primary/60`
+- CTA button: `variant="secondary"` (white button on primary bg)
+- Badge styling inside: `bg-primary-foreground/20 text-primary-foreground`
 
-### 4. Typography size bumps
-| Element | Current | New |
-|---------|---------|-----|
-| Bullet text | `text-[13px]` | `text-sm` (14px) |
-| Price number | `text-3xl` | `text-4xl` |
-| "/mo" suffix | `text-sm` | `text-base` |
+### 6. Badges — bigger with padding and bold
+All inline badges (NEW, SAVE %): 
+- `text-[9px]` → `text-[10px]`
+- Add `py-0.5` padding (currently `py-0`)
+- Add `font-bold` (currently no bold)
 
-## Files Changed
+### 7. Price-per-credit line — no bold
+Ensure the per-credit text has no `font-semibold` or `font-bold`. Keep it regular weight with `text-primary` color (or `text-primary-foreground` inside Growth card).
 
-| File | Change |
-|------|--------|
-| `BuyCreditsModal.tsx` | All 4 changes above |
-| `NoCreditsModal.tsx` | Same |
+### 8. SAVE % badge — same font as other text
+Remove any special styling on SAVE badge text. Use same `text-[10px] font-bold` as NEW badge. Already handled by unified badge styling in point 6.
+
+### 9. "Most popular" badge — bigger + uppercase
+- `text-[10px]` → `text-[11px]`
+- Add `uppercase tracking-wider`
+- Add `font-bold`
+
+### 10. Card hover shadow
+Add `hover:shadow-lg` to all non-highlighted cards (already partially there). For highlighted Growth card, add `shadow-lg hover:shadow-xl`.
+
+## Files
+- `src/components/app/BuyCreditsModal.tsx`
+- `src/components/app/NoCreditsModal.tsx`
 
