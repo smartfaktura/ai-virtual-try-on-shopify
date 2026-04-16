@@ -54,9 +54,9 @@ const FAQS = [
   { q: 'What can I create with VOVV.AI?', a: 'Product photography, virtual try-ons, lifestyle imagery, flat lays, interior staging, videos, and more — all from a single product photo.' },
   { q: 'Do I need photography experience?', a: 'Not at all. Choose a scene, upload your product, and the AI handles lighting, composition, and styling automatically.' },
   { q: 'How many credits does each generation cost?', a: 'Templates and Virtual Try-On cost 6 credits per image. Freestyle costs 4 credits, or 6 when you add a model or scene.' },
-  { q: 'Is there a free trial?', a: 'Every new account gets 20 free credits — no credit card required. That's enough to try multiple workflows and see the quality.' },
+  { q: 'Is there a free trial?', a: "Every new account gets 20 free credits — no credit card required. That's enough to try multiple workflows and see the quality." },
   { q: 'What image formats and sizes are supported?', a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print.' },
-  { q: 'Can I cancel my subscription anytime?', a: 'Absolutely. Cancel, upgrade, or downgrade at any time — no contracts or fees. Unused monthly credits don't roll over, but top-up credits never expire.' },
+  { q: 'Can I cancel my subscription anytime?', a: "Absolutely. Cancel, upgrade, or downgrade at any time — no contracts or fees. Unused monthly credits don't roll over, but top-up credits never expire." },
   { q: 'How does Brand Profile work?', a: 'Set your preferred tone, lighting, background, and composition rules. Every future generation uses this profile automatically so visuals stay on-brand.' },
   { q: 'What is the Content Calendar?', a: 'The Content Calendar automates recurring visual runs. Pick products and templates, set a schedule, and fresh visuals arrive on autopilot. Growth+ plans.' },
 ];
