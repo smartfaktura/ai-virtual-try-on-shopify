@@ -198,6 +198,7 @@ export function FreestylePromptPanel({
   highlightedChip,
   onReset,
   isDirty,
+  onBuyCredits,
 }: FreestylePromptPanelProps) {
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
