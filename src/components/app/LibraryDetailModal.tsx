@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
