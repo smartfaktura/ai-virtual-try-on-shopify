@@ -1,80 +1,64 @@
 
 
-# Polish Pricing Popup — Premium Offer Cards
+# Typography & Hierarchy Cleanup — Pricing Cards
 
 ## Problem
-Plan cards still have a box-inside-box layout (inner gray metrics panel), the billing toggle floats away from the cards it controls, the header lacks hierarchy, and overall spacing doesn't feel premium.
+Cards use ~11 different text sizes/weights creating visual noise. The `/mo` is too small, metrics mix with value badges, and vertical spacing is too compressed. Feels like a dashboard widget, not a premium offer.
 
 ## Changes
 
-### File: `src/components/app/BuyCreditsModal.tsx` — Plans tab
+### Both files: `BuyCreditsModal.tsx` (Plans tab cards, lines 420-519) and `NoCreditsModal.tsx` (FreePlanSection cards, lines 119-205)
 
-**1. Restructure header (lines 132-165)**
-- Remove the wallet icon box and plan badge from the top bar
-- Replace with a clean text hierarchy:
-  - `{balance} credits remaining` (bold)
-  - `Choose a plan to keep creating` (subtitle)
-  - `Better value on larger plans` (muted line)
-- Keep close button top-right
-
-**2. Move billing toggle (lines 167-217)**
-- Remove the billing toggle from the tab-switcher row
-- Place it directly above the plan cards grid, centered, within the Plans tab content area
-- Structure becomes: header → subtitle → billing toggle → cards
-
-**3. Flatten plan cards (lines 428-529)**
-- Remove the inner `rounded-xl bg-muted/60 border` metrics container (lines 482-501)
-- Place credits, images, price-per-credit directly in the card body as simple text lines:
-  - `500 credits / month` — text-sm
-  - `~100 images` — text-xs muted
-  - `$0.078 per credit` — text-xs primary with value label badge inline
-- Keep only 2 differentiator bullets below
-- Add `pt-3` before CTA for breathing room
-
-**4. Refine Growth card styling**
-- Use `border-primary/80` (not full `border-primary`) for a cleaner highlight
-- Keep `bg-primary/[0.03]` and `shadow-md shadow-primary/5`
-- "Most Popular" badge stays
-
-**5. Add reassurance line**
-Already exists at bottom — keep as-is
-
-### File: `src/components/app/NoCreditsModal.tsx` — FreePlanSection
-
-**Same card restructuring:**
-- Remove the inner `rounded-xl bg-muted/60` metrics container (lines 159-176)
-- Flatten metrics into card body directly
-- Keep billing toggle centered above cards (already in correct position)
-- Same spacing improvements
-
-## Card Layout (both files)
-
-```text
-┌─────────────────────┐
-│ Growth               │
-│ Best value for       │
-│ growing brands       │
-│                      │
-│ $79/mo               │
-│ billed monthly       │
-│                      │
-│ 1,500 credits/mo     │
-│ ~300 images           │
-│ $0.053/credit ▸Better│
-│                      │
-│ ✓ Faster queue       │
-│ ✓ Brand Models NEW   │
-│                      │
-│ [  Get Growth     ]  │
-└─────────────────────┘
+**1. Fix price block — `/mo` on same line, proper size**
 ```
+$39/mo          ← price: text-2xl font-bold, /mo: text-base font-medium (not text-xs)
+Billed monthly  ← text-xs text-muted-foreground
+```
+Remove the `items-baseline gap-1` flex approach. Use inline text instead so `/mo` feels connected.
 
-No inner panel. Clean flat hierarchy.
+**2. Clean metrics block — 3 uniform lines, no badges**
+Remove the inline value pill (`Better than Free` / `Better value` / `Best value`) from the metrics area entirely. Replace with 3 clean lines at consistent `text-sm` size:
+```
+~100 images / month
+500 credits / month
+$0.078 per credit
+```
+All `text-sm text-muted-foreground`, with price-per-credit in `text-primary` for emphasis. No badges, no pills.
+
+**3. Increase vertical spacing between card zones**
+Four clear zones with `mb-4` or `mb-5` gaps:
+- Zone 1: Plan name + descriptor (`mb-4`)
+- Zone 2: Price + billing note (`mb-5`)
+- Zone 3: Metrics — 3 lines (`mb-5`)
+- Zone 4: Bullets + CTA (`flex-1` + `mt-auto`)
+
+Current `mb-3` everywhere is too compressed.
+
+**4. Quiet the bullets**
+Keep `text-xs text-muted-foreground` (not `text-[11px]`). Consistent with metrics size but visually lighter.
+
+**5. Refine Growth card border**
+Change from `border-primary` to `border-primary/70` — still clearly highlighted but not heavy.
+
+**6. Clean header in BuyCreditsModal (lines 132-157)**
+Keep current text but ensure only 3 levels:
+- `text-xl font-bold` — balance line
+- `text-sm text-muted-foreground` — subtitle
+- `text-xs text-muted-foreground` — "Better value" line (already exists, just ensure spacing is clean)
+
+### Typography Scale (4 levels only inside cards)
+
+| Level | Usage | Style |
+|-------|-------|-------|
+| A | Plan name | `text-base font-bold` |
+| B | Price | `text-2xl font-bold` + `/mo` at `text-base font-medium` |
+| C | Metrics | `text-sm text-muted-foreground` |
+| D | Descriptor, bullets, billing | `text-xs text-muted-foreground` |
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `BuyCreditsModal.tsx` | Flatten header, move toggle above cards, remove inner metrics box, improve spacing |
-| `NoCreditsModal.tsx` | Remove inner metrics box in FreePlanSection, same flat card layout |
+| `BuyCreditsModal.tsx` | Flatten price block, remove value pills, uniform metrics, increase card padding |
+| `NoCreditsModal.tsx` | Same card typography cleanup in FreePlanSection |
 
