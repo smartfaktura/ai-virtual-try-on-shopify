@@ -42,7 +42,7 @@ import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
 
 import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
-import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
+
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
 import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
@@ -2157,7 +2157,7 @@ export default function Generate() {
     <PageHeader title={pageTitle} backAction={{ content: activeWorkflow ? 'Visual Studio' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}>
       <SEOHead title="Generate — VOVV AI" description="Generate AI product visuals." noindex />
       <div className="space-y-6 overflow-x-hidden">
-        <LowCreditsBanner />
+        
 
         {/* Workflow Info Banner */}
         {activeWorkflow && (

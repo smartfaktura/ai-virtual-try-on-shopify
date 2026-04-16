@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
-import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
+
 
 
 
@@ -574,9 +574,6 @@ export default function Dashboard() {
           </Button>
         </div>
       )}
-
-      {/* Low credits banner */}
-      <LowCreditsBanner />
 
       {/* Metrics Row — 5 value-driven cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
+
 import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
@@ -701,7 +701,7 @@ export default function Perspectives() {
           </div>
         </div>
 
-        <LowCreditsBanner />
+        
 
         {/* Step 1: Source Selection */}
         <section className="space-y-4">

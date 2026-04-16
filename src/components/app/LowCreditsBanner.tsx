@@ -3,23 +3,21 @@ import { Sparkles, X } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 
 export function LowCreditsBanner() {
-  const { balance, isLow, isCritical, isEmpty, openBuyModal } = useCredits();
+  const { balance, isEmpty, openBuyModal } = useCredits();
   const [dismissed, setDismissed] = useState(false);
   
-  if (dismissed || (!isLow && !isCritical && !isEmpty)) {
+  const shouldShow = isEmpty || balance < 4;
+  
+  if (dismissed || !shouldShow) {
     return null;
   }
   
   const title = isEmpty 
     ? "You're out of credits" 
-    : isCritical 
-      ? 'Almost out of credits'
-      : 'Running low on credits';
+    : 'Running low on credits';
   const message = isEmpty
     ? 'Top up to keep creating with VOVV.AI'
-    : isCritical
-      ? `Only ${balance} credits left — top up to avoid interruptions`
-      : `You have ${balance} credits remaining. Top up to keep creating`;
+    : `Only ${balance} credits left — top up to avoid interruptions`;
   
   return (
     <div className="mb-4 bg-primary/5 text-foreground border border-primary/20 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3">
