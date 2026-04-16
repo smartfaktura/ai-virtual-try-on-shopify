@@ -180,6 +180,8 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
         imageUrl={allImages[0]?.url}
         triggerType="result_ready"
       />
+
+      {lightboxOpen && (
         <ImageLightbox
           images={lightboxImages}
           currentIndex={lightboxIndex}
