@@ -7,7 +7,7 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CreditProvider } from '@/contexts/CreditContext';
 import { AdminViewProvider } from '@/contexts/AdminViewContext';
-import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
+import { GlobalUpgradeModal } from '@/components/app/GlobalUpgradeModal';
 import { ProtectedRoute } from '@/components/app/ProtectedRoute';
 import { AppShell } from '@/components/app/AppShell';
 import { AppShellLoading } from '@/components/app/AppShellLoading';
@@ -224,7 +224,7 @@ const App = () => {
                       </Routes>
                       </Suspense>
                     </AppShell>
-                    <BuyCreditsModal />
+                    <GlobalUpgradeModal />
                   </CreditProvider>
                   </AdminViewProvider>
                 </ProtectedRoute>

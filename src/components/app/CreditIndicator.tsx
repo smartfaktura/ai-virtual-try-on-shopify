@@ -17,6 +17,9 @@ export function CreditIndicator() {
   const canUpgrade = !!planConfig.nextPlanId && planConfig.nextPlanId !== 'enterprise';
   const ctaLabel = canUpgrade ? 'Upgrade' : 'Top up';
   const handleCta = () => {
+    // Both upgrade and top-up routes through the unified modal:
+    // canUpgrade → UpgradePlanModal (plan picker)
+    // !canUpgrade (Pro/Enterprise) → openBuyModal which now opens the same modal in topup variant
     if (canUpgrade) setUpgradeOpen(true);
     else openBuyModal();
   };
