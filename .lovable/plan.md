@@ -1,27 +1,21 @@
 
 
-# Inline Card Mobile Polish + Drawer Header Left-Align
+# Fix Inline Card Timer + X Button Overlap
 
 ## Changes
 
-### 1. PostGenerationUpgradeCard — mobile spacing refinements
-Current issues on mobile (compact mode):
-- `gap-1.5` between rows is too tight — content feels cramped
-- The dismiss X button sits far from the CTA with no visual grouping
-- Avatar + text row and CTA row need clearer vertical separation
+### 1. Increase appear delay from 3s to 7s
+In `PostGenerationUpgradeCard.tsx` line 56, change `3000` → `7000`.
 
-Changes in `PostGenerationUpgradeCard.tsx`:
-- Increase vertical padding: `py-2.5` → `py-3` for breathing room
-- Increase gap between content row and CTA row in compact mode: `gap-1.5` → `gap-2`
-- Move dismiss button to top-right corner as an absolute-positioned element (standard mobile card pattern) so it doesn't compete with the CTA row
-- CTA row: left-align button on mobile (remove `justify-end` in compact mode) for better thumb reach
+### 2. Fix X button overlapping with See Plans on desktop
+The issue: on desktop the layout is a single row (`md:flex-row`). The content has `md:pr-3` but the absolute X button sits at `right-2`, overlapping the CTA button.
 
-### 2. UpgradeValueDrawer — left-align header on mobile
-The `SheetHeader` component defaults to `text-center sm:text-left`. Override by passing `text-left` in the className on line 85 to force left alignment on all viewports.
+Fix: On desktop, move the X button inline into the flex row instead of absolute. Simpler approach — keep the absolute X but increase right padding on the desktop row to `md:pr-10` so the CTA has room, and the X sits outside the content flow.
 
-Change: `SheetHeader className="space-y-2 pb-3"` → `SheetHeader className="space-y-2 pb-3 text-left"`
+Change line 82: add `md:pr-10` to the desktop layout so the dismiss button doesn't overlap:
+- Current: `'flex-col gap-2 md:flex-row md:items-center md:gap-3 md:pr-3'`
+- New: `'flex-col gap-2 md:flex-row md:items-center md:gap-3 md:pr-10'`
 
 ### Files
-- `src/components/app/PostGenerationUpgradeCard.tsx` — lines 62-117 (card layout restructure)
-- `src/components/app/UpgradeValueDrawer.tsx` — line 85
+- `src/components/app/PostGenerationUpgradeCard.tsx` — 2 changes (lines 56, 82)
 
