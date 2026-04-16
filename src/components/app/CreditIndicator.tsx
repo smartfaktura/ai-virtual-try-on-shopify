@@ -27,7 +27,7 @@ export function CreditIndicator() {
         </span>
         {planConfig.nextPlanId && (
           <button
-            onClick={() => navigate('/app/settings')}
+            onClick={(e) => { e.stopPropagation(); navigate('/app/settings'); }}
             className={`flex items-center gap-0.5 text-[10px] font-semibold transition-colors ${
               isFree
                 ? 'text-primary hover:text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-md'
