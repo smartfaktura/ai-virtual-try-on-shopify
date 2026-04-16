@@ -421,7 +421,7 @@ export default function Jobs() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
             {/* Filter popover */}
             <div className="relative group">
               <button
