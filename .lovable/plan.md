@@ -1,27 +1,27 @@
 
 
-# Fix Inline Card Subtitle + Modal Mobile Scroll + Subline Copy
+# Inline Card Mobile Polish + Drawer Header Left-Align
 
 ## Changes
 
-### 1. PostGenerationUpgradeCard — remove subtitle truncation
-In `PostGenerationUpgradeCard.tsx` line 86, remove `sm:line-clamp-1` so the subtitle is never truncated:
-```
-<p className="text-xs text-muted-foreground leading-snug">{copy.subline}</p>
-```
+### 1. PostGenerationUpgradeCard — mobile spacing refinements
+Current issues on mobile (compact mode):
+- `gap-1.5` between rows is too tight — content feels cramped
+- The dismiss X button sits far from the CTA with no visual grouping
+- Avatar + text row and CTA row need clearer vertical separation
 
-### 2. NoCreditsModal — fix mobile scroll
-The `DialogContent` on mobile uses `max-sm:h-full` but the content area likely can't scroll. Add `max-sm:overflow-y-auto` to the DialogContent (line 71) to enable scrolling on mobile.
+Changes in `PostGenerationUpgradeCard.tsx`:
+- Increase vertical padding: `py-2.5` → `py-3` for breathing room
+- Increase gap between content row and CTA row in compact mode: `gap-1.5` → `gap-2`
+- Move dismiss button to top-right corner as an absolute-positioned element (standard mobile card pattern) so it doesn't compete with the CTA row
+- CTA row: left-align button on mobile (remove `justify-end` in compact mode) for better thumb reach
 
-### 3. Simplify generation count subline
-In `src/lib/conversionCopy.ts`, replace `getLayer3Subline` to remove the "You've created X images" text and the range. New copy:
-- `generationCount <= 1`: `"Brands like yours typically need 100+ visuals per month"`
-- else: `"Brands like yours typically need 100+ visuals per month"`
+### 2. UpgradeValueDrawer — left-align header on mobile
+The `SheetHeader` component defaults to `text-center sm:text-left`. Override by passing `text-left` in the className on line 85 to force left alignment on all viewports.
 
-Effectively a single return: `"Brands like yours typically need 100+ visuals per month"`
+Change: `SheetHeader className="space-y-2 pb-3"` → `SheetHeader className="space-y-2 pb-3 text-left"`
 
 ### Files
-- `src/components/app/PostGenerationUpgradeCard.tsx` — line 86
-- `src/components/app/NoCreditsModal.tsx` — line 71
-- `src/lib/conversionCopy.ts` — lines 295-300
+- `src/components/app/PostGenerationUpgradeCard.tsx` — lines 62-117 (card layout restructure)
+- `src/components/app/UpgradeValueDrawer.tsx` — line 85
 
