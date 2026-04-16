@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TEAM_MEMBERS } from '@/data/teamData';
+import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { BatchGroup } from '@/lib/batchGrouping';
 

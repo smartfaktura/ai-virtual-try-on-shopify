@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TEAM_MEMBERS, type TeamMember } from '@/data/teamData';
+import { TEAM_MEMBERS, getRandomStatusMessage, type TeamMember } from '@/data/teamData';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 

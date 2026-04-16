@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { CheckCircle, Loader2, Clock } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TEAM_MEMBERS } from '@/data/teamData';
+import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
 import type { QueueJob } from '@/hooks/useGenerationQueue';
 import { QueuePositionIndicator } from './QueuePositionIndicator';
 import { getOptimizedUrl } from '@/lib/imageOptimization';

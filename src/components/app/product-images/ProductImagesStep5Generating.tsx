@@ -8,14 +8,14 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { UserProduct } from './types';
 
 const BRANDED_MESSAGES = [
-  { member: 'Sophia', message: 'Dialing in studio lighting for your product…' },
-  { member: 'Kenji', message: 'Finding the best camera angle for this scene…' },
-  { member: 'Amara', message: 'Balancing highlights and shadows…' },
-  { member: 'Luna', message: 'Polishing every detail to pixel perfection…' },
-  { member: 'Sienna', message: 'Making sure this matches your brand look…' },
-  { member: 'Leo', message: 'Constructing the perfect background…' },
-  { member: 'Omar', message: 'Fine-tuning contrast for maximum impact…' },
-  { member: 'Zara', message: 'Styling the final frame — almost there…' },
+  { member: 'Sophia', message: 'Dialing in studio lighting for the perfect shot…' },
+  { member: 'Kenji', message: 'Art directing the visual layout…' },
+  { member: 'Amara', message: 'Placing your product in a lifestyle moment…' },
+  { member: 'Luna', message: 'Retouching every detail to pixel perfection…' },
+  { member: 'Sienna', message: 'Locking in your brand identity…' },
+  { member: 'Leo', message: 'Constructing the perfect set and background…' },
+  { member: 'Omar', message: 'Analyzing visual hierarchy for maximum conversions…' },
+  { member: 'Zara', message: 'Styling the perfect outfit presentation…' },
 ];
 
 interface Step5Props {

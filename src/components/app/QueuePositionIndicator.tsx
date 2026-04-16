@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { QueueJob, GenerationMeta } from '@/hooks/useGenerationQueue';
-import { TEAM_MEMBERS } from '@/data/teamData';
+import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface QueuePositionIndicatorProps {
