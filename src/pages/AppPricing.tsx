@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -137,36 +137,6 @@ export default function AppPricing() {
   const planConfig = pricingPlans.find(p => p.planId === plan);
   const isFreeUser = plan === 'free';
 
-  // Default selection: current plan if paid, else Growth
-  const defaultSelected = useMemo(() => {
-    if (currentIdx > 0) return plan;
-    return 'growth';
-  }, [plan, currentIdx]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>(defaultSelected);
-
-  const selectedPlan = mainPlans.find(p => p.planId === selectedPlanId) ?? mainPlans[0];
-  const selectedIdx = PLAN_ORDER.indexOf(selectedPlanId);
-
-  // Determine CTA state for the single button
-  let ctaLabel = 'Continue to checkout';
-  let ctaDisabled = false;
-  if (selectedPlanId === plan && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate plan';
-  else if (selectedPlanId === plan) { ctaLabel = 'Current plan'; ctaDisabled = true; }
-  else if (selectedPlanId === 'free') ctaLabel = 'Cancel subscription';
-  else if (selectedIdx < currentIdx) ctaLabel = `Downgrade to ${selectedPlan.name}`;
-
-  const handleConfirmSelection = () => {
-    if (ctaDisabled) return;
-    const targetPlan = mainPlans.find(p => p.planId === selectedPlanId);
-    if (!targetPlan) return;
-    if (selectedPlanId === plan && subscriptionStatus === 'canceling') setDialogMode('reactivate');
-    else if (selectedPlanId === 'free') setDialogMode('cancel');
-    else if (selectedIdx > currentIdx) setDialogMode('upgrade');
-    else setDialogMode('downgrade');
-    setSelectedDialogPlan(targetPlan);
-    setDialogOpen(true);
-  };
-
   const handleDialogConfirm = async () => {
     setLoading(true);
     try {
@@ -189,6 +159,30 @@ export default function AppPricing() {
     document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // Per-plan CTA used inside the comparison table header & footer
+  const getPlanCta = (p: PricingPlan) => {
+    const targetIdx = PLAN_ORDER.indexOf(p.planId);
+    const isCurrent = p.planId === plan;
+    if (isCurrent && subscriptionStatus === 'canceling') return { label: 'Reactivate', disabled: false, variant: 'default' as const };
+    if (isCurrent) return { label: 'Current plan', disabled: true, variant: 'outline' as const };
+    if (p.planId === 'free') return { label: 'Cancel plan', disabled: false, variant: 'outline' as const };
+    if (targetIdx < currentIdx) return { label: `Downgrade`, disabled: false, variant: 'outline' as const };
+    if (p.planId === 'growth') return { label: 'Continue with Growth', disabled: false, variant: 'default' as const };
+    return { label: `Choose ${p.name}`, disabled: false, variant: 'outline' as const };
+  };
+
+  const handlePlanSelect = (p: PricingPlan) => {
+    const targetIdx = PLAN_ORDER.indexOf(p.planId);
+    const isCurrent = p.planId === plan;
+    if (isCurrent && subscriptionStatus === 'canceling') setDialogMode('reactivate');
+    else if (isCurrent) return;
+    else if (p.planId === 'free') setDialogMode('cancel');
+    else if (targetIdx > currentIdx) setDialogMode('upgrade');
+    else setDialogMode('downgrade');
+    setSelectedDialogPlan(p);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 sm:py-16 pb-20 space-y-20 sm:space-y-24">
 
@@ -199,12 +193,19 @@ export default function AppPricing() {
           Studio-grade visuals.<br className="hidden sm:block" /> Without the studio.
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed">
-          Pick the plan that matches your output. Cancel anytime — no commitment.
+          Compare plans side-by-side and pick what matches your output. Cancel anytime.
         </p>
+      </header>
 
-        {/* Billing toggle */}
-        <div className="flex justify-center pt-3">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/40 text-xs">
+      {/* ── Plans = Comparison table (single unified plan picker) ── */}
+      <section id="plans-section" className="space-y-5">
+        {/* Header + billing toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Choose your plan</h2>
+            <p className="text-sm text-muted-foreground mt-1">Compare every feature across all tiers.</p>
+          </div>
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/40 text-xs self-start sm:self-auto">
             <button
               onClick={() => setBillingPeriod('monthly')}
               className={`px-4 py-1.5 rounded-full transition-colors ${
@@ -224,129 +225,74 @@ export default function AppPricing() {
             </button>
           </div>
         </div>
-      </header>
-
-      {/* ── Compact selectable plan rows (modal style) ── */}
-      <section id="plans-section" className="space-y-5 max-w-2xl mx-auto w-full">
-        <div className="space-y-2.5">
-          {mainPlans.map((p) => {
-            const isCurrent = p.planId === plan;
-            const isSelected = p.planId === selectedPlanId;
-            const isFree = p.planId === 'free';
-            const isRecommended = p.planId === 'growth';
-            const credits = typeof p.credits === 'number' ? p.credits : 0;
-            const imageEstimate = credits > 0 ? Math.round(credits / CREDITS_PER_IMAGE) : 0;
-            const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
-            const annualSavings = isAnnual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
-            const centsPerCredit = displayPrice > 0 && credits > 0 ? (displayPrice / credits * 100).toFixed(1) : null;
-
-            return (
-              <button
-                key={p.planId}
-                type="button"
-                onClick={() => setSelectedPlanId(p.planId)}
-                className={`w-full text-left rounded-2xl border p-4 transition-all ${
-                  isSelected
-                    ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30'
-                    : 'border-border/50 hover:border-border bg-card'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <span
-                      className={`mt-0.5 inline-flex w-4 h-4 rounded-full border items-center justify-center shrink-0 ${
-                        isSelected ? 'border-primary' : 'border-muted-foreground/40'
-                      }`}
-                    >
-                      {isSelected && <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-foreground">{p.name}</span>
-                        {isCurrent && (
-                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold whitespace-nowrap">
-                            Current plan
-                          </span>
-                        )}
-                        {isRecommended && !isCurrent && (
-                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
-                            Recommended for You
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {isFree
-                          ? `${credits} credits to try the platform`
-                          : `${credits.toLocaleString()} credits · ~${imageEstimate.toLocaleString()} images/mo${centsPerCredit ? ` · ${centsPerCredit}¢/credit` : ''}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end shrink-0">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-xl font-semibold tracking-tight">${isFree ? 0 : displayPrice}</span>
-                      <span className="text-[11px] text-muted-foreground">/mo</span>
-                    </div>
-                    {isAnnual && annualSavings > 0 && (
-                      <span className="text-[10px] text-primary font-medium mt-0.5">save ${annualSavings}/yr</span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Trust block — left-aligned, modal-style */}
-        <div className="flex flex-col gap-1.5 pt-2">
-          <p className="text-[13px] text-muted-foreground">
-            Cancel anytime · No commitment
-          </p>
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
-            <Lock className="w-3 h-3" />
-            <span>You'll be securely redirected to complete checkout</span>
-          </p>
-        </div>
-
-        {/* Single CTA */}
-        <Button
-          className="w-full rounded-xl min-h-[48px] gap-2 text-sm font-medium"
-          onClick={handleConfirmSelection}
-          disabled={ctaDisabled}
-        >
-          {ctaLabel}
-          {!ctaDisabled && <ArrowUpRight className="w-3.5 h-3.5" />}
-        </Button>
-      </section>
-
-      {/* ── Feature comparison table ── */}
-      <section className="space-y-8">
-        <div className="text-center space-y-3 max-w-xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Compare every feature</h2>
-          <p className="text-sm text-muted-foreground">
-            Everything that's included on each plan — no fine print.
-          </p>
-        </div>
 
         <div className="rounded-2xl border border-border/50 overflow-hidden bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-muted/40 sticky top-0">
-                <tr>
-                  <th className="text-left px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[34%]">
-                    Feature
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className="bg-muted/30 border-b border-border/50">
+                  <th className="text-left px-5 py-5 align-bottom w-[28%]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Plans
+                    </span>
                   </th>
                   {mainPlans.map((p) => {
                     const isRec = p.planId === 'growth';
+                    const isCurrent = p.planId === plan;
+                    const isFree = p.planId === 'free';
                     const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                    const annualSavings = isAnnual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
+                    const credits = typeof p.credits === 'number' ? p.credits : 0;
+                    const cta = getPlanCta(p);
                     return (
-                      <th key={p.planId} className="px-3 py-4 text-center min-w-[110px]">
-                        <div className="flex flex-col items-center gap-0.5">
-                          <span className={`text-xs font-semibold ${isRec ? 'text-primary' : 'text-foreground'}`}>
+                      <th
+                        key={p.planId}
+                        className={`px-3 py-5 align-bottom min-w-[150px] relative ${
+                          isRec ? 'bg-primary/[0.04]' : ''
+                        }`}
+                      >
+                        {isRec && (
+                          <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />
+                        )}
+                        <div className="flex flex-col items-center gap-2 text-center">
+                          {isRec ? (
+                            <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
+                              Recommended
+                            </span>
+                          ) : isCurrent ? (
+                            <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold whitespace-nowrap">
+                              Current
+                            </span>
+                          ) : (
+                            <span className="h-[18px]" aria-hidden />
+                          )}
+                          <span className={`text-sm font-semibold ${isRec ? 'text-primary' : 'text-foreground'}`}>
                             {p.name}
                           </span>
-                          <span className="text-[11px] text-muted-foreground font-normal">
-                            ${displayPrice}/mo
-                          </span>
+                          <div className="flex flex-col items-center">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-2xl font-semibold tracking-tight text-foreground">
+                                ${isFree ? 0 : displayPrice}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">/mo</span>
+                            </div>
+                            {isAnnual && annualSavings > 0 ? (
+                              <span className="text-[10px] text-primary font-medium mt-0.5">save ${annualSavings}/yr</span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/70 mt-0.5">
+                                {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={cta.variant}
+                            disabled={cta.disabled}
+                            onClick={() => handlePlanSelect(p)}
+                            className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                          >
+                            {cta.label}
+                          </Button>
                         </div>
                       </th>
                     );
@@ -364,18 +310,55 @@ export default function AppPricing() {
                     {group.rows.map((row) => (
                       <tr key={row.label} className="border-t border-border/30 hover:bg-muted/10 transition-colors">
                         <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
-                        {mainPlans.map((p) => (
-                          <td key={p.planId} className="px-3 py-3 text-center">
-                            {renderCell(row.values[p.planId] ?? false)}
-                          </td>
-                        ))}
+                        {mainPlans.map((p) => {
+                          const isRec = p.planId === 'growth';
+                          return (
+                            <td key={p.planId} className={`px-3 py-3 text-center ${isRec ? 'bg-primary/[0.04]' : ''}`}>
+                              {renderCell(row.values[p.planId] ?? false)}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </>
                 ))}
+                {/* Footer CTA row */}
+                <tr className="border-t border-border/50 bg-muted/20">
+                  <td className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Get started
+                  </td>
+                  {mainPlans.map((p) => {
+                    const isRec = p.planId === 'growth';
+                    const cta = getPlanCta(p);
+                    return (
+                      <td key={p.planId} className={`px-3 py-4 text-center ${isRec ? 'bg-primary/[0.04]' : ''}`}>
+                        <Button
+                          size="sm"
+                          variant={cta.variant}
+                          disabled={cta.disabled}
+                          onClick={() => handlePlanSelect(p)}
+                          className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                        >
+                          {cta.label}
+                        </Button>
+                      </td>
+                    );
+                  })}
+                </tr>
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Trust block */}
+        <div className="flex flex-col gap-1.5 pt-1 px-1">
+          <p className="text-[13px] text-muted-foreground">
+            Cancel anytime · No commitment
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
+            <Lock className="w-3 h-3" />
+            <span>You'll be securely redirected to complete checkout</span>
+          </p>
         </div>
       </section>
 
