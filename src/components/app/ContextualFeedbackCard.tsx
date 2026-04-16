@@ -153,9 +153,7 @@ export function ContextualFeedbackCard({
                 onClick={() => handleAnswer(key)}
                 className={cn(
                   'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
-                  key === 'yes' && 'border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400',
-                  key === 'almost' && 'border-amber-500/30 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400',
-                  key === 'no' && 'border-destructive/30 text-destructive hover:bg-destructive/10',
+                  'border-border/50 text-foreground/70 hover:bg-muted hover:text-foreground',
                 )}
               >
                 {buttonLabels[key]}
