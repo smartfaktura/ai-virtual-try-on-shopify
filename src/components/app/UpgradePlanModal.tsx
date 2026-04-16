@@ -9,6 +9,8 @@ import { pricingPlans } from '@/data/mockData';
 interface UpgradePlanModalProps {
   open: boolean;
   onClose: () => void;
+  /** Admin showroom only: override the user's plan to preview upgrade options */
+  previewPlan?: string;
 }
 
 const CREDITS_PER_IMAGE = 5;
