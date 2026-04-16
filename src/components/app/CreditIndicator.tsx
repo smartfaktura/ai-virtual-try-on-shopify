@@ -54,7 +54,7 @@ export function CreditIndicator() {
           </div>
         </div>
         <button
-          onClick={openBuyModal}
+          onClick={(e) => { e.stopPropagation(); openBuyModal(); }}
           className="w-6 h-6 rounded-full bg-white/10 border border-white/[0.08] backdrop-blur-sm flex items-center justify-center text-sidebar-foreground/70 hover:bg-white/20 hover:text-sidebar-foreground active:scale-95 transition-all duration-150"
           title="Buy credits"
         >
