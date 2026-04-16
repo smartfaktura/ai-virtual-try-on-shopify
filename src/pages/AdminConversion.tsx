@@ -241,6 +241,7 @@ export default function AdminConversion() {
                   <TableRow key={cat} className={cat === category ? 'bg-primary/5' : ''}>
                     <TableCell className="font-medium capitalize text-xs">{cat}</TableCell>
                     <TableCell className="text-xs">{l2.headline}</TableCell>
+                    <TableCell className="text-xs">{l2.unlockHeadline}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{l2.unlockItems.join(' · ')}</TableCell>
                   </TableRow>
                 );
