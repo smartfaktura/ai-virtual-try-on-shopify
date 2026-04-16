@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, ChevronDown, ArrowUpRight, Loader2 } from 'lucide-react';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { CompetitorComparison } from '@/components/app/CompetitorComparison';
 import { toast } from '@/lib/brandedToast';
@@ -76,6 +77,7 @@ export default function AppPricing() {
   const [loading, setLoading] = useState(false);
 
   const isAnnual = billingPeriod === 'annual';
+  const isMobile = useIsMobile();
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
 
   // On mobile, reorder so Growth is first
@@ -170,7 +172,7 @@ export default function AppPricing() {
       {/* Plan cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Desktop: original order, Mobile: Growth first */}
-        {(typeof window !== 'undefined' && window.innerWidth < 640 ? mobilePlans : mainPlans).map((p) => {
+        {(isMobile ? mobilePlans : mainPlans).map((p) => {
           const isCurrent = p.planId === plan;
           const targetIdx = PLAN_ORDER.indexOf(p.planId);
           const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
