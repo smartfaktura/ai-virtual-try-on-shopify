@@ -630,7 +630,6 @@ export default function Jobs() {
             )}
           </>
         )}
-      </div>
 
       {/* Floating action bar */}
       {selectMode && selectedIds.size > 0 && (
