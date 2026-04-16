@@ -1,31 +1,26 @@
 
 
-# Remove Redundant "Compare all plans" Button
+# Hide Clear Button When No Products Selected
 
 ## Problem
-The "Compare all plans" link appears at the bottom of the Plans tab inside the Buy Credits modal. The user is already viewing and comparing plans — this button is pointless and just closes the modal to navigate to `/app/settings`.
+On the product-images flow (Step 1), the "Clear" button is always visible even when nothing is selected — it's unnecessary clutter on mobile.
 
 ## Change
 
-### File: `src/components/app/BuyCreditsModal.tsx` (lines 417-431)
+### File: `src/pages/ProductImages.tsx` (line 1027)
 
-Remove the "Compare all plans" button from the bottom links row. Keep only the "Need more? Contact Sales" link, and center it or keep it left-aligned.
+Wrap the Clear button in a conditional so it only renders when `selectedProductIds.size > 0`:
 
-**Before:**
-```
-<div className="flex items-center justify-between">
-  <button>Need more? Contact Sales ↗</button>
-  <button>Compare all plans</button>  ← remove
-</div>
-```
+```tsx
+// Before
+<Button ...>Clear</Button>
 
-**After:**
-```
-<div>
-  <button>Need more? Contact Sales ↗</button>
-</div>
+// After
+{selectedProductIds.size > 0 && (
+  <Button ...>Clear</Button>
+)}
 ```
 
 ### Files
-- `src/components/app/BuyCreditsModal.tsx` — remove 1 button (~6 lines)
+- `src/pages/ProductImages.tsx` — 1 line wrapped in conditional
 
