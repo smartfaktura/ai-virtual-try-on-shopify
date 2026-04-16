@@ -2,12 +2,66 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
-import { Check, ArrowRight, Building2 } from 'lucide-react';
+import {
+  Check, ArrowRight, Building2, X,
+  Layers, Users, Sparkles, Film, ZoomIn, RefreshCw,
+  ScanLine, Wand2, Paintbrush, Palette, FolderOpen, Download,
+  Image, Video, Clock,
+  ChevronDown,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { pricingPlans } from '@/data/mockData';
+import { CompetitorComparison } from '@/components/app/CompetitorComparison';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro'];
+
+/* ── Data ────────────────────────────────────────────────────────── */
+
+const TEAM_COMPARISON = [
+  { role: 'Product Photographer', traditional: '$500–2,000/day', vovv: 'Included' },
+  { role: 'Photo Studio Rental', traditional: '$200–800/day', vovv: 'Included' },
+  { role: 'Styling & Props', traditional: '$300–1,000/shoot', vovv: 'Included' },
+  { role: 'Models & Talent', traditional: '$500–3,000/day', vovv: 'AI Models included' },
+  { role: 'Photo Retouching', traditional: '$5–25/image', vovv: 'Automatic' },
+  { role: 'Social Media Content', traditional: '$1,000–5,000/mo', vovv: 'Included' },
+  { role: 'Videography', traditional: '$2,000–10,000/project', vovv: 'Included' },
+];
+
+const PLATFORM_FEATURES = [
+  { icon: Layers, title: '1,000+ Scenes', desc: 'Editorial, lifestyle, studio, seasonal, and custom scenes for every product category.' },
+  { icon: Users, title: 'AI Models', desc: 'Virtual models with consistent identity, diverse body types, and professional poses.' },
+  { icon: Sparkles, title: 'Brand Models', desc: 'Train custom AI models on your brand aesthetic for on-brand consistency. Growth+ plans.' },
+  { icon: Film, title: 'Video Generation', desc: 'Product videos, ad sequences, and short films powered by AI cinematography.' },
+  { icon: ZoomIn, title: '4K Upscaling', desc: 'Upscale any generation to print-ready 4K resolution with zero quality loss.' },
+  { icon: RefreshCw, title: 'Bulk Generation', desc: 'Generate hundreds of images in one batch across multiple products and scenes.' },
+  { icon: ScanLine, title: 'Multi-Angle Shots', desc: 'Front, back, side, and detail perspectives from a single product photo.' },
+  { icon: Wand2, title: 'Freestyle Studio', desc: 'Create anything with custom prompts — full creative control over every detail.' },
+  { icon: Paintbrush, title: 'Image Editing', desc: 'AI-powered retouching, background swap, and intelligent object removal.' },
+  { icon: Palette, title: 'Brand Profiles', desc: 'Save brand colors, tone, typography, and style preferences for consistency.' },
+  { icon: FolderOpen, title: 'Product Library', desc: 'Organize unlimited products with multi-angle references and metadata.' },
+  { icon: Download, title: 'Export & Download', desc: 'ZIP bulk downloads, individual high-res files, and direct sharing links.' },
+];
+
+const CREDIT_CARDS = [
+  { icon: Image, title: 'Images', detail: '5 credits per image on average. Templates cost 6, Freestyle costs 4.' },
+  { icon: Video, title: 'Video & Upscale', detail: 'Short films and 4K upscaling deducted from the same credit pool.' },
+  { icon: Clock, title: 'Monthly Refresh', detail: 'Credits reset each billing cycle. Unused credits don't roll over. Top-ups never expire.' },
+];
+
+const FAQS = [
+  { q: 'What can I create with VOVV.AI?', a: 'Product photography, virtual try-ons, lifestyle imagery, flat lays, interior staging, videos, and more — all from a single product photo.' },
+  { q: 'Do I need photography experience?', a: 'Not at all. Choose a scene, upload your product, and the AI handles lighting, composition, and styling automatically.' },
+  { q: 'How many credits does each generation cost?', a: 'Templates and Virtual Try-On cost 6 credits per image. Freestyle costs 4 credits, or 6 when you add a model or scene.' },
+  { q: 'Is there a free trial?', a: 'Every new account gets 20 free credits — no credit card required. That's enough to try multiple workflows and see the quality.' },
+  { q: 'What image formats and sizes are supported?', a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print.' },
+  { q: 'Can I cancel my subscription anytime?', a: 'Absolutely. Cancel, upgrade, or downgrade at any time — no contracts or fees. Unused monthly credits don't roll over, but top-up credits never expire.' },
+  { q: 'How does Brand Profile work?', a: 'Set your preferred tone, lighting, background, and composition rules. Every future generation uses this profile automatically so visuals stay on-brand.' },
+  { q: 'What is the Content Calendar?', a: 'The Content Calendar automates recurring visual runs. Pick products and templates, set a schedule, and fresh visuals arrive on autopilot. Growth+ plans.' },
+];
+
+/* ── Component ───────────────────────────────────────────────────── */
 
 export function LandingPricing() {
   const navigate = useNavigate();
@@ -22,6 +76,8 @@ export function LandingPricing() {
   return (
     <section id="pricing" className="py-20 sm:py-28">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* ── Header ─────────────────────────────────────────────── */}
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
             Simple, Transparent Pricing
@@ -30,7 +86,6 @@ export function LandingPricing() {
             Start free. Automate as you grow. Content Calendar included on Growth and above.
           </p>
 
-          {/* Toggle */}
           <div className="inline-flex items-center p-1 rounded-full bg-muted">
             <button
               onClick={() => setAnnual(false)}
@@ -54,13 +109,10 @@ export function LandingPricing() {
           </div>
         </div>
 
-        {/* Main plans — 4 columns on lg, but only non-enterprise */}
+        {/* ── Plan Cards ─────────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {mainPlans.map((plan) => {
-            const price = annual
-              ? Math.round(plan.annualPrice / 12)
-              : plan.monthlyPrice;
-
+            const price = annual ? Math.round(plan.annualPrice / 12) : plan.monthlyPrice;
             const planIndex = PLAN_ORDER.indexOf(plan.planId);
             const isCurrentPlan = !!user && plan.planId === currentPlan;
             const isHigher = !!user && planIndex > currentPlanIndex;
@@ -169,7 +221,149 @@ export function LandingPricing() {
           })}
         </div>
 
-        {/* Enterprise — full-width banner below */}
+        {/* ── Team Comparison ────────────────────────────────────── */}
+        <div className="mt-24 max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+              One platform replaces your entire creative team
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Stop hiring photographers, renting studios, and booking models. VOVV.AI handles it all.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-border overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-3 bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="px-5 py-3">Role</div>
+              <div className="px-5 py-3 text-center">Traditional</div>
+              <div className="px-5 py-3 text-center text-primary">VOVV.AI</div>
+            </div>
+            {TEAM_COMPARISON.map((row, i) => (
+              <div
+                key={row.role}
+                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'} border-t border-border/50`}
+              >
+                <div className="px-5 py-3.5 font-medium text-foreground">{row.role}</div>
+                <div className="px-5 py-3.5 text-center text-muted-foreground flex items-center justify-center gap-1.5">
+                  <X className="w-3.5 h-3.5 text-destructive/60 shrink-0" />
+                  {row.traditional}
+                </div>
+                <div className="px-5 py-3.5 text-center font-medium text-primary flex items-center justify-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  {row.vovv}
+                </div>
+              </div>
+            ))}
+            {/* Total */}
+            <div className="grid grid-cols-3 border-t-2 border-border bg-muted/30 font-semibold text-sm">
+              <div className="px-5 py-4 text-foreground">Total per shoot</div>
+              <div className="px-5 py-4 text-center text-muted-foreground">$4,500–22,000+</div>
+              <div className="px-5 py-4 text-center text-primary text-base font-bold">From $0/mo</div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Platform Features Grid ─────────────────────────────── */}
+        <div className="mt-24 max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+              Everything you get with VOVV.AI
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              A complete visual production studio — photography, video, editing, and brand management in one place.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {PLATFORM_FEATURES.map((feat) => (
+              <div
+                key={feat.title}
+                className="rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                  <feat.icon className="w-4 h-4 text-primary" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{feat.title}</h3>
+                <p className="text-[12px] leading-relaxed text-muted-foreground">{feat.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Cost Comparison ────────────────────────────────────── */}
+        <div className="mt-24 max-w-4xl mx-auto">
+          <CompetitorComparison />
+        </div>
+
+        {/* ── How Credits Work ───────────────────────────────────── */}
+        <div className="mt-24 max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+              How credits work
+            </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto">
+              One simple currency for every creative tool on the platform.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {CREDIT_CARDS.map((card) => (
+              <div
+                key={card.title}
+                className="rounded-xl border border-border bg-card p-5 text-center"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <card.icon className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{card.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{card.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── FAQ ────────────────────────────────────────────────── */}
+        <div className="mt-24 max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+              Frequently Asked Questions
+            </h2>
+          </div>
+
+          <div className="space-y-2">
+            {FAQS.map((faq, idx) => (
+              <Collapsible key={idx}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-border bg-card px-5 py-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 transition-colors group">
+                  {faq.q}
+                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="px-5 pb-4 pt-1 text-sm text-muted-foreground leading-relaxed">
+                  {faq.a}
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Start Free CTA ─────────────────────────────────────── */}
+        <div className="mt-20 max-w-2xl mx-auto text-center rounded-2xl border border-primary/20 bg-primary/[0.04] p-8 sm:p-10">
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            Start with 20 free credits
+          </h3>
+          <p className="text-sm text-muted-foreground mb-6">
+            No credit card required. Try every workflow and see the quality before committing to a plan.
+          </p>
+          <Button
+            className="rounded-full font-semibold px-8 gap-2"
+            onClick={() => navigate(user ? '/app' : '/auth')}
+          >
+            {user ? 'Go to Studio' : 'Get Started Free'}
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* ── Enterprise Banner ───────────────────────────────────── */}
         {enterprisePlan && (
           <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
