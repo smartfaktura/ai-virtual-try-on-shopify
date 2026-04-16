@@ -35,6 +35,12 @@ export function BuyCreditsModal() {
   const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
+  const plansToShow = mainPlans.filter(p => {
+    if (isFreeUser(plan)) return p.planId !== 'free';
+    const currentIdx = PLAN_ORDER.indexOf(plan);
+    const targetIdx = PLAN_ORDER.indexOf(p.planId);
+    return targetIdx >= currentIdx;
+  });
   const currentPlanData = pricingPlans.find(p => p.planId === plan);
 
   // Show the focused "switch to annual" card when a monthly paid user toggles to annual
