@@ -13,7 +13,8 @@ export function CreditIndicator() {
     ? 100
     : Math.min(100, Math.max(3, (balance / (monthlyCredits || 1)) * 100));
 
-  const canUpgrade = !!planConfig.nextPlanId;
+  // 'enterprise' has no Stripe checkout — treat it as no upgrade path so the button isn't dead
+  const canUpgrade = !!planConfig.nextPlanId && planConfig.nextPlanId !== 'enterprise';
   const ctaLabel = canUpgrade ? 'Upgrade' : 'Top up';
   const handleCta = () => {
     if (canUpgrade) setUpgradeOpen(true);
