@@ -1,26 +1,26 @@
 
 
-# Fix Interior/Exterior Staging Generate Button Always Disabled
+# Fix Perspectives Estimated Generation Time
 
 ## Problem
-The Generate button stays grey (disabled) even after selecting styles because the disabled condition checks `selectedAspectRatios.size === 0`. For interior design, the aspect ratio selector is hidden (replaced by a static "Original" badge), so `selectedAspectRatios` remains an empty Set — the button can never be enabled.
+The Perspectives generation screen shows "Est. 4m 12s – 6m 18s total" for 9 images, but they actually complete in ~37 seconds. The estimate uses `35 seconds per image` calculated sequentially, but jobs run in parallel so effective per-image time is much lower.
 
 ## Fix
 
-### File: `src/components/app/generate/WorkflowSettingsPanel.tsx` (line 820)
+### File: `src/pages/Perspectives.tsx` (line 508)
 
-Skip the `selectedAspectRatios.size === 0` check when `isInteriorDesign` is true, since aspect ratio is locked to "Original" and not user-selectable:
+Change `estimatedSecondsPerImage` from `35` to `5` to reflect actual parallel throughput (~4-5s effective per image):
 
 ```tsx
-// Before (line 820)
-disabled={selectedVariationIndices.size === 0 || selectedAspectRatios.size === 0}
+// Before
+const estimatedSecondsPerImage = 35;
 
 // After
-disabled={selectedVariationIndices.size === 0 || (!isInteriorDesign && selectedAspectRatios.size === 0)}
+const estimatedSecondsPerImage = 5;
 ```
 
-This is a one-line logic fix. The interior design flow correctly uses the original image ratio at generation time (line 1208 fallback: `selectedAspectRatios.size > 0 ? ... : [aspectRatio]`), so this is purely a UI gate issue.
+For 9 images this gives: `Est. 36s – 54s total` — much closer to the real ~37s observed.
 
 ### Files
-- `src/components/app/generate/WorkflowSettingsPanel.tsx` — 1 condition update on line 820
+- `src/pages/Perspectives.tsx` — 1 constant change
 
