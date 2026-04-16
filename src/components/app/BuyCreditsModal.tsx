@@ -127,7 +127,7 @@ export function BuyCreditsModal() {
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={(open) => { if (!open && !anyLoading) closeBuyModal(); }}>
-        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 bg-muted">
+        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden top-0 sm:top-[50%] translate-y-0 sm:translate-y-[-50%] data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 bg-background">
 
           {/* Header */}
           <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 flex items-start justify-between">
@@ -428,7 +428,7 @@ export function BuyCreditsModal() {
                             ? 'bg-card border-2 border-primary shadow-md hover:shadow-lg'
                             : isCurrent && p.planId !== 'free'
                             ? 'bg-card border-2 border-primary ring-1 ring-primary/10 hover:shadow-lg'
-                              : 'bg-card border border-border/40 hover:shadow-lg'
+                              : 'bg-card border border-border/60 shadow-sm hover:shadow-lg'
                         }`}
                       >
                         {/* Most Popular badge — top-right corner */}

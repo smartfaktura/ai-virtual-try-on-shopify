@@ -129,7 +129,7 @@ function FreePlanSection({
               className={`relative rounded-2xl text-center transition-all duration-200 flex flex-col ${
                 isHighlighted
                   ? 'bg-card border-2 border-primary shadow-md hover:shadow-lg'
-                  : 'bg-card border border-border/40 hover:shadow-lg'
+                  : 'bg-card border border-border/60 shadow-sm hover:shadow-lg'
               }`}
             >
               {isHighlighted && (
@@ -400,7 +400,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:max-h-full max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:rounded-none p-0 gap-0 overflow-hidden max-sm:overflow-y-auto border-border/50 shadow-2xl bg-muted">
+      <DialogContent className="sm:max-w-2xl max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:max-h-full max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:rounded-none p-0 gap-0 overflow-hidden max-sm:overflow-y-auto <DialogContent className="sm:max-w-2xl max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:max-h-full max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:rounded-none p-0 gap-0 overflow-hidden max-sm:overflow-y-auto border-border/50 shadow-2xl bg-background">
         {/* Header */}
         <div className="px-5 sm:px-8 pt-8 pb-5">
           <div className="flex items-center gap-3 mb-2">
