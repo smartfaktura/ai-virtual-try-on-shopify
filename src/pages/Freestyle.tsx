@@ -1146,7 +1146,7 @@ export default function Freestyle() {
           <div className="lg:max-w-2xl lg:mx-auto lg:pointer-events-auto relative z-20">
             {/* Contextual feedback pill — once per session */}
             {hasImages && !isProcessing && !isLoading && !showSceneHint && showFreestyleFeedback && (
-              <div className="absolute -top-14 left-0 right-0 px-2 z-10">
+              <div className="mb-3 px-3 sm:px-0">
                 <ContextualFeedbackCard
                   workflow="freestyle"
                   questionText="How was this result?"
