@@ -115,14 +115,14 @@ function FreePlanSection({
               key={p.planId}
               className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg flex flex-col ${
                 isHighlighted
-                  ? 'border-2 border-primary/60 bg-primary/[0.03] shadow-lg shadow-primary/5 pt-4'
-                  : 'border-2 border-border/60 hover:border-primary/30 bg-background'
+                  ? 'border-2 border-primary/40 bg-primary/[0.02] shadow-md shadow-primary/5 pt-4'
+                  : 'border-2 border-border/40 hover:border-primary/30 bg-background'
               }`}
             >
               {isHighlighted && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/10">
-                    Most Popular
+                  <Badge className="bg-primary/10 text-primary text-[10px] font-medium px-4 py-0.5 border-0 shadow-sm">
+                    Most popular
                   </Badge>
                 </div>
               )}
@@ -193,7 +193,7 @@ function FreePlanSection({
       </div>
 
       {/* Reassurance */}
-      <div className="space-y-3 pt-4 border-t border-border/30">
+      <div className="space-y-3 pt-4 border-t border-border/20">
         <p className="text-[13px] text-muted-foreground font-medium text-center">
           Cancel anytime · No commitment
         </p>

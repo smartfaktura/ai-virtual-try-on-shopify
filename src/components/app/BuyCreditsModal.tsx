@@ -132,11 +132,15 @@ export function BuyCreditsModal() {
           {/* Header */}
           <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 flex items-start justify-between">
             <div>
-              <p className="text-xl font-bold tracking-tight">
-                You're out of credits
+              <p className="text-lg font-semibold tracking-tight">
+                {balance === 0
+                  ? (isPaidUser ? "You've used all your credits" : "You're out of credits")
+                  : (isPaidUser ? 'Get more from VOVV' : 'Upgrade your creative power')}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Choose a plan to keep creating
+              <p className="text-[13px] text-muted-foreground/80 mt-1">
+                {balance === 0
+                  ? (isPaidUser ? 'Top up or upgrade your plan' : 'Pick a plan to keep creating')
+                  : (isPaidUser ? 'Top up credits or switch plans' : 'Unlock faster generation and more credits')}
               </p>
               {isPaidUser && currentPeriodEnd && (
                 <p className={`text-[11px] mt-1.5 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
@@ -411,15 +415,15 @@ export function BuyCreditsModal() {
                           isCurrent && p.planId !== 'free'
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
-                              ? 'border-2 border-primary/60 bg-primary/[0.03] shadow-lg shadow-primary/5'
-                              : 'border border-border bg-card hover:shadow-sm'
+                            ? 'border-2 border-primary/40 bg-primary/[0.02] shadow-md shadow-primary/5'
+                              : 'border border-border/40 bg-card hover:shadow-sm'
                         }`}
                       >
                         {/* Most Popular badge for highlighted */}
                         {p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx) && (
                           <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
-                            <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-0.5 shadow-lg shadow-primary/20">
-                              Most Popular
+                            <Badge className="bg-primary/10 text-primary text-[10px] font-medium px-3 py-0.5 border-0 shadow-sm">
+                              Most popular
                             </Badge>
                           </div>
                         )}
@@ -501,7 +505,7 @@ export function BuyCreditsModal() {
                 </div>
 
                 {/* Reassurance + links */}
-                <div className="space-y-3 pt-4 border-t border-border/30">
+                <div className="space-y-3 pt-4 border-t border-border/20">
                   <p className="text-[13px] text-muted-foreground font-medium text-center">
                     Cancel anytime · No commitment
                   </p>
