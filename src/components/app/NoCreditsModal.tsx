@@ -61,7 +61,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
   const subline = generationCount > 0
     ? getLayer3Subline(generationCount)
     : isFree
-      ? 'Unlock more credits with a plan that fits your workflow'
+      ? 'Unlock more credits to keep creating'
       : 'Top up credits to continue this session';
 
   const upgradeNudge = !isFree ? getUpgradeNudge(plan) : null;
@@ -142,7 +142,7 @@ export function NoCreditsModal({ open, onClose, category = 'fallback', generatio
                         className="w-full min-h-[44px] rounded-xl text-sm font-medium"
                         onClick={() => handlePlanSelect(p.stripePriceIdMonthly)}
                       >
-                        {p.ctaText || `Get ${p.name}`}
+                        Choose {p.name}
                       </Button>
                     </div>
                   </div>
