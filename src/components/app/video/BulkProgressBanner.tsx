@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
+import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 export type BulkItemStatus = 'pending' | 'queued' | 'generating' | 'complete' | 'failed';
@@ -95,7 +95,7 @@ export function BulkProgressBanner({ items, isComplete }: BulkProgressBannerProp
             </h2>
             <p className="text-sm text-muted-foreground">
               {isEnqueuing
-                ? getRandomStatusMessage(member)
+                ? getStableStatusMessage(member, memberIdx)
                 : `Estimated time: ~${estimatedMin}m · Elapsed: ${formatTime(elapsed)}`}
             </p>
           </div>

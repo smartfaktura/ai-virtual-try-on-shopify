@@ -24,7 +24,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useGeneratePerspectives } from '@/hooks/useGeneratePerspectives';
 import type { PerspectiveJobInfo } from '@/hooks/useGeneratePerspectives';
 import { toSignedUrls } from '@/lib/signedUrl';
-import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
+import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
@@ -603,7 +603,7 @@ export default function Perspectives() {
                 <AvatarFallback className="text-xs">{currentMember.name[0]}</AvatarFallback>
               </Avatar>
               <p className="text-sm text-muted-foreground italic">
-                {currentMember.name} is {getRandomStatusMessage(currentMember).toLowerCase()}
+                {currentMember.name} is {getStableStatusMessage(currentMember, teamIndex).toLowerCase()}
               </p>
             </div>
 

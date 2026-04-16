@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { CheckCircle, Loader2, Clock } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
+import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { QueueJob } from '@/hooks/useGenerationQueue';
 import { QueuePositionIndicator } from './QueuePositionIndicator';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -176,7 +176,7 @@ export function MultiProductProgressBanner({
             <AvatarFallback className="text-[10px]">{currentMember.name[0]}</AvatarFallback>
           </Avatar>
           <p className="text-xs text-muted-foreground italic">
-            {currentMember.name} is {getRandomStatusMessage(currentMember).toLowerCase()}
+            {currentMember.name} is {getStableStatusMessage(currentMember, teamIndex).toLowerCase()}
           </p>
         </div>
       )}

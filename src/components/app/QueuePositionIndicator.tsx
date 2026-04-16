@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { QueueJob, GenerationMeta } from '@/hooks/useGenerationQueue';
-import { TEAM_MEMBERS, getRandomStatusMessage } from '@/data/teamData';
+import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface QueuePositionIndicatorProps {
@@ -108,7 +108,7 @@ function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => vo
           <AvatarFallback className="text-[10px]">{currentMember.name[0]}</AvatarFallback>
         </Avatar>
         <p className="text-xs text-muted-foreground italic">
-          {currentMember.name} is {getRandomStatusMessage(currentMember).toLowerCase()}
+          {currentMember.name} is {getStableStatusMessage(currentMember, teamTick).toLowerCase()}
         </p>
       </div>
 

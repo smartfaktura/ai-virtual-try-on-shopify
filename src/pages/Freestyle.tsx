@@ -402,19 +402,12 @@ export default function Freestyle() {
      parseInt(sessionStorage.getItem('vovv_fb_gen_count_freestyle') || '0', 10)
    );
    const [showFreestyleFeedback, setShowFreestyleFeedback] = useState(freestyleGenCountRef.current === 3);
+   const [completedFeedbackJobId, setCompletedFeedbackJobId] = useState<string | null>(null);
+   const lastCountedJobIdRef = useRef<string | null>(null);
 
    // Auto-refresh images while processing to self-heal stuck queue state
    const imageCountRef = useRef(savedImages.length);
    useEffect(() => {
-     // Detect new images arriving → increment generation counter
-     if (savedImages.length > imageCountRef.current) {
-       const newCount = freestyleGenCountRef.current + 1;
-       freestyleGenCountRef.current = newCount;
-       sessionStorage.setItem('vovv_fb_gen_count_freestyle', String(newCount));
-       if (newCount === 3) {
-         setShowFreestyleFeedback(true);
-       }
-     }
      imageCountRef.current = savedImages.length;
    }, [savedImages.length]);
 
@@ -786,6 +779,17 @@ export default function Freestyle() {
         resetQueueRef.current();
         toast('Credits refunded', { description: 'Your prompt was flagged — credits have been returned to your balance.' });
       } else {
+        // Increment freestyle generation counter (once per unique job)
+        if (activeJob.id !== lastCountedJobIdRef.current) {
+          lastCountedJobIdRef.current = activeJob.id;
+          const newCount = freestyleGenCountRef.current + 1;
+          freestyleGenCountRef.current = newCount;
+          sessionStorage.setItem('vovv_fb_gen_count_freestyle', String(newCount));
+          if (newCount === 3) {
+            setCompletedFeedbackJobId(activeJob.id);
+            setShowFreestyleFeedback(true);
+          }
+        }
         setTimeout(() => {
           refreshImagesRef.current();
           refreshBalanceRef.current();
@@ -1130,7 +1134,7 @@ export default function Freestyle() {
                   buttonLabels={{ yes: 'Nailed it', almost: 'Almost', no: 'Not quite' }}
                   reasonChips={['Prompt ignored', 'Product changed', 'Model/look off', 'Scene/style off', 'Bad composition', 'Not realistic', 'Low quality', 'Too slow']}
                   textPlaceholder="What did you expect instead?"
-                  resultId={activeJob?.id}
+                  resultId={completedFeedbackJobId || activeJob?.id}
                   imageUrl={savedImages[0]?.url}
                   triggerType="result_ready"
                 />
