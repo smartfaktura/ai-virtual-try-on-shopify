@@ -11,6 +11,8 @@ import { toast } from '@/lib/brandedToast';
 import type { PricingPlan } from '@/types';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+const isPro = (p: string) => p === 'pro';
+const isFreeUser = (p: string) => p === 'free';
 
 export function BuyCreditsModal() {
   const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, billingInterval, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
