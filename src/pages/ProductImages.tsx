@@ -179,7 +179,7 @@ export default function ProductImages() {
         return next;
       });
 
-      toast.success('Product created — select shots next');
+      // Product appearing in grid is sufficient feedback — no toast needed
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Upload failed';
       toast.error(msg);
@@ -1038,7 +1038,15 @@ export default function ProductImages() {
               )}
 
               {/* Empty state */}
-              {!isLoadingProducts && userProducts.length === 0 ? (
+              {quickUploading && userProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 space-y-4 border-2 border-dashed border-border rounded-xl bg-muted/30">
+                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                  <div className="text-center space-y-1">
+                    <p className="text-base font-semibold">{quickUploadProgress || 'Uploading…'}</p>
+                    <p className="text-sm text-muted-foreground">Your product will appear here in a moment</p>
+                  </div>
+                </div>
+              ) : !isLoadingProducts && userProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 space-y-5 border-2 border-dashed border-border rounded-xl bg-muted/30">
                   <Package className="w-12 h-12 text-muted-foreground/40" />
                   <div className="text-center space-y-1.5">
