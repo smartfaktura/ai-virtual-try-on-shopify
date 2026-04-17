@@ -550,10 +550,11 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
 
             return (
               <div className="space-y-2">
-                <p className="text-[11px] text-muted-foreground/70 font-medium">
-                  📐 Extra angles improve AI accuracy
+                <p className="text-[11px] text-muted-foreground/70 font-medium flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  Extra angles improve AI accuracy
                 </p>
-                <div className="flex gap-2">
+                <div className={cn('flex gap-2', isMobile && 'flex-wrap')}>
                   {slots.filter(s => !s.assigned).map((slot) => (
                     <div key={slot.role} className="flex flex-col items-center gap-1">
                       <input
