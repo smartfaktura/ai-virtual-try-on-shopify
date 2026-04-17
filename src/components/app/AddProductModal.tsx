@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ChevronRight, ChevronDown } from 'lucide-react';
+import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ChevronRight, ChevronLeft, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ManualProductTab } from './ManualProductTab';
 import { StoreImportTab } from './StoreImportTab';
