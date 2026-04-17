@@ -1,19 +1,31 @@
 
+User wants Brand Models gated to Growth+ (not Starter). So the badge "Growth & Pro" is actually correct copy-wise, but the underlying `isPaid` check at L817 currently includes Starter implicitly via paid-plan logic — need to verify and tighten.
+
+Let me check the file to confirm gating logic before planning.
+
 ## Goal
-Apply remaining P2 fixes from the audit. Skip P0 #1 (admin-only, confirmed not user-visible).
+Restrict Brand Models access to **Growth and Pro plans only** (exclude Starter), and apply remaining audit fixes.
 
 ## Changes
-1. **`src/components/app/WorkflowRequestBanner.tsx:103`** — "template" → "Visual Type"
-2. **`src/pages/BrandModels.tsx:853, 892`** — unify section headings to "My Brand Models"
-3. **`src/pages/Jobs.tsx:557`** — "Visual Studio or with Freestyle" → "Visual Studio or Freestyle Studio"; L560 button → "Open Freestyle Studio"
-4. **`src/pages/video/AnimateVideo.tsx:526`** — "3-5 minutes" → "3–5 minutes" (en-dash)
-5. **`src/pages/Products.tsx:139`** — drop ambiguous "library" wording
-6. **`src/pages/Discover.tsx:433`** — "Every image" → "Every result"
+
+1. **`src/pages/BrandModels.tsx:~817`** — Tighten `isPaid` gate to only allow `growth | pro | enterprise` (exclude `starter`). Verify the current check and adjust so Starter users see the upgrade hero.
+
+2. **`src/pages/BrandModels.tsx:38`** — Keep badge as **"Growth & Pro"** (already correct under new gating). No change needed if copy already matches.
+
+3. **`src/pages/BrandModels.tsx:113`** — `'~1-2 min'` → `'~1–2 min'` (en-dash for range consistency).
+
+4. **`src/pages/BrandModels.tsx:40`** — UpgradeHero `<h2>` "My Brand Models" → **"Brand Models"** (drop "My" on marketing surface).
+
+5. **`src/pages/Discover.tsx:472`** — "Try different keywords or browse all" → **"Try a different category or browse all"** (page uses category bar, not keyword search).
 
 ## Out of scope
-- P0 BrandModels admin checkbox (admin-only, not user-visible)
-- P1 WorkflowRequestBanner already covered above as P2 polish item
+- Pricing page copy (separate audit if Starter messaging needs updating to reflect Brand Models exclusion)
+- Admin-only blocks
 
 ## Acceptance
-- ~7 strings updated across 6 files
-- Text-only, no routes/types/backend touched
+- Starter users see upgrade hero on `/app/models` (not the generation UI)
+- Badge accurately reads "Growth & Pro"
+- En-dash applied to time estimate
+- Marketing hero heading reads "Brand Models"
+- Discover empty state matches actual UI controls
+- ~4 strings + 1 logic check across 2 files
