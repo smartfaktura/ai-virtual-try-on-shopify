@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ChevronRight } from 'lucide-react';
+import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ManualProductTab } from './ManualProductTab';
 import { StoreImportTab } from './StoreImportTab';
@@ -42,9 +42,23 @@ interface AddProductModalProps {
   editingProduct?: UserProduct | null;
   initialTab?: AddProductTab;
   initialFiles?: File[];
+  /** When true (and not editing), hides the method rail and shows only the active workflow with a contextual header. */
+  compact?: boolean;
+  /** Called when user clicks "Switch method" in compact mode — parent should set compact=false. */
+  onSwitchMethod?: () => void;
 }
 
-export function AddProductModal({ open, onOpenChange, onProductAdded, editingProduct, initialTab, initialFiles }: AddProductModalProps) {
+const METHOD_META: Record<AddProductTab, { label: string; sub: string; title: string; subtitle: string; icon: React.ComponentType<{ className?: string }> }> = {
+  manual:  { label: 'Upload images',  sub: 'Drag, drop, or browse files',     title: 'Upload images',     subtitle: 'Drag, drop, or browse to upload product photos.', icon: Upload },
+  store:   { label: 'Product URL',    sub: 'Import from any product page',    title: 'Import from URL',   subtitle: 'Paste a product page link to import images and details.', icon: Globe },
+  csv:     { label: 'CSV import',     sub: 'Bulk-add from a spreadsheet',     title: 'CSV import',        subtitle: 'Bulk-add products from a spreadsheet.', icon: FileSpreadsheet },
+  mobile:  { label: 'Mobile upload',  sub: 'Snap photos from your phone',     title: 'Mobile upload',     subtitle: 'Snap product photos directly from your phone.', icon: Smartphone },
+  shopify: { label: 'Shopify import', sub: 'Sync your Shopify catalog',       title: 'Shopify import',    subtitle: 'Sync products straight from your Shopify catalog.', icon: ShoppingBag },
+};
+
+const METHOD_ORDER: AddProductTab[] = ['manual', 'store', 'csv', 'mobile', 'shopify'];
+
+export function AddProductModal({ open, onOpenChange, onProductAdded, editingProduct, initialTab, initialFiles, compact = false, onSwitchMethod }: AddProductModalProps) {
   const handleClose = () => onOpenChange(false);
   const isMobile = useIsMobile();
 
@@ -59,10 +73,21 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     }
   }, [open, initialTab, initialFiles]);
 
-  const headerTitle = editingProduct ? 'Edit Product' : 'Add Products';
-  const subtitle = editingProduct
+  const meta = METHOD_META[activeTab];
+  const isEdit = !!editingProduct;
+  // compact only when not editing AND parent requested it
+  const isCompact = !isEdit && compact;
+
+  const headerTitle = isEdit
+    ? 'Edit Product'
+    : isCompact
+      ? meta.title
+      : 'Add Products';
+  const subtitle = isEdit
     ? 'Update your product details and images.'
-    : 'Upload images or import products in seconds.';
+    : isCompact
+      ? meta.subtitle
+      : 'Upload images or import products in seconds.';
 
   const editContent = (
     <ManualProductTab
@@ -72,38 +97,64 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     />
   );
 
-  const METHODS: { id: AddProductTab; label: string; sub: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'manual', label: 'Upload images', sub: 'Drag, drop, or browse files', icon: Upload },
-    { id: 'store', label: 'Product URL', sub: 'Import from any product page', icon: Globe },
-    { id: 'csv', label: 'CSV import', sub: 'Bulk-add from a spreadsheet', icon: FileSpreadsheet },
-    { id: 'mobile', label: 'Mobile upload', sub: 'Snap photos from your phone', icon: Smartphone },
-    { id: 'shopify', label: 'Shopify import', sub: 'Sync your Shopify catalog', icon: ShoppingBag },
-  ];
+  // Active method body — used in both compact and full modes
+  const activeBody = (
+    <>
+      {activeTab === 'manual'  && <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} initialFiles={pendingFiles} />}
+      {activeTab === 'store'   && <StoreImportTab onProductAdded={onProductAdded} onClose={handleClose} onSwitchToUpload={() => setActiveTab('manual')} />}
+      {activeTab === 'csv'     && <CsvImportTab onProductAdded={onProductAdded} onClose={handleClose} />}
+      {activeTab === 'mobile'  && <MobileUploadTab onProductAdded={onProductAdded} onClose={handleClose} />}
+      {activeTab === 'shopify' && <ShopifyImportTab onProductAdded={onProductAdded} onClose={handleClose} />}
+    </>
+  );
 
-  const tabsContent = (
+  const compactBody = (
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {activeBody}
+      </div>
+      {onSwitchMethod && (
+        <div className="pt-4 mt-2 border-t flex items-center justify-start">
+          <button
+            type="button"
+            onClick={onSwitchMethod}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Switch method
+            <ChevronDown className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const fullBody = (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AddProductTab)} className="w-full flex flex-col flex-1 min-h-0">
       {/* Mobile: keep compact pill row */}
       {isMobile ? (
         <div className="shrink-0">
           <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto overflow-x-auto max-w-full">
-            {METHODS.map(({ id, label, icon: Icon }) => (
-              <TabsTrigger
-                key={id}
-                value={id}
-                className="rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 whitespace-nowrap"
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label.split(' ')[0]}
-              </TabsTrigger>
-            ))}
+            {METHOD_ORDER.map((id) => {
+              const { label, icon: Icon } = METHOD_META[id];
+              return (
+                <TabsTrigger
+                  key={id}
+                  value={id}
+                  className="rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 whitespace-nowrap"
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {label.split(' ')[0]}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
         </div>
       ) : (
-        /* Desktop: vertical method rail matching empty-state aesthetic */
         <div className="shrink-0">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2 px-1">Method</p>
           <div className="rounded-xl border bg-background/50 divide-y">
-            {METHODS.map(({ id, label, sub, icon: Icon }) => {
+            {METHOD_ORDER.map((id) => {
+              const { label, sub, icon: Icon } = METHOD_META[id];
               const active = activeTab === id;
               return (
                 <button
@@ -138,11 +189,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
       <div className="pt-5 overflow-y-auto flex-1 min-h-0">
         <TabsContent value="manual" className="mt-0">
-          <ManualProductTab
-            onProductAdded={onProductAdded}
-            onClose={handleClose}
-            initialFiles={activeTab === 'manual' ? pendingFiles : undefined}
-          />
+          <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} initialFiles={activeTab === 'manual' ? pendingFiles : undefined} />
         </TabsContent>
         <TabsContent value="store" className="mt-0">
           <StoreImportTab onProductAdded={onProductAdded} onClose={handleClose} onSwitchToUpload={() => setActiveTab('manual')} />
@@ -160,6 +207,8 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     </Tabs>
   );
 
+  const tabsContent = isCompact ? compactBody : fullBody;
+
   // Mobile: bottom Drawer
   if (isMobile) {
     return (
@@ -170,26 +219,26 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
             <DrawerDescription className="text-sm text-muted-foreground">{subtitle}</DrawerDescription>
           </DrawerHeader>
           <div className="px-5 pb-5 overflow-y-auto flex-1 min-h-0">
-            {editingProduct ? editContent : tabsContent}
+            {isEdit ? editContent : tabsContent}
           </div>
         </DrawerContent>
       </Drawer>
     );
   }
 
-  // Desktop: right-side Sheet
+  // Desktop: right-side Sheet — wider for breathing room
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-[600px] p-0 flex flex-col gap-0"
+        className="w-full sm:max-w-[720px] p-0 flex flex-col gap-0"
       >
         <SheetHeader className="px-7 pt-7 pb-4 shrink-0 space-y-1.5">
           <SheetTitle className="text-xl font-semibold tracking-tight">{headerTitle}</SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">{subtitle}</SheetDescription>
         </SheetHeader>
 
-        {editingProduct ? (
+        {isEdit ? (
           <div className="px-7 pb-7 overflow-y-auto flex-1 min-h-0">{editContent}</div>
         ) : (
           <div className="px-7 pb-7 flex flex-col flex-1 min-h-0">{tabsContent}</div>
