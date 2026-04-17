@@ -1,175 +1,115 @@
 
 
-## Vision
+## Goal
+Rebuild `/app/learn` as a **premium, image-independent, list-style tutorial hub** organized around real VOVV.AI user intent — not a card gallery.
 
-A **native, premium learning layer** that lives inside the app — not a separate help center. Think Linear/Notion-style "Learn" surface: short, scannable, action-oriented, beautifully typed, with one-click "Try it now" CTAs that drop the user into the actual flow. Scalable to all app areas, but launching with **Catalog Studio (Visual Types)** + **Freestyle Studio**.
+## Why a list, not cards
+We have no proprietary tutorial artwork. Image-heavy cards = weak visuals + slow scanning. A clean row layout reads faster, scales better, and feels closer to Linear/Notion/Apple Developer docs — which matches our "luxury restraint" memory.
 
-Terminology stays consistent with existing memory: **Visual Studio** (route /app/workflows), **Visual Types** (the cards), **Freestyle Studio** (route /app/freestyle), **Catalog Studio** (route /app/catalog).
+## New IA — organized by user journey, not by section
 
----
+Replace the current "Visual Studio · Freestyle Studio" split with **5 intent-based tracks**. The same 11 guides get re-tagged via metadata; no content rewriting needed.
 
-## UX format chosen (and why)
+| Track | Purpose | Example items |
+|---|---|---|
+| **Start here** | First-run essentials — pick one and go | Product Visuals, Freestyle Basics, Catalog Studio |
+| **Visual Types** | Reference for every workflow | Try-On, Selfie/UGC, Flat Lay, Mirror Selfie, Staging, Perspectives |
+| **Improve output quality** | Prompting, refs, brand profiles | Freestyle prompting tips (extracted), Product Visuals best practices |
+| **Advanced & bulk** | Power flows | Catalog Studio bulk, Picture Perspectives, Image Upscaling |
+| **Coming soon** | Greyed teasers | Video, Brand Models, Brand Profiles |
 
-After weighing options (tooltips, modals, full pages, expandables), the right format here is a **dedicated `/app/learn` hub + per-Visual-Type detail pages**, surfaced contextually from the existing UI. Reasons:
+Each guide gets two new optional metadata fields in `learnContent.ts`:
+- `tracks: LearnTrack[]` (a guide can appear in 1–2 tracks, e.g. Product Visuals = Start here + Visual Types)
+- `level: 'foundational' | 'core' | 'advanced'`
+- `estimatedMin` already exists as `readMin`
 
-- **Hub page** → discoverable, scalable, indexable for future areas (Video, Brand Models, etc.)
-- **Per-guide detail page** → enough room for visual examples + dos/don'ts without feeling like docs
-- **Contextual entry points** (subtle "Learn how" links on cards, empty states, header) → users who need help find it; users who don't aren't blocked
-- **No long-form docs, no walkthrough overlays** (we already have the Freestyle inline coachmark for first-time, and that stays)
-
----
-
-## Information architecture
-
-```text
-/app/learn                          ← Hub: 2 sections (Catalog Studio · Freestyle Studio)
-/app/learn/visual-studio/:slug      ← Per Visual Type guide (10 guides)
-/app/learn/freestyle                ← Freestyle Studio guide
-```
-
-Each guide page uses the same template — one component, content-driven by a TS config file. Adding a new guide = appending one object.
-
----
-
-## Per-guide layout (single template)
+## Page layout — list-first, premium
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  ← Back to Learn          [time chip · 2 min]   │
-│                                                 │
-│  [Hero thumbnail / animated preview]            │
-│                                                 │
-│  Visual Type · Product Visuals                  │
-│  Brand-ready product shots, fully art-directed. │
-│                                                 │
-├─ What it does ──────────────────────────────────┤
-│  1-2 sentences. Plain language.                 │
-├─ Best for ──────────────────────────────────────┤
-│  • PDP heroes  • Editorial campaigns  • Ads     │
-├─ What you need ─────────────────────────────────┤
-│  • 1 product photo (clean bg preferred)         │
-│  • Optional: brand profile, model               │
-├─ What you get back ─────────────────────────────┤
-│  • 2K PNG · choice of aspect ratio · 1000+ scenes│
-├─ Quick start (3 steps) ─────────────────────────┤
-│  ① Pick product  ② Pick scene  ③ Generate       │
-├─ Tips ──────────────────────────────────────────┤
-│  ✓ Use a sharp source image                     │
-│  ✓ Pair with a Brand Profile for cohesion       │
-│  ✗ Don't upload screenshots or watermarked pics │
-├─ Visual examples (3-image strip) ───────────────┤
-│  [img] [img] [img]                              │
-└─ [ Start now → ]   [ See examples in Explore ]──┘
+┌──────────────────────────────────────────────────────────────────┐
+│  Learn                                       3 of 11 read · ▱▰▱  │
+│  Short, action-oriented guides for getting more out of VOVV.AI   │
+│                                                                  │
+│  [ Search guides …                                          ⌘K ] │
+│                                                                  │
+│  [ All ] [ Start here ] [ Visual Types ] [ Quality ] [ Advanced ]│
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ Recommended for you ────────────────────────────────────────────┐
+│  ▶  Product Visuals                              · 2 min  ›      │
+│     Brand-ready shots across 1000+ scenes                        │
+└──────────────────────────────────────────────────────────────────┘
+
+START HERE                                              3 guides
+─────────────────────────────────────────────────────────────────
+●  Product Visuals                                      2 min  ›
+   Brand-ready product shots across 1000+ scenes — fully
+   art-directed.                                  Foundational
+
+✓  Freestyle Studio Basics                              3 min  ›
+   Free-form prompts + your image. Maximum creative control.
+                                                      Core
+
+○  Catalog Studio (Bulk)                                2 min  ›
+   Bulk-generate catalog-ready visuals in one run.   Advanced
+
+VISUAL TYPES                                            6 guides
+─────────────────────────────────────────────────────────────────
+○  Virtual Try-On Set                                   2 min  ›
+○  Selfie / UGC Set                                     2 min  ›
+○  Flat Lay Set                                         2 min  ›
+…
 ```
 
-Premium touches: Inter typography, generous vertical rhythm, subtle section dividers, fade-in animation, mobile-stack at <768px. Reuses existing `<PageHeader>`, `<Button>`, `<Badge>`, `<ShimmerImage>`, `<Card>`. No new design tokens.
+**Row anatomy** (replaces all current cards):
+- Left: read-state dot (`○` unread, `●` recommended next, `✓` read)
+- Title (semibold, 15px)
+- Tagline (muted, 13px, single-line truncate with full text on hover via `title=`)
+- Right rail: time chip · level chip · chevron
+- Hover: subtle bg tint (`bg-accent/40`), chevron slides 2px right
+- Full row clickable, keyboard `Enter`/`Space`, focus ring matching design system
 
----
+## Key UX behaviors
 
-## Hub page layout (`/app/learn`)
+1. **"Recommended for you" hero row** — a single-row featured block at top. Logic: first unread guide in user's currently-recommended track. Default = Product Visuals.
+2. **Filter chips** drive instant client-side filtering by track. "All" = default.
+3. **Search** — fuzzy match on title + tagline + tracks. Empty state: friendly "No guides match X · Clear search" reset.
+4. **Read progress** — reuses the `useLearnRead` hook from previous polish plan (or creates it: `localStorage` keyed `learn:read:{section}/{slug}`). Shows ✓ on rows + "X of N read" with thin progress bar in header.
+5. **Continue learning** — tiny optional row above tracks if user has any read item: "Last opened: Freestyle Basics → Open again."
+6. **Coming soon** — collapsed disabled rows at bottom (Video, Brand Models, Brand Profiles).
 
-```text
-Learn                                  [Search guides …]
-Get the most out of VOVV.AI in minutes.
+## Polish + audit fixes
 
-CATALOG STUDIO · 9 guides
-┌──────┐ ┌──────┐ ┌──────┐
-│ card │ │ card │ │ card │  ← 3-col grid (2-col tablet, 1-col mobile)
-└──────┘ └──────┘ └──────┘   each card: thumb, title, 1-line, "2 min"
+- **Typography**: 2 sizes only on this page (24px page title, 15px row title, 13px supporting). No icon clutter.
+- **Spacing**: 12px row padding-y, 16px between sections. Section headers tiny uppercase like sidebar (matches `mem://ui/sidebar-and-navigation`).
+- **Mobile (<768px)**: filter chips become horizontal scroll, rows stack tagline below title, time/level chips collapse to time only.
+- **A11y**: rows are `<button>` with `aria-label`, focus ring uses `ring-ring`, chevron has `aria-hidden`.
+- **Active sidebar state**: confirm `Tutorials` highlights when on any `/app/learn/*` route (audit + fix if needed).
+- **Loading state**: list is static config — no skeleton needed, just fade-in.
+- **Empty search state**: centered muted copy + reset button, no illustration noise.
+- **Broken link audit**: verify every `cta.route` resolves (visual scan against `App.tsx`).
 
-FREESTYLE STUDIO · 1 guide
-┌──────────────────────────┐
-│ Freestyle Studio Basics  │  ← featured wide card
-└──────────────────────────┘
+## Files touched
 
-COMING SOON
-Video · Brand Models · Brand Profiles    (greyed chips)
-```
+- `src/data/learnContent.ts` — add `tracks` + `level` metadata to every guide, add `LEARN_TRACKS` array + helpers (`getGuidesByTrack`, `getRecommendedGuide`)
+- `src/pages/Learn.tsx` — full rewrite: header + search + chips + list sections + recommended row
+- `src/pages/Learn.tsx` companion: small `LearnRow` subcomponent (kept in same file — < 60 lines)
+- New: `src/hooks/useLearnRead.ts` — `localStorage`-backed read tracker (`isRead`, `markRead`, `readCount`)
+- `src/components/app/learn/GuideLayout.tsx` — minor: call `markRead` on mount so progress updates when a guide is opened
+- No DB changes. No new deps. No image work.
 
----
-
-## Discovery (entry points)
-
-| Where | What |
-|---|---|
-| **Sidebar** | Add "Learn" item under a new tiny `LEARN` section at the bottom (icon: `GraduationCap`, path: `/app/learn`) |
-| **Visual Studio cards** (`/app/workflows`) | Subtle `Learn how →` text link on each `WorkflowCardCompact` (bottom-left, muted) |
-| **Catalog Studio empty state** (`/app/catalog`, no jobs) | Quick-start card linking to its guide |
-| **Freestyle Studio header** | Small `Learn` ghost button next to existing controls |
-| **Freestyle existing inline coachmark** (`FreestyleGuide.tsx`) | Add `View full guide →` link in the "Got it!" final step |
-| **Dashboard** | One "Learn the basics" tip card (reuses existing `DashboardTipCard`) |
-
-Nothing intrusive. No modal overlays. No forced tours.
-
----
-
-## Content blueprint (10 guides)
-
-All copy follows the same structure. Drafts (final wording in implementation, but locked-in tone):
-
-1. **Product Visuals** — Brand-ready shots across 1000+ scenes. Best for PDP, ads, campaigns. Need: 1 product photo. Get: 2K editorial images.
-2. **Virtual Try-On Set** — Garment on diverse AI models. Best for fashion PDPs. Need: flat-lay garment + chosen model. Get: try-on shots in poses.
-3. **Selfie / UGC Set** — Creator-style content. Best for paid social, TikTok. Need: product + model. Get: authentic UGC-style images.
-4. **Flat Lay Set** — Overhead styled arrangements. Best for IG grid, editorial. Need: product. Get: top-down compositions with props.
-5. **Mirror Selfie Set** — Worn/held mirror selfies in real rooms. Best for lifestyle, TikTok. Need: product + model. Get: phone-in-hand mirror shots.
-6. **Interior / Exterior Staging** — Stage empty rooms or boost curb appeal. Best for real estate, hospitality. Need: room/exterior photo. Get: staged version, architecture preserved.
-7. **Picture Perspectives** — One photo → 9 angles. Best for PDP completeness. Need: 1 hero photo. Get: close-up, back, side, wide-angle variants.
-8. **Image Upscaling** — Sharpen to 2K/4K. Best for upgrading legacy assets. Need: any image. Get: sharper textures, faces, detail.
-9. **Catalog Studio (bulk)** — Generate full catalog runs. Best for stores with many SKUs. Need: multiple products. Get: catalog-ready set per SKU.
-10. **Freestyle Studio basics** — Free-form prompt + image. When to use vs Catalog: Catalog = structured/scalable, Freestyle = exploratory/one-off. How to write better prompts (subject + style + camera + light), upload tips, dos/don'ts.
-
----
-
-## Phased implementation
-
-### Phase 1 — Foundation (single PR)
-- Create `src/data/learnContent.ts` (typed config: `LearnGuide[]`)
-- Create `src/pages/Learn.tsx` (hub) + `src/pages/LearnGuide.tsx` (template)
-- Add routes in `App.tsx`: `/app/learn`, `/app/learn/visual-studio/:slug`, `/app/learn/freestyle`
-- Build the per-guide template component (`src/components/app/learn/GuideLayout.tsx`) with all sections
-- Ship hub + 3 highest-value guides (Product Visuals, Virtual Try-On, Catalog Studio)
-- Add sidebar "Learn" entry
-
-### Phase 2 — Full Visual Types coverage
-- Add remaining 6 Visual Type guides + Freestyle guide
-- Add `Learn how →` link on `WorkflowCardCompact`
-- Add Freestyle header `Learn` button
-- Add Catalog Studio empty-state CTA card
-- Link from final step of existing `FreestyleGuide` coachmark
-
-### Phase 3 — Polish & engagement
-- Visual example images (3 per guide, pulled from existing Discover assets where possible — no new uploads needed initially)
-- Dashboard "Learn the basics" tip
-- Hub-page search (client-side filter — guides are <20 items)
-- "Mark as read" persisted in `localStorage` (subtle ✓ on hub cards) — optional, no DB
-- Smooth fade-in on guide load
-
-### Phase 4 — Scale-out (future, not this build)
-- Video guides
-- Brand Models / Brand Profiles guides
-- Optional: Supabase-backed analytics on which guides get opened
-
----
-
-## Technical notes
-
-- **Content lives in TypeScript**, not the DB. Faster to iterate, type-safe, no migrations. If we ever want CMS-style edits, we move to a `learn_guides` table later — interface stays the same.
-- **One template, content-driven** → guarantees visual consistency across all 10+ guides.
-- **No new deps.** Reuses shadcn primitives + existing icons (`lucide-react`).
-- **Mobile-first.** Single-column stack <768px; CTAs sticky-bottom on mobile.
-- **Memory updates** I'll write after build:
-  - `mem://features/learn-guides-system` — architecture, content config location, how to add a guide
-  - Update `mem://ui/sidebar-and-navigation` Core line to include `Learn` section
-
----
+## Out of scope
+- Per-guide page redesign (already polished)
+- Video / Brand Models guides (Phase 4)
+- Server-backed analytics or "recently viewed" history beyond last-opened in `localStorage`
 
 ## Acceptance
-
-- `/app/learn` hub renders all guides grouped by section
-- Each guide renders the same template with all 8 content blocks
-- Sidebar shows "Learn" entry; clicking lands on hub
-- All 10 guides have final copy, fitting the "concise + action-oriented" voice
-- Every guide has working "Start now →" CTA that routes into the actual flow
-- Mobile layout is clean at 375px wide
-- Adding a new guide is a single object append in `learnContent.ts`
+- `/app/learn` shows zero hero images, no thumbnails, no card grid
+- Header has search + 5 filter chips + "X of N read" progress
+- Guides render as scannable rows grouped under tiny uppercase track headers
+- "Recommended for you" surfaces first unread item
+- Rows show ✓ once read; `localStorage` persists across reloads
+- Sidebar "Tutorials" stays active on all `/app/learn/*` routes
+- Clean at 375px mobile, full keyboard navigation, proper focus rings
+- Adding a new guide = one object append + tagging it with track(s) — no layout changes
 
