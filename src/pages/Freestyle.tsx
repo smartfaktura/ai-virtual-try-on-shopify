@@ -984,7 +984,7 @@ export default function Freestyle() {
                   </p>
                   <p className="text-sm text-muted-foreground hidden sm:block">
                     {balance === 0
-                      ? "Top up to keep creating with VOVV.AI"
+                      ? "Top up to keep creating premium, brand-ready visuals."
                       : `Only ${balance} credits left — top up to avoid interruptions`}
                   </p>
                 </div>
