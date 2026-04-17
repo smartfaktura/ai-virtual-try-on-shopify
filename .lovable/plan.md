@@ -1,51 +1,65 @@
 
 
 ## Goal
-Move **Tutorials** and **Help & Support** out of the sidebar's "Learn" group and into the user account menu (the popover that opens when clicking the user chip at the bottom of the sidebar). This declutters the sidebar and groups personal/utility items together.
+Refine `/app/help` to feel like an Apple-designed support page: refined typography, intentional whitespace, subtle interactions, no visual noise.
 
-## Changes — single file: `src/components/app/AppShell.tsx`
+## Issues with current page
+- Form looks like a chat widget shoved on a page (tiny labels, dense inputs, gray send button never animates to active state visually)
+- "What's on your mind?" + "Send a message to our team" stacked = redundant
+- Two muted cards floating with weak hierarchy
+- Avatar stack tiny, hero feels disconnected from form
+- "Send Message" button is gray/disabled-looking even when active — Apple would use a confident accent
 
-### 1. Remove the "Learn" sidebar group
-Delete the entire `Learn` group from the nav config (lines 78–84):
+## Design direction (Apple-style)
+- **Typography first**: larger title (text-4xl tracking-tight), single subtle subtitle, removed redundant micro-labels
+- **One generous form, no card chrome**: inputs sit on page background with hairline borders, taller height (h-12), 15px text, floating-style labels above
+- **Confident primary action**: full-width pill button, always solid foreground color when valid, smooth disabled state
+- **Quieter secondary cards**: replace bordered/muted blocks with bare hover-only rows (icon + title + arrow), divided by hairline
+- **Tighter avatar treatment**: bigger (w-12), softer ring, sits directly above title with smaller gap
+- **Send confirmation**: refined inline success state matching new visual language (green dot, not full chip)
+
+## Layout
+
 ```
-{ label: 'Learn', items: [Tutorials, Help & Support] }
+─ Hero (centered or left, max-w-xl) ───
+  [avatars w-12 -space-x-3]
+  Talk to the team               (text-3xl, tracking-tight, font-semibold)
+  Real humans, real fast.        (text-base muted)
+
+─ Form (single column, generous) ──────
+  Name
+  [input h-12]
+  Email
+  [input h-12]
+  Message
+  [textarea, 5 rows]
+  [Send message — full pill h-12]
+
+─ Quiet helpers (hairline rows) ───────
+  ─────────────────
+  Browse FAQs           ↗
+  ─────────────────
+  Tutorials & guides    →
+  ─────────────────
+
+─ Footer ──────────────────────────────
+  Email · Twitter · Instagram   (very small, muted)
 ```
-Sidebar now ends with **Assets** group → cleaner, shorter nav.
 
-### 2. Add both items into the user dropdown menu
-Insert two new menu buttons in the user popover (between "Brand Profiles" and "Earn Credits") so the order becomes:
+## Files
 
-```
-ievute040
-ievute040@gmail.com
-─────────────────
-⚙  Account settings
-🎨  Brand Profiles
-🎓  Tutorials          ← new
-🛟  Help & Support     ← new
-🎁  Earn Credits
-─────────────────
-(admin items if admin)
-─────────────────
-↪  Sign out
-```
+| File | Change |
+|---|---|
+| `src/components/app/ChatContactForm.tsx` | New "polished" variant: add `variant?: 'compact' \| 'spacious'` prop. When `spacious`: floating labels above inputs, h-12 inputs, 15px text, full pill primary button, refined success state |
+| `src/pages/AppHelp.tsx` | Restructure: bigger avatars, larger title, drop wrapper card around form (use spacious variant), replace twin grid cards with two hairline-divided rows, refine footer |
 
-Each new button mirrors the existing pattern:
-- `GraduationCap` icon → navigates to `/app/learn`
-- `LifeBuoy` icon → navigates to `/app/help`
-- Closes the menu on click (`setUserMenuOpen(false)`)
-
-Imports `GraduationCap` and `LifeBuoy` are already in the file (used by the now-removed Learn group), so no import changes needed beyond keeping them.
-
-### 3. No other files touched
-- Routes for `/app/learn` and `/app/help` stay as-is
-- Prefetch entries stay
-- No content changes to either page
+No new deps. No routing changes. Form submission logic untouched.
 
 ## Acceptance
-- Sidebar no longer shows "LEARN" section header or its two items
-- Clicking the user chip at the bottom opens the menu shown in the user's screenshot, now with **Tutorials** and **Help & Support** added between Brand Profiles and Earn Credits
-- Both menu items navigate correctly and close the popover
-- Collapsed sidebar still works (no leftover empty group)
-- Mobile drawer reflects the same change
+- Page reads as one calm column with strong typographic hierarchy
+- Form inputs are tall, breathable, with quiet labels above
+- Primary button looks confident (solid, not gray) when fields valid
+- FAQ + Learn collapse into two minimal rows separated by hairlines (not boxed cards)
+- Mobile: still spacious, no cramped fields
+- No visual regression in chat-widget usage of `ChatContactForm` (compact variant stays default)
 
