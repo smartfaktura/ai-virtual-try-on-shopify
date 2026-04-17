@@ -95,10 +95,17 @@ export function ProductsEmptyUpload({ onFilesSelected, onMethodSelect }: Product
               <UploadCloud className="w-5 h-5 text-foreground/70" />
             </div>
             <p className="text-sm font-medium">Drag & drop product images</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              or <span className="text-foreground underline underline-offset-2">browse files</span>
-            </p>
-            <p className="text-[11px] text-muted-foreground/70 mt-4">
+            <p className="text-xs text-muted-foreground mt-1">or click to browse from your computer</p>
+            <span
+              role="button"
+              tabIndex={-1}
+              onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+              className="mt-4 inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <UploadCloud className="w-4 h-4" />
+              Choose photos
+            </span>
+            <p className="text-[11px] text-muted-foreground/70 mt-3">
               PNG, JPG, WEBP · multiple files supported · each image creates a product
             </p>
             <input
