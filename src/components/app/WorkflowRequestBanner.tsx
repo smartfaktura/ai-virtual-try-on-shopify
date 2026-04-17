@@ -42,7 +42,7 @@ export function WorkflowRequestBanner() {
   };
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 sm:p-6">
+    <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 sm:p-6 mb-20 sm:mb-0">
       {submitted ? (
         <div className="flex items-center gap-3 py-2">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -54,17 +54,31 @@ export function WorkflowRequestBanner() {
           </div>
         </div>
       ) : !expanded ? (
-        <div className="flex flex-row items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-            {/* Avatar stack */}
-            <div className="flex -space-x-2.5 shrink-0">
+            {/* Avatar stack — hidden on mobile to free space */}
+            <div className="hidden sm:flex -space-x-2.5 shrink-0">
               {AVATARS.map((member, i) => (
                 <Avatar
                   key={member.name}
-                  className={`w-9 h-9 border-2 border-background ring-1 ring-primary/10 ${i === 3 ? 'hidden sm:flex' : ''}`}
+                  className="w-9 h-9 border-2 border-background ring-1 ring-primary/10"
                 >
                   <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
+                    {member.name[0]}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
+            {/* Compact avatar row on mobile */}
+            <div className="flex sm:hidden -space-x-2 shrink-0">
+              {AVATARS.slice(0, 3).map((member) => (
+                <Avatar
+                  key={member.name}
+                  className="w-7 h-7 border-2 border-background ring-1 ring-primary/10"
+                >
+                  <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
+                  <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-semibold">
                     {member.name[0]}
                   </AvatarFallback>
                 </Avatar>
@@ -80,12 +94,11 @@ export function WorkflowRequestBanner() {
             </div>
           </div>
           <Button
-            className="rounded-full text-sm font-semibold px-4 sm:px-5 h-10 shrink-0 gap-1.5"
+            className="rounded-full text-sm font-semibold px-5 h-10 shrink-0 gap-1.5 w-full sm:w-auto"
             onClick={() => setExpanded(true)}
           >
             <MessageSquarePlus className="w-4 h-4" />
-            <span className="hidden xs:inline sm:inline">Share Request</span>
-            <span className="xs:hidden sm:hidden">Request</span>
+            <span>Share Request</span>
           </Button>
         </div>
       ) : (
