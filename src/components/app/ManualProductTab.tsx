@@ -86,6 +86,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const isMobile = useIsMobile();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const hasManualEdits = useRef({ title: false, productType: false, description: false });
