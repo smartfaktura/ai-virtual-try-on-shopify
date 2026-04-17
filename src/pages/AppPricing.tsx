@@ -640,7 +640,7 @@ export default function AppPricing() {
         <div
           aria-hidden={!showStickyBar}
           className={cn(
-            "fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[calc(100vw-2rem)] sm:max-w-6xl z-30 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+            "sticky bottom-4 z-30 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
             showStickyBar
               ? "translate-y-0 opacity-100 pointer-events-auto"
               : "translate-y-[calc(100%+2rem)] opacity-0 pointer-events-none"
