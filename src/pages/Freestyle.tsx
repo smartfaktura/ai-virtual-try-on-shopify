@@ -19,8 +19,6 @@ import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator'
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import type { BlockedEntry, FailedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
-import { FreestyleGuide, GUIDE_STEPS } from '@/components/app/freestyle/FreestyleGuide';
-import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
 import { FreestyleQuickPresets } from '@/components/app/freestyle/FreestyleQuickPresets';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
@@ -137,9 +135,6 @@ export default function Freestyle() {
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
 
-  // First-time guide state — cached in localStorage for instant render, persisted per-user in DB
-  const [showGuide, setShowGuide] = useState(false);
-  const [guideStep, setGuideStep] = useState(0);
   const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
 
   const handleReset = useCallback(() => {
@@ -168,7 +163,7 @@ export default function Freestyle() {
 
   const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null || imageRole !== 'edit' || editIntent.length > 0;
 
-  const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
+  
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const promptRef = useRef(prompt);
@@ -222,56 +217,18 @@ export default function Freestyle() {
   // Fetch user product categories for personalized presets
   const [userCategories, setUserCategories] = useState<string[]>([]);
 
-  // Sync guide dismissal + fetch categories from profile
+  // Fetch user product categories from profile
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from('profiles')
-      .select('settings, product_categories')
+      .select('product_categories')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
-        const dismissed = (data?.settings as Record<string, unknown>)?.freestyleGuideDismissed === true;
-        if (dismissed) {
-          localStorage.setItem('freestyle_guide_dismissed', 'true');
-        } else {
-          setShowGuide(true);
-        }
         setUserCategories((data?.product_categories as string[]) ?? []);
       });
   }, [user?.id]);
-
-  const dismissGuide = useCallback(() => {
-    setShowGuide(false);
-    localStorage.setItem('freestyle_guide_dismissed', 'true');
-    if (user?.id) {
-      supabase
-        .from('profiles')
-        .select('settings')
-        .eq('user_id', user.id)
-        .single()
-        .then(({ data }) => {
-          const existing = (data?.settings as Record<string, unknown>) || {};
-          supabase
-            .from('profiles')
-            .update({ settings: { ...existing, freestyleGuideDismissed: true } })
-            .eq('user_id', user.id)
-            .then(() => {});
-        });
-    }
-  }, [user?.id]);
-
-  const handleGuideNext = useCallback(() => {
-    if (guideStep >= GUIDE_STEPS.length - 1) {
-      dismissGuide();
-    } else {
-      setGuideStep(s => s + 1);
-    }
-  }, [guideStep, dismissGuide]);
-
-  const handleGuideDismiss = useCallback(() => {
-    dismissGuide();
-  }, [dismissGuide]);
 
   // Detect workflow job completion to show "View Library" banner
   useEffect(() => {
@@ -945,7 +902,7 @@ export default function Freestyle() {
     onFramingPopoverChange: setFramingPopoverOpen,
     isCollapsed: isPromptCollapsed,
     onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
-    highlightedChip,
+    
     onReset: handleReset,
     isDirty,
     imageRole,
@@ -1185,15 +1142,6 @@ export default function Freestyle() {
                     <XIcon className="w-3 h-3" />
                   </button>
                 </div>
-              </div>
-            )}
-            {showGuide && (
-              <div className="mb-3 flex justify-center lg:justify-start">
-                <FreestyleGuide
-                  currentStep={guideStep}
-                  onNext={handleGuideNext}
-                  onDismiss={handleGuideDismiss}
-                />
               </div>
             )}
             <FreestylePromptPanel {...panelProps} />

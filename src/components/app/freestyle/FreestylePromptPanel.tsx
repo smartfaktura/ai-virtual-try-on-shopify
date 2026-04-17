@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
-import type { GuideStepKey } from './FreestyleGuide';
+
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import { ImageRoleSelector, type ImageRole, type EditIntent } from './ImageRoleSelector';
 import { PromptBuilderQuiz } from './PromptBuilderQuiz';
@@ -67,8 +67,6 @@ interface FreestylePromptPanelProps {
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
-  // Guide highlight
-  highlightedChip?: GuideStepKey | null;
   // Reset
   onReset?: () => void;
   isDirty?: boolean;
@@ -195,7 +193,7 @@ export function FreestylePromptPanel({
   disabledChips,
   isCollapsed,
   onToggleCollapse,
-  highlightedChip,
+  
   onReset,
   isDirty,
   onBuyCredits,
@@ -416,7 +414,7 @@ export function FreestylePromptPanel({
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}
-              highlightedChip={highlightedChip}
+              
               disabledChips={disabledChips}
               promptHelperButton={
                 <button
