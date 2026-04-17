@@ -110,7 +110,7 @@ function BrandedLoadingState() {
   const [elapsed, setElapsed] = useState(0);
 
   const estimateSeconds = 90;
-  const estimateLabel = '~1-2 min';
+  const estimateLabel = '~1–2 min';
   const ratio = elapsed / estimateSeconds;
   const progress = ratio <= 1 ? Math.min(ratio * 90, 90) : Math.min(90 + (ratio - 1) * 5, 95);
 
