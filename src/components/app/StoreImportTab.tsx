@@ -260,14 +260,14 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       <div className="space-y-2 min-w-0">
         <Label htmlFor="store-url">Product URL</Label>
         <div className="flex gap-2 min-w-0">
-          <div className="relative flex-1">
-            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative flex-1 min-w-0">
+            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <Input
               id="store-url"
-              placeholder="https://myshop.com/products/cool-tee"
+              placeholder="https://myshop.com/products/..."
               value={url}
               onChange={(e) => { setUrl(e.target.value); setImportError(null); }}
-              className="pl-9"
+              className="pl-9 focus-visible:ring-offset-0"
               disabled={isImporting}
             />
           </div>
