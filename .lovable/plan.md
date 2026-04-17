@@ -1,64 +1,54 @@
 
 
-## Goal
-Three fixes on /app/products:
-1. Hide "Help us improve VOVV.AI / Share feedback" banner when user has no products
-2. Make all "OTHER WAYS" buttons fully functional from the empty state
-3. Redesign the right-side Add Products drawer to match the premium empty-state aesthetic
+## Problem
+1. Empty state click on "Product URL" / "CSV" / "Shopify" → opens the same big drawer that re-shows the entire 5-method rail. User picked the method already, but UI makes them feel like nothing decisive happened.
+2. Drawer at 600px feels narrow for image upload + form fields, especially after a method is chosen the secondary rail eats vertical space.
+3. After clicking a method, there's no clear "you are in X mode" — title still says "Add Products" generically.
 
-## A. Hide FeedbackBanner on empty state
-`src/pages/Products.tsx` line 448: render `<FeedbackBanner />` only when `!hasNoProducts`. Keep it visible once products exist.
+## Fix — two-part redesign
 
-## B. Wire "OTHER WAYS" buttons properly
-Current state: `onMethodSelect` already opens drawer on the right tab — but two methods need real behavior:
-
-- **Paste image** currently maps to `manual` tab with no actual paste hook → opens Upload tab silently. Fix: when "Paste image" is clicked, open drawer in `manual` tab AND focus a paste-capture zone. Simplest robust approach: read `navigator.clipboard.read()` at click time, extract image blobs, convert to `File[]`, then `openAddDrawer('manual', files)`. If clipboard is empty/denied, fall back to opening drawer with a one-time toast: "Press Cmd/Ctrl+V to paste an image".
-- **Product URL → store**, **CSV → csv**, **Shopify → shopify** already map to existing tabs and work — verify by re-confirming `AddProductModal` `useEffect` syncs `activeTab` from `initialTab` on each open (it does, lines 51-55 of AddProductModal).
-
-Add a global paste listener in `Products.tsx` (only active when `addOpen` and on empty page) that captures `ClipboardEvent` images and feeds them into the drawer's `initialFiles` — same pipeline as drag-drop.
-
-## C. Redesign the right drawer to match empty-state premium look
-Current drawer (`AddProductModal.tsx` desktop branch) uses small pill tabs in a 60% muted bar. Replace with the same visual language as `ProductsEmptyUpload`:
+### Part 1 — Direct entry, no method rail when user already chose one
+When opening the drawer **from a specific empty-state method** (URL / CSV / Shopify / Paste), skip the method rail entirely. Show only that one workflow with a clear titled header and a tiny "Switch method ▾" link.
 
 ```text
-┌─ Sheet (right, 600px) ─────────────────────────┐
-│ Add Products                                  X│
-│ Upload images or import in seconds             │
-│                                                │
-│ ┌─ method rail (vertical, quiet) ────────────┐ │
-│ │ ⬆  Upload images        ● active           │ │
-│ │ 📋 Paste image                             │ │
-│ │ 🌐 Product URL                             │ │
-│ │ 📊 CSV import                              │ │
-│ │ 📱 Mobile upload                           │ │
-│ │ 🛍 Shopify import                          │ │
-│ └────────────────────────────────────────────┘ │
-│                                                │
-│ ┌─ active method panel ──────────────────────┐ │
-│ │   (current ManualProductTab / StoreImport  │ │
-│ │    / CsvImport / Mobile / Shopify content) │ │
-│ └────────────────────────────────────────────┘ │
-└────────────────────────────────────────────────┘
+┌─ Sheet ────────────────────────────────────┐
+│ ← Import from URL                       X │
+│ Paste a product page link to import       │
+│                                            │
+│ [ https://shop.com/products/...      ]    │
+│ [ Import ]                                 │
+│                                            │
+│ Switch method ▾   (small, bottom-left)    │
+└────────────────────────────────────────────┘
 ```
 
-Specifically:
-- Replace the `TabsList` pill row with a **segmented icon+label list** styled like the right column of `ProductsEmptyUpload` (rounded border container with divided rows + ChevronRight indicator on hover, active row highlighted with `bg-muted` + primary-tinted icon).
-- Compact horizontal variant on mobile (4-col scrollable chips) preserved via `useIsMobile`.
-- Keep all `TabsContent` bodies untouched — pure visual swap of the selector.
-- Header gets the same typographic treatment as the empty card: `text-lg font-semibold tracking-tight` title + muted subtitle (already close, just align spacing/padding).
-- Remove the small uppercase chips currently used as TabTriggers, but keep semantic Tabs primitive for state management.
+When opened from the **"Add Products" main button** (returning user, no method preselected), keep the current method rail — that's the discovery surface.
 
-No backend, no tab logic, no `ManualProductTab`/`StoreImportTab`/etc. internals changed.
+### Part 2 — Wider, calmer drawer
+- Bump desktop Sheet from `sm:max-w-[600px]` → `sm:max-w-[720px]` so upload + form breathe.
+- Header gets a contextual title per method: "Upload images", "Import from URL", "CSV import", "Shopify import", "Paste an image".
+- Header gets a contextual subtitle replacing the generic one.
+
+### Part 3 — Light pop UX for "Paste image"
+Currently Paste opens the full drawer in Upload mode. Replace with: clipboard read attempt → if image present, instantly open the drawer **already at the metadata-confirm step** (files preloaded). If clipboard empty, show inline toast "Press Cmd/Ctrl+V to paste — listening…" and keep page-level paste listener live for 15s. No drawer opens at all until an image arrives.
+
+### Part 4 — Empty-state polish
+- Make the "Other ways" rows visibly clickable (currently feels passive): add subtle hover lift + arrow that slides on hover.
+- Add tiny inline result feedback when a method is selected (button micro-press + 80ms delay before drawer opens) so the action feels confirmed.
+- Tighten secondary panel header from "Other ways" → "Or import from".
 
 ## Files to edit
-- `src/pages/Products.tsx` — conditional `FeedbackBanner`, add clipboard paste handler, paste-button clipboard read
-- `src/components/app/ProductsEmptyUpload.tsx` — make Paste button trigger clipboard read before opening drawer
-- `src/components/app/AddProductModal.tsx` — redesign desktop Sheet with vertical method rail matching empty-state aesthetic; mobile keeps current compact selector
+- `src/components/app/AddProductModal.tsx` — accept `compact?: boolean` (default true when `initialTab` is preset from empty-state method); when compact, hide method rail, render contextual header per `activeTab`, show small "Switch method ▾" popover toggling back to full rail; widen Sheet to 720px.
+- `src/pages/Products.tsx` — when calling `openAddDrawer` from an empty-state method, pass `compact: true`. When calling from main "Add Products" button, pass `compact: false`. Improve paste flow: try clipboard read first; if empty, just arm a 15s window paste listener + toast (no drawer open).
+- `src/components/app/ProductsEmptyUpload.tsx` — micro-interaction polish on method rows (hover arrow slide, subtle press), copy tweak.
+
+## Out of scope
+- No backend, no tab internals (`StoreImportTab` / `CsvImportTab` / etc unchanged), no product card / grid changes.
 
 ## Acceptance
-- Empty Products page: no Feedback banner visible
-- Clicking any of Paste / URL / CSV / Shopify on empty state opens the drawer pre-set to that method, ready to use
-- Paste image: reads clipboard if granted; otherwise opens Upload tab with toast prompting Cmd/Ctrl+V
-- Drawer visual matches the empty-state card's quiet, premium look — no pill-tab strip
-- All existing import flows keep working; no backend changes
+- Click "Product URL" on empty state → drawer opens showing **only** the URL input with title "Import from URL". No 5-row rail.
+- Click main "Add Products" button (returning user) → drawer opens with full method rail as today.
+- Click "Paste image" → if clipboard has image, drawer opens already at metadata step. If not, toast appears and any Cmd/Ctrl+V on the page within 15s opens drawer with that image.
+- Drawer is visibly wider (720px) on desktop; mobile drawer unchanged.
+- A small "Switch method ▾" link in compact mode lets user expand back to full rail without closing the drawer.
 
