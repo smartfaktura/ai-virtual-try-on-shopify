@@ -109,19 +109,19 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
   );
 
   const compactBody = (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex flex-col flex-1 min-h-0 min-w-0">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto pr-1 -mr-1">
         {activeBody}
       </div>
       {onSwitchMethod && (
-        <div className="pt-4 mt-2 border-t flex items-center justify-start">
+        <div className="mt-auto pt-6 flex items-center justify-start">
           <button
             type="button"
             onClick={onSwitchMethod}
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
+            <LayoutGrid className="w-3.5 h-3.5" />
             Switch method
-            <ChevronDown className="w-3 h-3" />
           </button>
         </div>
       )}
