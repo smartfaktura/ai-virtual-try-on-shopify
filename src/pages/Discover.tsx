@@ -511,6 +511,7 @@ export default function Discover() {
           );
         })()
       )}
+      </div>
 
       {/* Admin submissions panel */}
       {isAdmin && (
