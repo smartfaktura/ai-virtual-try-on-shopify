@@ -18,18 +18,32 @@ Deno.serve(async (req) => {
     const RESEND_AUDIENCE_ID = Deno.env.get("RESEND_AUDIENCE_ID");
     if (!RESEND_AUDIENCE_ID) throw new Error("RESEND_AUDIENCE_ID not configured");
 
-    // Authenticate user
-    const authHeader = req.headers.get("Authorization");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader! } },
-    });
+    // Validate the email belongs to a real Supabase auth user (service-role lookup).
+    // We do not require the caller's JWT because this endpoint is also invoked
+    // immediately after sign-up, before the user has confirmed their email and
+    // before a session token exists on the client.
+    const { email: bodyEmail } = await req.clone().json().catch(() => ({ email: null }));
+    if (!bodyEmail || typeof bodyEmail !== "string") {
+      return new Response(JSON.stringify({ error: "Missing email" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Confirm the email exists in profiles (created by the handle_new_user trigger).
+    const { data: profile, error: profileError } = await adminClient
+      .from("profiles")
+      .select("user_id")
+      .eq("email", bodyEmail)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: "Unknown user" }), {
+        status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
