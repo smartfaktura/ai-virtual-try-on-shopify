@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowUpRight, ExternalLink, Lock, Loader2, Check, Zap } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 import { pricingPlans, creditPacks } from '@/data/mockData';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export type UpgradeModalVariant = 'auto' | 'topup' | 'no-credits';
 
