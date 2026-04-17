@@ -503,7 +503,7 @@ export default function Workflows() {
       )}
 
       {/* ── Workflow catalog (heading + grid grouped tight) ── */}
-      <section className="space-y-6">
+      <section className="space-y-4">
         {hasActivity && (
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Choose what to create</h2>
@@ -529,7 +529,7 @@ export default function Workflows() {
               ))}
             </div>
           ) : (
-            <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
+            <div className={`grid auto-rows-fr ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="rounded-lg border overflow-hidden">
                   <Skeleton className={`w-full ${isMobile && effectiveLayout === '2col' ? 'aspect-[2/3]' : 'aspect-square'}`} />
@@ -558,7 +558,7 @@ export default function Workflows() {
             <WorkflowRequestBanner />
           </div>
         ) : (
-          <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
+          <div className={`grid auto-rows-fr ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
             {workflows.map((workflow) => (
               <WorkflowCardCompact
                 key={workflow.id}
@@ -580,7 +580,7 @@ export default function Workflows() {
 
       {/* ── Recent Creations (heading + row grouped tight) ── */}
       {(recentJobs.length > 0 || isLoadingRecent) && (
-        <section className="space-y-6">
+        <section className="space-y-4">
           <div className="flex items-end justify-between gap-3">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Recent Creations</h2>

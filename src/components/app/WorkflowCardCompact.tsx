@@ -137,12 +137,12 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       </div>
 
       {/* Content */}
-      <div className={cn("flex flex-col gap-1.5 flex-1", modalCompact ? "p-3" : mobileCompact ? "p-3" : "p-5")}>
+      <div className={cn("flex flex-col gap-1.5 flex-1", modalCompact ? "p-3" : mobileCompact ? "p-3" : "p-4")}>
         <h3 className={cn(
           "font-bold tracking-tight leading-tight",
           modalCompact ? "text-sm" : mobileCompact ? "text-sm" : "text-base"
         )}>
-          {displayName || workflow.name}
+          {displayName || (mobileCompact && workflow.name === 'Interior / Exterior Staging' ? 'Interior Staging' : workflow.name)}
         </h3>
 
         {modalCompact && subtitle && (
@@ -155,7 +155,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           </p>
         )}
 
-        <div className="pt-2 mt-auto">
+        <div className="pt-3 mt-auto">
           <Button
             size="sm"
             className={cn(
