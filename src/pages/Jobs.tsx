@@ -526,6 +526,7 @@ export default function Jobs() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Content */}
         {isLoading ? (
