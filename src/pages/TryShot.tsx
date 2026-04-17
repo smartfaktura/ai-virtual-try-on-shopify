@@ -209,7 +209,7 @@ export default function TryShot() {
         </a>
         <a href="https://vovv.ai/auth">
           <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-xs font-semibold">
-            Get started
+            Get Started Free
           </Button>
         </a>
       </nav>
