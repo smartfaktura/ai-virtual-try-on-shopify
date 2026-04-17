@@ -1,63 +1,51 @@
 
-
 ## Goal
-Lock user-facing terminology to **Visual Studio** (the destination) and **Visual Types** (the selectable creation options). Eliminate user-facing "Templates", "Workflows", and "Presets" as competing labels. Keep `workflow*` in code, routes, DB tables, internal variables, and SQL.
+Frontend-only sweep to remove remaining user-facing "Templates", "Workflows", "Presets" leaks. Replace with **Visual Studio** (destination) or **Visual Type** (selectable option). Zero backend, route, API, or DB changes.
 
-## Current state (verified)
-- Sidebar already says **Visual Studio** → `/app/workflows` ✅
-- Page `/app/workflows` already titled **Visual Studio** ✅
-- Many strings still leak old terms (Templates / Workflows / template / pipelines)
+## Scope (text-only edits in UI files)
 
-## Files to update (text-only, no logic changes)
+### A. In-product UI
+- `StartWorkflowModal.tsx:235` "Browse all templates" → "Browse Visual Studio"
+- `CreativeDropWizard.tsx` lines 674, 942, 948, 1579, 1843 — swap "workflow(s)" → "Visual Type(s)"
+- `UploadSourceCard.tsx:161` "across workflows" → "across Visual Types"
+- `WorkflowPreviewModal.tsx:50,198` eyebrow/fallback "Workflow" → "Visual Type"
+- `GenerateConfirmModal.tsx:91` label "Template" → "Visual Type"
+- `generate/WorkflowSettingsPanel.tsx:766` "Locked by workflow" → "Locked by Visual Type"
+- `Generate.tsx` template-step block (3835, 3857, 3869, 3887, 4335) — sweep "Template(s)" → "Visual Type(s)"
+- `Dashboard.tsx:709` table column "Template" → "Visual Type" (keep line 592 "traditional workflow" — generic meaning)
+- `Jobs.tsx:557,559` quote + "Explore Workflows" → "in Visual Studio or with Freestyle" / "Open Visual Studio"
+- `Products.tsx:139` "across workflows" → "across Visual Types"
+- `HelpCenter.tsx:143` SEO description "workflows" → "Visual Studio"
+- `useDiscoverSubmissions.ts:85` "in Presets" → "in Explore"
+- `lib/conversionCopy.ts:187` "creation workflows" → "creation runs"
 
-### App / in-product
-| File | Current | Replace with |
-|---|---|---|
-| `OnboardingChecklist.tsx:42` | "Go to Templates" | "Open Visual Studio" |
-| `OnboardingChecklist.tsx:36` | "Generate Your First Visual Set" | keep (already aligned) |
-| `DashboardTipCard.tsx:42` | "Use Workflows to generate complete visual sets — ads, listings, and hero images — in one click." | "Open Visual Studio to create complete visual sets — ads, listings, and hero images — in one click." |
-| `DashboardQuickActions.tsx:7` | label: "Browse Templates" | "Visual Studio" |
-| `Dashboard.tsx:539` | button "Visual Studio" | keep ✅ |
-| `Freestyle.tsx:1057` | button text "Workflows" (links to /app/workflows) | "Visual Studio" |
-| `WorkflowRequestBanner.tsx:72,107` | "Missing a template for your brand?" / "Describe the template, niche…" | "Missing a Visual Type for your brand?" / "Describe the Visual Type, niche, or product type you need…" |
-| `GlobalGenerationBar.tsx:405` | "View in Templates" | "View in Visual Studio" |
-| `Generate.tsx:1174` | toast "Please select a template first" | "Please select a Visual Type first" |
-| `Generate.tsx:1175` | "Template-based generation is no longer supported. Please use a workflow." | "This Visual Type is no longer supported. Please pick another from Visual Studio." |
-| `HelpCenter.tsx:15` | "…head to Workflows. Choose from seven core workflows…" | "…head to Visual Studio. Choose from seven Visual Types…" |
-| `StudioChat.tsx:19,20` | chip "Show me workflows" / "Which workflow fits my product?" | "Show me Visual Types" / "Which Visual Type fits my product?" |
-| `Generate.tsx:2157` | back-action "Visual Studio" | keep ✅ |
+### B. Public marketing
+- `LandingFAQ.tsx:29,37` "Templates" → "Visual Types"
+- `CreativeDropsSection.tsx:53` "visual templates" → "Visual Types"
+- `FeatureGrid.tsx:54` "Assign templates" → "Assign Visual Types"
+- `FinalCTA.tsx:32` "choose your templates" → "choose your Visual Types"
+- `About.tsx:28,53,77` "workflow(s)" → "Visual Type(s)"
+- `Press.tsx:77` "multiple templates" → "multiple Visual Types"
+- `BrandProfilesFeature.tsx:17-18` "Reusable Presets" title → "Reusable across the studio"; body "any template" → "any Visual Type"
 
-### Public marketing
-| File | Current | Replace with |
-|---|---|---|
-| `LandingFAQ.tsx:14` | "Templates are purpose-built generation pipelines. Choose from six core options…" | "Visual Types are built for specific content goals. Choose from six core options…" |
-| `LandingFAQ.tsx:21` | "…none of the standard Workflows fit your vision." | "…none of the standard Visual Types fit your vision." |
-| `LandingFAQ.tsx:33` | "…across Workflows and Freestyle…" | "…across Visual Studio and Freestyle…" |
-| `LandingFAQ.tsx:41` | "…run your first Workflow or try Freestyle…" | "…run your first Visual Type or try Freestyle…" |
-| `LandingPricing.tsx:119` | "…try multiple workflows…" | "…try multiple Visual Types…" |
-| `LandingPricing.tsx:594` | "Try every workflow…" | "Try every Visual Type…" |
-| `LandingPricing.tsx:57` | matrix group "Brand & workflow" | "Brand & studio" |
-| `LandingFooter.tsx:6` | footer link "Templates" → /features/workflows | "Visual Studio" |
-| `BrandProfilesFeature.tsx:35-36` | step "Attach to Workflows" / "Link your Brand Profile to any template…" | "Attach in Visual Studio" / "Link your Brand Profile to any Visual Type…" |
-| `WorkflowsFeature.tsx` (full sweep, user-facing copy only) | hero badge "Templates", H2 "Why Templates?", step "Pick a Template", CTA "Try {name} Free", body uses "template" repeatedly | hero badge "Visual Studio"; H1 keeps; H2 "Why Visual Types?"; step "Pick a Visual Type"; replace "template" → "Visual Type" in benefits, steps, CTA copy; SEO title → "AI Photography Visual Types — VOVV.AI" (slug/route stays `/features/workflows`) |
-| `HeroSection.tsx:245` | route to `/app/workflows` | keep route, no copy change needed |
+### C. Blog content
+- `blogPosts.ts:528,577,620` "workflows" → "Visual Types"
+- `mockData.ts:1516` "Automated workflows" → "Automated Visual Types"
 
-## Out of scope (do NOT change)
-- Routes (`/app/workflows`, `/features/workflows`) — keep
-- DB tables, columns, RLS, edge functions, types (`Workflow`, `workflow_id`, `workflow_slug`)
-- `src/pages/Templates.tsx` and `mockTemplates` — separate legacy admin/data file, not user-routed in current nav (verify; if surfaced, retitle later)
-- Internal variable names, comments, SQL labels in admin pages (`AdminScenes.tsx` "On-Model → Try-On Workflows" — admin-only, keep)
-- Code-level types: `templateId`, `templateSnapshot` on Job records
-- "Freestyle" naming (separate feature, untouched)
-- Cookie policy line "template cookie policy" (different meaning of "template")
+### D. Page-level decisions (resolved, frontend-only)
+- `src/pages/Templates.tsx` — retitle PageHeader "Templates" → "Visual Types"; table column "Template" → "Visual Type"; search "Search templates..." → "Search Visual Types…"; modal "Template preview and details" → "Visual Type preview and details"; "Use this template" → "Use this Visual Type". **Route stays `/app/templates/:id`.**
+- `App.tsx:194` `/templates` redirect — **untouched** (route preserved).
+- `blogPosts.ts:300` "[automated workflows]" — leave (blog slug link, generic noun).
+
+## Out of scope (will NOT touch)
+- Routes, redirects, API calls, edge functions, DB columns, types
+- Component/file names (`WorkflowCard.tsx`, `StartWorkflowModal.tsx`, etc.)
+- Code identifiers (`templateId`, `workflow_id`, `mockTemplates`)
+- Admin pages (`AdminScenes.tsx`, `AdminFeedback.tsx`, etc.) — internal/technical context
+- `CookiePolicy.tsx:53` "template cookie policy" / `TermsOfService.tsx:33` "proprietary workflows" — different meanings
+- `Dashboard.tsx:592` "vs traditional workflow" — generic English
 
 ## Acceptance
-- Zero user-facing occurrences of "Templates", "Workflows", or "Presets" used as a synonym for the visual creation feature
-- "Visual Studio" used for the page/destination
-- "Visual Types" used for the selectable options
-- All routes, DB, code identifiers untouched
-- No layout, logic, or pricing changes
-
-## Mental model after change
-**Open Visual Studio → choose a Visual Type → generate the result.**
-
+- Zero user-visible "Templates"/"Workflows"/"Presets" referring to the creation feature
+- All routes and backend untouched
+- No layout or logic changes — text only
