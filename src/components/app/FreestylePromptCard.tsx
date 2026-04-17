@@ -216,10 +216,10 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
       </div>
 
       {/* Content area */}
-      <div className={cn('flex flex-col gap-1.5 flex-1', mobileCompact ? 'p-2' : 'p-5')}>
+      <div className={cn('flex flex-col gap-1.5 flex-1', mobileCompact ? 'p-3' : 'p-5')}>
         <h3 className={cn(
           'font-bold tracking-tight leading-tight',
-          mobileCompact ? 'text-[11px]' : 'text-base',
+          mobileCompact ? 'text-sm' : 'text-base',
         )}>
           Freestyle Studio
         </h3>
@@ -235,7 +235,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
             size="sm"
             className={cn(
               'rounded-full font-semibold gap-1 w-full',
-              mobileCompact ? 'h-8 px-3 text-xs' : 'h-10 px-5',
+              mobileCompact ? 'h-9 px-4 text-xs' : 'h-10 px-5',
             )}
             onClick={(e) => { e.stopPropagation(); onSelect(); }}
           >
