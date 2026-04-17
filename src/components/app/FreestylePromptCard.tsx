@@ -125,8 +125,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
     <Card
       ref={ref}
       className={cn(
-        'group relative overflow-hidden transition-shadow duration-300 flex flex-col border hover:shadow-lg cursor-pointer',
-        !mobileCompact && 'rounded-2xl',
+        'group relative overflow-hidden transition-shadow duration-300 flex flex-col border hover:shadow-lg cursor-pointer rounded-2xl',
       )}
       onClick={onSelect}
     >
