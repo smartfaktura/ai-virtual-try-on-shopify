@@ -324,7 +324,6 @@ export default function AppPricing() {
     if (isCurrent) return { label: 'Current plan', disabled: true, variant: 'outline' as const };
     if (p.planId === 'free') return { label: 'Cancel plan', disabled: false, variant: 'outline' as const };
     if (targetIdx < currentIdx) return { label: `Downgrade`, disabled: false, variant: 'outline' as const };
-    if (p.planId === 'growth') return { label: 'Continue with Growth', disabled: false, variant: 'default' as const };
     if (targetIdx > currentIdx) return { label: `Upgrade to ${p.name}`, disabled: false, variant: 'default' as const };
     return { label: `Choose ${p.name}`, disabled: false, variant: 'outline' as const };
   };
@@ -427,12 +426,11 @@ export default function AppPricing() {
                               </span>
                               <span className="text-[11px] text-muted-foreground">/mo</span>
                             </div>
-                            {isAnnual && annualSavings > 0 ? (
-                              <span className="text-[10px] text-primary font-medium mt-0.5">save ${annualSavings}/yr</span>
-                            ) : (
-                              <span className="text-[10px] text-muted-foreground/70 mt-0.5">
-                                {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
-                              </span>
+                            <span className="text-[10px] text-muted-foreground/70 mt-0.5">
+                              {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
+                            </span>
+                            {isAnnual && annualSavings > 0 && (
+                              <span className="text-[10px] text-primary font-semibold mt-0.5">Save ${annualSavings}/yr</span>
                             )}
                           </div>
                           <Button
@@ -754,6 +752,7 @@ export default function AppPricing() {
                 <span className="text-[13px] text-foreground/80 font-medium mt-0.5 truncate">
                   <span className="font-semibold text-foreground">${stickyPrice}/mo</span>
                   {stickyCredits > 0 && <span className="text-foreground/70"> · {stickyCredits.toLocaleString()} credits</span>}
+                  {stickyPlanId === 'growth' && <span className="text-primary font-semibold"> · Best value</span>}
                 </span>
               </div>
               <Button
@@ -762,7 +761,13 @@ export default function AppPricing() {
                 onClick={handleStickyCta}
                 className="gap-1.5 flex-shrink-0 h-9"
               >
-                {stickyCta.label.replace(/^Continue with .*/, 'Continue').replace(/^Upgrade to .*/, 'Upgrade').replace(/^Choose .*/, 'Choose')}
+                {(() => {
+                  const label = stickyCta.label;
+                  if (label === 'Continue with Growth') return 'Get Growth';
+                  if (label.startsWith('Upgrade to ')) return 'Upgrade';
+                  if (label.startsWith('Choose ')) return 'Choose';
+                  return label;
+                })()}
                 {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
               </Button>
             </div>

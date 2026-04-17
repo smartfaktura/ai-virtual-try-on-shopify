@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight, ArrowDownRight, XCircle, RotateCcw, AlertTriangle, ExternalLink, Lock, Loader2 } from 'lucide-react';
@@ -61,7 +62,7 @@ const modeConfig: Record<PlanChangeMode, {
   },
 };
 
-export function PlanChangeDialog({
+export const PlanChangeDialog = forwardRef<HTMLDivElement, PlanChangeDialogProps>(function PlanChangeDialog({
   open,
   onClose,
   onConfirm,
@@ -73,7 +74,7 @@ export function PlanChangeDialog({
   periodEnd,
   hasActiveSubscription = false,
   loading = false,
-}: PlanChangeDialogProps) {
+}, _ref) {
   const config = modeConfig[mode];
 
   // Determine the confirm button label based on context
@@ -198,4 +199,4 @@ export function PlanChangeDialog({
       </DialogContent>
     </Dialog>
   );
-}
+});
