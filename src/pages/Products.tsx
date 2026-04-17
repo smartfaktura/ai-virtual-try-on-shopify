@@ -51,7 +51,64 @@ export default function Products() {
   const [sortBy, setSortBy] = useState<SortBy>('newest');
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
+  // Add Product drawer state
+  const [addOpen, setAddOpen] = useState(false);
+  const [addInitialTab, setAddInitialTab] = useState<AddProductTab>('manual');
+  const [addInitialFiles, setAddInitialFiles] = useState<File[] | undefined>(undefined);
+
+  // Page-wide drag overlay
+  const [pageDragActive, setPageDragActive] = useState(false);
+
+  const openAddDrawer = (tab: AddProductTab = 'manual', files?: File[]) => {
+    setAddInitialTab(tab);
+    setAddInitialFiles(files);
+    setAddOpen(true);
+  };
+
   useEffect(() => { trackViewContent('Products', 'product_library'); gtagViewItem('Products', 'product_library'); }, []);
+
+  // Window-level drag-and-drop: open drawer with files when user drops anywhere on the page
+  useEffect(() => {
+    let dragDepth = 0;
+    const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types || []).includes('Files');
+
+    const onDragEnter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      dragDepth++;
+      setPageDragActive(true);
+    };
+    const onDragOver = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+    };
+    const onDragLeave = () => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) setPageDragActive(false);
+    };
+    const onDrop = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragDepth = 0;
+      setPageDragActive(false);
+      const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+      if (files.length) {
+        setAddInitialTab('manual');
+        setAddInitialFiles(files);
+        setAddOpen(true);
+      }
+    };
+
+    window.addEventListener('dragenter', onDragEnter);
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('drop', onDrop);
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter);
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('drop', onDrop);
+    };
+  }, []);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],
