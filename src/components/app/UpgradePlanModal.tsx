@@ -393,4 +393,4 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
       </DialogContent>
     </Dialog>
   );
-}
+});

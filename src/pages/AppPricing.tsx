@@ -761,9 +761,6 @@ export default function AppPricing() {
                 onClick={handleStickyCta}
                 className="gap-1.5 flex-shrink-0 h-9"
               >
-                {stickyCta.label
-                  .replace(/^Continue with .*/, 'Continue')
-                  .replace(/^Upgrade to .*/, 'Upgrade')
                 {(() => {
                   const label = stickyCta.label;
                   if (label === 'Continue with Growth') return 'Get Growth';
