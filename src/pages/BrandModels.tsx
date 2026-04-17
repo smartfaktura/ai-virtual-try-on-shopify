@@ -32,14 +32,16 @@ import {
 function UpgradeHero() {
   const { openBuyModal } = useCredits();
   return (
-    <div className="flex flex-col items-center text-center py-20 px-4 max-w-2xl mx-auto gap-10">
+    <div className="flex flex-col items-center text-center py-16 px-4 max-w-2xl mx-auto gap-8">
       <div className="space-y-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-widest mb-4">
           <Crown className="h-3.5 w-3.5" /> Growth & Pro
         </div>
         <h2 className="text-3xl font-bold tracking-tight">Brand Models</h2>
         <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-          Create unlimited custom AI models — any gender, age, ethnicity, or body type — that match your brand identity perfectly.
+          Unlimited custom AI models — any gender, age, ethnicity, or body type.
+          <br />
+          Built to match your brand identity.
         </p>
       </div>
 
@@ -838,9 +840,11 @@ export default function BrandModels() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My Brand Models" subtitle="Create and manage your custom AI models for consistent brand imagery">
-        <div />
-      </PageHeader>
+      {isPaid && (
+        <PageHeader title="My Brand Models" subtitle="Custom AI models that match your brand.">
+          <div />
+        </PageHeader>
+      )}
 
       {!isPaid ? (
         <>
