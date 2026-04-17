@@ -653,53 +653,68 @@ export default function Auth() {
       {/* Right side - Rotating gallery (hidden on mobile) */}
       <AuthHeroGallery />
       {/* Forgot Password Dialog */}
-      <Dialog open={showResetDialog} onOpenChange={(open) => { setShowResetDialog(open); if (!open) setResetSent(false); }}>
+      <Dialog open={showResetDialog} onOpenChange={(open) => { setShowResetDialog(open); if (!open) { setResetSent(false); setResetError(null); } }}>
         <DialogContent className="sm:max-w-md rounded-2xl p-8">
           <DialogHeader>
             <DialogTitle className="text-xl">{resetSent ? 'Check your inbox' : 'Reset your password'}</DialogTitle>
             <DialogDescription>
               {resetSent
-                ? `We sent a reset link to ${resetEmail}`
+                ? <>We sent a reset link to <span className="text-foreground font-medium">{resetEmail}</span></>
                 : "Enter your email and we'll send you a reset link"}
             </DialogDescription>
           </DialogHeader>
 
           {resetSent ? (
-            <div className="flex flex-col items-center gap-4 py-6">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-primary" />
+            <div className="flex flex-col items-center gap-5 py-4">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <MailCheck className="h-7 w-7 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground text-center">
-                Didn't receive it? Check your spam folder or try again.
-              </p>
+              <div className="text-center space-y-2">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  It can take a minute to arrive. Check your{' '}
+                  <span className="text-foreground font-medium">Spam</span> or{' '}
+                  <span className="text-foreground font-medium">Promotions</span> folder —
+                  the email comes from <span className="text-foreground font-medium">noreply@notify.vovv.ai</span>.
+                </p>
+              </div>
+              {resetError && (
+                <div className="w-full flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  {resetError}
+                </div>
+              )}
               <Button
-                variant="outline"
-                className="w-full rounded-full"
-                onClick={() => setResetSent(false)}
+                className="w-full h-11 rounded-full shadow-sm hover:shadow-md transition-shadow"
+                disabled={resetLoading || resetCooldown > 0}
+                onClick={async () => {
+                  if (resetCooldown > 0 || resetLoading) return;
+                  const ok = await sendResetEmail(resetEmail);
+                  if (ok) startResetCooldown(resetEmail);
+                }}
               >
-                Try another email
+                {resetLoading
+                  ? 'Sending…'
+                  : resetCooldown > 0
+                    ? `Resend in ${resetCooldown}s`
+                    : 'Resend email'}
               </Button>
+              <button
+                type="button"
+                onClick={() => { setResetSent(false); setResetError(null); }}
+                className="text-sm text-muted-foreground hover:text-foreground py-1 transition-colors"
+              >
+                Use a different email
+              </button>
             </div>
           ) : (
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
                 if (!resetEmail.trim()) return;
-                setResetLoading(true);
-                setResetError(null);
-                const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                  redirectTo: window.location.origin + '/reset-password',
-                });
-                setResetLoading(false);
-                if (error) {
-                  const msg = error.message?.toLowerCase() || '';
-                  if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
-                    setResetError('Too many requests. Please wait a few minutes before trying again.');
-                  } else {
-                    setResetError('Could not send reset link. Please try again.');
-                  }
-                } else {
+                const ok = await sendResetEmail(resetEmail);
+                if (ok) {
                   setResetSent(true);
+                  startResetCooldown(resetEmail);
                 }
               }}
               className="space-y-5"
@@ -720,6 +735,10 @@ export default function Auth() {
                 className="rounded-full bg-muted/50 border-0 h-11 px-5"
                 autoFocus
               />
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                Reset emails arrive from <span className="text-foreground font-medium">noreply@notify.vovv.ai</span>.
+                They sometimes land in Spam or Promotions.
+              </p>
               <Button type="submit" className="w-full h-11 rounded-full shadow-sm hover:shadow-md transition-shadow" disabled={resetLoading}>
                 {resetLoading ? 'Sending...' : 'Send reset link'}
               </Button>
