@@ -28,6 +28,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
 import { DemoProductPicker } from '@/components/app/product-images/DemoProductPicker';
+import type { DemoProduct } from '@/data/demoProducts';
 
 // Lazy-load step components for faster initial render
 const ProductImagesStep2Scenes = lazy(() => import('@/components/app/product-images/ProductImagesStep2Scenes'));
@@ -186,6 +187,35 @@ export default function ProductImages() {
     } finally {
       setQuickUploading(false);
       setQuickUploadProgress('');
+    }
+  }, [user, queryClient]);
+
+  // Instant demo product insert — uses pre-baked metadata, zero AI cost
+  const handleDemoSelect = useCallback(async (demo: DemoProduct) => {
+    if (!user) { toast.error('Please sign in to try a demo'); return; }
+    try {
+      const { data: newProduct, error } = await supabase
+        .from('user_products')
+        .insert({
+          user_id: user.id,
+          title: demo.title,
+          product_type: demo.productType,
+          description: demo.description,
+          image_url: demo.image_url,
+          analysis_json: demo.analysis_json as never,
+        })
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      await queryClient.invalidateQueries({ queryKey: ['user-products'] });
+      setSelectedProductIds(prev => {
+        const next = new Set(prev);
+        next.add(newProduct.id);
+        return next;
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to add demo';
+      toast.error(msg);
     }
   }, [user, queryClient]);
 
@@ -1363,7 +1393,7 @@ export default function ProductImages() {
       <DemoProductPicker
         open={demoPickerOpen}
         onOpenChange={setDemoPickerOpen}
-        onSelect={handleQuickUpload}
+        onSelectDemo={handleDemoSelect}
       />
       <NoCreditsModal
         open={noCreditsModalOpen}
