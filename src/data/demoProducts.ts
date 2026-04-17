@@ -46,16 +46,10 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "semi-transparent",
       "metalTone": null,
       "heroFeature": "red cat-eye frames",
-      "detailFocusAreas": [
-        "frame shape",
-        "frame color",
-        "translucency"
-      ],
+      "detailFocusAreas": "frame shape, frame color, translucency",
       "scaleType": "precise",
       "wearabilityMode": "daily-wear",
-      "bodyPlacementSuggested": [
-        "face"
-      ],
+      "bodyPlacementSuggested": "face",
       "colorFamily": "red",
       "materialFamily": "plastic",
       "finish": "glossy",
@@ -70,10 +64,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "woodsRelated": null,
       "spicesRelated": null,
       "greensRelated": null,
-      "materialsRelated": [
-        "plastic",
-        "glass"
-      ],
+      "materialsRelated": "plastic, glass",
       "regionRelated": null,
       "landscapeRelated": null,
       "version": 2
@@ -106,16 +97,10 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": "gold",
       "heroFeature": "crescent shape design",
-      "detailFocusAreas": [
-        "hardware",
-        "strap attachment"
-      ],
+      "detailFocusAreas": "hardware, strap attachment",
       "scaleType": "personal",
       "wearabilityMode": "shoulder",
-      "bodyPlacementSuggested": [
-        "shoulder",
-        "underarm"
-      ],
+      "bodyPlacementSuggested": "shoulder, underarm",
       "colorFamily": "gray",
       "materialFamily": "leather",
       "finish": "smooth",
@@ -130,17 +115,11 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "woodsRelated": null,
       "spicesRelated": null,
       "greensRelated": null,
-      "materialsRelated": [
-        "pueblo leather",
-        "calfskin"
-      ],
+      "materialsRelated": "pueblo leather, calfskin",
       "regionRelated": null,
       "landscapeRelated": null,
       "accessoryType": "handbag",
-      "carryMode": [
-        "shoulder carry",
-        "hand carry"
-      ],
+      "carryMode": "shoulder carry, hand carry",
       "strapType": "fixed shoulder strap",
       "hardwareType": "rings",
       "hardwareFinish": "polished",
@@ -159,7 +138,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     "category": "hoodies",
     "analysis_json": {
       "category": "hoodies",
-      "sizeClass": "adult",
+      "sizeClass": "medium",
       "productSubcategory": "hoodies",
       "productForm": "finished",
       "productSilhouette": "zip-up hoodie",
@@ -176,18 +155,10 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": "silver",
       "heroFeature": "full-zip closure",
-      "detailFocusAreas": [
-        "hood",
-        "zipper",
-        "ribbed cuffs",
-        "ribbed hem"
-      ],
+      "detailFocusAreas": "hood, zipper, ribbed cuffs, ribbed hem",
       "scaleType": "true-to-size",
       "wearabilityMode": "casual",
-      "bodyPlacementSuggested": [
-        "torso",
-        "arms"
-      ],
+      "bodyPlacementSuggested": "torso, arms",
       "colorFamily": "cream",
       "materialFamily": "textile",
       "finish": "brushed",
@@ -202,11 +173,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "woodsRelated": null,
       "spicesRelated": null,
       "greensRelated": null,
-      "materialsRelated": [
-        "fleece",
-        "cotton",
-        "polyester"
-      ],
+      "materialsRelated": "fleece, cotton, polyester",
       "regionRelated": "global",
       "landscapeRelated": null,
       "garmentType": "hoodie",
@@ -244,19 +211,10 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": null,
       "heroFeature": "abstract geometric pattern",
-      "detailFocusAreas": [
-        "pattern detail",
-        "border",
-        "fabric drape"
-      ],
+      "detailFocusAreas": "pattern detail, border, fabric drape",
       "scaleType": "small-scale",
       "wearabilityMode": "neck-wrap",
-      "bodyPlacementSuggested": [
-        "neck",
-        "head",
-        "wrist",
-        "bag handle"
-      ],
+      "bodyPlacementSuggested": "neck, head, wrist, bag handle",
       "colorFamily": "blue",
       "materialFamily": "textile",
       "finish": "silken",
@@ -271,10 +229,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "woodsRelated": null,
       "spicesRelated": null,
       "greensRelated": null,
-      "materialsRelated": [
-        "chain-link",
-        "geometric shapes"
-      ],
+      "materialsRelated": "chain-link, geometric shapes",
       "regionRelated": "european",
       "landscapeRelated": null,
       "accessoryType": "scarf",
@@ -297,7 +252,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     "category": "hats-small",
     "analysis_json": {
       "category": "hats-small",
-      "sizeClass": "one-size",
+      "sizeClass": "medium",
       "productSubcategory": "headwear",
       "productForm": "structured",
       "productSilhouette": "baseball_cap",
@@ -314,16 +269,10 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": "none",
       "heroFeature": "embroidered_slogan",
-      "detailFocusAreas": [
-        "front_panel",
-        "brim",
-        "embroidery"
-      ],
+      "detailFocusAreas": "front_panel, brim, embroidery",
       "scaleType": "personal",
       "wearabilityMode": "casual_sporty",
-      "bodyPlacementSuggested": [
-        "head"
-      ],
+      "bodyPlacementSuggested": "head",
       "colorFamily": "red",
       "materialFamily": "textile",
       "finish": "matte",
@@ -361,7 +310,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     "category": "jeans",
     "analysis_json": {
       "category": "jeans",
-      "sizeClass": "adult",
+      "sizeClass": "medium",
       "productSubcategory": "bottoms",
       "productForm": "finished",
       "productSilhouette": "straight-leg",
@@ -378,16 +327,10 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": "silver",
       "heroFeature": "classic straight leg fit",
-      "detailFocusAreas": [
-        "waistband",
-        "pockets",
-        "seaming"
-      ],
+      "detailFocusAreas": "waistband, pockets, seaming",
       "scaleType": "true-to-size",
       "wearabilityMode": "everyday",
-      "bodyPlacementSuggested": [
-        "lower-body"
-      ],
+      "bodyPlacementSuggested": "lower-body",
       "colorFamily": "blue",
       "materialFamily": "textile",
       "finish": "distressed-wash",
@@ -396,18 +339,15 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "accentColor": "silver",
       "ingredientFamilyPrimary": "cotton",
       "ingredientFamilySecondary": "recycled materials",
-      "fruitsRelated": [],
-      "flowersRelated": [],
-      " botanicalsRelated": [],
-      "woodsRelated": [],
-      "spicesRelated": [],
-      "greensRelated": [],
-      "materialsRelated": [
-        "fabric",
-        "metal"
-      ],
-      "regionRelated": [],
-      "landscapeRelated": [],
+      "fruitsRelated": "",
+      "flowersRelated": "",
+      " botanicalsRelated": "",
+      "woodsRelated": "",
+      "spicesRelated": "",
+      "greensRelated": "",
+      "materialsRelated": "fabric, metal",
+      "regionRelated": "",
+      "landscapeRelated": "",
       "garmentType": "jeans",
       "fitType": "high-rise",
       "fabricType": "denim",
@@ -443,10 +383,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": "silver",
       "heroFeature": "minimalist design",
-      "detailFocusAreas": [
-        "cap",
-        "label"
-      ],
+      "detailFocusAreas": "cap, label",
       "scaleType": "personal",
       "wearabilityMode": "not applicable",
       "bodyPlacementSuggested": "hair",
@@ -502,11 +439,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": "none",
       "heroFeature": "mid_century_modern_design",
-      "detailFocusAreas": [
-        "boucle_upholstery",
-        "curved_wooden_frame",
-        "armrest_design"
-      ],
+      "detailFocusAreas": "boucle_upholstery, curved_wooden_frame, armrest_design",
       "scaleType": "human_scale",
       "wearabilityMode": "not_applicable",
       "bodyPlacementSuggested": "not_applicable",
@@ -532,18 +465,8 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "objectScale": "full_size",
       "baseMaterial": "wood",
       "surfaceFinish": "polished",
-      "roomContextSuggested": [
-        "living_room",
-        "lounge_area",
-        "study",
-        "bedroom"
-      ],
-      "stylingCompanions": [
-        "side_table",
-        "floor_lamp",
-        "throw_pillow",
-        "area_rug"
-      ],
+      "roomContextSuggested": "living_room, lounge_area, study, bedroom",
+      "stylingCompanions": "side_table, floor_lamp, throw_pillow, area_rug",
       "version": 2
     }
   },
@@ -574,11 +497,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "transparencyType": "opaque",
       "metalTone": "none",
       "heroFeature": "waterproof material",
-      "detailFocusAreas": [
-        "flap closure",
-        "adjustable shoulder straps",
-        "front clasp detail"
-      ],
+      "detailFocusAreas": "flap closure, adjustable shoulder straps, front clasp detail",
       "scaleType": "true-to-size",
       "wearabilityMode": "shoulder sling",
       "bodyPlacementSuggested": "back",
@@ -596,11 +515,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "woodsRelated": "none",
       "spicesRelated": "none",
       "greensRelated": "none",
-      "materialsRelated": [
-        "rainwear",
-        "technical fabric",
-        "rubberized fabric"
-      ],
+      "materialsRelated": "rainwear, technical fabric, rubberized fabric",
       "regionRelated": "none",
       "landscapeRelated": "urban",
       "accessoryType": "backpack",
