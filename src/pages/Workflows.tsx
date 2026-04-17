@@ -555,7 +555,6 @@ export default function Workflows() {
               />
             ))}
             <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
-            <WorkflowRequestBanner />
           </div>
         ) : (
           <div className={`grid auto-rows-fr ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
@@ -573,9 +572,9 @@ export default function Workflows() {
               onSelect={() => navigate('/app/freestyle')}
               mobileCompact={isMobile && effectiveLayout === '2col'}
             />
-            <WorkflowRequestBanner />
           </div>
         )}
+        <WorkflowRequestBanner />
       </section>
 
       {/* ── Recent Creations (heading + row grouped tight) ── */}
