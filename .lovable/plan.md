@@ -1,23 +1,34 @@
 
 
-## Fix "Missing a Visual Type" banner overflow on mobile
+## Fix layout toggle spacing + mobile row height
 
-### Issue
-The MissingRequestBanner card on `/app/workflows` mobile view has the floating chat bubble (bottom-left FAB) overlapping the avatar stack, and the text + Request button row is cramped — wrapping awkwardly ("Missing a / Visual Type / for your / brand?" wraps to 4 lines).
+### Issues
+1. Desktop: floating toggle (`-top-12`) is too close to the grid — needs same gap as between grid cards (typically `gap-6` ≈ 24px).
+2. Mobile: toggle still consumes a full row of height above the grid.
 
 ### Fix
-**File: `src/components/app/MissingRequestBanner.tsx`** (or wherever the "Missing a Visual Type for your brand?" card is rendered — likely a workflow-specific variant; need to locate exact component first)
+**File: `src/pages/Workflows.tsx`**
 
-Plan steps:
-1. Locate the actual component rendering this banner (search for "Missing a Visual Type" / "for your brand").
-2. On mobile:
-   - Stack vertically: avatars row on top, text below, Request button full-width at bottom — OR
-   - Hide the avatar stack on `<sm` and keep text + button in a tighter row.
-   - Reduce text size and allow text to flow naturally without forced narrow column.
-3. Ensure card has enough bottom padding so the floating chat FAB (bottom-left) doesn't overlap content — add `mb-16 sm:mb-0` to the banner container so it clears the FAB on mobile.
+1. **Desktop**: Change toggle position from `-top-12` to `-top-14` (or align it vertically into the page header row, ~56px above the grid) so spacing between toggle bottom and grid top matches grid card gap (~24px).
+
+2. **Mobile**: Hide the toggle entirely on mobile (`<sm`). Mobile only has 2 layout options (it clamps to 2col) — the toggle adds clutter without value. Remove the inline mobile toggle block.
+   - Alternative: keep mobile toggle but float it absolutely too with `top-0 right-0` overlapping into the page header area.
+
+**Chosen approach:** Hide on mobile entirely (cleanest — mobile is forced 2col anyway, no choice to make), keep desktop floating with corrected offset.
+
+```tsx
+<section className="relative space-y-4">
+  {/* Desktop only — floats up into page header area */}
+  <div className="hidden sm:block absolute -top-14 right-0 z-10">
+    <ToggleGroup ...>...</ToggleGroup>
+  </div>
+  {/* No mobile toggle — mobile is locked to 2col */}
+  <div className={gridClasses}>...</div>
+</section>
+```
 
 ### Acceptance
-- On mobile, banner content fits cleanly with no overlap from chat FAB.
-- Text reads on 1–2 lines, Request button accessible.
-- Desktop layout unchanged.
+- Desktop: visible spacing between toggle and first row of grid cards matches the gap between cards themselves.
+- Mobile: no toggle row — grid starts directly under page header with original spacing.
+- Behavior unchanged otherwise.
 
