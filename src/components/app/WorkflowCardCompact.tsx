@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight, LayoutTemplate } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -155,7 +156,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           </p>
         )}
 
-        <div className="pt-1 mt-auto">
+        <div className="pt-1 mt-auto space-y-1.5">
           <Button
             size="sm"
             className={cn(
@@ -167,6 +168,15 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
             {mobileCompact ? 'Start' : 'Start Creating'}
             <ArrowRight className="w-3 h-3" />
           </Button>
+          {!modalCompact && !mobileCompact && (
+            <Link
+              to={`/app/learn/visual-studio/${workflow.slug}`}
+              onClick={(e) => e.stopPropagation()}
+              className="block text-[11px] text-muted-foreground hover:text-foreground transition-colors text-center"
+            >
+              Learn how →
+            </Link>
+          )}
         </div>
       </div>
     </Card>
