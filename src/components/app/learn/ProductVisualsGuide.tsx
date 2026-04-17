@@ -2,9 +2,26 @@ import { useEffect } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { useLearnRead } from '@/hooks/useLearnRead';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { LEARN_TRACKS, type LearnGuide } from '@/data/learnContent';
+
+const EXAMPLE_MODELS = [
+  { name: 'Yuki', path: 'models/model-female-slim-asian.jpg' },
+  { name: 'Amara', path: 'models/model-female-athletic-black.jpg' },
+  { name: 'Sofia', path: 'models/model-female-plussize-latina.jpg' },
+  { name: 'Marcus', path: 'models/model-male-athletic-black.jpg' },
+] as const;
+
+const EXAMPLE_SCENES = [
+  { name: 'Editorial Minimal', path: 'poses/pose-editorial-minimal.jpg' },
+  { name: 'Studio Movement', path: 'poses/pose-studio-movement.jpg' },
+  { name: 'Lifestyle Rooftop', path: 'poses/pose-lifestyle-rooftop.jpg' },
+  { name: 'Editorial Moody', path: 'poses/pose-editorial-moody.jpg' },
+] as const;
 
 interface Props {
   guide: LearnGuide;
