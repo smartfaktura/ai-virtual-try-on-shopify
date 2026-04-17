@@ -451,15 +451,16 @@ export default function Discover() {
         </div>
       )}
 
-      {/* Category filter bar */}
-      {!similarTo && (
-        <DiscoverCategoryBar
-          categories={CATEGORIES}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          savedCount={savedCount}
-        />
-      )}
+      {/* Category filter bar + grid (tight grouping) */}
+      <div className="space-y-4">
+        {!similarTo && (
+          <DiscoverCategoryBar
+            categories={CATEGORIES}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            savedCount={savedCount}
+          />
+        )}
 
       {/* Masonry grid */}
       {isLoading ? (
