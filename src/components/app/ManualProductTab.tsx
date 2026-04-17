@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen, Droplets, Lightbulb } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen, Droplets, Lightbulb, UploadCloud } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
