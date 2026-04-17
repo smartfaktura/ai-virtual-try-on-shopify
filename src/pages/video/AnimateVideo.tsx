@@ -523,7 +523,7 @@ export default function AnimateVideo() {
       const position = activeJob?.position ?? 0;
       return { text: 'Queued', sub: position > 0 ? `Position #${position + 1} in queue — will start automatically` : 'Starting shortly…' };
     }
-    return { text: 'Generating your video...', sub: `Typically 3-5 minutes • ${elapsedSeconds}s elapsed` };
+    return { text: 'Generating your video...', sub: `Typically 3–5 minutes • ${elapsedSeconds}s elapsed` };
   };
 
   const currentProgressMember = PROGRESS_TEAM[progressAvatarIdx];
