@@ -435,7 +435,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/video/short-film')}>
-                Explore
+                Open
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -520,10 +520,10 @@ export default function Dashboard() {
       <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
       {/* Welcome greeting + CTA */}
       <div>
-        <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
-        <p className="text-sm sm:text-lg text-muted-foreground mt-1 sm:mt-2 max-w-xl">
+        <p className="text-lg text-muted-foreground mt-2 max-w-xl">
           Your next visuals are just a click away
         </p>
 
@@ -639,34 +639,40 @@ export default function Dashboard() {
       <div className="space-y-4">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-border bg-card p-5 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-              <Layers className="w-4.5 h-4.5 text-primary" />
+          <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Layers className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Create Product Visuals</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed flex-1">Brand-ready visuals tailored to your product and category.</p>
-            <Button className="w-full rounded-full font-semibold gap-1.5 mt-3 h-9 text-xs shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
-              Open <ArrowRight className="w-3.5 h-3.5" />
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground">Create Product Visuals</h3>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Brand-ready visuals tailored to your product and category.</p>
+            </div>
+            <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
+              Open <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-5 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-              <Wand2 className="w-4.5 h-4.5 text-primary" />
+          <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Wand2 className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Create with Prompt</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed flex-1">Describe any shot, scene, or style you want to create.</p>
-            <Button variant="outline" className="w-full rounded-full font-semibold gap-1.5 mt-3 h-9 text-xs" onClick={() => navigate('/app/freestyle')}>
-              Open <ArrowRight className="w-3.5 h-3.5" />
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground">Create with Prompt</h3>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Describe any shot, scene, or style you want to create.</p>
+            </div>
+            <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
+              Open <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-5 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-              <Compass className="w-4.5 h-4.5 text-primary" />
+          <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Compass className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Explore Examples</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed flex-1">Browse real examples and recreate them with your product.</p>
-            <Button variant="outline" className="w-full rounded-full font-semibold gap-1.5 mt-3 h-9 text-xs" onClick={() => navigate('/app/discover')}>
-              Open <ArrowRight className="w-3.5 h-3.5" />
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground">Explore Examples</h3>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Browse real examples and recreate them with your product.</p>
+            </div>
+            <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/discover')}>
+              Open <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -681,111 +687,106 @@ export default function Dashboard() {
             View all
           </Button>
         </div>
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
-        <div className="p-5 space-y-4">
-
-          {jobsLoading ? (
-            <div className="space-y-3 py-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-muted/40 animate-pulse" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3.5 w-32 bg-muted/40 rounded animate-pulse" />
-                    <div className="h-3 w-20 bg-muted/30 rounded animate-pulse" />
-                  </div>
+        {jobsLoading ? (
+          <div className="space-y-3 py-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-muted/40 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-32 bg-muted/40 rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-muted/30 rounded animate-pulse" />
                 </div>
-              ))}
-            </div>
-          ) : recentJobs.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Visual Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Credits</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
+              </div>
+            ))}
+          </div>
+        ) : recentJobs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Visual Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Credits</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentJobs.map(job => {
+                  const isPerspectives = '_source' in job && job._source === 'perspectives';
+                  const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
+                  const thumbUrl = isPerspectives ? (job as any)._image_url : (firstResult || job.user_products?.image_url);
+                  const displayUrl = getOptimizedUrl(thumbUrl, { quality: 50 }) || '/placeholder.svg';
+                  const hoverUrl = getOptimizedUrl(thumbUrl, { quality: 70 }) || '/placeholder.svg';
+                  const toSentenceCase = (str: string) => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+                  const sourceLabel = isPerspectives ? ((job as any)._label || 'Picture Perspectives') : toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation');
+                  return (
+                  <TableRow key={job.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <HoverCard openDelay={200}>
+                          <HoverCardTrigger asChild>
+                            <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0 bg-muted/30 cursor-pointer">
+                              <img
+                                src={displayUrl}
+                                alt={sourceLabel}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </HoverCardTrigger>
+                          <HoverCardContent side="right" className="w-52 p-1">
+                            <img src={hoverUrl} alt="" className="w-full rounded-md" />
+                          </HoverCardContent>
+                        </HoverCard>
+                        <span className="font-medium text-sm">
+                          {sourceLabel}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {job.workflows?.name || '—'}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={job.status as JobStatus} />
+                    </TableCell>
+                    <TableCell className="text-right text-sm">
+                      {job.credits_used > 0 ? job.credits_used : '—'}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {new Date(job.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {job.status === 'completed' && (
+                          <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate(`/app/library?search=${encodeURIComponent(job.user_products?.title || job.workflows?.name || '')}`)}>
+                            View
+                          </Button>
+                        )}
+                        {job.status === 'failed' && (
+                          <Button size="sm" className="rounded-full" onClick={() => navigate('/app/generate')}>
+                            Retry
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentJobs.map(job => {
-                    const isPerspectives = '_source' in job && job._source === 'perspectives';
-                    const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
-                    const thumbUrl = isPerspectives ? (job as any)._image_url : (firstResult || job.user_products?.image_url);
-                    const displayUrl = getOptimizedUrl(thumbUrl, { quality: 50 }) || '/placeholder.svg';
-                    const hoverUrl = getOptimizedUrl(thumbUrl, { quality: 70 }) || '/placeholder.svg';
-                    const toSentenceCase = (str: string) => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-                    const sourceLabel = isPerspectives ? ((job as any)._label || 'Picture Perspectives') : toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation');
-                    return (
-                    <TableRow key={job.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <HoverCard openDelay={200}>
-                            <HoverCardTrigger asChild>
-                              <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0 bg-muted/30 cursor-pointer">
-                                <img
-                                  src={displayUrl}
-                                  alt={sourceLabel}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            </HoverCardTrigger>
-                            <HoverCardContent side="right" className="w-52 p-1">
-                              <img src={hoverUrl} alt="" className="w-full rounded-md" />
-                            </HoverCardContent>
-                          </HoverCard>
-                          <span className="font-medium text-sm">
-                            {sourceLabel}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {job.workflows?.name || '—'}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={job.status as JobStatus} />
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {job.credits_used > 0 ? job.credits_used : '—'}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {new Date(job.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {job.status === 'completed' && (
-                            <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate(`/app/library?search=${encodeURIComponent(job.user_products?.title || job.workflows?.name || '')}`)}>
-                              View
-                            </Button>
-                          )}
-                          {job.status === 'failed' && (
-                            <Button size="sm" className="rounded-full" onClick={() => navigate('/app/generate')}>
-                              Retry
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <EmptyStateCard
-              heading="No jobs yet"
-              description="Generate your first product visuals to see them here."
-              showCollage
-              action={{
-                content: 'Generate visuals',
-                onAction: () => navigate('/app/generate'),
-              }}
-            />
-          )}
-        </div>
-      </div>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <EmptyStateCard
+            heading="No jobs yet"
+            description="Generate your first product visuals to see them here."
+            showCollage
+            action={{
+              content: 'Generate visuals',
+              onAction: () => navigate('/app/generate'),
+            }}
+          />
+        )}
       </div>
 
 
