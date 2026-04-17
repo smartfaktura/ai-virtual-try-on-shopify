@@ -21,12 +21,12 @@ export function PageHeader({ title, subtitle, backAction, actions, children }: P
                 {backAction.content}
               </Button>
             )}
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
           </div>
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
         {subtitle && (
-          <p className="text-base sm:text-lg text-muted-foreground mt-2 max-w-lg">{subtitle}</p>
+          <p className="text-base text-muted-foreground mt-1.5">{subtitle}</p>
         )}
       </div>
       {children}
