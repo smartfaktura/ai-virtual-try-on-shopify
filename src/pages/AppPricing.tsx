@@ -14,6 +14,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 import type { PricingPlan } from '@/types';
+import { cn } from '@/lib/utils';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 
