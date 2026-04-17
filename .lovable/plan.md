@@ -1,22 +1,36 @@
 
 
-## Increase "Create Visuals" CTA size in sidebar
+## Audit: Dashboard `/app` h2 consistency
 
-**File:** `src/components/app/AppShell.tsx` (lines 205-216)
+Compared all four section headings on the dashboard.
 
-Current CTA padding is `py-3` with `text-sm` — fairly compact. Bump it so it reads as the primary action of the sidebar.
+| Section | h2 size | Subtitle | Wrapper |
+|---|---|---|---|
+| **Start here** (Dashboard.tsx:343) | `text-2xl` (no responsive) | ❌ none | `space-y-4` |
+| **Steal the Look** (DashboardDiscoverSection.tsx:180) | `text-xl sm:text-2xl` | ✅ `mt-1.5` | — |
+| **Create Video** (Dashboard.tsx:406) | `text-xl sm:text-2xl` | ✅ `mt-1.5` | `space-y-4` |
+| **Your Products, In Motion** (Dashboard.tsx:452) | `text-xl sm:text-2xl` | ✅ `mt-1.5` | `space-y-3` ⚠️ |
 
-### Change
-- Expanded padding: `py-3` → `py-3.5`
-- Larger text: `text-sm` → `text-[15px]`
-- Larger icon: `w-4 h-4` → `w-[18px] h-[18px]`
-- Slightly larger radius for proportion: `rounded-xl` → `rounded-2xl`
-- Add a touch more wrapper breathing room: `pt-4 pb-3` → `pt-4 pb-4`
+### Inconsistencies found
+1. **"Start here" h2 size** — uses flat `text-2xl`; the other three use `text-xl sm:text-2xl`. On mobile it renders larger than the rest.
+2. **"Start here" has no subtitle** — the other three each have a one-line muted description. Creates an asymmetric rhythm down the page.
+3. **"Your Products, In Motion" wrapper** — uses `space-y-3` instead of `space-y-4`. Slightly tighter gap between heading block and the video grid.
 
-Collapsed state stays compact (`px-2 py-3 text-xs`) — only the expanded state grows.
+### Standard to align to
+- h2: `text-xl sm:text-2xl font-bold text-foreground tracking-tight`
+- Subtitle: `text-base text-muted-foreground mt-1.5`
+- Wrapper: `space-y-4`
+
+### Proposed fix
+- `src/pages/Dashboard.tsx:343` — change `text-2xl` → `text-xl sm:text-2xl`, and add a short subtitle ("Pick a workflow and start creating.") so the rhythm matches the other three sections.
+- `src/pages/Dashboard.tsx:450` — change `space-y-3` → `space-y-4`.
+
+### Out of scope
+- `VideoShowcaseSection` (landing page only — different scale by design).
+- Other dashboard sub-components not using h2 section headers.
 
 ### Acceptance
-- Expanded sidebar: CTA is visibly taller, icon + label more prominent, still full-width
-- Collapsed sidebar: unchanged
-- No layout shift in nav below it; no overflow on smaller sidebar widths
+- All four `/app` section headings render identical font size at every breakpoint.
+- All four have a subtitle with identical spacing (`mt-1.5`).
+- Vertical gap between heading block and content grid is the same (`space-y-4`) for all four.
 
