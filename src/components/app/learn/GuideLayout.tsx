@@ -39,15 +39,15 @@ export function GuideLayout({ guide }: Props) {
     markRead(guide.section, guide.slug);
   }, [guide.section, guide.slug, markRead]);
 
-  // Bespoke layout for the flagship Product Visuals guide
-  if (guide.slug === 'product-images' && guide.section === 'visual-studio') {
-    return <ProductVisualsGuide guide={guide} />;
-  }
-
   const trackLabel = useMemo(() => {
     const primary = guide.tracks[0];
     return LEARN_TRACKS.find((t) => t.id === primary)?.label ?? 'Guide';
   }, [guide.tracks]);
+
+  // Bespoke layout for the flagship Product Visuals guide
+  if (guide.slug === 'product-images' && guide.section === 'visual-studio') {
+    return <ProductVisualsGuide guide={guide} />;
+  }
 
   return (
     // Outer wrapper matches /app/learn hub width exactly
