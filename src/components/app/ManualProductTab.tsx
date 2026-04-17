@@ -297,7 +297,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     // Fresh upload: 1 file = single mode
     if (toAdd.length === 1 && !singleImage) {
       const file = toAdd[0];
-      const previewUrl = URL.createObjectURL(file);
+      const previewUrl = createTrackedObjectUrl(file);
       setSingleImage({ file, previewUrl });
       // Read as data URL for AI analysis
       const reader = new FileReader();
