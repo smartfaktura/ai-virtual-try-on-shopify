@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
@@ -531,10 +532,8 @@ export default function Jobs() {
         )}
 
         {/* Content */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
+        {isInitialLoading ? (
+          <LibrarySkeletonGrid columnCount={columnCount} />
         ) : items.length === 0 ? (
           (() => {
             if (smartView !== 'all' && allItems.length > 0) {
