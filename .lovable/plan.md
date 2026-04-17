@@ -1,30 +1,42 @@
 
-## Audit Result — terminology sweep status
+## Goal
+Frontend-only text sweep to fix all P0 terminology leaks identified in the audit. Replace user-visible "Workflows / Templates" with **Visual Studio** (destination) or **Visual Types** (selectable options). No routes, props, types, or backend touched.
 
-I scanned `src/**/*.{tsx,ts}` (excluding admin pages) for user-visible "Templates / Workflows / Presets" referring to the visual creation feature.
+## Scope (text-only edits)
 
-### ✅ Confirmed clean (previously approved batch landed)
-All ~30 strings from the last approved sweep are updated: `CreativeDropWizard`, `WorkflowPreviewModal`, `GenerateConfirmModal`, `WorkflowSettingsPanel`, `Generate.tsx` template-step block, `Dashboard` table column, `Jobs.tsx` empty state, `Products.tsx`, `HelpCenter` SEO, `useDiscoverSubmissions`, `LandingFAQ`, `CreativeDropsSection`, `FeatureGrid`, `FinalCTA`, `About`, `Press`, `BrandProfilesFeature`, `blogPosts`, `mockData`, `Templates.tsx` page, `StartWorkflowModal`, `UploadSourceCard`.
+### 1. `src/pages/HelpCenter.tsx` — heaviest regression (10 strings)
+| Line | Current → Replace |
+|---|---|
+| 31 | "across Workflows and Freestyle" → "across Visual Studio and Freestyle" |
+| 40 | "Workflows cost 6 credits per image" → "Visual Types cost 6 credits per image" |
+| 48 | "run your first Workflow or try Freestyle" → "run your first Visual Type or try Freestyle" |
+| 61 | category name "Workflows & Generation" → "Visual Studio & Generation" |
+| 64 | "What Workflows are available?" → "What Visual Types are available?" |
+| 65 | "seven core Workflows, each pre-configured…" → "seven core Visual Types, each pre-configured…" |
+| 77 | "Workflows support batch generation… choose a workflow… in the Workflows activity section." → "Visual Studio supports batch generation… choose a Visual Type… in the Visual Studio activity section." |
+| 81 | "select your Templates, and set a schedule" → "select your Visual Types, and set a schedule" |
+| 102 | "Try different workflows — some work better…" → "Try different Visual Types — some work better…" |
 
-### ⚠️ Remaining user-visible leaks found
+### 2. `src/components/landing/LandingPricing.tsx` (2 strings)
+- Line 110: "Templates cost 6, Freestyle costs 4." → "Visual Types cost 6, Freestyle costs 4."
+- Line 123: "Pick products and templates, set a schedule…" → "Pick products and Visual Types, set a schedule…"
 
-| File:line | Current | Replace with |
-|---|---|---|
-| `src/components/app/ProductMultiSelect.tsx:63` | "…the same template will be applied to all…" | "…the same Visual Type will be applied to all…" |
-| `src/pages/Generate.tsx:2171` | Badge `'Workflow'` (fallback when not Try-On) | `'Visual Type'` |
-| `src/components/app/WorkflowRecentRow.tsx:149` | fallback `'Workflow'` when job has no name | `'Visual Type'` |
-| `src/lib/conversionCopy.ts:93` | "…better value, and faster workflows." | "…better value, and faster runs." |
-| `src/lib/conversionCopy.ts:138` | "…better value and faster workflows." | "…better value and faster runs." |
-| `src/lib/conversionCopy.ts:165` | "…with more credits, better value, and faster workflows." | "…with more credits, better value, and faster runs." |
-| `src/lib/conversionCopy.ts:169` | valueBlock title `'Faster Workflow'` | `'Faster Runs'` |
-| `src/components/app/MissingRequestBanner.tsx:38-44` | `category === 'workflow'` branch text "Missing a feature or workflow?" / "Describe the workflow…" | branch is currently unused (no caller passes `category="workflow"`). Update copy to "Missing a feature or Visual Type?" / "Describe the Visual Type or feature you need…" for safety |
+### 3. `src/pages/AppPricing.tsx` (2 strings)
+- Line 66: matrix group title "Brand & workflow" → "Brand & studio"
+- Line 655: "depending on the workflow — product, lifestyle…" → "depending on the Visual Type — product, lifestyle…"
+- Line 92 (Brand Model pricing FAQ): **leave as-is for now** — flagged separately as P1 for product confirmation.
 
-### ✅ Intentionally NOT changed (correct as-is)
-- `WorkflowCard.tsx:106`, `WorkflowCardCompact.tsx:99` — render `{workflow.name}` (dynamic data, not the label "Workflow")
-- `DiscoverDetailModal.tsx:303,325,390` — internal/admin debug panel showing DB type/slug
-- `TermsOfService.tsx:33` — "proprietary workflows" (legal, generic noun)
-- `ProductImagesStep3Refine.tsx:1258,1370` — "Preset name…" refers to a real saved-settings preset feature, not the deprecated terminology
-- File names, type names, props (`workflow_slug`, `Workflow` type, `WorkflowType`) — internal code
+### 4. `src/components/app/CreativeDropWizard.tsx` (1 string)
+- Line 125: `STEP_LABELS = ['Details', 'Products', 'Workflow', 'Launch']` → `'Visual Type'`
 
-## Proposed cleanup (text-only, frontend, ~7 strings)
-Apply the replacements in the table above. No routes, props, types, or backend touched. After this, the platform has zero user-facing leaks.
+## Out of scope (intentionally untouched)
+- `src/pages/Changelog.tsx` — historical entries describing the product at time of release; preserved as record
+- Routes, redirects, props, types, file/component names, DB columns
+- Admin pages
+- P1 factual conflicts (six vs seven, TryShot 60 credits, Brand Model price) — separate plan after product decisions
+- P2 polish (e-commerce hyphenation, sign-in wording) — separate sweep
+
+## Acceptance
+- Zero user-visible "Workflows / Templates" referring to the visual creation feature in HelpCenter, LandingPricing, AppPricing, CreativeDropWizard
+- No layout, logic, routing, or pricing changes — text only
+- ~15 strings updated across 4 files
