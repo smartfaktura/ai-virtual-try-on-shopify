@@ -90,7 +90,7 @@ const CATEGORY_LABELS: Record<ConversionCategory, string> = {
 const LAYER1_COPY: Record<ConversionCategory, Layer1Copy> = {
   fashion: {
     headline: 'Your first fashion direction is ready',
-    subline: 'Keep creating with more credits, better value, and faster workflows.',
+    subline: 'Keep creating with more credits, better value, and faster runs.',
     valueBlocks: [
       { icon: 'layers', title: 'More Looks', detail: 'Monthly credits to keep creating fashion looks' },
       { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
@@ -135,7 +135,7 @@ const LAYER1_COPY: Record<ConversionCategory, Layer1Copy> = {
   },
   electronics: {
     headline: 'Your first product visual is ready',
-    subline: 'Create more launch-ready assets with better value and faster workflows.',
+    subline: 'Create more launch-ready assets with better value and faster runs.',
     valueBlocks: [
       { icon: 'layers', title: 'More Assets', detail: 'Monthly credits for product visuals' },
       { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
@@ -162,11 +162,11 @@ const LAYER1_COPY: Record<ConversionCategory, Layer1Copy> = {
   },
   fallback: {
     headline: 'Your first visual is ready',
-    subline: 'Keep creating with more credits, better value, and faster workflows.',
+    subline: 'Keep creating with more credits, better value, and faster runs.',
     valueBlocks: [
       { icon: 'layers', title: 'More Content', detail: 'Monthly credits to keep creating visuals' },
       { icon: 'trending-up', title: 'Better Value', detail: 'Higher plans improve your cost per visual' },
-      { icon: 'zap', title: 'Faster Workflow', detail: 'Priority processing and bulk generation' },
+      { icon: 'zap', title: 'Faster Runs', detail: 'Priority processing and bulk generation' },
     ],
   },
 };

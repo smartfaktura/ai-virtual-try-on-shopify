@@ -2168,7 +2168,7 @@ export default function Generate() {
                   <p className="font-semibold">{activeWorkflow.name}</p>
                   <p className="text-xs text-muted-foreground">{activeWorkflow.description}</p>
                 </div>
-                <Badge variant="secondary">{activeWorkflow.uses_tryon ? 'Try-On' : 'Workflow'}</Badge>
+                <Badge variant="secondary">{activeWorkflow.uses_tryon ? 'Try-On' : 'Visual Type'}</Badge>
               </div>
             </AlertDescription>
           </Alert>

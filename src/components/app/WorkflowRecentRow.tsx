@@ -146,7 +146,7 @@ function ThumbnailCard({ job, signedUrl, allSignedUrls, onSelect }: { job: Recen
       )}
 
       <div className="space-y-0.5 px-0.5">
-        <p className="text-xs font-medium truncate">{job.workflow_name ?? 'Workflow'}</p>
+        <p className="text-xs font-medium truncate">{job.workflow_name ?? 'Visual Type'}</p>
         <p className="text-[10px] text-muted-foreground">
           {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
         </p>

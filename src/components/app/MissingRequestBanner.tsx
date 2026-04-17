@@ -36,12 +36,12 @@ export function MissingRequestBanner({
 
   const defaultTitle =
     category === 'workflow'
-      ? 'Missing a feature or workflow? Let us know what you need.'
+      ? 'Missing a feature or Visual Type? Let us know what you need.'
       : `Missing a ${category}? Tell us, we'll create it in 1–2 business days.`;
 
   const defaultPlaceholder =
     category === 'workflow'
-      ? 'Describe the workflow or feature you need…'
+      ? 'Describe the Visual Type or feature you need…'
       : `Describe the ${category} you'd like us to create…`;
 
   const handleSubmit = async () => {

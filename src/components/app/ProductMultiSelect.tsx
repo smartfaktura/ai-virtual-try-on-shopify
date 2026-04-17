@@ -60,7 +60,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
   return (
     <div className="space-y-4">
       {isCategoryMismatch && (
-        <Alert><AlertDescription>Products from different categories selected. The same template will be applied to all, which may produce inconsistent results.</AlertDescription></Alert>
+        <Alert><AlertDescription>Products from different categories selected. The same Visual Type will be applied to all, which may produce inconsistent results.</AlertDescription></Alert>
       )}
       <div className="flex gap-3 items-center">
         <div className="relative flex-1">
