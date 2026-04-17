@@ -608,11 +608,6 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
         </div>
       )}
 
-      {!extracted && !isImporting && !importError && (
-        <div className="flex justify-end pt-6">
-          <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
-        </div>
-      )}
     </div>
   );
 }
