@@ -116,7 +116,7 @@ export function GuideLayout({ guide }: Props) {
                 <span
                   className={cn(
                     'flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5',
-                    tip.type === 'do' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'
+                    tip.type === 'do' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
                   )}
                 >
                   {tip.type === 'do' ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}

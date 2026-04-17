@@ -4,7 +4,7 @@ import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
-  TrendingUp, BookOpen, Clock, Camera,
+  TrendingUp, BookOpen, Clock, Camera, GraduationCap,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
@@ -41,6 +41,7 @@ const prefetchMap: Record<string, () => void> = {
   '/app/brand-profiles': () => { import('@/pages/BrandProfiles'); },
   '/app/catalog': () => { import('@/pages/CatalogHub'); },
   '/app/catalog/new': () => { import('@/pages/CatalogGenerate'); },
+  '/app/learn': () => { import('@/pages/Learn'); },
 };
 const prefetched = new Set<string>();
 const prefetchRoute = (path: string) => {
@@ -71,6 +72,12 @@ const navGroups = [
       { label: 'Products', icon: Package, path: '/app/products' },
       { label: 'Brand Models', icon: Users, path: '/app/models' },
       { label: 'Library', icon: Image, path: '/app/library' },
+    ],
+  },
+  {
+    label: 'Learn',
+    items: [
+      { label: 'Tutorials', icon: GraduationCap, path: '/app/learn' },
     ],
   },
 ];
