@@ -1,42 +1,23 @@
 
 
-## Fix extra row height from layout toggle
+## Fix "Missing a Visual Type" banner overflow on mobile
 
 ### Issue
-The new layout toggle row above the grid takes a full extra row of vertical space, pushing the grid down. User wants it to not consume extra height.
+The MissingRequestBanner card on `/app/workflows` mobile view has the floating chat bubble (bottom-left FAB) overlapping the avatar stack, and the text + Request button row is cramped — wrapping awkwardly ("Missing a / Visual Type / for your / brand?" wraps to 4 lines).
 
 ### Fix
-**File: `src/pages/Workflows.tsx`**
+**File: `src/components/app/MissingRequestBanner.tsx`** (or wherever the "Missing a Visual Type for your brand?" card is rendered — likely a workflow-specific variant; need to locate exact component first)
 
-Make the toggle visually float so it doesn't add a row:
-- Wrap the toggle row + grid in a `relative` container.
-- Position the toggle absolutely top-right, overlapping the top edge so it doesn't push the grid down.
-- Alternative (cleaner): use negative margin `-mb-2` on the toggle row and reduce its height contribution, OR move the toggle to sit inline next to the section/header area.
-
-**Chosen approach:** absolute-positioned toggle inside a `relative` wrapper so the grid's height is unaffected.
-
-```tsx
-<div className="relative">
-  <div className="absolute -top-12 right-0 z-10 hidden sm:block">
-    <ToggleGroup ... className="gap-1 rounded-lg border bg-card p-1 shadow-sm">
-      {/* h-8 w-8 buttons, w-3.5 h-3.5 icons — slightly smaller to fit */}
-    </ToggleGroup>
-  </div>
-  {/* On mobile, render inline above grid with no extra spacing */}
-  <div className="sm:hidden flex justify-end mb-2">
-    {/* same toggle */}
-  </div>
-  <div className={gridClasses}>...</div>
-</div>
-```
-
-- Desktop: toggle floats up next to the page header area — no extra row height.
-- Mobile: stays inline above grid with minimal `mb-2`.
-- Buttons sized `h-8 w-8` (between original tiny and previous large) so they're tappable but compact.
+Plan steps:
+1. Locate the actual component rendering this banner (search for "Missing a Visual Type" / "for your brand").
+2. On mobile:
+   - Stack vertically: avatars row on top, text below, Request button full-width at bottom — OR
+   - Hide the avatar stack on `<sm` and keep text + button in a tighter row.
+   - Reduce text size and allow text to flow naturally without forced narrow column.
+3. Ensure card has enough bottom padding so the floating chat FAB (bottom-left) doesn't overlap content — add `mb-16 sm:mb-0` to the banner container so it clears the FAB on mobile.
 
 ### Acceptance
-- No extra vertical row consumed on desktop — grid sits at original Y position.
-- Toggle visible top-right, near the grid.
-- Mobile keeps toggle inline with tight spacing.
-- Behavior unchanged.
+- On mobile, banner content fits cleanly with no overlap from chat FAB.
+- Text reads on 1–2 lines, Request button accessible.
+- Desktop layout unchanged.
 
