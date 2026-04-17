@@ -727,7 +727,7 @@ export default function Jobs() {
         initialIndex={selectedItem ? items.findIndex(i => i.id === selectedItem.id) : 0}
       />
 
-      <FeedbackBanner />
+      {allItems.length > 0 && <FeedbackBanner />}
 
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent>
