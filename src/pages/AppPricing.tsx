@@ -764,7 +764,13 @@ export default function AppPricing() {
                 {stickyCta.label
                   .replace(/^Continue with .*/, 'Continue')
                   .replace(/^Upgrade to .*/, 'Upgrade')
-                  .replace(/^Choose .*/, 'Choose')}
+                {(() => {
+                  const label = stickyCta.label;
+                  if (label === 'Continue with Growth') return 'Get Growth';
+                  if (label.startsWith('Upgrade to ')) return 'Upgrade';
+                  if (label.startsWith('Choose ')) return 'Choose';
+                  return label;
+                })()}
                 {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
               </Button>
             </div>

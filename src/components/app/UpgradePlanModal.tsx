@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -78,7 +78,7 @@ function getCopy(args: {
   };
 }
 
-export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' }: UpgradePlanModalProps) {
+export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps>(function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' }, _ref) {
   const navigate = useNavigate();
   const { plan, balance, billingInterval, startCheckout } = useCredits();
   const effectivePlan = previewPlan ?? plan;
