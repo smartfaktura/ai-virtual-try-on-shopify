@@ -285,13 +285,13 @@ export default function PublicFreestyle() {
   const jsonLd = useMemo(() => ({
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'VOVV AI Freestyle Studio',
+    name: 'VOVV.AI Freestyle Studio',
     applicationCategory: 'DesignApplication',
     operatingSystem: 'Web',
     url: `${SITE_URL}/freestyle`,
     description: 'AI-powered freestyle product photography tool. Generate professional e-commerce images with AI models, backgrounds, and custom scenes — no camera or studio required.',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', description: 'Free to try' },
-    creator: { '@type': 'Organization', name: 'VOVV AI', url: SITE_URL },
+    creator: { '@type': 'Organization', name: 'VOVV.AI', url: SITE_URL },
   }), []);
 
   // Local image upload (no storage)
@@ -324,8 +324,8 @@ export default function PublicFreestyle() {
   return (
     <PageLayout>
       <SEOHead
-        title="Free AI Product Photography Generator — Freestyle Studio | VOVV AI"
-        description="Create stunning AI product photos for free. Choose from 50+ AI models, 100+ scenes, and custom styles. No camera needed — generate e-commerce images in seconds with VOVV AI Freestyle."
+        title="Free AI Product Photography Generator — Freestyle Studio | VOVV.AI"
+        description="Create stunning AI product photos for free. Choose from 50+ AI models, 100+ scenes, and custom styles. No camera needed — generate e-commerce images in seconds with VOVV.AI Freestyle."
         canonical={`${SITE_URL}/freestyle`}
         ogType="website"
       />

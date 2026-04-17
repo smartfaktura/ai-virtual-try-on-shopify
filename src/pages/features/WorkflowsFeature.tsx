@@ -212,7 +212,7 @@ export default function WorkflowsFeature() {
 
   return (
     <PageLayout>
-      <SEOHead title="AI Photography Templates — VOVV AI" description="Six purpose-built AI photography templates: Virtual Try-On, Product Listing, Flat Lay, Mirror Selfie, UGC, and Interior Staging. Professional results in 60 seconds." canonical={`${SITE_URL}/features/workflows`} />
+      <SEOHead title="AI Photography Templates — VOVV.AI" description="Six purpose-built AI photography templates: Virtual Try-On, Product Listing, Flat Lay, Mirror Selfie, UGC, and Interior Staging. Professional results in 60 seconds." canonical={`${SITE_URL}/features/workflows`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

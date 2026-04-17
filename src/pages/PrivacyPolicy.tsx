@@ -6,7 +6,7 @@ import { SITE_URL } from '@/lib/constants';
 export default function PrivacyPolicy() {
   return (
     <PageLayout>
-      <SEOHead title="Privacy Policy — VOVV AI" description="Learn how VOVV AI collects, uses, and protects your data. Read our full privacy policy." canonical={`${SITE_URL}/privacy`} />
+      <SEOHead title="Privacy Policy — VOVV.AI" description="Learn how VOVV.AI collects, uses, and protects your data. Read our full privacy policy." canonical={`${SITE_URL}/privacy`} />
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">

@@ -73,7 +73,7 @@ const positions = [
 export default function Careers() {
   return (
     <PageLayout>
-      <SEOHead title="Careers at VOVV AI — Join the Future of AI Photography" description="Join the VOVV AI team. We're hiring engineers, designers, and marketers to build the future of AI-powered e-commerce photography." canonical={`${SITE_URL}/careers`} />
+      <SEOHead title="Careers at VOVV.AI — Join the Future of AI Photography" description="Join the VOVV.AI team. We're hiring engineers, designers, and marketers to build the future of AI-powered e-commerce photography." canonical={`${SITE_URL}/careers`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

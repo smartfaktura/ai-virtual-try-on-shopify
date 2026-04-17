@@ -44,7 +44,7 @@ export function SEOHead({ title, description, canonical, ogImage, ogType = 'webs
     setMeta('og:type', ogType, 'property');
     setMeta('og:image', resolvedImage, 'property');
     setMeta('og:url', resolvedUrl, 'property');
-    setMeta('og:site_name', 'VOVV AI', 'property');
+    setMeta('og:site_name', 'VOVV.AI', 'property');
 
     if (canonical) {
       setLink('canonical', canonical);
@@ -65,7 +65,7 @@ export function SEOHead({ title, description, canonical, ogImage, ogType = 'webs
     }
 
     return () => {
-      document.title = 'VOVV AI | Automated Visual Studio for E-commerce';
+      document.title = 'VOVV.AI | Automated Visual Studio for E-commerce';
     };
   }, [title, description, canonical, ogImage, ogType, noindex]);
 

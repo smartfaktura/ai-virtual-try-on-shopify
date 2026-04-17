@@ -101,7 +101,7 @@ export default function Changelog() {
 
   return (
     <PageLayout>
-      <SEOHead title="Changelog — VOVV AI Product Updates" description="A timeline of everything we've shipped. Follow along as VOVV AI builds the future of AI product photography." canonical={`${SITE_URL}/changelog`} />
+      <SEOHead title="Changelog — VOVV.AI Product Updates" description="A timeline of everything we've shipped. Follow along as VOVV.AI builds the future of AI product photography." canonical={`${SITE_URL}/changelog`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

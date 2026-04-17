@@ -33,7 +33,7 @@ export default function About() {
   return (
     <PageLayout>
       <SEOHead
-        title="About VOVV AI — The Team Behind AI Product Photography"
+        title="About VOVV.AI — The Team Behind AI Product Photography"
         description="Meet the team building the future of e-commerce visual content with AI-powered photography and automation."
         canonical={`${SITE_URL}/about`}
       />

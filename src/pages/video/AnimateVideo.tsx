@@ -750,7 +750,7 @@ export default function AnimateVideo() {
               ))}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground/70">VOVV AI Studio</p>
+              <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
               <p className="text-sm text-muted-foreground">
                 We detect category, scene type, and motion opportunities so you don't need to prompt from scratch.
               </p>

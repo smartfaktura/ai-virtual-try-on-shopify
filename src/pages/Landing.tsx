@@ -23,7 +23,7 @@ const LandingFooter = lazy(() => import('@/components/landing/LandingFooter').th
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'VOVV AI',
+  name: 'VOVV.AI',
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.png`,
   sameAs: [],
@@ -33,7 +33,7 @@ const organizationJsonLd = {
 const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'VOVV AI',
+  name: 'VOVV.AI',
   url: SITE_URL,
   potentialAction: {
     '@type': 'SearchAction',
@@ -46,7 +46,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
       <SEOHead
-        title="VOVV AI — AI Product Photography & Visual Studio for E-commerce"
+        title="VOVV.AI — AI Product Photography & Visual Studio for E-commerce"
         description="Upload one product photo, get 20 brand-ready visuals for ads, website, and campaigns automatically. Your automated visual studio."
         canonical={SITE_URL}
       />

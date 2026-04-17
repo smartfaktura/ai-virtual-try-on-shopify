@@ -83,7 +83,7 @@ export default function RealEstateStagingFeature() {
   return (
     <PageLayout>
       <SEOHead
-        title="AI Virtual Staging for Real Estate — VOVV AI"
+        title="AI Virtual Staging for Real Estate — VOVV.AI"
         description="Stage any empty room with AI in seconds. Generate Japandi, Contemporary, and Eclectic interiors from one photo. Save thousands vs physical staging."
         canonical={`${SITE_URL}/features/real-estate-staging`}
       />

@@ -32,12 +32,12 @@ export default function Blog() {
   const blogListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'VOVV AI Blog',
+    name: 'VOVV.AI Blog',
     description: 'Insights on AI product photography, visual content strategy, and e-commerce growth.',
     url: `${SITE_URL}/blog`,
     publisher: {
       '@type': 'Organization',
-      name: 'VOVV AI',
+      name: 'VOVV.AI',
       url: SITE_URL,
     },
     blogPost: sorted.map((p) => ({
@@ -52,8 +52,8 @@ export default function Blog() {
   return (
     <PageLayout>
       <SEOHead
-        title="VOVV AI Blog — AI Photography, E-commerce Tips & Visual Strategy"
-        description="Insights on AI product photography, visual content strategy, and e-commerce growth from the VOVV AI team."
+        title="VOVV.AI Blog — AI Photography, E-commerce Tips & Visual Strategy"
+        description="Insights on AI product photography, visual content strategy, and e-commerce growth from the VOVV.AI team."
         canonical={`${SITE_URL}/blog`}
       />
       <JsonLd data={blogListJsonLd} />

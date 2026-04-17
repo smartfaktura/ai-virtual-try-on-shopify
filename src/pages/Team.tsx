@@ -58,8 +58,8 @@ export default function Team() {
   return (
     <PageLayout>
       <SEOHead
-        title="Meet the VOVV AI Studio Team — Your AI Creative Crew"
-        description="10 AI professionals, zero overhead. Meet the virtual creative team powering your e-commerce product photography at VOVV AI."
+        title="Meet the VOVV.AI Studio Team — Your AI Creative Crew"
+        description="10 AI professionals, zero overhead. Meet the virtual creative team powering your e-commerce product photography at VOVV.AI."
         canonical={`${SITE_URL}/team`}
       />
 
