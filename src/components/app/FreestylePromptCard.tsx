@@ -216,26 +216,26 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
       </div>
 
       {/* Content area */}
-      <div className={cn('flex flex-col gap-1 flex-1', mobileCompact ? 'p-2' : 'p-4')}>
+      <div className={cn('flex flex-col gap-1.5 flex-1', mobileCompact ? 'p-2' : 'p-5')}>
         <h3 className={cn(
           'font-bold tracking-tight leading-tight',
-          mobileCompact ? 'text-[11px]' : 'text-sm',
+          mobileCompact ? 'text-[11px]' : 'text-base',
         )}>
           Freestyle Studio
         </h3>
 
         {!mobileCompact && (
-          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-            Type anything. Get styled visuals.
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+            Type anything and get styled brand visuals in seconds.
           </p>
         )}
 
-        <div className="pt-1 mt-auto">
+        <div className="pt-2 mt-auto">
           <Button
             size="sm"
             className={cn(
               'rounded-full font-semibold gap-1 w-full',
-              mobileCompact ? 'h-8 px-3 text-xs' : 'h-8 px-5',
+              mobileCompact ? 'h-8 px-3 text-xs' : 'h-10 px-5',
             )}
             onClick={(e) => { e.stopPropagation(); onSelect(); }}
           >
