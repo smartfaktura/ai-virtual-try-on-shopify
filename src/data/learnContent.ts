@@ -56,8 +56,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     whenToUse:
       'Use it for a small, art-directed set of premium shots for one product — a PDP refresh, a paid ad, a campaign hero.',
     vsAlternatives: [
-      { label: 'Use it for', useThisWhen: 'One product, full creative control over scene, model and framing.' },
-      { label: 'Skip it if', useThisWhen: 'You need the same look across 10+ SKUs — use Catalog Studio instead.' },
+      { label: 'Use it for', useThisWhen: 'Multiple products with full creative control over scene, models, and framing — generate batches across your catalog in one pass.' },
+      { label: 'Skip it if', useThisWhen: 'You only need plain white-background ecommerce shots at scale — use Catalog Studio for that.' },
     ],
     whatItDoes:
       'A 4-step wizard: pick a product, pick scenes, refine the setup, generate. Premium 2K shots that keep your real product intact.',
