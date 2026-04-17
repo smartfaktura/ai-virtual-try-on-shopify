@@ -914,111 +914,117 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         )}
       </div>
 
-      {/* Product Details */}
-      <div className="space-y-2">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="product-title" className="text-xs font-medium">
-              Product Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="product-title"
-              placeholder={isAnalyzing && !hasManualEdits.current.title ? "Analyzing…" : "e.g. Black Yoga Leggings"}
-              value={title}
-              onChange={(e) => { setTitle(e.target.value); hasManualEdits.current.title = true; }}
-              maxLength={200}
-              className={cn(
-                'transition-all duration-300',
-                isAnalyzing && !hasManualEdits.current.title && 'animate-pulse ring-1 ring-primary/30'
-              )}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="product-type" className="text-xs font-medium">Product Type</Label>
-            <Input
-              id="product-type"
-              placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
-              value={productType}
-              onChange={(e) => { setProductType(e.target.value); hasManualEdits.current.productType = true; }}
-              maxLength={100}
-              className={cn(
-                'transition-all duration-300',
-                isAnalyzing && !hasManualEdits.current.productType && 'animate-pulse ring-1 ring-primary/30'
-              )}
-            />
-          </div>
-        </div>
-
-        {!(isAnalyzing && !hasManualEdits.current.productType) && (
-          <>
-            {(!productType || singleChipsExpanded) ? (
-              <div className="flex flex-wrap gap-1.5">
-                {QUICK_TYPES.map((t) => (
-                  <Badge
-                    key={t}
-                    variant={productType === t ? 'default' : 'outline'}
-                    className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
-                    onClick={() => {
-                      setProductType(productType === t ? '' : t);
-                      hasManualEdits.current.productType = true;
-                      if (productType !== t) setSingleChipsExpanded(false);
-                    }}
-                  >
-                    {t}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <span
-                onClick={() => setSingleChipsExpanded(true)}
-                className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
-              >
-                Change category
+      {/* Product Details — only after an image is uploaded */}
+      {singleImage && (
+        <div className="space-y-2 animate-fade-in">
+          <div className="flex items-center gap-2 pt-1 pb-1 border-b border-border/50">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Product details
+            </span>
+            {isAnalyzing && (
+              <span className="flex items-center gap-1 text-[10px] text-primary">
+                <Sparkles className="w-3 h-3 animate-pulse" />
+                Auto-filling…
               </span>
             )}
-          </>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="product-desc" className="text-xs font-medium">Description</Label>
-            <Textarea
-              id="product-desc"
-              placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
-              value={description}
-              onChange={(e) => { setDescription(e.target.value); hasManualEdits.current.description = true; }}
-              maxLength={500}
-              rows={2}
-              className={cn(
-                'resize-none min-h-0 transition-all duration-300',
-                isAnalyzing && !hasManualEdits.current.description && 'animate-pulse ring-1 ring-primary/30'
-              )}
-            />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="product-dimensions" className="text-xs font-medium">
-              Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <Input
-              id="product-dimensions"
-              placeholder="e.g. 28 x 35 x 13 cm"
-              value={dimensions}
-              onChange={(e) => setDimensions(e.target.value)}
-              maxLength={100}
-            />
-            <p className="text-[11px] text-muted-foreground/70 sm:hidden mt-1">
-              Tip: Add real dimensions (e.g. 15×10cm) for realistic scaling in scenes.
-            </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="space-y-1">
+              <Label htmlFor="product-title" className="text-xs font-medium">
+                Product Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="product-title"
+                placeholder={isAnalyzing && !hasManualEdits.current.title ? "Analyzing…" : "e.g. Black Yoga Leggings"}
+                value={title}
+                onChange={(e) => { setTitle(e.target.value); hasManualEdits.current.title = true; }}
+                maxLength={200}
+                className={cn(
+                  'transition-all duration-300',
+                  isAnalyzing && !hasManualEdits.current.title && 'animate-pulse ring-1 ring-primary/30'
+                )}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="product-type" className="text-xs font-medium">Product Type</Label>
+              <Input
+                id="product-type"
+                placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
+                value={productType}
+                onChange={(e) => { setProductType(e.target.value); hasManualEdits.current.productType = true; }}
+                maxLength={100}
+                className={cn(
+                  'transition-all duration-300',
+                  isAnalyzing && !hasManualEdits.current.productType && 'animate-pulse ring-1 ring-primary/30'
+                )}
+              />
+            </div>
+          </div>
+
+          {!(isAnalyzing && !hasManualEdits.current.productType) && (
+            <>
+              {(!productType || singleChipsExpanded) ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_TYPES.map((t) => (
+                    <Badge
+                      key={t}
+                      variant={productType === t ? 'default' : 'outline'}
+                      className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
+                      onClick={() => {
+                        setProductType(productType === t ? '' : t);
+                        hasManualEdits.current.productType = true;
+                        if (productType !== t) setSingleChipsExpanded(false);
+                      }}
+                    >
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <span
+                  onClick={() => setSingleChipsExpanded(true)}
+                  className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
+                >
+                  Change category
+                </span>
+              )}
+            </>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="product-desc" className="text-xs font-medium">Description</Label>
+              <Textarea
+                id="product-desc"
+                placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
+                value={description}
+                onChange={(e) => { setDescription(e.target.value); hasManualEdits.current.description = true; }}
+                maxLength={500}
+                rows={2}
+                className={cn(
+                  'resize-none min-h-0 transition-all duration-300',
+                  isAnalyzing && !hasManualEdits.current.description && 'animate-pulse ring-1 ring-primary/30'
+                )}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="product-dimensions" className="text-xs font-medium">
+                Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <Input
+                id="product-dimensions"
+                placeholder="e.g. 28 x 35 x 13 cm"
+                value={dimensions}
+                onChange={(e) => setDimensions(e.target.value)}
+                maxLength={100}
+              />
+              <p className="text-[11px] text-muted-foreground/70 sm:hidden mt-1">
+                Tip: Add real dimensions (e.g. 15×10cm) for realistic scaling in scenes.
+              </p>
+            </div>
           </div>
         </div>
-
-        {singleImage && (
-          <div className="bg-primary/5 border border-primary/10 rounded-lg px-3 py-2 text-xs text-muted-foreground flex items-center gap-2 mt-4">
-            <Lightbulb className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>Add details to improve accuracy</span>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* More Details (optional, collapsible) */}
       <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen}>
