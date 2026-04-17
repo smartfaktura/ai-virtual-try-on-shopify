@@ -99,7 +99,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
           <p className="text-sm text-muted-foreground max-w-md">{description}</p>
         </div>
         {renderedActions.length > 0 && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pt-2">
             {renderedActions.map((a, i) => (
               <Button key={i} variant={a.variant === 'outline' ? 'outline' : 'default'} onClick={a.onAction}>
                 {a.icon}
