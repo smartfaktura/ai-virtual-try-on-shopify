@@ -38,6 +38,7 @@ interface ManualProductTabProps {
   onProductAdded: () => void;
   onClose: () => void;
   editingProduct?: UserProduct | null;
+  initialFiles?: File[];
 }
 
 interface BatchItem {
@@ -59,7 +60,7 @@ const QUICK_TYPES = [
 
 const MAX_BATCH = 100;
 
-export function ManualProductTab({ onProductAdded, onClose, editingProduct }: ManualProductTabProps) {
+export function ManualProductTab({ onProductAdded, onClose, editingProduct, initialFiles }: ManualProductTabProps) {
   const { user } = useAuth();
   // Single product mode state
   const [title, setTitle] = useState('');
@@ -121,6 +122,17 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (editingProduct.weight || editingProduct.materials || editingProduct.color) setMoreDetailsOpen(true);
     }
   }, [editingProduct]);
+
+  // Consume initialFiles once when provided (e.g. from page-level drag overlay or empty-state drop)
+  const consumedInitialRef = useRef(false);
+  useEffect(() => {
+    if (editingProduct) return;
+    if (!initialFiles || initialFiles.length === 0) return;
+    if (consumedInitialRef.current) return;
+    consumedInitialRef.current = true;
+    addFiles(initialFiles);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFiles, editingProduct]);
 
   // AI analysis for a single image
   const analyzeImage = useCallback(async (imageDataUrl: string, target?: { batchId: string }) => {

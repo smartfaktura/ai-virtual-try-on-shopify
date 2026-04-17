@@ -3,9 +3,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Ruler } from 'lucide-react';
+import { Ruler, UploadCloud } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, ImagePlus, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,13 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
+import { ProductsEmptyUpload, type EmptyUploadMethod } from '@/components/app/ProductsEmptyUpload';
+import { AddProductModal, type AddProductTab } from '@/components/app/AddProductModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { TEAM_MEMBERS } from '@/data/teamData';
 import { trackViewContent } from '@/lib/fbPixel';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { gtagViewItem } from '@/lib/gtag';
@@ -50,7 +51,64 @@ export default function Products() {
   const [sortBy, setSortBy] = useState<SortBy>('newest');
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
+  // Add Product drawer state
+  const [addOpen, setAddOpen] = useState(false);
+  const [addInitialTab, setAddInitialTab] = useState<AddProductTab>('manual');
+  const [addInitialFiles, setAddInitialFiles] = useState<File[] | undefined>(undefined);
+
+  // Page-wide drag overlay
+  const [pageDragActive, setPageDragActive] = useState(false);
+
+  const openAddDrawer = (tab: AddProductTab = 'manual', files?: File[]) => {
+    setAddInitialTab(tab);
+    setAddInitialFiles(files);
+    setAddOpen(true);
+  };
+
   useEffect(() => { trackViewContent('Products', 'product_library'); gtagViewItem('Products', 'product_library'); }, []);
+
+  // Window-level drag-and-drop: open drawer with files when user drops anywhere on the page
+  useEffect(() => {
+    let dragDepth = 0;
+    const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types || []).includes('Files');
+
+    const onDragEnter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      dragDepth++;
+      setPageDragActive(true);
+    };
+    const onDragOver = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+    };
+    const onDragLeave = () => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) setPageDragActive(false);
+    };
+    const onDrop = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragDepth = 0;
+      setPageDragActive(false);
+      const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+      if (files.length) {
+        setAddInitialTab('manual');
+        setAddInitialFiles(files);
+        setAddOpen(true);
+      }
+    };
+
+    window.addEventListener('dragenter', onDragEnter);
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('drop', onDrop);
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter);
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('drop', onDrop);
+    };
+  }, []);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],
@@ -174,7 +232,7 @@ export default function Products() {
               </Button>
             </div>
             {products.length > 0 && (
-              <Button onClick={() => navigate('/app/products/new')}>
+              <Button onClick={() => openAddDrawer('manual')}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Products
               </Button>
@@ -247,18 +305,22 @@ export default function Products() {
         ) : filtered.length === 0 ? (
           (() => {
             const isFiltered = !!(search || typeFilter !== 'all');
-            const sophia = TEAM_MEMBERS.find(m => m.name === 'Sophia');
+            if (isFiltered) {
+              return (
+                <EmptyStateCard
+                  heading="No products match your filters"
+                  description="Try a different search term or clear filters."
+                />
+              );
+            }
+            // Truly empty: show active upload surface
             return (
-              <EmptyStateCard
-                heading={isFiltered ? 'No products match your filters' : 'No products yet'}
-                description={isFiltered ? 'Try a different search term or clear filters.' : ''}
-                action={!isFiltered ? { content: 'Add Products', onAction: () => navigate('/app/products/new') } : undefined}
-                icon={
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                    <ImagePlus className="w-8 h-8 text-primary/60" />
-                  </div>
-                }
-                teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product to start creating studio-quality visuals." } : undefined}
+              <ProductsEmptyUpload
+                onFilesSelected={(files) => openAddDrawer('manual', files)}
+                onMethodSelect={(method) => {
+                  const tab: AddProductTab = method === 'paste' ? 'manual' : (method as AddProductTab);
+                  openAddDrawer(tab);
+                }}
               />
             );
           })()
@@ -404,6 +466,32 @@ export default function Products() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddProductModal
+        open={addOpen}
+        onOpenChange={(o) => {
+          setAddOpen(o);
+          if (!o) setAddInitialFiles(undefined);
+        }}
+        onProductAdded={() => {
+          queryClient.invalidateQueries({ queryKey: ['user-products'] });
+          queryClient.invalidateQueries({ queryKey: ['product-image-counts'] });
+        }}
+        initialTab={addInitialTab}
+        initialFiles={addInitialFiles}
+      />
+
+      {pageDragActive && (
+        <div className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
+          <div className="rounded-2xl border-2 border-dashed border-primary/60 bg-card px-10 py-8 shadow-xl flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <UploadCloud className="w-6 h-6 text-primary" />
+            </div>
+            <p className="text-base font-semibold">Drop to add products</p>
+            <p className="text-xs text-muted-foreground">Each image becomes a product</p>
+          </div>
+        </div>
+      )}
     </PageHeader>
   );
 }
