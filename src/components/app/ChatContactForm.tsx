@@ -6,11 +6,12 @@ import { cn } from '@/lib/utils';
 
 interface ChatContactFormProps {
   onSent?: (email: string) => void;
+  variant?: 'compact' | 'spacious';
 }
 
 type FormState = 'idle' | 'sending' | 'sent' | 'error';
 
-export function ChatContactForm({ onSent }: ChatContactFormProps) {
+export function ChatContactForm({ onSent, variant = 'compact' }: ChatContactFormProps) {
   const { user } = useAuth();
   const [name, setName] = useState(user?.user_metadata?.display_name || user?.user_metadata?.full_name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -49,6 +50,103 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
     }
   };
 
+  const isValid = name.trim() && email.trim() && message.trim();
+
+  if (variant === 'spacious') {
+    if (state === 'sent') {
+      return (
+        <div className="flex items-start gap-3 py-6 animate-in fade-in duration-500">
+          <span className="relative flex h-2.5 w-2.5 mt-2 flex-shrink-0">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+          </span>
+          <div>
+            <p className="text-[15px] font-medium text-foreground">Message sent</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              We'll reply to <span className="text-foreground">{email}</span> within a few hours.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    const fieldClass = "w-full h-12 bg-transparent border-b border-border/80 px-0 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50";
+    const labelClass = "block text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5";
+
+    return (
+      <div className="space-y-7">
+        <div>
+          <label className={labelClass}>Name</label>
+          <input
+            type="text"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={100}
+            className={fieldClass}
+            disabled={state === 'sending'}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Email</label>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            maxLength={255}
+            className={fieldClass}
+            disabled={state === 'sending'}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Message</label>
+          <textarea
+            placeholder="Tell us what's on your mind…"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            maxLength={2000}
+            rows={5}
+            className="w-full bg-transparent border-b border-border/80 px-0 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground transition-colors resize-none disabled:opacity-50"
+            disabled={state === 'sending'}
+          />
+        </div>
+
+        {state === 'error' && (
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-sm">{errorMsg}</span>
+          </div>
+        )}
+
+        <div className="pt-2">
+          <button
+            onClick={handleSubmit}
+            disabled={state === 'sending' || !isValid}
+            className={cn(
+              "w-full h-12 inline-flex items-center justify-center gap-2 rounded-full text-[15px] font-medium transition-all",
+              isValid && state !== 'sending'
+                ? "bg-foreground text-background hover:opacity-90 active:scale-[0.99]"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
+            )}
+          >
+            {state === 'sending' ? (
+              'Sending…'
+            ) : (
+              <>
+                Send message
+                <Send className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ----- compact (existing chat widget) -----
   if (state === 'sent') {
     return (
       <div className="flex items-center gap-2 py-2 rounded-lg bg-emerald-500/10 animate-in fade-in duration-300">
@@ -79,7 +177,7 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
 
       <button
         onClick={handleSubmit}
-        disabled={state === 'sending' || !name.trim() || !email.trim() || !message.trim()}
+        disabled={state === 'sending' || !isValid}
         className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors"
       >
         <Send className="w-3 h-3" />
