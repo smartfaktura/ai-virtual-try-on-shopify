@@ -1,5 +1,5 @@
 import React from 'react';
-import type { GuideStepKey } from './FreestyleGuide';
+
 import {
   Square, RectangleHorizontal, ChevronDown,
   Smartphone, Camera, Lock, Gauge, Sparkles, Palette,
@@ -72,7 +72,7 @@ interface FreestyleSettingsChipsProps {
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
   hasModelSelected?: boolean;
-  highlightedChip?: GuideStepKey | null;
+  
   disabledChips?: { product?: boolean; model?: boolean; scene?: boolean; brand?: boolean };
   promptHelperButton?: React.ReactNode;
 }
@@ -90,7 +90,7 @@ export function FreestyleSettingsChips({
   quality, onQualityChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
-  highlightedChip,
+  
   disabledChips,
   promptHelperButton,
 }: FreestyleSettingsChipsProps) {
@@ -211,7 +211,6 @@ export function FreestyleSettingsChips({
   // --- Chip wrappers for model/scene/product with disabled + highlight support ---
   const productChipInner = (
     <div className={cn(
-      highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
       disabledChips?.product && 'opacity-40'
     )}>
       <ProductSelectorChip
@@ -239,7 +238,6 @@ export function FreestyleSettingsChips({
 
   const modelChip = (
     <div className={cn(
-      highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
       disabledChips?.model && 'opacity-40 pointer-events-none'
     )}>
       <ModelSelectorChip
@@ -254,7 +252,6 @@ export function FreestyleSettingsChips({
 
   const sceneChip = (
     <div className={cn(
-      highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
       disabledChips?.scene && 'opacity-40 pointer-events-none'
     )}>
       <SceneSelectorChip
