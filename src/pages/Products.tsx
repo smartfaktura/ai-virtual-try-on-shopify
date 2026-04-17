@@ -55,13 +55,18 @@ export default function Products() {
   const [addOpen, setAddOpen] = useState(false);
   const [addInitialTab, setAddInitialTab] = useState<AddProductTab>('manual');
   const [addInitialFiles, setAddInitialFiles] = useState<File[] | undefined>(undefined);
+  const [addCompact, setAddCompact] = useState(false);
 
   // Page-wide drag overlay
   const [pageDragActive, setPageDragActive] = useState(false);
 
-  const openAddDrawer = (tab: AddProductTab = 'manual', files?: File[]) => {
+  // Armed paste listening window (for "Paste image" empty-state action)
+  const [pasteArmed, setPasteArmed] = useState(false);
+
+  const openAddDrawer = (tab: AddProductTab = 'manual', files?: File[], compact = false) => {
     setAddInitialTab(tab);
     setAddInitialFiles(files);
+    setAddCompact(compact);
     setAddOpen(true);
   };
 
