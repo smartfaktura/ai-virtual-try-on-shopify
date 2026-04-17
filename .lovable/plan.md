@@ -1,19 +1,28 @@
 
+
 ## Goal
-Align Freestyle's inline low-credits banner text with the global `LowCreditsBanner` tone — minimum-touch fix.
+Make truncated workflow card descriptions on `/app/workflows` fully readable without breaking the grid's vertical alignment.
 
-## Change
-**`src/pages/Freestyle.tsx:987`** — Replace banner text:
-- From: `"Top up to keep creating with VOVV.AI"`
-- To: `"Top up to keep creating premium, brand-ready visuals."`
+## Problem
+`WorkflowCardCompact.tsx:153` uses `line-clamp-2` on descriptions. Many descriptions exceed 2 lines and get cut off mid-word with no tooltip, no expand, no hover reveal — users physically cannot read them.
 
-## Why this works
-Both banners now share the same value-focused phrasing ("premium, brand-ready visuals"), so a user running low on credits gets a consistent message whether they're on Workflows, Library, or Freestyle. No component refactor needed — just a string swap.
+## Recommended fix (minimal, safest)
+
+**`src/components/app/WorkflowCardCompact.tsx:153`** — Replace `line-clamp-2` with `line-clamp-3` and add a native `title={workflow.description}` attribute on the `<p>`.
+
+- **Why line-clamp-3**: Reviewing typical descriptions in the data, 3 lines fits ~95% of them in full at the current card width. Cards stay grid-aligned because the container uses `flex-1` + `mt-auto` on the button.
+- **Why `title` attribute**: Free, native browser tooltip — hover reveals full text for the rare 4-line description. Zero new components, zero layout risk.
+
+## Alternative (heavier — only if you want it)
+Replace `<p>` with a shadcn `<Tooltip>` showing the full description on hover. More polish, more moving parts. Skip unless desired.
 
 ## Out of scope
-- Replacing the custom Freestyle banner with `<LowCreditsBanner />` (option a)
-- Video page changes (per your direction)
+- Rewriting/shortening descriptions in DB (could be follow-up audit)
+- `mobileRow` / `comingSoon` / `modalCompact` variants (already fine — row has no description, comingSoon already has line-clamp-2 which is acceptable for that compact tile)
 
 ## Acceptance
-- 1 string updated in 1 file
-- Freestyle low-credits banner tone matches global banner
+- Workflow cards on `/app/workflows` show up to 3 lines of description
+- Hovering a card reveals the complete description via native tooltip
+- Card heights remain consistent across the grid (button stays bottom-aligned)
+- 1 line changed in 1 file
+
