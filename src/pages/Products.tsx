@@ -181,8 +181,10 @@ export default function Products() {
             )}
           </div>
         </div>
+        )}
 
-        {/* Filter bar */}
+        {/* Filter bar — hidden when user has zero products */}
+        {showToolbar && (
         <div className="flex flex-wrap items-center gap-2">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-[160px] h-9 text-xs">
@@ -225,6 +227,7 @@ export default function Products() {
             </button>
           )}
         </div>
+        )}
 
         {/* Products */}
         {isLoading ? (
