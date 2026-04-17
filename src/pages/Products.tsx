@@ -132,6 +132,8 @@ export default function Products() {
   }, [products, search, typeFilter, sortBy]);
 
   const activeFilterCount = (typeFilter !== 'all' ? 1 : 0);
+  const hasNoProducts = !isLoading && products.length === 0;
+  const showToolbar = !hasNoProducts;
 
   return (
     <PageHeader
@@ -139,7 +141,8 @@ export default function Products() {
       subtitle="Manage your products. Upload once and use them across Visual Types."
     >
       <div className="space-y-4">
-        {/* Top bar */}
+        {/* Top bar — hidden when user has zero products */}
+        {showToolbar && (
         <div className="flex flex-col sm:flex-row gap-3 justify-between">
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -178,8 +181,10 @@ export default function Products() {
             )}
           </div>
         </div>
+        )}
 
-        {/* Filter bar */}
+        {/* Filter bar — hidden when user has zero products */}
+        {showToolbar && (
         <div className="flex flex-wrap items-center gap-2">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-[160px] h-9 text-xs">
@@ -222,6 +227,7 @@ export default function Products() {
             </button>
           )}
         </div>
+        )}
 
         {/* Products */}
         {isLoading ? (
