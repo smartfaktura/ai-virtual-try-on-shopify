@@ -369,8 +369,7 @@ export default function Dashboard() {
                   Describe any shot, scene, or style you want to create.
                 </p>
               </div>
-              <p className="text-xs text-muted-foreground/60 mt-3">More creative control</p>
-              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-3 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
                 Open
                 <ArrowRight className="w-4 h-4" />
               </Button>
