@@ -1,54 +1,42 @@
 
 
-## Problem
-1. Empty state click on "Product URL" / "CSV" / "Shopify" → opens the same big drawer that re-shows the entire 5-method rail. User picked the method already, but UI makes them feel like nothing decisive happened.
-2. Drawer at 600px feels narrow for image upload + form fields, especially after a method is chosen the secondary rail eats vertical space.
-3. After clicking a method, there's no clear "you are in X mode" — title still says "Add Products" generically.
+## Issues found in the compact URL drawer (and others)
 
-## Fix — two-part redesign
+### 1. URL input clipped at right edge (your screenshot)
+`StoreImportTab` uses `flex gap-2` with `flex-1` Input + Import button. Inside the wide Sheet (720px) the form has no right padding constraint and the Input's relative wrapper isn't fully containing — the focus ring + border touch the Sheet's right edge. **Fix:** wrap `StoreImportTab` body in `min-w-0` and ensure `AddProductModal` compact body has consistent horizontal padding (currently the body inherits `px-7` from the Sheet wrapper but the inner overflow container clips the focus ring). Add `pr-1` on the scroll container so focus ring isn't sliced.
 
-### Part 1 — Direct entry, no method rail when user already chose one
-When opening the drawer **from a specific empty-state method** (URL / CSV / Shopify / Paste), skip the method rail entirely. Show only that one workflow with a clear titled header and a tiny "Switch method ▾" link.
+### 2. Floating "Cancel" link mid-page
+Visible in your screenshot at right side, vertically centered — that's `StoreImportTab`'s own internal Cancel button rendering when there's lots of empty vertical space. In compact mode it looks orphaned and duplicates the Sheet's X close. **Fix:** hide the in-tab Cancel when the parent provides its own close affordance (always true in drawer). Pass an `embedded` flag or simply remove it — Sheet X + "Switch method" are enough.
 
-```text
-┌─ Sheet ────────────────────────────────────┐
-│ ← Import from URL                       X │
-│ Paste a product page link to import       │
-│                                            │
-│ [ https://shop.com/products/...      ]    │
-│ [ Import ]                                 │
-│                                            │
-│ Switch method ▾   (small, bottom-left)    │
-└────────────────────────────────────────────┘
-```
+### 3. Divider line above "Switch method" looks like a section break
+The `border-t` creates a hard rule across the whole drawer width that visually separates content from a tiny ghost link. Feels broken. **Fix:** drop the `border-t`, reduce to a simple muted link aligned left with more breathing room (`pt-6` only).
 
-When opened from the **"Add Products" main button** (returning user, no method preselected), keep the current method rail — that's the discovery surface.
+### 4. Vast empty space below the form
+URL form is ~200px tall but drawer is 100vh. The empty white void makes it feel unfinished. **Fix in compact mode:** add a subtle helper card below the form (e.g. "Works with Shopify · Etsy · Amazon · WooCommerce · any product page" already exists as badges — promote them visually) and let the Switch method link sit at true bottom via `mt-auto`.
 
-### Part 2 — Wider, calmer drawer
-- Bump desktop Sheet from `sm:max-w-[600px]` → `sm:max-w-[720px]` so upload + form breathe.
-- Header gets a contextual title per method: "Upload images", "Import from URL", "CSV import", "Shopify import", "Paste an image".
-- Header gets a contextual subtitle replacing the generic one.
+### 5. Header lacks a back affordance
+Compact mode shows only "Import from URL" + X. User who arrived from the empty state has no obvious way back to the empty state's other methods besides scrolling to the bottom-left "Switch method". **Fix:** add a small left-aligned chevron-left button next to the title that calls `onSwitchMethod`, mirroring iOS/Linear patterns. Keep bottom link as secondary.
 
-### Part 3 — Light pop UX for "Paste image"
-Currently Paste opens the full drawer in Upload mode. Replace with: clipboard read attempt → if image present, instantly open the drawer **already at the metadata-confirm step** (files preloaded). If clipboard empty, show inline toast "Press Cmd/Ctrl+V to paste — listening…" and keep page-level paste listener live for 15s. No drawer opens at all until an image arrives.
+### 6. Inconsistent padding in Sheet header vs body
+Sheet header uses `px-7 pt-7 pb-4`, body uses `px-7 pb-7`. Fine on desktop, but the "Switch method" button bar should also sit inside the same padding — currently OK but the `border-t` makes it look like it spans full width. Removing the border (fix #3) resolves this.
 
-### Part 4 — Empty-state polish
-- Make the "Other ways" rows visibly clickable (currently feels passive): add subtle hover lift + arrow that slides on hover.
-- Add tiny inline result feedback when a method is selected (button micro-press + 80ms delay before drawer opens) so the action feels confirmed.
-- Tighten secondary panel header from "Other ways" → "Or import from".
+### 7. (Bonus) Mobile compact mode has no header context
+On mobile the Drawer header still says "Import from URL" but body fills under it without the bottom Switch method link being sticky. Make `Switch method` part of the DrawerFooter region so it's always visible without scroll.
+
+### 8. (Bonus) "Switch method" uses ChevronDown but action goes back/up
+Semantically wrong — opens the method rail above this view. Use `ChevronLeft` or `LayoutGrid` icon instead.
 
 ## Files to edit
-- `src/components/app/AddProductModal.tsx` — accept `compact?: boolean` (default true when `initialTab` is preset from empty-state method); when compact, hide method rail, render contextual header per `activeTab`, show small "Switch method ▾" popover toggling back to full rail; widen Sheet to 720px.
-- `src/pages/Products.tsx` — when calling `openAddDrawer` from an empty-state method, pass `compact: true`. When calling from main "Add Products" button, pass `compact: false`. Improve paste flow: try clipboard read first; if empty, just arm a 15s window paste listener + toast (no drawer open).
-- `src/components/app/ProductsEmptyUpload.tsx` — micro-interaction polish on method rows (hover arrow slide, subtle press), copy tweak.
+- `src/components/app/AddProductModal.tsx` — header back-chevron in compact mode, drop `border-t` above Switch method, push to `mt-auto`, swap icon, ensure `min-w-0` on compact body wrapper, add `pr-1` to scroll container so focus rings aren't clipped.
+- `src/components/app/StoreImportTab.tsx` — wrap root in `min-w-0`; hide internal Cancel button (or only render when not embedded); promote platform badges row visually as a quiet helper strip below the input.
 
 ## Out of scope
-- No backend, no tab internals (`StoreImportTab` / `CsvImportTab` / etc unchanged), no product card / grid changes.
+- Backend, import logic, error cards, role-assignment popover — all unchanged.
 
 ## Acceptance
-- Click "Product URL" on empty state → drawer opens showing **only** the URL input with title "Import from URL". No 5-row rail.
-- Click main "Add Products" button (returning user) → drawer opens with full method rail as today.
-- Click "Paste image" → if clipboard has image, drawer opens already at metadata step. If not, toast appears and any Cmd/Ctrl+V on the page within 15s opens drawer with that image.
-- Drawer is visibly wider (720px) on desktop; mobile drawer unchanged.
-- A small "Switch method ▾" link in compact mode lets user expand back to full rail without closing the drawer.
+- URL input no longer touches the right edge of the drawer; focus ring fully visible.
+- No orphaned "Cancel" link floating in the middle of the drawer.
+- "Switch method" sits cleanly at the bottom-left without a full-width divider; uses a left-pointing icon.
+- Optional small back chevron in the header next to "Import from URL".
+- Same fixes apply automatically to CSV / Shopify / Mobile compact modes (they share the same wrapper).
 
