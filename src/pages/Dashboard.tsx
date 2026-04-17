@@ -340,7 +340,7 @@ export default function Dashboard() {
 
         {/* Start here — 3-card grid */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">Start here</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Start here</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Card 1 — Product Visuals */}
             <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
@@ -447,7 +447,7 @@ export default function Dashboard() {
         </div>
 
         {/* Video Showcase */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Your Products, In Motion</h2>
             <p className="text-base text-muted-foreground mt-1.5">AI-generated video ads ready in minutes, not weeks.</p>
