@@ -341,7 +341,7 @@ export default function TryShot() {
             {/* CTA */}
             <div className="pt-8 border-t border-border">
               <p className="text-muted-foreground mb-4">
-                Want more? Get <span className="text-foreground font-semibold">60 free credits</span> when you sign up.
+                Want more? Get <span className="text-foreground font-semibold">20 free credits</span> when you sign up.
               </p>
               <a href="https://vovv.ai/auth">
                 <Button className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-full">

@@ -171,7 +171,7 @@ export default function Auth() {
 
   const handleMagicLink = async () => {
     if (!email.trim()) {
-      setErrors({ email: 'Enter your email to get a login link' });
+      setErrors({ email: 'Enter your email to get a sign-in link' });
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -190,7 +190,7 @@ export default function Auth() {
       if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
         setFormError('Too many requests. Please wait a few minutes before trying again.');
       } else {
-        setFormError('Could not send login link. Please try again.');
+        setFormError('Could not send sign-in link. Please try again.');
       }
     } else {
       setFormError(null);
@@ -391,7 +391,7 @@ export default function Auth() {
           ) : magicLinkSent ? (
             renderCheckInbox({
               title: 'Check your email',
-              description: 'We sent a login link to',
+              description: 'We sent a sign-in link to',
               showOtp: false,
               onBack: () => {
                 setMagicLinkSent(false);

@@ -9,7 +9,7 @@ const categories = [
   },
   {
     title: 'Fashion & accessories',
-    text: 'Editorial content and ecommerce visuals for fashion brands.',
+    text: 'Editorial content and e-commerce visuals for fashion brands.',
     colors: ['from-slate-300/60 to-gray-200/40', 'from-stone-300/60 to-neutral-200/40', 'from-zinc-300/50 to-gray-200/30'],
     shapes: ['rounded-xl w-12 h-20', 'rounded-lg w-14 h-14', 'rounded-2xl w-10 h-16'],
   },

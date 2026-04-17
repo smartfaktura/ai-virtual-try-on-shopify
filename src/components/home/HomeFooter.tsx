@@ -46,7 +46,7 @@ export function HomeFooter() {
               VOVV
             </Link>
             <p className="text-[#9ca3af] text-[13px] mt-3 leading-relaxed">
-              AI product images &amp; videos for ecommerce brands.
+              AI product images &amp; videos for e-commerce brands.
             </p>
           </div>
 

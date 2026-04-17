@@ -78,10 +78,10 @@ function TeamAvatarRow({ label = 'Your studio team is ready' }: { label?: string
 
 const PAGE = {
   slug: 'ai-product-photography-for-ecommerce',
-  title: 'AI Product Photography for Ecommerce | Create Product Images from One Photo | VOVV.ai',
-  description: 'Create ecommerce-ready product images from one photo with VOVV.ai. Generate PDP, marketplace, lifestyle, ad, social, and email visuals faster than a traditional photoshoot.',
-  h1: 'AI Product Photography for Ecommerce',
-  subheadline: 'Create ecommerce-ready product images from one photo for PDP, marketplace, ad, social, and email use.',
+  title: 'AI Product Photography for E-commerce | Create Product Images from One Photo | VOVV.ai',
+  description: 'Create e-commerce-ready product images from one photo with VOVV.ai. Generate PDP, marketplace, lifestyle, ad, social, and email visuals faster than a traditional photoshoot.',
+  h1: 'AI Product Photography for E-commerce',
+  subheadline: 'Create e-commerce-ready product images from one photo for PDP, marketplace, ad, social, and email use.',
 };
 
 const CANONICAL = `${SITE_URL}/${PAGE.slug}`;
@@ -89,21 +89,21 @@ const CANONICAL = `${SITE_URL}/${PAGE.slug}`;
 /* ─── FAQ data ─── */
 
 const FAQS = [
-  { q: 'Can I create ecommerce product images from just one photo?', a: 'Yes. VOVV.ai helps turn a single product image into multiple ecommerce-ready visual outputs for product pages, ads, social, email, and more.' },
-  { q: 'Can I generate white background and lifestyle product images?', a: 'Yes. You can create different visual directions depending on your ecommerce needs, from clean product imagery to realistic lifestyle scenes.' },
+  { q: 'Can I create e-commerce product images from just one photo?', a: 'Yes. VOVV.ai helps turn a single product image into multiple e-commerce-ready visual outputs for product pages, ads, social, email, and more.' },
+  { q: 'Can I generate white background and lifestyle product images?', a: 'Yes. You can create different visual directions depending on your e-commerce needs, from clean product imagery to realistic lifestyle scenes.' },
   { q: 'Is this useful for Shopify stores?', a: 'Yes. VOVV.ai is useful for Shopify brands that need stronger visuals for product pages, launches, ads, and campaigns.' },
-  { q: 'Can I create visuals for marketplaces too?', a: 'Yes. The platform can help create clean, professional product imagery suitable for multiple ecommerce channels.' },
-  { q: 'Will the outputs look realistic?', a: 'VOVV.ai generates premium, brand-ready visuals with realistic lighting, shadows, and composition. The quality is designed for professional ecommerce use.' },
-  { q: 'Can I use the images commercially?', a: 'Yes. All images generated through VOVV.ai are yours to use commercially across your ecommerce channels, ads, and marketing materials.' },
+  { q: 'Can I create visuals for marketplaces too?', a: 'Yes. The platform can help create clean, professional product imagery suitable for multiple e-commerce channels.' },
+  { q: 'Will the outputs look realistic?', a: 'VOVV.ai generates premium, brand-ready visuals with realistic lighting, shadows, and composition. The quality is designed for professional e-commerce use.' },
+  { q: 'Can I use the images commercially?', a: 'Yes. All images generated through VOVV.ai are yours to use commercially across your e-commerce channels, ads, and marketing materials.' },
   { q: 'Is VOVV.ai faster than a traditional photoshoot?', a: 'VOVV.ai helps brands create and test more visual directions faster, especially when starting from existing product photos. You can go from upload to finished visuals in minutes.' },
-  { q: 'Can I create ad creatives and email visuals too?', a: 'Yes. VOVV.ai is designed to support broader ecommerce creative workflows beyond just basic product photos, including ad creatives, email banners, and social content.' },
+  { q: 'Can I create ad creatives and email visuals too?', a: 'Yes. VOVV.ai is designed to support broader e-commerce creative workflows beyond just basic product photos, including ad creatives, email banners, and social content.' },
 ];
 
 /* ─── OUTCOME TABS ─── */
 
 const OUTCOME_TABS = [
   { id: 'white-bg', label: 'White Background', category: 'commercial', title: 'Clean Product Images', desc: 'Create clean product images for listings, catalogs, and product pages. Perfect for storefronts that need consistent, distraction-free visuals.' },
-  { id: 'pdp', label: 'PDP', category: 'photography', title: 'Product Detail Page Visuals', desc: 'Generate polished ecommerce product visuals built for online stores. Showcase your products with professional lighting and composition.' },
+  { id: 'pdp', label: 'PDP', category: 'photography', title: 'Product Detail Page Visuals', desc: 'Generate polished e-commerce product visuals built for online stores. Showcase your products with professional lighting and composition.' },
   { id: 'lifestyle', label: 'Lifestyle', category: 'lifestyle', title: 'Lifestyle Product Scenes', desc: 'Place products into realistic branded scenes without reshooting. Create context-rich imagery that helps customers visualize ownership.' },
   { id: 'ads', label: 'Ads', category: 'ads', title: 'Ad-Ready Product Creatives', desc: 'Create campaign-ready product creatives for paid social and performance marketing. Test more visual concepts without additional production.' },
   { id: 'email', label: 'Email', category: 'campaign', title: 'Email Campaign Visuals', desc: 'Generate visuals for email campaigns, launches, and promotional sends. Create cohesive imagery that matches your brand across every touchpoint.' },
@@ -227,7 +227,7 @@ export default function AIProductPhotographyEcommerce() {
               {PAGE.h1}
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl mx-auto">
-              {PAGE.subheadline} Turn one product photo into multiple ecommerce-ready visuals for your online store and campaigns.
+              {PAGE.subheadline} Turn one product photo into multiple e-commerce-ready visuals for your online store and campaigns.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <Button asChild size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25">
@@ -312,10 +312,10 @@ export default function AIProductPhotographyEcommerce() {
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground mb-4">
-                Ecommerce Product Images for Every Channel
+                E-commerce Product Images for Every Channel
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Generate the right visual for every ecommerce use case — from clean product cutouts to lifestyle scenes and ad creatives.
+                Generate the right visual for every e-commerce use case — from clean product cutouts to lifestyle scenes and ad creatives.
               </p>
             </div>
             {/* Pill chips */}
@@ -398,10 +398,10 @@ export default function AIProductPhotographyEcommerce() {
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground mb-4">
-                Explore Real Ecommerce Visual Styles
+                Explore Real E-commerce Visual Styles
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                All examples below are pulled from our discovery library, showing how one product photo can become multiple ecommerce-ready creative directions.
+                All examples below are pulled from our discovery library, showing how one product photo can become multiple e-commerce-ready creative directions.
               </p>
             </div>
             {showcaseImages.length > 0 && (
@@ -559,8 +559,8 @@ export default function AIProductPhotographyEcommerce() {
               <div className="hidden lg:block absolute top-7 left-[12.5%] right-[12.5%] h-px bg-border" />
               {[
                 { icon: Upload, step: '01', title: 'Upload a Product Photo', desc: 'Start with a single product image from your existing catalog.' },
-                { icon: Palette, step: '02', title: 'Choose a Direction', desc: 'Select a visual style, scene, or use case for your ecommerce needs.' },
-                { icon: Camera, step: '03', title: 'Generate Visuals', desc: 'Create ecommerce-ready product images in seconds with AI.' },
+                { icon: Palette, step: '02', title: 'Choose a Direction', desc: 'Select a visual style, scene, or use case for your e-commerce needs.' },
+                { icon: Camera, step: '03', title: 'Generate Visuals', desc: 'Create e-commerce-ready product images in seconds with AI.' },
                 { icon: Download, step: '04', title: 'Export & Use', desc: 'Download and use across your store, ads, email, or marketplace.' },
               ].map(({ icon: Icon, step, title, desc }, index) => (
                 <div
@@ -619,23 +619,23 @@ export default function AIProductPhotographyEcommerce() {
         <section className="py-20 sm:py-28 bg-background">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-semibold tracking-tight text-foreground mb-6">
-              What Is AI Product Photography for Ecommerce?
-            </h2>
-            <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
-              <p>
-                AI product photography for ecommerce is the process of using artificial intelligence to create professional product images from existing photos. Instead of organizing traditional photoshoots for every product variant, scene, or campaign, ecommerce brands can upload a single product photo and generate multiple high-quality visual outputs — from clean white background cutouts to lifestyle scenes, ad creatives, and marketplace-ready imagery.
-              </p>
-              <p>
-                Modern ecommerce brands use AI-generated product images to populate product detail pages, create social content, build ad campaigns, and support email marketing — all from one source image. This approach dramatically reduces the cost and time associated with traditional product photography while enabling faster creative iteration across channels.
-              </p>
-            </div>
+              What Is AI Product Photography for E-commerce?
+              </h2>
+              <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
+                <p>
+                  AI product photography for e-commerce is the process of using artificial intelligence to create professional product images from existing photos. Instead of organizing traditional photoshoots for every product variant, scene, or campaign, e-commerce brands can upload a single product photo and generate multiple high-quality visual outputs — from clean white background cutouts to lifestyle scenes, ad creatives, and marketplace-ready imagery.
+                </p>
+                <p>
+                  Modern e-commerce brands use AI-generated product images to populate product detail pages, create social content, build ad campaigns, and support email marketing — all from one source image. This approach dramatically reduces the cost and time associated with traditional product photography while enabling faster creative iteration across channels.
+                </p>
+              </div>
 
-            <h3 className="text-2xl font-semibold tracking-tight text-foreground mt-12 mb-4">
-              Why Ecommerce Brands Need More Than Basic Product Cutouts
-            </h3>
-            <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
-              <p>
-                Today's ecommerce landscape demands more than a single product image on a white background. Brands need PDP visuals that convert, social content that stops the scroll, ad creatives that perform, email visuals that drive clicks, product-in-context imagery that tells a story, and marketplace-ready formats that meet listing requirements. An ecommerce product image generator like VOVV.ai helps brands create all of these visual types from existing product photos, making it possible to maintain a consistent, high-quality visual presence across every channel without scaling production costs linearly.
+              <h3 className="text-2xl font-semibold tracking-tight text-foreground mt-12 mb-4">
+                Why E-commerce Brands Need More Than Basic Product Cutouts
+              </h3>
+              <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
+                <p>
+                  Today's e-commerce landscape demands more than a single product image on a white background. Brands need PDP visuals that convert, social content that stops the scroll, ad creatives that perform, email visuals that drive clicks, product-in-context imagery that tells a story, and marketplace-ready formats that meet listing requirements. An e-commerce product image generator like VOVV.ai helps brands create all of these visual types from existing product photos, making it possible to maintain a consistent, high-quality visual presence across every channel without scaling production costs linearly.
               </p>
             </div>
           </div>

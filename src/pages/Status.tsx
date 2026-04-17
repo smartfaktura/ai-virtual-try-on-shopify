@@ -31,7 +31,7 @@ const services = [
   },
   {
     name: 'Authentication',
-    description: 'Login, signup, and session management',
+    description: 'Sign-in, sign-up, and session management',
     status: 'operational' as const,
     uptime: '99.99%',
   },

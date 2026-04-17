@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: 'Can I use the outputs for ads and product pages?',
-    a: 'Yes. VOVV is designed for ecommerce visuals, campaign creatives, and other commercial brand content.',
+    a: 'Yes. VOVV is designed for e-commerce visuals, campaign creatives, and other commercial brand content.
   },
   {
     q: 'How long does it take?',
