@@ -55,13 +55,18 @@ export default function Products() {
   const [addOpen, setAddOpen] = useState(false);
   const [addInitialTab, setAddInitialTab] = useState<AddProductTab>('manual');
   const [addInitialFiles, setAddInitialFiles] = useState<File[] | undefined>(undefined);
+  const [addCompact, setAddCompact] = useState(false);
 
   // Page-wide drag overlay
   const [pageDragActive, setPageDragActive] = useState(false);
 
-  const openAddDrawer = (tab: AddProductTab = 'manual', files?: File[]) => {
+  // Armed paste listening window (for "Paste image" empty-state action)
+  const [pasteArmed, setPasteArmed] = useState(false);
+
+  const openAddDrawer = (tab: AddProductTab = 'manual', files?: File[], compact = false) => {
     setAddInitialTab(tab);
     setAddInitialFiles(files);
+    setAddCompact(compact);
     setAddOpen(true);
   };
 
@@ -263,7 +268,7 @@ export default function Products() {
               </Button>
             </div>
             {products.length > 0 && (
-              <Button onClick={() => openAddDrawer('manual')}>
+              <Button onClick={() => openAddDrawer('manual', undefined, false)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Products
               </Button>
@@ -347,10 +352,10 @@ export default function Products() {
             // Truly empty: show active upload surface
             return (
               <ProductsEmptyUpload
-                onFilesSelected={(files) => openAddDrawer('manual', files)}
+                onFilesSelected={(files) => openAddDrawer('manual', files, false)}
                 onMethodSelect={async (method) => {
                   if (method === 'paste') {
-                    // Try clipboard read; fall back to opening drawer with toast prompt
+                    // Try clipboard read first; if image present, open compact drawer with files preloaded
                     try {
                       const items = await (navigator.clipboard as any)?.read?.();
                       const files: File[] = [];
@@ -365,17 +370,20 @@ export default function Products() {
                         }
                       }
                       if (files.length) {
-                        openAddDrawer('manual', files);
+                        openAddDrawer('manual', files, true);
                         return;
                       }
                     } catch {
                       /* clipboard denied or unsupported */
                     }
-                    openAddDrawer('manual');
-                    toast.info('Press Cmd/Ctrl+V to paste an image');
+                    // No image — arm 15s page-level paste listener, no drawer
+                    setPasteArmed(true);
+                    toast.info('Press Cmd/Ctrl+V to paste — listening…');
+                    window.setTimeout(() => setPasteArmed(false), 15000);
                     return;
                   }
-                  openAddDrawer(method as AddProductTab);
+                  // URL / CSV / Shopify / Mobile → compact drawer for that method
+                  openAddDrawer(method as AddProductTab, undefined, true);
                 }}
               />
             );
@@ -535,6 +543,8 @@ export default function Products() {
         }}
         initialTab={addInitialTab}
         initialFiles={addInitialFiles}
+        compact={addCompact}
+        onSwitchMethod={() => setAddCompact(false)}
       />
 
       {pageDragActive && (

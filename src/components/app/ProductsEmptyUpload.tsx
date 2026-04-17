@@ -80,23 +80,23 @@ export function ProductsEmptyUpload({ onFilesSelected, onMethodSelect }: Product
 
         {/* Secondary methods */}
         <div className="flex flex-col">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2 px-1">Other ways</p>
-          <div className="rounded-xl border bg-background/50 divide-y">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2 px-1">Or import from</p>
+          <div className="rounded-xl border bg-background/50 divide-y overflow-hidden">
             {METHODS.map(({ id, label, sub, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => onMethodSelect(id)}
-                className="w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-muted/50 transition-colors first:rounded-t-xl last:rounded-b-xl group"
+                className="w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-muted/60 active:bg-muted transition-all group"
               >
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-foreground/70" />
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                  <Icon className="w-4 h-4 text-foreground/70 group-hover:text-primary transition-colors" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium leading-tight">{label}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{sub}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground transition-colors shrink-0" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
               </button>
             ))}
           </div>
