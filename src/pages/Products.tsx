@@ -110,6 +110,37 @@ export default function Products() {
     };
   }, []);
 
+  // Window-level paste handler: capture image blobs from clipboard
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      // Only act when target is not an editable element
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName?.toLowerCase();
+      const isEditable = tag === 'input' || tag === 'textarea' || (t && t.isContentEditable);
+      if (isEditable) return;
+
+      const items = Array.from(e.clipboardData?.items || []);
+      const files: File[] = [];
+      items.forEach((item) => {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (blob) {
+            const ext = item.type.split('/')[1] || 'png';
+            files.push(new File([blob], `pasted-${Date.now()}.${ext}`, { type: item.type }));
+          }
+        }
+      });
+      if (files.length) {
+        e.preventDefault();
+        setAddInitialTab('manual');
+        setAddInitialFiles(files);
+        setAddOpen(true);
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, []);
+
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],
     queryFn: async () => {
@@ -317,9 +348,34 @@ export default function Products() {
             return (
               <ProductsEmptyUpload
                 onFilesSelected={(files) => openAddDrawer('manual', files)}
-                onMethodSelect={(method) => {
-                  const tab: AddProductTab = method === 'paste' ? 'manual' : (method as AddProductTab);
-                  openAddDrawer(tab);
+                onMethodSelect={async (method) => {
+                  if (method === 'paste') {
+                    // Try clipboard read; fall back to opening drawer with toast prompt
+                    try {
+                      const items = await (navigator.clipboard as any)?.read?.();
+                      const files: File[] = [];
+                      if (items) {
+                        for (const item of items) {
+                          const imgType = item.types.find((t: string) => t.startsWith('image/'));
+                          if (imgType) {
+                            const blob = await item.getType(imgType);
+                            const ext = imgType.split('/')[1] || 'png';
+                            files.push(new File([blob], `pasted-${Date.now()}.${ext}`, { type: imgType }));
+                          }
+                        }
+                      }
+                      if (files.length) {
+                        openAddDrawer('manual', files);
+                        return;
+                      }
+                    } catch {
+                      /* clipboard denied or unsupported */
+                    }
+                    openAddDrawer('manual');
+                    toast.info('Press Cmd/Ctrl+V to paste an image');
+                    return;
+                  }
+                  openAddDrawer(method as AddProductTab);
                 }}
               />
             );
@@ -445,7 +501,7 @@ export default function Products() {
           </div>
         )}
       </div>
-      <FeedbackBanner />
+      {!hasNoProducts && <FeedbackBanner />}
 
       <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
