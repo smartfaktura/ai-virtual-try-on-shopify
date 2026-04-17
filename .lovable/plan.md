@@ -1,73 +1,64 @@
 
 
 ## Goal
-Make /app/products active and frictionless in both empty and filled states. Reuse existing components — no backend changes, no card/grid changes.
+Three fixes on /app/products:
+1. Hide "Help us improve VOVV.AI / Share feedback" banner when user has no products
+2. Make all "OTHER WAYS" buttons fully functional from the empty state
+3. Redesign the right-side Add Products drawer to match the premium empty-state aesthetic
 
-## Architecture decision
-- Keep the existing `AddProductModal` (it already wraps `ManualProductTab` + URL/CSV/Mobile/Shopify tabs). Convert it from a centered Dialog to a **right-side Sheet (drawer)** on desktop. Mobile keeps the bottom Drawer.
-- Stop navigating to `/app/products/new` from the Products page. Open the drawer in place.
-- The route `/app/products/new` stays alive for deep links / edit flow — no removal.
+## A. Hide FeedbackBanner on empty state
+`src/pages/Products.tsx` line 448: render `<FeedbackBanner />` only when `!hasNoProducts`. Keep it visible once products exist.
 
-## A. Empty state (`Products.tsx`)
-Replace the current `EmptyStateCard` (when `products.length === 0` and not searching) with a new inline upload surface:
+## B. Wire "OTHER WAYS" buttons properly
+Current state: `onMethodSelect` already opens drawer on the right tab — but two methods need real behavior:
+
+- **Paste image** currently maps to `manual` tab with no actual paste hook → opens Upload tab silently. Fix: when "Paste image" is clicked, open drawer in `manual` tab AND focus a paste-capture zone. Simplest robust approach: read `navigator.clipboard.read()` at click time, extract image blobs, convert to `File[]`, then `openAddDrawer('manual', files)`. If clipboard is empty/denied, fall back to opening drawer with a one-time toast: "Press Cmd/Ctrl+V to paste an image".
+- **Product URL → store**, **CSV → csv**, **Shopify → shopify** already map to existing tabs and work — verify by re-confirming `AddProductModal` `useEffect` syncs `activeTab` from `initialTab` on each open (it does, lines 51-55 of AddProductModal).
+
+Add a global paste listener in `Products.tsx` (only active when `addOpen` and on empty page) that captures `ClipboardEvent` images and feeds them into the drawer's `initialFiles` — same pipeline as drag-drop.
+
+## C. Redesign the right drawer to match empty-state premium look
+Current drawer (`AddProductModal.tsx` desktop branch) uses small pill tabs in a 60% muted bar. Replace with the same visual language as `ProductsEmptyUpload`:
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  Add your first product                         │
-│  Upload images, paste a link, or import in bulk │
-│                                                 │
-│  ┌──────────────────────┐  ┌─────────────────┐ │
-│  │  ⬆  Drag & drop      │  │ • Upload images │ │
-│  │     or browse files  │  │ • Paste image   │ │
-│  │  PNG · JPG · WEBP    │  │ • Product URL   │ │
-│  │  Multiple supported  │  │ • CSV import    │ │
-│  └──────────────────────┘  │ • Shopify       │ │
-│                             └─────────────────┘ │
-│  Best results: clean background, good lighting │
-└─────────────────────────────────────────────────┘
+┌─ Sheet (right, 600px) ─────────────────────────┐
+│ Add Products                                  X│
+│ Upload images or import in seconds             │
+│                                                │
+│ ┌─ method rail (vertical, quiet) ────────────┐ │
+│ │ ⬆  Upload images        ● active           │ │
+│ │ 📋 Paste image                             │ │
+│ │ 🌐 Product URL                             │ │
+│ │ 📊 CSV import                              │ │
+│ │ 📱 Mobile upload                           │ │
+│ │ 🛍 Shopify import                          │ │
+│ └────────────────────────────────────────────┘ │
+│                                                │
+│ ┌─ active method panel ──────────────────────┐ │
+│ │   (current ManualProductTab / StoreImport  │ │
+│ │    / CsvImport / Mobile / Shopify content) │ │
+│ └────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────┘
 ```
 
-- **Left (primary)**: large dashed drop zone wired to the same upload handler `ManualProductTab` uses. Dropping/selecting files immediately opens the drawer in "Upload" tab with files pre-loaded — user lands directly in the metadata-confirm step.
-- **Right (secondary)**: 4 quiet rows (Paste image, Product URL, CSV, Shopify). Click → opens drawer pre-selected on that tab.
-- New component: `src/components/app/ProductsEmptyUpload.tsx` — purely presentational; emits `onFilesSelected(files)` and `onMethodSelect(method)`.
+Specifically:
+- Replace the `TabsList` pill row with a **segmented icon+label list** styled like the right column of `ProductsEmptyUpload` (rounded border container with divided rows + ChevronRight indicator on hover, active row highlighted with `bg-muted` + primary-tinted icon).
+- Compact horizontal variant on mobile (4-col scrollable chips) preserved via `useIsMobile`.
+- Keep all `TabsContent` bodies untouched — pure visual swap of the selector.
+- Header gets the same typographic treatment as the empty card: `text-lg font-semibold tracking-tight` title + muted subtitle (already close, just align spacing/padding).
+- Remove the small uppercase chips currently used as TabTriggers, but keep semantic Tabs primitive for state management.
 
-## B. Non-empty state
-- Keep grid/cards/search/filters/sort exactly as-is.
-- Change "Add Products" button: instead of `navigate('/app/products/new')`, set `addOpen=true` to open the drawer.
-- Remove the duplicated "Add Products" button (currently rendered twice — once gated on `products.length > 0`, redundant with toolbar).
-
-## C. Convert AddProductModal → right-side Sheet (desktop)
-In `AddProductModal.tsx`:
-- Desktop branch: swap shadcn `Dialog` for `Sheet` with `side="right"`, `className="w-full sm:max-w-[560px] flex flex-col p-0"`.
-- Header: "Add Products" + subtext "Upload images or import products in seconds" + close X (Sheet provides).
-- Body: same Tabs (Upload / URL / CSV / Mobile / Shopify) — visually keep them, they are already underline-friendly pill style and work well in narrow drawer.
-- Mobile branch: unchanged (bottom Drawer).
-- Accept new optional props: `initialTab?: 'manual'|'store'|'csv'|'mobile'|'shopify'` and `initialFiles?: File[]` so the empty state can deep-link into Upload with files preloaded.
-- `ManualProductTab` already exposes drag/drop + browse and a `singleImage`/`batchItems` model — accept `initialFiles` via a small `useEffect` that runs the existing file-handler once on mount.
-
-## D. Page-wide drag overlay
-In `Products.tsx`, add window-level `dragenter`/`dragover`/`dragleave`/`drop` listeners. While dragging files anywhere on the page, render a full-page overlay:
-> "Drop to add products"
-On drop → open drawer with files preloaded. Works in both empty and filled states.
-
-## E. Drawer behavior after upload
-- After successful add: invalidate queries (already handled), keep drawer open and reset form so user can keep dropping more.
-- Add small inline confirmation toast already exists — leave as-is.
-- Close button or clicking outside closes.
+No backend, no tab logic, no `ManualProductTab`/`StoreImportTab`/etc. internals changed.
 
 ## Files to edit
-- `src/pages/Products.tsx` — open drawer instead of navigating; new empty-state surface; page-level drag overlay
-- `src/components/app/AddProductModal.tsx` — desktop becomes right Sheet; accept `initialTab` + `initialFiles`
-- `src/components/app/ManualProductTab.tsx` — accept `initialFiles` prop and feed to existing handler on mount
-- New: `src/components/app/ProductsEmptyUpload.tsx`
-
-## Out of scope (per request)
-- Product card design, grid layout, backend, storage, /app/products/new route (kept for direct links and edit), search/filter/sort
+- `src/pages/Products.tsx` — conditional `FeedbackBanner`, add clipboard paste handler, paste-button clipboard read
+- `src/components/app/ProductsEmptyUpload.tsx` — make Paste button trigger clipboard read before opening drawer
+- `src/components/app/AddProductModal.tsx` — redesign desktop Sheet with vertical method rail matching empty-state aesthetic; mobile keeps current compact selector
 
 ## Acceptance
-- Empty page shows active dual-panel upload surface — no passive icon
-- Dragging files anywhere triggers overlay; dropping opens drawer with files queued
-- "Add Products" opens right drawer (desktop) / bottom drawer (mobile), never navigates
-- Filled-state grid, cards, filters unchanged
-- Same upload logic and copy in both states
+- Empty Products page: no Feedback banner visible
+- Clicking any of Paste / URL / CSV / Shopify on empty state opens the drawer pre-set to that method, ready to use
+- Paste image: reads clipboard if granted; otherwise opens Upload tab with toast prompting Cmd/Ctrl+V
+- Drawer visual matches the empty-state card's quiet, premium look — no pill-tab strip
+- All existing import flows keep working; no backend changes
 
