@@ -635,9 +635,17 @@ export default function AppPricing() {
       </section>
 
       {/* ── Sticky plan-selector bar ── */}
-      {showStickyBar && stickyPlan && stickyCta && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[calc(100vw-2rem)] sm:max-w-6xl z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+      {stickyPlan && stickyCta && (
+        <div
+          aria-hidden={!showStickyBar}
+          className={cn(
+            "fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[calc(100vw-2rem)] sm:max-w-6xl z-30 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+            showStickyBar
+              ? "translate-y-0 opacity-100 pointer-events-auto"
+              : "translate-y-[calc(100%+2rem)] opacity-0 pointer-events-none"
+          )}
+        >
+          <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg pointer-events-auto">
             {/* Mobile layout */}
             <div className="flex items-center justify-between gap-3 p-3 sm:hidden">
               <div className="flex flex-col min-w-0 flex-1">
@@ -656,8 +664,9 @@ export default function AppPricing() {
                     <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary flex-shrink-0">Rec</span>
                   )}
                 </div>
-                <span className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                  ${stickyPrice}/mo{stickyCredits > 0 ? ` · ${stickyCredits.toLocaleString()} credits` : ''}
+                <span className="text-[13px] text-foreground/80 font-medium mt-0.5 truncate">
+                  <span className="font-semibold text-foreground">${stickyPrice}/mo</span>
+                  {stickyCredits > 0 && <span className="text-foreground/70"> · {stickyCredits.toLocaleString()} credits</span>}
                 </span>
               </div>
               <Button
@@ -690,9 +699,9 @@ export default function AppPricing() {
                   )}
                 </div>
               </div>
-              <div className="flex flex-col text-xs text-muted-foreground items-end">
-                <span className="font-semibold text-foreground">${stickyPrice}/mo</span>
-                {stickyCredits > 0 && <span>{stickyCredits.toLocaleString()} credits/mo</span>}
+              <div className="flex flex-col items-end">
+                <span className="text-base font-semibold text-foreground">${stickyPrice}/mo</span>
+                {stickyCredits > 0 && <span className="text-[13px] text-muted-foreground">{stickyCredits.toLocaleString()} credits/mo</span>}
               </div>
               <Button
                 disabled={stickyCta.disabled}
