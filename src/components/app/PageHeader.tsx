@@ -12,7 +12,7 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, backAction, actions, children }: PageHeaderProps) {
   return (
     <div>
-      <div className="mb-8 sm:mb-10">
+      <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             {backAction && (
