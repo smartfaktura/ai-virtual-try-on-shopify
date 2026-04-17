@@ -67,7 +67,7 @@ export default function ResetPassword() {
           </p>
           <Button variant="outline" onClick={() => navigate('/auth')} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to login
+            Back to sign in
           </Button>
         </div>
       </div>

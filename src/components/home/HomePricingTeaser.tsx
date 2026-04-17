@@ -3,7 +3,7 @@ import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { ArrowRight, Sparkles, Clock, TrendingUp } from 'lucide-react';
 
 const badges = [
-  { icon: Sparkles, label: 'Built for ecommerce brands' },
+  { icon: Sparkles, label: 'Built for e-commerce brands' },
   { icon: Clock, label: 'Fast setup' },
   { icon: TrendingUp, label: 'Upgrade only when needed' },
 ];

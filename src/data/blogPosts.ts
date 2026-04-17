@@ -903,7 +903,7 @@ No. A clear smartphone photo on a plain background works well. The AI handles th
 
 ### How much does it cost?
 
-VOVV offers [flexible plans](/pricing) starting with free credits. Most images cost 1–3 credits depending on quality settings. A single image replaces what used to cost $200–$500 in traditional photography.
+VOVV offers [flexible plans](/pricing) starting with free credits. Most images cost 4–6 credits depending on quality settings. A single image replaces what used to cost $200–$500 in traditional photography.
 `,
   },
 ];

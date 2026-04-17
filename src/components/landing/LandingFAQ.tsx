@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     q: 'What are Visual Types?',
-    a: 'Visual Types are built for specific content goals. Choose from six core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
+    a: 'Visual Types are built for specific content goals. Choose from seven core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Picture Perspectives, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
   },
   {
     q: 'What is Freestyle?',

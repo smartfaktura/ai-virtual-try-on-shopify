@@ -89,7 +89,7 @@ const FAQS = [
   },
   {
     q: 'What exactly counts as 1 credit?',
-    a: 'A standard image is ~4–6 credits depending on complexity. Video generation runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model training is a one-time ~50 credits per model. You always see the cost before you generate.',
+    a: 'A standard image is 4–6 credits depending on complexity. Video generation runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model generation is 20 credits per image; adding a public Brand Model is free. You always see the cost before you generate.',
   },
   {
     q: 'Do unused credits roll over?',
@@ -97,7 +97,7 @@ const FAQS = [
   },
   {
     q: 'Can I use the images commercially?',
-    a: 'Yes. Every paid plan includes a full commercial license — use generations in ads, ecommerce, packaging, social, print, anywhere. You own the output.',
+    a: 'Yes. Every paid plan includes a full commercial license — use generations in ads, e-commerce, packaging, social, print, anywhere. You own the output.',
   },
   {
     q: 'What happens if I cancel mid-cycle?',

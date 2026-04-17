@@ -21,7 +21,7 @@ const jsonLd = {
   name: 'VOVV',
   url: `${SITE_URL}/home`,
   description:
-    'Turn one product photo into ready-to-use product images, ads, and videos for ecommerce brands.',
+    'Turn one product photo into ready-to-use product images, ads, and videos for e-commerce brands.',
   applicationCategory: 'DesignApplication',
   offers: {
     '@type': 'Offer',
@@ -35,7 +35,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#FAFAF8]">
       <SEOHead
         title="VOVV — AI Product Visuals & Videos for Ecommerce"
-        description="Turn one product photo into ready-to-use product visuals, ads, and videos. Create ecommerce visuals in minutes without booking another shoot."
+        description="Turn one product photo into ready-to-use product visuals, ads, and videos. Create e-commerce visuals in minutes without booking another shoot."
         canonical={`${SITE_URL}/home`}
         ogImage={DEFAULT_OG_IMAGE}
       />
