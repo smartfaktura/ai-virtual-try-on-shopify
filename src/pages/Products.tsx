@@ -3,9 +3,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Ruler } from 'lucide-react';
+import { Ruler, UploadCloud } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, ImagePlus, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,13 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
+import { ProductsEmptyUpload, type EmptyUploadMethod } from '@/components/app/ProductsEmptyUpload';
+import { AddProductModal, type AddProductTab } from '@/components/app/AddProductModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { TEAM_MEMBERS } from '@/data/teamData';
 import { trackViewContent } from '@/lib/fbPixel';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { gtagViewItem } from '@/lib/gtag';
