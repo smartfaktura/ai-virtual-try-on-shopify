@@ -1,35 +1,37 @@
 
 
-## Tighten desktop copy on /app/products empty state
+## Two fixes for /app/products Add Product drawer
 
-### Current copy (too wordy, repeats "Visual Types" twice)
-- Page header title: "Products"
-- Page header subtitle: "Manage your products. Upload once and use them across Visual Types."
-- Empty card title: "Add your first product"
-- Empty card subtitle: "Upload images, paste a link, or import in bulk. Each image becomes a product you can reuse across all Visual Types."
+### Issue 1 — URL field focus ring clipped (desktop screenshot 1)
+**Cause:** `Input` uses `focus-visible:ring-2 ring-offset-2` (4px outside the border). In `StoreImportTab`, the URL input sits in `<div className="flex gap-2 min-w-0"><div className="relative flex-1">...`. There's no horizontal padding/space for the focus ring on the right edge — the ring renders past the wrapper and the Sheet clips it. Also when focus appears the ring visually pushes the layout boundary.
 
-### Issues
-1. "Visual Types" appears in both subtitles back-to-back — redundant.
-2. Page subtitle is generic ("Manage your products") — doesn't add value next to "Products" title.
-3. Empty card subtitle has two sentences where one would do; the second sentence repeats the value prop already implied.
-4. Combined effect: ~40 words of intro before the user reaches the actions.
+**Fix — `src/components/app/StoreImportTab.tsx` (lines 262-273):**
+- Replace the 2px ring + 2px offset combo with a flush 2px ring (no offset) that stays inside the wrapper bounds:
+  - Input: add `focus-visible:ring-offset-0` to override the default 2px offset (the ring will sit on top of the border, no layout shift, no clipping).
+- Also add `min-w-0` to the inner `relative flex-1` wrapper so it can actually shrink within the flex row.
+- Optional: shorten desktop placeholder to `https://myshop.com/products/...` so it doesn't visually crowd the right edge with a long URL.
 
-### Proposed copy (desktop)
-- **Page subtitle:** "Upload once. Reuse across every Visual Type." (8 words, punchier, single value prop)
-- **Empty card subtitle:** "Upload images, paste a link, or import in bulk." (drops the redundant second sentence — the methods already speak for themselves)
+### Issue 2 — Mobile "back" returns to a clipped tab strip (mobile screenshot 2)
+**Cause:** In `AddProductModal.tsx` (lines 134-151), the mobile method picker uses a horizontal `TabsList` with `overflow-x-auto`. With 5 methods (Upload, Product, CSV, Mobile, Shopify) the row overflows — "Upload" gets cut on the left and "Shopify" on the right, with a visible scrollbar. Plus the active tab's contextual subtitle ("Upload images or import products in seconds.") doesn't match the visual state.
 
-Mobile already shortened in prior turn — keep "Upload photos or import in bulk." for the empty card, and apply the same new shorter page subtitle.
+**Fix — `src/components/app/AddProductModal.tsx`:**
+Replace the horizontal scrolling tab strip on mobile with a clean **2-column grid of method cards** (matches the Apple-style touch UX already used elsewhere in the app):
+- Render `METHOD_ORDER` as a `grid grid-cols-2 gap-2` list of tappable cards.
+- Each card: icon (top-left), short label (`Upload`, `Product URL`, `CSV`, `Mobile`, `Shopify`), tiny sub-label, subtle border, active state ring. Last odd card spans full row (`col-span-2`) so 5 items lay out cleanly.
+- Drop `TabsList`/`TabsTrigger` for mobile branch — keep `Tabs` root for state management with explicit `setActiveTab(id)` onClick on cards.
+- Keep desktop branch (lines 152-188) unchanged.
+
+This means tapping "Switch method" / back arrow returns to a clean, fully-visible 2-col grid instead of a clipped horizontal scroll.
 
 ### Files to edit
-- `src/pages/Products.tsx` (or wherever the PageHeader for /app/products renders) — update `subtitle` prop.
-- `src/components/app/ProductsEmptyUpload.tsx` — shorten the desktop subtitle inside the card header (line ~42).
+- `src/components/app/StoreImportTab.tsx` — input ring fix + min-w-0 on wrapper
+- `src/components/app/AddProductModal.tsx` — replace mobile `TabsList` with 2-col card grid
 
 ### Out of scope
-- Layout, icons, methods rail, drawer, backend.
+- Desktop method rail, drawer chrome, backend, other tabs' content.
 
 ### Acceptance
-- Desktop page subtitle reads: "Upload once. Reuse across every Visual Type."
-- Desktop empty card subtitle reads: "Upload images, paste a link, or import in bulk."
-- Mobile copy unchanged from current short version.
-- "Visual Types" appears only once on the page (in the page subtitle).
+- Clicking the URL field on desktop: focus ring sits flush within the field, no clipping at right edge, no layout shift.
+- On mobile, after tapping the back arrow from a method, user sees a clean 2-column grid of all 5 methods — none clipped, no horizontal scrollbar.
+- Tapping a card switches into that method's compact view.
 
