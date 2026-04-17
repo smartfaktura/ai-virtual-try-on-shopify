@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLearnRead } from '@/hooks/useLearnRead';
 import { LEARN_TRACKS, type LearnGuide } from '@/data/learnContent';
+import { ProductVisualsGuide } from './ProductVisualsGuide';
 
 interface Props {
   guide: LearnGuide;
@@ -37,6 +38,11 @@ export function GuideLayout({ guide }: Props) {
   useEffect(() => {
     markRead(guide.section, guide.slug);
   }, [guide.section, guide.slug, markRead]);
+
+  // Bespoke layout for the flagship Product Visuals guide
+  if (guide.slug === 'product-images' && guide.section === 'visual-studio') {
+    return <ProductVisualsGuide guide={guide} />;
+  }
 
   const trackLabel = useMemo(() => {
     const primary = guide.tracks[0];
