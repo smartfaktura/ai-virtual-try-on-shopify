@@ -357,7 +357,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       toast.error('Image exceeds 10 MB');
       return;
     }
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = createTrackedObjectUrl(file);
+    // Revoke any previous blob preview being replaced
+    if (singleImage) revokeTrackedObjectUrl(singleImage.previewUrl);
     setSingleImage({ file, previewUrl });
     hasManualEdits.current = { title: false, productType: false, description: false };
     const reader = new FileReader();
