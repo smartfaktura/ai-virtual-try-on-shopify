@@ -148,6 +148,83 @@ function BillingToggle({ isAnnual, onChange }: { isAnnual: boolean; onChange: (v
   );
 }
 
+// Branded plan picker (replaces native <select> in sticky bar)
+function PlanPickerPopover({
+  plans,
+  selectedId,
+  onSelect,
+  isAnnual,
+}: {
+  plans: PricingPlan[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+  isAnnual: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = plans.find(p => p.planId === selectedId);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-1 -ml-1 px-1 py-0.5 rounded hover:bg-muted/60 transition-colors text-sm font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {selected?.name ?? 'Select plan'}
+          <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="top"
+        align="start"
+        sideOffset={12}
+        className="p-1.5 w-[280px] min-w-[260px] border-border/60 shadow-lg rounded-xl"
+      >
+        <div className="flex flex-col">
+          {plans.map((p) => {
+            const isSelected = p.planId === selectedId;
+            const isRec = p.planId === 'growth';
+            const price = p.planId === 'free'
+              ? 0
+              : isAnnual
+                ? Math.round(p.annualPrice / 12)
+                : p.monthlyPrice;
+            const credits = typeof p.credits === 'number' ? p.credits : 0;
+            return (
+              <button
+                key={p.planId}
+                type="button"
+                onClick={() => { onSelect(p.planId); setOpen(false); }}
+                className={cn(
+                  "flex items-start justify-between gap-2 px-2.5 py-2 rounded-lg text-left transition-colors",
+                  isSelected ? "bg-primary/5" : "hover:bg-muted/60"
+                )}
+              >
+                <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-foreground">{p.name}</span>
+                    {isRec && (
+                      <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[12px] text-muted-foreground mt-0.5">
+                    ${price}/mo
+                    {credits > 0 && ` · ${credits.toLocaleString()} credits`}
+                  </span>
+                </div>
+                {isSelected && (
+                  <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function AppPricing() {
   const navigate = useNavigate();
   const { plan, subscriptionStatus, startCheckout, openCustomerPortal } = useCredits();
