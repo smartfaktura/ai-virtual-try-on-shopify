@@ -371,7 +371,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               </div>
               {extracted.dimensions && (
                 <Badge variant="outline" className="text-[10px] gap-1">
-                  📐 {extracted.dimensions}
+                  <Ruler className="w-3 h-3" />
+                  {extracted.dimensions}
                 </Badge>
               )}
               {extracted.description && (
