@@ -39,7 +39,7 @@ export function ProductsEmptyUpload({ onFilesSelected, onMethodSelect }: Product
         <p className="text-sm text-muted-foreground">
           {isMobile
             ? 'Upload photos or import in bulk.'
-            : 'Upload images, paste a link, or import in bulk. Each image becomes a product you can reuse across all Visual Types.'}
+            : 'Upload images, paste a link, or import in bulk.'}
         </p>
       </div>
 
