@@ -52,6 +52,9 @@ const WELCOME_MESSAGE =
 export function StudioChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [hiddenByPage, setHiddenByPage] = useState(
+    typeof document !== 'undefined' && document.body.hasAttribute('data-hide-studio-chat')
+  );
   const location = useLocation();
   const isMobile = useIsMobile();
   const { messages, isLoading, isThrottled, sendMessage, clearChat, addSystemMessage } = useStudioChat(location.pathname);
@@ -73,6 +76,20 @@ export function StudioChat() {
     }
   }, [isOpen]);
 
+  // Watch body attribute to hide widget when a page requests it (e.g. pricing sticky bar)
+  useEffect(() => {
+    const update = () => setHiddenByPage(document.body.hasAttribute('data-hide-studio-chat'));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-hide-studio-chat'] });
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-close panel when hidden by page request
+  useEffect(() => {
+    if (hiddenByPage && isOpen) setIsOpen(false);
+  }, [hiddenByPage, isOpen]);
+
   const isProductImagesPage = location.pathname === '/app/generate/product-images';
   const hideOnMobile = isMobile && (
     location.pathname === '/app/creative-drops' ||
@@ -83,6 +100,8 @@ export function StudioChat() {
   if (isProductImagesPage) return null;
 
   if (hideOnMobile) return null;
+
+  if (hiddenByPage) return null;
 
   const handleSend = () => {
     const trimmed = input.trim();

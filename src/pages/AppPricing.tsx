@@ -208,6 +208,18 @@ export default function AppPricing() {
 
   const showStickyBar = pastCompare && !atFinalCta;
 
+  // Hide the global StudioChat support widget while the sticky plan bar is visible
+  useEffect(() => {
+    if (showStickyBar) {
+      document.body.setAttribute('data-hide-studio-chat', 'true');
+    } else {
+      document.body.removeAttribute('data-hide-studio-chat');
+    }
+    return () => {
+      document.body.removeAttribute('data-hide-studio-chat');
+    };
+  }, [showStickyBar]);
+
   const handleDialogConfirm = async () => {
     setLoading(true);
     try {
