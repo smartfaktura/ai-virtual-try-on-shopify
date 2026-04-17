@@ -1,55 +1,38 @@
 
 
 ## Goal
-Fix the sticky plan-selector bar on `/app/pricing`:
-1. Mobile: "Growth · Recommended" overflows on one line + price/credits hidden.
-2. Desktop: bar is too narrow — should match the page content width (`max-w-6xl`) edge-to-edge.
+Smooth, natural slide animation for the sticky bar on `/app/pricing` (slides up from bottom on scroll-down, slides down off-screen on scroll-up — no side animation, no abrupt mount/unmount). Also enlarge the credits number text in the sticky bar so it's easy to read.
 
 ## File
-- `src/pages/AppPricing.tsx` (sticky bar block only, lines 638–674)
+- `src/pages/AppPricing.tsx` (sticky bar block, lines 637–708)
 
 ## Changes
 
-### 1. Width — match content edge-to-edge
-- Desktop: replace fixed `sm:w-[min(640px,calc(100vw-2rem))]` with the page content width — `sm:left-1/2 sm:-translate-x-1/2 sm:w-[calc(100vw-2rem)] sm:max-w-6xl` so the bar visually aligns with the comparison table and other sections.
-- Mobile: keep `left-4 right-4` (already edge-to-edge with page padding).
+### 1. Replace mount/unmount with always-mounted transform
+Currently the bar mounts via `{showStickyBar && ...}` with Tailwind `animate-in slide-in-from-bottom-2` — feels like a pop, not a glide, and unmount is instant.
 
-### 2. Mobile — show price + credits, fix label overflow
-Restructure the inner layout so on mobile we get a clean two-row arrangement that always fits:
+Replace with always-rendered container that translates:
+- Wrapper always in DOM, `pointer-events-none` when hidden so it doesn't block clicks.
+- Use transform + opacity transition:
+  - Hidden: `translate-y-[calc(100%+2rem)] opacity-0`
+  - Visible: `translate-y-0 opacity-100`
+- Transition: `transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]` (smooth eased glide, slightly longer for natural feel).
+- Inner card keeps `pointer-events-auto`.
 
-- Left block (selector):
-  - Tiny "SELECTED PLAN" label.
-  - Native `<select>` shows just the **plan name** (e.g. "Growth"). Strip the " · Recommended" suffix from the option label on mobile by rendering only the name and putting "Recommended" as a small adjacent badge instead — prevents truncation in the trigger.
-  - Directly under the name (mobile only): a compact meta line `$79/mo · 1,500 credits` in `text-[11px] text-muted-foreground`.
-- Right block (CTA):
-  - Keep the primary CTA. On mobile, shorten label to "Continue" when the plan is Growth/Starter/Pro and not the current plan (current logic produces "Continue with Growth" → too long). Use the full label on `sm+`. Implement via a `mobileLabel` derived from `cta.label.replace(/^Continue with .*/, 'Continue').replace(/^Choose .*/, 'Choose plan')`.
+Result: scrolling down → bar glides up from below the viewport. Scrolling back up past the comparison table → bar glides back down out of view. Fully reversible, seamless.
 
-Result on mobile (390px):
-```
-┌─────────────────────────────────────────────┐
-│ SELECTED PLAN              [ Continue → ]   │
-│ Growth  [Recommended]                       │
-│ $79/mo · 1,500 credits                      │
-└─────────────────────────────────────────────┘
-```
+### 2. Bigger credits/price text in the sticky bar
+Improve readability of the price + credits meta:
 
-### 3. Desktop layout (≥sm)
-Single row, full content width:
-```
-[ SELECTED PLAN ▼ Growth · Recommended ]   [ $79/mo · 1,500 credits ]   [ Continue with Growth → ]
-```
-With `justify-between` so the three blocks spread across the full bar.
+- **Mobile** (line 659): change `text-[11px] text-muted-foreground` → `text-[13px] text-foreground/80 font-medium`. Bump price to slightly stronger weight by wrapping `${stickyPrice}/mo` in a `font-semibold text-foreground` span; credits in `text-foreground/70`.
+- **Desktop** (lines 693–696): increase from `text-xs` → `text-sm`. Price line: `text-base font-semibold text-foreground` (was `text-xs` semibold). Credits line: `text-[13px] text-muted-foreground`.
 
-### 4. Recommended badge
-Render "Recommended" as a small `text-[9px] uppercase` pill next to the plan name (both viewports) instead of inside the `<select>` option label, so the trigger text stays short and never truncates.
-
-## Out of scope
-- Visibility logic (`pastCompare` / `atFinalCta`) — unchanged.
-- StudioChat hide behavior — unchanged.
-- Comparison table, FAQ, How credits work — unchanged.
+### 3. Keep
+- Visibility logic (`showStickyBar`, `pastCompare`, `atFinalCta`) — unchanged, just drives the transform class instead of conditional render.
+- StudioChat hide behavior — unchanged (still keyed off `showStickyBar`).
+- Width, layout, dropdown, CTA logic — unchanged.
 
 ## Result
-- Sticky bar spans the same width as the page content on desktop (no longer floating narrow in the middle).
-- Mobile shows plan name + Recommended badge + price + credits without truncation.
-- CTA always fits on one line on mobile.
+- Sticky bar slides up naturally from below when user scrolls past the comparison table, and slides back down smoothly when scrolling up — no side swipe, no pop.
+- Price + credit count are visibly larger and easier to read on both mobile and desktop.
 
