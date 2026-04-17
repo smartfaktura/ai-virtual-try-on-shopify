@@ -2,6 +2,8 @@
 // Add a new guide by appending an object to LEARN_GUIDES.
 
 export type LearnSection = 'visual-studio' | 'freestyle';
+export type LearnTrack = 'start' | 'visual-types' | 'quality' | 'advanced';
+export type LearnLevel = 'foundational' | 'core' | 'advanced';
 
 export interface LearnGuide {
   /** URL slug (per section). For visual-studio guides this matches the workflow slug when possible. */
@@ -15,6 +17,10 @@ export interface LearnGuide {
   readMin: number;
   /** Hero image (Supabase storage URL or static asset). Optional — falls back to gradient. */
   heroImage?: string;
+  /** Intent tracks this guide belongs to (1–2). */
+  tracks: LearnTrack[];
+  /** Difficulty / progression level. */
+  level: LearnLevel;
   /** Section blocks */
   whatItDoes: string;
   bestFor: string[];
@@ -41,6 +47,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Product Visuals',
     tagline: 'Brand-ready product shots across 1000+ scenes — fully art-directed.',
     readMin: 2,
+    tracks: ['start', 'visual-types'],
+    level: 'foundational',
     whatItDoes:
       'Generates premium, on-brand product photography in any scene you can imagine — studio, editorial, lifestyle — using your real product as the reference.',
     bestFor: ['PDP hero images', 'Paid social ads', 'Editorial campaigns', 'Brand refreshes'],
@@ -75,6 +83,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Virtual Try-On Set',
     tagline: 'Put your clothing on diverse AI models in any pose or setting.',
     readMin: 2,
+    tracks: ['visual-types'],
+    level: 'core',
     heroImage: `${PREVIEW_BASE}/workflow-previews/021146a4-47a4-4d13-8ce9-8d54e45cc8fc.png`,
     whatItDoes:
       'Dresses any AI model with your garment and produces realistic try-on imagery across multiple poses, framings, and backgrounds.',
@@ -108,13 +118,12 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Selfie / UGC Set',
     tagline: 'Authentic creator-style content pairing your product with a real-feeling model.',
     readMin: 2,
+    tracks: ['visual-types'],
+    level: 'core',
     whatItDoes:
       'Generates UGC-style imagery that mimics top creators — natural lighting, casual framing, authentic feel. Perfect for paid social.',
     bestFor: ['TikTok ads', 'Meta paid social', 'Influencer-style assets', 'Native feed content'],
-    whatYouNeed: [
-      'Your product image',
-      'A model (built-in or Brand Models)',
-    ],
+    whatYouNeed: ['Your product image', 'A model (built-in or Brand Models)'],
     whatYouGet: [
       'Multiple authentic UGC-style shots',
       'Natural lighting and casual compositions',
@@ -138,6 +147,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Flat Lay Set',
     tagline: 'Styled overhead arrangements with curated props — built for Instagram and editorial.',
     readMin: 2,
+    tracks: ['visual-types'],
+    level: 'core',
     whatItDoes:
       'Creates top-down product compositions with thoughtfully chosen props, surfaces, and color palettes.',
     bestFor: ['Instagram grid', 'Editorial layouts', 'Lookbook spreads', 'Press kit assets'],
@@ -164,6 +175,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Mirror Selfie Set',
     tagline: 'Authentic mirror selfies of your product, worn or held in real-feeling rooms.',
     readMin: 2,
+    tracks: ['visual-types'],
+    level: 'core',
     heroImage: `${PREVIEW_BASE}/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png`,
     whatItDoes:
       'Produces phone-in-hand mirror selfie content across diverse rooms and mirror types — feels native to TikTok and IG.',
@@ -174,11 +187,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       'Variety of room and mirror styles',
       'Native-looking smartphone framing',
     ],
-    quickStart: [
-      { label: 'Pick product' },
-      { label: 'Pick model' },
-      { label: 'Generate' },
-    ],
+    quickStart: [{ label: 'Pick product' }, { label: 'Pick model' }, { label: 'Generate' }],
     tips: [
       { type: 'do', text: 'Choose a room style that matches your brand world.' },
       { type: 'dont', text: 'Don’t expect studio lighting — that defeats the format.' },
@@ -191,6 +200,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Interior / Exterior Staging',
     tagline: 'Stage empty rooms or boost curb appeal — original architecture stays intact.',
     readMin: 2,
+    tracks: ['visual-types'],
+    level: 'core',
     whatItDoes:
       'Transforms empty interiors into professionally staged spaces, or enhances exteriors with curb appeal — without altering the underlying architecture.',
     bestFor: ['Real estate listings', 'Hospitality marketing', 'Renovation previews'],
@@ -217,6 +228,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Picture Perspectives',
     tagline: 'Turn one product photo into close-ups, back, side, and wide-angle shots.',
     readMin: 2,
+    tracks: ['visual-types', 'advanced'],
+    level: 'advanced',
     whatItDoes:
       'Generates a complete visual set from a single hero photo — close-up, back, sides, top, and wide shots — for full PDP coverage.',
     bestFor: ['PDP completeness', 'Marketplace listings', 'Catalog gap-filling'],
@@ -239,6 +252,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Image Upscaling',
     tagline: 'Sharpen any image to 2K or 4K — recovers textures, faces, and fine detail.',
     readMin: 1,
+    tracks: ['quality', 'advanced'],
+    level: 'advanced',
     whatItDoes:
       'AI-powered upscaling that sharpens detail, recovers textures, and enhances faces — perfect for upgrading legacy assets.',
     bestFor: ['Old catalog images', 'Press-quality exports', 'Print-ready assets'],
@@ -261,6 +276,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Catalog Studio (Bulk)',
     tagline: 'Bulk-generate catalog-ready visuals for any product, in one run.',
     readMin: 2,
+    tracks: ['start', 'advanced'],
+    level: 'advanced',
     whatItDoes:
       'A bulk-photoshoot pipeline that generates a complete catalog-ready set for many products at once — anchor + derivative shots, consistent across SKUs.',
     bestFor: ['Stores with many SKUs', 'Seasonal drops', 'Catalog refreshes'],
@@ -286,6 +303,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     title: 'Freestyle Studio Basics',
     tagline: 'Free-form prompts + your image. Maximum creative control.',
     readMin: 3,
+    tracks: ['start', 'quality'],
+    level: 'core',
     whatItDoes:
       'Freestyle is the open-canvas mode: you write a prompt, optionally attach a product, model, and scene, and the AI builds the image. Use it when you want full control or want to explore something Catalog Studio can’t do.',
     bestFor: [
@@ -329,10 +348,43 @@ export const LEARN_SECTIONS: { id: LearnSection; label: string; description: str
   },
 ];
 
+export const LEARN_TRACKS: { id: LearnTrack; label: string; description: string }[] = [
+  { id: 'start', label: 'Start here', description: 'First-run essentials — pick one and go.' },
+  { id: 'visual-types', label: 'Visual Types', description: 'Reference for every workflow.' },
+  { id: 'quality', label: 'Improve quality', description: 'Prompting, refs, brand profiles.' },
+  { id: 'advanced', label: 'Advanced & bulk', description: 'Power flows for scale.' },
+];
+
+export const LEARN_COMING_SOON: { label: string; reason: string }[] = [
+  { label: 'Video', reason: 'Short Film & product motion — coming soon' },
+  { label: 'Brand Models', reason: 'Train custom AI models — coming soon' },
+  { label: 'Brand Profiles', reason: 'Lock palette, tone, and look — coming soon' },
+];
+
 export function getGuide(section: LearnSection, slug: string): LearnGuide | undefined {
   return LEARN_GUIDES.find((g) => g.section === section && g.slug === slug);
 }
 
 export function getGuidesBySection(section: LearnSection): LearnGuide[] {
   return LEARN_GUIDES.filter((g) => g.section === section);
+}
+
+export function getGuidesByTrack(track: LearnTrack): LearnGuide[] {
+  return LEARN_GUIDES.filter((g) => g.tracks.includes(track));
+}
+
+/** Returns the first unread guide in a preferred-track order. */
+export function getRecommendedGuide(isRead: (section: string, slug: string) => boolean): LearnGuide {
+  const trackOrder: LearnTrack[] = ['start', 'visual-types', 'quality', 'advanced'];
+  for (const t of trackOrder) {
+    const found = getGuidesByTrack(t).find((g) => !isRead(g.section, g.slug));
+    if (found) return found;
+  }
+  return LEARN_GUIDES[0];
+}
+
+export function levelLabel(level: LearnLevel): string {
+  if (level === 'foundational') return 'Foundational';
+  if (level === 'core') return 'Core';
+  return 'Advanced';
 }
