@@ -234,7 +234,19 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         className="w-full sm:max-w-[720px] p-0 flex flex-col gap-0"
       >
         <SheetHeader className="px-7 pt-7 pb-4 shrink-0 space-y-1.5">
-          <SheetTitle className="text-xl font-semibold tracking-tight">{headerTitle}</SheetTitle>
+          <SheetTitle className="text-xl font-semibold tracking-tight flex items-center gap-2">
+            {isCompact && onSwitchMethod && (
+              <button
+                type="button"
+                onClick={onSwitchMethod}
+                aria-label="Back to methods"
+                className="inline-flex items-center justify-center w-7 h-7 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+            {headerTitle}
+          </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">{subtitle}</SheetDescription>
         </SheetHeader>
 
