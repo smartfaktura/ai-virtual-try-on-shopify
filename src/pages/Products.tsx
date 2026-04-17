@@ -445,7 +445,7 @@ export default function Products() {
           </div>
         )}
       </div>
-      <FeedbackBanner />
+      {!hasNoProducts && <FeedbackBanner />}
 
       <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
