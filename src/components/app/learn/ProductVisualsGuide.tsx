@@ -45,16 +45,16 @@ const STEPS = [
   {
     n: '03',
     name: 'Setup',
-    what: 'Optionally lock a model and Brand Profile.',
-    why: 'Keeps palette, mood and styling consistent across runs.',
+    what: 'Pick models, background colors, and fine-tune scene settings.',
+    why: 'Adjust per-scene aspect ratios, props, and outfit details before you generate.',
     visual: 'chips',
   },
   {
     n: '04',
     name: 'Generate',
     what: 'Confirm credits, hit Generate.',
-    why: 'First image lands in ~30s. 2–4 variations per scene.',
-    visual: 'pulse',
+    why: 'Run batches across products and scenes — generate hundreds of studio-grade images in one pass.',
+    visual: 'batch',
   },
 ] as const;
 
