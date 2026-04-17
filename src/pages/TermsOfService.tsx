@@ -6,7 +6,7 @@ import { SITE_URL } from '@/lib/constants';
 export default function TermsOfService() {
   return (
     <PageLayout>
-      <SEOHead title="Terms of Service — VOVV AI" description="Read the VOVV AI terms of service. Understand your rights and responsibilities when using our AI product photography platform." canonical={`${SITE_URL}/terms`} />
+      <SEOHead title="Terms of Service — VOVV.AI" description="Read the VOVV.AI terms of service. Understand your rights and responsibilities when using our AI product photography platform." canonical={`${SITE_URL}/terms`} />
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">

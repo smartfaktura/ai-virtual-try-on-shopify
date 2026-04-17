@@ -41,7 +41,7 @@ export default function TryFree() {
   return (
     <PageLayout>
       <SEOHead
-        title="Try VOVV AI Free — AI Product Photos in Seconds"
+        title="Try VOVV.AI Free — AI Product Photos in Seconds"
         description="Upload one product photo and get studio-quality visuals with AI models and professional scenes. No credit card required. 20 free credits to start."
         canonical={`${SITE_URL}/try`}
       />
@@ -62,7 +62,7 @@ export default function TryFree() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button asChild size="lg" className="text-base px-8 py-6 rounded-full shadow-lg">
               <Link to="/auth">
-                Try VOVV AI Free <ArrowRight className="ml-2 h-5 w-5" />
+                Try VOVV.AI Free <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
@@ -176,11 +176,11 @@ export default function TryFree() {
             Start Creating — Free
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
-            Join thousands of brands using VOVV AI to generate scroll-stopping product visuals. No credit card, no commitment.
+            Join thousands of brands using VOVV.AI to generate scroll-stopping product visuals. No credit card, no commitment.
           </p>
           <Button asChild size="lg" className="mt-8 text-base px-10 py-6 rounded-full shadow-lg">
             <Link to="/auth">
-              Try VOVV AI Free <ArrowRight className="ml-2 h-5 w-5" />
+              Try VOVV.AI Free <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
         </div>

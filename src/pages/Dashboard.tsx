@@ -293,7 +293,7 @@ export default function Dashboard() {
   if (dashboardMode === 'resolving') {
     return (
       <div className="space-y-6 sm:space-y-10">
-        <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
+        <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         <div>
           <div className="h-10 w-64 bg-muted/40 rounded-lg animate-pulse" />
           <div className="h-5 w-96 bg-muted/30 rounded-lg animate-pulse mt-3" />
@@ -306,7 +306,7 @@ export default function Dashboard() {
   if (dashboardMode === 'new') {
     return (
       <div className="space-y-6 sm:space-y-10">
-        <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
+        <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         {/* Welcome — bold, matching landing hero */}
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -521,7 +521,7 @@ export default function Dashboard() {
   // --- RETURNING USER DASHBOARD ---
   return (
     <div className="space-y-5 sm:space-y-10">
-      <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
+      <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
       {/* Welcome greeting + CTA */}
       <div>
         <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight">

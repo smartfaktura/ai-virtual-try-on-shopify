@@ -48,7 +48,7 @@ export default function UpscaleFeature() {
   return (
     <PageLayout>
       <SEOHead
-        title="AI Image Upscaling for E-Commerce — VOVV AI"
+        title="AI Image Upscaling for E-Commerce — VOVV.AI"
         description="Upscale product images to 2K or 4K with AI texture recovery. Batch enhance up to 10 images at once. Sharper details, richer textures, print-ready quality."
         canonical={`${SITE_URL}/features/upscale`}
       />

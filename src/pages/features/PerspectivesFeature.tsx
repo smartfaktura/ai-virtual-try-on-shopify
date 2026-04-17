@@ -48,7 +48,7 @@ export default function PerspectivesFeature() {
   return (
     <PageLayout>
       <SEOHead
-        title="Product Perspectives — Multi-Angle AI Photography — VOVV AI"
+        title="Product Perspectives — Multi-Angle AI Photography — VOVV.AI"
         description="Generate every angle from a single product photo. Front, back, side, close-up — 8 perspective types with matching lighting and backgrounds. 6 credits per angle."
         canonical={`${SITE_URL}/features/perspectives`}
       />

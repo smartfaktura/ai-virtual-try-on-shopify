@@ -26,7 +26,7 @@ export const blogPosts: BlogPost[] = [
     title: 'AI Product Photography for E-commerce: How It Works and Why It Matters',
     metaDescription: 'AI product photography cuts costs by 90% and delivers studio-quality e-commerce images in seconds. See ROI examples for Shopify, Amazon & Etsy sellers.',
     publishDate: '2026-03-03',
-    author: 'VOVV AI Team',
+    author: 'VOVV.AI Team',
     readTime: '9 min read',
     category: 'AI Photography',
     excerpt: 'A DTC skincare brand spent $47,000 on product photos last year — then switched to AI and produced 3x the images for under $2,000. Here\'s exactly how.',
@@ -97,7 +97,7 @@ For **80% of your e-commerce visual needs**, AI is now the smarter, faster, and 
 
 ## Getting started (it's free)
 
-The barrier to entry is remarkably low. VOVV AI gives every new account **20 free credits** — enough to generate your first batch of AI product photos and see the quality firsthand. No credit card. No commitment.
+The barrier to entry is remarkably low. VOVV.AI gives every new account **20 free credits** — enough to generate your first batch of AI product photos and see the quality firsthand. No credit card. No commitment.
 
 Here's your 15-minute challenge: pick your top-selling product, upload a photo, and generate 5 variations. Compare them to your current listing images. We think you'll be surprised.
 
@@ -123,7 +123,7 @@ In blind tests, consumers cannot reliably distinguish modern AI product photos f
     title: 'Virtual Try-On Technology: How Fashion Brands Are Cutting Return Rates by 40%',
     metaDescription: 'Virtual try-on technology slashes fashion returns by 25-40% and lifts conversions by 30%. See how AI fitting works for clothing brands of every size.',
     publishDate: '2026-03-04',
-    author: 'VOVV AI Team',
+    author: 'VOVV.AI Team',
     readTime: '8 min read',
     category: 'Virtual Try-On',
     excerpt: 'A customer adds a silk blouse to her cart, scrolls through images on 5 different body types, and buys with confidence. No return. Here\'s the tech behind that moment.',
@@ -231,7 +231,7 @@ The images are pre-generated, so there's zero impact on page speed. They're stan
     title: 'E-commerce Visual Content Strategy for 2026: What Top Brands Do Differently',
     metaDescription: 'Build a winning 2026 visual content strategy. Learn the 4-part framework top e-commerce brands use to produce 5x more content with AI photography.',
     publishDate: '2026-03-05',
-    author: 'VOVV AI Team',
+    author: 'VOVV.AI Team',
     readTime: '10 min read',
     category: 'Strategy',
     excerpt: 'The top 10% of e-commerce brands produce 5x more visual content than average — and spend less doing it. Here\'s the exact 4-part framework they follow.',
@@ -369,7 +369,7 @@ Track three metrics: product page conversion rate (aim for 3–5%), click-throug
     title: 'AI Model Photography: Why Diverse Representation Drives Higher Conversions',
     metaDescription: 'AI model photography lets brands show products on diverse models — boosting conversions 15-25%, cutting returns, and building loyalty. See Gen Z data inside.',
     publishDate: '2026-03-06',
-    author: 'VOVV AI Team',
+    author: 'VOVV.AI Team',
     readTime: '7 min read',
     category: 'Diversity & Inclusion',
     excerpt: 'When a customer sees your product on someone who looks like them, they buy with confidence. AI makes that possible for every SKU — at zero additional cost.',
@@ -484,7 +484,7 @@ AI model photography complements — not replaces — real representation. It al
     title: 'Automated Product Listing Images: How to Create Thousands of SKU Photos in Hours',
     metaDescription: 'Generate marketplace-ready product listing images for 5,000+ SKUs in hours, not months. See the automated workflow for Shopify, Amazon & multi-channel sellers.',
     publishDate: '2026-03-07',
-    author: 'VOVV AI Team',
+    author: 'VOVV.AI Team',
     readTime: '8 min read',
     category: 'Automation',
     excerpt: 'One brand processed 3,200 SKU images in a single weekend — with two people and a laptop. Here\'s the exact workflow they followed.',
@@ -625,7 +625,7 @@ You can regenerate individual products with adjusted settings, try different sce
     title: 'Brand Consistency with AI-Generated Visuals: The Complete Guide',
     metaDescription: 'Keep every AI-generated product image on-brand with Brand Profiles. Learn why AI delivers better visual consistency than traditional photography.',
     publishDate: '2026-03-08',
-    author: 'VOVV AI Team',
+    author: 'VOVV.AI Team',
     readTime: '9 min read',
     category: 'Brand Strategy',
     excerpt: 'One brand\'s product pages had 4 different lighting styles across 600 SKUs. Their Brand Profile fixed it in an afternoon. Here\'s the before-and-after story.',
@@ -772,7 +772,7 @@ No. A Brand Profile defines the *style* — lighting, background, composition �
     title: '12 AI-Generated Product Photography Examples That Look 100% Real',
     metaDescription: 'See 12 stunning AI-generated product photography examples across fashion, beauty, fragrances, jewelry & sports. Discover how brands create studio-quality images with AI.',
     publishDate: '2026-03-31',
-    author: 'VOVV AI Team',
+    author: 'VOVV.AI Team',
     readTime: '7 min read',
     category: 'AI Photography',
     excerpt: 'From fashion editorials to fragrance close-ups, these 12 AI-generated product images are indistinguishable from traditional studio photography. See exactly how they were made.',

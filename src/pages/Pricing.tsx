@@ -11,9 +11,9 @@ import { pricingPlans } from '@/data/mockData';
 const pricingJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Product',
-  name: 'VOVV AI Visual Studio',
+  name: 'VOVV.AI Visual Studio',
   description: 'AI-powered product photography platform for e-commerce brands.',
-  brand: { '@type': 'Brand', name: 'VOVV AI' },
+  brand: { '@type': 'Brand', name: 'VOVV.AI' },
   offers: pricingPlans
     .filter((p) => !p.isEnterprise)
     .map((p) => ({
@@ -30,7 +30,7 @@ export default function Pricing() {
   useEffect(() => { trackViewContent('Pricing', 'pricing_page'); gtagViewItem('Pricing', 'pricing_page'); }, []);
   return (
     <PageLayout>
-      <SEOHead title="Pricing & Plans — VOVV AI" description="Free credits to start. Scale with flexible plans from Starter to Enterprise. AI product photography pricing for every e-commerce brand." canonical={`${SITE_URL}/pricing`} />
+      <SEOHead title="Pricing & Plans — VOVV.AI" description="Free credits to start. Scale with flexible plans from Starter to Enterprise. AI product photography pricing for every e-commerce brand." canonical={`${SITE_URL}/pricing`} />
       <JsonLd data={pricingJsonLd} />
       <LandingPricing />
     </PageLayout>

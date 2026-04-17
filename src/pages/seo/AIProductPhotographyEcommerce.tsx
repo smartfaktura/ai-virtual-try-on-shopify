@@ -203,7 +203,7 @@ export default function AIProductPhotographyEcommerce() {
     name: PAGE.h1,
     description: PAGE.description,
     url: CANONICAL,
-    publisher: { '@type': 'Organization', name: 'VOVV AI', url: SITE_URL },
+    publisher: { '@type': 'Organization', name: 'VOVV.AI', url: SITE_URL },
   }), []);
 
   return (

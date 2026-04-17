@@ -46,8 +46,8 @@ export default function Press() {
   return (
     <PageLayout>
       <SEOHead
-        title="Press & Media Resources — VOVV AI"
-        description="Download VOVV AI brand assets, logos, and color palette. Media inquiries welcome."
+        title="Press & Media Resources — VOVV.AI"
+        description="Download VOVV.AI brand assets, logos, and color palette. Media inquiries welcome."
         canonical={`${SITE_URL}/press`}
       />
 

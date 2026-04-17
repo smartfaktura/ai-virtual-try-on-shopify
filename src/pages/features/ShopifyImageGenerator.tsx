@@ -76,7 +76,7 @@ export default function ShopifyImageGenerator() {
   return (
     <PageLayout>
       <SEOHead
-        title="Shopify Product Image Generator — AI Photos for Your Store | VOVV AI"
+        title="Shopify Product Image Generator — AI Photos for Your Store | VOVV.AI"
         description="Generate stunning AI product photos for your Shopify store. 50+ diverse models, 30+ scenes. Create professional listing images without photoshoots — try free."
         canonical={`${SITE_URL}/features/shopify-image-generator`}
       />

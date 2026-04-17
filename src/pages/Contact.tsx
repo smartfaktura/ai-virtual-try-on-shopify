@@ -53,7 +53,7 @@ export default function Contact() {
 
   return (
     <PageLayout>
-      <SEOHead title="Contact VOVV AI — Get in Touch" description="Have a question about AI product photography? Contact the VOVV AI team for support, partnerships, or feature requests." canonical={`${SITE_URL}/contact`} />
+      <SEOHead title="Contact VOVV.AI — Get in Touch" description="Have a question about AI product photography? Contact the VOVV.AI team for support, partnerships, or feature requests." canonical={`${SITE_URL}/contact`} />
       <section className="py-20 sm:py-28">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">

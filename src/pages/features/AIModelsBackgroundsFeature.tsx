@@ -76,7 +76,7 @@ export default function AIModelsBackgroundsFeature() {
   return (
     <PageLayout>
       <SEOHead
-        title="AI Models & Backgrounds for Product Photography — VOVV AI"
+        title="AI Models & Backgrounds for Product Photography — VOVV.AI"
         description="Add AI models and scene backgrounds to your product photos. 50+ diverse models, 30+ environments. Create premium brand visuals without photoshoots."
         canonical={`${SITE_URL}/features/ai-models-backgrounds`}
       />
@@ -166,7 +166,7 @@ export default function AIModelsBackgroundsFeature() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-              Why VOVV AI
+              Why VOVV.AI
             </Badge>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               Everything You Need for Visual Content

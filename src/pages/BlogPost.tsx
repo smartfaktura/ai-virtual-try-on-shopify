@@ -134,7 +134,7 @@ export default function BlogPost() {
     author: { '@type': 'Organization', name: post.author },
     publisher: {
       '@type': 'Organization',
-      name: 'VOVV AI',
+      name: 'VOVV.AI',
       url: SITE_URL,
       logo: { '@type': 'ImageObject', url: defaultImage },
     },
@@ -154,7 +154,7 @@ export default function BlogPost() {
   return (
     <PageLayout>
       <SEOHead
-        title={`${post.title} | VOVV AI Blog`}
+        title={`${post.title} | VOVV.AI Blog`}
         description={post.metaDescription}
         canonical={`${SITE_URL}/blog/${post.slug}`}
         ogType="article"
