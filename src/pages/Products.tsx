@@ -268,7 +268,7 @@ export default function Products() {
               </Button>
             </div>
             {products.length > 0 && (
-              <Button onClick={() => openAddDrawer('manual')}>
+              <Button onClick={() => openAddDrawer('manual', undefined, false)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Products
               </Button>
