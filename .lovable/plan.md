@@ -1,69 +1,51 @@
 
 
 ## Goal
-Make `/app/help` feel personal, calm, and on-brand. Remove inline FAQ accordion (link out instead), make the contact form feel like messaging the team, drop Status link.
+Move **Tutorials** and **Help & Support** out of the sidebar's "Learn" group and into the user account menu (the popover that opens when clicking the user chip at the bottom of the sidebar). This declutters the sidebar and groups personal/utility items together.
 
-## Changes (single file: `src/pages/AppHelp.tsx`)
+## Changes — single file: `src/components/app/AppShell.tsx`
 
-### 1. Personal hero
-Replace generic "Help & support" header with a warmer block:
-- Avatar stack (3 team avatars — reuse `avatarSophia`, `avatarKenji`, `avatarZara` from `ContactFormDialog.tsx`)
-- Title: **"Talk to the team"**
-- Subtitle: *"Real humans, real fast. We usually reply within a few hours."*
+### 1. Remove the "Learn" sidebar group
+Delete the entire `Learn` group from the nav config (lines 78–84):
+```
+{ label: 'Learn', items: [Tutorials, Help & Support] }
+```
+Sidebar now ends with **Assets** group → cleaner, shorter nav.
 
-### 2. Contact form → "Message the team"
-Keep `ChatContactForm` but reframe its surrounding card:
-- Drop the bordered/muted card wrapper — let it breathe on the page background
-- Change section label from "Contact us" to nothing (form is the hero action now)
-- Above the form add a tiny line: *"What's on your mind?"*
-- Form itself stays (already wired to `send-contact`); placeholder copy in `ChatContactForm` already reads "How can we help?" which fits
-
-### 3. Remove inline FAQ accordion
-Replace the entire FAQ accordion section with a single soft link card:
-- Title: **"Browse FAQs"**
-- Sub: *"Quick answers to common questions"*
-- Opens `/help` in new tab
-- Same visual pattern as the Learn card below it (consistent rhythm)
-
-Drop `QUICK_FAQ_KEYS`, `quickFaqs`, `faqCategories`, `Accordion` imports.
-
-### 4. Self-serve row (FAQ + Learn side by side)
-Two cards in a 2-col grid (stacks on mobile):
-- **Browse FAQs** → `/help` (external)
-- **Tutorials & guides** → `/app/learn`
-
-Same card style: rounded-2xl, soft muted bg, icon left, title + sub, arrow right.
-
-### 5. Other ways to reach us
-Remove `Status` entry. Keep: Email, Twitter, Instagram. Same minimal text-link row.
-
-## Layout (single column, max-w-2xl — tighter than before for intimacy)
+### 2. Add both items into the user dropdown menu
+Insert two new menu buttons in the user popover (between "Brand Profiles" and "Earn Credits") so the order becomes:
 
 ```
-─ Personal hero ───────────────
-  [avatars]  Talk to the team
-             Real humans, real fast.
-
-─ Message form ────────────────
-  What's on your mind?
-  [name] [email] [message] [Send]
-
-─ Self-serve (2-col) ──────────
-  [Browse FAQs →]   [Tutorials & guides →]
-
-─ Footer links ────────────────
-  Email · Twitter · Instagram
+ievute040
+ievute040@gmail.com
+─────────────────
+⚙  Account settings
+🎨  Brand Profiles
+🎓  Tutorials          ← new
+🛟  Help & Support     ← new
+🎁  Earn Credits
+─────────────────
+(admin items if admin)
+─────────────────
+↪  Sign out
 ```
 
-## Files
-- `src/pages/AppHelp.tsx` — restructure as above
-- No other files touched. `ChatContactForm`, `faqContent.ts`, routing all stay.
+Each new button mirrors the existing pattern:
+- `GraduationCap` icon → navigates to `/app/learn`
+- `LifeBuoy` icon → navigates to `/app/help`
+- Closes the menu on click (`setUserMenuOpen(false)`)
+
+Imports `GraduationCap` and `LifeBuoy` are already in the file (used by the now-removed Learn group), so no import changes needed beyond keeping them.
+
+### 3. No other files touched
+- Routes for `/app/learn` and `/app/help` stay as-is
+- Prefetch entries stay
+- No content changes to either page
 
 ## Acceptance
-- No inline FAQ accordion on `/app/help`
-- Form feels like messaging real people (avatars + warm copy)
-- FAQ + Learn presented as twin cards
-- No Status link in footer row
-- Tighter `max-w-2xl` for a more personal feel
-- Mobile: clean stacking, generous spacing
+- Sidebar no longer shows "LEARN" section header or its two items
+- Clicking the user chip at the bottom opens the menu shown in the user's screenshot, now with **Tutorials** and **Help & Support** added between Brand Profiles and Earn Credits
+- Both menu items navigate correctly and close the popover
+- Collapsed sidebar still works (no leftover empty group)
+- Mobile drawer reflects the same change
 
