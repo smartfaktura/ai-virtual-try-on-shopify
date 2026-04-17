@@ -1,30 +1,31 @@
 
 
-## Fix WorkflowRequestBanner — desktop layout + mobile right-aligned button
+## Fix workflow card layout — too tall, content sitting too high
 
-### Issues from screenshots
-1. **Desktop (screenshot 2):** Banner is now extremely wide (full width with empty right space) because parent grid uses `auto-rows-fr` → row stretches to match Catalog/Freestyle card height (~600px). Banner sits in a tall empty box.
-2. **Mobile (screenshot 1):** Share Request button stacks below text on its own row, left-aligned. User wants compact row: avatars + text on left, button on right (same line).
+### Issue from screenshot
+On the 3-col desktop grid (`/app/workflows`), cards have `auto-rows-fr` applied. Because the Selfie/UGC card has 2 lines of description while others have shorter text, the row stretches to a tall height (~850px). The thumbnail keeps its `aspect-[3/4]` ratio at the column width (~470px → ~625px tall), but `auto-rows-fr` then forces the whole card row taller, leaving the title/description/button block compressed at the bottom and a visual mismatch where content sits "too high" relative to the thumbnail.
+
+Also: at this 3-col layout each card is quite large (~470px wide) — the user says "little too small" actually means the cards feel awkward because the wide thumbnail + short content = unbalanced. Better fix: tighten thumbnail aspect from `aspect-[3/4]` (1.33x tall) to `aspect-[4/5]` (1.25x tall) on desktop. Slightly less tall thumbnail → cards naturally shorter → less stretching needed.
 
 ### Root cause
-- `WorkflowRequestBanner` is rendered inside a `grid` with `auto-rows-fr` (added in last patch for even card heights). `col-span-full` makes it span all columns, but `auto-rows-fr` forces it to match the tallest row. Need to opt this row out of `auto-rows-fr`.
-- Mobile layout uses `flex-col sm:flex-row` — switches to row at `sm` (640px). At <640px (real mobile) it stacks vertically, button goes full-width below. User wants horizontal even on mobile.
+1. `auto-rows-fr` on the grid is forcing all cards to match the tallest, creating wasted vertical space inside shorter cards.
+2. `aspect-[3/4]` thumbnail is too tall on desktop at 3-col / 4-col widths.
 
 ### Changes
 
-**File: `src/pages/Workflows.tsx`** (around line 561 — the grid wrapping the banner)
-- The banner needs to escape `auto-rows-fr`. Move `WorkflowRequestBanner` OUT of the `auto-rows-fr` grid into its own block right below the grid (still inside the same section). Keeps card grid uniform-height while banner sizes to content.
+**File: `src/pages/Workflows.tsx`**
+- Remove `auto-rows-fr` from the workflow grid (around line 561). Let cards size to their content. Consistency comes from the fixed thumbnail aspect + 2-line clamp on subtitle (already in place).
 
-**File: `src/components/app/WorkflowRequestBanner.tsx`**
-- Collapsed state container (line ~58): change `flex-col sm:flex-row items-start sm:items-center justify-between gap-4` → `flex-row items-center justify-between gap-3 sm:gap-4` so avatars+text and button always sit on the same row.
-- Inner left block: keep avatars + text. On mobile, hide the secondary subtitle ("Tell us what you need…") OR keep it — it can wrap under the title since text block is `min-w-0 flex-1`. Probably cleaner: keep title only on mobile, show subtitle from `sm:` up.
-- Avatar count on mobile: reduce from 4 to 3 to save space (`AVATARS.slice(0, isMobile ? 3 : 4)` — or simpler: hide last avatar with `hidden sm:flex` on the 4th).
-- Button: keep current size (`h-10 px-5`), shrink label on mobile to just the icon + "Request" or keep "Share Request" — at `h-10` with `text-sm` it should fit on a 375px viewport alongside 3 avatars + 1-line title. Confirmed by screenshot 1 the button at h-10 fits, just needs to be on the right.
-- Remove the `col-span-full` class from the root (no longer needed once it's outside the grid).
-- Padding: reduce mobile padding from `p-5 sm:p-8` → `p-4 sm:p-6` for tighter mobile feel.
+**File: `src/components/app/WorkflowCardCompact.tsx`** (around line 117 — thumbnail aspect)
+- Change desktop thumbnail aspect from `aspect-[3/4]` to `aspect-[4/5]` (slightly less tall, more balanced for the wider desktop columns).
+- Keep `aspect-[2/3]` for mobileCompact (mobile already feels right).
+- Keep `aspect-[3/4]` for modalCompact (modal context unchanged).
+
+**File: `src/components/app/FreestylePromptCard.tsx`** 
+- Match the same aspect change so Freestyle card aligns with workflow cards on desktop (`aspect-[3/4]` → `aspect-[4/5]` for non-mobile).
 
 ### Acceptance
-- Desktop: banner sits as a normal-height row below the workflow grid, no giant empty space; visually similar to before the `auto-rows-fr` change.
-- Mobile: avatars + "Missing a Visual Type for your brand?" on left, Share Request button on right, single row, button right-aligned.
-- Workflow grid cards above still have uniform heights (auto-rows-fr preserved on the grid).
+- Workflow cards on `/app/workflows` desktop have balanced thumbnail-to-content ratio; no big empty band above the Start button.
+- All cards in a row share roughly the same height naturally (via fixed aspect + 2-line clamp), no `auto-rows-fr` stretching.
+- Mobile and modal layouts unchanged.
 
