@@ -759,10 +759,10 @@ export default function AppPricing() {
               <Button
                 size="sm"
                 disabled={stickyCta.disabled}
-                onClick={() => handlePlanSelect(stickyPlan)}
+                onClick={handleStickyCta}
                 className="gap-1.5 flex-shrink-0 h-9"
               >
-                {stickyCta.label.replace(/^Continue with .*/, 'Continue').replace(/^Choose .*/, 'Choose')}
+                {stickyCta.label.replace(/^Continue with .*/, 'Continue').replace(/^Upgrade to .*/, 'Upgrade').replace(/^Choose .*/, 'Choose')}
                 {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
               </Button>
             </div>
@@ -789,7 +789,7 @@ export default function AppPricing() {
               </div>
               <Button
                 disabled={stickyCta.disabled}
-                onClick={() => handlePlanSelect(stickyPlan)}
+                onClick={handleStickyCta}
                 className="gap-1.5 flex-shrink-0"
               >
                 {stickyCta.label}
@@ -808,7 +808,8 @@ export default function AppPricing() {
         targetPlan={selectedDialogPlan || undefined}
         currentPlanName={planConfig?.name || 'Free'}
         isAnnual={isAnnual}
-        currentBalance={0}
+        currentBalance={balance}
+        periodEnd={currentPeriodEnd ? currentPeriodEnd.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : undefined}
         hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
         loading={loading}
       />
