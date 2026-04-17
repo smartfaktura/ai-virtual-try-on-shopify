@@ -1,42 +1,77 @@
 
 ## Goal
-Frontend-only text sweep to fix all P0 terminology leaks identified in the audit. Replace user-visible "Workflows / Templates" with **Visual Studio** (destination) or **Visual Types** (selectable options). No routes, props, types, or backend touched.
+Resolve P1 factual conflicts and apply P2 polish — frontend text only. No routes, slugs, file names, props, types, or backend touched.
 
-## Scope (text-only edits)
+---
 
-### 1. `src/pages/HelpCenter.tsx` — heaviest regression (10 strings)
-| Line | Current → Replace |
+## Part 1 — P1 Factual Fixes
+
+### 1.1 Visual Types count → **seven** (add Picture Perspectives to LandingFAQ)
+**`src/components/landing/LandingFAQ.tsx:17`**
+- Current: "Choose from six core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, and Interior / Exterior Staging"
+- Replace: "Choose from **seven core options** — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, **Picture Perspectives**, and Interior / Exterior Staging"
+
+### 1.2 TryShot signup credits → **20**
+**`src/pages/TryShot.tsx:344`**
+- Current: "Get 60 free credits when you sign up."
+- Replace: "Get **20 free credits** when you sign up."
+
+### 1.3 Brand Model pricing FAQ → free public model + 20 credits/generation
+**`src/pages/AppPricing.tsx:92`**
+- Current: "A standard image is ~4–6 credits depending on complexity. Video generation runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model training is a one-time ~50 credits per model. You always see the cost before you generate."
+- Replace: "A standard image is 4–6 credits depending on complexity. Video generation runs 30–60 credits per clip. 4K upscaling is ~5 credits. **Brand Model generation is 20 credits per image; adding a public Brand Model is free.** You always see the cost before you generate."
+
+### 1.4 Blog credit cost factual fix
+**`src/data/blogPosts.ts:906`**
+- Current: "Most images cost 1–3 credits depending on quality settings."
+- Replace: "Most images cost **4–6 credits** depending on quality settings."
+
+---
+
+## Part 2 — P2 Polish
+
+### 2.1 Hyphenation sweep: `ecommerce` → `e-commerce` (visible body copy only)
+Update these user-visible strings (skip route paths, file names, slugs, internal token strings like `ecommerce_scene_type`, blog banner filenames, lib comments):
+
+| File:line | Replace |
 |---|---|
-| 31 | "across Workflows and Freestyle" → "across Visual Studio and Freestyle" |
-| 40 | "Workflows cost 6 credits per image" → "Visual Types cost 6 credits per image" |
-| 48 | "run your first Workflow or try Freestyle" → "run your first Visual Type or try Freestyle" |
-| 61 | category name "Workflows & Generation" → "Visual Studio & Generation" |
-| 64 | "What Workflows are available?" → "What Visual Types are available?" |
-| 65 | "seven core Workflows, each pre-configured…" → "seven core Visual Types, each pre-configured…" |
-| 77 | "Workflows support batch generation… choose a workflow… in the Workflows activity section." → "Visual Studio supports batch generation… choose a Visual Type… in the Visual Studio activity section." |
-| 81 | "select your Templates, and set a schedule" → "select your Visual Types, and set a schedule" |
-| 102 | "Try different workflows — some work better…" → "Try different Visual Types — some work better…" |
+| `src/components/home/HomeCategoryExamples.tsx:12` | "ecommerce visuals" → "e-commerce visuals" |
+| `src/components/home/HomeFAQ.tsx:27` | "designed for ecommerce visuals" → "designed for e-commerce visuals" |
+| `src/components/home/HomeFooter.tsx:49` | "for ecommerce brands" → "for e-commerce brands" |
+| `src/components/home/HomePricingTeaser.tsx:6` | "Built for ecommerce brands" → "Built for e-commerce brands" |
+| `src/pages/AppPricing.tsx:100` | "ads, ecommerce, packaging" → "ads, e-commerce, packaging" |
+| `src/pages/Home.tsx:24, 38` | "for ecommerce brands" / "Create ecommerce visuals" → "e-commerce" |
+| `src/pages/seo/AIProductPhotographyEcommerce.tsx` (lines 82, 84, 92, 93, 95, 96, 97, 99, 106, 230, 318, 404, 562, 563, 626, 629, 638) | All visible-body "ecommerce" → "e-commerce". **Keep the file name, route `/ai-product-photography-for-ecommerce`, and any URL/slug references unchanged.** |
 
-### 2. `src/components/landing/LandingPricing.tsx` (2 strings)
-- Line 110: "Templates cost 6, Freestyle costs 4." → "Visual Types cost 6, Freestyle costs 4."
-- Line 123: "Pick products and templates, set a schedule…" → "Pick products and Visual Types, set a schedule…"
+### 2.2 Sign-in wording standardization
+**`src/pages/ResetPassword.tsx:70`**
+- "Back to login" → "Back to sign in"
 
-### 3. `src/pages/AppPricing.tsx` (2 strings)
-- Line 66: matrix group title "Brand & workflow" → "Brand & studio"
-- Line 655: "depending on the workflow — product, lifestyle…" → "depending on the Visual Type — product, lifestyle…"
-- Line 92 (Brand Model pricing FAQ): **leave as-is for now** — flagged separately as P1 for product confirmation.
+**`src/pages/Auth.tsx`**
+- Line 174: "Enter your email to get a login link" → "…to get a **sign-in link**"
+- Line 193: "Could not send login link." → "Could not send **sign-in link**."
+- Line 394: "We sent a login link to" → "We sent a **sign-in link** to"
 
-### 4. `src/components/app/CreativeDropWizard.tsx` (1 string)
-- Line 125: `STEP_LABELS = ['Details', 'Products', 'Workflow', 'Launch']` → `'Visual Type'`
+**`src/pages/Status.tsx:34`**
+- "Login, signup, and session management" → "**Sign-in, sign-up,** and session management"
+
+---
 
 ## Out of scope (intentionally untouched)
-- `src/pages/Changelog.tsx` — historical entries describing the product at time of release; preserved as record
-- Routes, redirects, props, types, file/component names, DB columns
-- Admin pages
-- P1 factual conflicts (six vs seven, TryShot 60 credits, Brand Model price) — separate plan after product decisions
-- P2 polish (e-commerce hyphenation, sign-in wording) — separate sweep
+- Route paths, slugs (`/ai-product-photography-for-ecommerce`, blog slug `ai-product-photography-for-ecommerce`, `ecommerce-visual-content-strategy-2026`)
+- File/component names (`AIProductPhotographyEcommerce.tsx`)
+- Internal token strings (`ecommerce_scene_type`, `analysis.ecommerce_scene_type`)
+- Code comments in `src/lib/videoStrategyResolver.ts`, `src/lib/catalogEngine.ts` (prompt internals)
+- Blog filename references (`blog-ecommerce.jpg`)
+- `BrandModels.tsx:686` (already correct — admin-only public toggle, free generation when checked)
+- Existing blog `metaDescription` strings already using "e-commerce" (no change)
 
 ## Acceptance
-- Zero user-visible "Workflows / Templates" referring to the visual creation feature in HelpCenter, LandingPricing, AppPricing, CreativeDropWizard
-- No layout, logic, routing, or pricing changes — text only
-- ~15 strings updated across 4 files
+- LandingFAQ shows seven Visual Types including Picture Perspectives
+- TryShot promises 20 free credits (consistent with rest of site)
+- AppPricing FAQ correctly states Brand Model = 20 cr/generation, public = free
+- Blog post says 4–6 credits per image
+- All user-visible "ecommerce" → "e-commerce" across home, SEO page, AppPricing
+- All visible auth surfaces use "sign in / sign-in / sign-up" consistently
+- Zero route, slug, file-name, type, or backend changes
+- ~30 strings updated across ~10 files
