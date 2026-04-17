@@ -386,6 +386,7 @@ export default function Jobs() {
             </button>
           ))}
         </div>
+        )}
 
         {/* Incoming images banner */}
         {showIncomingBanner && (
