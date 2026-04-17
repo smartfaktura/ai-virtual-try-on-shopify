@@ -42,7 +42,7 @@ export function WorkflowRequestBanner() {
   };
 
   return (
-    <div className="col-span-full rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-8">
+    <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 sm:p-6">
       {submitted ? (
         <div className="flex items-center gap-3 py-2">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -54,34 +54,38 @@ export function WorkflowRequestBanner() {
           </div>
         </div>
       ) : !expanded ? (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-row items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             {/* Avatar stack */}
             <div className="flex -space-x-2.5 shrink-0">
-              {AVATARS.map((member) => (
-                <Avatar key={member.name} className="w-9 h-9 border-2 border-background ring-1 ring-primary/10">
-                   <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
+              {AVATARS.map((member, i) => (
+                <Avatar
+                  key={member.name}
+                  className={`w-9 h-9 border-2 border-background ring-1 ring-primary/10 ${i === 3 ? 'hidden sm:flex' : ''}`}
+                >
+                  <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
                     {member.name[0]}
                   </AvatarFallback>
                 </Avatar>
               ))}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-foreground leading-snug">
                 Missing a Visual Type for your brand?
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="hidden sm:block text-xs text-muted-foreground mt-0.5">
                 Tell us what you need — we'll build it and add it to our lineup.
               </p>
             </div>
           </div>
           <Button
-            className="rounded-full text-sm font-semibold px-5 h-10 shrink-0 gap-1.5"
+            className="rounded-full text-sm font-semibold px-4 sm:px-5 h-10 shrink-0 gap-1.5"
             onClick={() => setExpanded(true)}
           >
             <MessageSquarePlus className="w-4 h-4" />
-            Share Request
+            <span className="hidden xs:inline sm:inline">Share Request</span>
+            <span className="xs:hidden sm:hidden">Request</span>
           </Button>
         </div>
       ) : (
