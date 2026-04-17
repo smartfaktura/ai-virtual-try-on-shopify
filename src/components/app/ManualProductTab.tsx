@@ -281,7 +281,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       const newItems: BatchItem[] = toAdd.map((file, i) => ({
         id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
         file,
-        previewUrl: URL.createObjectURL(file),
+        previewUrl: createTrackedObjectUrl(file),
         title: '',
         productType: '',
         description: '',
