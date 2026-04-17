@@ -140,6 +140,8 @@ export default function Products() {
     window.addEventListener('paste', onPaste);
     return () => window.removeEventListener('paste', onPaste);
   }, []);
+
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],
     queryFn: async () => {
       const { data, error } = await supabase
