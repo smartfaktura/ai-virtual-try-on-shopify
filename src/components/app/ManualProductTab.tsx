@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen, Droplets, Lightbulb } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown, ChevronUp, Package, Plus, RotateCcw, ArrowRight, Camera, Check, FolderOpen, Droplets, Lightbulb, UploadCloud } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,6 +86,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const isMobile = useIsMobile();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const hasManualEdits = useRef({ title: false, productType: false, description: false });
@@ -744,54 +746,91 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
         {!singleImage ? (
           <div className="space-y-4">
-            <div
-              className={cn(
-                'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 py-6 sm:py-8 cursor-pointer',
-                dragActive
-                  ? 'bg-primary/8 border-2 border-primary scale-[1.02] shadow-lg shadow-primary/10'
-                  : 'bg-muted/30 hover:bg-muted/50 border-2 border-dashed border-border hover:border-muted-foreground/30'
-              )}
-              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={handleDrop}
-              onClick={() => document.getElementById('dropzone-file-input')?.click()}
-            >
-              <div className={cn(
-                'w-10 h-10 rounded-full flex items-center justify-center mb-2.5 transition-all duration-300',
-                dragActive ? 'bg-primary/15 scale-110' : 'bg-muted'
-              )}>
-                <ImagePlus className={cn(
-                  'w-5 h-5 transition-colors duration-300',
-                  dragActive ? 'text-primary' : 'text-muted-foreground'
-                )} />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Drop images, <span className="text-primary font-medium">browse</span>, or paste
-              </p>
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <Layers className="w-3 h-3 text-muted-foreground/50" />
-                <p className="text-[11px] text-muted-foreground/60">
-                  Each image creates a separate product · up to {MAX_BATCH} at once
+            {isMobile ? (
+              <div className="flex flex-col items-center justify-center text-center rounded-2xl border bg-muted/20 px-5 py-8">
+                <div className="w-12 h-12 rounded-full bg-background border flex items-center justify-center mb-4">
+                  <UploadCloud className="w-5 h-5 text-foreground/70" />
+                </div>
+                <p className="text-base font-medium">Upload product photos</p>
+                <p className="text-xs text-muted-foreground mt-1 mb-4">Tap to choose from your phone</p>
+                <Button
+                  type="button"
+                  onClick={() => document.getElementById('dropzone-file-input')?.click()}
+                  className="w-full h-11 rounded-full"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                  Choose photos
+                </Button>
+                <p className="text-[11px] text-muted-foreground/70 mt-3">
+                  JPG, PNG, WEBP · up to {MAX_BATCH} at once
                 </p>
+                <input
+                  id="dropzone-file-input"
+                  type="file"
+                  accept="image/*"
+                  multiple={!isEditing}
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length) {
+                      if (isEditing) handleEditImageReplace(files);
+                      else addFiles(files);
+                    }
+                    e.target.value = '';
+                  }}
+                />
               </div>
-              <input
-                id="dropzone-file-input"
-                type="file"
-                accept="image/*"
-                multiple={!isEditing}
-                className="hidden"
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
-                  if (files.length) {
-                    if (isEditing) handleEditImageReplace(files);
-                    else addFiles(files);
-                  }
-                  e.target.value = '';
-                }}
-              />
-            </div>
+            ) : (
+              <div
+                className={cn(
+                  'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 py-6 sm:py-8 cursor-pointer',
+                  dragActive
+                    ? 'bg-primary/8 border-2 border-primary scale-[1.02] shadow-lg shadow-primary/10'
+                    : 'bg-muted/30 hover:bg-muted/50 border-2 border-dashed border-border hover:border-muted-foreground/30'
+                )}
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('dropzone-file-input')?.click()}
+              >
+                <div className={cn(
+                  'w-10 h-10 rounded-full flex items-center justify-center mb-2.5 transition-all duration-300',
+                  dragActive ? 'bg-primary/15 scale-110' : 'bg-muted'
+                )}>
+                  <ImagePlus className={cn(
+                    'w-5 h-5 transition-colors duration-300',
+                    dragActive ? 'text-primary' : 'text-muted-foreground'
+                  )} />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Drop images, <span className="text-primary font-medium">browse</span>, or paste
+                </p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <Layers className="w-3 h-3 text-muted-foreground/50" />
+                  <p className="text-[11px] text-muted-foreground/60">
+                    Each image creates a separate product · up to {MAX_BATCH} at once
+                  </p>
+                </div>
+                <input
+                  id="dropzone-file-input"
+                  type="file"
+                  accept="image/*"
+                  multiple={!isEditing}
+                  className="hidden"
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length) {
+                      if (isEditing) handleEditImageReplace(files);
+                      else addFiles(files);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+            )}
           </div>
+
         ) : (
           /* Main image + reference angle slots — stacked vertically */
           <div className="rounded-2xl border border-border/50 bg-muted/10 p-3 space-y-3">
