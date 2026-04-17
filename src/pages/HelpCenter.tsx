@@ -12,7 +12,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do I create my first product image?',
-        a: 'Upload your product photo in the Products section, then head to Workflows. Choose from seven core workflows — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, or Picture Perspectives — select your product, and hit Generate. Your images will be ready in about 60 seconds at 2K resolution in PNG format.',
+        a: 'Upload your product photo in the Products section, then head to Visual Studio. Choose from seven Visual Types — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, or Picture Perspectives — select your product, and hit Generate. Your images will be ready in about 60 seconds at 2K resolution in PNG format.',
       },
       {
         q: 'What image formats are supported for uploads?',
@@ -24,7 +24,7 @@ const faqCategories = [
       },
       {
         q: 'What is Freestyle mode?',
-        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene.',
+        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Visual Types fit your vision. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene.',
       },
       {
         q: 'What is a Brand Profile and why should I create one?',

@@ -1171,8 +1171,8 @@ export default function Generate() {
       handleWorkflowGenerate();
       return;
     }
-    if (!selectedTemplate) { toast.error('Please select a template first'); return; }
-    toast.error('Template-based generation is no longer supported. Please use a workflow.');
+    if (!selectedTemplate) { toast.error('Please select a Visual Type first'); return; }
+    toast.error('This Visual Type is no longer supported. Please pick another from Visual Studio.');
   };
 
   const handleWorkflowGenerate = async () => {

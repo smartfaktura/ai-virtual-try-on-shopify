@@ -32,8 +32,8 @@ const steps = [
   },
   {
     number: '02',
-    title: 'Attach to Workflows',
-    description: 'Link your Brand Profile to any template or Content Calendar. The AI incorporates your guidelines into every generation.',
+    title: 'Attach in Visual Studio',
+    description: 'Link your Brand Profile to any Visual Type or Content Calendar. The AI incorporates your guidelines into every generation.',
   },
   {
     number: '03',

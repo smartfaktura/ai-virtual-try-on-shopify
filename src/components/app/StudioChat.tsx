@@ -16,8 +16,8 @@ const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'),
 const avatarZara = getOptimizedUrl(getLandingAssetUrl('team/avatar-zara.jpg'), { quality: 60 });
 
 const PAGE_CHIPS: Record<string, string[]> = {
-  '/app/': ['What should I create first?', 'How do credits work?', 'Show me workflows'],
-  '/app/workflows': ['Which workflow fits my product?', 'Try-on vs Product Listing?', 'How much does it cost?'],
+  '/app/': ['What should I create first?', 'How do credits work?', 'Show me Visual Types'],
+  '/app/workflows': ['Which Visual Type fits my product?', 'Try-on vs Product Listing?', 'How much does it cost?'],
   '/app/freestyle': ['Help me write a prompt', 'What quality should I pick?', 'Tips for better results'],
   '/app/perspectives': ['How do perspectives work?', 'Best source image tips?', 'How many credits per angle?'],
   '/app/creative-drops': ['How does the Content Calendar work?', 'Set up my first drop', 'How much does a drop cost?'],

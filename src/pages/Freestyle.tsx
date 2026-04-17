@@ -1054,7 +1054,7 @@ export default function Freestyle() {
                         </p>
                       </div>
                       <Button variant="ghost" size="sm" className="shrink-0 gap-1 text-xs text-muted-foreground hover:text-foreground" onClick={() => navigate('/app/workflows')}>
-                        Workflows <ArrowRight className="w-3 h-3" />
+                        Visual Studio <ArrowRight className="w-3 h-3" />
                       </Button>
                     </div>
                     <div className="px-4 pb-3">

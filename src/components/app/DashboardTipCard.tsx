@@ -39,7 +39,7 @@ const TIPS: Tip[] = [
   },
   {
     icon: Lightbulb,
-    text: 'Use Workflows to generate complete visual sets — ads, listings, and hero images — in one click.',
+    text: 'Open Visual Studio to create complete visual sets — ads, listings, and hero images — in one click.',
     highlight: 'Work smarter',
     avatar: teamAvatar('avatar-omar.jpg'),
     memberName: 'Omar',
