@@ -133,21 +133,39 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
       {/* Mobile: keep compact pill row */}
       {isMobile ? (
         <div className="shrink-0">
-          <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto overflow-x-auto max-w-full">
-            {METHOD_ORDER.map((id) => {
-              const { label, icon: Icon } = METHOD_META[id];
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2 px-1">Method</p>
+          <div className="grid grid-cols-2 gap-2">
+            {METHOD_ORDER.map((id, idx) => {
+              const { label, sub, icon: Icon } = METHOD_META[id];
+              const active = activeTab === id;
+              const isLastOdd = idx === METHOD_ORDER.length - 1 && METHOD_ORDER.length % 2 === 1;
               return (
-                <TabsTrigger
+                <button
                   key={id}
-                  value={id}
-                  className="rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 whitespace-nowrap"
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  className={cn(
+                    'flex items-start gap-2.5 rounded-xl border p-3 text-left transition-colors',
+                    isLastOdd && 'col-span-2',
+                    active
+                      ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/30'
+                      : 'border-border bg-background/50 hover:bg-muted/40',
+                  )}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label.split(' ')[0]}
-                </TabsTrigger>
+                  <div className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                    active ? 'bg-primary/10' : 'bg-muted',
+                  )}>
+                    <Icon className={cn('w-4 h-4', active ? 'text-primary' : 'text-foreground/70')} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-tight">{label}</p>
+                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">{sub}</p>
+                  </div>
+                </button>
               );
             })}
-          </TabsList>
+          </div>
         </div>
       ) : (
         <div className="shrink-0">
