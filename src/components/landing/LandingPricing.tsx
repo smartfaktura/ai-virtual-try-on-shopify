@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import {
-  Check, ArrowRight, Building2, X,
+  Check, ArrowRight, Building2, X, Minus,
   Layers, Users, Sparkles, Film, ZoomIn, RefreshCw,
   ScanLine, Wand2, Paintbrush, Palette, FolderOpen, Download,
   Image, Video, Clock,
@@ -16,6 +16,68 @@ import { pricingPlans } from '@/data/mockData';
 import { CompetitorComparison } from '@/components/app/CompetitorComparison';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro'];
+
+// ── Feature comparison matrix (mirrors /app/pricing) ──
+type Cell = boolean | string;
+type FeatureRow = { label: string; values: Record<string, Cell> };
+type FeatureGroup = { title: string; rows: FeatureRow[] };
+
+const FEATURE_MATRIX: FeatureGroup[] = [
+  {
+    title: 'Generation',
+    rows: [
+      { label: 'Product photography scenes (1,000+)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Lifestyle & editorial scenes', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'AI Models (on-model imagery)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Brand Models (custom trained)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Bulk generation', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Multi-angle / perspectives', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Freestyle (text-to-image)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Image editing & background swap', values: { free: true, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Video',
+    rows: [
+      { label: 'Product videos', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Short Films (AI Director)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Audio & dialog', values: { free: false, starter: false, growth: false, pro: true } },
+    ],
+  },
+  {
+    title: 'Quality & output',
+    rows: [
+      { label: '2K resolution', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: '4K upscaling', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'All aspect ratios (1:1, 4:5, 3:4, 16:9, 9:16)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'PNG / JPG export', values: { free: true, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Brand & workflow',
+    rows: [
+      { label: 'Brand Profiles', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Saved aesthetics & color systems', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Catalog Studio', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Trend Watch (curated drops)', values: { free: false, starter: false, growth: false, pro: true } },
+      { label: 'Bulk export (ZIP)', values: { free: false, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Account',
+    rows: [
+      { label: 'Generation queue speed', values: { free: 'Standard', starter: 'Standard', growth: 'Priority', pro: 'Fastest' } },
+      { label: 'Monthly credits', values: { free: '20', starter: '500', growth: '1,500', pro: '4,500' } },
+      { label: 'Support', values: { free: 'Community', starter: 'Email', growth: 'Email', pro: 'Priority' } },
+    ],
+  },
+];
+
+function renderCell(val: Cell) {
+  if (val === true) return <Check className="w-4 h-4 text-primary mx-auto" strokeWidth={2.5} />;
+  if (val === false) return <Minus className="w-4 h-4 text-muted-foreground/40 mx-auto" />;
+  return <span className="text-xs font-medium text-foreground">{val}</span>;
+}
 
 /* ── Data ────────────────────────────────────────────────────────── */
 
