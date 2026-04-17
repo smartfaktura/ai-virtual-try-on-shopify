@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
+import { LibrarySkeletonGrid } from '@/components/app/LibrarySkeletonGrid';
 import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
@@ -360,7 +361,9 @@ export default function Jobs() {
   };
 
   const activeFilterCount = (sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0);
-  const isTrulyEmpty = !isLoading && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
+  // True only on initial fetch with no data yet — drives skeleton vs. content/empty-state decision
+  const isInitialLoading = (isLoading || isFetching) && allItems.length === 0;
+  const isTrulyEmpty = !isInitialLoading && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
 
   return (
     <PageHeader
@@ -369,7 +372,7 @@ export default function Jobs() {
     >
 
         {/* Smart Views */}
-        {!isTrulyEmpty && (
+        {!isTrulyEmpty && !isInitialLoading && (
         <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide">
           {SMART_VIEWS.map(v => (
             <button
@@ -408,7 +411,7 @@ export default function Jobs() {
         )}
 
         {/* Search + Filters + Columns + Select */}
-        {!isTrulyEmpty && (
+        {!isTrulyEmpty && !isInitialLoading && (
         <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div className="relative w-full sm:max-w-lg sm:flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -529,10 +532,8 @@ export default function Jobs() {
         )}
 
         {/* Content */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
+        {isInitialLoading ? (
+          <LibrarySkeletonGrid columnCount={columnCount} />
         ) : items.length === 0 ? (
           (() => {
             if (smartView !== 'all' && allItems.length > 0) {
