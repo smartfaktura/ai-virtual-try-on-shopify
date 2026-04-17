@@ -43,7 +43,7 @@ export default function Templates() {
   };
 
   return (
-    <PageHeader title="Templates">
+    <PageHeader title="Visual Types">
       <div className="space-y-4">
         <Card>
           <CardContent className="p-5 space-y-4">
@@ -52,7 +52,7 @@ export default function Templates() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search templates..."
+                  placeholder="Search Visual Types…"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -82,7 +82,7 @@ export default function Templates() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Template</TableHead>
+                    <TableHead>Visual Type</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Updated</TableHead>
@@ -162,7 +162,7 @@ export default function Templates() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{previewTemplate?.name}</DialogTitle>
-            <DialogDescription>Template preview and details</DialogDescription>
+            <DialogDescription>Visual Type preview and details</DialogDescription>
           </DialogHeader>
           {previewTemplate && (
             <div className="space-y-4">
@@ -196,7 +196,7 @@ export default function Templates() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewTemplate(null)}>Close</Button>
             <Button onClick={() => previewTemplate && handleUseTemplate(previewTemplate.templateId)}>
-              Use this template
+              Use this Visual Type
             </Button>
           </DialogFooter>
         </DialogContent>

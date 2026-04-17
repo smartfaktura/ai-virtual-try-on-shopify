@@ -3832,7 +3832,7 @@ export default function Generate() {
             {currentStep === 'template' && (
               <div className={selectedTemplate ? 'pb-24' : ''}>
                 <div className="space-y-4">
-                  <Alert><AlertDescription>Templates define the photography style. Each template produces a different look.</AlertDescription></Alert>
+                  <Alert><AlertDescription>Visual Types define the photography style. Each Visual Type produces a different look.</AlertDescription></Alert>
 
                   {/* Top Picks */}
                   {(() => {
@@ -3855,7 +3855,7 @@ export default function Generate() {
                         <Card><CardContent className="p-5 space-y-4">
                           <div>
                             <h2 className="text-base font-semibold">Top Picks for {categoryLabels[productCategory]}</h2>
-                            <p className="text-sm text-muted-foreground">Best templates for {productType || 'your'} products</p>
+                            <p className="text-sm text-muted-foreground">Best Visual Types for {productType || 'your'} products</p>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {topPicks.map(t => (
@@ -3866,7 +3866,7 @@ export default function Generate() {
 
                         <Card><CardContent className="p-5 space-y-4">
                           <div>
-                            <h2 className="text-base font-semibold">Browse All Templates</h2>
+                            <h2 className="text-base font-semibold">Browse All Visual Types</h2>
                             <p className="text-sm text-muted-foreground">Explore all available photography styles</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -3884,7 +3884,7 @@ export default function Generate() {
                               </div>
                             ) : (
                               <p className="py-8 text-center text-sm text-muted-foreground">
-                                {selectedCategory === 'all' ? 'All templates shown above.' : `No additional ${categoryLabels[selectedCategory as TemplateCategory]} templates.`}
+                                {selectedCategory === 'all' ? 'All Visual Types shown above.' : `No additional ${categoryLabels[selectedCategory as TemplateCategory]} Visual Types.`}
                               </p>
                             );
                           })()}
@@ -4332,7 +4332,7 @@ export default function Generate() {
                     {activeWorkflow?.name || (isInteriorDesign ? 'Interior Staging' : sourceType === 'scratch' ? 'Image Generation' : 'Generation Summary')}
                   </h3>
                   {activeWorkflow && (
-                    <Badge variant="secondary" className="text-[10px]">Workflow</Badge>
+                    <Badge variant="secondary" className="text-[10px]">Visual Type</Badge>
                   )}
                 </div>
 

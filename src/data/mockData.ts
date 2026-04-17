@@ -1513,7 +1513,7 @@ export const pricingPlans: PricingPlan[] = [
       'Dedicated support',
       'Custom integrations',
       'Custom shot generation',
-      'Automated workflows',
+      'Automated Visual Types',
     ],
     isEnterprise: true,
     ctaText: 'Contact Sales',

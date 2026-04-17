@@ -706,7 +706,7 @@ export default function Dashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Source</TableHead>
-                    <TableHead>Template</TableHead>
+                    <TableHead>Visual Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Credits</TableHead>
                     <TableHead>Created</TableHead>

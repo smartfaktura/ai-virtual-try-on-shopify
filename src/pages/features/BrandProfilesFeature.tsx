@@ -14,8 +14,8 @@ const benefits = [
   },
   {
     icon: BookmarkCheck,
-    title: 'Reusable Presets',
-    description: 'Create once, use forever. Apply your Brand Profile to any template, Content Calendar, or freestyle generation.',
+    title: 'Reusable across the studio',
+    description: 'Create once, use forever. Apply your Brand Profile to any Visual Type, Content Calendar, or Freestyle generation.',
   },
   {
     icon: Users2,

@@ -29,7 +29,7 @@ export function FinalCTA() {
         </h2>
 
         <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-          Upload your products, choose your templates, and let your studio team deliver fresh visuals every month.
+          Upload your products, choose your Visual Types, and let your studio team deliver fresh visuals every month.
         </p>
 
         <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate(user ? '/app' : '/auth')}>

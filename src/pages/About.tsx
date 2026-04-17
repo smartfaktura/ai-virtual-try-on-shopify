@@ -25,7 +25,7 @@ const values = [
     icon: Zap,
     title: 'Radical Simplicity',
     description:
-      'Complex technology, effortless experience. Upload a product, pick a workflow, get studio-quality results.',
+      'Complex technology, effortless experience. Upload a product, pick a Visual Type, get studio-quality results.',
   },
 ];
 
@@ -50,7 +50,7 @@ export default function About() {
             Studio-quality product photography, powered by AI
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            VOVV.AI is an AI-powered visual studio for e-commerce brands. Upload a product photo, generate professional images across workflows — from virtual try-on to lifestyle scenes — in seconds.
+            VOVV.AI is an AI-powered visual studio for e-commerce brands. Upload a product photo, generate professional images across Visual Types — from virtual try-on to lifestyle scenes — in seconds.
           </p>
         </div>
       </section>
@@ -74,7 +74,7 @@ export default function About() {
                 We built VOVV.AI to make professional product visuals accessible to every brand, regardless of size or budget.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                One product image is all it takes. Our AI workflows handle on-model shots, lifestyle scenes, flat lays, upscaling, and more — delivering studio-quality results in minutes.
+                One product image is all it takes. Our AI Visual Types handle on-model shots, lifestyle scenes, flat lays, upscaling, and more — delivering studio-quality results in minutes.
               </p>
             </div>
           </div>
