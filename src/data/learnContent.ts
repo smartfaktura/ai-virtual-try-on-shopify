@@ -21,6 +21,10 @@ export interface LearnGuide {
   tracks: LearnTrack[];
   /** Difficulty / progression level. */
   level: LearnLevel;
+  /** One-liner answering: "When should I pick THIS workflow?" */
+  whenToUse?: string;
+  /** Side-by-side comparisons against the most-confused alternatives. */
+  vsAlternatives?: { label: string; useThisWhen: string }[];
   /** Section blocks */
   whatItDoes: string;
   bestFor: string[];
@@ -49,30 +53,61 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readMin: 2,
     tracks: ['start', 'visual-types'],
     level: 'foundational',
+    whenToUse:
+      'Reach for Product Visuals when you need a small, art-directed set of premium shots for one product — a PDP refresh, a paid ad, a campaign hero.',
+    vsAlternatives: [
+      {
+        label: 'Use Product Visuals when',
+        useThisWhen: 'You want full creative control over scene, model, and framing for one product at a time.',
+      },
+      {
+        label: 'Use Catalog Studio instead when',
+        useThisWhen: 'You need the same look applied to 10+ SKUs in one go.',
+      },
+    ],
     whatItDoes:
-      'Generates premium, on-brand product photography in any scene you can imagine — studio, editorial, lifestyle — using your real product as the reference.',
-    bestFor: ['PDP hero images', 'Paid social ads', 'Editorial campaigns', 'Brand refreshes'],
+      'A 6-step wizard that takes one of your products, lets you pick a scene from 1000+ curated environments, optionally a model and brand profile, then generates premium 2K product photography that keeps your real product intact.',
+    bestFor: [
+      'Refreshing low-res Shopify or Amazon catalog photos before a launch',
+      'Single-product hero images for paid Meta and TikTok ads',
+      'Editorial campaign assets without booking a studio',
+      'Filling gaps when only one packshot exists',
+    ],
     whatYouNeed: [
-      'One sharp product photo (clean background preferred)',
-      'Optional: a Brand Profile for cohesive look across runs',
-      'Optional: a model from Brand Models for on-body shots',
+      'A clean front-facing product photo at 1024px or larger — no harsh shadows, no lifestyle background, no watermarks',
+      'Optional: a Brand Profile so palette, mood and styling stay locked across runs',
+      'Optional: extra angles (back / side / inside / packaging) — uploaded once and reused automatically',
     ],
     whatYouGet: [
-      '2K resolution PNG output',
-      'Choice of aspect ratio per scene',
-      'Multiple variations per generation',
+      '2K PNG output, lossless, ready for web or print',
+      '2–4 variations per generation so you can pick the strongest frame',
+      'Aspect ratio per scene (square, portrait, landscape) — not a fixed format',
+      "Note: this is not a bulk catalog flow — for that, use Catalog Studio",
     ],
     quickStart: [
-      { label: 'Pick a product', detail: 'From your Products library or upload a new one.' },
-      { label: 'Choose a scene', detail: 'Browse 1000+ curated scenes by category.' },
-      { label: 'Generate', detail: 'Review variants, then save to Library.' },
+      {
+        label: 'Add or pick a product',
+        detail: 'Step 1: tap "Add Product" and drop your front-on photo. Wait for "Analysis complete" — that means VOVV has read the materials, color and category.',
+      },
+      {
+        label: 'Pick scenes',
+        detail: 'Step 2: browse by category. Start with 2–3 scenes max so you can compare cleanly. Filters at the top narrow by aesthetic.',
+      },
+      {
+        label: 'Refine setup',
+        detail: 'Step 3: optionally lock a model and brand profile. If you skip both, VOVV picks neutral defaults.',
+      },
+      {
+        label: 'Review and generate',
+        detail: 'Step 5: confirm credits, hit Generate. First image typically lands in 25–40s.',
+      },
     ],
     tips: [
-      { type: 'do', text: 'Use the highest-resolution source image you have.' },
-      { type: 'do', text: 'Pair with a Brand Profile so every run feels cohesive.' },
-      { type: 'do', text: 'Add side / back / packaging refs for richer composition.' },
-      { type: 'dont', text: 'Don’t upload screenshots, watermarked images, or low-res pics.' },
-      { type: 'dont', text: 'Don’t mix unrelated products in a single generation.' },
+      { type: 'do', text: 'Use the highest-resolution source you have — VOVV preserves detail it can see, but cannot invent texture from a 400px crop.' },
+      { type: 'do', text: 'Lock a Brand Profile in Step 3 before a multi-scene run — switching mid-batch breaks visual consistency.' },
+      { type: 'do', text: 'Upload back / side / inside refs once on the product — every future scene reuses them automatically.' },
+      { type: 'dont', text: 'Do not upload screenshots, mockups, or photos with watermarks — VOVV will treat them as part of the product.' },
+      { type: 'dont', text: 'Do not mix unrelated SKUs in a single generation — split them into separate runs for cleaner output.' },
     ],
     cta: { label: 'Open Product Visuals', route: '/app/generate/product-images' },
     secondaryCta: { label: 'See examples in Explore', route: '/app/discover' },
@@ -86,29 +121,55 @@ export const LEARN_GUIDES: LearnGuide[] = [
     tracks: ['visual-types'],
     level: 'core',
     heroImage: `${PREVIEW_BASE}/workflow-previews/021146a4-47a4-4d13-8ce9-8d54e45cc8fc.png`,
+    whenToUse:
+      'Reach for Try-On when you have a flat-lay or ghost-mannequin garment and need it shown on a real-feeling model — not just floating in a scene.',
+    vsAlternatives: [
+      {
+        label: 'Use Try-On when',
+        useThisWhen: 'The garment must be worn — fit, drape, and pose matter to the sale.',
+      },
+      {
+        label: 'Use Product Visuals instead when',
+        useThisWhen: 'You only need the garment styled in a scene, no body required.',
+      },
+    ],
     whatItDoes:
-      'Dresses any AI model with your garment and produces realistic try-on imagery across multiple poses, framings, and backgrounds.',
-    bestFor: ['Fashion PDPs', 'Lookbooks', 'Lifestyle campaigns', 'Size-inclusive marketing'],
+      'Dresses any AI model with your garment and produces realistic try-on imagery across multiple poses, framings, and backgrounds — keeping the garment’s color, print and silhouette intact.',
+    bestFor: [
+      'Fashion PDPs that need front / back / detail shots on body',
+      'Lookbooks with consistent model identity across an entire collection',
+      'Size-inclusive marketing without hiring multiple models',
+      'Lifestyle shots when you only have a flat-lay product photo',
+    ],
     whatYouNeed: [
-      'A flat-lay or ghost-mannequin garment image',
-      'A model from Brand Models (or pick a built-in)',
-      'Optional: scene preference (studio vs. lifestyle)',
+      'A flat-lay or ghost-mannequin garment shot — clean, full silhouette visible, no body in frame',
+      'A model: pick one from Brand Models or use a built-in',
+      'Optional: scene preference (clean studio vs. lifestyle backdrop)',
     ],
     whatYouGet: [
-      'Try-on shots in multiple poses',
-      'Consistent model identity across the full set',
-      '2K editorial-quality output',
+      'A 4–6 shot set with consistent model identity across poses',
+      '2K editorial-quality output, lossless',
+      "Note: garments already worn in the source photo will not retransfer cleanly — start from flat-lay",
     ],
     quickStart: [
-      { label: 'Upload your garment', detail: 'Flat-lay works best — clean fabric details.' },
-      { label: 'Pick a model', detail: 'Choose from Brand Models or built-in library.' },
-      { label: 'Generate the set', detail: 'Get a full pose range in one run.' },
+      {
+        label: 'Upload your garment',
+        detail: 'Step 1: drop a clean flat-lay. Avoid garments already on a model — Try-On expects a free-standing piece.',
+      },
+      {
+        label: 'Pick a model',
+        detail: 'Step 2: choose from your Brand Models or the built-in library. Match body type to your real customer.',
+      },
+      {
+        label: 'Generate the set',
+        detail: 'Step 4: pick how many shots. A full pose range comes back in one batch — review and save the strongest.',
+      },
     ],
     tips: [
-      { type: 'do', text: 'Use clean flat-lay shots with the full garment visible.' },
-      { type: 'do', text: 'Match the model body type to your target customer.' },
-      { type: 'dont', text: 'Don’t upload garments already worn by another model.' },
-      { type: 'dont', text: 'Don’t crop the garment — full silhouette gives best fit.' },
+      { type: 'do', text: 'Use clean ghost-mannequin or flat-lay shots with the full garment in frame.' },
+      { type: 'do', text: 'Test 2–3 different model body types in parallel — fit reads differently on different bodies and conversion follows.' },
+      { type: 'dont', text: 'Do not upload garments already worn by another model — VOVV cannot reliably re-dress them.' },
+      { type: 'dont', text: 'Do not crop the garment edges — the silhouette is the strongest signal for fit.' },
     ],
     cta: { label: 'Open Virtual Try-On', route: '/app/generate/virtual-try-on-set' },
   },
@@ -120,24 +181,34 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readMin: 2,
     tracks: ['visual-types'],
     level: 'core',
+    whenToUse:
+      'Use Selfie / UGC when polished studio shots underperform — paid social rewards content that feels real, not produced.',
     whatItDoes:
-      'Generates UGC-style imagery that mimics top creators — natural lighting, casual framing, authentic feel. Perfect for paid social.',
-    bestFor: ['TikTok ads', 'Meta paid social', 'Influencer-style assets', 'Native feed content'],
-    whatYouNeed: ['Your product image', 'A model (built-in or Brand Models)'],
+      'Generates UGC-style imagery that mimics top creators — natural phone-camera lighting, casual framing, authentic feel. Built specifically for paid social where studio shots get scrolled past.',
+    bestFor: [
+      'TikTok and Reels ad creative that needs to feel native to the feed',
+      'Meta paid social where studio shots are underperforming',
+      'Influencer-style assets without paying influencers',
+      'A/B testing creator faces against your existing studio set',
+    ],
+    whatYouNeed: [
+      'Your product image (any clean angle works)',
+      'A model whose vibe matches your target customer — not your aesthetic ideal',
+    ],
     whatYouGet: [
-      'Multiple authentic UGC-style shots',
-      'Natural lighting and casual compositions',
-      '2K output ready for paid placements',
+      'A set of authentic UGC-style frames with natural lighting',
+      'Casual compositions ready for paid placements',
+      "Note: don't expect studio polish — the format works *because* it isn't polished",
     ],
     quickStart: [
-      { label: 'Pick your product' },
-      { label: 'Pick a model that matches your audience' },
-      { label: 'Generate UGC variants' },
+      { label: 'Pick your product', detail: 'Step 1: any product from your library. The flow expects a clean image, not a styled one.' },
+      { label: 'Pick a model that matches your audience', detail: 'Step 2: pick by vibe and demographic, not by who looks "best".' },
+      { label: 'Generate UGC variants', detail: 'Step 4: generate 4+ variants and ad-test the top two — UGC performance is highly model-dependent.' },
     ],
     tips: [
-      { type: 'do', text: 'Pick a model whose vibe matches your customer.' },
-      { type: 'do', text: 'Test multiple models — different faces convert differently.' },
-      { type: 'dont', text: 'Don’t over-style — UGC works because it feels real.' },
+      { type: 'do', text: 'Pick a model whose face and styling match your real customer — relatability beats aesthetic perfection in paid social.' },
+      { type: 'do', text: 'Test multiple models in parallel — different faces convert very differently for the same product.' },
+      { type: 'dont', text: 'Do not over-style the prompt — UGC works because it feels unproduced.' },
     ],
     cta: { label: 'Open Selfie / UGC', route: '/app/generate/selfie-ugc-set' },
   },
@@ -149,23 +220,34 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readMin: 2,
     tracks: ['visual-types'],
     level: 'core',
+    whenToUse:
+      'Use Flat Lay when the product needs to live alongside props and color — Instagram grids, press kits, editorial spreads.',
     whatItDoes:
-      'Creates top-down product compositions with thoughtfully chosen props, surfaces, and color palettes.',
-    bestFor: ['Instagram grid', 'Editorial layouts', 'Lookbook spreads', 'Press kit assets'],
-    whatYouNeed: ['One product image (top-down or front-facing both work)'],
+      'Creates top-down compositions where your product sits inside a curated arrangement of props, surfaces, and color palette — instead of standing alone.',
+    bestFor: [
+      'Instagram grid posts that need to sit cohesively next to each other',
+      'Editorial layouts and lookbook spreads',
+      'Press kit assets where the product needs context',
+      'Seasonal campaign moodboards',
+    ],
+    whatYouNeed: [
+      'A clean product photo — top-down or front-facing both work',
+      'Optional: a Brand Profile to lock the palette and prop tone',
+    ],
     whatYouGet: [
-      'Multiple overhead compositions',
-      'Curated prop pairings and surface textures',
-      '2K output, multiple aspect ratios',
+      'Multiple overhead compositions with curated prop pairings',
+      'Surface textures and color palette that match the chosen style',
+      '2K output in multiple aspect ratios',
     ],
     quickStart: [
-      { label: 'Pick your product' },
-      { label: 'Choose a flat-lay style' },
-      { label: 'Generate the set' },
+      { label: 'Pick your product', detail: 'Step 1: pick from your library or upload a new product.' },
+      { label: 'Choose a flat-lay style', detail: 'Step 2: each style has a distinct prop family and palette — pick one that fits your grid.' },
+      { label: 'Generate the set', detail: 'Step 4: generate 4+ frames and pick the composition that reads cleanest in a grid.' },
     ],
     tips: [
-      { type: 'do', text: 'Pair with a Brand Profile to lock palette and mood.' },
-      { type: 'dont', text: 'Don’t overload — a few thoughtful props beat many.' },
+      { type: 'do', text: 'Pair with a Brand Profile to lock the palette across multiple flat-lay runs — otherwise each batch can drift.' },
+      { type: 'do', text: 'Pick the same style across a sequence of posts to build visual continuity in the grid.' },
+      { type: 'dont', text: 'Do not request "more props" in the prompt — restraint is what makes the format read editorial.' },
     ],
     cta: { label: 'Open Flat Lay', route: '/app/generate/flat-lay-set' },
   },
@@ -178,19 +260,31 @@ export const LEARN_GUIDES: LearnGuide[] = [
     tracks: ['visual-types'],
     level: 'core',
     heroImage: `${PREVIEW_BASE}/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png`,
+    whenToUse:
+      'Use Mirror Selfie when you want OOTD-style content that feels native to TikTok and Reels — phone-in-hand, real bedroom, no studio.',
     whatItDoes:
-      'Produces phone-in-hand mirror selfie content across diverse rooms and mirror types — feels native to TikTok and IG.',
-    bestFor: ['TikTok / Reels', 'Lifestyle campaigns', 'Outfit-of-the-day style content'],
-    whatYouNeed: ['Your product (worn or held)', 'A model'],
-    whatYouGet: [
-      'Realistic mirror selfie compositions',
-      'Variety of room and mirror styles',
-      'Native-looking smartphone framing',
+      'Produces phone-in-hand mirror selfie content across diverse rooms and mirror types — the exact format that feels native on TikTok and IG, not produced.',
+    bestFor: [
+      'TikTok and Reels creative for fashion and accessories',
+      'OOTD-style organic content for IG',
+      'Lifestyle campaigns where the room matters as much as the product',
     ],
-    quickStart: [{ label: 'Pick product' }, { label: 'Pick model' }, { label: 'Generate' }],
+    whatYouNeed: [
+      'Your product (worn or held — both work)',
+      'A model from Brand Models or the built-in library',
+    ],
+    whatYouGet: [
+      'Realistic mirror selfie compositions across multiple room types',
+      'Native-looking smartphone framing with authentic crop and angle',
+    ],
+    quickStart: [
+      { label: 'Pick the product', detail: 'Step 1: choose what gets worn or held in frame.' },
+      { label: 'Pick a model', detail: 'Step 2: pick a model whose styling fits the room aesthetic.' },
+      { label: 'Generate', detail: 'Step 4: generate 4+ frames — pick the one with the most natural phone framing.' },
+    ],
     tips: [
-      { type: 'do', text: 'Choose a room style that matches your brand world.' },
-      { type: 'dont', text: 'Don’t expect studio lighting — that defeats the format.' },
+      { type: 'do', text: 'Choose a room style that matches your brand world — rooms read as strongly as styling in this format.' },
+      { type: 'dont', text: 'Do not push for studio lighting — the format only works because it looks like a real bedroom.' },
     ],
     cta: { label: 'Open Mirror Selfie', route: '/app/generate/mirror-selfie-set' },
   },
@@ -202,23 +296,31 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readMin: 2,
     tracks: ['visual-types'],
     level: 'core',
+    whenToUse:
+      'Use Staging when you have a clean photo of an empty room or building exterior and need to show its potential — without altering the architecture.',
     whatItDoes:
-      'Transforms empty interiors into professionally staged spaces, or enhances exteriors with curb appeal — without altering the underlying architecture.',
-    bestFor: ['Real estate listings', 'Hospitality marketing', 'Renovation previews'],
-    whatYouNeed: ['A clear photo of the empty room or building exterior'],
+      'Transforms empty interiors into professionally staged spaces, or enhances exteriors with curb appeal — preserving the underlying architecture, windows, and proportions exactly.',
+    bestFor: [
+      'Real estate listings before a launch',
+      'Hospitality marketing for new properties',
+      'Renovation previews for clients',
+    ],
+    whatYouNeed: [
+      'A clear photo of the empty room or building exterior — landscape orientation, as much of the space visible as possible',
+    ],
     whatYouGet: [
-      'Fully staged or enhanced version',
-      'Architecture and proportions preserved',
-      'Multiple style options',
+      'A fully staged or enhanced version of the original',
+      'Architecture, windows, and proportions preserved',
+      'Multiple style options to compare',
     ],
     quickStart: [
-      { label: 'Upload room or exterior photo' },
-      { label: 'Pick a staging style' },
-      { label: 'Generate' },
+      { label: 'Upload room or exterior photo', detail: 'Step 1: shoot in landscape, well-lit, with as much of the space visible as possible.' },
+      { label: 'Pick a staging style', detail: 'Step 2: each style has a different furniture and palette family.' },
+      { label: 'Generate', detail: 'Step 4: review variants and pick the one that best fits the listing tone.' },
     ],
     tips: [
-      { type: 'do', text: 'Shoot in landscape with as much room visible as possible.' },
-      { type: 'dont', text: 'Don’t use heavily edited or fish-eye source photos.' },
+      { type: 'do', text: 'Shoot the source in landscape with a wide angle — the more of the room visible, the cleaner the staging.' },
+      { type: 'dont', text: 'Do not use heavily edited or fish-eye source photos — VOVV will preserve the distortion.' },
     ],
     cta: { label: 'Open Staging', route: '/app/generate/interior-exterior-staging' },
   },
@@ -230,19 +332,31 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readMin: 2,
     tracks: ['visual-types', 'advanced'],
     level: 'advanced',
+    whenToUse:
+      'Use Perspectives when one good hero photo exists but the PDP needs the full angle gallery — back, side, top, close-up — without re-shooting.',
     whatItDoes:
-      'Generates a complete visual set from a single hero photo — close-up, back, sides, top, and wide shots — for full PDP coverage.',
-    bestFor: ['PDP completeness', 'Marketplace listings', 'Catalog gap-filling'],
-    whatYouNeed: ['One sharp hero product photo'],
-    whatYouGet: ['Up to 9 angle and detail variants', 'Consistent product identity across all shots'],
+      'Generates a complete visual set from a single hero photo — close-up, back, sides, top, and wide shots — keeping product identity consistent across all 9 angles.',
+    bestFor: [
+      'Filling angle gaps on existing PDPs',
+      'Marketplace listings (Amazon, Etsy) that need a fixed angle set',
+      'Catalog gap-filling when only one shot exists per SKU',
+    ],
+    whatYouNeed: [
+      'One sharp hero product photo at 1024px+ — sets the look and material for every angle',
+    ],
+    whatYouGet: [
+      'Up to 9 angle and detail variants from a single source',
+      'Consistent product identity across all shots',
+      "Note: angles VOVV cannot see directly (e.g. inside of a bag) are inferred — verify before publishing",
+    ],
     quickStart: [
-      { label: 'Upload your hero shot' },
-      { label: 'Pick the angles you want' },
-      { label: 'Generate the full set' },
+      { label: 'Upload your hero shot', detail: 'Step 1: use the cleanest, sharpest photo you have — it sets the tone for every other angle.' },
+      { label: 'Pick the angles you want', detail: 'Step 2: select from 9 available — back, side, top, close-up, wide, etc.' },
+      { label: 'Generate the full set', detail: 'Step 4: all selected angles come back in one batch.' },
     ],
     tips: [
-      { type: 'do', text: 'Use the cleanest, sharpest hero you have — it sets the tone.' },
-      { type: 'dont', text: 'Don’t use reflective product shots with visible backgrounds.' },
+      { type: 'do', text: 'Use the cleanest, sharpest hero you have — it dictates the quality of every angle that follows.' },
+      { type: 'dont', text: 'Do not use reflective product shots with visible backgrounds — reflections will repeat across angles.' },
     ],
     cta: { label: 'Open Perspectives', route: '/app/perspectives' },
   },
@@ -254,19 +368,31 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readMin: 1,
     tracks: ['quality', 'advanced'],
     level: 'advanced',
+    whenToUse:
+      'Use Upscaling on existing assets that look soft, compressed, or pixelated — not for repairing fundamentally broken or tiny source images.',
     whatItDoes:
-      'AI-powered upscaling that sharpens detail, recovers textures, and enhances faces — perfect for upgrading legacy assets.',
-    bestFor: ['Old catalog images', 'Press-quality exports', 'Print-ready assets'],
-    whatYouNeed: ['Any image you want sharpened'],
-    whatYouGet: ['2K or 4K output', 'Sharper textures, faces, and edges'],
+      'AI-powered upscaling that sharpens detail, recovers textures, and enhances faces. It enhances what is there — it does not invent missing detail.',
+    bestFor: [
+      'Old catalog images you want to keep using',
+      'Press-quality and print-ready exports',
+      'Generated images you want to push to 4K before delivery',
+    ],
+    whatYouNeed: [
+      'Any image you want sharpened — works best on already-decent source quality',
+    ],
+    whatYouGet: [
+      '2K or 4K output',
+      'Sharper textures, faces, and edges',
+      "Note: upscaling enhances, it does not invent — start with the best source you have",
+    ],
     quickStart: [
-      { label: 'Upload an image' },
-      { label: 'Pick target resolution' },
-      { label: 'Run upscale' },
+      { label: 'Upload an image', detail: 'Drop the source image — any format works.' },
+      { label: 'Pick target resolution', detail: '2K is enough for web; pick 4K only if printing or zooming.' },
+      { label: 'Run upscale', detail: 'Output lands in seconds.' },
     ],
     tips: [
-      { type: 'do', text: 'Works best on already-decent photos — it enhances, not invents.' },
-      { type: 'dont', text: 'Don’t expect miracles on heavily compressed or tiny images.' },
+      { type: 'do', text: 'Works best on already-decent photos — it enhances what it can see, it cannot invent texture.' },
+      { type: 'dont', text: 'Do not expect miracles on heavily compressed or sub-500px images — start cleaner if you can.' },
     ],
     cta: { label: 'Open Image Upscaling', route: '/app/generate/image-upscaling' },
   },
@@ -278,20 +404,43 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readMin: 2,
     tracks: ['start', 'advanced'],
     level: 'advanced',
+    whenToUse:
+      'Use Catalog Studio when you have many SKUs and need the same look applied across all of them — Product Visuals is the wrong tool at that scale.',
+    vsAlternatives: [
+      {
+        label: 'Use Catalog Studio when',
+        useThisWhen: 'You have 10+ SKUs and want the same look applied to all — bulk consistency over per-shot control.',
+      },
+      {
+        label: 'Use Product Visuals instead when',
+        useThisWhen: 'You need full per-product art direction on one or two SKUs.',
+      },
+    ],
     whatItDoes:
-      'A bulk-photoshoot pipeline that generates a complete catalog-ready set for many products at once — anchor + derivative shots, consistent across SKUs.',
-    bestFor: ['Stores with many SKUs', 'Seasonal drops', 'Catalog refreshes'],
-    whatYouNeed: ['Multiple products in your library', 'Optional: Brand Profile for cohesion'],
-    whatYouGet: ['A full catalog set per product', 'Consistent style across all SKUs', 'Single-click bulk export'],
+      'A bulk pipeline that generates a complete catalog-ready set for many products at once — anchor + derivative shots, consistent style across every SKU.',
+    bestFor: [
+      'Stores with 10+ SKUs that need a consistent shoot',
+      'Seasonal drops where everything needs to launch on the same day',
+      'Catalog refreshes after a brand redesign',
+    ],
+    whatYouNeed: [
+      'Multiple products already in your library (each with a clean main image)',
+      'A Brand Profile — strongly recommended for cohesive output across SKUs',
+    ],
+    whatYouGet: [
+      'A full catalog set per product — anchor shot + derivatives',
+      'Consistent style across every SKU in the run',
+      'Single-click bulk export when complete',
+    ],
     quickStart: [
-      { label: 'Open Catalog Studio', detail: 'New Photoshoot button in the top right.' },
-      { label: 'Pick products and a style preset' },
-      { label: 'Run — review when complete' },
+      { label: 'Open Catalog Studio', detail: 'Tap "New Photoshoot" in the top right.' },
+      { label: 'Pick products and a style preset', detail: 'Start with 5–10 products to validate the style before scaling.' },
+      { label: 'Run and review', detail: 'Output appears in your Library when the batch completes — typically a few minutes.' },
     ],
     tips: [
-      { type: 'do', text: 'Lock a Brand Profile first so all SKUs share a look.' },
-      { type: 'do', text: 'Start with 5–10 products to validate the style.' },
-      { type: 'dont', text: 'Don’t mix product categories in one run — split them.' },
+      { type: 'do', text: 'Lock a Brand Profile before kicking off — it is the only way to keep look consistent across all SKUs.' },
+      { type: 'do', text: 'Start with 5–10 products to validate the style preset before running the full catalog.' },
+      { type: 'dont', text: 'Do not mix product categories (e.g. apparel + skincare) in one run — split them into separate batches.' },
     ],
     cta: { label: 'Open Catalog Studio', route: '/app/catalog' },
   },
@@ -301,34 +450,59 @@ export const LEARN_GUIDES: LearnGuide[] = [
     slug: 'freestyle-basics',
     section: 'freestyle',
     title: 'Freestyle Studio Basics',
-    tagline: 'Free-form prompts + your image. Maximum creative control.',
+    tagline: 'Free-form prompts plus your image. Maximum creative control.',
     readMin: 3,
     tracks: ['start', 'quality'],
     level: 'core',
+    whenToUse:
+      'Use Freestyle when no template fits — exploratory shots, custom directions, or quick iteration on a single creative idea.',
+    vsAlternatives: [
+      {
+        label: 'Use Freestyle when',
+        useThisWhen: 'You want full prompt control and are exploring a one-off creative idea.',
+      },
+      {
+        label: 'Use Product Visuals instead when',
+        useThisWhen: 'You want a curated scene library and a guided wizard, not a blank canvas.',
+      },
+    ],
     whatItDoes:
-      'Freestyle is the open-canvas mode: you write a prompt, optionally attach a product, model, and scene, and the AI builds the image. Use it when you want full control or want to explore something Catalog Studio can’t do.',
+      'The open-canvas mode: write a prompt, optionally attach a product, model and scene reference, and the AI builds the image. Best when you want full control or want to explore something the structured workflows cannot do.',
     bestFor: [
-      'Exploratory / one-off shots',
-      'Testing creative directions',
-      'Custom requests outside the templates',
-      'Rapid iteration on a single idea',
+      'Exploratory and one-off creative directions',
+      'Testing a new look before committing to a template',
+      'Custom requests outside the structured workflows',
+      'Rapid iteration on a single idea via re-generate or edit-image',
     ],
     whatYouNeed: [
-      'A prompt (the more specific, the better)',
-      'Optional: a product image, model, scene reference',
+      'A specific prompt — vague prompts return vague results',
+      'Optional but strongly recommended: a product image, a model, and a scene reference',
     ],
-    whatYouGet: ['One image per generation', 'Full prompt control', 'Edit-image follow-ups available'],
+    whatYouGet: [
+      'One image per generation',
+      'Full prompt control + edit-image follow-ups',
+      "Note: not the right tool for 50 cohesive SKUs — use Catalog Studio for that",
+    ],
     quickStart: [
-      { label: 'Add your product', detail: 'Upload or pick from your library.' },
-      { label: 'Pick a model and scene', detail: 'Optional but improves consistency a lot.' },
-      { label: 'Write the prompt + Generate', detail: 'Be specific about subject, style, camera, light.' },
+      {
+        label: 'Add your product',
+        detail: 'Upload or pick from your library. Text-only prompts (no product attached) almost always underperform.',
+      },
+      {
+        label: 'Pick a model and scene',
+        detail: 'Optional but strongly improves consistency. Even one reference dramatically tightens the output.',
+      },
+      {
+        label: 'Write the prompt and generate',
+        detail: 'Structure: subject → style → camera → light. Example: "Black leather bag, editorial, 35mm, soft north light".',
+      },
     ],
     tips: [
-      { type: 'do', text: 'Structure prompts: subject → style → camera → light. ("Black leather bag, editorial, 35mm, soft north light")' },
-      { type: 'do', text: 'Attach a product image — text-only is always weaker.' },
-      { type: 'do', text: 'Iterate: regenerate or edit the image instead of starting fresh.' },
-      { type: 'dont', text: 'Don’t write essays — concise, layered prompts beat walls of text.' },
-      { type: 'dont', text: 'Don’t use Freestyle when you need 50 cohesive SKUs — use Catalog Studio.' },
+      { type: 'do', text: 'Structure prompts as: subject → style → camera → light. ("Black leather bag, editorial, 35mm, soft north light")' },
+      { type: 'do', text: 'Always attach a product image — text-only output is consistently weaker.' },
+      { type: 'do', text: 'Iterate via re-generate or edit-image instead of starting fresh — VOVV preserves your inputs between runs.' },
+      { type: 'dont', text: 'Do not write paragraph-long prompts — concise, layered prompts beat walls of text.' },
+      { type: 'dont', text: 'Do not use Freestyle when you need 50 cohesive SKUs — switch to Catalog Studio.' },
     ],
     cta: { label: 'Open Freestyle Studio', route: '/app/freestyle' },
     secondaryCta: { label: 'See examples in Explore', route: '/app/discover' },
