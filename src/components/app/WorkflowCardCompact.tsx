@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowRight, LayoutTemplate } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -114,7 +113,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       id={id}
       ref={ref}
       className={cn(
-        "group relative overflow-hidden transition-shadow duration-300 flex flex-col",
+        "group relative overflow-hidden transition-shadow duration-300 flex flex-col rounded-2xl",
         modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
       )}
     >
@@ -138,10 +137,10 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       </div>
 
       {/* Content */}
-      <div className={cn("flex flex-col gap-1 flex-1", modalCompact ? "p-3" : mobileCompact ? "p-2" : "p-4")}>
+      <div className={cn("flex flex-col gap-1.5 flex-1", modalCompact ? "p-3" : mobileCompact ? "p-2" : "p-5")}>
         <h3 className={cn(
           "font-bold tracking-tight leading-tight",
-          modalCompact ? "text-sm" : mobileCompact ? "text-[11px]" : "text-sm"
+          modalCompact ? "text-sm" : mobileCompact ? "text-[11px]" : "text-base"
         )}>
           {displayName || workflow.name}
         </h3>
@@ -151,32 +150,23 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         )}
 
         {!mobileCompact && !modalCompact && (
-          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3" title={workflow.description}>
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" title={workflow.description}>
             {workflow.description}
           </p>
         )}
 
-        <div className="pt-1 mt-auto space-y-1.5">
+        <div className="pt-2 mt-auto">
           <Button
             size="sm"
             className={cn(
               "rounded-full font-semibold gap-1 w-full",
-              modalCompact ? "h-8 px-4 text-xs" : mobileCompact ? "h-8 px-3 text-xs" : "h-8 px-5"
+              modalCompact ? "h-8 px-4 text-xs" : mobileCompact ? "h-8 px-3 text-xs" : "h-10 px-5"
             )}
             onClick={onSelect}
           >
             {mobileCompact ? 'Start' : 'Start Creating'}
             <ArrowRight className="w-3 h-3" />
           </Button>
-          {!modalCompact && !mobileCompact && (
-            <Link
-              to={`/app/learn/visual-studio/${workflow.slug}`}
-              onClick={(e) => e.stopPropagation()}
-              className="block text-[11px] text-muted-foreground hover:text-foreground transition-colors text-center"
-            >
-              Learn how →
-            </Link>
-          )}
         </div>
       </div>
     </Card>

@@ -169,7 +169,7 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
               className="rounded-full font-semibold gap-2 h-11 px-8"
               onClick={onSelect}
             >
-              Create Set
+              Start Creating
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>

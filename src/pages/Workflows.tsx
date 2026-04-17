@@ -504,8 +504,9 @@ export default function Workflows() {
             />
           )}
 
-          <div className="section-divider flex items-center gap-3">
-            <span className="section-label">CHOOSE WHAT TO CREATE</span>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Choose what to create</h2>
+            <p className="text-base text-muted-foreground mt-1.5">Pick a Visual Type to start a new set.</p>
           </div>
         </div>
       )}
@@ -581,13 +582,15 @@ export default function Workflows() {
 
       {/* ── Recent Creations ── */}
       {(recentJobs.length > 0 || isLoadingRecent) && (
-        <div className="space-y-3 mt-6">
-          <div className="flex items-center gap-3">
-            <span className="section-label shrink-0">Recent Creations</span>
-            <div className="flex-1 h-px bg-border" />
-            <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 shrink-0" onClick={() => navigate('/app/library')}>
+        <div className="space-y-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Recent Creations</h2>
+              <p className="text-base text-muted-foreground mt-1.5">Pick up where you left off.</p>
+            </div>
+            <Button variant="ghost" size="sm" className="gap-1 shrink-0" onClick={() => navigate('/app/library')}>
               View All
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
           <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
