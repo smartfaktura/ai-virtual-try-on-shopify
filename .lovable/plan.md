@@ -1,20 +1,22 @@
 
 
-## Swap "Create with Prompt" sidebar icon to wand
+## Increase "Create Visuals" CTA size in sidebar
 
-Find sidebar nav entry for "Create with Prompt" and replace its `Sparkles` icon with the same wand icon used on the dashboard for the matching action, so both surfaces stay in sync.
+**File:** `src/components/app/AppShell.tsx` (lines 205-216)
 
-### Steps
-1. Locate the sidebar nav config (likely `src/components/app/Sidebar*.tsx` or a nav items file) and confirm current icon is `Sparkles`.
-2. Locate the dashboard tile labeled "Create with Prompt" / Freestyle and read which wand icon it uses (`Wand` or `Wand2` from lucide-react).
-3. Update the sidebar import + usage to that exact same icon.
+Current CTA padding is `py-3` with `text-sm` — fairly compact. Bump it so it reads as the primary action of the sidebar.
 
-### Files (to confirm during exploration)
-- Sidebar nav (icon source of truth for left menu)
-- Dashboard tile component (icon source of truth to match)
+### Change
+- Expanded padding: `py-3` → `py-3.5`
+- Larger text: `text-sm` → `text-[15px]`
+- Larger icon: `w-4 h-4` → `w-[18px] h-[18px]`
+- Slightly larger radius for proportion: `rounded-xl` → `rounded-2xl`
+- Add a touch more wrapper breathing room: `pt-4 pb-3` → `pt-4 pb-4`
+
+Collapsed state stays compact (`px-2 py-3 text-xs`) — only the expanded state grows.
 
 ### Acceptance
-- Sidebar "Create with Prompt" renders the wand icon, identical to the dashboard tile
-- No other sidebar icons change
-- No unused `Sparkles` import left behind
+- Expanded sidebar: CTA is visibly taller, icon + label more prominent, still full-width
+- Collapsed sidebar: unchanged
+- No layout shift in nav below it; no overflow on smaller sidebar widths
 
