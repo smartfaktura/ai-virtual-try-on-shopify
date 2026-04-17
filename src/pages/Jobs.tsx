@@ -360,14 +360,16 @@ export default function Jobs() {
   };
 
   const activeFilterCount = (sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0);
+  const isTrulyEmpty = !isLoading && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
 
   return (
     <PageHeader
       title="Library"
-      subtitle="All your visuals, organized for review, selection, and publishing"
+      subtitle="All your generated visuals, in one place."
     >
 
         {/* Smart Views */}
+        {!isTrulyEmpty && (
         <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide">
           {SMART_VIEWS.map(v => (
             <button
