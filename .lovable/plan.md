@@ -1,31 +1,19 @@
 
-User wants Brand Models gated to Growth+ (not Starter). So the badge "Growth & Pro" is actually correct copy-wise, but the underlying `isPaid` check at L817 currently includes Starter implicitly via paid-plan logic — need to verify and tighten.
-
-Let me check the file to confirm gating logic before planning.
-
 ## Goal
-Restrict Brand Models access to **Growth and Pro plans only** (exclude Starter), and apply remaining audit fixes.
+Align Freestyle's inline low-credits banner text with the global `LowCreditsBanner` tone — minimum-touch fix.
 
-## Changes
+## Change
+**`src/pages/Freestyle.tsx:987`** — Replace banner text:
+- From: `"Top up to keep creating with VOVV.AI"`
+- To: `"Top up to keep creating premium, brand-ready visuals."`
 
-1. **`src/pages/BrandModels.tsx:~817`** — Tighten `isPaid` gate to only allow `growth | pro | enterprise` (exclude `starter`). Verify the current check and adjust so Starter users see the upgrade hero.
-
-2. **`src/pages/BrandModels.tsx:38`** — Keep badge as **"Growth & Pro"** (already correct under new gating). No change needed if copy already matches.
-
-3. **`src/pages/BrandModels.tsx:113`** — `'~1-2 min'` → `'~1–2 min'` (en-dash for range consistency).
-
-4. **`src/pages/BrandModels.tsx:40`** — UpgradeHero `<h2>` "My Brand Models" → **"Brand Models"** (drop "My" on marketing surface).
-
-5. **`src/pages/Discover.tsx:472`** — "Try different keywords or browse all" → **"Try a different category or browse all"** (page uses category bar, not keyword search).
+## Why this works
+Both banners now share the same value-focused phrasing ("premium, brand-ready visuals"), so a user running low on credits gets a consistent message whether they're on Workflows, Library, or Freestyle. No component refactor needed — just a string swap.
 
 ## Out of scope
-- Pricing page copy (separate audit if Starter messaging needs updating to reflect Brand Models exclusion)
-- Admin-only blocks
+- Replacing the custom Freestyle banner with `<LowCreditsBanner />` (option a)
+- Video page changes (per your direction)
 
 ## Acceptance
-- Starter users see upgrade hero on `/app/models` (not the generation UI)
-- Badge accurately reads "Growth & Pro"
-- En-dash applied to time estimate
-- Marketing hero heading reads "Brand Models"
-- Discover empty state matches actual UI controls
-- ~4 strings + 1 logic check across 2 files
+- 1 string updated in 1 file
+- Freestyle low-credits banner tone matches global banner
