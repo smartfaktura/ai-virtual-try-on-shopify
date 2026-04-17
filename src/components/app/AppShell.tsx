@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Sparkles, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
+  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
   TrendingUp, BookOpen, Clock, Camera, GraduationCap, LifeBuoy,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
