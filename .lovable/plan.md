@@ -1,115 +1,101 @@
 
 
 ## Goal
-Rebuild `/app/learn` as a **premium, image-independent, list-style tutorial hub** organized around real VOVV.AI user intent — not a card gallery.
+Strip `/app/learn` and the per-guide pages down to a clean, calm tutorial index. No recommendations, no progress UI, no hero blocks, no images. Just: title → list → read.
 
-## Why a list, not cards
-We have no proprietary tutorial artwork. Image-heavy cards = weak visuals + slow scanning. A clean row layout reads faster, scales better, and feels closer to Linear/Notion/Apple Developer docs — which matches our "luxury restraint" memory.
+## Audit of current state
 
-## New IA — organized by user journey, not by section
+**`/app/learn` today has too much:**
+- "Continue" row (last opened)
+- "Recommended for you" gradient hero block with Sparkles icon
+- Read progress chip + progress bar in header
+- 5 filter chips + search with ⌘K kbd
+- Per-section subtitle + guide count
+- Read-state dots (○ / ● / ✓)
+- Coming Soon section
 
-Replace the current "Visual Studio · Freestyle Studio" split with **5 intent-based tracks**. The same 11 guides get re-tagged via metadata; no content rewriting needed.
+**Per-guide page (`GuideLayout.tsx`) likely has** hero gradient/image area, badges, multiple section styles. Needs to match the new calm vibe.
 
-| Track | Purpose | Example items |
-|---|---|---|
-| **Start here** | First-run essentials — pick one and go | Product Visuals, Freestyle Basics, Catalog Studio |
-| **Visual Types** | Reference for every workflow | Try-On, Selfie/UGC, Flat Lay, Mirror Selfie, Staging, Perspectives |
-| **Improve output quality** | Prompting, refs, brand profiles | Freestyle prompting tips (extracted), Product Visuals best practices |
-| **Advanced & bulk** | Power flows | Catalog Studio bulk, Picture Perspectives, Image Upscaling |
-| **Coming soon** | Greyed teasers | Video, Brand Models, Brand Profiles |
-
-Each guide gets two new optional metadata fields in `learnContent.ts`:
-- `tracks: LearnTrack[]` (a guide can appear in 1–2 tracks, e.g. Product Visuals = Start here + Visual Types)
-- `level: 'foundational' | 'core' | 'advanced'`
-- `estimatedMin` already exists as `readMin`
-
-## Page layout — list-first, premium
+## New `/app/learn` — minimal index
 
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│  Learn                                       3 of 11 read · ▱▰▱  │
-│  Short, action-oriented guides for getting more out of VOVV.AI   │
-│                                                                  │
-│  [ Search guides …                                          ⌘K ] │
-│                                                                  │
-│  [ All ] [ Start here ] [ Visual Types ] [ Quality ] [ Advanced ]│
-└──────────────────────────────────────────────────────────────────┘
+Learn
+Short guides for getting more out of VOVV.AI.
 
-┌─ Recommended for you ────────────────────────────────────────────┐
-│  ▶  Product Visuals                              · 2 min  ›      │
-│     Brand-ready shots across 1000+ scenes                        │
-└──────────────────────────────────────────────────────────────────┘
+[ Search guides…                                    ]   ← quiet, optional
 
-START HERE                                              3 guides
-─────────────────────────────────────────────────────────────────
-●  Product Visuals                                      2 min  ›
-   Brand-ready product shots across 1000+ scenes — fully
-   art-directed.                                  Foundational
+Getting started
+─────────────────────────────────────────────────────
+  Product Visuals                              2 min  ›
+  Brand-ready product shots across 1000+ scenes.
 
-✓  Freestyle Studio Basics                              3 min  ›
-   Free-form prompts + your image. Maximum creative control.
-                                                      Core
+  Freestyle Studio Basics                      3 min  ›
+  Free-form prompts plus your image.
 
-○  Catalog Studio (Bulk)                                2 min  ›
-   Bulk-generate catalog-ready visuals in one run.   Advanced
+  Catalog Studio                               2 min  ›
+  Bulk-generate catalog-ready visuals.
 
-VISUAL TYPES                                            6 guides
-─────────────────────────────────────────────────────────────────
-○  Virtual Try-On Set                                   2 min  ›
-○  Selfie / UGC Set                                     2 min  ›
-○  Flat Lay Set                                         2 min  ›
-…
+Visual Types
+─────────────────────────────────────────────────────
+  Virtual Try-On Set                           2 min  ›
+  Garment on diverse AI models.
+  …
+
+Advanced
+─────────────────────────────────────────────────────
+  …
 ```
 
-**Row anatomy** (replaces all current cards):
-- Left: read-state dot (`○` unread, `●` recommended next, `✓` read)
-- Title (semibold, 15px)
-- Tagline (muted, 13px, single-line truncate with full text on hover via `title=`)
-- Right rail: time chip · level chip · chevron
-- Hover: subtle bg tint (`bg-accent/40`), chevron slides 2px right
-- Full row clickable, keyboard `Enter`/`Space`, focus ring matching design system
+**What's removed:**
+- ❌ Recommended hero block
+- ❌ Continue row
+- ❌ Progress chip + bar
+- ❌ Read-state dots
+- ❌ Filter chips (search alone is enough)
+- ❌ Sparkles, gradients, kbd badge
+- ❌ Coming Soon section
+- ❌ Per-section guide counts and descriptions
 
-## Key UX behaviors
+**What stays (quiet & lightweight):**
+- Page title + one-line subtitle (existing `PageHeader`)
+- Single search input (no ⌘K chrome, no progress)
+- Sections grouped by track, tiny uppercase header only
+- Clean list rows: title (15px semibold) · tagline (13px muted, single line) · time (12px tabular) · chevron
+- Hover: subtle bg tint. Focus: ring. Full-row button.
 
-1. **"Recommended for you" hero row** — a single-row featured block at top. Logic: first unread guide in user's currently-recommended track. Default = Product Visuals.
-2. **Filter chips** drive instant client-side filtering by track. "All" = default.
-3. **Search** — fuzzy match on title + tagline + tracks. Empty state: friendly "No guides match X · Clear search" reset.
-4. **Read progress** — reuses the `useLearnRead` hook from previous polish plan (or creates it: `localStorage` keyed `learn:read:{section}/{slug}`). Shows ✓ on rows + "X of N read" with thin progress bar in header.
-5. **Continue learning** — tiny optional row above tracks if user has any read item: "Last opened: Freestyle Basics → Open again."
-6. **Coming soon** — collapsed disabled rows at bottom (Video, Brand Models, Brand Profiles).
+**Search behavior:** if no results → simple muted "No guides match" + Clear link. Empty query → show all sections.
 
-## Polish + audit fixes
+## New per-guide page — matches hub vibe
 
-- **Typography**: 2 sizes only on this page (24px page title, 15px row title, 13px supporting). No icon clutter.
-- **Spacing**: 12px row padding-y, 16px between sections. Section headers tiny uppercase like sidebar (matches `mem://ui/sidebar-and-navigation`).
-- **Mobile (<768px)**: filter chips become horizontal scroll, rows stack tagline below title, time/level chips collapse to time only.
-- **A11y**: rows are `<button>` with `aria-label`, focus ring uses `ring-ring`, chevron has `aria-hidden`.
-- **Active sidebar state**: confirm `Tutorials` highlights when on any `/app/learn/*` route (audit + fix if needed).
-- **Loading state**: list is static config — no skeleton needed, just fade-in.
-- **Empty search state**: centered muted copy + reset button, no illustration noise.
-- **Broken link audit**: verify every `cta.route` resolves (visual scan against `App.tsx`).
+Update `GuideLayout.tsx`:
+- ❌ Remove any hero image / gradient / thumbnail area
+- ❌ Remove decorative badges, shimmer treatments
+- Keep: back link, title, one-line tagline, then the content sections (What it does, Best for, What you need, What you get, Quick start, Tips) as **plain typographic blocks** with tiny uppercase section labels — same restraint as the hub
+- Keep CTAs at bottom (primary "Start now" + secondary)
+- Time chip stays as a single muted line below title
+
+## Behind the scenes (kept, invisible)
+- `useLearnRead` hook stays wired so `markRead` still fires on guide open (future-proof) — just no UI surfaces it
+- `learnContent.ts` metadata (`tracks`, `level`, `readMin`) stays — drives grouping & time
+- `level` is no longer rendered (kept in data only)
 
 ## Files touched
+- `src/pages/Learn.tsx` — heavy simplification rewrite
+- `src/components/app/learn/GuideLayout.tsx` — strip hero, flatten visual hierarchy
+- `src/pages/LearnGuide.tsx` — remove any hero-related props if present
+- No changes to: `useLearnRead.ts`, `learnContent.ts`, routes, sidebar entry
 
-- `src/data/learnContent.ts` — add `tracks` + `level` metadata to every guide, add `LEARN_TRACKS` array + helpers (`getGuidesByTrack`, `getRecommendedGuide`)
-- `src/pages/Learn.tsx` — full rewrite: header + search + chips + list sections + recommended row
-- `src/pages/Learn.tsx` companion: small `LearnRow` subcomponent (kept in same file — < 60 lines)
-- New: `src/hooks/useLearnRead.ts` — `localStorage`-backed read tracker (`isRead`, `markRead`, `readCount`)
-- `src/components/app/learn/GuideLayout.tsx` — minor: call `markRead` on mount so progress updates when a guide is opened
-- No DB changes. No new deps. No image work.
-
-## Out of scope
-- Per-guide page redesign (already polished)
-- Video / Brand Models guides (Phase 4)
-- Server-backed analytics or "recently viewed" history beyond last-opened in `localStorage`
+## QA pass
+- Spacing: consistent 24px between sections, 12px row padding-y
+- Typography: 3 sizes max on hub (24 title, 15 row title, 13 supporting)
+- Mobile: rows stack cleanly at 375px, search full-width, no horizontal overflow
+- Hover/focus: subtle bg + ring, no transform tricks beyond chevron 2px slide
+- Active sidebar state for `/app/learn/*` verified
 
 ## Acceptance
-- `/app/learn` shows zero hero images, no thumbnails, no card grid
-- Header has search + 5 filter chips + "X of N read" progress
-- Guides render as scannable rows grouped under tiny uppercase track headers
-- "Recommended for you" surfaces first unread item
-- Rows show ✓ once read; `localStorage` persists across reloads
-- Sidebar "Tutorials" stays active on all `/app/learn/*` routes
-- Clean at 375px mobile, full keyboard navigation, proper focus rings
-- Adding a new guide = one object append + tagging it with track(s) — no layout changes
+- Hub renders title, optional search, and grouped lists — nothing else
+- Zero "recommended", "continue", or progress UI
+- Per-guide page has no hero image and matches hub's typographic restraint
+- Reads top-to-bottom in one calm scan
+- Adding a guide is still one append in `learnContent.ts`
 
