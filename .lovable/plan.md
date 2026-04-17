@@ -1,26 +1,35 @@
 
 
-## Tighten gap between category bar and image grid on /app/discover
+## Match `/app/video` section headings to dashboard rhythm
 
 ### Issue
-Screenshot shows large empty space between the category filter row (All / Fashion / Beauty…) and the first row of images. User wants images to appear right after the categories.
+On `/app/video` (VideoHub), section headings ("Showcase", "In Progress", "Completed Videos") use `text-lg font-semibold` with `text-sm` subtitles — much smaller than the dashboard `/app` standard (`text-2xl sm:text-3xl font-bold tracking-tight` + `text-base mt-1.5` subtitle, wrapped in `space-y-4`).
 
-### Root cause
-`PublicDiscover.tsx` (the public page). But screenshot shows `/app/discover` (authenticated) which sits inside `AppShell`. Need to check the authenticated `Discover.tsx` page wrapper. The outer container uses `space-y-8` (or similar) PLUS `PublicDiscoverCategoryBar` likely has its own bottom margin/padding, compounding into a big gap.
+### Change
+**File: `src/pages/VideoHub.tsx`**
 
-Need to verify which component renders `/app/discover` in the auth shell, and the spacing classes on the wrapper + category bar.
+For each section block, swap heading classes to match dashboard:
 
-### Plan
-1. Locate `/app/discover` route component (likely `src/pages/Discover.tsx`).
-2. Inspect wrapper `space-y-*` and `DiscoverCategoryBar` margins.
-3. Reduce top-level vertical rhythm from `space-y-8` → `space-y-4` (or remove redundant `mt-*`/`mb-*` on the category bar) so the grid sits ~16px below the chips instead of ~48-64px.
-4. Verify mobile + desktop both look tight.
+1. **Showcase** (line 238-242)
+   - Wrapper: `space-y-3` → `space-y-4`
+   - h2: `text-lg font-semibold text-foreground` → `text-2xl sm:text-3xl font-bold text-foreground tracking-tight`
+   - p: `text-sm text-muted-foreground` → `text-base text-muted-foreground mt-1.5`
 
-### Files likely changed
-- `src/pages/Discover.tsx` (auth version) — reduce wrapper spacing.
-- Possibly `src/components/app/DiscoverCategoryBar.tsx` if it adds its own `mb-*`.
+2. **In Progress** (line 267-274) — inline heading with badge
+   - Wrapper: `space-y-3` → `space-y-4`
+   - h2: `text-lg font-semibold` → `text-2xl sm:text-3xl font-bold tracking-tight`
+   - (No subtitle here; keep dot + badge inline.)
+
+3. **Completed Videos** (line 291-306)
+   - Wrapper already `space-y-4` ✓
+   - h2: `text-lg font-semibold` → `text-2xl sm:text-3xl font-bold tracking-tight`
+
+### Also check: Create Video section above (lines ~190-235)
+Confirm the "Create Video" section heading also matches. If it currently uses `text-lg`, bump it to the same standard so the whole page is consistent.
 
 ### Acceptance
-- On `/app/discover`, the image grid starts immediately below the category chip row (~16px gap), matching dashboard rhythm.
-- No regression on mobile or in the public `/discover` page.
+- Section titles on `/app/video` visually match `/app` dashboard ("Your Products, In Motion" size).
+- Subtitles use `text-base` with `mt-1.5`.
+- 16px gap (`space-y-4`) between heading block and content.
+- No regression to badges or inline controls.
 
