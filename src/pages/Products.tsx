@@ -232,7 +232,7 @@ export default function Products() {
   return (
     <PageHeader
       title="Products"
-      subtitle="Manage your products. Upload once and use them across Visual Types."
+      subtitle="Upload once. Reuse across every Visual Type."
     >
       <div className="space-y-4">
         {/* Top bar — hidden when user has zero products */}
