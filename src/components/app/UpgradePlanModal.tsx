@@ -30,8 +30,19 @@ function getCopy(args: {
   effectivePlan: string;
   balance: number;
   isTopup: boolean;
+  planName?: string;
 }): ModalCopy {
-  const { variant, effectivePlan, balance, isTopup } = args;
+  const { variant, effectivePlan, balance, isTopup, planName } = args;
+
+  // Zero-credits urgency wins over generic top-up copy
+  if (isTopup && variant === 'no-credits') {
+    return {
+      title: "You've used all your credits",
+      subtitle: planName
+        ? `Top up to keep creating on your ${planName} plan — credits add instantly`
+        : 'Top up to keep creating — credits add instantly',
+    };
+  }
 
   if (isTopup) {
     return {
@@ -100,7 +111,8 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
     }
   }, [upgradePlans, selectedPlanId]);
 
-  const copy = getCopy({ variant, effectivePlan, balance, isTopup });
+  const planConfigCurrent = pricingPlans.find((p) => p.planId === effectivePlan);
+  const copy = getCopy({ variant, effectivePlan, balance, isTopup, planName: planConfigCurrent?.name });
 
   // No upgrades available and not topup mode → admin preview fallback / nothing
   if (!isTopup && !upgradePlans.length) {
@@ -295,9 +307,16 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-baseline gap-1 shrink-0">
-                          <span className="text-xl font-semibold tracking-tight">${displayPrice}</span>
-                          <span className="text-[11px] text-muted-foreground">/mo</span>
+                        <div className="flex flex-col items-end shrink-0">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-xl font-semibold tracking-tight">${displayPrice}</span>
+                            <span className="text-[11px] text-muted-foreground">/mo</span>
+                          </div>
+                          {isAnnual && p.monthlyPrice > 0 && (
+                            <span className="text-[10px] text-primary font-semibold mt-0.5 whitespace-nowrap">
+                              Save ${(p.monthlyPrice * 12) - p.annualPrice}/yr
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>
@@ -313,6 +332,10 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
         <div className="px-6 sm:px-8 mt-4 sm:mt-5 mb-4 sm:mb-5 flex flex-col gap-1.5">
           <p className="text-[13px] text-muted-foreground">
             Cancel anytime · No commitment
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
+            <Check className="w-3 h-3 text-primary" strokeWidth={3} />
+            <span>Credits unlock instantly after checkout</span>
           </p>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
             <Lock className="w-3 h-3" />

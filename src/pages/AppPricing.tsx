@@ -76,7 +76,7 @@ const FEATURE_MATRIX: FeatureGroup[] = [
     title: 'Account',
     rows: [
       { label: 'Generation queue speed', values: { free: 'Standard', starter: 'Standard', growth: 'Priority', pro: 'Fastest' } },
-      { label: 'Monthly credits', values: { free: '20', starter: '500', growth: '1,500', pro: '5,000' } },
+      { label: 'Monthly credits', values: { free: '20', starter: '500', growth: '1,500', pro: '4,500' } },
       { label: 'Support', values: { free: 'Community', starter: 'Email', growth: 'Email', pro: 'Priority' } },
     ],
   },
@@ -227,7 +227,7 @@ function PlanPickerPopover({
 
 export default function AppPricing() {
   const navigate = useNavigate();
-  const { plan, subscriptionStatus, startCheckout, openCustomerPortal } = useCredits();
+  const { plan, balance, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
@@ -325,6 +325,7 @@ export default function AppPricing() {
     if (p.planId === 'free') return { label: 'Cancel plan', disabled: false, variant: 'outline' as const };
     if (targetIdx < currentIdx) return { label: `Downgrade`, disabled: false, variant: 'outline' as const };
     if (p.planId === 'growth') return { label: 'Continue with Growth', disabled: false, variant: 'default' as const };
+    if (targetIdx > currentIdx) return { label: `Upgrade to ${p.name}`, disabled: false, variant: 'default' as const };
     return { label: `Choose ${p.name}`, disabled: false, variant: 'outline' as const };
   };
 
@@ -350,7 +351,17 @@ export default function AppPricing() {
         : stickyPlan.monthlyPrice
     : 0;
   const stickyCredits = stickyPlan && typeof stickyPlan.credits === 'number' ? stickyPlan.credits : 0;
-  const stickyCta = stickyPlan ? getPlanCta(stickyPlan) : null;
+  const stickyIsCurrent = !!stickyPlan && stickyPlan.planId === plan && subscriptionStatus !== 'canceling';
+  const stickyCta = stickyPlan
+    ? stickyIsCurrent
+      ? { label: 'Top up credits', disabled: false, variant: 'default' as const }
+      : getPlanCta(stickyPlan)
+    : null;
+  const handleStickyCta = () => {
+    if (!stickyPlan) return;
+    if (stickyIsCurrent) setTopupOpen(true);
+    else handlePlanSelect(stickyPlan);
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 pb-24 space-y-14">
@@ -748,10 +759,10 @@ export default function AppPricing() {
               <Button
                 size="sm"
                 disabled={stickyCta.disabled}
-                onClick={() => handlePlanSelect(stickyPlan)}
+                onClick={handleStickyCta}
                 className="gap-1.5 flex-shrink-0 h-9"
               >
-                {stickyCta.label.replace(/^Continue with .*/, 'Continue').replace(/^Choose .*/, 'Choose')}
+                {stickyCta.label.replace(/^Continue with .*/, 'Continue').replace(/^Upgrade to .*/, 'Upgrade').replace(/^Choose .*/, 'Choose')}
                 {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
               </Button>
             </div>
@@ -778,7 +789,7 @@ export default function AppPricing() {
               </div>
               <Button
                 disabled={stickyCta.disabled}
-                onClick={() => handlePlanSelect(stickyPlan)}
+                onClick={handleStickyCta}
                 className="gap-1.5 flex-shrink-0"
               >
                 {stickyCta.label}
@@ -797,7 +808,8 @@ export default function AppPricing() {
         targetPlan={selectedDialogPlan || undefined}
         currentPlanName={planConfig?.name || 'Free'}
         isAnnual={isAnnual}
-        currentBalance={0}
+        currentBalance={balance}
+        periodEnd={currentPeriodEnd ? currentPeriodEnd.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : undefined}
         hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
         loading={loading}
       />
