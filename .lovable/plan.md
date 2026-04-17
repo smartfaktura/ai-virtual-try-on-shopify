@@ -1,19 +1,14 @@
 
 
-## Fix #1 — Revoke object URLs in ManualProductTab
+## Verify Fix #1 — object URL revocation in ManualProductTab
 
-**File:** `src/components/app/ManualProductTab.tsx`
+I'll read the updated `ManualProductTab.tsx` and audit:
 
-**Change:** Track all `URL.createObjectURL()` calls in a `useRef<Set<string>>`, then:
-- Revoke an entry when its preview is removed from the batch
-- Revoke all entries on component unmount (cleanup `useEffect`)
-- Revoke on successful save (when batch is cleared)
+1. Every `URL.createObjectURL` call goes through `createTrackedObjectUrl`
+2. Every code path that drops a preview revokes the URL (remove item, replace image, reset form, successful save)
+3. Cleanup `useEffect` revokes all on unmount
+4. No double-revoke or use-after-revoke bugs (e.g., revoking a URL that's still rendered elsewhere)
+5. No TypeScript or lint regressions
 
-**Why:** Prevents memory leak on large batch uploads (20+ images). Pure correctness fix, zero behavior change, ~5 min.
-
-**Acceptance:**
-- All `createObjectURL` calls have a matching `revokeObjectURL`
-- Batch previews still display correctly
-- Removing one item doesn't break others
-- No console warnings
+If anything is missing or incorrect, I'll list it with file/line and propose a tight follow-up patch. If clean, I'll confirm with a short checklist.
 
