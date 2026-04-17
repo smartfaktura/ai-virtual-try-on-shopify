@@ -122,7 +122,7 @@ interface UserProduct {
   product_type: string;
 }
 
-const STEP_LABELS = ['Details', 'Products', 'Workflow', 'Launch'];
+const STEP_LABELS = ['Details', 'Products', 'Visual Type', 'Launch'];
 const TOTAL_STEPS = 4;
 
 export function CreativeDropWizard({ onClose, onLaunched, initialData, editingScheduleId }: CreativeDropWizardProps) {

@@ -107,7 +107,7 @@ const PLATFORM_FEATURES = [
 ];
 
 const CREDIT_CARDS = [
-  { icon: Image, title: 'Images', detail: '5 credits per image on average. Templates cost 6, Freestyle costs 4.' },
+  { icon: Image, title: 'Images', detail: '5 credits per image on average. Visual Types cost 6, Freestyle costs 4.' },
   { icon: Video, title: 'Video & Upscale', detail: 'Short films and 4K upscaling deducted from the same credit pool.' },
   { icon: Clock, title: 'Monthly Refresh', detail: "Credits reset each billing cycle. Unused credits don't roll over. Top-ups never expire." },
 ];
@@ -120,7 +120,7 @@ const FAQS = [
   { q: 'What image formats and sizes are supported?', a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print.' },
   { q: 'Can I cancel my subscription anytime?', a: "Absolutely. Cancel, upgrade, or downgrade at any time — no contracts or fees. Unused monthly credits don't roll over, but top-up credits never expire." },
   { q: 'How does Brand Profile work?', a: 'Set your preferred tone, lighting, background, and composition rules. Every future generation uses this profile automatically so visuals stay on-brand.' },
-  { q: 'What is the Content Calendar?', a: 'The Content Calendar automates recurring visual runs. Pick products and templates, set a schedule, and fresh visuals arrive on autopilot. Growth+ plans.' },
+  { q: 'What is the Content Calendar?', a: 'The Content Calendar automates recurring visual runs. Pick products and Visual Types, set a schedule, and fresh visuals arrive on autopilot. Growth+ plans.' },
 ];
 
 /* ── Component ───────────────────────────────────────────────────── */

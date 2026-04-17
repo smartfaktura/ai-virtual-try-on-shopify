@@ -63,7 +63,7 @@ const FEATURE_MATRIX: FeatureGroup[] = [
     ],
   },
   {
-    title: 'Brand & workflow',
+    title: 'Brand & studio',
     rows: [
       { label: 'Brand Profiles', values: { free: false, starter: true, growth: true, pro: true } },
       { label: 'Saved aesthetics & color systems', values: { free: false, starter: false, growth: true, pro: true } },
@@ -652,7 +652,7 @@ export default function AppPricing() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
           {[
-            { icon: Image, title: 'Generate images', desc: '4–6 credits per image depending on the workflow — product, lifestyle, editorial, or on-model.' },
+            { icon: Image, title: 'Generate images', desc: '4–6 credits per image depending on the Visual Type — product, lifestyle, editorial, or on-model.' },
             { icon: Video, title: 'Video & upscaling', desc: 'Use credits for video generation, 2K and 4K upscaling, and Brand Model training.' },
             { icon: RefreshCw, title: 'Monthly refresh', desc: 'Credits refresh every billing cycle. Higher plans unlock better per-credit value and faster queues.' },
           ].map((item) => (
