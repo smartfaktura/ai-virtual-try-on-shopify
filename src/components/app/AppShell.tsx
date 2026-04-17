@@ -207,7 +207,7 @@ export function AppShell({ children }: AppShellProps) {
             onClick={() => handleNav('/app/generate/product-images')}
             className={cn(
               'w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
-              isCollapsed ? 'px-2 py-3 text-xs rounded-xl' : 'px-3 py-3.5 text-[15px] rounded-2xl'
+              isCollapsed ? 'px-2 py-3 text-xs rounded-xl' : 'px-3 py-3.5 text-[14px] rounded-2xl'
             )}
             title={isCollapsed ? 'Create Visuals' : undefined}
           >
