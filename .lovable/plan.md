@@ -1,35 +1,31 @@
 
 
-## Match `/app/video` section headings to dashboard rhythm
+## Restore workflow card thumbnails/animations + remove duplicate "Choose what to create" heading
 
-### Issue
-On `/app/video` (VideoHub), section headings ("Showcase", "In Progress", "Completed Videos") use `text-lg font-semibold` with `text-sm` subtitles — much smaller than the dashboard `/app` standard (`text-2xl sm:text-3xl font-bold tracking-tight` + `text-base mt-1.5` subtitle, wrapped in `space-y-4`).
+### Issue 1: Cards thumbnails wrong + animations broken
+My previous change swapped desktop thumbnail aspect from `aspect-[3/4]` → `aspect-[4/5]` in `WorkflowCardCompact.tsx` and `FreestylePromptCard.tsx`. The `WorkflowAnimatedThumbnail` scenes are calibrated for `aspect-[3/4]` — at `aspect-[4/5]` (shorter container), background images crop differently (looks like "wrong images" for Selfie/UGC + Flat Lay) and absolutely-positioned animation elements lose their reference frame (Virtual Try-On overlay broken).
 
-### Change
-**File: `src/pages/VideoHub.tsx`**
+### Issue 2: Extra heading appeared
+Screenshot shows two stacked headings on `/app/workflows`:
+- "Visual Studio" / "Turn one product photo…" (page header — keep)
+- "Choose what to create" / "Pick a Visual Type to start a new set." (duplicate — remove)
 
-For each section block, swap heading classes to match dashboard:
+The second one is redundant and was likely added recently in `Workflows.tsx`.
 
-1. **Showcase** (line 238-242)
-   - Wrapper: `space-y-3` → `space-y-4`
-   - h2: `text-lg font-semibold text-foreground` → `text-2xl sm:text-3xl font-bold text-foreground tracking-tight`
-   - p: `text-sm text-muted-foreground` → `text-base text-muted-foreground mt-1.5`
+### Plan
 
-2. **In Progress** (line 267-274) — inline heading with badge
-   - Wrapper: `space-y-3` → `space-y-4`
-   - h2: `text-lg font-semibold` → `text-2xl sm:text-3xl font-bold tracking-tight`
-   - (No subtitle here; keep dot + badge inline.)
+**File: `src/components/app/WorkflowCardCompact.tsx`** (line ~117)
+- Revert desktop aspect: `aspect-[4/5]` → `aspect-[3/4]`. Restores correct thumbnail framing for all scenes (Selfie/UGC, Flat Lay) and fixes animation positioning (Virtual Try-On etc.).
 
-3. **Completed Videos** (line 291-306)
-   - Wrapper already `space-y-4` ✓
-   - h2: `text-lg font-semibold` → `text-2xl sm:text-3xl font-bold tracking-tight`
+**File: `src/components/app/FreestylePromptCard.tsx`**
+- Same revert: `aspect-[4/5]` → `aspect-[3/4]` to keep Freestyle aligned with workflow cards.
 
-### Also check: Create Video section above (lines ~190-235)
-Confirm the "Create Video" section heading also matches. If it currently uses `text-lg`, bump it to the same standard so the whole page is consistent.
+**File: `src/pages/Workflows.tsx`**
+- Locate and remove the "Choose what to create" / "Pick a Visual Type to start a new set." heading block (the secondary one above the grid). Keep only the main page header.
 
 ### Acceptance
-- Section titles on `/app/video` visually match `/app` dashboard ("Your Products, In Motion" size).
-- Subtitles use `text-base` with `mt-1.5`.
-- 16px gap (`space-y-4`) between heading block and content.
-- No regression to badges or inline controls.
+- Selfie/UGC + Flat Lay cards show their original correct thumbnails.
+- Virtual Try-On and all card animations work as before.
+- Only one heading on `/app/workflows` ("Visual Studio" page header). The duplicate "Choose what to create" block is gone.
+- Card heights still reasonable (kept `auto-rows-fr` removal from earlier fix).
 
