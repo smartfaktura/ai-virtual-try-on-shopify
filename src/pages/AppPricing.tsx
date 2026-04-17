@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -243,9 +243,11 @@ export default function AppPricing() {
 
   // Sticky bar selected plan — defaults to current plan if paid, otherwise Growth (recommended)
   const defaultStickyPlanId = useMemo(() => {
-    if (!isFreeUser) return plan;
-    return 'growth';
-  }, [plan, isFreeUser]);
+    if (isFreeUser) return 'growth';
+    // If current plan isn't in the picker (e.g. enterprise), fall back to Pro
+    if (!mainPlans.find((p) => p.planId === plan)) return 'pro';
+    return plan;
+  }, [plan, isFreeUser, mainPlans]);
   const [stickyPlanId, setStickyPlanId] = useState<string>(defaultStickyPlanId);
   useEffect(() => { setStickyPlanId(defaultStickyPlanId); }, [defaultStickyPlanId]);
 
@@ -312,7 +314,7 @@ export default function AppPricing() {
           if (priceId) await startCheckout(priceId, 'subscription');
         }
       }
-    } catch {
+    } finally {
       setLoading(false);
     }
   };
@@ -450,8 +452,8 @@ export default function AppPricing() {
               </thead>
               <tbody>
                 {FEATURE_MATRIX.map((group) => (
-                  <>
-                    <tr key={`${group.title}-header`} className="bg-muted/20 border-t border-border/40">
+                  <Fragment key={group.title}>
+                    <tr className="bg-muted/20 border-t border-border/40">
                       <td colSpan={mainPlans.length + 1} className="px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         {group.title}
                       </td>
@@ -469,7 +471,7 @@ export default function AppPricing() {
                         })}
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 ))}
                 <tr className="border-t border-border/50 bg-muted/20">
                   <td className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
