@@ -16,10 +16,10 @@ const EXAMPLE_MODELS = (['model_029', 'model_031', 'model_018', 'model_033'] as 
   });
 
 const EXAMPLE_SCENES = [
-  { name: 'On-Model Editorial', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776233159228-ji84j3.jpg' },
-  { name: 'Movement Shot', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776241316033-5ym4h3.jpg' },
-  { name: 'In-Hand Lifestyle', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/in-hand-lifestyle-fragrance-1776013280517.jpg' },
-  { name: 'Editorial Jackets', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776242322741-h5942k.jpg' },
+  { name: 'Color Hero Beauty', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776243655539-6oqq6e.jpg' },
+  { name: 'Color Wall Carry', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776231536512-thgrhr.jpg' },
+  { name: 'Color Hero Furniture', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776250513910-ilg7us.jpg' },
+  { name: 'Solar Tangerine Wall', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776240349610-59fbt7.jpg' },
 ] as const;
 
 interface Props {
@@ -152,7 +152,7 @@ function ExamplesSection({ onExplore }: { onExplore: () => void }) {
         {/* Scenes */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/70 mb-3">
-            Editorial scenes — 1000+ available
+            Aesthetic-color scenes — pick a mood, we color-match it
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {EXAMPLE_SCENES.map((s, i) => (
