@@ -123,7 +123,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       {/* Thumbnail */}
       <div className={cn(
         "relative w-full overflow-hidden",
-        modalCompact ? "aspect-[3/4]" : mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
+        modalCompact ? "aspect-[3/4]" : mobileCompact ? "aspect-[2/3]" : "aspect-[4/5]"
       )}>
         {scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} modalCompact={modalCompact} />
