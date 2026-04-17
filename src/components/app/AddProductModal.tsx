@@ -215,7 +215,19 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[92vh] flex flex-col">
           <DrawerHeader className="px-5 pt-4 pb-3 text-left shrink-0">
-            <DrawerTitle className="text-lg font-semibold tracking-tight">{headerTitle}</DrawerTitle>
+            <DrawerTitle className="text-lg font-semibold tracking-tight flex items-center gap-2">
+              {isCompact && onSwitchMethod && (
+                <button
+                  type="button"
+                  onClick={onSwitchMethod}
+                  aria-label="Back to methods"
+                  className="inline-flex items-center justify-center w-7 h-7 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              )}
+              {headerTitle}
+            </DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">{subtitle}</DrawerDescription>
           </DrawerHeader>
           <div className="px-5 pb-5 overflow-y-auto flex-1 min-h-0">
