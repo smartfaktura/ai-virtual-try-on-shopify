@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Check, Clock, X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useLearnRead } from '@/hooks/useLearnRead';
 import type { LearnGuide } from '@/data/learnContent';
 
 interface Props {
