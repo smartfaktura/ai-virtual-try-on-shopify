@@ -5,22 +5,21 @@ import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { useLearnRead } from '@/hooks/useLearnRead';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { LEARN_TRACKS, type LearnGuide } from '@/data/learnContent';
+import { mockModels } from '@/data/mockData';
 
-const EXAMPLE_MODELS = [
-  { name: 'Yuki', path: 'models/model-female-slim-asian.jpg' },
-  { name: 'Amara', path: 'models/model-female-athletic-black.jpg' },
-  { name: 'Sofia', path: 'models/model-female-plussize-latina.jpg' },
-  { name: 'Marcus', path: 'models/model-male-athletic-black.jpg' },
-] as const;
+const EXAMPLE_MODELS = (['model_029', 'model_031', 'model_018', 'model_033'] as const)
+  .map((id) => {
+    const m = mockModels.find((x) => x.modelId === id)!;
+    return { name: m.name, url: m.previewUrl };
+  });
 
 const EXAMPLE_SCENES = [
-  { name: 'Editorial Minimal', path: 'poses/pose-editorial-minimal.jpg' },
-  { name: 'Studio Movement', path: 'poses/pose-studio-movement.jpg' },
-  { name: 'Lifestyle Rooftop', path: 'poses/pose-lifestyle-rooftop.jpg' },
-  { name: 'Editorial Moody', path: 'poses/pose-editorial-moody.jpg' },
+  { name: 'On-Model Editorial', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776233159228-ji84j3.jpg' },
+  { name: 'Movement Shot', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776241316033-5ym4h3.jpg' },
+  { name: 'In-Hand Lifestyle', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/in-hand-lifestyle-fragrance-1776013280517.jpg' },
+  { name: 'Editorial Jackets', url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776242322741-h5942k.jpg' },
 ] as const;
 
 interface Props {
@@ -131,11 +130,11 @@ function ExamplesSection({ onExplore }: { onExplore: () => void }) {
                 }`}
                 style={{ transitionDelay: visible ? `${i * 70}ms` : '0ms' }}
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-muted/30 border border-border/50">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-muted/30 border border-border/50">
                   <ShimmerImage
-                    src={getOptimizedUrl(getLandingAssetUrl(m.path), { width: 128, quality: 65 })}
+                    src={getOptimizedUrl(m.url, { quality: 65 })}
                     alt={m.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
                 <span className="text-[11px] text-muted-foreground">{m.name}</span>
@@ -166,7 +165,7 @@ function ExamplesSection({ onExplore }: { onExplore: () => void }) {
               >
                 <div className="rounded-lg overflow-hidden bg-muted/30 border border-border/50" style={{ aspectRatio: '3/4' }}>
                   <ShimmerImage
-                    src={getOptimizedUrl(getLandingAssetUrl(s.path), { width: 240, quality: 65 })}
+                    src={getOptimizedUrl(s.url, { quality: 65 })}
                     alt={s.name}
                     className="w-full h-full object-cover"
                   />
