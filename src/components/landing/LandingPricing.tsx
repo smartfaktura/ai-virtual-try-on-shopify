@@ -283,6 +283,183 @@ export function LandingPricing() {
           })}
         </div>
 
+        {/* ── Trust microcopy ────────────────────────────────────── */}
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Cancel anytime · No commitment · Secure checkout
+        </p>
+
+        {/* ── Compare every feature ──────────────────────────────── */}
+        <div className="mt-20 max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+              Compare every feature
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Every plan, side-by-side. Pick the one that matches your output.
+            </p>
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-2xl border border-border/50 overflow-hidden bg-card">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-sm">
+                <thead>
+                  <tr className="bg-muted/30 border-b border-border/50">
+                    <th className="text-left px-5 py-5 align-bottom w-[28%]">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Plans
+                      </span>
+                    </th>
+                    {mainPlans.map((p) => {
+                      const isRec = p.planId === 'growth';
+                      const isFree = p.planId === 'free';
+                      const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                      const annualSavings = annual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
+                      const credits = typeof p.credits === 'number' ? p.credits : 0;
+                      return (
+                        <th
+                          key={p.planId}
+                          className={`px-3 py-5 align-bottom min-w-[150px] relative ${isRec ? 'bg-primary/[0.04]' : ''}`}
+                        >
+                          {isRec && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />}
+                          <div className="flex flex-col items-center gap-2 text-center">
+                            {isRec ? (
+                              <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
+                                Recommended
+                              </span>
+                            ) : (
+                              <span className="h-[18px]" aria-hidden />
+                            )}
+                            <span className={`text-sm font-semibold ${isRec ? 'text-primary' : 'text-foreground'}`}>
+                              {p.name}
+                            </span>
+                            <div className="flex flex-col items-center">
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-semibold tracking-tight text-foreground">
+                                  ${isFree ? 0 : displayPrice}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground">/mo</span>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground/70 mt-0.5">
+                                {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
+                              </span>
+                              {annual && annualSavings > 0 && (
+                                <span className="text-[10px] text-primary font-semibold mt-0.5">Save ${annualSavings}/yr</span>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={isRec ? 'default' : 'outline'}
+                              onClick={() => navigate(user ? '/app/settings' : '/auth')}
+                              className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                            >
+                              {isFree ? 'Start Free' : `Get ${p.name}`}
+                            </Button>
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {FEATURE_MATRIX.map((group) => (
+                    <Fragment key={group.title}>
+                      <tr className="bg-muted/20 border-t border-border/40">
+                        <td colSpan={mainPlans.length + 1} className="px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {group.title}
+                        </td>
+                      </tr>
+                      {group.rows.map((row) => (
+                        <tr key={row.label} className="border-t border-border/30 hover:bg-muted/10 transition-colors">
+                          <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
+                          {mainPlans.map((p) => {
+                            const isRec = p.planId === 'growth';
+                            return (
+                              <td key={p.planId} className={`px-3 py-3 text-center ${isRec ? 'bg-primary/[0.04]' : ''}`}>
+                                {renderCell(row.values[p.planId] ?? false)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile collapsible feature lists per plan */}
+          <div className="md:hidden space-y-3">
+            {mainPlans.map((p) => {
+              const isRec = p.planId === 'growth';
+              const isFree = p.planId === 'free';
+              const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+              const credits = typeof p.credits === 'number' ? p.credits : 0;
+              return (
+                <div
+                  key={p.planId}
+                  className={`rounded-2xl border bg-card p-4 ${isRec ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/50'}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-semibold">{p.name}</span>
+                        {isRec && (
+                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
+                            Recommended
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {credits > 0 ? `${credits.toLocaleString()} credits / month` : 'Trial credits'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-baseline gap-1 justify-end">
+                        <span className="text-xl font-semibold">${isFree ? 0 : displayPrice}</span>
+                        <span className="text-[11px] text-muted-foreground">/mo</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                      <span>See all features</span>
+                      <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3 space-y-3">
+                      {FEATURE_MATRIX.map((group) => (
+                        <div key={group.title} className="space-y-1.5">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{group.title}</p>
+                          <ul className="space-y-1.5">
+                            {group.rows.map((row) => {
+                              const v = row.values[p.planId] ?? false;
+                              return (
+                                <li key={row.label} className="flex items-start gap-2 text-[13px]">
+                                  {v === false ? (
+                                    <Minus className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 flex-shrink-0" />
+                                  ) : (
+                                    <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+                                  )}
+                                  <span className={v === false ? 'text-muted-foreground/60' : 'text-foreground/90'}>
+                                    {row.label}
+                                    {typeof v === 'string' && <span className="text-muted-foreground"> · {v}</span>}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ── Team Comparison ────────────────────────────────────── */}
         <div className="mt-24 max-w-4xl mx-auto">
           <div className="text-center mb-10">
