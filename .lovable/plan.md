@@ -1,88 +1,75 @@
 
 
-## `/app` Dashboard consistency audit — branding, spacing, polish
+## `/app/workflows` cleanup — remove "Learn how" + align to dashboard standards
 
-Audited the full file. Here's everything off-pattern, grouped by severity.
+### Part 1: Remove "Learn how" links
 
-### 1. Card sizing inconsistency (HIGH — most visible)
+**File:** `src/components/app/WorkflowCardCompact.tsx` (lines 171-179)
 
-**The "Tools" cards (returning user, lines 645-674) are visibly smaller than every other card on the page.**
+Remove the entire `<Link to="/app/learn/visual-studio/...">Learn how →</Link>` block under the Start button. Also drop the now-unused `Link` import and the surrounding `space-y-1.5` wrapper (Button can sit alone in `pt-1 mt-auto`).
 
-| Card group | Padding | Icon container | Title | Description | Button |
-|---|---|---|---|---|---|
-| Start here / Create Video / More tools | `p-6` | `w-10 h-10` | `text-lg font-bold` | `text-sm` | `min-h-[44px]` |
-| **Tools (returning)** | `p-5` ⚠️ | `w-9 h-9` ⚠️ | `text-sm font-bold` ⚠️ | `text-xs` ⚠️ | `h-9 text-xs` ⚠️ |
+### Part 2: Branding & consistency audit on `/app/workflows`
 
-Same content ("Create Product Visuals", "Create with Prompt", "Explore Examples") appears in both first-run and returning views — but with completely different visual weight. Returning users see a shrunken version.
+Compared against the standards we just unified on `/app`. Issues found:
 
-**Fix:** unify Tools cards to the same standard as the other card groups.
+| # | Issue | Where | Current | Standard (from /app) |
+|---|---|---|---|---|
+| 1 | **Page title smaller than dashboard h1** | `PageHeader.tsx:24` | `text-2xl sm:text-3xl` | Dashboard h1 = `text-3xl sm:text-4xl` |
+| 2 | **Subtitle smaller** | `PageHeader.tsx:29` | `text-sm sm:text-base mt-2` | Dashboard = `text-lg mt-2` |
+| 3 | **Section heading "CHOOSE WHAT TO CREATE"** uses tiny uppercase label | Workflows.tsx:508 | `section-label` (tiny caps) | Dashboard sections use real `text-2xl sm:text-3xl font-bold` h2s with subtitle |
+| 4 | **"Recent Creations" heading** uses tiny uppercase label inline with hr line | Workflows.tsx:586 | `section-label` + divider line + ghost "View All" | Dashboard "Recent Jobs" = full h2 + subtitle, then content directly |
+| 5 | **Section spacing too tight** | Workflows.tsx:14, 496, 584 | `space-y-6`, `mt-6` between sections | Dashboard = `space-y-12 sm:space-y-16` |
+| 6 | **Card title sizes inconsistent** | WorkflowCardCompact.tsx:144 | `text-sm` (or `text-[11px]` mobile) | Dashboard cards = `text-lg font-bold` |
+| 7 | **Card description tiny** | WorkflowCardCompact.tsx:154 | `text-xs ... line-clamp-3` | Dashboard cards = `text-sm leading-relaxed` |
+| 8 | **Button heights too small** | WorkflowCardCompact.tsx:164 | `h-8` | Dashboard CTAs = `min-h-[44px]` |
+| 9 | **Button labels inconsistent** across the page | rows: "Create Set", grid: "Start Creating", mobile: "Start", "View All" | mix | Dashboard standard = "Open" (or here: settle on **"Start Creating"** consistently across rows + grid) |
+| 10 | **Invalid Tailwind class `w-4.5 h-4.5`** | WorkflowRequestBanner.tsx:49 | silent fallback | use `w-5 h-5` (same bug we fixed on dashboard) |
+| 11 | **Card radius inconsistent** | Card defaults vs dashboard `rounded-2xl` | mixed | Standardize on `rounded-2xl` for grid cards |
 
-### 2. Heading inconsistency in "Recent Jobs" wrapper
+### Proposed changes
 
-Lines 687-792: there's a **double wrapper** — `rounded-2xl border bg-card overflow-hidden shadow-sm` wrapping another `p-5` div. Other sections present content directly in a grid, no card chrome around the heading group. This makes Recent Jobs feel like a different design language.
+**A. `src/components/app/PageHeader.tsx`**
+- h1: `text-2xl sm:text-3xl` → `text-3xl sm:text-4xl font-bold tracking-tight`
+- subtitle: `text-sm sm:text-base mt-2` → `text-base sm:text-lg mt-2`
+- Outer wrapper: `space-y-6` → `space-y-12 sm:space-y-16`
 
-**Fix:** drop the outer card wrapper; let the table sit directly under the heading like every other section. Or keep the wrapper but use consistent `p-6` padding.
+**B. `src/pages/Workflows.tsx`**
+- Replace tiny "CHOOSE WHAT TO CREATE" label (line 507-510) with proper h2 block:
+  ```
+  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Choose what to create</h2>
+  <p className="text-base text-muted-foreground mt-1.5">Pick a Visual Type to start a new set.</p>
+  ```
+- Replace "Recent Creations" tiny label + hr (lines 583-595) with proper h2 + subtitle + "View All" ghost button on the right (mirroring dashboard pattern).
+- Drop the standalone `mt-6` on Recent block since parent `space-y-12` handles spacing.
 
-### 3. Returning user welcome block — different from first-run
+**C. `src/components/app/WorkflowCardCompact.tsx`**
+- Remove the "Learn how" link block (lines 171-179) and unused `Link` import.
+- Bump default (non-mobile, non-modal) variant to dashboard card scale:
+  - Padding: `p-4` → `p-5`
+  - Title: `text-sm` → `text-base font-bold` (keep tracking-tight)
+  - Description: `text-xs` → `text-sm leading-relaxed`
+  - Button: `h-8 px-5` → `h-10 px-5` (better touch target)
+  - Card root: ensure `rounded-2xl`
+- Mobile compact + modalCompact variants: leave as-is (intentionally dense).
 
-| | First-run (line 311) | Returning (line 526) |
-|---|---|---|
-| h1 size | `text-3xl sm:text-4xl` | `text-2xl sm:text-4xl` ⚠️ smaller mobile |
-| Subtitle | `text-lg ... mt-2` | `text-sm sm:text-lg ... mt-1 sm:mt-2` ⚠️ smaller mobile |
+**D. `src/components/app/WorkflowCard.tsx`** (rows layout)
+- Button label "Create Set" → "Start Creating" (consistent with grid view).
+- h2 already `text-xl lg:text-2xl` — keep.
 
-Returning users get a measurably smaller welcome on mobile. No reason for the divergence.
+**E. `src/components/app/WorkflowRequestBanner.tsx`**
+- Replace `w-4.5 h-4.5` with `w-5 h-5` (line 49).
 
-**Fix:** align returning header to `text-3xl sm:text-4xl` / `text-lg ... mt-2`.
+### Out of scope
+- Activity card internal layout (separate component, not affecting page rhythm).
+- Mobile compact and 3-col grid card densities — they're intentionally tighter.
+- The toggle layout switcher in the header actions — works fine.
 
-### 4. Button label inconsistency
-
-- All cards say **"Open"** — except Short Films card (line 441) which says **"Explore"**.
-- All workflow CTAs use `→` arrow, consistent.
-
-**Fix:** change Short Films to "Open" for consistency. Beta badge already signals it's different.
-
-### 5. Icon stroke weight / sizing variance in Tools section
-
-Lines 647, 657, 667 use `w-4.5 h-4.5` — Tailwind has no `w-4.5` utility. This silently falls back to no class, defaulting to natural icon size. Likely renders inconsistently.
-
-**Fix:** use `w-5 h-5` like the rest, with `w-10 h-10` icon container.
-
-### 6. "Best place to start" / "More creative control" / "Good first look around" microcopy
-
-Lines 355, 373, 391: small grey hint above the button using `text-xs text-muted-foreground/60`. Only appears on first-run "Start here" cards — not on Create Video, More tools, or returning Tools. Inconsistent rhythm; either show it everywhere or nowhere.
-
-**Fix:** remove these three hints. The card title + description already explain the purpose; the hint feels like apologetic copy.
-
-### 7. Section spacing — first-run vs returning
-
-Both wrappers now use `space-y-12 sm:space-y-16` ✅ (good — recently unified).
-
-But the **resolving placeholder** (line 295) still uses `space-y-6 sm:space-y-10`. Minor — only visible for ~200ms during load.
-
-**Fix:** align to `space-y-12 sm:space-y-16`.
-
-### 8. Branding — VOVV.AI
-
-`SEOHead title="Dashboard — VOVV.AI"` ✅ correct. No branding violations found in dashboard copy.
-
----
-
-### Recommended scope (what I'd ship)
-
-**Tier A — clear wins, low risk:**
-1. Resize "Tools" cards (returning) to match the standard card system → biggest visual improvement
-2. Align returning-user welcome heading to first-run sizing
-3. Fix `w-4.5` invalid Tailwind classes
-4. "Short Films" button: "Explore" → "Open"
-5. Remove the three microcopy hints under Start-here cards (optional — could also keep & extend everywhere)
-
-**Tier B — structural cleanup:**
-6. Unwrap "Recent Jobs" double card chrome
-7. Align resolving-state spacing
-
-### Question before I implement
-
-**Microcopy hints ("Best place to start", etc.):**
-- **Remove them** — cleaner, lets cards speak for themselves
-- **Keep & extend** — add similar hints to all card groups so the rhythm is consistent
+### Acceptance
+- No "Learn how" links anywhere on `/app/workflows`.
+- Page h1 + subtitle visually match `/app` dashboard h1 + subtitle.
+- Section headings ("Choose what to create", "Recent Creations") match dashboard h2 standard (`text-2xl sm:text-3xl`, with subtitle).
+- Vertical breathing room between sections matches dashboard (`space-y-12 sm:space-y-16`).
+- Default grid cards have larger title + description + button, in line with dashboard cards.
+- All workflow CTAs say "Start Creating".
+- No invalid Tailwind classes left in the page tree.
 
