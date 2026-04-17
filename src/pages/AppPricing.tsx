@@ -326,8 +326,7 @@ export default function AppPricing() {
     if (isCurrent) return { label: 'Current plan', disabled: true, variant: 'outline' as const };
     if (p.planId === 'free') return { label: 'Cancel plan', disabled: false, variant: 'outline' as const };
     if (targetIdx < currentIdx) return { label: `Downgrade`, disabled: false, variant: 'outline' as const };
-    if (targetIdx > currentIdx) return { label: `Upgrade to ${p.name}`, disabled: false, variant: 'default' as const };
-    return { label: `Choose ${p.name}`, disabled: false, variant: 'outline' as const };
+    return { label: `Upgrade to ${p.name}`, disabled: false, variant: 'default' as const };
   };
 
   const handlePlanSelect = (p: PricingPlan) => {
