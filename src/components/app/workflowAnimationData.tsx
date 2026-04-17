@@ -282,3 +282,10 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
 };
+
+// Aliases for renamed DB workflows (dropped " Set" suffix)
+workflowScenes['Virtual Try-On'] = workflowScenes['Virtual Try-On Set'];
+workflowScenes['Selfie / UGC'] = workflowScenes['Selfie / UGC Set'];
+workflowScenes['Flat Lay'] = workflowScenes['Flat Lay Set'];
+workflowScenes['Mirror Selfie'] = workflowScenes['Mirror Selfie Set'];
+workflowScenes['Product Listing'] = workflowScenes['Product Listing Set'];
