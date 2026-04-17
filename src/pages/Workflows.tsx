@@ -489,6 +489,26 @@ export default function Workflows() {
 
       {/* ── Workflow catalog (heading + grid grouped tight) ── */}
       <section className="space-y-4">
+        <div className="flex justify-end">
+          <ToggleGroup
+            type="single"
+            value={effectiveLayout}
+            onValueChange={handleLayoutChange}
+            className="gap-1 rounded-lg border bg-card p-1"
+          >
+            <ToggleGroupItem value="rows" aria-label="Row layout" className="h-9 w-9 p-0">
+              <LayoutList className="w-4 h-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-9 w-9 p-0">
+              <Grid2X2 className="w-4 h-4" />
+            </ToggleGroupItem>
+            {!isMobile && (
+              <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-9 w-9 p-0">
+                <Grid3X3 className="w-4 h-4" />
+              </ToggleGroupItem>
+            )}
+          </ToggleGroup>
+        </div>
 
         {isLoading ? (
           effectiveLayout === 'rows' ? (
