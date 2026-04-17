@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, FolderOpen, Droplets, X } from 'lucide-react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles, Plus, RotateCcw, ArrowRight, Package, FolderOpen, Droplets, X, Camera, Ruler } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,6 +92,7 @@ function getErrorInfo(code: string, rawMessage: string) {
 
 export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: StoreImportTabProps) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [url, setUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedProduct | null>(null);
@@ -369,7 +371,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               </div>
               {extracted.dimensions && (
                 <Badge variant="outline" className="text-[10px] gap-1">
-                  📐 {extracted.dimensions}
+                  <Ruler className="w-3 h-3" />
+                  {extracted.dimensions}
                 </Badge>
               )}
               {extracted.description && (
@@ -381,9 +384,16 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
           {/* Show all extracted images with role assignment popover */}
           {extracted.image_urls && extracted.image_urls.length > 1 && (
             <div className="space-y-2.5">
-              <p className="text-[11px] text-muted-foreground">
-                Tap an image to set its role
-              </p>
+              {isMobile ? (
+                <div className="space-y-0.5">
+                  <p className="text-xs font-medium text-foreground">Choose your main photo</p>
+                  <p className="text-[11px] text-muted-foreground">Tap a thumbnail to change roles (Main, Back, Side…)</p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">
+                  Tap an image to set its role
+                </p>
+              )}
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {extracted.image_urls.map((imgUrl, i) => {
                    const role = i === selectedImageIndex ? 'Main'
@@ -447,7 +457,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                         <button
                           type="button"
                           className={cn(
-                            'relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0 border-2 transition-all',
+                            'relative rounded-lg overflow-hidden bg-muted shrink-0 border-2 transition-all',
+                            isMobile ? 'w-20 h-20' : 'w-16 h-16',
                             i === selectedImageIndex
                               ? 'border-primary ring-1 ring-primary/30'
                               : role
@@ -474,7 +485,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                           )}
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-32 p-1" align="center" sideOffset={6}>
+                      <PopoverContent className="w-32 p-1" align={isMobile ? 'start' : 'center'} sideOffset={isMobile ? 8 : 6}>
                         <div className="flex flex-col">
                           {roleOptions.map(opt => {
                             const isActive = role === opt.value;
@@ -539,10 +550,11 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
 
             return (
               <div className="space-y-2">
-                <p className="text-[11px] text-muted-foreground/70 font-medium">
-                  📐 Extra angles improve AI accuracy
+                <p className="text-[11px] text-muted-foreground/70 font-medium flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  Extra angles improve AI accuracy
                 </p>
-                <div className="flex gap-2">
+                <div className={cn('flex gap-2', isMobile && 'flex-wrap')}>
                   {slots.filter(s => !s.assigned).map((slot) => (
                     <div key={slot.role} className="flex flex-col items-center gap-1">
                       <input
