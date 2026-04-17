@@ -1,61 +1,63 @@
 
 
 ## Goal
-Replace all user-facing `VOVV AI` (with space, no dot) with `VOVV.AI`. Preserve `vovv.ai` URLs, technical identifiers, and the short `VOVV` microcopy where it already exists.
+Lock user-facing terminology to **Visual Studio** (the destination) and **Visual Types** (the selectable creation options). Eliminate user-facing "Templates", "Workflows", and "Presets" as competing labels. Keep `workflow*` in code, routes, DB tables, internal variables, and SQL.
 
-## Scope of changes
+## Current state (verified)
+- Sidebar already says **Visual Studio** → `/app/workflows` ✅
+- Page `/app/workflows` already titled **Visual Studio** ✅
+- Many strings still leak old terms (Templates / Workflows / template / pipelines)
 
-Based on the audit from earlier this session, here are the exact locations to fix:
+## Files to update (text-only, no logic changes)
 
-### SEO titles & meta descriptions
-- `src/components/SEOHead.tsx` line 68 — default title fallback `'VOVV AI | Automated Visual Studio for E-commerce'` → `'VOVV.AI | Automated Visual Studio for E-commerce'`, and og:site_name on line 53 `'VOVV AI'` → `'VOVV.AI'`
-- `src/pages/Auth.tsx` SEO description (~line 347): `"...your VOVV AI account..."` → `"...your VOVV.AI account..."`
-- All `src/pages/features/*` page SEO titles using `VOVV AI`
-- Any other page-level `<SEOHead title="... VOVV AI ...">` invocations
-- `src/pages/Pricing.tsx` (lines 14, 16, 33) public pricing SEO copy
-- `src/pages/PublicFreestyle.tsx` (lines 294, 327) and `src/pages/PublicDiscover.tsx` SEO blocks
+### App / in-product
+| File | Current | Replace with |
+|---|---|---|
+| `OnboardingChecklist.tsx:42` | "Go to Templates" | "Open Visual Studio" |
+| `OnboardingChecklist.tsx:36` | "Generate Your First Visual Set" | keep (already aligned) |
+| `DashboardTipCard.tsx:42` | "Use Workflows to generate complete visual sets — ads, listings, and hero images — in one click." | "Open Visual Studio to create complete visual sets — ads, listings, and hero images — in one click." |
+| `DashboardQuickActions.tsx:7` | label: "Browse Templates" | "Visual Studio" |
+| `Dashboard.tsx:539` | button "Visual Studio" | keep ✅ |
+| `Freestyle.tsx:1057` | button text "Workflows" (links to /app/workflows) | "Visual Studio" |
+| `WorkflowRequestBanner.tsx:72,107` | "Missing a template for your brand?" / "Describe the template, niche…" | "Missing a Visual Type for your brand?" / "Describe the Visual Type, niche, or product type you need…" |
+| `GlobalGenerationBar.tsx:405` | "View in Templates" | "View in Visual Studio" |
+| `Generate.tsx:1174` | toast "Please select a template first" | "Please select a Visual Type first" |
+| `Generate.tsx:1175` | "Template-based generation is no longer supported. Please use a workflow." | "This Visual Type is no longer supported. Please pick another from Visual Studio." |
+| `HelpCenter.tsx:15` | "…head to Workflows. Choose from seven core workflows…" | "…head to Visual Studio. Choose from seven Visual Types…" |
+| `StudioChat.tsx:19,20` | chip "Show me workflows" / "Which workflow fits my product?" | "Show me Visual Types" / "Which Visual Type fits my product?" |
+| `Generate.tsx:2157` | back-action "Visual Studio" | keep ✅ |
 
-### UI text
-- Anywhere a visible string contains `VOVV AI` (with space) in:
-  - Navigation, headers, hero copy
-  - Onboarding screens
-  - Modals (upgrade, no-credits, buy-credits, etc.)
-  - Pricing pages (`/pricing`, `/app/pricing`)
-  - Auth pages (sign in / sign up / reset)
-  - Legal pages (`CookiePolicy`, `PrivacyPolicy`, `TermsOfService` if they exist)
-  - Footer, FAQ blocks
+### Public marketing
+| File | Current | Replace with |
+|---|---|---|
+| `LandingFAQ.tsx:14` | "Templates are purpose-built generation pipelines. Choose from six core options…" | "Visual Types are built for specific content goals. Choose from six core options…" |
+| `LandingFAQ.tsx:21` | "…none of the standard Workflows fit your vision." | "…none of the standard Visual Types fit your vision." |
+| `LandingFAQ.tsx:33` | "…across Workflows and Freestyle…" | "…across Visual Studio and Freestyle…" |
+| `LandingFAQ.tsx:41` | "…run your first Workflow or try Freestyle…" | "…run your first Visual Type or try Freestyle…" |
+| `LandingPricing.tsx:119` | "…try multiple workflows…" | "…try multiple Visual Types…" |
+| `LandingPricing.tsx:594` | "Try every workflow…" | "Try every Visual Type…" |
+| `LandingPricing.tsx:57` | matrix group "Brand & workflow" | "Brand & studio" |
+| `LandingFooter.tsx:6` | footer link "Templates" → /features/workflows | "Visual Studio" |
+| `BrandProfilesFeature.tsx:35-36` | step "Attach to Workflows" / "Link your Brand Profile to any template…" | "Attach in Visual Studio" / "Link your Brand Profile to any Visual Type…" |
+| `WorkflowsFeature.tsx` (full sweep, user-facing copy only) | hero badge "Templates", H2 "Why Templates?", step "Pick a Template", CTA "Try {name} Free", body uses "template" repeatedly | hero badge "Visual Studio"; H1 keeps; H2 "Why Visual Types?"; step "Pick a Visual Type"; replace "template" → "Visual Type" in benefits, steps, CTA copy; SEO title → "AI Photography Visual Types — VOVV.AI" (slug/route stays `/features/workflows`) |
+| `HeroSection.tsx:245` | route to `/app/workflows` | keep route, no copy change needed |
 
-### Email templates
-- `supabase/functions/_shared/email-templates/*.tsx` — confirm `siteName` usage; if any subject line or body string hardcodes `VOVV AI`, change to `VOVV.AI`
-- `supabase/functions/auth-email-hook/index.ts` (or equivalent) — subject lines passing the brand
-- Any transactional email template files
+## Out of scope (do NOT change)
+- Routes (`/app/workflows`, `/features/workflows`) — keep
+- DB tables, columns, RLS, edge functions, types (`Workflow`, `workflow_id`, `workflow_slug`)
+- `src/pages/Templates.tsx` and `mockTemplates` — separate legacy admin/data file, not user-routed in current nav (verify; if surfaced, retitle later)
+- Internal variable names, comments, SQL labels in admin pages (`AdminScenes.tsx` "On-Model → Try-On Workflows" — admin-only, keep)
+- Code-level types: `templateId`, `templateSnapshot` on Job records
+- "Freestyle" naming (separate feature, untouched)
+- Cookie policy line "template cookie policy" (different meaning of "template")
 
-### Index HTML
-- `index.html` `<title>` and meta tags if they contain `VOVV AI`
+## Acceptance
+- Zero user-facing occurrences of "Templates", "Workflows", or "Presets" used as a synonym for the visual creation feature
+- "Visual Studio" used for the page/destination
+- "Visual Types" used for the selectable options
+- All routes, DB, code identifiers untouched
+- No layout, logic, or pricing changes
 
-## Method
-
-1. Run a project-wide search for the exact string `VOVV AI` (case-sensitive, with the single space).
-2. For each match, replace with `VOVV.AI` **only when it is user-facing display text** (JSX text, string literals used in `title`/`content`/`subject`/`displayName`).
-3. Skip:
-   - `vovv.ai` lowercase URL strings
-   - Variable names, comments, code identifiers
-   - Existing short `VOVV` microcopy (e.g. `BuyCreditsModal` "Get more from VOVV", `CompetitorComparison` "VOVV pricing varies…", `HomeFAQ` "What is VOVV?") — leave these untouched per the rule
-4. After applying, run the same search again to confirm zero remaining `VOVV AI` matches in user-facing strings.
-
-## Out of scope
-- Tone, copy length, or structural changes
-- The short `VOVV` form (preserved where natural)
-- Any `vovv.ai` URL string
-- Lowercase `vovv` in technical contexts
-- Image alt text rewrites beyond the brand fix
-
-## Deliverable
-After the sweep, I'll output:
-1. A grouped list of every file changed and the exact line(s) updated
-2. Any ambiguous cases I deferred (e.g. a string that mixes brand + product name and might need your call) — flagged, not auto-changed
-3. Confirmation that `grep "VOVV AI"` (case-sensitive, with space) returns zero matches in `src/`, `supabase/functions/`, and `index.html`
-
-## Result
-Single canonical brand mark `VOVV.AI` everywhere it appears as a name, with the short `VOVV` form retained only in the existing handful of microcopy locations. No design, tone, or structural changes.
+## Mental model after change
+**Open Visual Studio → choose a Visual Type → generate the result.**
 
