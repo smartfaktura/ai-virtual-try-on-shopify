@@ -850,7 +850,7 @@ export default function BrandModels() {
             <div className="space-y-4 mt-6">
               <div className="flex items-center gap-3">
                 <h3 className="font-semibold flex items-center gap-2 text-base">
-                  <Users className="h-4 w-4 text-muted-foreground" /> Your Brand Models
+                  <Users className="h-4 w-4 text-muted-foreground" /> My Brand Models
                 </h3>
                 <Badge variant="secondary" className="text-[10px]">{models.length}</Badge>
               </div>
@@ -889,7 +889,7 @@ export default function BrandModels() {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <h3 className="font-semibold flex items-center gap-2 text-base">
-                <Users className="h-4 w-4 text-muted-foreground" /> My Models
+                <Users className="h-4 w-4 text-muted-foreground" /> My Brand Models
               </h3>
               {models.length > 0 && <Badge variant="secondary" className="text-[10px]">{models.length}</Badge>}
             </div>

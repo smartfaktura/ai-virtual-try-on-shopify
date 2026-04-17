@@ -554,10 +554,10 @@ export default function Jobs() {
                     heading="No images yet"
                     description=""
                     icon={<Sparkles className="w-10 h-10" />}
-                    teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Create stunning visuals in Visual Studio or with Freestyle." }}
+                    teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Create stunning visuals in Visual Studio or Freestyle Studio." }}
                     actions={[
                       { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'outline', icon: <Layers className="w-4 h-4" /> },
-                      { content: 'Freestyle Generation', onAction: () => navigate('/app/freestyle'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
+                      { content: 'Open Freestyle Studio', onAction: () => navigate('/app/freestyle'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
                     ]}
                   />
                 ) : (

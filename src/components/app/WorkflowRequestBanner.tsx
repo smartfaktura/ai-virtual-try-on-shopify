@@ -100,7 +100,7 @@ export function WorkflowRequestBanner() {
               ))}
             </div>
             <p className="text-sm font-semibold text-foreground">
-              What template would you like us to create?
+              What Visual Type would you like us to create?
             </p>
           </div>
           <Textarea

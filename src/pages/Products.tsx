@@ -136,7 +136,7 @@ export default function Products() {
   return (
     <PageHeader
       title="Products"
-      subtitle="Manage your product library. Upload products here and use them across Visual Types."
+      subtitle="Manage your products. Upload once and use them across Visual Types."
     >
       <div className="space-y-4">
         {/* Top bar */}
