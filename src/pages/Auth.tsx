@@ -30,6 +30,58 @@ export default function Auth() {
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [resetCooldown, setResetCooldown] = useState(0);
+
+  const COOLDOWN_SECONDS = 60;
+  const cooldownKey = (email: string) => `vovv_reset_sent_at:${email.trim().toLowerCase()}`;
+
+  const startResetCooldown = (email: string, fromTimestamp?: number) => {
+    const sentAt = fromTimestamp ?? Date.now();
+    try { sessionStorage.setItem(cooldownKey(email), String(sentAt)); } catch {}
+    const elapsed = Math.floor((Date.now() - sentAt) / 1000);
+    setResetCooldown(Math.max(0, COOLDOWN_SECONDS - elapsed));
+  };
+
+  // Tick cooldown
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+    const t = setInterval(() => setResetCooldown((c) => (c <= 1 ? 0 : c - 1)), 1000);
+    return () => clearInterval(t);
+  }, [resetCooldown]);
+
+  // Restore cooldown when re-opening success panel for this email
+  useEffect(() => {
+    if (!resetSent || !resetEmail) return;
+    try {
+      const raw = sessionStorage.getItem(cooldownKey(resetEmail));
+      if (raw) {
+        const sentAt = parseInt(raw, 10);
+        if (!Number.isNaN(sentAt)) {
+          const remaining = COOLDOWN_SECONDS - Math.floor((Date.now() - sentAt) / 1000);
+          if (remaining > 0) setResetCooldown(remaining);
+        }
+      }
+    } catch {}
+  }, [resetSent, resetEmail]);
+
+  const sendResetEmail = async (email: string): Promise<boolean> => {
+    setResetLoading(true);
+    setResetError(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+    setResetLoading(false);
+    if (error) {
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+        setResetError('Too many requests. Please wait a few minutes before trying again.');
+      } else {
+        setResetError('Could not send reset link. Please try again.');
+      }
+      return false;
+    }
+    return true;
+  };
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string; terms?: string }>({});
   const [signupComplete, setSignupComplete] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
