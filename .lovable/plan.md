@@ -1,42 +1,50 @@
 
 
-## Hide feedback bar on empty Library + tighten subtitle→buttons spacing
+## Fix Library empty-state flash with skeleton loader
 
-### Change 1 — Hide `<FeedbackBanner />` when Library is empty
-**File:** `src/pages/Jobs.tsx` (line 730)
+### Problem
+On `/app/library`, when navigating in or refreshing, you briefly see a flash of stale/previous content (or layout) before the empty state appears. Two reasons:
 
-The feedback banner currently always renders at the bottom. Wrap it so it only shows when there's content (or an active search), matching the same condition that hides tabs/toolbar.
+1. **Loading state is a tiny centered spinner** (`Loader2` at line 533-535) — visually it reads as "nothing here", which feels identical to the empty state. So the transition `spinner → empty card` looks like `empty → empty` with a flash.
+2. **`keepPreviousData`** in `useLibraryItems` (line 254) preserves the previous page's data across query-key changes, so for one frame after mount the hook can return `isLoading: false` with stale items before reconciling to the true empty result.
 
-```tsx
-{!isEmpty && <FeedbackBanner />}
+### Fix
+
+**File:** `src/pages/Jobs.tsx`
+
+**A. Replace the spinner with a proper skeleton grid** that matches the masonry layout (lines 532-535):
+- Render N skeleton cards in the same column grid the real content uses
+- Use varying heights to mimic the masonry feel
+- Use the existing `<Skeleton />` component from `@/components/ui/skeleton`
+
+**B. Tighten the loading condition** so we show skeleton whenever data isn't truly settled for the current query key:
+- Use `isPending` (true only on initial fetch with no data) OR `isFetching && allItems.length === 0`
+- Also hide the toolbar/tabs during initial load to avoid them flashing in then out
+
+**C. Hide `EmptyStateCard` until loading is fully done** — the current `items.length === 0` branch fires the moment `keepPreviousData` clears, even if a refetch is mid-flight. Gate it on `!isFetching || allItems.length > 0`.
+
+### Skeleton design (matches existing masonry grid)
 ```
-(I'll use whatever variable already drives the empty-state branch around line 543 — likely `allItems.length === 0` — to stay consistent.)
-
-### Change 2 — Spacing between subtitle and CTA buttons
-**File:** `src/components/app/EmptyStateCard.tsx` (default variant, lines ~96-118)
-
-Current: `CardContent` uses `space-y-4` (16px) between the heading/description block and the action buttons. With a two-line description + two pill buttons, the buttons sit slightly close — they read as part of the text block rather than a distinct call-to-action.
-
-Proposal: add a small extra top margin on the actions row only when the default empty card is shown.
-
-```tsx
-<div className="flex items-center gap-3 pt-2">
+┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+│      │ │      │ │      │ │      │
+│      │ │      │ └──────┘ │      │
+└──────┘ │      │ ┌──────┐ │      │
+┌──────┐ └──────┘ │      │ └──────┘
+│      │ ┌──────┐ │      │ ┌──────┐
+└──────┘ │      │ └──────┘ │      │
 ```
-Net effect: ~24px breathing room between description and buttons (16 + 8). Subtle, keeps the card compact but lets the CTAs feel like their own beat.
-
-I won't touch the `teamMember` variant (it already has `pt-1`, intentionally tight).
-
-### UX assessment of current state (per your ask)
-- White card: 👍 keeps consistency with surrounding cards, calm feel
-- Icon (ImagePlus): reads OK in this context
-- Heading + subtitle pairing: clear and on-brand
-- Subtitle → buttons gap: only thing that feels slightly off — fix above addresses it
-- Two CTAs with correct hierarchy: ✅
-- Once feedback bar is hidden, the page becomes one focused moment — that's the right call for empty
+- Same column count as `columnCount` setting
+- 6-8 cards per column with rotating aspect ratios (3:4, 1:1, 4:5, 4:3)
+- `rounded-2xl` to match `LibraryImageCard` corners
+- Subtle pulse via existing `Skeleton` component
 
 ### Acceptance
-- Empty Library (zero items, no search): no FeedbackBanner; CTAs have a touch more air above them
-- Library with items: FeedbackBanner still renders at the bottom as today
-- "No results" search empty state: spacing change applies there too (it uses the same component) — that's fine
-- No layout shift, no regressions on the `teamMember` variant used elsewhere
+- Hard refresh on `/app/library` (empty account): skeleton grid → empty state card. No flash of previous page or empty card before grid.
+- Hard refresh with content: skeleton grid → real cards. No flash.
+- Toolbar/tabs don't flash in then out during initial load.
+- No regression on infinite scroll loading indicator (line 580-586 stays as-is — that's the in-flight overlay for subsequent pages).
+
+### Out of scope
+- Changing `useLibraryItems` cache strategy (`keepPreviousData` is correct for sort/filter changes — we just gate UI on it properly).
+- Route-level transition animations.
 
