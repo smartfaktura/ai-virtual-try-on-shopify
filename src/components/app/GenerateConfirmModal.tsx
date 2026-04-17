@@ -88,7 +88,7 @@ export function GenerateConfirmModal({
 
             {/* Template */}
             <div className="p-4 rounded-lg border border-border bg-muted/50 space-y-2">
-              <p className="text-xs text-muted-foreground">Template</p>
+              <p className="text-xs text-muted-foreground">Visual Type</p>
               <div className="flex items-center gap-2">
                 {templateImage ? (
                   <div className="w-10 h-10 rounded-md overflow-hidden">

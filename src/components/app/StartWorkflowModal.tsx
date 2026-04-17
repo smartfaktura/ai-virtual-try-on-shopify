@@ -232,7 +232,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
           className="text-xs text-muted-foreground gap-1.5"
           onClick={() => { onOpenChange(false); navigate('/app/workflows'); }}
         >
-          Browse all templates <ArrowRight className="w-3 h-3" />
+          Browse Visual Studio <ArrowRight className="w-3 h-3" />
         </Button>
       </div>
     </div>

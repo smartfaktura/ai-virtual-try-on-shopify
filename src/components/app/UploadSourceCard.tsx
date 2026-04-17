@@ -158,7 +158,7 @@ export function UploadSourceCard({
                     />
                     <div className="space-y-0.5">
                       <span className="text-sm font-medium group-hover:text-foreground transition-colors">Save to My Products</span>
-                      <p className="text-xs text-muted-foreground">Save this product to your library so you can reuse it across workflows without uploading again.</p>
+                      <p className="text-xs text-muted-foreground">Save this product to your library so you can reuse it across Visual Types without uploading again.</p>
                     </div>
                   </label>
                 )}

@@ -763,7 +763,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                 ) : uiConfig?.lock_aspect_ratio ? (
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
-                    <span className="text-xs text-muted-foreground">Locked by workflow</span>
+                    <span className="text-xs text-muted-foreground">Locked by Visual Type</span>
                   </div>
                 ) : variationStrategy?.type === 'multi-ratio' ? (
                   <div className="flex items-center gap-2">

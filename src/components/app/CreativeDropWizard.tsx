@@ -671,7 +671,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                 </div>
                 <div>
                   <h3 className="text-base font-semibold tracking-tight">Name Your Drop</h3>
-                  <p className="text-xs text-muted-foreground">Set up the basics — you'll pick products and workflows next.</p>
+                  <p className="text-xs text-muted-foreground">Set up the basics — you'll pick products and Visual Types next.</p>
                 </div>
               </div>
 
@@ -939,13 +939,13 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                   <Zap className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold tracking-tight">Choose a Workflow</h3>
+                  <h3 className="text-base font-semibold tracking-tight">Choose a Visual Type</h3>
                   <p className="text-xs text-muted-foreground">Select one visual style, then configure it below.</p>
                 </div>
               </div>
 
               {attempted && !selectedWorkflowId && (
-                <p className="text-xs text-destructive">Select a workflow</p>
+                <p className="text-xs text-destructive">Select a Visual Type</p>
               )}
 
               {/* Workflow cards — single select */}
@@ -1576,7 +1576,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                           <Switch checked={includeFreestyle} onCheckedChange={setIncludeFreestyle} />
                           <div>
                             <p className="text-sm font-medium">Freestyle Prompts</p>
-                            <p className="text-xs text-muted-foreground">Add custom text prompts alongside the workflow</p>
+                            <p className="text-xs text-muted-foreground">Add custom text prompts alongside the Visual Type</p>
                           </div>
                         </div>
                         <CollapsibleTrigger asChild>
@@ -1840,7 +1840,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                       )}
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Workflow</p>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Visual Type</p>
                       <p className="font-semibold">{selectedWorkflow?.name || '—'}</p>
                     </div>
                   </div>

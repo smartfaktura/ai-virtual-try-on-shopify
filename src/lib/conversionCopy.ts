@@ -184,7 +184,7 @@ export function getLayer1Subline(category: ConversionCategory, hint?: BehaviorHi
     case 'repeated-product':
       return `Scale your ${label} catalog with monthly credits`;
     case 'model-heavy':
-      return 'Paid plans support faster, larger creation workflows';
+      return 'Paid plans support faster, larger creation runs';
     case 'export-intent':
       return 'Unlock batch export and bulk generation with a plan';
     case 'video-usage':

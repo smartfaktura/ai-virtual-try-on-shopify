@@ -47,7 +47,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
 
   const rawUrls = job ? extractUrls(job.results) : [];
   const count = rawUrls.length;
-  const title = job?.workflow_name ?? 'Workflow';
+  const title = job?.workflow_name ?? 'Visual Type';
 
   const onClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
@@ -195,7 +195,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
             {/* Source + title */}
             <div className="space-y-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                Workflow
+                Visual Type
               </p>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">
                 {title}

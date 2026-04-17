@@ -525,7 +525,7 @@ You have three options:
 
 Even basic product photos work as inputs. Smartphone quality with any background is fine — the AI handles background removal and scene composition.
 
-### Step 2: Select your workflows
+### Step 2: Select your Visual Types
 
 Choose the types of images each product needs:
 
@@ -574,7 +574,7 @@ Different platforms have different image requirements — and getting them wrong
 | Google Shopping | Clean, uncluttered | Flexible | 100 × 100 |
 | Etsy | Lifestyle or styled | Varies | 2,000 × 2,000 |
 
-AI workflows output images that meet each platform's specific requirements **from the same source photo**. No reformatting, no manual cropping.
+AI Visual Types output images that meet each platform's specific requirements **from the same source photo**. No reformatting, no manual cropping.
 
 ## "What about quality? Doesn't automation mean worse images?"
 
@@ -617,7 +617,7 @@ There's no hard limit on batch size. Most brands process 100–500 products per 
 
 ### What if I don't like some of the generated images?
 
-You can regenerate individual products with adjusted settings, try different scenes or workflows, or fine-tune your Brand Profile. Most brands nail their preferred style within 2–3 iterations.
+You can regenerate individual products with adjusted settings, try different scenes or Visual Types, or fine-tune your Brand Profile. Most brands nail their preferred style within 2–3 iterations.
 `,
   },
   {

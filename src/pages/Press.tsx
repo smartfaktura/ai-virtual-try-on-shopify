@@ -74,7 +74,7 @@ export default function Press() {
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">What is VOVV.AI?</h2>
           <div className="space-y-4 text-muted-foreground text-base sm:text-lg leading-relaxed">
             <p>
-              VOVV.AI is an AI-powered visual studio built for e-commerce brands. Upload a product photo and generate studio-quality images across multiple templates — from virtual try-on to lifestyle scenes to product listing shots — in seconds.
+              VOVV.AI is an AI-powered visual studio built for e-commerce brands. Upload a product photo and generate studio-quality images across multiple Visual Types — from virtual try-on to lifestyle scenes to product listing shots — in seconds.
             </p>
             <p>
               The platform helps brands create professional visual content without traditional photoshoots, reducing time and cost while maintaining high-quality, on-brand imagery.
