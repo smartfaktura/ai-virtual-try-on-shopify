@@ -341,7 +341,6 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "ingredientFamilySecondary": "recycled materials",
       "fruitsRelated": "",
       "flowersRelated": "",
-      " botanicalsRelated": "",
       "woodsRelated": "",
       "spicesRelated": "",
       "greensRelated": "",
@@ -353,7 +352,8 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "fabricType": "denim",
       "fabricWeight": "medium-weight",
       "drapeBehavior": "structured",
-      "version": 2
+      "version": 2,
+      "botanicalsRelated": ""
     }
   },
   {
@@ -451,13 +451,13 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       "accentColor": null,
       "ingredientFamilyPrimary": "not_applicable",
       "ingredientFamilySecondary": "not_applicable",
-      "fruitsRelated": false,
-      "flowersRelated": false,
-      "botanicalsRelated": false,
-      "woodsRelated": true,
-      "spicesRelated": false,
-      "greensRelated": false,
-      "materialsRelated": true,
+      "fruitsRelated": "false",
+      "flowersRelated": "false",
+      "botanicalsRelated": "false",
+      "woodsRelated": "true",
+      "spicesRelated": "false",
+      "greensRelated": "false",
+      "materialsRelated": "true",
       "regionRelated": "not_applicable",
       "landscapeRelated": "not_applicable",
       "decorType": "seating",
