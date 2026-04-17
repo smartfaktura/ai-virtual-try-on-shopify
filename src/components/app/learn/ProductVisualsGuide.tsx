@@ -300,6 +300,9 @@ export function ProductVisualsGuide({ guide }: Props) {
           </div>
         </section>
 
+        {/* Examples — models + scenes taste */}
+        <ExamplesSection onExplore={() => navigate('/app/generate/product-images')} />
+
         {/* Best for / Need — compact 2-col */}
         <section className="mb-14">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
