@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal, Trash2, Heart } from 'lucide-react';
+import { Search, Image, ImagePlus, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -360,14 +360,16 @@ export default function Jobs() {
   };
 
   const activeFilterCount = (sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0);
+  const isTrulyEmpty = !isLoading && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
 
   return (
     <PageHeader
       title="Library"
-      subtitle="All your visuals, organized for review, selection, and publishing"
+      subtitle="All your generated visuals, in one place."
     >
 
         {/* Smart Views */}
+        {!isTrulyEmpty && (
         <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide">
           {SMART_VIEWS.map(v => (
             <button
@@ -384,6 +386,7 @@ export default function Jobs() {
             </button>
           ))}
         </div>
+        )}
 
         {/* Incoming images banner */}
         {showIncomingBanner && (
@@ -405,6 +408,7 @@ export default function Jobs() {
         )}
 
         {/* Search + Filters + Columns + Select */}
+        {!isTrulyEmpty && (
         <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div className="relative w-full sm:max-w-lg sm:flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -522,6 +526,7 @@ export default function Jobs() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Content */}
         {isLoading ? (
@@ -546,18 +551,16 @@ export default function Jobs() {
                 </div>
               );
             }
-            const kenji = TEAM_MEMBERS.find(m => m.name === 'Kenji');
             return (
               <div className="py-8">
-                {!searchQuery && kenji ? (
+                {!searchQuery ? (
                   <EmptyStateCard
-                    heading="No images yet"
-                    description=""
-                    icon={<Sparkles className="w-10 h-10" />}
-                    teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Create stunning visuals in Visual Studio or Freestyle Studio." }}
+                    heading="Your library is empty"
+                    description="Generated visuals land here, ready to review, favorite, and publish."
+                    icon={<ImagePlus className="w-8 h-8 text-muted-foreground" />}
                     actions={[
-                      { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'outline', icon: <Layers className="w-4 h-4" /> },
-                      { content: 'Open Freestyle Studio', onAction: () => navigate('/app/freestyle'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
+                      { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
+                      { content: 'Try Freestyle', onAction: () => navigate('/app/freestyle'), variant: 'outline' },
                     ]}
                   />
                 ) : (
