@@ -77,12 +77,10 @@ export function WorkflowRequestBanner() {
             </div>
           </div>
           <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full text-xs font-semibold px-5 h-8 shrink-0 gap-1.5"
+            className="rounded-full text-sm font-semibold px-5 h-10 shrink-0 gap-1.5"
             onClick={() => setExpanded(true)}
           >
-            <MessageSquarePlus className="w-3.5 h-3.5" />
+            <MessageSquarePlus className="w-4 h-4" />
             Share Request
           </Button>
         </div>

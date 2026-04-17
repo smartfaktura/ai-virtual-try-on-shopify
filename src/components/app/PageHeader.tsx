@@ -11,8 +11,8 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, backAction, actions, children }: PageHeaderProps) {
   return (
-    <div className="space-y-12 sm:space-y-16">
-      <div>
+    <div>
+      <div className="mb-8 sm:mb-10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             {backAction && (
@@ -29,7 +29,7 @@ export function PageHeader({ title, subtitle, backAction, actions, children }: P
           <p className="text-base text-muted-foreground mt-1.5">{subtitle}</p>
         )}
       </div>
-      {children}
+      <div className="space-y-12 sm:space-y-16">{children}</div>
     </div>
   );
 }
