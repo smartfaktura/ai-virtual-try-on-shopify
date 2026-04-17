@@ -653,18 +653,15 @@ export default function AppPricing() {
               <div className="flex flex-col min-w-0 flex-1">
                 <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Selected plan</label>
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <select
-                    value={stickyPlanId}
-                    onChange={(e) => setStickyPlanId(e.target.value)}
-                    className="bg-transparent text-sm font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded -ml-1 px-1 py-0.5 cursor-pointer min-w-0 truncate"
-                  >
-                    {mainPlans.map((p) => (
-                      <option key={p.planId} value={p.planId}>{p.name}</option>
-                    ))}
-                  </select>
                   {stickyPlanId === 'growth' && (
-                    <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary flex-shrink-0">Rec</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" aria-hidden />
                   )}
+                  <PlanPickerPopover
+                    plans={mainPlans}
+                    selectedId={stickyPlanId}
+                    onSelect={setStickyPlanId}
+                    isAnnual={isAnnual}
+                  />
                 </div>
                 <span className="text-[13px] text-foreground/80 font-medium mt-0.5 truncate">
                   <span className="font-semibold text-foreground">${stickyPrice}/mo</span>
@@ -687,15 +684,12 @@ export default function AppPricing() {
               <div className="flex flex-col min-w-0">
                 <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Selected plan</label>
                 <div className="flex items-center gap-2">
-                  <select
-                    value={stickyPlanId}
-                    onChange={(e) => setStickyPlanId(e.target.value)}
-                    className="bg-transparent text-sm font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded -ml-1 px-1 py-0.5 cursor-pointer"
-                  >
-                    {mainPlans.map((p) => (
-                      <option key={p.planId} value={p.planId}>{p.name}</option>
-                    ))}
-                  </select>
+                  <PlanPickerPopover
+                    plans={mainPlans}
+                    selectedId={stickyPlanId}
+                    onSelect={setStickyPlanId}
+                    isAnnual={isAnnual}
+                  />
                   {stickyPlanId === 'growth' && (
                     <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Recommended</span>
                   )}
