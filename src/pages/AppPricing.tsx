@@ -636,31 +636,65 @@ export default function AppPricing() {
 
       {/* ── Sticky plan-selector bar ── */}
       {showStickyBar && stickyPlan && stickyCta && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[min(640px,calc(100vw-2rem))] z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[calc(100vw-2rem)] sm:max-w-6xl z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
-            <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="flex flex-col min-w-0">
-                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Selected plan</label>
+            {/* Mobile layout */}
+            <div className="flex items-center justify-between gap-3 p-3 sm:hidden">
+              <div className="flex flex-col min-w-0 flex-1">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Selected plan</label>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <select
+                    value={stickyPlanId}
+                    onChange={(e) => setStickyPlanId(e.target.value)}
+                    className="bg-transparent text-sm font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded -ml-1 px-1 py-0.5 cursor-pointer min-w-0 truncate"
+                  >
+                    {mainPlans.map((p) => (
+                      <option key={p.planId} value={p.planId}>{p.name}</option>
+                    ))}
+                  </select>
+                  {stickyPlanId === 'growth' && (
+                    <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary flex-shrink-0">Rec</span>
+                  )}
+                </div>
+                <span className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                  ${stickyPrice}/mo{stickyCredits > 0 ? ` · ${stickyCredits.toLocaleString()} credits` : ''}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                disabled={stickyCta.disabled}
+                onClick={() => handlePlanSelect(stickyPlan)}
+                className="gap-1.5 flex-shrink-0 h-9"
+              >
+                {stickyCta.label.replace(/^Continue with .*/, 'Continue').replace(/^Choose .*/, 'Choose')}
+                {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
+              </Button>
+            </div>
+
+            {/* Desktop layout */}
+            <div className="hidden sm:flex items-center justify-between gap-4 p-4">
+              <div className="flex flex-col min-w-0">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Selected plan</label>
+                <div className="flex items-center gap-2">
                   <select
                     value={stickyPlanId}
                     onChange={(e) => setStickyPlanId(e.target.value)}
                     className="bg-transparent text-sm font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded -ml-1 px-1 py-0.5 cursor-pointer"
                   >
                     {mainPlans.map((p) => (
-                      <option key={p.planId} value={p.planId}>
-                        {p.name}{p.planId === 'growth' ? ' · Recommended' : ''}
-                      </option>
+                      <option key={p.planId} value={p.planId}>{p.name}</option>
                     ))}
                   </select>
-                </div>
-                <div className="hidden sm:flex flex-col text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">${stickyPrice}/mo</span>
-                  {stickyCredits > 0 && <span>{stickyCredits.toLocaleString()} credits/mo</span>}
+                  {stickyPlanId === 'growth' && (
+                    <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Recommended</span>
+                  )}
                 </div>
               </div>
+              <div className="flex flex-col text-xs text-muted-foreground items-end">
+                <span className="font-semibold text-foreground">${stickyPrice}/mo</span>
+                {stickyCredits > 0 && <span>{stickyCredits.toLocaleString()} credits/mo</span>}
+              </div>
               <Button
-                size="sm"
                 disabled={stickyCta.disabled}
                 onClick={() => handlePlanSelect(stickyPlan)}
                 className="gap-1.5 flex-shrink-0"
