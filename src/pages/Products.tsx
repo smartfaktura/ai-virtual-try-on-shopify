@@ -110,7 +110,36 @@ export default function Products() {
     };
   }, []);
 
-  const { data: products = [], isLoading } = useQuery({
+  // Window-level paste handler: capture image blobs from clipboard
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      // Only act when target is not an editable element
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName?.toLowerCase();
+      const isEditable = tag === 'input' || tag === 'textarea' || (t && t.isContentEditable);
+      if (isEditable) return;
+
+      const items = Array.from(e.clipboardData?.items || []);
+      const files: File[] = [];
+      items.forEach((item) => {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (blob) {
+            const ext = item.type.split('/')[1] || 'png';
+            files.push(new File([blob], `pasted-${Date.now()}.${ext}`, { type: item.type }));
+          }
+        }
+      });
+      if (files.length) {
+        e.preventDefault();
+        setAddInitialTab('manual');
+        setAddInitialFiles(files);
+        setAddOpen(true);
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, []);
     queryKey: ['user-products'],
     queryFn: async () => {
       const { data, error } = await supabase
