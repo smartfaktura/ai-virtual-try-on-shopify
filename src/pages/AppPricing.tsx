@@ -326,8 +326,7 @@ export default function AppPricing() {
     if (isCurrent) return { label: 'Current plan', disabled: true, variant: 'outline' as const };
     if (p.planId === 'free') return { label: 'Cancel plan', disabled: false, variant: 'outline' as const };
     if (targetIdx < currentIdx) return { label: `Downgrade`, disabled: false, variant: 'outline' as const };
-    if (targetIdx > currentIdx) return { label: `Upgrade to ${p.name}`, disabled: false, variant: 'default' as const };
-    return { label: `Choose ${p.name}`, disabled: false, variant: 'outline' as const };
+    return { label: `Upgrade to ${p.name}`, disabled: false, variant: 'default' as const };
   };
 
   const handlePlanSelect = (p: PricingPlan) => {
@@ -765,9 +764,8 @@ export default function AppPricing() {
               >
                 {(() => {
                   const label = stickyCta.label;
-                  if (label === 'Continue with Growth') return 'Get Growth';
+                  if (label === 'Upgrade to Growth') return 'Get Growth';
                   if (label.startsWith('Upgrade to ')) return 'Upgrade';
-                  if (label.startsWith('Choose ')) return 'Choose';
                   return label;
                 })()}
                 {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
