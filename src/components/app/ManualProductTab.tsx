@@ -38,6 +38,7 @@ interface ManualProductTabProps {
   onProductAdded: () => void;
   onClose: () => void;
   editingProduct?: UserProduct | null;
+  initialFiles?: File[];
 }
 
 interface BatchItem {
@@ -59,7 +60,7 @@ const QUICK_TYPES = [
 
 const MAX_BATCH = 100;
 
-export function ManualProductTab({ onProductAdded, onClose, editingProduct }: ManualProductTabProps) {
+export function ManualProductTab({ onProductAdded, onClose, editingProduct, initialFiles }: ManualProductTabProps) {
   const { user } = useAuth();
   // Single product mode state
   const [title, setTitle] = useState('');
