@@ -92,6 +92,7 @@ function getErrorInfo(code: string, rawMessage: string) {
 
 export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: StoreImportTabProps) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [url, setUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedProduct | null>(null);
