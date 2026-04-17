@@ -1,45 +1,42 @@
 
 
-## Move + enlarge layout toggle near the cards grid
+## Fix extra row height from layout toggle
 
 ### Issue
-Layout toggle (rows / 2col / 3col icons) sits in the top-right corner of the page header — too small (`h-7 w-7`) and far from the grid it controls. User wants it bigger and positioned near the workflow cards grid.
+The new layout toggle row above the grid takes a full extra row of vertical space, pushing the grid down. User wants it to not consume extra height.
 
-### Change
+### Fix
 **File: `src/pages/Workflows.tsx`**
 
-1. Remove the `actions={...}` prop from `<PageHeader>` (lines 477–491) — drop the ToggleGroup from the header.
+Make the toggle visually float so it doesn't add a row:
+- Wrap the toggle row + grid in a `relative` container.
+- Position the toggle absolutely top-right, overlapping the top edge so it doesn't push the grid down.
+- Alternative (cleaner): use negative margin `-mb-2` on the toggle row and reduce its height contribution, OR move the toggle to sit inline next to the section/header area.
 
-2. Inside the workflow catalog `<section className="space-y-4">` (line 506), add a small row above the grid (but after activity card) containing the toggle, right-aligned:
-   ```tsx
-   <div className="flex justify-end">
-     <ToggleGroup
-       type="single"
-       value={effectiveLayout}
-       onValueChange={handleLayoutChange}
-       className="gap-1 rounded-lg border bg-card p-1"
-     >
-       <ToggleGroupItem value="rows" aria-label="Row layout" className="h-9 w-9 p-0">
-         <LayoutList className="w-4 h-4" />
-       </ToggleGroupItem>
-       <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-9 w-9 p-0">
-         <Grid2X2 className="w-4 h-4" />
-       </ToggleGroupItem>
-       {!isMobile && (
-         <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-9 w-9 p-0">
-           <Grid3X3 className="w-4 h-4" />
-         </ToggleGroupItem>
-       )}
-     </ToggleGroup>
-   </div>
-   ```
-   - Bigger buttons: `h-9 w-9` (was `h-7 w-7`), icons `w-4 h-4` (was `w-3.5`).
-   - Wrapped in subtle bordered card container so it reads as a control group.
-   - Right-aligned, sits directly above the grid.
+**Chosen approach:** absolute-positioned toggle inside a `relative` wrapper so the grid's height is unaffected.
+
+```tsx
+<div className="relative">
+  <div className="absolute -top-12 right-0 z-10 hidden sm:block">
+    <ToggleGroup ... className="gap-1 rounded-lg border bg-card p-1 shadow-sm">
+      {/* h-8 w-8 buttons, w-3.5 h-3.5 icons — slightly smaller to fit */}
+    </ToggleGroup>
+  </div>
+  {/* On mobile, render inline above grid with no extra spacing */}
+  <div className="sm:hidden flex justify-end mb-2">
+    {/* same toggle */}
+  </div>
+  <div className={gridClasses}>...</div>
+</div>
+```
+
+- Desktop: toggle floats up next to the page header area — no extra row height.
+- Mobile: stays inline above grid with minimal `mb-2`.
+- Buttons sized `h-8 w-8` (between original tiny and previous large) so they're tappable but compact.
 
 ### Acceptance
-- Layout toggle no longer in page header — header shows only title + subtitle.
-- Toggle appears as a bordered pill group right-aligned just above the workflow card grid.
-- Buttons visibly larger and easier to tap.
-- Behavior unchanged (still persists to localStorage, mobile still clamps to 2col).
+- No extra vertical row consumed on desktop — grid sits at original Y position.
+- Toggle visible top-right, near the grid.
+- Mobile keeps toggle inline with tight spacing.
+- Behavior unchanged.
 
