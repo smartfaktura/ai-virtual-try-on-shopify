@@ -83,6 +83,9 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
   const { plan, balance, billingInterval, startCheckout } = useCredits();
   const effectivePlan = previewPlan ?? plan;
   const [isAnnual, setIsAnnual] = useState(billingInterval === 'annual');
+  useEffect(() => {
+    if (billingInterval) setIsAnnual(billingInterval === 'annual');
+  }, [billingInterval]);
   const [loading, setLoading] = useState(false);
   const [topUpLoading, setTopUpLoading] = useState(false);
   const defaultPackId = creditPacks.find((p) => p.popular)?.packId ?? creditPacks[0]?.packId ?? '';
