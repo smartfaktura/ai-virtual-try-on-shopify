@@ -543,6 +543,8 @@ export default function Products() {
         }}
         initialTab={addInitialTab}
         initialFiles={addInitialFiles}
+        compact={addCompact}
+        onSwitchMethod={() => setAddCompact(false)}
       />
 
       {pageDragActive && (
