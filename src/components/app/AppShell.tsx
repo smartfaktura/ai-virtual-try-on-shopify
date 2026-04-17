@@ -75,13 +75,6 @@ const navGroups = [
       { label: 'Library', icon: Image, path: '/app/library' },
     ],
   },
-  {
-    label: 'Learn',
-    items: [
-      { label: 'Tutorials', icon: GraduationCap, path: '/app/learn' },
-      { label: 'Help & Support', icon: LifeBuoy, path: '/app/help' },
-    ],
-  },
 ];
 
 type NavItem = { label: string; icon: typeof Home; path: string };
