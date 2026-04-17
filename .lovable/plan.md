@@ -1,34 +1,45 @@
 
 
-## Fix workflow card thumbnails + animations (root cause: name mismatch)
+## Move + enlarge layout toggle near the cards grid
 
-### Root cause found
-DB workflow names were renamed (dropped " Set" suffix): now `Virtual Try-On`, `Selfie / UGC`, `Flat Lay`, `Mirror Selfie`. But `workflowScenes` in `workflowAnimationData.tsx` is keyed by the OLD names: `Virtual Try-On Set`, `Selfie / UGC Set`, `Flat Lay Set`, `Mirror Selfie Set`.
+### Issue
+Layout toggle (rows / 2col / 3col icons) sits in the top-right corner of the page header — too small (`h-7 w-7`) and far from the grid it controls. User wants it bigger and positioned near the workflow cards grid.
 
-`WorkflowCardCompact` looks up `workflowScenes[workflow.name]` → `undefined` for these 4 cards → falls through to the static `<img>` fallback. That's why:
-- Wrong/old images appear (the DB `preview_image_url`, not the curated scene background).
-- No animations (animated component never mounts).
+### Change
+**File: `src/pages/Workflows.tsx`**
 
-Other cards still work because their names already match (`Product Visuals`, `Picture Perspectives`, `Catalog Studio`, `Interior / Exterior Staging`, `Image Upscaling`).
+1. Remove the `actions={...}` prop from `<PageHeader>` (lines 477–491) — drop the ToggleGroup from the header.
 
-### Fix
-
-**File: `src/components/app/workflowAnimationData.tsx`** — add aliases for the renamed workflows so lookup works for both old and new names:
-
-```ts
-// After workflowScenes object, add aliases for renamed DB workflows
-workflowScenes['Virtual Try-On'] = workflowScenes['Virtual Try-On Set'];
-workflowScenes['Selfie / UGC'] = workflowScenes['Selfie / UGC Set'];
-workflowScenes['Flat Lay'] = workflowScenes['Flat Lay Set'];
-workflowScenes['Mirror Selfie'] = workflowScenes['Mirror Selfie Set'];
-workflowScenes['Product Listing'] = workflowScenes['Product Listing Set'];
-```
-
-This is a 5-line additive change — zero risk to other cards or scene definitions. All thumbnails and animations come back instantly.
+2. Inside the workflow catalog `<section className="space-y-4">` (line 506), add a small row above the grid (but after activity card) containing the toggle, right-aligned:
+   ```tsx
+   <div className="flex justify-end">
+     <ToggleGroup
+       type="single"
+       value={effectiveLayout}
+       onValueChange={handleLayoutChange}
+       className="gap-1 rounded-lg border bg-card p-1"
+     >
+       <ToggleGroupItem value="rows" aria-label="Row layout" className="h-9 w-9 p-0">
+         <LayoutList className="w-4 h-4" />
+       </ToggleGroupItem>
+       <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-9 w-9 p-0">
+         <Grid2X2 className="w-4 h-4" />
+       </ToggleGroupItem>
+       {!isMobile && (
+         <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-9 w-9 p-0">
+           <Grid3X3 className="w-4 h-4" />
+         </ToggleGroupItem>
+       )}
+     </ToggleGroup>
+   </div>
+   ```
+   - Bigger buttons: `h-9 w-9` (was `h-7 w-7`), icons `w-4 h-4` (was `w-3.5`).
+   - Wrapped in subtle bordered card container so it reads as a control group.
+   - Right-aligned, sits directly above the grid.
 
 ### Acceptance
-- Virtual Try-On card shows model carousel + animations.
-- Selfie / UGC card shows UGC carousel + animations.
-- Flat Lay + Mirror Selfie show their scene compositions.
-- Product Visuals, Perspectives, Catalog Studio, Staging, Upscaling unchanged (already worked).
+- Layout toggle no longer in page header — header shows only title + subtitle.
+- Toggle appears as a bordered pill group right-aligned just above the workflow card grid.
+- Buttons visibly larger and easier to tap.
+- Behavior unchanged (still persists to localStorage, mobile still clamps to 2col).
 
