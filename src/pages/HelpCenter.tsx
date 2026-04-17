@@ -28,7 +28,7 @@ const faqCategories = [
       },
       {
         q: 'What is a Brand Profile and why should I create one?',
-        a: 'A Brand Profile teaches our AI your visual identity — your preferred colors, lighting style, scenes, tone, color temperature, and composition rules. Once set up, every image you generate across Workflows and Freestyle will automatically align with your brand aesthetic. Create one under Brand Profiles in the sidebar.',
+        a: 'A Brand Profile teaches our AI your visual identity — your preferred colors, lighting style, scenes, tone, color temperature, and composition rules. Once set up, every image you generate across Visual Studio and Freestyle will automatically align with your brand aesthetic. Create one under Brand Profiles in the sidebar.',
       },
     ],
   },
@@ -37,7 +37,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each generation costs credits based on the mode: Workflows cost 6 credits per image. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
+        a: 'Each generation costs credits based on the mode: Visual Types cost 6 credits per image. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
       },
       {
         q: 'What happens if I run out of credits?',
@@ -45,7 +45,7 @@ const faqCategories = [
       },
       {
         q: 'Is there a free trial?',
-        a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Workflow or try Freestyle and see the quality before committing to a plan.',
+        a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Visual Type or try Freestyle and see the quality before committing to a plan.',
       },
       {
         q: 'Can I change my plan?',
@@ -58,11 +58,11 @@ const faqCategories = [
     ],
   },
   {
-    name: 'Workflows & Generation',
+    name: 'Visual Studio & Generation',
     questions: [
       {
-        q: 'What Workflows are available?',
-        a: 'VOVV.AI offers seven core Workflows, each pre-configured with the right prompts, aspect ratios, and model settings: Virtual Try-On (clothing on AI models), Product Listing (clean e-commerce shots), Selfie / UGC (user-generated-style content), Flat Lay (top-down product arrangements), Mirror Selfie (casual mirror-style shots), Interior / Exterior Staging (room and environment staging), and Picture Perspectives (multi-angle product sets).',
+        q: 'What Visual Types are available?',
+        a: 'VOVV.AI offers seven core Visual Types, each pre-configured with the right prompts, aspect ratios, and model settings: Virtual Try-On (clothing on AI models), Product Listing (clean e-commerce shots), Selfie / UGC (user-generated-style content), Flat Lay (top-down product arrangements), Mirror Selfie (casual mirror-style shots), Interior / Exterior Staging (room and environment staging), and Picture Perspectives (multi-angle product sets).',
       },
       {
         q: 'How does Virtual Try-On work?',
@@ -74,11 +74,11 @@ const faqCategories = [
       },
       {
         q: 'Can I generate images in bulk?',
-        a: 'Yes! Workflows support batch generation for multiple products at once. Select your products, choose a workflow, set your quality and count preferences, and let VOVV.AI process them all. You can track progress in the Workflows activity section.',
+        a: 'Yes! Visual Studio supports batch generation for multiple products at once. Select your products, choose a Visual Type, set your quality and count preferences, and let VOVV.AI process them all. You can track progress in the Visual Studio activity section.',
       },
       {
         q: 'What is the Content Calendar?',
-        a: 'The Content Calendar automates recurring visual runs. Choose your products, select your Templates, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
+        a: 'The Content Calendar automates recurring visual runs. Choose your products, select your Visual Types, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
       },
       {
         q: 'Can I upscale my images?',
@@ -99,7 +99,7 @@ const faqCategories = [
       },
       {
         q: 'My generated images don\'t look right. What can I do?',
-        a: 'Try these tips: 1) Use a higher-quality source image with good lighting. 2) Create a Brand Profile to guide the AI\'s style decisions. 3) Use negative prompts to exclude unwanted elements. 4) Try different workflows — some work better for certain product types. 5) Try Freestyle mode for full creative control with a custom prompt.',
+        a: 'Try these tips: 1) Use a higher-quality source image with good lighting. 2) Create a Brand Profile to guide the AI\'s style decisions. 3) Use negative prompts to exclude unwanted elements. 4) Try different Visual Types — some work better for certain product types. 5) Try Freestyle mode for full creative control with a custom prompt.',
       },
     ],
   },
