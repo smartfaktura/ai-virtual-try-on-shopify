@@ -123,6 +123,17 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     }
   }, [editingProduct]);
 
+  // Consume initialFiles once when provided (e.g. from page-level drag overlay or empty-state drop)
+  const consumedInitialRef = useRef(false);
+  useEffect(() => {
+    if (editingProduct) return;
+    if (!initialFiles || initialFiles.length === 0) return;
+    if (consumedInitialRef.current) return;
+    consumedInitialRef.current = true;
+    addFiles(initialFiles);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFiles, editingProduct]);
+
   // AI analysis for a single image
   const analyzeImage = useCallback(async (imageDataUrl: string, target?: { batchId: string }) => {
     if (target) {
