@@ -109,6 +109,78 @@ function StepVisual({ kind }: { kind: (typeof STEPS)[number]['visual'] }) {
   );
 }
 
+function ExamplesSection({ onExplore }: { onExplore: () => void }) {
+  const { ref, visible } = useScrollReveal(0.15);
+  return (
+    <section ref={ref} className="mb-14">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-4">
+        A taste of what's inside
+      </h2>
+      <div className="rounded-xl border border-border/50 bg-card/30 p-6 space-y-7">
+        {/* Models */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/70 mb-3">
+            Models you can pick
+          </p>
+          <div className="flex items-end gap-3 flex-wrap">
+            {EXAMPLE_MODELS.map((m, i) => (
+              <div
+                key={m.name}
+                className={`flex flex-col items-center gap-1.5 transition-all duration-500 ease-out motion-reduce:transition-none ${
+                  visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1.5'
+                }`}
+                style={{ transitionDelay: visible ? `${i * 70}ms` : '0ms' }}
+              >
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-muted/30 border border-border/50">
+                  <ShimmerImage
+                    src={getOptimizedUrl(getLandingAssetUrl(m.path), { width: 128, quality: 65 })}
+                    alt={m.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="text-[11px] text-muted-foreground">{m.name}</span>
+              </div>
+            ))}
+            <button
+              onClick={onExplore}
+              className="ml-1 px-3 h-8 rounded-full border border-border/60 bg-card/40 text-[11px] text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+            >
+              + many more
+            </button>
+          </div>
+        </div>
+
+        {/* Scenes */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/70 mb-3">
+            Editorial scenes — 1000+ available
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {EXAMPLE_SCENES.map((s, i) => (
+              <div
+                key={s.name}
+                className={`transition-all duration-500 ease-out motion-reduce:transition-none ${
+                  visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1.5'
+                }`}
+                style={{ transitionDelay: visible ? `${(i + EXAMPLE_MODELS.length) * 70}ms` : '0ms' }}
+              >
+                <div className="rounded-lg overflow-hidden bg-muted/30 border border-border/50" style={{ aspectRatio: '3/4' }}>
+                  <ShimmerImage
+                    src={getOptimizedUrl(getLandingAssetUrl(s.path), { width: 240, quality: 65 })}
+                    alt={s.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1.5 truncate">{s.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function StepCard({ step, index }: { step: (typeof STEPS)[number]; index: number }) {
   const { ref, visible } = useScrollReveal(0.2);
   return (
