@@ -1,54 +1,57 @@
 
 
-## Fix Freestyle card + clean up subtitles + tighten section spacing
+## Polish: Share Request button + mobile workflow cards + tighter header gap
 
-### 1. Freestyle Studio card — match other grid cards
+### 1. Share Request button — match "Start Creating" vibe
 
-`src/components/app/FreestylePromptCard.tsx` is still on the OLD compact scale (p-4, text-sm title, text-xs description, h-8 button). Bring default variant in line with `WorkflowCardCompact` (the standard we just unified):
+Currently `variant="outline" size="sm" h-8 text-xs` with subtle border — feels different from the dark pill CTAs everywhere else.
 
-- Card root: add `rounded-2xl`
-- Content padding: `p-4` → `p-5`
-- Title `text-sm` → `text-base font-bold tracking-tight leading-tight`
-- Description: `text-xs ... line-clamp-2` → `text-sm text-muted-foreground leading-relaxed line-clamp-2`
-- Subtitle copy: "Type anything. Get styled visuals." → **"Type anything and get styled brand visuals in seconds."** (2 lines, no em-dash)
-- Button: `h-8 px-5` → `h-10 px-5`
-- Wrap `gap-1` → `gap-1.5` to match other cards
+**File:** `src/components/app/WorkflowRequestBanner.tsx` (line 79-87)
 
-Mobile/modalCompact variants stay untouched.
+Change to match the standard primary pill used by all other workflow CTAs:
+- Drop `variant="outline"`, use default (filled primary).
+- `h-8 text-xs px-5` → `h-10 px-5 text-sm`
+- Keep `rounded-full font-semibold gap-1.5`
+- Icon `w-3.5 h-3.5` → `w-4 h-4`
 
-### 2. Rewrite all workflow descriptions — max 2 lines, no em-dash (—)
+### 2. Mobile workflow cards — too small titles & buttons
 
-Update via SQL migration (DB column `workflows.description`). Current copy uses em-dashes and runs 2-3 lines. New copy: short, scannable, max ~85 chars so it fits 2 lines in `line-clamp-2`.
+Looking at the mobile screenshot: in 2-col mobile mode, titles are `text-[11px]`, buttons are `h-8 px-3 text-xs` saying "Start" — visibly too small/weak compared to the strong imagery above and feels off-brand.
 
-| Workflow | New description |
-|---|---|
-| Product Visuals | Brand-ready product shots across 1000+ studio and editorial scenes. |
-| Virtual Try-On Set | Put your clothing on diverse AI models in any pose or setting. |
-| Selfie / UGC Set | Authentic creator-style content pairing your product with a real-feeling model. |
-| Flat Lay Set | Styled overhead arrangements with curated props for Instagram and editorial. |
-| Mirror Selfie Set | Authentic mirror selfies of your product, worn or held in real-feeling rooms. |
-| Interior / Exterior Staging | Stage empty rooms or boost curb appeal while keeping original architecture intact. |
-| Picture Perspectives | Turn one product photo into close-ups, back, side, and wide-angle shots. |
-| Image Upscaling | Sharpen any image to 2K or 4K and recover textures, faces, and fine detail. |
-| Catalog Studio | Bulk-generate catalog-ready visuals for any product in one run. |
+**File:** `src/components/app/WorkflowCardCompact.tsx`
 
-### 3. Tighten gap below subtitles → content
+Mobile compact (2-col) variant — bump to comfortable touch scale:
+- Content padding: `p-2` → `p-3`
+- Title: `text-[11px]` → `text-sm font-bold` (line 143)
+- Button: `h-8 px-3 text-xs` → `h-9 px-4 text-xs` (line 163) — keep "Start" label since space is tight
+- Gap: `gap-1.5` stays
 
-Two section heading blocks on `/app/workflows` use the dashboard pattern but the grid that follows sits inside the parent `space-y-12 sm:space-y-16` flow → too much gap.
+**File:** `src/components/app/FreestylePromptCard.tsx`
 
-Fix:
-- **`src/pages/Workflows.tsx`** "Choose what to create" block (lines 507-510): wrap heading + the workflow grid that follows into a single sibling with `space-y-6` so they stay tight; only outer sections get the larger 12/16 gap. Same pattern dashboard uses (heading is part of section, not separated by section gap).
-- Same for "Recent Creations" block (lines 585-597) — change `space-y-4` → `space-y-6` (currently fine, but verify) and ensure no extra wrapper gap.
+Same treatment for mobile compact:
+- Content padding `p-2` → `p-3` (line 219)
+- Title `text-[11px]` → `text-sm font-bold` (line 222)
+- Button `h-8 px-3 text-xs` → `h-9 px-4 text-xs` (line 238)
 
-Implementation: introduce a wrapping `<section className="space-y-6">` around (heading + grid) for "Choose what to create", and around (heading + WorkflowRecentRow) for "Recent Creations". Outer `PageHeader` children spacing stays `space-y-12 sm:space-y-16` between sections.
+### 3. Tighten gap between PageHeader subtitle and first content
 
-### 4. Out of scope
-- Mobile `mobileCompact` variants (intentionally tight).
-- Activity card layout.
-- Card image animation/aspect ratios.
+Currently `PageHeader` outer wrapper is `space-y-12 sm:space-y-16` — that's the gap between the header block (h1 + subtitle) and the first child section. Screenshot shows this gap is way too large (basically a blank screen full of empty space below "realistic brand visuals" subtitle).
+
+**File:** `src/components/app/PageHeader.tsx` (line 14)
+
+- Outer wrapper: `space-y-12 sm:space-y-16` → `space-y-8 sm:space-y-10`
+
+This keeps generous breathing room but kills the excessive empty band. Section-to-section spacing inside children (like Activity → Catalog → Recent on workflows page) is controlled separately by the parent `space-y-*` on `<PageHeader>`'s child wrappers — so we adjust ONLY the header→first-section gap by reducing the wrapper.
+
+Wait — same wrapper controls both. To truly fix only the header→first gap without shrinking section-to-section gaps, switch approach:
+- Remove `space-y-*` from outer wrapper.
+- Add `mb-8 sm:mb-10` to the inner header block (line 15 `<div>`).
+- Wrap `{children}` in a `<div className="space-y-12 sm:space-y-16">` so sibling sections still get the larger breathing room.
+
+This way: header→first section = ~32-40px (tight, reads as one block), section→section = 48-64px (generous rhythm).
 
 ### Acceptance
-- Freestyle card matches Product Visuals / Virtual Try-On / etc. in size, padding, title, description, and button height.
-- Every workflow grid card subtitle fits in exactly 1-2 lines, no em-dash anywhere.
-- Heading + content sit tight together; only between separate sections (Activity → Catalog → Recent) is there the larger breathing room.
+- Share Request button looks like the same family as "Start Creating" buttons (filled primary pill, h-10).
+- Mobile 2-col workflow cards have readable titles (`text-sm`) and proper-sized buttons (`h-9`).
+- Gap below the page subtitle to the first content (Activity card or grid) is noticeably tighter; section-to-section spacing further down is unchanged.
 
