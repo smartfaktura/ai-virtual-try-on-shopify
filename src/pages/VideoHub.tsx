@@ -291,7 +291,7 @@ export default function VideoHub() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-foreground">Completed Videos</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Completed Videos</h2>
                   {completedVideos.length > 0 && (
                     <Badge variant="secondary" className="text-xs">
                       {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
