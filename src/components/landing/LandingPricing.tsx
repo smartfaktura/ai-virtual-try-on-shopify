@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import {
-  Check, ArrowRight, Building2, X,
+  Check, ArrowRight, Building2, X, Minus,
   Layers, Users, Sparkles, Film, ZoomIn, RefreshCw,
   ScanLine, Wand2, Paintbrush, Palette, FolderOpen, Download,
   Image, Video, Clock,
@@ -16,6 +16,68 @@ import { pricingPlans } from '@/data/mockData';
 import { CompetitorComparison } from '@/components/app/CompetitorComparison';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro'];
+
+// ── Feature comparison matrix (mirrors /app/pricing) ──
+type Cell = boolean | string;
+type FeatureRow = { label: string; values: Record<string, Cell> };
+type FeatureGroup = { title: string; rows: FeatureRow[] };
+
+const FEATURE_MATRIX: FeatureGroup[] = [
+  {
+    title: 'Generation',
+    rows: [
+      { label: 'Product photography scenes (1,000+)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Lifestyle & editorial scenes', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'AI Models (on-model imagery)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Brand Models (custom trained)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Bulk generation', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Multi-angle / perspectives', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Freestyle (text-to-image)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'Image editing & background swap', values: { free: true, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Video',
+    rows: [
+      { label: 'Product videos', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Short Films (AI Director)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Audio & dialog', values: { free: false, starter: false, growth: false, pro: true } },
+    ],
+  },
+  {
+    title: 'Quality & output',
+    rows: [
+      { label: '2K resolution', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: '4K upscaling', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'All aspect ratios (1:1, 4:5, 3:4, 16:9, 9:16)', values: { free: true, starter: true, growth: true, pro: true } },
+      { label: 'PNG / JPG export', values: { free: true, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Brand & workflow',
+    rows: [
+      { label: 'Brand Profiles', values: { free: false, starter: true, growth: true, pro: true } },
+      { label: 'Saved aesthetics & color systems', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Catalog Studio', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Trend Watch (curated drops)', values: { free: false, starter: false, growth: false, pro: true } },
+      { label: 'Bulk export (ZIP)', values: { free: false, starter: true, growth: true, pro: true } },
+    ],
+  },
+  {
+    title: 'Account',
+    rows: [
+      { label: 'Generation queue speed', values: { free: 'Standard', starter: 'Standard', growth: 'Priority', pro: 'Fastest' } },
+      { label: 'Monthly credits', values: { free: '20', starter: '500', growth: '1,500', pro: '4,500' } },
+      { label: 'Support', values: { free: 'Community', starter: 'Email', growth: 'Email', pro: 'Priority' } },
+    ],
+  },
+];
+
+function renderCell(val: Cell) {
+  if (val === true) return <Check className="w-4 h-4 text-primary mx-auto" strokeWidth={2.5} />;
+  if (val === false) return <Minus className="w-4 h-4 text-muted-foreground/40 mx-auto" />;
+  return <span className="text-xs font-medium text-foreground">{val}</span>;
+}
 
 /* ── Data ────────────────────────────────────────────────────────── */
 
@@ -53,7 +115,7 @@ const CREDIT_CARDS = [
 const FAQS = [
   { q: 'What can I create with VOVV.AI?', a: 'Product photography, virtual try-ons, lifestyle imagery, flat lays, interior staging, videos, and more — all from a single product photo.' },
   { q: 'Do I need photography experience?', a: 'Not at all. Choose a scene, upload your product, and the AI handles lighting, composition, and styling automatically.' },
-  { q: 'How many credits does each generation cost?', a: 'Templates and Virtual Try-On cost 6 credits per image. Freestyle costs 4 credits, or 6 when you add a model or scene.' },
+  { q: 'How many credits does each generation cost?', a: 'A standard image is ~4–6 credits depending on complexity. Video runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model training is a one-time ~50 credits. You always see the cost before you generate.' },
   { q: 'Is there a free trial?', a: "Every new account gets 20 free credits — no credit card required. That's enough to try multiple workflows and see the quality." },
   { q: 'What image formats and sizes are supported?', a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print.' },
   { q: 'Can I cancel my subscription anytime?', a: "Absolutely. Cancel, upgrade, or downgrade at any time — no contracts or fees. Unused monthly credits don't roll over, but top-up credits never expire." },
@@ -219,6 +281,183 @@ export function LandingPricing() {
               </div>
             );
           })}
+        </div>
+
+        {/* ── Trust microcopy ────────────────────────────────────── */}
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Cancel anytime · No commitment · Secure checkout
+        </p>
+
+        {/* ── Compare every feature ──────────────────────────────── */}
+        <div className="mt-20 max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+              Compare every feature
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Every plan, side-by-side. Pick the one that matches your output.
+            </p>
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-2xl border border-border/50 overflow-hidden bg-card">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-sm">
+                <thead>
+                  <tr className="bg-muted/30 border-b border-border/50">
+                    <th className="text-left px-5 py-5 align-bottom w-[28%]">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Plans
+                      </span>
+                    </th>
+                    {mainPlans.map((p) => {
+                      const isRec = p.planId === 'growth';
+                      const isFree = p.planId === 'free';
+                      const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                      const annualSavings = annual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
+                      const credits = typeof p.credits === 'number' ? p.credits : 0;
+                      return (
+                        <th
+                          key={p.planId}
+                          className={`px-3 py-5 align-bottom min-w-[150px] relative ${isRec ? 'bg-primary/[0.04]' : ''}`}
+                        >
+                          {isRec && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />}
+                          <div className="flex flex-col items-center gap-2 text-center">
+                            {isRec ? (
+                              <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
+                                Recommended
+                              </span>
+                            ) : (
+                              <span className="h-[18px]" aria-hidden />
+                            )}
+                            <span className={`text-sm font-semibold ${isRec ? 'text-primary' : 'text-foreground'}`}>
+                              {p.name}
+                            </span>
+                            <div className="flex flex-col items-center">
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-semibold tracking-tight text-foreground">
+                                  ${isFree ? 0 : displayPrice}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground">/mo</span>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground/70 mt-0.5">
+                                {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
+                              </span>
+                              {annual && annualSavings > 0 && (
+                                <span className="text-[10px] text-primary font-semibold mt-0.5">Save ${annualSavings}/yr</span>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={isRec ? 'default' : 'outline'}
+                              onClick={() => navigate(user ? '/app/settings' : '/auth')}
+                              className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                            >
+                              {isFree ? 'Start Free' : `Get ${p.name}`}
+                            </Button>
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {FEATURE_MATRIX.map((group) => (
+                    <Fragment key={group.title}>
+                      <tr className="bg-muted/20 border-t border-border/40">
+                        <td colSpan={mainPlans.length + 1} className="px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {group.title}
+                        </td>
+                      </tr>
+                      {group.rows.map((row) => (
+                        <tr key={row.label} className="border-t border-border/30 hover:bg-muted/10 transition-colors">
+                          <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
+                          {mainPlans.map((p) => {
+                            const isRec = p.planId === 'growth';
+                            return (
+                              <td key={p.planId} className={`px-3 py-3 text-center ${isRec ? 'bg-primary/[0.04]' : ''}`}>
+                                {renderCell(row.values[p.planId] ?? false)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile collapsible feature lists per plan */}
+          <div className="md:hidden space-y-3">
+            {mainPlans.map((p) => {
+              const isRec = p.planId === 'growth';
+              const isFree = p.planId === 'free';
+              const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+              const credits = typeof p.credits === 'number' ? p.credits : 0;
+              return (
+                <div
+                  key={p.planId}
+                  className={`rounded-2xl border bg-card p-4 ${isRec ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/50'}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-semibold">{p.name}</span>
+                        {isRec && (
+                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
+                            Recommended
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {credits > 0 ? `${credits.toLocaleString()} credits / month` : 'Trial credits'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-baseline gap-1 justify-end">
+                        <span className="text-xl font-semibold">${isFree ? 0 : displayPrice}</span>
+                        <span className="text-[11px] text-muted-foreground">/mo</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                      <span>See all features</span>
+                      <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3 space-y-3">
+                      {FEATURE_MATRIX.map((group) => (
+                        <div key={group.title} className="space-y-1.5">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{group.title}</p>
+                          <ul className="space-y-1.5">
+                            {group.rows.map((row) => {
+                              const v = row.values[p.planId] ?? false;
+                              return (
+                                <li key={row.label} className="flex items-start gap-2 text-[13px]">
+                                  {v === false ? (
+                                    <Minus className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 flex-shrink-0" />
+                                  ) : (
+                                    <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+                                  )}
+                                  <span className={v === false ? 'text-muted-foreground/60' : 'text-foreground/90'}>
+                                    {row.label}
+                                    {typeof v === 'string' && <span className="text-muted-foreground"> · {v}</span>}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* ── Team Comparison ────────────────────────────────────── */}
