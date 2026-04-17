@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag } from 'lucide-react';
@@ -32,26 +32,36 @@ interface UserProduct {
   sku?: string | null;
 }
 
+export type AddProductTab = 'manual' | 'store' | 'csv' | 'mobile' | 'shopify';
+
 interface AddProductModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onProductAdded: () => void;
   editingProduct?: UserProduct | null;
+  initialTab?: AddProductTab;
+  initialFiles?: File[];
 }
 
-export function AddProductModal({ open, onOpenChange, onProductAdded, editingProduct }: AddProductModalProps) {
+export function AddProductModal({ open, onOpenChange, onProductAdded, editingProduct, initialTab, initialFiles }: AddProductModalProps) {
   const handleClose = () => onOpenChange(false);
   const isMobile = useIsMobile();
 
-  const header = (
-    <>
-      {editingProduct ? 'Edit Product' : 'Add Product'}
-    </>
-  );
+  const [activeTab, setActiveTab] = useState<AddProductTab>(initialTab ?? 'manual');
+  const [pendingFiles, setPendingFiles] = useState<File[] | undefined>(initialFiles);
 
+  // Sync tab + files whenever the drawer (re)opens with new initial values
+  useEffect(() => {
+    if (open) {
+      if (initialTab) setActiveTab(initialTab);
+      setPendingFiles(initialFiles && initialFiles.length ? initialFiles : undefined);
+    }
+  }, [open, initialTab, initialFiles]);
+
+  const headerTitle = editingProduct ? 'Edit Product' : 'Add Products';
   const subtitle = editingProduct
     ? 'Update your product details and images.'
-    : 'Upload images, import from a URL, or bulk-add via CSV.';
+    : 'Upload images or import products in seconds.';
 
   const editContent = (
     <ManualProductTab
@@ -61,10 +71,8 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     />
   );
 
-  const [activeTab, setActiveTab] = useState('manual');
-
   const tabsContent = (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
+    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AddProductTab)} className="w-full flex flex-col flex-1 min-h-0">
       <div className="shrink-0">
         <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto">
           <TabsTrigger
@@ -79,7 +87,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
             className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
           >
             <Globe className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Product </span>URL
+            URL
           </TabsTrigger>
           <TabsTrigger
             value="csv"
@@ -107,7 +115,11 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
       <div className="pt-5 overflow-y-auto flex-1 min-h-0">
         <TabsContent value="manual" className="mt-0">
-          <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} />
+          <ManualProductTab
+            onProductAdded={onProductAdded}
+            onClose={handleClose}
+            initialFiles={activeTab === 'manual' ? pendingFiles : undefined}
+          />
         </TabsContent>
         <TabsContent value="store" className="mt-0">
           <StoreImportTab onProductAdded={onProductAdded} onClose={handleClose} onSwitchToUpload={() => setActiveTab('manual')} />
@@ -125,18 +137,14 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     </Tabs>
   );
 
-  // Mobile: use Drawer
+  // Mobile: bottom Drawer
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[92vh] flex flex-col">
           <DrawerHeader className="px-5 pt-4 pb-3 text-left shrink-0">
-            <DrawerTitle className="text-lg font-semibold tracking-tight">
-              {header}
-            </DrawerTitle>
-            <DrawerDescription className="text-sm text-muted-foreground">
-              {subtitle}
-            </DrawerDescription>
+            <DrawerTitle className="text-lg font-semibold tracking-tight">{headerTitle}</DrawerTitle>
+            <DrawerDescription className="text-sm text-muted-foreground">{subtitle}</DrawerDescription>
           </DrawerHeader>
           <div className="px-5 pb-5 overflow-y-auto flex-1 min-h-0">
             {editingProduct ? editContent : tabsContent}
@@ -146,31 +154,24 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     );
   }
 
-  // Desktop: use Dialog
+  // Desktop: right-side Sheet
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[680px] max-h-[85vh] flex flex-col overflow-hidden rounded-2xl p-0 gap-0">
-        <div className="px-8 pt-8 pb-4 shrink-0">
-          <DialogHeader className="space-y-1.5">
-            <DialogTitle className="text-xl font-semibold tracking-tight">
-              {header}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              {subtitle}
-            </DialogDescription>
-          </DialogHeader>
-        </div>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-[600px] p-0 flex flex-col gap-0"
+      >
+        <SheetHeader className="px-7 pt-7 pb-4 shrink-0 space-y-1.5">
+          <SheetTitle className="text-xl font-semibold tracking-tight">{headerTitle}</SheetTitle>
+          <SheetDescription className="text-sm text-muted-foreground">{subtitle}</SheetDescription>
+        </SheetHeader>
 
         {editingProduct ? (
-          <div className="px-8 pb-8 overflow-y-auto flex-1 min-h-0">
-            {editContent}
-          </div>
+          <div className="px-7 pb-7 overflow-y-auto flex-1 min-h-0">{editContent}</div>
         ) : (
-          <div className="px-8 pb-8 flex flex-col flex-1 min-h-0">
-            {tabsContent}
-          </div>
+          <div className="px-7 pb-7 flex flex-col flex-1 min-h-0">{tabsContent}</div>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
