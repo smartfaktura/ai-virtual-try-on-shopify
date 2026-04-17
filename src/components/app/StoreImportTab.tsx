@@ -485,7 +485,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                           )}
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-32 p-1" align="center" sideOffset={6}>
+                      <PopoverContent className="w-32 p-1" align={isMobile ? 'start' : 'center'} sideOffset={isMobile ? 8 : 6}>
                         <div className="flex flex-col">
                           {roleOptions.map(opt => {
                             const isActive = role === opt.value;
