@@ -365,7 +365,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     const reader = new FileReader();
     reader.onload = (e) => analyzeImage(e.target?.result as string);
     reader.readAsDataURL(file);
-  }, [analyzeImage]);
+  }, [analyzeImage, singleImage, createTrackedObjectUrl, revokeTrackedObjectUrl]);
 
   // Clipboard paste
   useEffect(() => {
@@ -536,6 +536,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
   const removeBatchItem = (id: string) => {
     setBatchItems(prev => {
+      const removed = prev.find(b => b.id === id);
+      if (removed) revokeTrackedObjectUrl(removed.previewUrl);
       const updated = prev.filter(b => b.id !== id);
       // If only 1 left, convert back to single mode
       if (updated.length === 1) {
@@ -875,10 +877,16 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                 {!isEditing && (
                   <button
                     onClick={() => {
+                      if (singleImage) revokeTrackedObjectUrl(singleImage.previewUrl);
                       setSingleImage(null);
                       setTitle('');
                       setProductType('');
                       setDescription('');
+                      if (backImage) revokeTrackedObjectUrl(backImage.previewUrl);
+                      if (sideImage) revokeTrackedObjectUrl(sideImage.previewUrl);
+                      if (packagingImage) revokeTrackedObjectUrl(packagingImage.previewUrl);
+                      if (insideImage) revokeTrackedObjectUrl(insideImage.previewUrl);
+                      if (textureImage) revokeTrackedObjectUrl(textureImage.previewUrl);
                       setBackImage(null);
                       setSideImage(null);
                       setPackagingImage(null);
@@ -903,7 +911,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                         if (isEditing) handleEditImageReplace(files);
                         else {
                           const file = files[0];
-                          const previewUrl = URL.createObjectURL(file);
+                          if (singleImage) revokeTrackedObjectUrl(singleImage.previewUrl);
+                          const previewUrl = createTrackedObjectUrl(file);
                           setSingleImage({ file, previewUrl });
                           const reader = new FileReader();
                           reader.onload = (ev) => analyzeImage(ev.target?.result as string);
@@ -972,7 +981,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file && file.type.startsWith('image/')) {
-                                    setter({ file, previewUrl: URL.createObjectURL(file) });
+                                    if (state) revokeTrackedObjectUrl(state.previewUrl);
+                                    setter({ file, previewUrl: createTrackedObjectUrl(file) });
                                   }
                                   e.target.value = '';
                                 }}
