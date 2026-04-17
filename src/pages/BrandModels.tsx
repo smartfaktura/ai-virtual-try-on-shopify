@@ -840,9 +840,11 @@ export default function BrandModels() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My Brand Models" subtitle="Create and manage your custom AI models for consistent brand imagery">
-        <div />
-      </PageHeader>
+      {isPaid && (
+        <PageHeader title="My Brand Models" subtitle="Custom AI models that match your brand.">
+          <div />
+        </PageHeader>
+      )}
 
       {!isPaid ? (
         <>
