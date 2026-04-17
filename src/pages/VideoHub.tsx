@@ -264,10 +264,10 @@ export default function VideoHub() {
         return (
           <>
             {processingVideos.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <h2 className="text-lg font-semibold text-foreground">In Progress</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">In Progress</h2>
                   <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
                     {processingVideos.length}
                   </Badge>
