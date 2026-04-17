@@ -22,6 +22,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function GuideLayout({ guide }: Props) {
   const navigate = useNavigate();
+  const { markRead } = useLearnRead();
+
+  useEffect(() => {
+    markRead(guide.section, guide.slug);
+  }, [guide.section, guide.slug, markRead]);
+
 
   return (
     <div className="max-w-3xl mx-auto pb-24 animate-in fade-in duration-300">
