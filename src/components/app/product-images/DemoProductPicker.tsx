@@ -6,39 +6,23 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
-
-const DEMO_PRODUCTS = [
-  { id: 'demo_eyewear', title: 'Cat-Eye Glasses', category: 'Eyewear', previewSrc: '/images/demos/previews/demo-eyewear.webp', sourceSrc: '/images/demos/demo-eyewear.png' },
-  { id: 'demo_handbag', title: 'Leather Handbag', category: 'Bags', previewSrc: '/images/demos/previews/demo-handbag.webp', sourceSrc: '/images/demos/demo-handbag.png' },
-  { id: 'demo_hoodie', title: 'Zip Hoodie', category: 'Hoodies', previewSrc: '/images/demos/previews/demo-hoodie.webp', sourceSrc: '/images/demos/demo-hoodie.png' },
-  { id: 'demo_scarf', title: 'Silk Scarf', category: 'Scarves', previewSrc: '/images/demos/previews/demo-scarf.webp', sourceSrc: '/images/demos/demo-scarf.png' },
-  { id: 'demo_cap', title: 'Baseball Cap', category: 'Hats', previewSrc: '/images/demos/previews/demo-cap.webp', sourceSrc: '/images/demos/demo-cap.png' },
-  { id: 'demo_jeans', title: 'High-Rise Jeans', category: 'Jeans', previewSrc: '/images/demos/previews/demo-jeans.webp', sourceSrc: '/images/demos/demo-jeans.png' },
-  { id: 'demo_shampoo', title: 'Luxury Shampoo', category: 'Beauty', previewSrc: '/images/demos/previews/demo-shampoo.webp', sourceSrc: '/images/demos/demo-shampoo.png' },
-  { id: 'demo_chair', title: 'Bouclé Armchair', category: 'Furniture', previewSrc: '/images/demos/previews/demo-chair.webp', sourceSrc: '/images/demos/demo-chair.png' },
-  { id: 'demo_backpack', title: 'Urban Backpack', category: 'Backpacks', previewSrc: '/images/demos/previews/demo-backpack.webp', sourceSrc: '/images/demos/demo-backpack.png' },
-];
+import { DEMO_PRODUCTS, type DemoProduct } from '@/data/demoProducts';
 
 interface DemoProductPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (file: File) => void;
+  onSelectDemo: (demo: DemoProduct) => Promise<void> | void;
 }
 
-export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductPickerProps) {
+export function DemoProductPicker({ open, onOpenChange, onSelectDemo }: DemoProductPickerProps) {
   const isMobile = useIsMobile();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const handleSelect = async (product: typeof DEMO_PRODUCTS[0]) => {
-    setLoadingId(product.id);
+  const handleSelect = async (demo: DemoProduct) => {
+    setLoadingId(demo.id);
     try {
-      const response = await fetch(product.sourceSrc);
-      const blob = await response.blob();
-      const file = new File([blob], `${product.id}.png`, { type: 'image/png' });
       onOpenChange(false);
-      onSelect(file);
-    } catch {
-      console.error('Failed to load demo product');
+      await onSelectDemo(demo);
     } finally {
       setLoadingId(null);
     }
@@ -72,7 +56,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
             )}
           </div>
           <span className="text-xs font-medium text-foreground truncate w-full text-center">{product.title}</span>
-          <Badge variant="secondary" className="mt-0.5 text-[10px] px-1.5 py-0">{product.category}</Badge>
+          <Badge variant="secondary" className="mt-0.5 text-[10px] px-1.5 py-0">{product.productType}</Badge>
         </button>
       ))}
     </div>
@@ -84,7 +68,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
         <DrawerContent className="max-h-[85vh]">
           <DrawerHeader className="pb-2">
             <DrawerTitle>Try a demo product</DrawerTitle>
-            <DrawerDescription>Pick one to see how it works</DrawerDescription>
+            <DrawerDescription>Pick one to see how it works — instant, no credits used</DrawerDescription>
           </DrawerHeader>
           <div className="overflow-y-auto px-4 pb-6">
             {grid}
@@ -99,7 +83,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelect }: DemoProductP
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Try a demo product</DialogTitle>
-          <DialogDescription>Pick one to see how it works</DialogDescription>
+          <DialogDescription>Pick one to see how it works — instant, no credits used</DialogDescription>
         </DialogHeader>
         {grid}
       </DialogContent>
