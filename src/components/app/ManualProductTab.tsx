@@ -91,6 +91,29 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const hasManualEdits = useRef({ title: false, productType: false, description: false });
 
+  // Track all blob: URLs created via URL.createObjectURL so we can revoke them
+  // and avoid memory leaks (esp. on large batch uploads).
+  const objectUrlsRef = useRef<Set<string>>(new Set());
+  const createTrackedObjectUrl = useCallback((file: File) => {
+    const url = URL.createObjectURL(file);
+    objectUrlsRef.current.add(url);
+    return url;
+  }, []);
+  const revokeTrackedObjectUrl = useCallback((url?: string | null) => {
+    if (!url || !url.startsWith('blob:')) return;
+    if (objectUrlsRef.current.has(url)) {
+      URL.revokeObjectURL(url);
+      objectUrlsRef.current.delete(url);
+    }
+  }, []);
+  // Revoke everything on unmount
+  useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      objectUrlsRef.current.clear();
+    };
+  }, []);
+
   // Batch mode state
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const isBatchMode = batchItems.length > 1;
@@ -230,7 +253,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       const newItems: BatchItem[] = toAdd.map((file, i) => ({
         id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
         file,
-        previewUrl: URL.createObjectURL(file),
+        previewUrl: createTrackedObjectUrl(file),
         title: '',
         productType: '',
         description: '',
@@ -258,7 +281,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       const newItems: BatchItem[] = toAdd.map((file, i) => ({
         id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
         file,
-        previewUrl: URL.createObjectURL(file),
+        previewUrl: createTrackedObjectUrl(file),
         title: '',
         productType: '',
         description: '',
@@ -274,7 +297,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     // Fresh upload: 1 file = single mode
     if (toAdd.length === 1 && !singleImage) {
       const file = toAdd[0];
-      const previewUrl = URL.createObjectURL(file);
+      const previewUrl = createTrackedObjectUrl(file);
       setSingleImage({ file, previewUrl });
       // Read as data URL for AI analysis
       const reader = new FileReader();
@@ -290,7 +313,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     const newItems: BatchItem[] = toAdd.map((file, i) => ({
       id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
       file,
-      previewUrl: URL.createObjectURL(file),
+      previewUrl: createTrackedObjectUrl(file),
       title: '',
       productType: '',
       description: '',
@@ -334,13 +357,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       toast.error('Image exceeds 10 MB');
       return;
     }
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = createTrackedObjectUrl(file);
+    // Revoke any previous blob preview being replaced
+    if (singleImage) revokeTrackedObjectUrl(singleImage.previewUrl);
     setSingleImage({ file, previewUrl });
     hasManualEdits.current = { title: false, productType: false, description: false };
     const reader = new FileReader();
     reader.onload = (e) => analyzeImage(e.target?.result as string);
     reader.readAsDataURL(file);
-  }, [analyzeImage]);
+  }, [analyzeImage, singleImage, createTrackedObjectUrl, revokeTrackedObjectUrl]);
 
   // Clipboard paste
   useEffect(() => {
@@ -511,6 +536,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
   const removeBatchItem = (id: string) => {
     setBatchItems(prev => {
+      const removed = prev.find(b => b.id === id);
+      if (removed) revokeTrackedObjectUrl(removed.previewUrl);
       const updated = prev.filter(b => b.id !== id);
       // If only 1 left, convert back to single mode
       if (updated.length === 1) {
@@ -850,10 +877,16 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                 {!isEditing && (
                   <button
                     onClick={() => {
+                      if (singleImage) revokeTrackedObjectUrl(singleImage.previewUrl);
                       setSingleImage(null);
                       setTitle('');
                       setProductType('');
                       setDescription('');
+                      if (backImage) revokeTrackedObjectUrl(backImage.previewUrl);
+                      if (sideImage) revokeTrackedObjectUrl(sideImage.previewUrl);
+                      if (packagingImage) revokeTrackedObjectUrl(packagingImage.previewUrl);
+                      if (insideImage) revokeTrackedObjectUrl(insideImage.previewUrl);
+                      if (textureImage) revokeTrackedObjectUrl(textureImage.previewUrl);
                       setBackImage(null);
                       setSideImage(null);
                       setPackagingImage(null);
@@ -878,7 +911,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                         if (isEditing) handleEditImageReplace(files);
                         else {
                           const file = files[0];
-                          const previewUrl = URL.createObjectURL(file);
+                          if (singleImage) revokeTrackedObjectUrl(singleImage.previewUrl);
+                          const previewUrl = createTrackedObjectUrl(file);
                           setSingleImage({ file, previewUrl });
                           const reader = new FileReader();
                           reader.onload = (ev) => analyzeImage(ev.target?.result as string);
@@ -947,7 +981,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file && file.type.startsWith('image/')) {
-                                    setter({ file, previewUrl: URL.createObjectURL(file) });
+                                    if (state) revokeTrackedObjectUrl(state.previewUrl);
+                                    setter({ file, previewUrl: createTrackedObjectUrl(file) });
                                   }
                                   e.target.value = '';
                                 }}
