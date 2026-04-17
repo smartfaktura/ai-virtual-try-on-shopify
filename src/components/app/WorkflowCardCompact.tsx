@@ -150,7 +150,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         )}
 
         {!mobileCompact && !modalCompact && (
-          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" title={workflow.description}>
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2" title={workflow.description}>
             {workflow.description}
           </p>
         )}
