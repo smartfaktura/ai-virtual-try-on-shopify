@@ -37,7 +37,7 @@ function UpgradeHero() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-widest mb-4">
           <Crown className="h-3.5 w-3.5" /> Growth & Pro
         </div>
-        <h2 className="text-3xl font-bold tracking-tight">My Brand Models</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Brand Models</h2>
         <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
           Create unlimited custom AI models — any gender, age, ethnicity, or body type — that match your brand identity perfectly.
         </p>
@@ -110,7 +110,7 @@ function BrandedLoadingState() {
   const [elapsed, setElapsed] = useState(0);
 
   const estimateSeconds = 90;
-  const estimateLabel = '~1-2 min';
+  const estimateLabel = '~1–2 min';
   const ratio = elapsed / estimateSeconds;
   const progress = ratio <= 1 ? Math.min(ratio * 90, 90) : Math.min(90 + (ratio - 1) * 5, 95);
 

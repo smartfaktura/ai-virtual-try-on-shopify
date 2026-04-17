@@ -469,7 +469,7 @@ export default function Discover() {
           <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
           <p className="text-sm font-medium text-muted-foreground mb-1">No results found</p>
           <p className="text-xs text-muted-foreground/70 max-w-xs">
-            Try different keywords or{' '}
+            Try a different category or{' '}
             <button
               onClick={() => { setSelectedCategory('all'); setSimilarTo(null); }}
               className="text-primary hover:underline"
