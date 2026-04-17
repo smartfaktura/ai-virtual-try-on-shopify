@@ -1,59 +1,69 @@
 
 
 ## Goal
-Create a new in-app `/app/help` page — a calm, premium support hub with: contact form, FAQ preview, Learn Hub link, and contact/social links.
+Make `/app/help` feel personal, calm, and on-brand. Remove inline FAQ accordion (link out instead), make the contact form feel like messaging the team, drop Status link.
 
-## Approach
+## Changes (single file: `src/pages/AppHelp.tsx`)
 
-Reuse what already exists:
-- **Contact form** → wrap the existing `ChatContactForm` (already wired to `send-contact` edge fn, validated, auth-prefilled).
-- **FAQ data** → import `faqCategories` from `src/pages/HelpCenter.tsx` (extract to a shared module so both public `/help` and in-app `/app/help` use the same source of truth).
-- **Learn entry** → small card linking to `/app/learn`.
-- **Style** → match Learn page restraint (no heavy borders, generous whitespace, `text-[15px]` titles, muted descriptions).
+### 1. Personal hero
+Replace generic "Help & support" header with a warmer block:
+- Avatar stack (3 team avatars — reuse `avatarSophia`, `avatarKenji`, `avatarZara` from `ContactFormDialog.tsx`)
+- Title: **"Talk to the team"**
+- Subtitle: *"Real humans, real fast. We usually reply within a few hours."*
 
-## Layout (single column, max-w-3xl, mx-auto)
+### 2. Contact form → "Message the team"
+Keep `ChatContactForm` but reframe its surrounding card:
+- Drop the bordered/muted card wrapper — let it breathe on the page background
+- Change section label from "Contact us" to nothing (form is the hero action now)
+- Above the form add a tiny line: *"What's on your mind?"*
+- Form itself stays (already wired to `send-contact`); placeholder copy in `ChatContactForm` already reads "How can we help?" which fits
+
+### 3. Remove inline FAQ accordion
+Replace the entire FAQ accordion section with a single soft link card:
+- Title: **"Browse FAQs"**
+- Sub: *"Quick answers to common questions"*
+- Opens `/help` in new tab
+- Same visual pattern as the Learn card below it (consistent rhythm)
+
+Drop `QUICK_FAQ_KEYS`, `quickFaqs`, `faqCategories`, `Accordion` imports.
+
+### 4. Self-serve row (FAQ + Learn side by side)
+Two cards in a 2-col grid (stacks on mobile):
+- **Browse FAQs** → `/help` (external)
+- **Tutorials & guides** → `/app/learn`
+
+Same card style: rounded-2xl, soft muted bg, icon left, title + sub, arrow right.
+
+### 5. Other ways to reach us
+Remove `Status` entry. Keep: Email, Twitter, Instagram. Same minimal text-link row.
+
+## Layout (single column, max-w-2xl — tighter than before for intimacy)
 
 ```
-─ Header ──────────────────────────
-  Help & support
-  We usually reply within a few hours.
+─ Personal hero ───────────────
+  [avatars]  Talk to the team
+             Real humans, real fast.
 
-─ Contact (primary) ───────────────
-  Card with ChatContactForm (slightly larger paddings than chat variant)
+─ Message form ────────────────
+  What's on your mind?
+  [name] [email] [message] [Send]
 
-─ Quick answers (FAQ preview) ─────
-  Inline accordion — show top 5 most relevant questions only
-  Link: "Browse all FAQs →" (opens public /help in new tab)
+─ Self-serve (2-col) ──────────
+  [Browse FAQs →]   [Tutorials & guides →]
 
-─ Learn the basics ────────────────
-  Single soft card → /app/learn  
-  "Tutorials & guides — learn VOVV.AI in minutes"
-
-─ Other ways to reach us ──────────
-  Tiny row of links: Email · X/Twitter · Instagram · Status
-  (text-only, no big icon grid)
+─ Footer links ────────────────
+  Email · Twitter · Instagram
 ```
-
-Mobile: same single column, generous `py-6` between sections, sticky-friendly tap targets.
 
 ## Files
-
-| File | Change |
-|---|---|
-| `src/data/faqContent.ts` | **New** — extract `faqCategories` array from `HelpCenter.tsx` so it's shared |
-| `src/pages/HelpCenter.tsx` | Import `faqCategories` from new shared file (no UI change) |
-| `src/pages/AppHelp.tsx` | **New** — the in-app help page |
-| `src/App.tsx` | Add lazy import + `<Route path="/help" element={<AppHelp />} />` inside the `/app` shell block |
-| `src/components/app/AppShell.tsx` | Add `LifeBuoy` icon link "Help & Support" under the **Learn** nav group → `/app/help`; add prefetch entry |
-
-No schema changes. No new dependencies. Reuses `ChatContactForm`, `Accordion`, `send-contact` edge function.
+- `src/pages/AppHelp.tsx` — restructure as above
+- No other files touched. `ChatContactForm`, `faqContent.ts`, routing all stay.
 
 ## Acceptance
-- `/app/help` renders inside AppShell with sidebar
-- Contact form submits via existing `send-contact` flow, shows success state
-- FAQ shows ~5 curated items; "Browse all" links to `/help`
-- Learn card navigates to `/app/learn`
-- Sidebar has new "Help & Support" entry under Learn group
-- Spacious on desktop (1276px), comfortable stacking on mobile (375px)
-- No new console errors
+- No inline FAQ accordion on `/app/help`
+- Form feels like messaging real people (avatars + warm copy)
+- FAQ + Learn presented as twin cards
+- No Status link in footer row
+- Tighter `max-w-2xl` for a more personal feel
+- Mobile: clean stacking, generous spacing
 
