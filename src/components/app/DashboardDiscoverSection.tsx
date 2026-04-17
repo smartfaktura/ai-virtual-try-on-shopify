@@ -177,7 +177,7 @@ export function DashboardDiscoverSection() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Steal the Look</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Steal the Look</h2>
           <p className="text-base text-muted-foreground mt-1.5">Click any visual to recreate it with your product.</p>
         </div>
       </div>
