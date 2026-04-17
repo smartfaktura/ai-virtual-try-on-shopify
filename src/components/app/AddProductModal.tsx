@@ -72,47 +72,69 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     />
   );
 
+  const METHODS: { id: AddProductTab; label: string; sub: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'manual', label: 'Upload images', sub: 'Drag, drop, or browse files', icon: Upload },
+    { id: 'store', label: 'Product URL', sub: 'Import from any product page', icon: Globe },
+    { id: 'csv', label: 'CSV import', sub: 'Bulk-add from a spreadsheet', icon: FileSpreadsheet },
+    { id: 'mobile', label: 'Mobile upload', sub: 'Snap photos from your phone', icon: Smartphone },
+    { id: 'shopify', label: 'Shopify import', sub: 'Sync your Shopify catalog', icon: ShoppingBag },
+  ];
+
   const tabsContent = (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AddProductTab)} className="w-full flex flex-col flex-1 min-h-0">
-      <div className="shrink-0">
-        <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto">
-          <TabsTrigger
-            value="manual"
-            className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            Upload
-          </TabsTrigger>
-          <TabsTrigger
-            value="store"
-            className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            URL
-          </TabsTrigger>
-          <TabsTrigger
-            value="csv"
-            className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            CSV
-          </TabsTrigger>
-          <TabsTrigger
-            value="mobile"
-            className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            Mobile
-          </TabsTrigger>
-          <TabsTrigger
-            value="shopify"
-            className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Shopify
-          </TabsTrigger>
-        </TabsList>
-      </div>
+      {/* Mobile: keep compact pill row */}
+      {isMobile ? (
+        <div className="shrink-0">
+          <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto overflow-x-auto max-w-full">
+            {METHODS.map(({ id, label, icon: Icon }) => (
+              <TabsTrigger
+                key={id}
+                value={id}
+                className="rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 whitespace-nowrap"
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label.split(' ')[0]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+      ) : (
+        /* Desktop: vertical method rail matching empty-state aesthetic */
+        <div className="shrink-0">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2 px-1">Method</p>
+          <div className="rounded-xl border bg-background/50 divide-y">
+            {METHODS.map(({ id, label, sub, icon: Icon }) => {
+              const active = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors first:rounded-t-xl last:rounded-b-xl group',
+                    active ? 'bg-muted/70' : 'hover:bg-muted/50',
+                  )}
+                >
+                  <div className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                    active ? 'bg-primary/10' : 'bg-muted',
+                  )}>
+                    <Icon className={cn('w-4 h-4', active ? 'text-primary' : 'text-foreground/70')} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-tight">{label}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{sub}</p>
+                  </div>
+                  <ChevronRight className={cn(
+                    'w-4 h-4 shrink-0 transition-colors',
+                    active ? 'text-primary' : 'text-muted-foreground/50 group-hover:text-foreground',
+                  )} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="pt-5 overflow-y-auto flex-1 min-h-0">
         <TabsContent value="manual" className="mt-0">
