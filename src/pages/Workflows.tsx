@@ -504,12 +504,6 @@ export default function Workflows() {
 
       {/* ── Workflow catalog (heading + grid grouped tight) ── */}
       <section className="space-y-4">
-        {hasActivity && (
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Choose what to create</h2>
-            <p className="text-base text-muted-foreground mt-1.5">Pick a Visual Type to start a new set.</p>
-          </div>
-        )}
 
         {isLoading ? (
           effectiveLayout === 'rows' ? (
