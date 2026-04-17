@@ -457,7 +457,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
                         <button
                           type="button"
                           className={cn(
-                            'relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0 border-2 transition-all',
+                            'relative rounded-lg overflow-hidden bg-muted shrink-0 border-2 transition-all',
+                            isMobile ? 'w-20 h-20' : 'w-16 h-16',
                             i === selectedImageIndex
                               ? 'border-primary ring-1 ring-primary/30'
                               : role
