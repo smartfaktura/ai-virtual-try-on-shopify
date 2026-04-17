@@ -175,7 +175,7 @@ export default function Products() {
               </Button>
             </div>
             {products.length > 0 && (
-              <Button onClick={() => navigate('/app/products/new')}>
+              <Button onClick={() => openAddDrawer('manual')}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Products
               </Button>
@@ -248,18 +248,22 @@ export default function Products() {
         ) : filtered.length === 0 ? (
           (() => {
             const isFiltered = !!(search || typeFilter !== 'all');
-            const sophia = TEAM_MEMBERS.find(m => m.name === 'Sophia');
+            if (isFiltered) {
+              return (
+                <EmptyStateCard
+                  heading="No products match your filters"
+                  description="Try a different search term or clear filters."
+                />
+              );
+            }
+            // Truly empty: show active upload surface
             return (
-              <EmptyStateCard
-                heading={isFiltered ? 'No products match your filters' : 'No products yet'}
-                description={isFiltered ? 'Try a different search term or clear filters.' : ''}
-                action={!isFiltered ? { content: 'Add Products', onAction: () => navigate('/app/products/new') } : undefined}
-                icon={
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                    <ImagePlus className="w-8 h-8 text-primary/60" />
-                  </div>
-                }
-                teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product to start creating studio-quality visuals." } : undefined}
+              <ProductsEmptyUpload
+                onFilesSelected={(files) => openAddDrawer('manual', files)}
+                onMethodSelect={(method) => {
+                  const tab: AddProductTab = method === 'paste' ? 'manual' : (method as AddProductTab);
+                  openAddDrawer(tab);
+                }}
               />
             );
           })()
@@ -405,6 +409,32 @@ export default function Products() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddProductModal
+        open={addOpen}
+        onOpenChange={(o) => {
+          setAddOpen(o);
+          if (!o) setAddInitialFiles(undefined);
+        }}
+        onProductAdded={() => {
+          queryClient.invalidateQueries({ queryKey: ['user-products'] });
+          queryClient.invalidateQueries({ queryKey: ['product-image-counts'] });
+        }}
+        initialTab={addInitialTab}
+        initialFiles={addInitialFiles}
+      />
+
+      {pageDragActive && (
+        <div className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
+          <div className="rounded-2xl border-2 border-dashed border-primary/60 bg-card px-10 py-8 shadow-xl flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <UploadCloud className="w-6 h-6 text-primary" />
+            </div>
+            <p className="text-base font-semibold">Drop to add products</p>
+            <p className="text-xs text-muted-foreground">Each image becomes a product</p>
+          </div>
+        </div>
+      )}
     </PageHeader>
   );
 }
