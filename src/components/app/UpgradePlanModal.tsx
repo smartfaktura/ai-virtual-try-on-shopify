@@ -365,9 +365,15 @@ export function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' 
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={handleSeeAll} disabled={loading} className="rounded-xl min-h-[44px]">
-                Compare plans
-              </Button>
+              {typeof window !== 'undefined' && window.location.pathname === '/app/pricing' ? (
+                <Button variant="outline" onClick={onClose} disabled={loading} className="rounded-xl min-h-[44px]">
+                  Maybe later
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={handleSeeAll} disabled={loading} className="rounded-xl min-h-[44px]">
+                  Compare plans
+                </Button>
+              )}
               <Button onClick={handleConfirm} disabled={loading} className="rounded-xl min-h-[44px] gap-2">
                 {loading ? (
                   <>
