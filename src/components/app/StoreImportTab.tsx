@@ -384,9 +384,16 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
           {/* Show all extracted images with role assignment popover */}
           {extracted.image_urls && extracted.image_urls.length > 1 && (
             <div className="space-y-2.5">
-              <p className="text-[11px] text-muted-foreground">
-                Tap an image to set its role
-              </p>
+              {isMobile ? (
+                <div className="space-y-0.5">
+                  <p className="text-xs font-medium text-foreground">Choose your main photo</p>
+                  <p className="text-[11px] text-muted-foreground">Tap a thumbnail to change roles (Main, Back, Side…)</p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">
+                  Tap an image to set its role
+                </p>
+              )}
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {extracted.image_urls.map((imgUrl, i) => {
                    const role = i === selectedImageIndex ? 'Main'
