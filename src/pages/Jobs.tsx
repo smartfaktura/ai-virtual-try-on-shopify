@@ -551,18 +551,16 @@ export default function Jobs() {
                 </div>
               );
             }
-            const kenji = TEAM_MEMBERS.find(m => m.name === 'Kenji');
             return (
               <div className="py-8">
-                {!searchQuery && kenji ? (
+                {!searchQuery ? (
                   <EmptyStateCard
-                    heading="No images yet"
-                    description=""
-                    icon={<Sparkles className="w-10 h-10" />}
-                    teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Create stunning visuals in Visual Studio or Freestyle Studio." }}
+                    heading="Your library is empty"
+                    description="Generated visuals land here, ready to review, favorite, and publish."
+                    icon={<ImagePlus className="w-8 h-8 text-muted-foreground" />}
                     actions={[
-                      { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'outline', icon: <Layers className="w-4 h-4" /> },
-                      { content: 'Open Freestyle Studio', onAction: () => navigate('/app/freestyle'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
+                      { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
+                      { content: 'Try Freestyle', onAction: () => navigate('/app/freestyle'), variant: 'outline' },
                     ]}
                   />
                 ) : (
