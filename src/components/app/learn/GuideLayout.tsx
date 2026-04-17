@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLearnRead } from '@/hooks/useLearnRead';
 import { LEARN_TRACKS, type LearnGuide } from '@/data/learnContent';
+import { ProductVisualsGuide } from './ProductVisualsGuide';
 
 interface Props {
   guide: LearnGuide;
@@ -42,6 +43,11 @@ export function GuideLayout({ guide }: Props) {
     const primary = guide.tracks[0];
     return LEARN_TRACKS.find((t) => t.id === primary)?.label ?? 'Guide';
   }, [guide.tracks]);
+
+  // Bespoke layout for the flagship Product Visuals guide
+  if (guide.slug === 'product-images' && guide.section === 'visual-studio') {
+    return <ProductVisualsGuide guide={guide} />;
+  }
 
   return (
     // Outer wrapper matches /app/learn hub width exactly

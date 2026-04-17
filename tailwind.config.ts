@@ -105,6 +105,10 @@ export default {
           "0%": { transform: "translateX(-50%)" },
           "100%": { transform: "translateX(0)" },
         },
+        "progress-grow": {
+          "0%": { transform: "scaleX(0)" },
+          "100%": { transform: "scaleX(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -114,6 +118,7 @@ export default {
         "fade-in": "fade-in 0.4s ease-out",
         "marquee-left": "marquee-left linear infinite",
         "marquee-right": "marquee-right linear infinite",
+        "progress-grow": "progress-grow 1.2s ease-out forwards",
       },
     },
   },
