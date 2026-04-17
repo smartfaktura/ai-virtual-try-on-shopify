@@ -84,23 +84,27 @@ function StepVisual({ kind }: { kind: (typeof STEPS)[number]['visual'] }) {
   if (kind === 'chips') {
     return (
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="px-2.5 py-1 rounded-full border border-border/60 bg-card/60 text-[11px] text-muted-foreground">
-          Model
-        </span>
-        <span className="px-2.5 py-1 rounded-full border border-border/60 bg-card/60 text-[11px] text-muted-foreground">
-          Brand
-        </span>
+        {['Model', 'Color', 'Scene'].map((label) => (
+          <span
+            key={label}
+            className="px-2.5 py-1 rounded-full border border-border/60 bg-card/60 text-[11px] text-muted-foreground"
+          >
+            {label}
+          </span>
+        ))}
       </div>
     );
   }
-  // pulse
+  // batch
   return (
     <div className="flex items-center gap-2">
-      <span className="relative flex h-2 w-2">
-        <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-      </span>
-      <span className="text-[11px] font-medium text-muted-foreground tabular-nums">~30s</span>
+      <div className="relative w-9 h-9">
+        <div className="absolute inset-0 rounded-md border border-border/50 bg-card/40 translate-x-1.5 translate-y-1.5" />
+        <div className="absolute inset-0 rounded-md border border-border/60 bg-card/60 translate-x-0.5 translate-y-0.5" />
+        <div className="absolute inset-0 rounded-md border border-border/70 bg-card/80 flex items-center justify-center">
+          <span className="text-[10px] font-semibold text-foreground/70 tabular-nums">×100</span>
+        </div>
+      </div>
     </div>
   );
 }
