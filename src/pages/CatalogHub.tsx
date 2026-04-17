@@ -134,9 +134,14 @@ export default function CatalogHub() {
   return (
     <div className="space-y-6 pb-16">
       <PageHeader title="Catalog Studio" subtitle="AI-powered product photoshoots">
-        <Button onClick={() => navigate('/app/catalog/new')} className="gap-2 rounded-full">
-          <Plus className="w-4 h-4" /> New Photoshoot
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/app/learn/visual-studio/catalog-shot-set')} className="gap-1.5 rounded-full">
+            Learn
+          </Button>
+          <Button onClick={() => navigate('/app/catalog/new')} className="gap-2 rounded-full">
+            <Plus className="w-4 h-4" /> New Photoshoot
+          </Button>
+        </div>
       </PageHeader>
 
       {/* Active generation banner */}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Package, User, Image, Sparkles, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -91,12 +92,21 @@ export function FreestyleGuide({ currentStep, onNext, onDismiss }: FreestyleGuid
 
         {/* Actions */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/40">
-          <button
-            onClick={onDismiss}
-            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Skip guide
-          </button>
+          {isLast ? (
+            <Link
+              to="/app/learn/freestyle"
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              View full guide →
+            </Link>
+          ) : (
+            <button
+              onClick={onDismiss}
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip guide
+            </button>
+          )}
           <Button
             size="sm"
             onClick={onNext}
