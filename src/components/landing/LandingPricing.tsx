@@ -54,7 +54,7 @@ const FEATURE_MATRIX: FeatureGroup[] = [
     ],
   },
   {
-    title: 'Brand & workflow',
+    title: 'Brand & studio',
     rows: [
       { label: 'Brand Profiles', values: { free: false, starter: true, growth: true, pro: true } },
       { label: 'Saved aesthetics & color systems', values: { free: false, starter: false, growth: true, pro: true } },
@@ -116,7 +116,7 @@ const FAQS = [
   { q: 'What can I create with VOVV.AI?', a: 'Product photography, virtual try-ons, lifestyle imagery, flat lays, interior staging, videos, and more — all from a single product photo.' },
   { q: 'Do I need photography experience?', a: 'Not at all. Choose a scene, upload your product, and the AI handles lighting, composition, and styling automatically.' },
   { q: 'How many credits does each generation cost?', a: 'A standard image is ~4–6 credits depending on complexity. Video runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model training is a one-time ~50 credits. You always see the cost before you generate.' },
-  { q: 'Is there a free trial?', a: "Every new account gets 20 free credits — no credit card required. That's enough to try multiple workflows and see the quality." },
+  { q: 'Is there a free trial?', a: "Every new account gets 20 free credits — no credit card required. That's enough to try multiple Visual Types and see the quality." },
   { q: 'What image formats and sizes are supported?', a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print.' },
   { q: 'Can I cancel my subscription anytime?', a: "Absolutely. Cancel, upgrade, or downgrade at any time — no contracts or fees. Unused monthly credits don't roll over, but top-up credits never expire." },
   { q: 'How does Brand Profile work?', a: 'Set your preferred tone, lighting, background, and composition rules. Every future generation uses this profile automatically so visuals stay on-brand.' },
@@ -591,7 +591,7 @@ export function LandingPricing() {
             Start with 20 free credits
           </h3>
           <p className="text-sm text-muted-foreground mb-6">
-            No credit card required. Try every workflow and see the quality before committing to a plan.
+            No credit card required. Try every Visual Type and see the quality before committing to a plan.
           </p>
           <Button
             className="rounded-full font-semibold px-8 gap-2"

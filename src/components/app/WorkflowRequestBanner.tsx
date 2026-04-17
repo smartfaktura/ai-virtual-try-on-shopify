@@ -69,7 +69,7 @@ export function WorkflowRequestBanner() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground leading-snug">
-                Missing a template for your brand?
+                Missing a Visual Type for your brand?
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Tell us what you need — we'll build it and add it to our lineup.
@@ -104,7 +104,7 @@ export function WorkflowRequestBanner() {
             </p>
           </div>
           <Textarea
-            placeholder="Describe the template, niche, or product type you need…"
+            placeholder="Describe the Visual Type, niche, or product type you need…"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="min-h-[80px] text-sm bg-background"

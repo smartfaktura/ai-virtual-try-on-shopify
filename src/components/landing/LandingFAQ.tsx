@@ -13,12 +13,12 @@ const faqs = [
     a: 'No. Our AI generates studio-quality images indistinguishable from professional photography. Combined with your Brand Profile, every image maintains consistent, realistic lighting and composition automatically.',
   },
   {
-    q: 'What are Templates?',
-    a: 'Templates are purpose-built generation pipelines. Choose from six core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
+    q: 'What are Visual Types?',
+    a: 'Visual Types are built for specific content goals. Choose from six core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
   },
   {
     q: 'What is Freestyle?',
-    a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision.',
+    a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Visual Types fit your vision.',
   },
   {
     q: 'How does Virtual Try-On work?',
@@ -30,7 +30,7 @@ const faqs = [
   },
   {
     q: 'How does Brand Profile work?',
-    a: 'When you create a Brand Profile, you set your preferred tone, lighting style, background, color temperature, and composition rules. Every future generation — across Workflows and Freestyle — uses this profile automatically so your visuals stay on-brand without manual adjustments.',
+    a: 'When you create a Brand Profile, you set your preferred tone, lighting style, background, color temperature, and composition rules. Every future generation — across Visual Studio and Freestyle — uses this profile automatically so your visuals stay on-brand without manual adjustments.',
   },
   {
     q: 'How many credits does each generation cost?',
@@ -38,7 +38,7 @@ const faqs = [
   },
   {
     q: 'Is there a free trial?',
-    a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Workflow or try Freestyle and see the quality before committing to a plan.',
+    a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Visual Type or try Freestyle and see the quality before committing to a plan.',
   },
   {
     q: 'What image formats and sizes are supported?',
