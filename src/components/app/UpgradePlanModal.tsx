@@ -32,11 +32,20 @@ function getCopy(args: {
   balance: number;
   isTopup: boolean;
   planName?: string;
+  isMobile?: boolean;
 }): ModalCopy {
-  const { variant, effectivePlan, balance, isTopup, planName } = args;
+  const { variant, effectivePlan, balance, isTopup, planName, isMobile } = args;
 
   // Zero-credits urgency wins over generic top-up copy
   if (isTopup && variant === 'no-credits') {
+    if (isMobile) {
+      return {
+        title: 'Out of credits',
+        subtitle: planName
+          ? `Top up your ${planName} plan — instant`
+          : 'Top up to keep creating — instant',
+      };
+    }
     return {
       title: "You've used all your credits",
       subtitle: planName
@@ -55,6 +64,12 @@ function getCopy(args: {
   // Free user states
   if (effectivePlan === 'free') {
     if (balance === 0 || variant === 'no-credits') {
+      if (isMobile) {
+        return {
+          title: 'Out of credits',
+          subtitle: 'Pick a plan to keep creating',
+        };
+      }
       return {
         title: "You've used all your credits",
         subtitle: 'Choose a plan to keep creating with VOVV',
@@ -66,6 +81,12 @@ function getCopy(args: {
         subtitle: 'Pick a plan to keep your visuals flowing',
       };
     }
+    if (isMobile) {
+      return {
+        title: 'Keep creating with VOVV',
+        subtitle: 'Pick a plan — better value as you scale',
+      };
+    }
     return {
       title: 'Choose a plan to keep creating with VOVV',
       subtitle: 'Create more visuals, faster — with better value on larger plans',
@@ -75,7 +96,9 @@ function getCopy(args: {
   // Paid users upgrading
   return {
     title: 'Upgrade your plan',
-    subtitle: 'Unlock more credits and faster output each month',
+    subtitle: isMobile
+      ? 'More credits, faster output every month'
+      : 'Unlock more credits and faster output each month',
   };
 }
 
