@@ -145,12 +145,12 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           {/* Prompt bar */}
           <div className={cn(
             'w-full rounded-xl border border-border/40 bg-muted/40 backdrop-blur-sm flex flex-col',
-            mobileCompact ? 'p-2.5 min-h-[60px]' : 'p-3 min-h-[76px]',
+            mobileCompact ? 'p-2.5 min-h-[68px]' : 'p-3 min-h-[84px]',
           )}>
             <div className="flex-1 flex items-start">
               <span className={cn(
                 'text-foreground/80 leading-relaxed font-medium break-words',
-                mobileCompact ? 'text-xs' : 'text-sm',
+                mobileCompact ? 'text-sm' : 'text-base',
               )}>
                 {visibleText}
                 {showCursor && (
