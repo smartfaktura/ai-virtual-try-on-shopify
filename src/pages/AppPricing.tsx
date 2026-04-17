@@ -764,9 +764,8 @@ export default function AppPricing() {
               >
                 {(() => {
                   const label = stickyCta.label;
-                  if (label === 'Continue with Growth') return 'Get Growth';
+                  if (label === 'Upgrade to Growth') return 'Get Growth';
                   if (label.startsWith('Upgrade to ')) return 'Upgrade';
-                  if (label.startsWith('Choose ')) return 'Choose';
                   return label;
                 })()}
                 {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
