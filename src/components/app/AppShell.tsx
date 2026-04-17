@@ -202,16 +202,16 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Create Visuals CTA */}
-        <div className={cn('pt-4 pb-3', isCollapsed ? 'px-2' : 'px-4')}>
+        <div className={cn('pt-4 pb-4', isCollapsed ? 'px-2' : 'px-4')}>
           <button
             onClick={() => handleNav('/app/generate/product-images')}
             className={cn(
-              'w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
-              isCollapsed ? 'px-2 py-3 text-xs' : 'px-3 py-3 text-sm'
+              'w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
+              isCollapsed ? 'px-2 py-3 text-xs rounded-xl' : 'px-3 py-3.5 text-[15px] rounded-2xl'
             )}
             title={isCollapsed ? 'Create Visuals' : undefined}
           >
-            <Sparkles className="w-4 h-4 flex-shrink-0" />
+            <Sparkles className={cn('flex-shrink-0', isCollapsed ? 'w-4 h-4' : 'w-[18px] h-[18px]')} />
             {!isCollapsed && 'Create Visuals'}
           </button>
         </div>
