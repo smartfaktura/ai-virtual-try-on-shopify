@@ -91,6 +91,29 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const hasManualEdits = useRef({ title: false, productType: false, description: false });
 
+  // Track all blob: URLs created via URL.createObjectURL so we can revoke them
+  // and avoid memory leaks (esp. on large batch uploads).
+  const objectUrlsRef = useRef<Set<string>>(new Set());
+  const createTrackedObjectUrl = useCallback((file: File) => {
+    const url = URL.createObjectURL(file);
+    objectUrlsRef.current.add(url);
+    return url;
+  }, []);
+  const revokeTrackedObjectUrl = useCallback((url?: string | null) => {
+    if (!url || !url.startsWith('blob:')) return;
+    if (objectUrlsRef.current.has(url)) {
+      URL.revokeObjectURL(url);
+      objectUrlsRef.current.delete(url);
+    }
+  }, []);
+  // Revoke everything on unmount
+  useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      objectUrlsRef.current.clear();
+    };
+  }, []);
+
   // Batch mode state
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const isBatchMode = batchItems.length > 1;
