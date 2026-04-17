@@ -1,56 +1,65 @@
 
 
-## Understanding
-
-The user is right — `/app/pricing` currently shows plan selection rows AND a comparison table = same plans shown twice. For a dedicated pricing/comparison page, the **comparison table IS the primary plan selector**. No need for separate selectable rows above it.
-
 ## Goal
-
-Remove the duplicate "compact plan rows" section. Make the **comparison table the hero of plan selection** with:
-- Plan names + prices in sticky header columns
-- "Recommended for You" badge on Growth column
-- A CTA button per plan column at the bottom of the table (and sticky in the header)
-- Free user / current plan states reflected in the header
+Bring `/app/pricing` in line with other `/app/*` pages: standard `PageHeader` title/subtitle, single clear "Compare plans" framing (no double headings), better mobile comparison table, larger/more spacious "How credits work" + FAQ blocks, single-open accordion behavior, and a sticky plan-selector bar that appears once the user scrolls past the comparison table.
 
 ## File
-- `src/pages/AppPricing.tsx`
+- `src/pages/AppPricing.tsx` (only)
 
 ## Changes
 
-### 1. Remove the compact plan rows section entirely
-Delete the current selectable row block (radio + plan name + price). Also remove:
-- The `selectedPlanId` state
-- The single dynamic CTA below the rows
-- The "Choose your plan" mini-header
+### 1. Standardize header to match `/app/workflows`, `/app/video`, etc.
+- Remove the centered hero (eyebrow "Pricing" + giant "Studio-grade visuals…" + sub).
+- Wrap page in `<PageHeader title="Compare plans" subtitle="See every feature side-by-side and pick the plan that matches your output. Cancel anytime." />` — same component used by Workflows / VideoHub.
+- Remove the duplicate `<h2>Choose your plan</h2>` + sub above the table. Keep only the billing toggle on the right (above the table).
+- Tighten container: `max-w-6xl mx-auto px-4 py-8 space-y-14`.
 
-The comparison table replaces all of it.
+### 2. Comparison table: better mobile experience
+Replace the single horizontally-scrolling 760px table with a **responsive dual layout**:
 
-### 2. Promote the comparison table to be THE plan picker
-Restructure `FEATURE_MATRIX` table:
-- **Sticky header row** per plan column containing:
-  - Plan name (Growth gets "Recommended for You" badge above name)
-  - Price `$X/mo` + small annual savings text
-  - Credits/month line
-  - **CTA button** ("Choose Starter" / "Continue with Growth" / "Current plan" / "Reactivate")
-- First column: feature name + category group headers (Generation, Video, etc.)
-- Cell values: ✓ / — / text
-- Mobile: horizontal scroll wrapper with the first column pinned (sticky left)
-- Bottom of table: repeat the CTA row so users don't have to scroll back up
+- **Desktop (`md+`)**: keep current full table (sticky header columns with plan name/price/CTA + grouped feature rows).
+- **Mobile (`<md`)**: hide table, show a **stacked plan-card list** instead — each plan is a `rounded-2xl border` card with:
+  - Plan name + Recommended/Current badge
+  - Price + credits
+  - CTA button (full width)
+  - Collapsible "See all features" → expands to show that plan's checkmark list grouped by category (Generation / Video / Quality / Brand / Account)
+- Plus a compact mobile "billing toggle" pill above the cards.
 
-### 3. Hero stays compact (from previous round)
-Keep the tightened hero, billing toggle, free-user value strip — all still relevant. Billing toggle moves to sit directly above the comparison table (controls the prices in the table header).
+This removes horizontal scroll on phones and reads naturally.
 
-### 4. Trust block placement
-Move the "Cancel anytime · No commitment" + lock line to sit directly under the comparison table (below the bottom CTA row), left-aligned to match the table.
+### 3. Sticky plan-selector bar (after comparison table)
+New component at the bottom of the page (inside `AppPricing`), styled like `ProductImagesStickyBar`:
+- `sticky bottom-4 z-30` · `rounded-xl border bg-card/95 backdrop-blur-sm shadow-lg`
+- Left: small "Selected plan" label + dropdown (`<select>` or popover) listing Free / Starter / Growth / Pro — defaults to **Growth (Recommended)** or current plan if user has one.
+- Middle: live price `$X/mo` + `Y credits/mo` based on selection + billing period.
+- Right: primary CTA — "Continue with {plan}" → triggers same `handlePlanSelect(plan)` flow. If selected = current plan → disabled "Current plan".
+- **Visibility**: only shown after the user scrolls **past the comparison table**. Use `IntersectionObserver` on the comparison section's bottom sentinel — when it leaves viewport upward, show the bar; when it's still in view, hide it. Also hide once footer CTA strip enters view (avoid stacking).
 
-### 5. Sticky mobile CTA
-Update mobile sticky bar to show the **recommended plan** (Growth) by default with a "Continue" button → opens checkout for Growth. No more "selected plan" tracking needed.
+### 4. "How credits work" — bigger, more spacious cards
+- Section title spacing: `space-y-10`.
+- Cards: `p-7 sm:p-8`, `space-y-4`, larger icon container `w-11 h-11`, title `text-base font-semibold`, body `text-sm leading-relaxed` (was `text-[12px]`).
+- Grid gap: `gap-4 sm:gap-5`.
+
+### 5. FAQ — single-open accordion + bigger type
+Replace the `Collapsible` map (each independently open) with shadcn `Accordion type="single" collapsible` so opening one closes the previous.
+- Trigger: `text-base font-medium` (was `text-sm`), `py-5 px-6`.
+- Content: `text-[15px] leading-relaxed text-muted-foreground`, `pb-5 px-6`.
+- Container gap: `space-y-3`.
+- Section heading slightly larger spacing: `space-y-8`.
+
+### 6. Final CTA strip
+Untouched logic, only minor: align with new container width, keep current free vs paid copy/buttons.
 
 ## Out of scope
-- ROI snapshot, How credits work, FAQs, Enterprise CTA — unchanged
-- Plan data, Stripe wiring, modal — unchanged
+- Plan data, Stripe wiring, `PlanChangeDialog`, `UpgradePlanModal` — unchanged.
+- ROI snapshot section — unchanged.
+- Public `/pricing` — untouched.
 
 ## Result
-
-One unified plan section: a premium comparison table where each column is a complete plan (name, price, badge, CTA, feature checkmarks). No duplication. Users compare and pick in one place — exactly how Linear, Notion, Framer, Vercel pricing pages work.
+- Page header matches the rest of `/app/*` (consistent product feel).
+- One clear "Compare plans" framing, no duplicated titles.
+- Mobile users get readable stacked plan cards with per-plan feature accordions instead of a horizontal-scroll table.
+- "How credits work" feels premium and breathable.
+- FAQ behaves cleanly (one open at a time) and is comfortable to read.
+- A subtle sticky plan-selector follows the user after they pass the comparison so they can subscribe from anywhere on the page.
 
