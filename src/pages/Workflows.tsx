@@ -492,97 +492,95 @@ export default function Workflows() {
     >
 
       {/* ── Activity section ── */}
-      {hasActivity && (
-        <div className="space-y-6">
-          {(activeBatchGroups.length > 0 || completedBatchGroups.length > 0 || failedBatchGroups.length > 0) && (
-            <WorkflowActivityCard
-              batchGroups={activeBatchGroups}
-              completedGroups={completedBatchGroups}
-              failedGroups={failedBatchGroups}
-              onCancelJob={handleCancelJob}
-              onDismiss={handleDismiss}
-            />
-          )}
+      {hasActivity && (activeBatchGroups.length > 0 || completedBatchGroups.length > 0 || failedBatchGroups.length > 0) && (
+        <WorkflowActivityCard
+          batchGroups={activeBatchGroups}
+          completedGroups={completedBatchGroups}
+          failedGroups={failedBatchGroups}
+          onCancelJob={handleCancelJob}
+          onDismiss={handleDismiss}
+        />
+      )}
 
+      {/* ── Workflow catalog (heading + grid grouped tight) ── */}
+      <section className="space-y-6">
+        {hasActivity && (
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Choose what to create</h2>
             <p className="text-base text-muted-foreground mt-1.5">Pick a Visual Type to start a new set.</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── Layout switcher (when no activity section shown) ── */}
-
-      {/* ── Workflow catalog ── */}
-      {isLoading ? (
-        effectiveLayout === 'rows' ? (
-          <div className="space-y-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="rounded-lg border overflow-hidden">
-                <div className="flex flex-col lg:flex-row">
-                  <Skeleton className="w-full lg:w-[45%] aspect-[4/3] lg:aspect-[3/4]" />
-                  <div className="flex-1 p-6 lg:p-10 space-y-4">
-                    <Skeleton className="h-7 w-48" />
-                    <Skeleton className="h-4 w-full max-w-md" />
-                    <Skeleton className="h-4 w-full max-w-sm" />
-                    <Skeleton className="h-11 w-36 rounded-full" />
+        {isLoading ? (
+          effectiveLayout === 'rows' ? (
+            <div className="space-y-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-lg border overflow-hidden">
+                  <div className="flex flex-col lg:flex-row">
+                    <Skeleton className="w-full lg:w-[45%] aspect-[4/3] lg:aspect-[3/4]" />
+                    <div className="flex-1 p-6 lg:p-10 space-y-4">
+                      <Skeleton className="h-7 w-48" />
+                      <Skeleton className="h-4 w-full max-w-md" />
+                      <Skeleton className="h-4 w-full max-w-sm" />
+                      <Skeleton className="h-11 w-36 rounded-full" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          ) : (
+            <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="rounded-lg border overflow-hidden">
+                  <Skeleton className={`w-full ${isMobile && effectiveLayout === '2col' ? 'aspect-[2/3]' : 'aspect-square'}`} />
+                  <div className="p-4 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-8 w-full rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : effectiveLayout === 'rows' ? (
+          <div className="space-y-6">
+            {workflows.map((workflow, index) => (
+              <WorkflowCard
+                key={workflow.id}
+                id={`workflow-${workflow.id}`}
+                workflow={workflow}
+                onSelect={() => handleCreateVisualSet(workflow)}
+                reversed={index % 2 !== 0}
+                beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
+              />
             ))}
+            <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
+            <WorkflowRequestBanner />
           </div>
         ) : (
           <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-lg border overflow-hidden">
-                <Skeleton className={`w-full ${isMobile && effectiveLayout === '2col' ? 'aspect-[2/3]' : 'aspect-square'}`} />
-                <div className="p-4 space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-8 w-full rounded-full" />
-                </div>
-              </div>
+            {workflows.map((workflow) => (
+              <WorkflowCardCompact
+                key={workflow.id}
+                id={`workflow-${workflow.id}`}
+                workflow={workflow}
+                onSelect={() => handleCreateVisualSet(workflow)}
+                mobileCompact={isMobile && effectiveLayout === '2col'}
+                beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
+              />
             ))}
-          </div>
-        )
-      ) : effectiveLayout === 'rows' ? (
-        <div className="space-y-6">
-          {workflows.map((workflow, index) => (
-            <WorkflowCard
-              key={workflow.id}
-              id={`workflow-${workflow.id}`}
-              workflow={workflow}
-              onSelect={() => handleCreateVisualSet(workflow)}
-              reversed={index % 2 !== 0}
-              beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
-            />
-          ))}
-          <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
-          <WorkflowRequestBanner />
-        </div>
-      ) : (
-        <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
-          {workflows.map((workflow) => (
-            <WorkflowCardCompact
-              key={workflow.id}
-              id={`workflow-${workflow.id}`}
-              workflow={workflow}
-              onSelect={() => handleCreateVisualSet(workflow)}
+            <FreestylePromptCard
+              onSelect={() => navigate('/app/freestyle')}
               mobileCompact={isMobile && effectiveLayout === '2col'}
-              beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
             />
-          ))}
-          <FreestylePromptCard
-            onSelect={() => navigate('/app/freestyle')}
-            mobileCompact={isMobile && effectiveLayout === '2col'}
-          />
-          <WorkflowRequestBanner />
-        </div>
-      )}
+            <WorkflowRequestBanner />
+          </div>
+        )}
+      </section>
 
-      {/* ── Recent Creations ── */}
+      {/* ── Recent Creations (heading + row grouped tight) ── */}
       {(recentJobs.length > 0 || isLoadingRecent) && (
-        <div className="space-y-4">
+        <section className="space-y-6">
           <div className="flex items-end justify-between gap-3">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Recent Creations</h2>
@@ -594,7 +592,7 @@ export default function Workflows() {
             </Button>
           </div>
           <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
-        </div>
+        </section>
       )}
     </PageHeader>
   );
