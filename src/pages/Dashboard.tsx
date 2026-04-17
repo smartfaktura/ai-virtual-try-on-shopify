@@ -305,9 +305,8 @@ export default function Dashboard() {
   // --- FIRST-RUN DASHBOARD ---
   if (dashboardMode === 'new') {
     return (
-      <div className="space-y-6 sm:space-y-10">
+      <div className="space-y-12 sm:space-y-16">
         <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
-        {/* Welcome — bold, matching landing hero */}
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
             Welcome, {firstName} 👋
@@ -340,7 +339,7 @@ export default function Dashboard() {
 
         {/* Start here — 3-card grid */}
         <div className="space-y-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Start here</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Start here</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Card 1 — Product Visuals */}
             <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
@@ -403,7 +402,7 @@ export default function Dashboard() {
         {/* Create Video Section */}
         <div className="space-y-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Create Video</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Create Video</h2>
             <p className="text-base text-muted-foreground mt-1.5">Bring your visuals to life with motion and short film tools.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -449,7 +448,7 @@ export default function Dashboard() {
         {/* Video Showcase */}
         <div className="space-y-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Your Products, In Motion</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Your Products, In Motion</h2>
             <p className="text-base text-muted-foreground mt-1.5">AI-generated video ads ready in minutes, not weeks.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -471,8 +470,8 @@ export default function Dashboard() {
         {/* More tools */}
         <div className="space-y-4">
           <div>
-            <h2 className="text-xl font-bold text-foreground">More tools</h2>
-            <p className="text-sm text-muted-foreground mt-1">Specialized tools for angles, quality, and catalog creation.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">More tools</h2>
+            <p className="text-base text-muted-foreground mt-1.5">Specialized tools for angles, quality, and catalog creation.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {([
@@ -520,7 +519,7 @@ export default function Dashboard() {
 
   // --- RETURNING USER DASHBOARD ---
   return (
-    <div className="space-y-5 sm:space-y-10">
+    <div className="space-y-12 sm:space-y-16">
       <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
       {/* Welcome greeting + CTA */}
       <div>
@@ -641,7 +640,7 @@ export default function Dashboard() {
 
       {/* Tools */}
       <div className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Tools</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl border border-border bg-card p-5 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
@@ -680,7 +679,7 @@ export default function Dashboard() {
       {/* Recent Jobs */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Jobs</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Recent Jobs</h2>
           <Button variant="link" className="text-sm font-medium" onClick={() => navigate('/app/library')}>
             View all
           </Button>
