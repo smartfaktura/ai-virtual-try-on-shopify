@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
-  Check, ChevronDown, ArrowUpRight, Lock, Minus,
-  Image, Video, RefreshCw,
+  Check, ArrowUpRight, Lock, Minus,
+  Image, Video, RefreshCw, ArrowRight,
 } from 'lucide-react';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
+import { PageHeader } from '@/components/app/PageHeader';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
@@ -13,7 +16,6 @@ import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 import type { PricingPlan } from '@/types';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
-const CREDITS_PER_IMAGE = 5;
 
 const COMPARISON = [
   { role: 'Product photographer', traditional: '$500–2,000/day' },
@@ -23,7 +25,6 @@ const COMPARISON = [
 ];
 
 // ── Feature comparison matrix ──
-// value true = ✓ · false = — · string = text value
 type Cell = boolean | string;
 type FeatureRow = { label: string; values: Record<string, Cell> };
 type FeatureGroup = { title: string; rows: FeatureRow[] };
@@ -114,11 +115,35 @@ const FAQS = [
   },
 ];
 
-// Helper to render a comparison cell
 function renderCell(val: Cell) {
   if (val === true) return <Check className="w-4 h-4 text-primary mx-auto" strokeWidth={2.5} />;
   if (val === false) return <Minus className="w-4 h-4 text-muted-foreground/40 mx-auto" />;
   return <span className="text-xs font-medium text-foreground">{val}</span>;
+}
+
+// Billing toggle (reused mobile + desktop)
+function BillingToggle({ isAnnual, onChange }: { isAnnual: boolean; onChange: (v: 'monthly' | 'annual') => void }) {
+  return (
+    <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/40 text-xs">
+      <button
+        onClick={() => onChange('monthly')}
+        className={`px-4 py-1.5 rounded-full transition-colors ${
+          !isAnnual ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
+        }`}
+      >
+        Monthly
+      </button>
+      <button
+        onClick={() => onChange('annual')}
+        className={`px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
+          isAnnual ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
+        }`}
+      >
+        Annual
+        <span className="text-[10px] text-primary font-semibold">−20%</span>
+      </button>
+    </div>
+  );
 }
 
 export default function AppPricing() {
@@ -136,6 +161,52 @@ export default function AppPricing() {
   const currentIdx = PLAN_ORDER.indexOf(plan);
   const planConfig = pricingPlans.find(p => p.planId === plan);
   const isFreeUser = plan === 'free';
+
+  // Sticky bar selected plan — defaults to current plan if paid, otherwise Growth (recommended)
+  const defaultStickyPlanId = useMemo(() => {
+    if (!isFreeUser) return plan;
+    return 'growth';
+  }, [plan, isFreeUser]);
+  const [stickyPlanId, setStickyPlanId] = useState<string>(defaultStickyPlanId);
+  useEffect(() => { setStickyPlanId(defaultStickyPlanId); }, [defaultStickyPlanId]);
+
+  // Sticky bar visibility — show after user scrolls past the comparison section
+  const compareSectionRef = useRef<HTMLDivElement>(null);
+  const finalCtaRef = useRef<HTMLDivElement>(null);
+  const [pastCompare, setPastCompare] = useState(false);
+  const [atFinalCta, setAtFinalCta] = useState(false);
+
+  useEffect(() => {
+    const compareEl = compareSectionRef.current;
+    const ctaEl = finalCtaRef.current;
+    if (!compareEl) return;
+
+    const compareObserver = new IntersectionObserver(
+      ([entry]) => {
+        // past = bottom of compare is above the viewport
+        const rect = entry.boundingClientRect;
+        setPastCompare(rect.bottom < window.innerHeight * 0.5);
+      },
+      { threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+    compareObserver.observe(compareEl);
+
+    let ctaObserver: IntersectionObserver | null = null;
+    if (ctaEl) {
+      ctaObserver = new IntersectionObserver(
+        ([entry]) => setAtFinalCta(entry.isIntersecting),
+        { threshold: 0.1 }
+      );
+      ctaObserver.observe(ctaEl);
+    }
+
+    return () => {
+      compareObserver.disconnect();
+      ctaObserver?.disconnect();
+    };
+  }, []);
+
+  const showStickyBar = pastCompare && !atFinalCta;
 
   const handleDialogConfirm = async () => {
     setLoading(true);
@@ -155,11 +226,6 @@ export default function AppPricing() {
     }
   };
 
-  const scrollToPlans = () => {
-    document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  // Per-plan CTA used inside the comparison table header & footer
   const getPlanCta = (p: PricingPlan) => {
     const targetIdx = PLAN_ORDER.indexOf(p.planId);
     const isCurrent = p.planId === plan;
@@ -183,50 +249,37 @@ export default function AppPricing() {
     setDialogOpen(true);
   };
 
+  // ── Sticky bar derived state ──
+  const stickyPlan = pricingPlans.find(p => p.planId === stickyPlanId);
+  const stickyPrice = stickyPlan
+    ? stickyPlan.planId === 'free'
+      ? 0
+      : isAnnual
+        ? Math.round(stickyPlan.annualPrice / 12)
+        : stickyPlan.monthlyPrice
+    : 0;
+  const stickyCredits = stickyPlan && typeof stickyPlan.credits === 'number' ? stickyPlan.credits : 0;
+  const stickyCta = stickyPlan ? getPlanCta(stickyPlan) : null;
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10 sm:py-16 pb-20 space-y-20 sm:space-y-24">
+    <div className="max-w-6xl mx-auto px-4 py-8 pb-24 space-y-14">
+      <PageHeader
+        title="Compare plans"
+        subtitle="See every feature side-by-side and pick the plan that matches your output. Cancel anytime."
+      >
+        <></>
+      </PageHeader>
 
-      {/* ── Hero ── */}
-      <header className="text-center space-y-4 max-w-2xl mx-auto">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">Pricing</p>
-        <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight leading-[1.05]">
-          Studio-grade visuals.<br className="hidden sm:block" /> Without the studio.
-        </h1>
-        <p className="text-base text-muted-foreground leading-relaxed">
-          Compare plans side-by-side and pick what matches your output. Cancel anytime.
-        </p>
-      </header>
-
-      {/* ── Plans = Comparison table (single unified plan picker) ── */}
-      <section id="plans-section" className="space-y-5">
-        {/* Header + billing toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Choose your plan</h2>
-            <p className="text-sm text-muted-foreground mt-1">Compare every feature across all tiers.</p>
-          </div>
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/40 text-xs self-start sm:self-auto">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`px-4 py-1.5 rounded-full transition-colors ${
-                !isAnnual ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingPeriod('annual')}
-              className={`px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
-                isAnnual ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
-              }`}
-            >
-              Annual
-              <span className="text-[10px] text-primary font-semibold">−20%</span>
-            </button>
-          </div>
+      {/* ── Plans / Comparison ── */}
+      <section ref={compareSectionRef} id="plans-section" className="space-y-5">
+        {/* Billing toggle row */}
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">All plans · Cancel anytime</p>
+          <BillingToggle isAnnual={isAnnual} onChange={setBillingPeriod} />
         </div>
 
-        <div className="rounded-2xl border border-border/50 overflow-hidden bg-card">
+        {/* ─ Desktop comparison table ─ */}
+        <div className="hidden md:block rounded-2xl border border-border/50 overflow-hidden bg-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
               <thead>
@@ -247,13 +300,9 @@ export default function AppPricing() {
                     return (
                       <th
                         key={p.planId}
-                        className={`px-3 py-5 align-bottom min-w-[150px] relative ${
-                          isRec ? 'bg-primary/[0.04]' : ''
-                        }`}
+                        className={`px-3 py-5 align-bottom min-w-[150px] relative ${isRec ? 'bg-primary/[0.04]' : ''}`}
                       >
-                        {isRec && (
-                          <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />
-                        )}
+                        {isRec && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />}
                         <div className="flex flex-col items-center gap-2 text-center">
                           {isRec ? (
                             <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
@@ -322,7 +371,6 @@ export default function AppPricing() {
                     ))}
                   </>
                 ))}
-                {/* Footer CTA row */}
                 <tr className="border-t border-border/50 bg-muted/20">
                   <td className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Get started
@@ -350,11 +398,101 @@ export default function AppPricing() {
           </div>
         </div>
 
+        {/* ─ Mobile stacked plan cards ─ */}
+        <div className="md:hidden space-y-3">
+          {mainPlans.map((p) => {
+            const isRec = p.planId === 'growth';
+            const isCurrent = p.planId === plan;
+            const isFree = p.planId === 'free';
+            const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+            const annualSavings = isAnnual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
+            const credits = typeof p.credits === 'number' ? p.credits : 0;
+            const cta = getPlanCta(p);
+            return (
+              <div
+                key={p.planId}
+                className={`rounded-2xl border bg-card p-4 ${isRec ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/50'}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold">{p.name}</span>
+                      {isRec && (
+                        <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
+                          Recommended
+                        </span>
+                      )}
+                      {isCurrent && (
+                        <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {credits > 0 ? `${credits.toLocaleString()} credits / month` : 'Trial credits'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-baseline gap-1 justify-end">
+                      <span className="text-xl font-semibold">${isFree ? 0 : displayPrice}</span>
+                      <span className="text-[11px] text-muted-foreground">/mo</span>
+                    </div>
+                    {isAnnual && annualSavings > 0 && (
+                      <span className="text-[10px] text-primary font-medium">save ${annualSavings}/yr</span>
+                    )}
+                  </div>
+                </div>
+
+                <Button
+                  variant={cta.variant}
+                  disabled={cta.disabled}
+                  onClick={() => handlePlanSelect(p)}
+                  className="w-full mt-4 rounded-lg"
+                >
+                  {cta.label}
+                </Button>
+
+                <Collapsible>
+                  <CollapsibleTrigger className="w-full flex items-center justify-between mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                    <span>See all features</span>
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-3 space-y-3">
+                    {FEATURE_MATRIX.map((group) => (
+                      <div key={group.title} className="space-y-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{group.title}</p>
+                        <ul className="space-y-1.5">
+                          {group.rows.map((row) => {
+                            const v = row.values[p.planId] ?? false;
+                            return (
+                              <li key={row.label} className="flex items-start gap-2 text-[13px]">
+                                {v === true ? (
+                                  <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+                                ) : v === false ? (
+                                  <Minus className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 flex-shrink-0" />
+                                ) : (
+                                  <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+                                )}
+                                <span className={v === false ? 'text-muted-foreground/60' : 'text-foreground/90'}>
+                                  {row.label}
+                                  {typeof v === 'string' && <span className="text-muted-foreground"> · {v}</span>}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Trust block */}
         <div className="flex flex-col gap-1.5 pt-1 px-1">
-          <p className="text-[13px] text-muted-foreground">
-            Cancel anytime · No commitment
-          </p>
+          <p className="text-[13px] text-muted-foreground">Cancel anytime · No commitment</p>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
             <Lock className="w-3 h-3" />
             <span>You'll be securely redirected to complete checkout</span>
@@ -406,50 +544,53 @@ export default function AppPricing() {
       </section>
 
       {/* ── How credits work ── */}
-      <section className="space-y-8">
+      <section className="space-y-10">
         <div className="text-center space-y-3 max-w-xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">How credits work</h2>
           <p className="text-sm text-muted-foreground">One simple currency powers everything you create.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
           {[
             { icon: Image, title: 'Generate images', desc: '4–6 credits per image depending on the workflow — product, lifestyle, editorial, or on-model.' },
             { icon: Video, title: 'Video & upscaling', desc: 'Use credits for video generation, 2K and 4K upscaling, and Brand Model training.' },
             { icon: RefreshCw, title: 'Monthly refresh', desc: 'Credits refresh every billing cycle. Higher plans unlock better per-credit value and faster queues.' },
           ].map((item) => (
-            <div key={item.title} className="rounded-2xl border border-border/50 bg-card p-5 space-y-3">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <item.icon className="w-4 h-4 text-primary" />
+            <div key={item.title} className="rounded-2xl border border-border/50 bg-card p-7 sm:p-8 space-y-4">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                <item.icon className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold tracking-tight">{item.title}</h3>
-              <p className="text-[12px] text-muted-foreground leading-relaxed">{item.desc}</p>
+              <h3 className="text-base font-semibold tracking-tight">{item.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── FAQ ── */}
-      <section className="space-y-6 max-w-3xl mx-auto w-full">
+      <section className="space-y-8 max-w-3xl mx-auto w-full">
         <div className="text-center space-y-3">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Questions, answered</h2>
         </div>
-        <div className="space-y-2">
-          {FAQS.map((faq) => (
-            <Collapsible key={faq.q}>
-              <CollapsibleTrigger className="w-full flex items-center justify-between rounded-2xl border border-border/50 bg-card px-5 py-4 hover:border-border transition-colors text-left group">
-                <span className="text-sm font-medium pr-4">{faq.q}</span>
-                <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="px-5 pt-2 pb-4">
-                <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-              </CollapsibleContent>
-            </Collapsible>
+        <Accordion type="single" collapsible className="space-y-3">
+          {FAQS.map((faq, i) => (
+            <AccordionItem
+              key={faq.q}
+              value={`faq-${i}`}
+              className="rounded-2xl border border-border/50 bg-card px-2 border-b"
+            >
+              <AccordionTrigger className="text-base font-medium py-5 px-4 hover:no-underline text-left">
+                {faq.q}
+              </AccordionTrigger>
+              <AccordionContent className="pb-5 px-4 text-[15px] leading-relaxed text-muted-foreground">
+                {faq.a}
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       </section>
 
       {/* ── Final CTA strip ── */}
-      <section className="rounded-2xl border border-border/50 bg-card p-8 sm:p-10 text-center space-y-5">
+      <section ref={finalCtaRef} className="rounded-2xl border border-border/50 bg-card p-8 sm:p-10 text-center space-y-5">
         <div className="space-y-2 max-w-xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
             {isFreeUser ? 'Ready to start creating?' : 'Need credits sooner?'}
@@ -462,7 +603,10 @@ export default function AppPricing() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {isFreeUser ? (
-            <Button onClick={scrollToPlans} className="rounded-xl min-h-[44px] gap-2">
+            <Button
+              onClick={() => document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="rounded-xl min-h-[44px] gap-2"
+            >
               Choose a plan
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Button>
@@ -477,6 +621,45 @@ export default function AppPricing() {
           </Button>
         </div>
       </section>
+
+      {/* ── Sticky plan-selector bar ── */}
+      {showStickyBar && stickyPlan && stickyCta && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[min(640px,calc(100vw-2rem))] z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+            <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex flex-col min-w-0">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Selected plan</label>
+                  <select
+                    value={stickyPlanId}
+                    onChange={(e) => setStickyPlanId(e.target.value)}
+                    className="bg-transparent text-sm font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded -ml-1 px-1 py-0.5 cursor-pointer"
+                  >
+                    {mainPlans.map((p) => (
+                      <option key={p.planId} value={p.planId}>
+                        {p.name}{p.planId === 'growth' ? ' · Recommended' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="hidden sm:flex flex-col text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">${stickyPrice}/mo</span>
+                  {stickyCredits > 0 && <span>{stickyCredits.toLocaleString()} credits/mo</span>}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                disabled={stickyCta.disabled}
+                onClick={() => handlePlanSelect(stickyPlan)}
+                className="gap-1.5 flex-shrink-0"
+              >
+                {stickyCta.label}
+                {!stickyCta.disabled && <ArrowRight className="w-3.5 h-3.5" />}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <PlanChangeDialog
         open={dialogOpen}
