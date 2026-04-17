@@ -75,13 +75,6 @@ const navGroups = [
       { label: 'Library', icon: Image, path: '/app/library' },
     ],
   },
-  {
-    label: 'Learn',
-    items: [
-      { label: 'Tutorials', icon: GraduationCap, path: '/app/learn' },
-      { label: 'Help & Support', icon: LifeBuoy, path: '/app/help' },
-    ],
-  },
 ];
 
 type NavItem = { label: string; icon: typeof Home; path: string };
@@ -326,7 +319,20 @@ export function AppShell({ children }: AppShellProps) {
                   Brand Profiles
                 </button>
                 <button
-                  onClick={() => { setEarnCreditsOpen(true); setUserMenuOpen(false); }}
+                  onClick={() => { navigate('/app/learn'); setUserMenuOpen(false); }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  Tutorials
+                </button>
+                <button
+                  onClick={() => { navigate('/app/help'); setUserMenuOpen(false); }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <LifeBuoy className="w-4 h-4" />
+                  Help & Support
+                </button>
+                <button
                   className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
                 >
                   <Gift className="w-4 h-4" />
