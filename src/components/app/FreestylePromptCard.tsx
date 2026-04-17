@@ -131,7 +131,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
     >
       <div className={cn(
         'relative w-full overflow-hidden bg-gradient-to-b from-muted/30 to-background flex flex-col items-center justify-center',
-        mobileCompact ? 'aspect-[2/3]' : 'aspect-[3/4]',
+        mobileCompact ? 'aspect-[2/3]' : 'aspect-[4/5]',
       )}>
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary/[0.06] blur-3xl pointer-events-none" />
 
