@@ -139,7 +139,8 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
   }, [upgradePlans, selectedPlanId]);
 
   const planConfigCurrent = pricingPlans.find((p) => p.planId === effectivePlan);
-  const copy = getCopy({ variant, effectivePlan, balance, isTopup, planName: planConfigCurrent?.name });
+  const isMobile = useIsMobile();
+  const copy = getCopy({ variant, effectivePlan, balance, isTopup, planName: planConfigCurrent?.name, isMobile });
 
   // No upgrades available and not topup mode → admin preview fallback / nothing
   if (!isTopup && !upgradePlans.length) {
