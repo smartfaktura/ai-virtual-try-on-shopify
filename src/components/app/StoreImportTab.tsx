@@ -254,8 +254,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
   const errorInfo = importError ? getErrorInfo(importError.code, importError.message) : null;
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-2">
+    <div className="space-y-5 min-w-0">
+      <div className="space-y-2 min-w-0">
         <Label htmlFor="store-url">Product URL</Label>
         <div className="flex gap-2 min-w-0">
           <div className="relative flex-1">
@@ -608,11 +608,6 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
         </div>
       )}
 
-      {!extracted && !isImporting && !importError && (
-        <div className="flex justify-end pt-6">
-          <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
-        </div>
-      )}
     </div>
   );
 }

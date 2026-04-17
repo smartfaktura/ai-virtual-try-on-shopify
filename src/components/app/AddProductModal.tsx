@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ChevronRight, ChevronDown } from 'lucide-react';
+import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ChevronRight, ChevronLeft, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ManualProductTab } from './ManualProductTab';
 import { StoreImportTab } from './StoreImportTab';
@@ -109,19 +109,19 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
   );
 
   const compactBody = (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex flex-col flex-1 min-h-0 min-w-0">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto pr-1 -mr-1">
         {activeBody}
       </div>
       {onSwitchMethod && (
-        <div className="pt-4 mt-2 border-t flex items-center justify-start">
+        <div className="mt-auto pt-6 flex items-center justify-start">
           <button
             type="button"
             onClick={onSwitchMethod}
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
+            <LayoutGrid className="w-3.5 h-3.5" />
             Switch method
-            <ChevronDown className="w-3 h-3" />
           </button>
         </div>
       )}
@@ -215,7 +215,19 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[92vh] flex flex-col">
           <DrawerHeader className="px-5 pt-4 pb-3 text-left shrink-0">
-            <DrawerTitle className="text-lg font-semibold tracking-tight">{headerTitle}</DrawerTitle>
+            <DrawerTitle className="text-lg font-semibold tracking-tight flex items-center gap-2">
+              {isCompact && onSwitchMethod && (
+                <button
+                  type="button"
+                  onClick={onSwitchMethod}
+                  aria-label="Back to methods"
+                  className="inline-flex items-center justify-center w-7 h-7 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              )}
+              {headerTitle}
+            </DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">{subtitle}</DrawerDescription>
           </DrawerHeader>
           <div className="px-5 pb-5 overflow-y-auto flex-1 min-h-0">
@@ -234,7 +246,19 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         className="w-full sm:max-w-[720px] p-0 flex flex-col gap-0"
       >
         <SheetHeader className="px-7 pt-7 pb-4 shrink-0 space-y-1.5">
-          <SheetTitle className="text-xl font-semibold tracking-tight">{headerTitle}</SheetTitle>
+          <SheetTitle className="text-xl font-semibold tracking-tight flex items-center gap-2">
+            {isCompact && onSwitchMethod && (
+              <button
+                type="button"
+                onClick={onSwitchMethod}
+                aria-label="Back to methods"
+                className="inline-flex items-center justify-center w-7 h-7 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+            {headerTitle}
+          </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">{subtitle}</SheetDescription>
         </SheetHeader>
 
