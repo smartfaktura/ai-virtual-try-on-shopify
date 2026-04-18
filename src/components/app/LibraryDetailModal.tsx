@@ -413,10 +413,11 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </p>
                 <Button
                   onClick={() => setSubmitDiscoverOpen(true)}
+                  variant="outline"
                   size="pill"
-                  className="mt-3 w-full font-medium"
+                  className="mt-3 w-full font-medium gap-1.5"
                 >
-                  <Send className="w-4 h-4 mr-2" /> Submit for Review
+                  <Send className="w-4 h-4" /> Submit for Review
                 </Button>
               </div>
 
