@@ -81,33 +81,31 @@ export function ContentIntentStep({ value, onChange }: ContentIntentStepProps) {
               key={opt.value}
               onClick={() => handleIntentSelect(opt.value)}
               className={cn(
-                'group text-left rounded-2xl border p-4 transition-all duration-200',
-                'bg-white/[0.02] hover:bg-white/[0.04]',
+                'group relative text-left rounded-2xl border p-4 transition-all duration-200',
+                'bg-card hover:bg-muted/40',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                 isActive
-                  ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_hsl(var(--primary)/0.4)]'
+                  ? 'border-primary/60 bg-primary/5 shadow-[0_0_0_1px_hsl(var(--primary)/0.4)]'
                   : 'border-border/60 hover:border-border',
               )}
             >
+              {opt.recommendsClarityFirst && (
+                <span className="absolute top-2.5 right-2.5 text-[9px] uppercase tracking-wider text-primary font-semibold px-1.5 py-0.5 rounded bg-primary/10">
+                  Clarity
+                </span>
+              )}
               <div className="flex items-start gap-3">
                 <div className={cn(
                   'flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors',
-                  isActive ? 'bg-primary/15 text-primary' : 'bg-muted/60 text-muted-foreground group-hover:text-foreground',
+                  isActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground group-hover:text-foreground',
                 )}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className={cn(
-                      'text-sm font-medium tracking-tight',
-                      isActive ? 'text-foreground' : 'text-foreground/90',
-                    )}>{opt.label}</p>
-                    {opt.recommendsClarityFirst && (
-                      <span className="text-[9px] uppercase tracking-wider text-primary/80 font-semibold px-1.5 py-0.5 rounded bg-primary/10">
-                        Clarity
-                      </span>
-                    )}
-                  </div>
+                  <p className={cn(
+                    'text-sm font-medium tracking-tight pr-14',
+                    isActive ? 'text-foreground' : 'text-foreground/90',
+                  )}>{opt.label}</p>
                   <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{opt.description}</p>
                 </div>
               </div>
@@ -146,7 +144,7 @@ export function ContentIntentStep({ value, onChange }: ContentIntentStepProps) {
       </div>
 
       {/* Clarity-first toggle */}
-      <div className="flex items-start justify-between gap-4 rounded-2xl border border-border/60 bg-white/[0.02] p-4">
+      <div className="flex items-start justify-between gap-4 rounded-2xl border border-border/60 bg-card p-4">
         <div className="flex items-start gap-3 min-w-0">
           <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
             {value.clarityFirstMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -174,7 +172,7 @@ export function ContentIntentStep({ value, onChange }: ContentIntentStepProps) {
       </button>
 
       {showAdvanced && (
-        <div className="space-y-6 rounded-2xl border border-border/60 bg-white/[0.02] p-5">
+        <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5">
           {/* Sound mode */}
           <div>
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2.5 block">
@@ -283,7 +281,7 @@ export function ContentIntentStep({ value, onChange }: ContentIntentStepProps) {
                 value={value.audienceContext ?? ''}
                 onChange={(e) => update('audienceContext', e.target.value)}
                 placeholder="e.g. Gen-Z skincare buyers"
-                className="bg-white/[0.02]"
+                className="bg-background"
               />
             </div>
             <div>
@@ -292,7 +290,7 @@ export function ContentIntentStep({ value, onChange }: ContentIntentStepProps) {
                 value={value.offerContext ?? ''}
                 onChange={(e) => update('offerContext', e.target.value)}
                 placeholder="e.g. New launch, free shipping"
-                className="bg-white/[0.02]"
+                className="bg-background"
               />
             </div>
           </div>
