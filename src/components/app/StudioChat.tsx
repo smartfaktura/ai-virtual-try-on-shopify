@@ -281,7 +281,7 @@ export function StudioChat() {
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading || isThrottled}
-              className="p-2.5 rounded-xl bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
+              className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>

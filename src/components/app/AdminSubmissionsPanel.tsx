@@ -162,21 +162,21 @@ function SubmissionCard({
                   className="w-full text-xs rounded-lg border border-border/50 bg-muted/20 p-2 resize-none h-16 focus:outline-none focus:ring-1 focus:ring-ring"
                 />
                 <div className="flex gap-2">
-                  <Button size="sm" variant="destructive" onClick={onConfirmReject} disabled={isRejecting} className="flex-1 rounded-lg h-8 text-xs">
+                  <Button size="sm" variant="destructive" onClick={onConfirmReject} disabled={isRejecting} className="flex-1 text-xs">
                     {isRejecting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Reject'}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={onCancelReject} className="rounded-lg h-8 text-xs">
+                  <Button size="sm" variant="ghost" onClick={onCancelReject} className="text-xs">
                     Cancel
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="flex gap-2">
-                <Button size="sm" onClick={onApprove} disabled={isApproving} className="flex-1 rounded-lg text-xs">
+                <Button size="sm" onClick={onApprove} disabled={isApproving} className="flex-1 text-xs">
                   <Check className="w-3.5 h-3.5 mr-1" />
                   {isApproving ? 'Approving...' : 'Approve'}
                 </Button>
-                <Button size="sm" variant="outline" onClick={onStartReject} className="flex-1 rounded-lg text-xs">
+                <Button size="sm" variant="outline" onClick={onStartReject} className="flex-1 text-xs">
                   <X className="w-3.5 h-3.5 mr-1" /> Reject
                 </Button>
               </div>

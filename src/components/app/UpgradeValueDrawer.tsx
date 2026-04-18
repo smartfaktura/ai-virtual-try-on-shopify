@@ -236,7 +236,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext 
                   <Button
                     variant={recommended ? 'default' : 'outline'}
                     size="sm"
-                    className="w-full rounded-xl h-10 text-sm"
+                    className="w-full h-10 text-sm"
                     onClick={() => handleCheckout(plan)}
                   >
                     {`Get ${plan.name}`}

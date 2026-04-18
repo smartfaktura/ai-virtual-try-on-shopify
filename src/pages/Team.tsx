@@ -170,7 +170,7 @@ export default function Team() {
             Generate professional product visuals in seconds — without photoshoots, studios, or editing.
           </p>
 
-          <Button asChild size="lg" className="rounded-xl text-base px-8 min-h-[48px]">
+          <Button asChild size="lg" className="text-base px-8 min-h-[48px]">
             <Link to="/auth">
               Start Creating Free <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

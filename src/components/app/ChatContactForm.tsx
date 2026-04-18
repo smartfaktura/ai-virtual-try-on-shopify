@@ -178,7 +178,7 @@ export function ChatContactForm({ onSent, variant = 'compact' }: ChatContactForm
       <button
         onClick={handleSubmit}
         disabled={state === 'sending' || !isValid}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors"
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors"
       >
         <Send className="w-3 h-3" />
         {state === 'sending' ? 'Sending...' : 'Send Message'}

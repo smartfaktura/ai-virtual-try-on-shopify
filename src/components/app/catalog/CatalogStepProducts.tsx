@@ -206,7 +206,7 @@ export function CatalogStepProducts({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 text-xs rounded-lg"
+                      className="h-8 text-xs"
                       onClick={() => {
                         const ids = filtered.slice(0, maxProducts).map(p => p.id);
                         setSelectionOrder(ids);
@@ -221,7 +221,7 @@ export function CatalogStepProducts({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 text-xs rounded-lg text-muted-foreground"
+                          className="h-8 text-xs text-muted-foreground"
                           onClick={() => { setSelectionOrder([]); onProductSelectionChange(new Set()); }}
                         >
                           Clear
@@ -440,7 +440,6 @@ export function CatalogStepProducts({
             />
             <Button
               disabled
-              className="rounded-xl"
             >
               Coming Soon
             </Button>

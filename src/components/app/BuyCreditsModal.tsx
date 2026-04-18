@@ -233,7 +233,7 @@ export function BuyCreditsModal() {
                             )}
                             <Button
                               variant={pack.popular ? 'default' : 'outline'}
-                              className="w-full min-h-[44px] rounded-xl text-sm font-medium gap-2"
+                              className="w-full min-h-[44px] text-sm font-medium gap-2"
                               onClick={() => handlePurchase(pack.packId, pack.stripePriceId)}
                               disabled={!!topUpLoadingId || switchLoading}
                             >
@@ -349,7 +349,7 @@ export function BuyCreditsModal() {
                     <Button
                       onClick={handleSwitchToAnnual}
                       size="sm"
-                      className="rounded-lg shrink-0 gap-1.5"
+                      className="shrink-0 gap-1.5"
                       disabled={switchLoading || !!topUpLoadingId}
                     >
                       {switchLoading ? (
@@ -484,7 +484,7 @@ export function BuyCreditsModal() {
                         {/* CTA */}
                         <Button
                           variant={isDisabled ? 'secondary' : (p.highlighted && !isCurrent && (plan === 'free' || targetIdx > currentIdx)) ? 'default' : 'outline'}
-                          className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
+                          className="w-full min-h-[44px] text-sm font-medium mt-auto"
                           onClick={() => handlePlanSelect(p.planId)}
                           disabled={isDisabled}
                         >
