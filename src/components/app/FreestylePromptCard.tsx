@@ -185,8 +185,8 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
 
           {/* Visual workflow pills — single row */}
           <div className={cn(
-            'flex flex-nowrap items-center justify-center w-full overflow-hidden',
-            mobileCompact ? 'gap-1' : 'gap-1.5',
+            'flex flex-nowrap items-center justify-center w-full',
+            mobileCompact ? 'gap-1' : 'gap-1',
           )}>
             {WORKFLOW_STEPS.map((step, i) => {
               const isGenerate = step.label === 'Generate';
@@ -195,9 +195,9 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
                 <span
                   key={step.label}
                   className={cn(
-                    'inline-flex items-center gap-1 rounded-full border font-medium flex-shrink-0',
+                    'inline-flex items-center gap-0.5 rounded-full border font-medium flex-shrink-0',
                     'transition-all duration-500',
-                    mobileCompact ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[10px]',
+                    mobileCompact ? 'px-1 py-0.5 text-[9px]' : 'px-1.5 py-0.5 text-[10px]',
                     isGenerate
                       ? 'bg-primary border-primary text-primary-foreground'
                       : 'bg-background/60 border-border/40 text-foreground/75 backdrop-blur-sm',
@@ -213,7 +213,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
                       alt={step.label}
                       className={cn(
                         'rounded-full object-cover flex-shrink-0',
-                        mobileCompact ? 'w-4 h-4' : 'w-5 h-5',
+                        mobileCompact ? 'w-3.5 h-3.5' : 'w-4 h-4',
                       )}
                     />
                   ) : (
