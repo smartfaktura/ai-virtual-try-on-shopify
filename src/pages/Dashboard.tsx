@@ -25,7 +25,7 @@ export default function Dashboard() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Fetch user profile (first_name)
-  const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
+  const { data: profile, isError: profileError, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['dashboard-profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,7 +41,7 @@ export default function Dashboard() {
   });
 
   // Detect returning user (has at least one completed generation job)
-  const { data: hasGenerated } = useQuery({
+  const { data: hasGenerated, isLoading: hasGeneratedLoading } = useQuery({
     queryKey: ['dashboard-has-generated', user?.id],
     queryFn: async () => {
       const { count } = await supabase
@@ -55,6 +55,7 @@ export default function Dashboard() {
   });
 
   const isReturning = hasGenerated === true;
+  const greetingReady = !!user && !profileLoading && !hasGeneratedLoading;
 
   if (profileError) {
     return (
