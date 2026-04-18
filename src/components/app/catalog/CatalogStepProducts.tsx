@@ -138,7 +138,6 @@ export function CatalogStepProducts({
       {/* ── Library ─────────────────────────────────────── */}
       <>
         {products.length === 0 ? (
-          {products.length === 0 ? (
             <div className="text-center py-20 rounded-2xl border-2 border-dashed border-border bg-muted/20">
               <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
                 <Package className="w-7 h-7 text-muted-foreground/40" />
