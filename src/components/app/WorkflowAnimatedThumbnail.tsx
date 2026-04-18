@@ -266,14 +266,23 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
 
   useEffect(() => {
     if (!isActive || backgrounds.length <= 1) return;
-    const t = setInterval(() => {
+    const advance = () => {
       const next = (currentRef.current + 1) % backgrounds.length;
       currentRef.current = next;
       setCurrent(next);
       setProgressKey((k) => k + 1);
-    }, INTERVAL);
-    return () => clearInterval(t);
-  }, [isActive, backgrounds.length]);
+    };
+    const offset = Math.random() * INTERVAL;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    const initial = setTimeout(() => {
+      advance();
+      intervalId = setInterval(advance, INTERVAL);
+    }, offset);
+    return () => {
+      clearTimeout(initial);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isActive, backgrounds.length, INTERVAL]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
