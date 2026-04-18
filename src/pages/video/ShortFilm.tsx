@@ -273,6 +273,12 @@ export default function ShortFilm() {
             shots={shots}
             settings={settings}
             totalCredits={totalCredits}
+            references={references}
+            contentIntent={contentIntent}
+            platform={platform}
+            soundMode={soundMode}
+            endingStyle={endingStyle}
+            clarityFirst={clarityFirstMode}
           />
         )}
 
