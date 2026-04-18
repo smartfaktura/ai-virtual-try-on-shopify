@@ -4433,19 +4433,19 @@ export default function Generate() {
                   <p className="text-xs text-muted-foreground">Click images to select them</p>
                 </div>
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
-                  <Button variant="outline" size="sm" className="h-9" onClick={() => {
+                  <Button variant="outline" size="sm"  onClick={() => {
                     if (selectedForPublish.size === generatedImages.length) {
                       setSelectedForPublish(new Set());
                     } else {
                       setSelectedForPublish(new Set(generatedImages.map((_, i) => i)));
                     }
                   }}>{selectedForPublish.size === generatedImages.length ? 'Deselect All' : 'Select All'}</Button>
-                  <Button variant="outline" size="sm" className="h-9" onClick={() => handleDownloadZip()} disabled={zipDownloading}>
+                  <Button variant="outline" size="sm"  onClick={() => handleDownloadZip()} disabled={zipDownloading}>
                     {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" /> Download All</>}
                   </Button>
-                  <Button variant="outline" size="sm" className="h-9" onClick={() => setCurrentStep('settings')}>Adjust</Button>
+                  <Button variant="outline" size="sm"  onClick={() => setCurrentStep('settings')}>Adjust</Button>
                   {isInteriorDesign && (
-                    <Button variant="outline" size="sm" className="h-9" onClick={() => {
+                    <Button variant="outline" size="sm"  onClick={() => {
                       setGeneratedImages([]);
                       setSelectedForPublish(new Set());
                       setSelectedVariationIndices(new Set());
@@ -4454,7 +4454,7 @@ export default function Generate() {
                       <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Try Another Style
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" className="h-9" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); setProductQueue([]); setCurrentProductIndex(0); setMultiProductResults(new Map()); }}>Start Over</Button>
+                  <Button variant="outline" size="sm"  onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); setProductQueue([]); setCurrentProductIndex(0); setMultiProductResults(new Map()); }}>Start Over</Button>
                 </div>
               </div>
 
@@ -4516,7 +4516,7 @@ export default function Generate() {
                   Saved to your library
                 </p>
               </div>
-              <Button className="rounded-xl min-h-[44px]" onClick={() => navigate('/app/library')}>
+              <Button className="min-h-[44px]" onClick={() => navigate('/app/library')}>
                 View in Library
               </Button>
             </div>
@@ -4526,7 +4526,7 @@ export default function Generate() {
               <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-background/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-5 py-3">
                 <span className="text-sm font-medium whitespace-nowrap">{selectedForPublish.size} selected</span>
                 <Separator orientation="vertical" className="h-6" />
-                <Button size="sm" variant="outline" className="rounded-xl" onClick={() => handleDownloadZip(Array.from(selectedForPublish))} disabled={zipDownloading}>
+                <Button size="sm" variant="outline"  onClick={() => handleDownloadZip(Array.from(selectedForPublish))} disabled={zipDownloading}>
                   {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" />Download ZIP</>}
                 </Button>
                 <button onClick={() => setSelectedForPublish(new Set())} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors">

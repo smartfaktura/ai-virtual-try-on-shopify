@@ -64,14 +64,14 @@ export default function AdminSceneLibrary() {
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search scenes…" className="pl-9 h-9" />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {TREND_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[120px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-[120px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
@@ -80,10 +80,10 @@ export default function AdminSceneLibrary() {
           </SelectContent>
         </Select>
         <div className="flex border rounded-md">
-          <Button size="icon" variant={viewMode === 'grid' ? 'default' : 'ghost'} className="h-9 w-9" onClick={() => setViewMode('grid')}>
+          <Button size="icon" variant={viewMode === 'grid' ? 'default' : 'ghost'} className="w-9" onClick={() => setViewMode('grid')}>
             <Grid className="w-4 h-4" />
           </Button>
-          <Button size="icon" variant={viewMode === 'list' ? 'default' : 'ghost'} className="h-9 w-9" onClick={() => setViewMode('list')}>
+          <Button size="icon" variant={viewMode === 'list' ? 'default' : 'ghost'} className="w-9" onClick={() => setViewMode('list')}>
             <List className="w-4 h-4" />
           </Button>
         </div>

@@ -737,7 +737,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-2 sticky bottom-0 bg-background pb-1">
-          <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
+          <Button variant="ghost" onClick={onClose} disabled={isUploading} >
             Cancel
           </Button>
           <Button
@@ -1153,7 +1153,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       {/* Footer — only shown when an image is present */}
       {singleImage && (
         <div className="flex justify-end gap-3 pt-2 pb-1 sm:static sticky bottom-0 bg-background sm:bg-transparent animate-fade-in">
-          <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
+          <Button variant="ghost" onClick={onClose} disabled={isUploading} >
             Cancel
           </Button>
           <Button

@@ -1604,7 +1604,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                           </div>
                         ))}
                         {freestylePrompts.length < 5 && (
-                          <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => setFreestylePrompts(prev => [...prev, ''])}>
+                          <Button variant="outline" size="sm" className="text-xs" onClick={() => setFreestylePrompts(prev => [...prev, ''])}>
                             <Plus className="w-3.5 h-3.5 mr-1" /> Add Prompt
                           </Button>
                         )}
@@ -1778,10 +1778,10 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-3 ml-8">
-                    <Button size="sm" className="rounded-full h-8 px-4 text-xs gap-1.5" onClick={() => setNoCreditsOpen(true)}>
+                    <Button size="sm" className="h-8 px-4 text-xs gap-1.5" onClick={() => setNoCreditsOpen(true)}>
                       <CreditCard className="w-3.5 h-3.5" /> Buy Credits
                     </Button>
-                    <Button size="sm" variant="ghost" className="rounded-full h-8 px-3 text-xs text-muted-foreground" asChild>
+                    <Button size="sm" variant="ghost" className="h-8 px-3 text-xs text-muted-foreground" asChild>
                       <a href="/app/settings">Upgrade Plan</a>
                     </Button>
                   </div>

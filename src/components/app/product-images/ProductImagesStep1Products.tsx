@@ -68,7 +68,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
         </div>
         {productTypes.length > 1 && (
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
+            <SelectTrigger className="w-full sm:w-[180px] text-sm">
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>

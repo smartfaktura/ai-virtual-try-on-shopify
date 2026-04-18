@@ -172,11 +172,11 @@ function SubmissionCard({
               </div>
             ) : (
               <div className="flex gap-2">
-                <Button size="sm" onClick={onApprove} disabled={isApproving} className="flex-1 rounded-lg h-9 text-xs">
+                <Button size="sm" onClick={onApprove} disabled={isApproving} className="flex-1 rounded-lg text-xs">
                   <Check className="w-3.5 h-3.5 mr-1" />
                   {isApproving ? 'Approving...' : 'Approve'}
                 </Button>
-                <Button size="sm" variant="outline" onClick={onStartReject} className="flex-1 rounded-lg h-9 text-xs">
+                <Button size="sm" variant="outline" onClick={onStartReject} className="flex-1 rounded-lg text-xs">
                   <X className="w-3.5 h-3.5 mr-1" /> Reject
                 </Button>
               </div>

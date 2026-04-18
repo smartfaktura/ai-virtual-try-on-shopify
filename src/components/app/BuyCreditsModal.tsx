@@ -290,7 +290,7 @@ export function BuyCreditsModal() {
                           <p className="text-xs text-muted-foreground mt-0.5">Custom credit volumes, dedicated support & integrations</p>
                         </div>
                       </div>
-                      <Button variant="outline" className="min-h-[44px] rounded-xl text-xs font-medium shrink-0" asChild>
+                      <Button variant="outline" className="min-h-[44px] text-xs font-medium shrink-0" asChild>
                         <a href="mailto:hello@vovv.ai">
                           Contact Sales
                           <ArrowUpRight className="w-3.5 h-3.5 ml-1.5" />

@@ -215,7 +215,7 @@ export default function AdminTrendWatch() {
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px] h-9">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>

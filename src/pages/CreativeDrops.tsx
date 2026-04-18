@@ -308,7 +308,7 @@ export default function CreativeDrops() {
                   Calendar
                 </TabsTrigger>
               </TabsList>
-              <Button onClick={openWizard} className="rounded-xl gap-2 w-full sm:w-auto">
+              <Button onClick={openWizard} className="gap-2 w-full sm:w-auto">
                 <Calendar className="w-4 h-4" />
                 Create Drop
               </Button>

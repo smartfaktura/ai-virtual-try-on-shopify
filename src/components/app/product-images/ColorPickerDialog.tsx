@@ -289,14 +289,14 @@ export function ColorPickerDialog({
             </div>
 
             {canSave && isValidHex(hex) && (
-              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 rounded-xl" onClick={() => onSaveColor(hex)}>
+              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5" onClick={() => onSaveColor(hex)}>
                 <Save className="w-3 h-3" /> Save to palette
               </Button>
             )}
 
             <div className="flex gap-2 pt-1">
-              <Button variant="outline" size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={handleApply}>Apply</Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs h-10" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1 text-xs h-10" onClick={handleApply}>Apply</Button>
             </div>
           </TabsContent>
 
@@ -353,14 +353,14 @@ export function ColorPickerDialog({
             </div>
 
             {canSave && (
-              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 rounded-xl" onClick={() => onSaveGradient(gradFrom, gradTo)}>
+              <Button variant="outline" size="sm" className="w-full text-xs gap-1.5" onClick={() => onSaveGradient(gradFrom, gradTo)}>
                 <Save className="w-3 h-3" /> Save to palette
               </Button>
             )}
 
             <div className="flex gap-2 pt-1">
-              <Button variant="outline" size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button size="sm" className="flex-1 text-xs h-10 rounded-xl" onClick={handleApply}>Apply</Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs h-10" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1 text-xs h-10" onClick={handleApply}>Apply</Button>
             </div>
           </TabsContent>
         </Tabs>
