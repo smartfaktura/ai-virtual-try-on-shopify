@@ -180,7 +180,7 @@ export default function ShortFilm() {
   const hideBar = step === 'review' && isGenerating;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-28">
+    <div className="max-w-4xl mx-auto space-y-6 pb-28">
       <PageHeader
         title="Short Film"
         subtitle="Plan and generate a premium multi-shot brand film"
@@ -294,18 +294,6 @@ export default function ShortFilm() {
             />
 
             {/* Regenerate music button — only after everything is done */}
-            {allSucceeded && !isGeneratingAudio && audioPhase === 'done' && audioAssets?.backgroundTrackUrl && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 h-9"
-                onClick={() => generateAudio(projectId || undefined)}
-              >
-                <Music className="h-3.5 w-3.5" />
-                Regenerate Music
-              </Button>
-            )}
-
             {allSucceeded && !isGeneratingAudio && audioPhase === 'done' && audioAssets?.backgroundTrackUrl && (
               <Button
                 variant="outline"
