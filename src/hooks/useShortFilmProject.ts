@@ -150,6 +150,7 @@ export function useShortFilmProject() {
   const canAdvance = useMemo(() => {
     switch (step) {
       case 'film_type': return !!filmType;
+      case 'content_intent': return !!contentIntent;
       case 'references': return true;
       case 'story': return !!storyStructure && (storyStructure !== 'custom' || customRoles.length >= 2);
       case 'shot_plan': return shots.length > 0 && !isAiPlanning;
@@ -157,13 +158,18 @@ export function useShortFilmProject() {
       case 'review': return !isGenerating;
       default: return false;
     }
-  }, [step, filmType, storyStructure, shots, isGenerating, isAiPlanning, customRoles]);
+  }, [step, filmType, contentIntent, storyStructure, shots, isGenerating, isAiPlanning, customRoles]);
 
   // ─── Save Draft ────────────────────────────────────────────
   const saveDraft = useCallback(async () => {
     if (!user) return;
     const draftState: DraftState = {
       step, filmType, storyStructure, references, shots, settings, planMode, customRoles,
+      contentIntent: contentIntent ?? undefined,
+      platform, soundMode, paceMode, productPriority, endingStyle,
+      audienceContext: audienceContext || undefined,
+      offerContext: offerContext || undefined,
+      clarityFirstMode,
     };
 
     try {
