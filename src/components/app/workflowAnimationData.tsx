@@ -91,6 +91,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: tryonShowcase1,
     objectPosition: 'center',
+    interval: 750,
     backgrounds: [tryonShowcase1, tryonShowcase2, tryonShowcase3, tryonShowcase4, tryonShowcase5, tryonShowcase6],
     recipe: [
       { image: tryonProduct, label: 'Product' },
@@ -113,6 +114,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: showcase1,
     objectPosition: 'center',
+    interval: 750,
     backgrounds: [showcase1, showcase2, showcase3, showcase5, showcase6, showcase7],
     recipe: [
       { image: listingProduct, label: 'Product' },
@@ -134,6 +136,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: ugcResult1,
     objectPosition: 'center',
+    interval: 750,
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
     recipe: [
       { image: ugcProduct, label: 'Product' },
@@ -232,6 +235,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Picture Perspectives': {
     mode: 'carousel',
     background: '/images/perspectives/VOVVAI-Perspectives-1.jpg',
+    interval: 750,
     backgrounds: [
       '/images/perspectives/VOVVAI-Perspectives-1.jpg',
       '/images/perspectives/VOVVAI-Perspectives-2.jpg',
@@ -256,7 +260,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: '/images/catalog-studio/VOVVAI-Catalog-Studio-1.jpg',
     objectPosition: 'center',
-    interval: 500,
+    interval: 750,
     backgrounds: [
       '/images/catalog-studio/VOVVAI-Catalog-Studio-1.jpg',
       '/images/catalog-studio/VOVVAI-Catalog-Studio-2.jpg',
