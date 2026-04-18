@@ -146,22 +146,19 @@ export function AppShell({ children }: AppShellProps) {
         onClick={handleClick}
         onMouseEnter={() => prefetchRoute(item.path)}
         className={cn(
-          'w-full flex items-center gap-3 rounded-xl text-[15px] font-medium transition-all duration-200 relative group',
+          'w-full flex items-center gap-3 rounded-lg text-[15px] font-medium transition-all duration-200 relative group',
           collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
           isComingSoon
             ? 'text-white/30 cursor-default'
             : isEarnCredits
               ? 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
               : isActive(item.path)
-                ? 'bg-white/[0.08] text-white'
+                ? 'bg-sidebar-primary/15 text-sidebar-primary ring-1 ring-inset ring-sidebar-primary/20'
                 : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
         )}
         title={collapsed ? item.label : undefined}
       >
-        {!isComingSoon && !isEarnCredits && isActive(item.path) && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
-        )}
-        <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+        <item.icon className={cn('w-[18px] h-[18px] flex-shrink-0', isActive(item.path) && !isComingSoon && !isEarnCredits && 'text-sidebar-primary')} />
         {!collapsed && (
           <span className="flex items-center gap-2">
             {item.label}
