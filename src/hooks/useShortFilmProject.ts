@@ -203,7 +203,8 @@ export function useShortFilmProject() {
       console.error('[ShortFilm] Save draft failed:', err);
       toast.error('Failed to save draft');
     }
-  }, [user, step, filmType, storyStructure, references, shots, settings, planMode, customRoles, draftProjectId]);
+  }, [user, step, filmType, storyStructure, references, shots, settings, planMode, customRoles, draftProjectId,
+      contentIntent, platform, soundMode, paceMode, productPriority, endingStyle, audienceContext, offerContext, clarityFirstMode]);
 
   // ─── Load Draft ────────────────────────────────────────────
   const loadDraft = useCallback(async (projectIdToLoad: string) => {
@@ -215,13 +216,14 @@ export function useShortFilmProject() {
         .single();
 
       if (data?.draft_state_json) {
-        const d = data.draft_state_json as unknown as DraftState;
+        // Run migration on legacy drafts to fill new commerce-video defaults
+        const d = migrateLegacyDraft(data.draft_state_json as unknown as DraftState);
         setStep(d.step || 'film_type');
         setFilmType(d.filmType || null);
         setStoryStructure(d.storyStructure || null);
         setReferences(d.references || []);
         setShots(d.shots || []);
-        
+
         // Backward compat: migrate old audioMode to audioLayers
         const restoredSettings = d.settings || DEFAULT_SETTINGS;
         if (!restoredSettings.audioLayers) {
@@ -233,9 +235,21 @@ export function useShortFilmProject() {
           restoredSettings.audioLayers = { music: true, sfx: true, voiceover: false };
         }
         setSettings(restoredSettings);
-        
+
         setPlanMode(d.planMode || 'ai');
         setCustomRoles(d.customRoles || []);
+
+        // Restore commerce-video fields (always present after migration)
+        setContentIntent(d.contentIntent ?? null);
+        setPlatform(d.platform ?? DEFAULT_PLATFORM);
+        setSoundMode(d.soundMode ?? DEFAULT_SOUND_MODE);
+        setPaceMode(d.paceMode ?? DEFAULT_PACE_MODE);
+        setProductPriority(d.productPriority ?? DEFAULT_PRODUCT_PRIORITY);
+        setEndingStyle(d.endingStyle ?? DEFAULT_ENDING_STYLE);
+        setAudienceContext(d.audienceContext ?? '');
+        setOfferContext(d.offerContext ?? '');
+        setClarityFirstMode(!!d.clarityFirstMode);
+
         setDraftProjectId(data.id);
         setProjectId(data.id);
 
