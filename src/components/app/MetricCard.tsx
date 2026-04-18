@@ -48,10 +48,10 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-border/40 bg-card p-2.5 sm:p-5 h-[100px] sm:h-[140px] space-y-3">
-        <div className="h-3 w-16 bg-muted rounded animate-pulse" />
-        <div className="h-6 w-20 bg-muted rounded animate-pulse" />
-        <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 min-h-[120px] sm:min-h-[160px] space-y-3">
+        <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+        <div className="h-9 w-28 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-32 bg-muted rounded animate-pulse" />
       </div>
     );
   }
