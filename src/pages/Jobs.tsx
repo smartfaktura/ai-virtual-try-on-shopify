@@ -370,6 +370,7 @@ export default function Jobs() {
       title="Library"
       subtitle="All your generated visuals, in one place."
     >
+      <section className="space-y-4 sm:space-y-6">
 
         {/* Smart Views */}
         {!isTrulyEmpty && !isInitialLoading && (
@@ -542,37 +543,31 @@ export default function Jobs() {
                 ? 'Hover over any image and tap the heart to save it here.'
                 : 'Mark assets as ready using the hover actions or select mode.';
               return (
-                <div className="py-8">
-                  <EmptyStateCard
-                    heading={emptyLabel}
-                    description={emptyDesc}
-                    icon={<Heart className="w-7 h-7 text-muted-foreground" />}
-                    action={{ content: 'View All', onAction: () => setSmartView('all') }}
-                  />
-                </div>
+                <EmptyStateCard
+                  heading={emptyLabel}
+                  description={emptyDesc}
+                  icon={<Heart className="w-7 h-7 text-muted-foreground" />}
+                  action={{ content: 'View All', onAction: () => setSmartView('all') }}
+                />
               );
             }
-            return (
-              <div className="py-8">
-                {!searchQuery ? (
-                  <EmptyStateCard
-                    heading="Your library is empty"
-                    description="Generated visuals land here, ready to review, favorite, and publish."
-                    icon={<ImagePlus className="w-8 h-8 text-muted-foreground" />}
-                    actions={[
-                      { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
-                      { content: 'Try Freestyle', onAction: () => navigate('/app/freestyle'), variant: 'outline' },
-                    ]}
-                  />
-                ) : (
-                  <EmptyStateCard
-                    heading="No results found"
-                    description="No results match your search."
-                    action={{ content: 'Clear search', onAction: () => setSearchQuery('') }}
-                    icon={<Image className="w-7 h-7 text-muted-foreground" />}
-                  />
-                )}
-              </div>
+            return !searchQuery ? (
+              <EmptyStateCard
+                heading="Your library is empty"
+                description="Generated visuals land here, ready to review, favorite, and publish."
+                icon={<ImagePlus className="w-8 h-8 text-muted-foreground" />}
+                actions={[
+                  { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
+                  { content: 'Try Freestyle', onAction: () => navigate('/app/freestyle'), variant: 'outline' },
+                ]}
+              />
+            ) : (
+              <EmptyStateCard
+                heading="No results found"
+                description="No results match your search."
+                action={{ content: 'Clear search', onAction: () => setSearchQuery('') }}
+                icon={<Image className="w-7 h-7 text-muted-foreground" />}
+              />
             );
           })()
         ) : (
@@ -634,6 +629,7 @@ export default function Jobs() {
             )}
           </>
         )}
+      </section>
 
       {/* Floating action bar */}
       {selectMode && selectedIds.size > 0 && (
