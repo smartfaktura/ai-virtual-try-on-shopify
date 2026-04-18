@@ -599,75 +599,78 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
 }) {
   return (
     <div>
-      <div className={`flex flex-col sm:flex-row items-start gap-3 p-2.5 rounded-lg border transition-colors ${
+      <div className={`flex flex-row items-stretch sm:items-start gap-3 p-2.5 rounded-lg border transition-colors ${
         !scene.is_active ? 'opacity-50 border-dashed' : 'border-border'
       } ${editingId === scene.id ? 'border-primary/40 bg-primary/[0.02]' : 'hover:bg-muted/20'}`}>
-        {/* Thumbnail — bigger on mobile */}
-        <div className="w-full sm:w-10 h-32 sm:h-10 rounded-md overflow-hidden bg-muted flex-shrink-0 border border-border/40">
+        {/* Thumbnail — 4:5 left on mobile, tiny square on desktop */}
+        <div className="w-[112px] sm:w-10 aspect-[4/5] sm:aspect-square sm:h-10 rounded-md overflow-hidden bg-muted flex-shrink-0 border border-border/40">
           <ScenePreviewThumb
             url={scene.preview_image_url}
             className="w-full h-full"
             iconClassName="w-6 h-6 sm:w-4 sm:h-4"
           />
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium truncate">{scene.title}</span>
-            <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
-            {scene.sub_category && (
-              <Badge variant="secondary" className="text-[10px]">{scene.sub_category}</Badge>
-            )}
-            <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
-            {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
-            {(scene as any).requires_extra_reference && <Badge variant="outline" className="text-[10px] gap-0.5"><Camera className="w-2.5 h-2.5" />Extra ref</Badge>}
-            {(scene as any).use_scene_reference && <Badge variant="outline" className="text-[10px] gap-0.5 border-primary/40 text-primary">🖼 Scene ref</Badge>}
+        {/* Right column on mobile: info + actions stacked. Desktop: passes through to flex row */}
+        <div className="flex-1 min-w-0 flex flex-col sm:contents gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm font-medium break-words">{scene.title}</span>
+              <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
+              {scene.sub_category && (
+                <Badge variant="secondary" className="text-[10px]">{scene.sub_category}</Badge>
+              )}
+              {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
+              {(scene as any).requires_extra_reference && <Badge variant="outline" className="text-[10px] gap-0.5"><Camera className="w-2.5 h-2.5" />Extra</Badge>}
+              {(scene as any).use_scene_reference && <Badge variant="outline" className="text-[10px] gap-0.5 border-primary/40 text-primary">🖼 Ref</Badge>}
+            </div>
+            <code className="block text-[10px] text-muted-foreground font-mono truncate mt-0.5">{scene.scene_id}</code>
+            <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+              Triggers: {scene.trigger_blocks.join(', ')}
+              {scene.category_sort_order > 0 && ` · Cat: ${scene.category_sort_order}`}
+            </p>
           </div>
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            Triggers: {scene.trigger_blocks.join(', ')}
-            {scene.category_sort_order > 0 && ` · Cat order: ${scene.category_sort_order}`}
-          </p>
-        </div>
-        {/* Actions — vertical grid on mobile, horizontal row on desktop */}
-        <div className="grid grid-cols-6 sm:flex sm:items-center gap-1 shrink-0 w-full sm:w-auto">
-          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
-            <ArrowUp className="w-3.5 h-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onMove(scene, 'down')} disabled={idx === total - 1}>
-            <ArrowDown className="w-3.5 h-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => editingId === scene.id ? onCancelEdit() : onStartEdit(scene)}>
-            <Pencil className="w-3.5 h-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onDuplicate(scene)} title="Duplicate scene">
-            <Copy className="w-3.5 h-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7" onClick={() => onToggleActive(scene)}>
-            {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-full sm:h-7 sm:w-7 text-destructive hover:text-destructive">
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete scene permanently?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently remove <strong>{scene.title}</strong> ({scene.scene_id}). This cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => onDelete(scene.id)}
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {/* Actions — wrap row on mobile, inline on desktop */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 shrink-0 sm:w-auto mt-auto sm:mt-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
+              <ArrowUp className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onMove(scene, 'down')} disabled={idx === total - 1}>
+              <ArrowDown className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => editingId === scene.id ? onCancelEdit() : onStartEdit(scene)}>
+              <Pencil className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onDuplicate(scene)} title="Duplicate scene">
+              <Copy className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onToggleActive(scene)}>
+              {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7 text-destructive hover:text-destructive">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete scene permanently?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently remove <strong>{scene.title}</strong> ({scene.scene_id}). This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => onDelete(scene.id)}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
 
