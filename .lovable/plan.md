@@ -1,44 +1,58 @@
 
-## Unify Edit/Add Product page visuals
+## Fix Edit Product page: nesting, gaps, image whitespace, label colors
 
-The Edit Product page renders content as loose stacked sections (Sophia tip, then a `bg-muted/10` image block, then bare form fields). The Add Product page has the same building blocks but inside a Tabs container — neither feels like the polished card-driven "Products" page. Goal: give both the same calm, grouped, card-based vibe without touching backend logic, AI flow, or form state.
+Five concrete issues to fix on `/app/products/:id/edit` (and same flow for Add Product → Upload tab).
 
-### Approach
-Introduce consistent **"section card" wrappers** around the existing content blocks. No prop, hook, or submission logic changes — purely presentational JSX wrappers + spacing/border tokens.
+### 1. Triple-nested cards → single card
+Today in editing mode:
+- `AddProduct.tsx` wraps `<ManualProductTab>` in `rounded-2xl border bg-card p-4 sm:p-6` (outer card)
+- Inside `ManualProductTab`, the image section is wrapped in another `rounded-2xl border bg-card p-3 sm:p-4` (middle card)
+- Inside that, the filled-image state wraps everything again in `rounded-xl border border-border/50 bg-muted/10 p-3` (inner card)
 
-### Concrete changes
+Result: three borders stacked. Fix:
+- **Remove the outer card from `AddProduct.tsx`** in the editing branch (lines 83–92). Render `<ManualProductTab>` directly so its own section cards (Image / Product Details / More details) become the single card layer — same pattern as the rest of the app.
+- **Remove the inner `rounded-xl border border-border/50 bg-muted/10 p-3` wrapper** in `ManualProductTab.tsx` line 863. Just use a simple `space-y-3` div — the outer image-section card already provides the border + padding.
+- Keep the Tabs / Add Product branch outer card so each import method still has a consistent container.
 
-**1. `src/pages/AddProduct.tsx`**
-- Wrap the editing branch's `<ManualProductTab>` in a `<Card>` (rounded-2xl, p-4 sm:p-6) so it matches Products page card density.
-- Wrap the Tabs branch's `<div className="pt-6">` content area in the same `<Card>` so each import method renders inside a unified surface (image dropzone, URL input, CSV uploader, etc. all sit in one card).
-- Keep `ProductUploadTips` outside the card (it already has its own surface).
+### 2. Huge gap below Sophia tip
+`PageHeader.tsx` uses `space-y-8 sm:space-y-10` between children. That puts ~40–80px between the Sophia tip and the form card. Fix:
+- Tighten to `space-y-4 sm:space-y-6` (matches Products page rhythm). This is a single-line change in `src/components/app/PageHeader.tsx`.
 
-**2. `src/components/app/ManualProductTab.tsx`** (presentational only)
-- Wrap the **image / reference-angles block** (lines ~774–860 dropzone OR ~861+ filled state) so empty + filled both share the same outer card padding — already mostly there, just normalize to `rounded-2xl border bg-card p-3 sm:p-4` (currently uses `bg-muted/10`).
-- Wrap **PRODUCT DETAILS** (Name, Type, chips, description) in a sibling `rounded-2xl border bg-card p-4 sm:p-5` with a small uppercase section label `PRODUCT DETAILS` — matches the screenshot's existing label.
-- Wrap **More details** collapsible (weight, materials, color) in the same card pattern.
-- Sticky footer: keep existing Cancel / Save Changes bar but align its container to `border-t border-border/60 bg-background/80 backdrop-blur` and constrain to same max-width as cards above so it visually aligns on desktop.
+### 3. Image whitespace (image hugging left, blank space on right)
+The main image is locked to `max-w-[280px]` while sitting in a full-width card → the right ~70% of the card is empty (visible in screenshot).
 
-**3. Mobile / desktop consistency**
-- Cards: `rounded-2xl` everywhere (matches Products page).
-- Padding scale: `p-4 sm:p-5` for content cards, `p-3 sm:p-4` for media card.
-- Vertical rhythm: `space-y-4 sm:space-y-5` between cards.
-- Tabs row keeps `overflow-x-auto` (mobile-safe) — already done.
-- Reference-angle slots (88×88) stay as-is on desktop; on mobile they already wrap — verify horizontal scroll is preserved.
+Fix in `ManualProductTab.tsx` filled-image block:
+- Change layout to **side-by-side on desktop**: image on the left (`max-w-[280px]`), reference angles strip on the right of it (or below on mobile). Use `flex flex-col sm:flex-row gap-4` with the angles section taking the remaining space.
+- This naturally fills the card and eliminates the dead space.
+
+### 4. Grey border / box around the product image
+The image container uses `bg-muted/20` and `rounded-2xl overflow-hidden` — for transparent PNGs this paints a grey rectangle behind the product.
+
+Fix:
+- Change `bg-muted/20` → `bg-transparent` (or remove the background entirely) on the image wrapper at line 865.
+- Keep `object-contain` so non-square photos still display fully without crop.
+
+### 5. Product Details labels look "off / different from rest of platform"
+The `<Label>` elements use `text-xs font-medium` without an explicit text color, so they inherit `text-card-foreground`, while the section header uses `text-muted-foreground`. Visually the labels look slightly muted/grey and inconsistent with the rest of the app where field labels are crisper.
+
+Fix:
+- Add `text-foreground` to the four `<Label>` elements (Product Name, Product Type, Description, Dimensions) in the Product Details card so they match the rest of the app's form labels.
+- No changes to placeholders (those already use the standard `placeholder:text-muted-foreground` from the Input component).
 
 ### Files touched
-- `src/pages/AddProduct.tsx` (~10 lines)
-- `src/components/app/ManualProductTab.tsx` (wrapper divs only, ~6 spots)
+- `src/pages/AddProduct.tsx` (~3 lines — drop outer card in editing branch)
+- `src/components/app/PageHeader.tsx` (~1 line — tighten spacing)
+- `src/components/app/ManualProductTab.tsx` (~10 lines — remove inner wrapper, side-by-side layout, transparent image bg, label color)
 
 ### Out of scope
-- No backend / Supabase / mutation / analyze-product-image changes
-- No field additions/removals
-- No tab restructuring
-- No icon/color theme changes
+- No backend, mutation, AI-analysis, or field changes
+- No tab restructuring on Add Product
+- No changes to the empty-state dropzone (only the filled image state)
 
 ### Acceptance
-- Edit Product and Add Product render with the same card-surface vibe as `/app/products`
-- Image block, Product Details, and More Details each sit in their own consistent card
-- Mobile: cards stack with comfortable padding, no horizontal overflow
-- Desktop: cards align to the same content max-width as Products page
-- Save / Cancel still works identically; AI analysis flow unchanged
+- Edit Product shows one consistent card per section — no triple borders
+- Compact gap between Sophia tip and the form
+- Product image fills its area sensibly with reference angles next to it on desktop, stacked on mobile
+- Transparent product images render without a grey box behind them
+- Form labels match the rest of the platform (same crisp foreground color)
+- Save / Cancel and AI analysis flow unchanged
