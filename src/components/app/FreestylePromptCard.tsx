@@ -140,18 +140,10 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           background: 'radial-gradient(ellipse 60% 40% at 50% 45%, hsl(var(--primary) / 0.06), transparent 70%)',
         }} />
 
-        {/* VOVV watermark */}
-        <span className={cn(
-          'absolute top-3 left-3 uppercase font-medium text-foreground/25 pointer-events-none',
-          'tracking-[0.2em]',
-          mobileCompact ? 'text-[9px]' : 'text-[10px]',
-        )}>
-          VOVV.AI
-        </span>
-
         <div
           className={cn(
-            'relative z-10 w-[88%] flex flex-col items-center gap-3 transition-opacity duration-500',
+            'relative z-10 w-full flex flex-col items-center gap-2.5 transition-opacity duration-500',
+            mobileCompact ? 'px-3' : 'px-4',
             isFading ? 'opacity-0' : 'opacity-100',
           )}
           style={{ transitionTimingFunction: APPLE_EASE }}
@@ -159,7 +151,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
           {/* Prompt bar */}
           <div className={cn(
             'w-full rounded-2xl border border-border/40 bg-background/80 backdrop-blur-md flex flex-col shadow-sm',
-            mobileCompact ? 'p-3 min-h-[88px]' : 'p-4 min-h-[110px]',
+            mobileCompact ? 'p-3 min-h-[76px]' : 'p-4 min-h-[92px]',
           )}>
             <div className="flex-1 flex items-start">
               <span className={cn(
