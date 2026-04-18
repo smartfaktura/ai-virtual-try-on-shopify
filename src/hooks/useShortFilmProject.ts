@@ -49,6 +49,16 @@ interface DraftState {
   settings: ShortFilmSettings;
   planMode: 'auto' | 'ai';
   customRoles?: string[];
+  // Commerce-video extensions (Phase 1) — all optional for backward compat
+  contentIntent?: ContentIntent;
+  platform?: Platform;
+  soundMode?: SoundMode;
+  paceMode?: PaceMode;
+  productPriority?: ProductPriority;
+  endingStyle?: EndingStyle;
+  audienceContext?: string;
+  offerContext?: string;
+  clarityFirstMode?: boolean;
 }
 
 const DEFAULT_SETTINGS: ShortFilmSettings = {
