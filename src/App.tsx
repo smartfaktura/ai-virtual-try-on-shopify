@@ -61,6 +61,7 @@ const AdminSceneLibrary = lazy(() => import('@/pages/AdminSceneLibrary'));
 const AdminPromptTokens = lazy(() => import('@/pages/AdminPromptTokens'));
 const AdminBulkPreviewUpload = lazy(() => import('@/pages/AdminBulkPreviewUpload'));
 const AdminPlanPopups = lazy(() => import('@/pages/AdminPlanPopups'));
+const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
@@ -224,6 +225,7 @@ const App = () => {
                         <Route path="/admin/prompt-tokens" element={<AdminPromptTokens />} />
                         <Route path="/admin/bulk-preview-upload" element={<AdminBulkPreviewUpload />} />
                         <Route path="/admin/plan-popups" element={<AdminPlanPopups />} />
+                        <Route path="/admin/ui-audit" element={<AdminUIAudit />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
