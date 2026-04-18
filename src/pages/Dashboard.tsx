@@ -672,7 +672,7 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Browse real examples and recreate them with your product.</p>
             </div>
             <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/discover')}>
-              Open <ArrowRight className="w-4 h-4" />
+              Browse looks <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
