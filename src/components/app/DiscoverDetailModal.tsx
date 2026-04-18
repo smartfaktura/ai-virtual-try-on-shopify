@@ -776,6 +776,7 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                   navigate(`/app/freestyle?${params.toString()}`);
                 }
               }}
+              size="pill"
               className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               Recreate this
@@ -785,48 +786,56 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
             {/* Secondary actions */}
             <div className="flex gap-2">
               {onToggleSave && (
-                <button
+                <Button
+                  variant="outline"
+                  size="pill"
                   onClick={onToggleSave}
                   className={cn(
-                    'flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 transition-all',
+                    'flex-1 font-medium gap-1.5',
                     isSaved ? 'text-destructive border-destructive/20' : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <Heart className={cn('w-3.5 h-3.5', isSaved && 'fill-current')} />
+                  <Heart className={cn('w-4 h-4', isSaved && 'fill-current')} />
                   {isSaved ? 'Saved' : 'Save'}
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="outline"
+                size="pill"
                 onClick={() => { onSearchSimilar(item); onClose(); }}
-                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
+                className="flex-1 font-medium gap-1.5 text-muted-foreground hover:text-foreground"
               >
-                <Search className="w-3.5 h-3.5" /> Similar
-              </button>
+                <Search className="w-4 h-4" /> Similar
+              </Button>
               <SharePopover
                 url={`${SITE_URL}/discover/${getItemSlug(item)}`}
                 title={title}
                 variant="action"
               />
               {isAdmin && onToggleFeatured && (
-                <button
+                <Button
+                  variant="outline"
+                  size="pill"
                   onClick={onToggleFeatured}
                   className={cn(
-                    'flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 transition-all',
+                    'flex-1 font-medium gap-1.5',
                     isFeatured ? 'text-amber-500 border-amber-500/20' : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <Star className={cn('w-3.5 h-3.5', isFeatured && 'fill-current')} />
+                  <Star className={cn('w-4 h-4', isFeatured && 'fill-current')} />
                   {isFeatured ? 'Unfeature' : 'Feature'}
-                </button>
+                </Button>
               )}
               {isAdmin && onDelete && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <button
-                      className="flex items-center justify-center gap-1.5 h-10 w-10 rounded-xl text-xs font-medium text-destructive bg-destructive/10 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/20 transition-all"
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="rounded-full text-destructive border-destructive/20 bg-destructive/10 hover:bg-destructive/20 hover:text-destructive"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="z-[300]">
                     <AlertDialogHeader>

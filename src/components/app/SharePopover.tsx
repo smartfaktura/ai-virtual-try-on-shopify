@@ -3,6 +3,7 @@ import { Share2, Link2, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/lib/brandedToast';
+import { Button } from '@/components/ui/button';
 
 interface SharePopoverProps {
   url: string;
@@ -58,9 +59,9 @@ export function SharePopover({ url, title, variant = 'inline' }: SharePopoverPro
 
   const trigger =
     variant === 'action' ? (
-      <button className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all">
-        <Share2 className="w-3.5 h-3.5" /> Share
-      </button>
+      <Button variant="outline" size="pill" className="flex-1 font-medium gap-1.5 text-muted-foreground hover:text-foreground">
+        <Share2 className="w-4 h-4" /> Share
+      </Button>
     ) : (
       <button className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
         <Share2 className="w-3.5 h-3.5" /> Share
