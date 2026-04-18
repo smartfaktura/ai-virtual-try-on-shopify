@@ -645,11 +645,11 @@ export default function Perspectives() {
               />
               <div className="text-center">
                 <Button
+                  size="pill"
                   onClick={() => {
                     setIsGeneratingView(false);
                     navigate('/app/library');
                   }}
-                  className="h-11 px-6 rounded-xl"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   View in Library
@@ -1066,9 +1066,10 @@ export default function Perspectives() {
             </div>
 
             <Button
+              size="pill"
               onClick={handleGenerate}
               disabled={!canGenerate || totalCost > credits}
-              className="h-11 px-6 rounded-xl shadow-lg shadow-primary/10 w-full sm:w-auto"
+              className="shadow-lg shadow-primary/10 w-full sm:w-auto"
             >
               {isGenerating ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</>

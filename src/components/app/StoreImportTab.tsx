@@ -267,7 +267,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               placeholder="Paste product link"
               value={url}
               onChange={(e) => { setUrl(e.target.value); setImportError(null); }}
-              className="pl-9 pr-16 h-12 text-base sm:h-10 sm:text-sm focus-visible:ring-offset-0"
+              className="pl-9 pr-16 focus-visible:ring-offset-0"
               disabled={isImporting}
             />
             {!url && (
@@ -285,7 +285,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
               </button>
             )}
           </div>
-          <Button onClick={handleImport} disabled={isImporting || !url.trim()} className="h-12 sm:h-10 px-5">
+          <Button onClick={handleImport} disabled={isImporting || !url.trim()} className="px-5">
             {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Import'}
           </Button>
         </div>

@@ -54,8 +54,9 @@ export function ProductsEmptyUpload({ onFilesSelected, onMethodSelect }: Product
             <p className="text-xs text-muted-foreground mt-1 mb-4">Tap to choose from your phone</p>
             <Button
               type="button"
+              size="pill"
               onClick={() => inputRef.current?.click()}
-              className="w-full h-11 rounded-full"
+              className="w-full"
             >
               <UploadCloud className="w-4 h-4" />
               Choose photos

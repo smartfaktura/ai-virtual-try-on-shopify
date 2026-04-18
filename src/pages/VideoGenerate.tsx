@@ -598,8 +598,8 @@ function VideoGenerateInner() {
           <Button
             onClick={handleGenerate}
             disabled={isGenerating || isUploading || (!imageUrl && imageSource === 'upload')}
-            className="w-full h-12 text-base font-semibold gap-2"
-            size="lg"
+            className="w-full font-semibold gap-2"
+            size="pill"
           >
             {isGenerating ? (
               <>

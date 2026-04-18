@@ -421,7 +421,7 @@ export default function CatalogGenerate() {
                 <p className="text-[10px] text-muted-foreground/40 tracking-[0.2em] uppercase font-light">VOVV.AI Studio</p>
                 {/* Action buttons */}
                 <div className="flex items-center justify-center gap-3 pt-1 flex-wrap">
-                  <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm rounded-full">
+                  <Button variant="outline" size="pill" onClick={handleNewGeneration} className="gap-2">
                     <RefreshCw className="w-3.5 h-3.5" /> New Set
                   </Button>
                   {batchState.aggregatedImages.length > 1 && (

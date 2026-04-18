@@ -138,7 +138,7 @@ export function ContactFormDialog({ open, onOpenChange, onSuccess }: ContactForm
                 </div>
               )}
 
-              <button onClick={handleSubmit} disabled={state === 'sending' || !name.trim() || !email.trim() || !message.trim()} className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors">
+              <button onClick={handleSubmit} disabled={state === 'sending' || !name.trim() || !email.trim() || !message.trim()} className="w-full flex items-center justify-center gap-2 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors">
                 {state === 'sending' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
