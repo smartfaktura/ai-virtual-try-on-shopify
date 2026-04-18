@@ -298,7 +298,11 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
         product_visible: s.product_visible ?? true,
         character_visible: s.character_visible ?? false,
         preservation_strength: s.preservation_strength || "medium",
-        script_line: wantVoiceover ? (s.script_line || "") : "",
+        script_line: wantVoiceover
+          ? (s.script_line && String(s.script_line).trim().length > 0
+              ? String(s.script_line).trim()
+              : (VO_FALLBACK_BY_ROLE[role] || "Crafted with intention."))
+          : "",
         sfx_prompt: wantSfx ? (s.sfx_prompt || "subtle cinematic ambient sound") : "",
         sfx_trigger_at: wantSfx
           ? (typeof s.sfx_trigger_at === "number" ? Math.max(0, Math.min(5, s.sfx_trigger_at)) : (SFX_TRIGGER_DEFAULTS[role] ?? 0))
