@@ -928,74 +928,67 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
             {/* Reference Angles — beside main image on desktop, stacked on mobile */}
             <div className="flex-1 min-w-0 w-full">
-              <Collapsible open={anglesOpen} onOpenChange={setAnglesOpen}>
-                <CollapsibleTrigger className="flex items-start gap-2 w-full group/trigger">
-                  <div className="flex-1 text-left space-y-0.5">
-                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Extra angles
-                    </span>
-                    <span className="block text-[11px] text-muted-foreground/70">
-                      Improves AI accuracy
-                    </span>
+              <div className="space-y-0.5">
+                <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Extra angles
+                </span>
+                <span className="block text-[11px] text-muted-foreground/70">
+                  Improves AI accuracy
+                </span>
+              </div>
+              <div className="flex gap-2.5 flex-wrap pt-3">
+                {([
+                  { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
+                  { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
+                  { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
+                  { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
+                  { label: 'Texture', shortLabel: 'Texture', state: textureImage, setter: setTextureImage, Icon: Droplets },
+                ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
+                  <div key={shortLabel} className="relative">
+                    {state ? (
+                      <HoverCard openDelay={200} closeDelay={100}>
+                        <HoverCardTrigger asChild>
+                          <div className="relative group/ref w-[88px] h-[88px] rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
+                            <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
+                              <span className="text-[11px] text-white font-medium">{label}</span>
+                            </div>
+                            <button
+                              onClick={(e) => { e.preventDefault(); setter(null); }}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent side="top" className="w-[200px] p-1.5">
+                          <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
+                          <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
+                        </HoverCardContent>
+                      </HoverCard>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-[88px] h-[88px] rounded-xl border border-dashed border-border/60 bg-muted/20 hover:border-primary/30 hover:bg-muted/30 cursor-pointer transition-all gap-1">
+                        <Plus className="w-4 h-4 text-muted-foreground/40" />
+                        <Icon className="w-4 h-4 text-muted-foreground/50" />
+                        <span className="text-[11px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file && file.type.startsWith('image/')) {
+                              if (state) revokeTrackedObjectUrl(state.previewUrl);
+                              setter({ file, previewUrl: createTrackedObjectUrl(file) });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    )}
                   </div>
-                  <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/50 mt-1 transition-transform", anglesOpen && "rotate-180")} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3">
-                  <div className="flex gap-2.5 flex-wrap">
-                    {([
-                      { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
-                      { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
-                      { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
-                      { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
-                      { label: 'Texture', shortLabel: 'Texture', state: textureImage, setter: setTextureImage, Icon: Droplets },
-                    ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
-                      <div key={shortLabel} className="relative">
-                        {state ? (
-                          <HoverCard openDelay={200} closeDelay={100}>
-                            <HoverCardTrigger asChild>
-                              <div className="relative group/ref w-[88px] h-[88px] rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
-                                <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
-                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
-                                  <span className="text-[11px] text-white font-medium">{label}</span>
-                                </div>
-                                <button
-                                  onClick={(e) => { e.preventDefault(); setter(null); }}
-                                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </HoverCardTrigger>
-                            <HoverCardContent side="top" className="w-[200px] p-1.5">
-                              <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
-                              <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
-                            </HoverCardContent>
-                          </HoverCard>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center w-[88px] h-[88px] rounded-xl border border-dashed border-border/60 bg-muted/20 hover:border-primary/30 hover:bg-muted/30 cursor-pointer transition-all gap-1">
-                            <Plus className="w-4 h-4 text-muted-foreground/40" />
-                            <Icon className="w-4 h-4 text-muted-foreground/50" />
-                            <span className="text-[11px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file && file.type.startsWith('image/')) {
-                                  if (state) revokeTrackedObjectUrl(state.previewUrl);
-                                  setter({ file, previewUrl: createTrackedObjectUrl(file) });
-                                }
-                                e.target.value = '';
-                              }}
-                            />
-                          </label>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                ))}
+              </div>
             </div>
           </div>
         )}
