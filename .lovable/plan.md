@@ -1,22 +1,31 @@
 
-Yes — exactly right. If the user enables the Voiceover audio layer AND picks AI Director, the AI must write narration for every shot. Currently that already works *in theory* (the VO flag is passed to `ai-shot-planner`), but two gaps remain:
 
-1. If the user enables Voiceover but the planner returns empty `script_line` for some shots (model variance), those shots end up silent with no fallback.
-2. If the user picks AI Director with VO **off**, nothing should change — but my earlier proposal would have force-enabled VO. That was wrong. Correct rule: **AI Director respects the user's VO toggle.**
+## Issue 1 — Films land at 12s instead of 15s
 
-**Fix:**
+**Root cause:** The AI Director picks shot durations freely (e.g. 2+4+3+3=12s). The edge function `ai-shot-planner` only *scales down* when total > 15 — there is no logic to *expand up* to the target. Worse, the system prompt actively says *"social/teaser ~6–10s, showcase/PDP ~8–12s, brand mood/editorial ~10–15s. Do NOT force exactly 15s"*. So the model is being told NOT to hit 15.
 
-1. **`src/hooks/useShortFilmProject.ts`**
-   - Keep passing the user's actual `audioLayers.voiceover` flag to `ai-shot-planner` (no forcing).
-   - After receiving the plan, when VO is enabled: auto-set `vo_enabled: true` per shot whenever `script_line` is non-empty (so the checkbox reflects reality).
-   - If VO is enabled but the planner returned zero scripts across all shots, surface a toast: "AI Director couldn't generate narration — try regenerating or add scripts manually."
+**Fix in `supabase/functions/ai-shot-planner/index.ts`:**
+1. Update the DURATION instruction in the system prompt to: *"Total duration MUST be exactly 15 seconds across all shots. Use cinematic, role-weighted pacing (NOT equal splits) — but the sum must equal 15."*
+2. Add an **expand-up** branch in the post-processing: when `total < cap`, distribute the remaining seconds onto the longest-fitting shots (priority: `product_reveal`/`product_moment`/`brand_finish`) so the final film always hits 15s.
+3. Redeploy the function.
 
-2. **`supabase/functions/ai-shot-planner/index.ts`**
-   - Strengthen the prompt: when `wantVoiceover` is true, every shot ≥2s MUST have a non-empty `script_line` (currently it's strongly suggested, not enforced).
-   - Add a server-side guarantee: if VO is on and a returned shot has empty `script_line`, fill it with a short purpose-derived line (e.g. "Crafted for everyday." for `brand_finish`) so no shot is silently empty.
-   - Redeploy.
+## Issue 2 — Player progress bar desyncs from time display
 
-3. **`src/components/app/video/short-film/AudioLayersPanel.tsx`** (small hint)
-   - Under the Voiceover toggle: "When on, AI Director will write narration for each shot."
+**Root cause:** In `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx`, the rAF `onFrame` does `(t / (video.duration || 1)) * 100`. If `video.duration` is transiently `NaN`/`0` after seek/source-swap, the formula returns e.g. `5 * 100 = 500%` which CSS clamps to 100% — so the bar pins to the end while the time clock still ticks correctly. Also `loadedmetadata` only updates the `duration` state once and there's no `durationchange` listener.
 
-**Result:** Voiceover ON + AI Director = guaranteed narration on every shot. Voiceover OFF + AI Director = silent shots, as expected. User stays in control of the toggle.
+**Fix in `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx`:**
+1. In `onFrame`, guard: only update progress when `video.duration > 0 && isFinite(video.duration)`.
+2. Add a `durationchange` listener alongside `loadedmetadata` so duration state stays in sync if it updates after first load.
+3. Use the `duration` state (not raw `video.duration`) as the source of truth in `onFrame`, falling back to skipping the update if invalid.
+4. Bonus: also fix the React warning *"Function components cannot be given refs"* by removing the unused `bgAudioRef` ref-on-component pattern or wrapping with `forwardRef` if needed (will inspect during edit).
+
+## Files to edit
+
+- `supabase/functions/ai-shot-planner/index.ts` (then redeploy)
+- `src/components/app/video/short-film/ShortFilmVideoPlayer.tsx`
+
+## Result
+
+- Every AI Director film totals exactly **15 seconds**.
+- The progress bar moves linearly with the time counter — no more "bar at end while clock says 0:05".
+
