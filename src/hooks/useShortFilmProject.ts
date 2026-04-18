@@ -573,11 +573,33 @@ export function useShortFilmProject() {
   // ─── Audio generation ────────────────────────────────────────
   const generateAudio = useCallback(async (targetProjectId?: string, currentShots?: ShotPlanItem[]) => {
     if (!user) return;
-    const layers = getEffectiveLayers(settings);
+
+    // ── Phase 4 audio polish: soundMode overrides legacy audioLayers ──
+    const baseLayers = getEffectiveLayers(settings);
+    const layers: AudioLayers = (() => {
+      switch (soundMode) {
+        case 'silent_first':
+        case 'caption_first':
+          return { music: false, sfx: false, voiceover: false };
+        case 'music_only':
+          return { music: true, sfx: false, voiceover: false };
+        case 'no_voiceover':
+          return { music: baseLayers.music, sfx: baseLayers.sfx, voiceover: false };
+        case 'music_plus_sfx':
+          return { music: true, sfx: true, voiceover: false };
+        case 'voiceover_plus_music':
+          return { music: true, sfx: baseLayers.sfx, voiceover: true };
+        case 'full_audio':
+          return { music: true, sfx: true, voiceover: true };
+        default:
+          return baseLayers;
+      }
+    })();
+
     const anyLayerOn = layers.music || layers.sfx || layers.voiceover;
-    console.log('[ShortFilm Audio] generateAudio called — layers:', layers, 'shots:', (currentShots || shots).length);
+    console.log('[ShortFilm Audio] generateAudio called — soundMode:', soundMode, 'layers:', layers, 'shots:', (currentShots || shots).length);
     if (!anyLayerOn) {
-      console.log('[ShortFilm Audio] Skipping — all layers disabled');
+      console.log('[ShortFilm Audio] Skipping — soundMode/layers fully muted');
       return;
     }
 
