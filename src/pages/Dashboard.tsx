@@ -170,8 +170,8 @@ export default function Dashboard() {
         {/* Create Video Section */}
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">Create Video</h2>
-            <p className="text-sm text-muted-foreground mt-1">Bring your visuals to life with motion and short film tools.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Create Video</h2>
+            <p className="text-base text-muted-foreground mt-1.5">Bring your visuals to life with motion and short film tools.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Card 1 — Animate from Image */}
