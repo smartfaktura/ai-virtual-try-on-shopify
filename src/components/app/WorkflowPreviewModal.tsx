@@ -248,7 +248,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
             <Button
               onClick={handleDownloadCurrent}
               disabled={isLoading}
-              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+              className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
             </Button>

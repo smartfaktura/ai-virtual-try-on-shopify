@@ -124,7 +124,7 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
           <Button
             onClick={hasEnough ? handleUpscale : () => setNoCreditsOpen(true)}
             disabled={isUpscaling}
-            className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/20"
+            className="w-full font-medium shadow-lg shadow-primary/20"
           >
             {isUpscaling ? (
               <>

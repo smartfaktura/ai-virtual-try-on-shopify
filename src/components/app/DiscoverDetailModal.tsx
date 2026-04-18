@@ -776,7 +776,7 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                   navigate(`/app/freestyle?${params.toString()}`);
                 }
               }}
-              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+              className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               Recreate this
               <ArrowRight className="w-4 h-4 ml-2" />

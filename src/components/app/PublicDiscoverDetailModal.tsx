@@ -193,7 +193,7 @@ export function PublicDiscoverDetailModal({
                   navigate('/auth');
                 }
               }}
-              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+              className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               {onRecreate ? 'Recreate This' : (
                 <>
