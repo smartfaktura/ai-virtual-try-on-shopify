@@ -212,6 +212,26 @@ export default function ShortFilm() {
           />
         )}
 
+        {step === 'content_intent' && (
+          <ContentIntentStep
+            value={{
+              contentIntent, platform, soundMode, paceMode,
+              productPriority, endingStyle, audienceContext, offerContext, clarityFirstMode,
+            }}
+            onChange={(v) => {
+              setContentIntent(v.contentIntent);
+              setPlatform(v.platform);
+              setSoundMode(v.soundMode);
+              setPaceMode(v.paceMode);
+              setProductPriority(v.productPriority);
+              setEndingStyle(v.endingStyle);
+              setAudienceContext(v.audienceContext ?? '');
+              setOfferContext(v.offerContext ?? '');
+              setClarityFirstMode(v.clarityFirstMode);
+            }}
+          />
+        )}
+
         {step === 'references' && (
           <ReferenceUploadPanel references={references} onChange={setReferences} />
         )}
