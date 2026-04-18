@@ -128,7 +128,18 @@ export function useShortFilmProject() {
   const [audioPhase, setAudioPhase] = useState<AudioPhase>('idle');
   const [audioShotStatuses, setAudioShotStatuses] = useState<AudioShotStatus[]>([]);
 
-  const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
+  // ── Commerce Video Engine state (Phase 1) ────────────────────────────
+  const [contentIntent, setContentIntent] = useState<ContentIntent | null>(null);
+  const [platform, setPlatform] = useState<Platform>(DEFAULT_PLATFORM);
+  const [soundMode, setSoundMode] = useState<SoundMode>(DEFAULT_SOUND_MODE);
+  const [paceMode, setPaceMode] = useState<PaceMode>(DEFAULT_PACE_MODE);
+  const [productPriority, setProductPriority] = useState<ProductPriority>(DEFAULT_PRODUCT_PRIORITY);
+  const [endingStyle, setEndingStyle] = useState<EndingStyle>(DEFAULT_ENDING_STYLE);
+  const [audienceContext, setAudienceContext] = useState<string>('');
+  const [offerContext, setOfferContext] = useState<string>('');
+  const [clarityFirstMode, setClarityFirstMode] = useState<boolean>(false);
+
+  const steps: ShortFilmStep[] = ['film_type', 'content_intent', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
 
   const totalCredits = useMemo(
