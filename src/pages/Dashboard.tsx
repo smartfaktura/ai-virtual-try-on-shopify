@@ -648,7 +648,7 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Brand-ready visuals tailored to your product and category.</p>
             </div>
             <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
-              Open <ArrowRight className="w-4 h-4" />
+              Start creating <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
           <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
@@ -660,7 +660,7 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Describe any shot, scene, or style you want to create.</p>
             </div>
             <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
-              Open <ArrowRight className="w-4 h-4" />
+              Open studio <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
           <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
@@ -672,7 +672,7 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Browse real examples and recreate them with your product.</p>
             </div>
             <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/discover')}>
-              Open <ArrowRight className="w-4 h-4" />
+              Browse looks <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
