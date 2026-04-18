@@ -292,8 +292,8 @@ export function SubmitToDiscoverModal({
             <Send className="w-4 h-4 mr-2" />
             {submitMutation.isPending ? 'Submitting...' : 'Submit for Review'}
           </Button>
-          <p className="text-[10px] text-muted-foreground/50 text-center">
-            Your submission will be reviewed by our team before Your submission will be reviewed by our team before appearing in Explore
+          <p className="text-muted-foreground/50 text-center text-xs">
+            Submitted content is reviewed before appearing in Explore.
           </p>
         </div>
       </div>
