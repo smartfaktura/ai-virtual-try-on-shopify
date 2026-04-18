@@ -1,36 +1,19 @@
 import { useNavigate } from 'react-router-dom';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
-import { useRef, useState, useEffect } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Image, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Palette, Wand2, Film, Clapperboard, RotateCw, LayoutGrid } from 'lucide-react';
+import { ArrowRight, Sparkles, Layers, RefreshCw, Compass, Wand2, Film, Clapperboard, RotateCw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { StatusBadge } from '@/components/app/StatusBadge';
-import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
-
-
-
-
-
 import { DashboardDiscoverSection } from '@/components/app/DashboardDiscoverSection';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
-import { DashboardTipCard } from '@/components/app/DashboardTipCard';
-import { ActivityFeed } from '@/components/app/ActivityFeed';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import type { JobStatus } from '@/types';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
-
-
 
 export default function Dashboard() {
   const navigate = useNavigate();
