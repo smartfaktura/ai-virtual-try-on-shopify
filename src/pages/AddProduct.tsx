@@ -81,15 +81,13 @@ export default function AddProduct() {
       </div>
 
       {isEditing ? (
-        <div className="rounded-2xl border bg-card p-4 sm:p-6">
-          {editingProduct && (
-            <ManualProductTab
-              onProductAdded={handleDone}
-              onClose={handleDone}
-              editingProduct={editingProduct}
-            />
-          )}
-        </div>
+        editingProduct && (
+          <ManualProductTab
+            onProductAdded={handleDone}
+            onClose={handleDone}
+            editingProduct={editingProduct}
+          />
+        )
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto overflow-x-auto flex-nowrap max-w-full">

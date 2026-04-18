@@ -859,14 +859,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </div>
 
         ) : (
-          /* Main image + reference angle slots — stacked vertically */
-          <div className="rounded-xl border border-border/50 bg-muted/10 p-3 space-y-3">
+          /* Main image + reference angles — side-by-side on desktop */
+          <div className="flex flex-col sm:flex-row gap-4">
             {/* Main image — constrained width */}
-            <div className="relative group rounded-2xl overflow-hidden bg-muted/20 max-w-[280px] w-full min-w-0">
+            <div className="relative group rounded-2xl overflow-hidden bg-transparent max-w-[280px] w-full min-w-0 shrink-0">
               <img
                 src={singleImage.previewUrl}
                 alt={title || 'Product preview'}
-                className="w-full max-h-[200px] object-contain rounded-2xl"
+                className="w-full max-h-[240px] object-contain rounded-2xl"
               />
               <div className="absolute top-2 left-2">
                 <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-background/70 backdrop-blur-sm">
@@ -926,7 +926,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               </div>
             </div>
 
-            {/* Reference Angles — collapsible section below main image */}
+            {/* Reference Angles — beside main image on desktop, stacked on mobile */}
+            <div className="flex-1 min-w-0">
             <Collapsible open={anglesOpen} onOpenChange={setAnglesOpen}>
                 <>
 
@@ -996,6 +997,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                 </>
 
             </Collapsible>
+            </div>
           </div>
         )}
       </div>
@@ -1016,7 +1018,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="space-y-1">
-              <Label htmlFor="product-title" className="text-xs font-medium">
+              <Label htmlFor="product-title" className="text-xs font-medium text-foreground">
                 Product Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -1032,7 +1034,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="product-type" className="text-xs font-medium">Product Type</Label>
+              <Label htmlFor="product-type" className="text-xs font-medium text-foreground">Product Type</Label>
               <Input
                 id="product-type"
                 placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
@@ -1079,7 +1081,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="product-desc" className="text-xs font-medium">Description</Label>
+              <Label htmlFor="product-desc" className="text-xs font-medium text-foreground">Description</Label>
               <Textarea
                 id="product-desc"
                 placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
@@ -1094,7 +1096,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="product-dimensions" className="text-xs font-medium">
+              <Label htmlFor="product-dimensions" className="text-xs font-medium text-foreground">
                 Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
               </Label>
               <Input
