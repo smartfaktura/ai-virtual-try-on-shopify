@@ -1114,7 +1114,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* More Details (optional, collapsible) — only after image uploaded */}
       {singleImage && (
-        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="animate-fade-in">
+        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="rounded-2xl border bg-card p-4 sm:p-5 animate-fade-in">
           <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
             <Package className="w-3.5 h-3.5" />
             <span className="font-medium">More details</span>
