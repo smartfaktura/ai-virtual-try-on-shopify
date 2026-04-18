@@ -82,7 +82,7 @@ export function ShortFilmStickyBar({
           </div>
           <div className="flex items-center gap-2">
             {currentStepIndex > 0 && !allDone && (
-              <Button variant="outline" className="flex-shrink-0" onClick={onBack}>Back</Button>
+              <Button variant="outline" size="pill" className="flex-shrink-0" onClick={onBack}>Back</Button>
             )}
             {allDone ? (
               <div className="flex items-center gap-2 flex-1">
@@ -149,8 +149,8 @@ export function ShortFilmStickyBar({
                     <Save className="h-3.5 w-3.5" /> Save
                   </Button>
                 )}
-                <Button variant="outline" size="sm" onClick={onBack}>
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+                <Button variant="outline" size="pill" onClick={onBack} className="gap-1.5">
+                  <ArrowLeft className="h-4 w-4" /> Back
                 </Button>
               </>
             )}
