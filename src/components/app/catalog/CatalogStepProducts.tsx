@@ -8,7 +8,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { cn } from '@/lib/utils';
 import {
   ChevronRight, Package, Search, LayoutGrid, List, Check,
-  Globe, Upload, Download, Plus, Sparkles,
+  Download, Plus, Sparkles,
 } from 'lucide-react';
 
 interface UserProduct {
