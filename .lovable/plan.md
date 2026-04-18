@@ -1,38 +1,34 @@
 
 ## Goal
-QA credit deduction and calculation correctness across all workflows on `/app/workflows`. This is a research/audit task — I'll inspect the code paths, DB functions, and run targeted DB queries to verify users are charged correctly.
+Replace the variable Short Film pricing with a flat **40 credits per generation**, end-to-end (frontend display + server enforcement). This eliminates the drift between client-side `videoCreditPricing.ts` (per-shot + audio + voice add-ons) and the server's flat `25` for `video_multishot`.
 
-## Approach
-Read-only audit covering:
+## Does this fix the audit problem?
+**Yes — for Short Film specifically.** A flat rate means the server and client agree by definition; no add-on math to drift. The other discrepancies from the audit (Animate `motionRecipe` mismatch, Ad Sequence / Consistent Model under-pricing) remain — but you asked only about Short Film, so this plan stays scoped there.
 
-1. **Workflow inventory** — list all generation entry points reachable from `/app/workflows` (Product Images, Catalog Studio, Freestyle, Brand Models, Try-On, Upscale, Video flows: Animate / Ad Sequence / Consistent Model / Short Film, Creative Drops).
-2. **Cost calculation layer (frontend)** — verify each workflow uses the correct pricing source:
-   - `videoCreditPricing.ts` (video)
-   - `dropCreditCalculator.ts` (drops)
-   - inline per-image (6 credits) for image flows
-   - upscale (10/15) for 2K/4K
-3. **Enqueue layer** — confirm `enqueueWithRetry` sends `imageCount × cost` matching frontend display, and that `enqueue-generation` edge function recomputes server-side (defense in depth) rather than trusting client.
-4. **DB-side reservation** — `enqueue_generation` RPC: reserves credits atomically, locks profile row, checks balance, decrements `credits_balance`.
-5. **Refund paths**:
-   - `cancel_queue_job` + `handle_queue_cancellation` trigger → `refund_credits`
-   - `cleanup_stale_jobs` → partial refund on timeout, full refund on retry exhaustion
-   - Failure path in queue processor
-6. **Live data spot-check** — query recent `generation_queue` rows: compare `credits_reserved` vs job_type/payload to catch mismatches; check for orphaned `processing` jobs; verify completed jobs match expected pricing formula.
-7. **Edge cases**:
-   - Bulk batches (per-image pacing, partial completion refunds)
-   - Multi-product matrix (products × scenes × models)
-   - Video premium add-ons (ambient audio, premium motion, voice)
-   - First-generation priority discount (does not affect cost, only priority)
+## Changes
 
-## Deliverable
-A concise audit report with:
-- ✅ Workflows charging correctly
-- ⚠️ Discrepancies or risks found (frontend vs server vs DB)
-- 🔧 Recommended fixes (if any)
+### 1. Server — `supabase/functions/enqueue-generation/index.ts`
+In `calculateCreditCost`, the video branch:
+```ts
+if (jobType === "video_multishot") return 40;
+```
+(currently returns flat `25`). Leave single-shot `video` logic unchanged.
 
-No code changes in this pass — only diagnosis. Any fixes will be proposed as a follow-up plan after you review findings.
+### 2. Frontend — Short Film cost display
+Files that compute Short Film cost via `VIDEO_CREDIT_RULES.shortFilm` or sum per-shot:
+- `src/config/videoCreditPricing.ts` — add a `SHORT_FILM_FLAT_COST = 40` export (keep old rules for reference but unused).
+- Any Short Film review/summary component that currently sums shots × duration + audio (likely `src/components/app/video/short-film/ShortFilmReview.tsx` or similar — I'll grep for `shortFilm` usage and replace the calc with the flat constant).
+- The estimate shown in Step 6 / generation CTA → "40 credits".
+
+### 3. No DB migration needed
+`enqueue_generation` RPC just receives the cost from the edge function — server change alone is authoritative.
 
 ## Out of scope
-- Stripe top-up / subscription renewal flows (separate billing system)
-- UI copy for credit display
-- Implementing fixes (this round is audit only)
+- Animate / Ad Sequence / Consistent Model pricing fixes (separate follow-up).
+- Refund logic (already correct).
+- Short Film internal shot/audio config (only the price label changes).
+
+## Verification after build
+1. Trigger a Short Film generation → confirm exactly **40 credits** deducted regardless of shot count, audio, voice, or duration.
+2. Confirm the Step 6 review screen shows "40 credits".
+3. Confirm cancellation refunds 40.
