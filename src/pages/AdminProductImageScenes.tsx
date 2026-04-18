@@ -397,7 +397,7 @@ export default function AdminProductImageScenes() {
         <div className="flex items-center gap-1.5">
           <Filter className="w-3.5 h-3.5 text-muted-foreground" />
           <Select value={previewCategory} onValueChange={setPreviewCategory}>
-            <SelectTrigger className="w-[180px] h-9 text-xs">
+            <SelectTrigger className="w-[180px] text-xs">
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
@@ -774,10 +774,10 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
                 placeholder="Type new sub-category name..."
                 className="text-xs"
               />
-              <Button variant="ghost" size="sm" className="h-9 px-2 shrink-0" disabled={!draft.sub_category?.trim()} onClick={() => setCreatingSubCat(false)}>
+              <Button variant="ghost" size="sm" className="px-2 shrink-0" disabled={!draft.sub_category?.trim()} onClick={() => setCreatingSubCat(false)}>
                 <Check className="w-3.5 h-3.5 text-green-600" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-9 px-2 shrink-0" onClick={() => { set('sub_category', null); setCreatingSubCat(false); }}>
+              <Button variant="ghost" size="sm" className="px-2 shrink-0" onClick={() => { set('sub_category', null); setCreatingSubCat(false); }}>
                 <X className="w-3.5 h-3.5" />
               </Button>
             </div>

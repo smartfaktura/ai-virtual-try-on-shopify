@@ -179,10 +179,10 @@ export const PlanChangeDialog = forwardRef<HTMLDivElement, PlanChangeDialogProps
         </div>
 
         <DialogFooter className="px-8 pb-8 pt-0 gap-3 sm:gap-3">
-          <Button variant="outline" onClick={onClose} disabled={loading} className="rounded-xl min-h-[44px]">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="min-h-[44px]">
             Go Back
           </Button>
-          <Button variant={config.confirmVariant} onClick={onConfirm} disabled={loading} className="rounded-xl min-h-[44px] gap-2">
+          <Button variant={config.confirmVariant} onClick={onConfirm} disabled={loading} className="min-h-[44px] gap-2">
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />

@@ -377,7 +377,7 @@ export default function Products() {
           </div>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="flex-1 h-9 text-xs">
+            <SelectTrigger className="flex-1 text-xs">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -389,7 +389,7 @@ export default function Products() {
           </Select>
 
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-            <SelectTrigger className="flex-1 h-9 text-xs">
+            <SelectTrigger className="flex-1 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

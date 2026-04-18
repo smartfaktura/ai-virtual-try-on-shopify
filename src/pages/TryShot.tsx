@@ -208,7 +208,7 @@ export default function TryShot() {
           VOVV.AI
         </a>
         <a href="https://vovv.ai/auth">
-          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-xs font-semibold">
+          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 px-5 text-xs font-semibold">
             Get Started Free
           </Button>
         </a>
@@ -344,7 +344,7 @@ export default function TryShot() {
                 Want more? Get <span className="text-foreground font-semibold">20 free credits</span> when you sign up.
               </p>
               <a href="https://vovv.ai/auth">
-                <Button className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-full">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
                   Start creating for free
                   <ExternalLink className="w-4 h-4 ml-2" />
                 </Button>

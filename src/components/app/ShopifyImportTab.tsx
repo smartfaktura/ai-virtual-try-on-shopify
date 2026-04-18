@@ -379,7 +379,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           )}
 
           <div className="flex justify-end pt-2">
-            <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
+            <Button variant="ghost" onClick={onClose} >Cancel</Button>
           </div>
         </>
       ) : (
@@ -520,8 +520,8 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
               {selectedCount} of {selectableProducts.length} selected
             </p>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
-              <Button onClick={handleImportSelected} disabled={isImporting || selectedCount === 0} className="rounded-xl">
+              <Button variant="ghost" onClick={onClose} >Cancel</Button>
+              <Button onClick={handleImportSelected} disabled={isImporting || selectedCount === 0} >
                 {isImporting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
