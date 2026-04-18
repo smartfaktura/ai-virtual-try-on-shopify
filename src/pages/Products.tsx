@@ -229,31 +229,40 @@ export default function Products() {
   const hasNoProducts = !isLoading && products.length === 0;
   const showToolbar = !hasNoProducts;
 
+  const headerActions = showToolbar && products.length > 0 ? (
+    <Button
+      onClick={() => openAddDrawer('manual', undefined, false)}
+      className="hidden sm:inline-flex h-10"
+    >
+      <Plus className="w-4 h-4 mr-2" />
+      Add Products
+    </Button>
+  ) : undefined;
+
   return (
     <PageHeader
       title="Products"
       subtitle="Upload once and reuse across every Visual Type"
+      actions={headerActions}
     >
-      <div className="space-y-3 sm:space-y-4">
-        {/* Top bar — hidden when user has zero products */}
+      <div className="space-y-3">
+        {/* Desktop toolbar row: search (left) + view toggle (right) */}
         {showToolbar && (
-        <div className="flex flex-col sm:flex-row gap-3 justify-between">
-          <div className="relative w-full sm:max-w-sm sm:flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9 h-11 sm:h-10"
-            />
-          </div>
-          {/* Desktop-only inline view toggle + CTA */}
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="flex items-center border rounded-md">
+          <div className="hidden sm:flex items-center justify-between gap-3">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9 h-10"
+              />
+            </div>
+            <div className="flex items-center border border-border rounded-md shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
-                className={cn('h-9 w-9 rounded-r-none', viewMode === 'grid' && 'bg-muted')}
+                className={cn('h-9 w-9 rounded-r-none text-muted-foreground', viewMode === 'grid' && 'bg-muted text-foreground')}
                 onClick={() => setViewMode('grid')}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -261,20 +270,26 @@ export default function Products() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={cn('h-9 w-9 rounded-l-none', viewMode === 'list' && 'bg-muted')}
+                className={cn('h-9 w-9 rounded-l-none text-muted-foreground', viewMode === 'list' && 'bg-muted text-foreground')}
                 onClick={() => setViewMode('list')}
               >
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            {products.length > 0 && (
-              <Button onClick={() => openAddDrawer('manual', undefined, false)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Products
-              </Button>
-            )}
           </div>
-        </div>
+        )}
+
+        {/* Mobile search */}
+        {showToolbar && (
+          <div className="relative sm:hidden">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9 h-11"
+            />
+          </div>
         )}
 
         {/* Mobile-only primary CTA — full width, dominant */}
@@ -288,7 +303,7 @@ export default function Products() {
           </Button>
         )}
 
-        {/* Tools row — view toggle (mobile) + filters in one line */}
+        {/* Filter row — selects + mobile view toggle */}
         {showToolbar && (
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex sm:hidden items-center border rounded-md shrink-0">
@@ -311,7 +326,7 @@ export default function Products() {
           </div>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] h-9 text-xs">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] h-9 sm:h-10 text-xs sm:text-sm">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -323,7 +338,7 @@ export default function Products() {
           </Select>
 
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-            <SelectTrigger className="flex-1 sm:flex-none sm:w-[150px] h-9 text-xs">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[150px] h-9 sm:h-10 text-xs sm:text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
