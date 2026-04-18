@@ -2,7 +2,7 @@ import { Coins } from 'lucide-react';
 import { ShotCard } from './ShotCard';
 import { PreflightPanel } from './PreflightPanel';
 import { FILM_TYPE_OPTIONS, STORY_STRUCTURE_OPTIONS } from '@/lib/shortFilmPlanner';
-import { CONTENT_INTENT_OPTIONS } from '@/lib/commerceVideo/contentIntents';
+import { INTENT_OPTIONS } from '@/lib/commerceVideo/contentIntents';
 import { validateProject } from '@/lib/commerceVideo/preflight';
 import type { ShotPlanItem, FilmType, StoryStructure, ShortFilmSettings } from '@/types/shortFilm';
 import type { ReferenceAsset } from './ReferenceUploadPanel';
@@ -53,7 +53,7 @@ export function ShortFilmReviewSummary({
   const filmLabel = FILM_TYPE_OPTIONS.find(f => f.value === filmType)?.label || filmType?.replace(/_/g, ' ') || '--';
   const structureLabel = STORY_STRUCTURE_OPTIONS.find(s => s.value === storyStructure)?.label || storyStructure?.replace(/_/g, ' ') || '--';
   const audioLabel = AUDIO_LABELS[settings.audioMode] || settings.audioMode;
-  const intentLabel = CONTENT_INTENT_OPTIONS.find(i => i.value === contentIntent)?.label || contentIntent?.replace(/_/g, ' ') || '--';
+  const intentLabel = INTENT_OPTIONS.find(i => i.value === contentIntent)?.label || contentIntent?.replace(/_/g, ' ') || '--';
 
   const preflight = useMemo(
     () =>
