@@ -194,7 +194,7 @@ export default function CatalogHub() {
           <Button onClick={() => navigate('/app/catalog/new')} size="lg" className="gap-2 rounded-full">
             <Camera className="w-4 h-4" /> Start First Photoshoot
           </Button>
-          <p className="text-[10px] text-muted-foreground/40 tracking-[0.2em] uppercase font-light">VOVV.AI Studio</p>
+          <p className="text-[10px] text-muted-foreground/40 tracking-[0.2em] uppercase font-light">​</p>
         </div>
       ) : (
         <div className="space-y-4">
