@@ -168,6 +168,7 @@ export function CatalogStepReview({
         <Button
           onClick={hasEnoughCredits ? onGenerate : onOpenBuyModal}
           disabled={isGenerating || totalImages === 0}
+          size="pill"
           className="gap-2"
         >
           {isGenerating ? (

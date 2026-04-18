@@ -82,25 +82,25 @@ export function ShortFilmStickyBar({
           </div>
           <div className="flex items-center gap-2">
             {currentStepIndex > 0 && !allDone && (
-              <Button variant="outline" size="sm" className="h-8 text-xs flex-shrink-0" onClick={onBack}>Back</Button>
+              <Button variant="outline" className="flex-shrink-0" onClick={onBack}>Back</Button>
             )}
             {allDone ? (
               <div className="flex items-center gap-2 flex-1">
-                <Button variant="outline" size="sm" className="h-8 text-xs gap-1 flex-1" onClick={onReset}>
+                <Button variant="outline" className="gap-1.5 flex-1" onClick={onReset}>
                   <Film className="w-3.5 h-3.5" /> New Film
                 </Button>
                 {hasCompletedClips && (
-                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1 flex-1" onClick={onDownloadAll}>
+                  <Button variant="outline" className="gap-1.5 flex-1" onClick={onDownloadAll}>
                     <Download className="w-3.5 h-3.5" /> Download
                   </Button>
                 )}
               </div>
             ) : ctaLabel ? (
               <Button
-                size="sm"
+                size="pill"
                 disabled={step === 'review' ? isGenerating : !canAdvance}
                 onClick={step === 'review' ? onGenerate : onNext}
-                className="gap-1.5 h-8 text-xs flex-1"
+                className="gap-1.5 flex-1"
               >
                 {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
                 {ctaLabel}
@@ -156,18 +156,18 @@ export function ShortFilmStickyBar({
             )}
             {allDone ? (
               <>
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={onReset}>
+                <Button variant="outline" className="gap-1.5" onClick={onReset}>
                   <Film className="w-3.5 h-3.5" /> New Film
                 </Button>
                 {hasCompletedClips && (
-                  <Button size="sm" className="gap-1.5" onClick={onDownloadAll}>
+                  <Button size="pill" className="gap-1.5" onClick={onDownloadAll}>
                     <Download className="w-3.5 h-3.5" /> Download
                   </Button>
                 )}
               </>
             ) : ctaLabel ? (
               <Button
-                size="sm"
+                size="pill"
                 disabled={step === 'review' ? isGenerating : !canAdvance}
                 onClick={step === 'review' ? onGenerate : onNext}
                 className="gap-1.5"

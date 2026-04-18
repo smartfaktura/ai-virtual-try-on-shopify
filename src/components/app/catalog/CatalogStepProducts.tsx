@@ -491,7 +491,7 @@ export function CatalogStepProducts({
                 {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} selected
               </p>
             </div>
-            <Button onClick={onNext} disabled={!canProceed} size="sm" className="gap-1.5 shadow-md flex-shrink-0">
+            <Button onClick={onNext} disabled={!canProceed} size="pill" className="gap-1.5 shadow-md flex-shrink-0">
               Next <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -501,7 +501,7 @@ export function CatalogStepProducts({
       {/* ── Bottom Next (when nothing selected, for the overall flow) ── */}
       {selectedProductIds.size === 0 && (
         <div className="flex justify-end pt-2">
-          <Button onClick={onNext} disabled={!canProceed} variant="outline" className="gap-2">
+          <Button onClick={onNext} disabled={!canProceed} size="pill" className="gap-2">
             Next: Style <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
