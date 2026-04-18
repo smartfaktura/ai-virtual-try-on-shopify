@@ -543,14 +543,12 @@ export default function Jobs() {
                 ? 'Hover over any image and tap the heart to save it here.'
                 : 'Mark assets as ready using the hover actions or select mode.';
               return (
-                <div className="py-8">
-                  <EmptyStateCard
-                    heading={emptyLabel}
-                    description={emptyDesc}
-                    icon={<Heart className="w-7 h-7 text-muted-foreground" />}
-                    action={{ content: 'View All', onAction: () => setSmartView('all') }}
-                  />
-                </div>
+                <EmptyStateCard
+                  heading={emptyLabel}
+                  description={emptyDesc}
+                  icon={<Heart className="w-7 h-7 text-muted-foreground" />}
+                  action={{ content: 'View All', onAction: () => setSmartView('all') }}
+                />
               );
             }
             return (
