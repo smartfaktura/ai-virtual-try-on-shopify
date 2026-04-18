@@ -71,7 +71,7 @@ export function FeedbackBanner() {
       </div>
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="text-xs font-semibold px-4 h-8">
+          <Button variant="outline" size="pill" className="font-semibold">
             Share feedback
           </Button>
         </PopoverTrigger>
