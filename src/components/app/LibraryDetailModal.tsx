@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { useNavigate } from 'react-router-dom';
