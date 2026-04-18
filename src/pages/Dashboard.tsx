@@ -370,7 +370,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
-                Open
+                Open studio
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -387,7 +387,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/discover')}>
-                Open
+                Browse looks
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
