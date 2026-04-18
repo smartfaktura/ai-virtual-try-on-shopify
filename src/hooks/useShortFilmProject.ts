@@ -449,6 +449,16 @@ export function useShortFilmProject() {
     setIsGeneratingAudio(false);
     setAudioPhase('idle');
     setAudioShotStatuses([]);
+    // Reset commerce-video state
+    setContentIntent(null);
+    setPlatform(DEFAULT_PLATFORM);
+    setSoundMode(DEFAULT_SOUND_MODE);
+    setPaceMode(DEFAULT_PACE_MODE);
+    setProductPriority(DEFAULT_PRODUCT_PRIORITY);
+    setEndingStyle(DEFAULT_ENDING_STYLE);
+    setAudienceContext('');
+    setOfferContext('');
+    setClarityFirstMode(false);
     try { sessionStorage.removeItem('sf_active_project'); } catch {}
   }, []);
 
@@ -1152,6 +1162,25 @@ export function useShortFilmProject() {
     audioShotStatuses,
     retryAudioForShot,
     previewAudio,
+    // ── Commerce Video Engine (Phase 1) ──
+    contentIntent,
+    setContentIntent,
+    platform,
+    setPlatform,
+    soundMode,
+    setSoundMode,
+    paceMode,
+    setPaceMode,
+    productPriority,
+    setProductPriority,
+    endingStyle,
+    setEndingStyle,
+    audienceContext,
+    setAudienceContext,
+    offerContext,
+    setOfferContext,
+    clarityFirstMode,
+    setClarityFirstMode,
   };
 }
 
