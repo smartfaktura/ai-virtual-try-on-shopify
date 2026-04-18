@@ -18,7 +18,7 @@ import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { balance, isEmpty, openBuyModal, plan, planConfig } = useCredits();
+  const { balance, isEmpty, openBuyModal } = useCredits();
   const [startModalOpen, setStartModalOpen] = useState(false);
   const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -39,135 +39,20 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch product count
-  const { data: productCount = 0, isLoading: productsLoading } = useQuery({
-    queryKey: ['dashboard-product-count', user?.id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('user_products')
-        .select('*', { count: 'exact', head: true });
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    placeholderData: (prev: number | undefined) => prev,
-  });
-
-  // Fetch brand profile count
-  const { data: brandProfileCount = 0 } = useQuery({
-    queryKey: ['dashboard-brand-count', user?.id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('brand_profiles')
-        .select('*', { count: 'exact', head: true });
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch freestyle generation count (exclude Perspectives)
-  const { data: freestyleCount = 0 } = useQuery({
-    queryKey: ['dashboard-freestyle-count', user?.id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('freestyle_generations')
-        .select('*', { count: 'exact', head: true })
-        .is('workflow_label', null);
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch recent jobs (generation_jobs + Picture Perspectives from freestyle_generations)
-  const { data: recentJobs = [], isLoading: jobsLoading, isError: jobsError, refetch: refetchJobs } = useQuery({
-    queryKey: ['dashboard-recent-jobs', user?.id],
-    queryFn: async () => {
-      const [jobsRes, perspRes] = await Promise.all([
-        supabase
-          .from('generation_jobs')
-          .select('*, user_products(title, image_url), workflows(name)')
-          .order('created_at', { ascending: false })
-          .limit(5),
-        supabase
-          .from('freestyle_generations')
-          .select('id, workflow_label, image_url, quality, created_at')
-          .not('workflow_label', 'is', null)
-          .ilike('workflow_label', 'Picture Perspectives%')
-          .order('created_at', { ascending: false })
-          .limit(5),
-      ]);
-      if (jobsRes.error) throw jobsRes.error;
-
-      const genJobs = (jobsRes.data ?? []).map(j => ({ ...j, _source: 'job' as const }));
-      const perspJobs = (perspRes.data ?? []).map(p => ({
-        id: p.id,
-        created_at: p.created_at,
-        status: 'completed',
-        credits_used: p.quality === 'high' ? 8 : 4,
-        results: [p.image_url],
-        user_products: null,
-        workflows: { name: 'Picture Perspectives' },
-        workflow_id: null,
-        product_id: null,
-        _source: 'perspectives' as const,
-        _label: p.workflow_label,
-        _image_url: p.image_url,
-      }));
-
-      const merged = [...genJobs, ...perspJobs]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5);
-      return merged;
-    },
-    enabled: !!user,
-  });
-
-  // Fetch active schedule count
-  const { data: scheduleCount = 0, isLoading: schedulesLoading } = useQuery({
-    queryKey: ['dashboard-schedule-count', user?.id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('creative_schedules')
-        .select('*', { count: 'exact', head: true })
-        .eq('active', true);
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    placeholderData: (prev: number | undefined) => prev,
-  });
-
-
-  // Critical error state — show recovery UI instead of blank skeletons
-  const hasCriticalError = profileError && jobsError;
-
-  const handleRetry = () => {
-    refetchProfile();
-    refetchJobs();
-  };
-
-  if (hasCriticalError) {
+  if (profileError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
           <RefreshCw className="w-5 h-5 text-muted-foreground" />
         </div>
         <p className="text-muted-foreground text-center">Something went wrong loading your dashboard.</p>
-        <Button onClick={handleRetry} variant="outline" className="rounded-full gap-2">
+        <Button onClick={() => refetchProfile()} variant="outline" className="rounded-full gap-2">
           <RefreshCw className="w-4 h-4" />
           Try Again
         </Button>
       </div>
     );
   }
-
-  const totalJobCount = recentJobs.length;
 
   const firstName = profile?.first_name || profile?.display_name || 'there';
 
