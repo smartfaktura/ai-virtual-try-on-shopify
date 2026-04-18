@@ -231,8 +231,9 @@ export default function Products() {
 
   const headerActions = showToolbar && products.length > 0 ? (
     <Button
+      size="pill"
       onClick={() => openAddDrawer('manual', undefined, false)}
-      className="hidden sm:inline-flex text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
+      className="hidden sm:inline-flex font-semibold shadow-sm hover:shadow-md transition-shadow"
     >
       <Plus className="w-4 h-4 mr-2" />
       Add Products
@@ -344,8 +345,9 @@ export default function Products() {
         {/* Mobile-only primary CTA — full width, dominant */}
         {showToolbar && products.length > 0 && (
           <Button
+            size="pill"
             onClick={() => openAddDrawer('manual', undefined, false)}
-            className="sm:hidden w-full text-sm font-medium"
+            className="sm:hidden w-full font-medium"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Products
