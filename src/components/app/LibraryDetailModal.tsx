@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { useNavigate } from 'react-router-dom';
@@ -140,7 +141,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   const isUpscaled = activeItem.quality?.startsWith('upscaled_') || activeItem.quality === 'upscaled';
   const upscaleLabel = activeItem.quality === 'upscaled_4k' ? '4K' : activeItem.quality === 'upscaled_2k' ? '2K' : activeItem.quality === 'upscaled' ? 'HD' : null;
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
@@ -531,6 +532,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           }}
         />
       )}
-    </>
+    </>,
+    document.body
   );
 }
