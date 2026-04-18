@@ -337,7 +337,7 @@ export default function Products() {
               placeholder="Search products..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 h-11"
+              className="pl-9"
             />
           </div>
         )}

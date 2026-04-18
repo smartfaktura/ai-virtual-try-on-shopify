@@ -302,13 +302,13 @@ export function AddToDiscoverModal({
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title *</label>
             {aiLoading ? (
-              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-lg" />
             ) : (
               <Input
                 value={title}
                 onChange={e => setTitle(e.target.value.slice(0, 60))}
                 placeholder="Give it a title..."
-                className="rounded-xl h-11"
+                
               />
             )}
             <p className="text-[10px] text-muted-foreground/50 text-right">{title.length}/60</p>
@@ -412,7 +412,7 @@ export function AddToDiscoverModal({
           <Button
             onClick={handlePublish}
             disabled={!title.trim() || publishing || aiLoading}
-            className="w-full h-12 rounded-xl text-sm font-medium"
+            className="w-full font-medium"
           >
             <Globe className="w-4 h-4 mr-2" />
             {publishing ? 'Publishing...' : 'Publish to Discover'}

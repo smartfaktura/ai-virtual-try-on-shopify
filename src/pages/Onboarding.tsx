@@ -144,7 +144,6 @@ export default function Onboarding() {
                     placeholder="First name"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="h-11"
                     autoFocus
                   />
                 </div>
@@ -157,7 +156,6 @@ export default function Onboarding() {
                     placeholder="Last name"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="h-11"
                   />
                 </div>
 
@@ -169,7 +167,6 @@ export default function Onboarding() {
                     placeholder="https://yourcompany.com"
                     value={companyUrl}
                     onChange={(e) => setCompanyUrl(e.target.value)}
-                    className="h-11"
                   />
                 </div>
 
@@ -227,9 +224,10 @@ export default function Onboarding() {
           {/* Navigation */}
           <div className="mt-10">
             <Button
+              size="pill"
               onClick={handleNext}
               disabled={!canProceed() || saving}
-              className="w-full h-12 rounded-full font-semibold text-base gap-2"
+              className="w-full font-semibold gap-2"
             >
               {saving ? 'Saving…' : step === TOTAL_STEPS ? 'Get Started' : 'Continue'}
               {!saving && <ArrowRight className="w-4 h-4" />}

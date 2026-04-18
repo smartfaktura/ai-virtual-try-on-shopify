@@ -299,7 +299,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
               <div className="space-y-2.5 pt-2">
                 <Button
                   onClick={handleDownload}
-                  className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+                  className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
                   <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
                 </Button>
@@ -310,7 +310,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                     navigate(`/app/freestyle?editImage=${encodeURIComponent(activeItem.imageUrl)}&imageRole=edit`);
                     onClose();
                   }}
-                  className="w-full h-11 rounded-xl text-sm font-medium"
+                  className="w-full font-medium"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit Image
@@ -329,7 +329,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                       });
                       onClose();
                     }}
-                    className="w-full h-11 rounded-xl text-sm font-medium"
+                    className="w-full font-medium"
                   >
                     <ClipboardCopy className="w-4 h-4 mr-2" />
                     Copy to Editor
@@ -340,7 +340,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   <Button
                     variant="outline"
                     disabled
-                    className="w-full h-11 rounded-xl text-sm font-medium"
+                    className="w-full font-medium"
                   >
                     <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
                     Enhancing in progress…
@@ -349,7 +349,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   <Button
                     variant="outline"
                     onClick={() => setUpscaleModalOpen(true)}
-                    className="w-full h-11 rounded-xl text-sm font-medium"
+                    className="w-full font-medium"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
                     {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
@@ -359,7 +359,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 <Button
                   variant="outline"
                   onClick={() => navigate(`/app/perspectives?source=${encodeURIComponent(activeItem.imageUrl)}`)}
-                  className="w-full h-11 rounded-xl text-sm font-medium"
+                  className="w-full font-medium"
                 >
                   <Layers className="w-4 h-4 mr-2" />
                   Generate Perspectives
@@ -371,7 +371,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                     navigate(`/app/video/animate?imageUrl=${encodeURIComponent(activeItem.imageUrl)}`);
                     onClose();
                   }}
-                  className="w-full h-11 rounded-xl text-sm font-medium"
+                  className="w-full font-medium"
                 >
                   <Video className="w-4 h-4 mr-2" />
                   Generate Video
@@ -382,7 +382,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   variant="ghost"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
+                  className="w-full text-xs font-medium text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                   {deleting ? 'Deleting…' : 'Delete'}
@@ -412,7 +412,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </p>
                 <Button
                   onClick={() => setSubmitDiscoverOpen(true)}
-                  className="w-full h-11 rounded-xl text-sm font-medium"
+                  className="w-full font-medium"
                 >
                   <Send className="w-4 h-4 mr-2" /> Submit for Review
                 </Button>

@@ -765,10 +765,10 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-2 space-y-2">
                   {brandProfilesLoading ? (
-                    <div className="h-12 rounded-xl bg-muted animate-pulse" />
+                    <div className="h-10 rounded-lg bg-muted animate-pulse" />
                   ) : (
                     <Select value={brandProfileId} onValueChange={setBrandProfileId}>
-                      <SelectTrigger className="h-12 rounded-xl">
+                      <SelectTrigger>
                         <SelectValue placeholder="Select brand profile (optional)" />
                       </SelectTrigger>
                       <SelectContent>
@@ -834,7 +834,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                   <div className="flex items-center gap-3">
                     <div className="relative flex-1">
                       <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input placeholder="Search products..." value={productSearch} onChange={e => setProductSearch(e.target.value)} className="pl-10 h-12 rounded-xl" />
+                      <Input placeholder="Search products..." value={productSearch} onChange={e => setProductSearch(e.target.value)} className="pl-10" />
                     </div>
                     <div className="flex border rounded-lg overflow-hidden flex-shrink-0">
                       <button onClick={() => setProductViewMode('grid')} className={cn('p-2.5 transition-colors', productViewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted')} title="Grid view">
@@ -1546,7 +1546,6 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                                 setCustomImageCountStr('');
                                 markDirty();
                               }}
-                              className="h-11 rounded-xl"
                             >
                               {n}
                             </Button>
@@ -1564,7 +1563,6 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                               markDirty();
                             }
                           }}
-                          className="h-11 rounded-xl"
                         />
                       </div>
                     )}
@@ -1698,7 +1696,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                   <p className="section-label">Start Date</p>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full h-12 rounded-xl justify-start text-left font-normal">
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {startDate ? format(startDate, 'PPP') : 'Pick a date'}
                       </Button>
@@ -1944,8 +1942,8 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
+            size="pill"
             onClick={step === 0 ? () => { if (isDirty) setShowExitDialog(true); else onClose(); } : handleBack}
-            className="rounded-full min-h-[44px] h-11 px-5 sm:px-6"
           >
             {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
           </Button>
@@ -1956,16 +1954,18 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
 
           {!isLastStep ? (
             <Button
+              size="pill"
               onClick={handleNext}
-              className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
+              className="gap-1.5"
             >
               Next <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
             <Button
+              size="pill"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending || (deliveryMode === 'now' && insufficientCredits)}
-              className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
+              className="gap-1.5"
             >
               {saveMutation.isPending
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> {deliveryMode === 'now' && !editingScheduleId ? 'Launching Drop...' : editingScheduleId ? 'Saving...' : 'Creating...'}</>

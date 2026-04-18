@@ -287,7 +287,7 @@ export function SubmitToDiscoverModal({
           <Button
             onClick={handleSubmit}
             disabled={!title.trim() || submitMutation.isPending || aiLoading}
-            className="w-full h-11 rounded-xl text-sm font-medium"
+            className="w-full font-medium"
           >
             <Send className="w-4 h-4 mr-2" />
             {submitMutation.isPending ? 'Submitting...' : 'Submit for Review'}

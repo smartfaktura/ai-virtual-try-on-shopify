@@ -165,8 +165,8 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
 
           <div className="pt-2">
             <Button
-              size="lg"
-              className="rounded-full font-semibold gap-2 h-11 px-8"
+              size="pill"
+              className="font-semibold gap-2"
               onClick={onSelect}
             >
               Start Creating
