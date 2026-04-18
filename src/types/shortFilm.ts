@@ -36,6 +36,22 @@ export interface ShotPlanItem {
   model_reference_id?: string;
   preservation_strength: 'low' | 'medium' | 'high';
   user_notes?: string;
+
+  // ── Commerce Video Engine extensions (Phase 3) ─────────────────────
+  // All optional — legacy shots still work.
+  clarity_first?: boolean;
+  branding_accuracy_priority?: 'low' | 'medium' | 'high';
+  material_accuracy_priority?: 'low' | 'medium' | 'high';
+  shape_accuracy_priority?: 'low' | 'medium' | 'high';
+  text_legibility_priority?: 'low' | 'medium' | 'high';
+  continuity_lock?: {
+    keepSameModel?: boolean;
+    keepSameOutfit?: boolean;
+    keepSameEnvironment?: boolean;
+    keepSameLightingFamily?: boolean;
+    keepSameProductState?: boolean;
+  };
+  reference_strategy?: string[];
 }
 
 export interface ShortFilmProject {
