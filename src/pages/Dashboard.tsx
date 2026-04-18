@@ -35,9 +35,10 @@ import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { balance, isEmpty, openBuyModal } = useCredits();
+  const { balance, isEmpty, openBuyModal, plan, planConfig } = useCredits();
   const [startModalOpen, setStartModalOpen] = useState(false);
   const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Fetch user profile (first_name)
   const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
