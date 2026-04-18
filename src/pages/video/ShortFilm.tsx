@@ -6,6 +6,7 @@ import { useShortFilmProject } from '@/hooks/useShortFilmProject';
 import { useCredits } from '@/contexts/CreditContext';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { FilmTypeSelector } from '@/components/app/video/short-film/FilmTypeSelector';
+import { ContentIntentStep } from '@/components/app/video/short-film/ContentIntentStep';
 import { ReferenceUploadPanel } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { StoryStructureSelector } from '@/components/app/video/short-film/StoryStructureSelector';
 import { ShotPlanEditor } from '@/components/app/video/short-film/ShotPlanEditor';
@@ -40,6 +41,15 @@ export default function ShortFilm() {
     audioAssets, isGeneratingAudio,
     audioPhase,
     generateAudio, previewAudio,
+    contentIntent, setContentIntent,
+    platform, setPlatform,
+    soundMode, setSoundMode,
+    paceMode, setPaceMode,
+    productPriority, setProductPriority,
+    endingStyle, setEndingStyle,
+    audienceContext, setAudienceContext,
+    offerContext, setOfferContext,
+    clarityFirstMode, setClarityFirstMode,
   } = useShortFilmProject();
 
   const handleGenerate = useCallback(() => {
