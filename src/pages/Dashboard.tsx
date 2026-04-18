@@ -39,6 +39,22 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Detect returning user (has at least one completed generation job)
+  const { data: hasGenerated } = useQuery({
+    queryKey: ['dashboard-has-generated', user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('generation_jobs')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'completed');
+      return (count ?? 0) > 0;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isReturning = hasGenerated === true;
+
   if (profileError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
