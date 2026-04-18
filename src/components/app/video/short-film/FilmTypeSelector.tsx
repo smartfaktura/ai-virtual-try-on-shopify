@@ -131,6 +131,11 @@ export function FilmTypeSelector({ value, onChange, audioLayers, onAudioLayersCh
           <p className="text-[10px] text-muted-foreground">
             Dialog & SFX are generated natively by the video engine. Background music is added as a separate layer.
           </p>
+          {layers.voiceover && (
+            <p className="text-[11px] text-primary/80">
+              When Dialog/Speech is on, AI Director will write narration for each shot automatically.
+            </p>
+          )}
         </div>
       )}
     </div>

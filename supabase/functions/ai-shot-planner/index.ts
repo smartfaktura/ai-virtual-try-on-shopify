@@ -53,6 +53,24 @@ const SFX_TRIGGER_DEFAULTS: Record<string, number> = {
   end_frame: 0,
 };
 
+const VO_FALLBACK_BY_ROLE: Record<string, string> = {
+  hook: "Look closer.",
+  intro: "Meet the new essential.",
+  tease: "Something new is coming.",
+  atmosphere: "Crafted with intention.",
+  build: "Designed to stand out.",
+  product_reveal: "Here it is.",
+  product_moment: "Made for moments like this.",
+  product_focus: "Every detail considered.",
+  detail_closeup: "Crafted in every detail.",
+  highlight: "Built to perform.",
+  lifestyle_moment: "Made for everyday.",
+  human_interaction: "Made to be lived in.",
+  resolve: "This is the one.",
+  brand_finish: "Crafted for everyday.",
+  end_frame: "Available now.",
+};
+
 function snapToValidValue(val: string, validList: string[], fallback: string): string {
   if (validList.includes(val)) return val;
   const lower = val.toLowerCase().replace(/[\s-]/g, "_");
@@ -131,7 +149,7 @@ serve(async (req) => {
       : `Voiceover (if any) should clarify value and product presence WITHOUT sounding like a hard sell. For brand_mood_film and product_detail_film, prefer minimal, descriptive, premium phrasing — or omit. For creator/social content, conversational and observational is fine.`;
 
     const scriptLineInstruction = wantVoiceover
-      ? `- script_line (string: ${voiceoverGuidance} Do NOT describe visual aesthetics. Word budget: ~2 words per second of shot duration.)`
+      ? `- script_line (string: ${voiceoverGuidance} Word budget: ~2 words per second of shot duration. MANDATORY: every shot with duration_sec >= 2 MUST have a non-empty script_line. NEVER return an empty string when voiceover is enabled. Do NOT describe visual aesthetics.)`
       : `- script_line (string: MUST be empty string "" — voiceover is disabled for this sound mode)`;
 
     const sfxInstruction = wantSfx
@@ -280,7 +298,11 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
         product_visible: s.product_visible ?? true,
         character_visible: s.character_visible ?? false,
         preservation_strength: s.preservation_strength || "medium",
-        script_line: wantVoiceover ? (s.script_line || "") : "",
+        script_line: wantVoiceover
+          ? (s.script_line && String(s.script_line).trim().length > 0
+              ? String(s.script_line).trim()
+              : (VO_FALLBACK_BY_ROLE[role] || "Crafted with intention."))
+          : "",
         sfx_prompt: wantSfx ? (s.sfx_prompt || "subtle cinematic ambient sound") : "",
         sfx_trigger_at: wantSfx
           ? (typeof s.sfx_trigger_at === "number" ? Math.max(0, Math.min(5, s.sfx_trigger_at)) : (SFX_TRIGGER_DEFAULTS[role] ?? 0))

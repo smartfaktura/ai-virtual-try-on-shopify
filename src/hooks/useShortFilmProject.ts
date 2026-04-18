@@ -385,12 +385,26 @@ export function useShortFilmProject() {
       });
       if (error) throw new Error(error.message);
       if (data?.shots && Array.isArray(data.shots)) {
-        setShots(data.shots);
+        const voEnabled = !!(settings.audioLayers?.voiceover);
+        const decoratedShots = data.shots.map((s: any) => ({
+          ...s,
+          vo_enabled: voEnabled ? !!(s.script_line && String(s.script_line).trim().length > 0) : false,
+        }));
+        setShots(decoratedShots);
         // Store AI-generated music direction and pre-select AI Director preset
         if (data.music_direction) {
           setSettings(prev => ({ ...prev, musicPrompt: data.music_direction, musicPresetKey: 'ai_director' }));
         }
-        toast.success(`AI Director generated ${data.shots.length} shots`);
+        if (voEnabled) {
+          const withScripts = decoratedShots.filter((s: any) => s.vo_enabled).length;
+          if (withScripts === 0) {
+            toast.warning("AI Director couldn't generate narration — try regenerating or add scripts manually.");
+          } else {
+            toast.success(`AI Director generated ${decoratedShots.length} shots (${withScripts} with narration)`);
+          }
+        } else {
+          toast.success(`AI Director generated ${decoratedShots.length} shots`);
+        }
       } else {
         throw new Error('Invalid AI response');
       }
