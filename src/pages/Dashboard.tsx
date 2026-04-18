@@ -353,7 +353,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
-                Open
+                Start creating
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
