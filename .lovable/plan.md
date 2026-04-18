@@ -1,51 +1,38 @@
 
 
-## Freestyle card — match platform sizing + Apple-style animation refinement
+## Freestyle card — fix overflow + remove watermark
 
-### Problem (from screenshot at 390px viewport)
-- Animation area is mostly empty white space — prompt bar + pills sit small in a huge `aspect-[2/3]` container.
-- Padding (`p-5`), button (`h-10 px-5`), and title/description sizing don't match the sibling `WorkflowCardCompact` (uses `p-4`, `h-10 px-5` desktop / `p-3`, `h-9` mobile).
-- Pills wrap awkwardly on narrow widths; subtle/non-Apple feel — too many staggered states, no hero focal moment.
+### Issues from screenshot
+1. **Pills overflow** — "Generate" pill clips off the right edge ("Gener..."); "Scene" pill clips on the left.
+2. **Empty space top + bottom** — content block isn't truly centered, prompt sits with too much vertical breathing room while pills hang off-screen.
+3. **VOVV.AI watermark** — user wants it removed.
 
-### Goal
-Quiet, confident Apple-like motion: one clear focal element, smooth fades, premium spacing. Visually consistent with the rest of the workflow card grid (same paddings, button, typography, aspect ratios).
+### Root cause
+- Inner block uses `w-[88%]` AND pills use horizontal padding `px-2 py-0.5` with avatar `w-5 h-5` + label text. Total pill row width exceeds 88% of container at 1276px viewport when the card sits in a 4-col grid (~290px wide).
+- `justify-center` + `flex-nowrap` + `overflow-hidden` causes pills wider than container to overflow symmetrically (clipping both edges).
 
 ### Changes (single file: `src/components/app/FreestylePromptCard.tsx`)
 
-**1. Match sibling card sizing exactly**
-- Content padding: `p-5` → `p-4` (desktop), `p-3` (mobile) — match `WorkflowCardCompact`.
-- Button: identical class to sibling (`h-10 px-5` desktop, `h-9 px-4 text-xs` mobile), same `Start` / `Start Creating` labels.
-- Title: `text-base` desktop / `text-sm` mobile — already matches; keep.
-- Description: `text-sm text-muted-foreground line-clamp-2` desktop only — already matches; keep.
-- Card outer: same `rounded-2xl border hover:shadow-lg` — already matches.
+**1. Remove VOVV.AI watermark**
+Delete lines 143–150 entirely.
 
-**2. Make the animation fill the frame (Apple-style hero composition)**
-- Center the prompt bar vertically in the thumbnail area (currently floating).
-- Increase prompt bar size so it reads as the hero element: `min-h-[110px]` desktop / `min-h-[88px]` mobile, larger horizontal padding.
-- Constrain max width of inner block (`max-w-[88%]`) so it breathes inside the frame.
-- Replace the soft circular blur with a subtle vertical gradient + faint radial highlight behind the prompt — closer to Apple keynote slide aesthetic.
-- Add a tiny VOVV brand wordmark watermark (very low opacity, top-left of the thumbnail area) — `VOVV.AI` in `text-[10px] tracking-[0.2em] uppercase text-foreground/30 font-medium`. Reinforces brand without noise.
+**2. Make inner block fit container width**
+- Change `w-[88%]` → `w-full px-4` (desktop) / `w-full px-3` (mobile). Gives pills the full available width to breathe.
 
-**3. Refine the workflow pills (less busy, more deliberate)**
-- Remove individual border per pill; instead: pills sit in a single horizontal row with consistent `bg-background/60 border border-border/40 backdrop-blur-sm`.
-- Smaller, single-line: `text-[10px]` desktop / `text-[9px]` mobile, force `flex-nowrap`, hide overflow gracefully.
-- Avatar circles: `w-5 h-5` desktop / `w-4 h-4` mobile (smaller, more elegant).
-- Generate pill: solid `bg-primary text-primary-foreground` (not tinted) — clearer arrival moment.
+**3. Make pills fit cleanly**
+- Reduce pill padding: `px-2` → `px-1.5` (desktop), `px-1.5` → `px-1` (mobile).
+- Reduce avatar size: `w-5 h-5` → `w-4 h-4` desktop; `w-4 h-4` → `w-3.5 h-3.5` mobile.
+- Tighten gap between pills: `gap-1.5` → `gap-1` desktop; keep `gap-1` mobile.
+- Tighten icon-to-label gap inside pill: `gap-1` → `gap-0.5`.
+- Allow gentle shrink: keep `flex-nowrap` but remove `overflow-hidden` on the row so nothing clips; the reduced widths above will fit at all card sizes in the grid.
 
-**4. Apple-style timing curve**
-- Slow the typing slightly: `TYPING_SPEED 55 → 42` (smoother, more deliberate).
-- Stagger pills closer: `PILL_STAGGER 250 → 180`.
-- Hold longer: `HOLD_DURATION 2200 → 2800` (let the user read).
-- Use `ease-[cubic-bezier(0.22,1,0.36,1)]` on the pill enter and prompt-bar fade — Apple's standard easing.
-- Cursor: thinner (`w-px`) and slower pulse via custom inline style instead of `animate-pulse`.
-
-**5. Micro-polish**
-- Send button: `bg-primary` solid (not `bg-primary/15`), white arrow — matches "send" affordance in real Freestyle UI.
-- Prompt text color: `text-foreground` (not `/80`), `font-normal` (not `font-medium`) for that crisp Apple keynote feel.
+**4. Tighten vertical composition**
+- Reduce prompt bar `min-h`: `110px` → `92px` desktop; `88px` → `76px` mobile. Less wasted vertical space, prompt + pills sit as a balanced cluster.
+- Reduce gap between prompt bar and pills: `gap-3` → `gap-2.5`.
 
 ### Acceptance
-- Card on mobile (390px) and desktop visually balanced — animation fills the frame, no blank ocean of white.
-- Padding, button height, title size byte-identical to neighbouring `WorkflowCardCompact` cards in the same grid.
-- Animation feels intentional and unhurried (typing → send → pills → generate → fade), with VOVV brand mark visible.
-- No layout shift, no overflow on narrowest viewports.
+- All 4 pills (Scene, Model, Product, Generate) fully visible, no clipping at 4-col, 3-col, 2-col grid widths.
+- No VOVV.AI watermark.
+- Prompt bar and pills feel like a centered, balanced cluster — no large empty band above or below.
+- Card height + padding still byte-identical to sibling `WorkflowCardCompact`.
 
