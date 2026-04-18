@@ -370,6 +370,7 @@ export default function Jobs() {
       title="Library"
       subtitle="All your generated visuals, in one place."
     >
+      <section className="space-y-4 sm:space-y-6">
 
         {/* Smart Views */}
         {!isTrulyEmpty && !isInitialLoading && (
