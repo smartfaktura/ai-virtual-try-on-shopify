@@ -403,30 +403,30 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
               />
 
               {/* Share to Discover */}
-              <div className="rounded-xl border border-border/40 bg-primary/5 p-5 space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <Trophy className="w-5 h-5 text-primary" />
-                  <h3 className="text-base font-semibold text-foreground"><h3 className="text-base font-semibold text-foreground">Share to Explore</h3></h3>
+              <div className="bg-card border border-border/60 rounded-xl p-4">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-primary shrink-0" />
+                  <h3 className="text-sm font-semibold text-foreground">Share to Explore</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Submit your best work · Win up to 10,000 credits
                 </p>
                 <Button
                   onClick={() => setSubmitDiscoverOpen(true)}
                   size="pill"
-                  className="w-full font-medium"
+                  className="mt-3 w-full font-medium"
                 >
                   <Send className="w-4 h-4 mr-2" /> Submit for Review
                 </Button>
               </div>
 
               {/* Social tag promo */}
-              <div className="rounded-xl border border-border/40 bg-muted/30 p-5 space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <AtSign className="w-5 h-5 text-muted-foreground/70" />
-                  <h3 className="text-base font-semibold text-foreground">Tag Us, Win a Free Year</h3>
+              <div className="bg-card border border-border/60 rounded-xl p-4">
+                <div className="flex items-center gap-2">
+                  <AtSign className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <h3 className="text-sm font-semibold text-foreground">Tag Us, Win a Free Year</h3>
                 </div>
-                <p className="text-sm text-muted-foreground/80 leading-relaxed">
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                   Post your creation on social media with{' '}
                   <a href="https://www.instagram.com/vovv.ai" target="_blank" rel="noopener noreferrer"
                      className="font-medium text-foreground underline underline-offset-2 hover:text-primary transition-colors">
@@ -436,7 +436,8 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </p>
                 <Button
                   variant="outline"
-                  className="font-medium gap-1.5"
+                  size="pill"
+                  className="mt-3 w-full font-medium gap-1.5"
                   onClick={() => {
                     navigator.clipboard.writeText('Created with @vovv.ai #vovvai');
                     setCaptionCopied(true);
