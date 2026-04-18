@@ -1,23 +1,23 @@
 
 
-## Fix /app/models subtitle
+## Restore /app/products subtitle to regular style
 
 ### Issue
-Current `/app/models` subtitle is two sentences with a period: "Unlimited custom AI models — any gender, age, ethnicity, or body type. Built to match your brand identity."
-
-Violates Core memory rule: no terminal periods on single-sentence subtitles, and the user wants it as **one engaging statement**.
+Earlier I made the `/app/products` subtitle into a "rich JSX node" with headline + supporting detail + product count chip. User didn't ask for that — they want the standard plain muted subtitle like every other `/app/*` page, just as a single engaging statement with no period.
 
 ### Plan
-1. Locate the Models page (likely `src/pages/Models.tsx` or `src/pages/app/Models.tsx`) — confirm via search.
-2. Replace the two-sentence subtitle with a single engaging statement, no trailing period.
+1. Open `src/pages/Products.tsx`, find the `<PageHeader>` usage.
+2. Replace the JSX `subtitle` node with a plain single-sentence string.
+3. Remove any now-unused imports (count chip, icons, helpers introduced for the rich subtitle).
 
 **Proposed copy:**
-> `"Unlimited custom AI models built to match your brand — any gender, age, ethnicity, or body type"`
+> `"Upload once and reuse across every Visual Type"`
 
-Reads as one continuous thought, leads with the value ("Unlimited custom AI models built to match your brand"), then expands with the dimensions of customization.
+One sentence, no period, matches the quiet muted style used on Models / Discover / etc.
 
 ### Acceptance
-- One sentence, no trailing period
-- Same information density, more engaging flow
-- Matches memory Core rule
+- `/app/products` subtitle renders as a single plain muted line (same visual weight as other app pages)
+- No product count chip, no headline+detail rhythm, no extra JSX
+- No trailing period
+- No unused imports left behind
 
