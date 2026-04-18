@@ -684,6 +684,7 @@ export default function Dashboard() {
 
       <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
       <EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />
+      <UpgradePlanModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 }
