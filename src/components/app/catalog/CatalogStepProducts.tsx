@@ -53,9 +53,7 @@ export function CatalogStepProducts({
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
-  const [importUrl, setImportUrl] = useState('');
   
-  const [activeTab, setActiveTab] = useState<'library' | 'url' | 'csv'>('library');
 
   const filtered = products.filter(p =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
