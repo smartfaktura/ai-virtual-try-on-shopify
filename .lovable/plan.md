@@ -1,21 +1,22 @@
 
 
-## Fix /app/discover subtitle
+## Match Recent Creations heading size to other dashboard sections
 
-The public `/discover` page has it right ("Every image here was created by AI. Yours can be next." — but that's two sentences with periods on a public marketing page, which is allowed).
+### Issue
+On `/app`, the "Recent Creations" heading + "Your latest generated visuals" subtitle render smaller than sibling section headings on the dashboard. Same issue on "Recent Activity".
 
-The user wants `/app/discover` (authenticated app version) fixed: single sentence, no period.
-
-### Find & fix
-
-Need to locate the app-side Discover page (likely `src/pages/Discover.tsx` or similar) and update its `PageHeader subtitle` to a single sentence with no trailing period.
+### Root cause
+- `RecentCreationsGallery.tsx` uses `text-xl sm:text-2xl` for h2, `text-base` for subtitle
+- `ActivityFeed.tsx` uses `text-xl sm:text-2xl` for h2
+- Other dashboard sections use larger `text-2xl sm:text-3xl font-bold tracking-tight` headings
 
 ### Plan
-1. Locate `/app/discover` page component.
-2. Replace current subtitle with a single sentence, no period — e.g. `"Browse AI-generated visuals and recreate any look with your product"`.
+
+1. **`src/components/app/RecentCreationsGallery.tsx`** — bump heading from `text-xl sm:text-2xl` → `text-2xl sm:text-3xl`. Subtitle stays `text-base text-muted-foreground` (already no period ✓).
+2. **`src/components/app/ActivityFeed.tsx`** — bump heading `text-xl sm:text-2xl` → `text-2xl sm:text-3xl` for parity.
 
 ### Acceptance
-- `/app/discover` header shows one clean sentence
-- No trailing period
-- Matches memory rule for app subtitles
+- "Recent Creations" and "Recent Activity" headings on `/app` match other dashboard section headings
+- Subtitle remains quiet `text-base` muted body
+- No trailing periods
 
