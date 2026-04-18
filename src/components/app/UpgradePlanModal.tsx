@@ -374,10 +374,10 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
         <DialogFooter className="px-6 sm:px-8 pb-7 sm:pb-8 pt-0 gap-3 sm:gap-3">
           {isTopup ? (
             <>
-              <Button variant="outline" onClick={onClose} disabled={topUpLoading} className="min-h-[44px]">
+              <Button variant="outline" size="pill" onClick={onClose} disabled={topUpLoading}>
                 Maybe later
               </Button>
-              <Button onClick={handleTopUp} disabled={topUpLoading || !selectedPackId} className="min-h-[44px] gap-2">
+              <Button size="pill" onClick={handleTopUp} disabled={topUpLoading || !selectedPackId} className="gap-2">
                 {topUpLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -394,15 +394,15 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
           ) : (
             <>
               {typeof window !== 'undefined' && window.location.pathname === '/app/pricing' ? (
-                <Button variant="outline" onClick={onClose} disabled={loading} className="min-h-[44px]">
+                <Button variant="outline" size="pill" onClick={onClose} disabled={loading}>
                   Maybe later
                 </Button>
               ) : (
-                <Button variant="outline" onClick={handleSeeAll} disabled={loading} className="min-h-[44px]">
+                <Button variant="outline" size="pill" onClick={handleSeeAll} disabled={loading}>
                   Compare plans
                 </Button>
               )}
-              <Button onClick={handleConfirm} disabled={loading} className="min-h-[44px] gap-2">
+              <Button size="pill" onClick={handleConfirm} disabled={loading} className="gap-2">
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
