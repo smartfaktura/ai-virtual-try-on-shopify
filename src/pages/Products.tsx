@@ -232,7 +232,7 @@ export default function Products() {
   const headerActions = showToolbar && products.length > 0 ? (
     <Button
       onClick={() => openAddDrawer('manual', undefined, false)}
-      className="hidden sm:inline-flex h-10"
+      className="hidden sm:inline-flex h-11 px-5 text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
     >
       <Plus className="w-4 h-4 mr-2" />
       Add Products
@@ -246,19 +246,68 @@ export default function Products() {
       actions={headerActions}
     >
       <div className="space-y-3">
-        {/* Desktop toolbar row: search (left) + view toggle (right) */}
+        {/* Desktop & tablet unified toolbar: search + filters + view toggle on one line */}
         {showToolbar && (
-          <div className="hidden sm:flex items-center justify-between gap-3">
-            <div className="relative w-full max-w-md">
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              {/* Tablet (sm to md): short placeholder */}
+              <Input
+                placeholder="Search"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9 h-10 md:hidden"
+              />
+              {/* Desktop (md+): full placeholder */}
               <Input
                 placeholder="Search products..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="pl-9 h-10"
+                className="pl-9 h-10 hidden md:block"
               />
             </div>
-            <div className="flex items-center border border-border rounded-md shrink-0">
+
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[140px] md:w-[160px] h-10 text-sm">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {productTypes.map(t => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
+              <SelectTrigger className="w-[140px] md:w-[150px] h-10 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="name-asc">Name A–Z</SelectItem>
+                <SelectItem value="name-desc">Name Z–A</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {typeFilter !== 'all' && (
+              <Badge variant="secondary" className="gap-1 text-xs cursor-pointer" onClick={() => setTypeFilter('all')}>
+                {typeFilter}
+                <X className="w-3 h-3" />
+              </Badge>
+            )}
+
+            {activeFilterCount > 0 && (
+              <button
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => { setTypeFilter('all'); setSortBy('newest'); }}
+              >
+                Clear
+              </button>
+            )}
+
+            <div className="ml-auto flex items-center border border-border rounded-md shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -303,10 +352,10 @@ export default function Products() {
           </Button>
         )}
 
-        {/* Filter row — selects + mobile view toggle */}
+        {/* Mobile-only filter row */}
         {showToolbar && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex sm:hidden items-center border rounded-md shrink-0">
+        <div className="flex sm:hidden items-center gap-2 flex-wrap">
+          <div className="flex items-center border rounded-md shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -326,7 +375,7 @@ export default function Products() {
           </div>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] h-9 sm:h-10 text-xs sm:text-sm">
+            <SelectTrigger className="flex-1 h-9 text-xs">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -338,7 +387,7 @@ export default function Products() {
           </Select>
 
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-            <SelectTrigger className="flex-1 sm:flex-none sm:w-[150px] h-9 sm:h-10 text-xs sm:text-sm">
+            <SelectTrigger className="flex-1 h-9 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
