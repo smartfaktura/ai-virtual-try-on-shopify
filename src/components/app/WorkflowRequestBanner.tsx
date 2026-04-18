@@ -42,7 +42,7 @@ export function WorkflowRequestBanner() {
   };
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6 mt-8 sm:mt-12 mb-20 sm:mb-0">
+    <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6 mt-8 sm:mt-12">
       {submitted ? (
         <div className="flex items-center gap-3 py-2">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
