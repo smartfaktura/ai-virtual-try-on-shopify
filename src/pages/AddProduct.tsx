@@ -81,7 +81,7 @@ export default function AddProduct() {
       </div>
 
       {isEditing ? (
-        <div>
+        <div className="rounded-2xl border bg-card p-4 sm:p-6">
           {editingProduct && (
             <ManualProductTab
               onProductAdded={handleDone}
@@ -132,7 +132,7 @@ export default function AddProduct() {
             </TabsTrigger>
           </TabsList>
 
-          <div className="pt-6">
+          <div className="pt-6 rounded-2xl border bg-card p-4 sm:p-6 mt-4">
             <TabsContent value="manual" className="mt-0">
               <ManualProductTab onProductAdded={handleDone} onClose={handleDone} />
             </TabsContent>

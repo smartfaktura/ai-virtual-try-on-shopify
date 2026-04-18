@@ -761,9 +761,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
   // ── SINGLE PRODUCT MODE UI ──
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="space-y-4 sm:space-y-5">
       {/* Image Section */}
-      <div className="space-y-2">
+      <div className="rounded-2xl border bg-card p-3 sm:p-4 space-y-2">
         {singleImage && isAnalyzing && (
           <div className="flex items-center gap-1.5 text-[11px] text-primary">
             <Sparkles className="w-3 h-3 animate-pulse" />
@@ -860,7 +860,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
         ) : (
           /* Main image + reference angle slots — stacked vertically */
-          <div className="rounded-2xl border border-border/50 bg-muted/10 p-3 space-y-3">
+          <div className="rounded-xl border border-border/50 bg-muted/10 p-3 space-y-3">
             {/* Main image — constrained width */}
             <div className="relative group rounded-2xl overflow-hidden bg-muted/20 max-w-[280px] w-full min-w-0">
               <img
@@ -1002,7 +1002,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* Product Details — only after an image is uploaded */}
       {singleImage && (
-        <div className="space-y-2 animate-fade-in">
+        <div className="rounded-2xl border bg-card p-4 sm:p-5 space-y-2 animate-fade-in">
           <div className="flex items-center gap-2 pt-1 pb-1 border-b border-border/50">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Product details
@@ -1114,7 +1114,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* More Details (optional, collapsible) — only after image uploaded */}
       {singleImage && (
-        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="animate-fade-in">
+        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="rounded-2xl border bg-card p-4 sm:p-5 animate-fade-in">
           <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
             <Package className="w-3.5 h-3.5" />
             <span className="font-medium">More details</span>
@@ -1155,7 +1155,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* Footer — only shown when an image is present */}
       {singleImage && (
-        <div className="flex justify-end gap-3 pt-2 sm:pt-3 sticky bottom-0 bg-background pb-1 animate-fade-in">
+        <div className="flex justify-end gap-3 pt-3 sticky bottom-0 bg-background/80 backdrop-blur border-t border-border/60 pb-2 -mx-1 px-1 animate-fade-in">
           <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
             Cancel
           </Button>
