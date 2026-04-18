@@ -997,6 +997,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                 </>
 
             </Collapsible>
+            </div>
           </div>
         )}
       </div>
@@ -1017,7 +1018,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="space-y-1">
-              <Label htmlFor="product-title" className="text-xs font-medium">
+              <Label htmlFor="product-title" className="text-xs font-medium text-foreground">
                 Product Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -1033,7 +1034,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="product-type" className="text-xs font-medium">Product Type</Label>
+              <Label htmlFor="product-type" className="text-xs font-medium text-foreground">Product Type</Label>
               <Input
                 id="product-type"
                 placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
@@ -1080,7 +1081,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="product-desc" className="text-xs font-medium">Description</Label>
+              <Label htmlFor="product-desc" className="text-xs font-medium text-foreground">Description</Label>
               <Textarea
                 id="product-desc"
                 placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
@@ -1095,7 +1096,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="product-dimensions" className="text-xs font-medium">
+              <Label htmlFor="product-dimensions" className="text-xs font-medium text-foreground">
                 Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
               </Label>
               <Input
