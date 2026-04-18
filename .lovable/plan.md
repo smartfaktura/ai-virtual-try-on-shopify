@@ -1,58 +1,49 @@
 
-## Fix Edit Product page: nesting, gaps, image whitespace, label colors
 
-Five concrete issues to fix on `/app/products/:id/edit` (and same flow for Add Product → Upload tab).
+## Polish Edit Product: image card, angles, footer
 
-### 1. Triple-nested cards → single card
-Today in editing mode:
-- `AddProduct.tsx` wraps `<ManualProductTab>` in `rounded-2xl border bg-card p-4 sm:p-6` (outer card)
-- Inside `ManualProductTab`, the image section is wrapped in another `rounded-2xl border bg-card p-3 sm:p-4` (middle card)
-- Inside that, the filled-image state wraps everything again in `rounded-xl border border-border/50 bg-muted/10 p-3` (inner card)
+Three concrete fixes for the Edit Product / Upload tab to remove the inconsistencies visible in the screenshot.
 
-Result: three borders stacked. Fix:
-- **Remove the outer card from `AddProduct.tsx`** in the editing branch (lines 83–92). Render `<ManualProductTab>` directly so its own section cards (Image / Product Details / More details) become the single card layer — same pattern as the rest of the app.
-- **Remove the inner `rounded-xl border border-border/50 bg-muted/10 p-3` wrapper** in `ManualProductTab.tsx` line 863. Just use a simple `space-y-3` div — the outer image-section card already provides the border + padding.
-- Keep the Tabs / Add Product branch outer card so each import method still has a consistent container.
+### 1. Image card → clean, single, structured layout
+Today the image section is one card containing: a transparent floating image with a `Main` badge overlay (looks like it's randomly stuck to the side), then the angles strip on the right with a tiny muted header. Result feels disjointed.
 
-### 2. Huge gap below Sophia tip
-`PageHeader.tsx` uses `space-y-8 sm:space-y-10` between children. That puts ~40–80px between the Sophia tip and the form card. Fix:
-- Tighten to `space-y-4 sm:space-y-6` (matches Products page rhythm). This is a single-line change in `src/components/app/PageHeader.tsx`.
+Fix in `src/components/app/ManualProductTab.tsx` (filled-image branch ~lines 861–1002):
 
-### 3. Image whitespace (image hugging left, blank space on right)
-The main image is locked to `max-w-[280px]` while sitting in a full-width card → the right ~70% of the card is empty (visible in screenshot).
+- **Remove the floating "Main" badge overlay.** Replace with a small left-aligned label above the image: same uppercase tiny header style as `PRODUCT DETAILS` ("MAIN PHOTO"). One typography system across all sections.
+- **Give the image a real frame.** Wrap the `<img>` in a square 1:1 (or 4:5) tile with a subtle muted backdrop only inside the tile (`bg-muted/30 rounded-xl`), so transparent PNGs sit on a defined surface — but the *outer* card stays clean. This stops the "image randomly added" feeling.
+- **Constrain image tile to a fixed compact size** (e.g. `w-[180px] h-[220px]` desktop, `w-[140px] h-[170px]` mobile) so it doesn't dominate the card.
+- **Layout**: `flex flex-col sm:flex-row gap-5 sm:gap-6 items-start` — image tile on left, angles block fills remaining space on right.
 
-Fix in `ManualProductTab.tsx` filled-image block:
-- Change layout to **side-by-side on desktop**: image on the left (`max-w-[280px]`), reference angles strip on the right of it (or below on mobile). Use `flex flex-col sm:flex-row gap-4` with the angles section taking the remaining space.
-- This naturally fills the card and eliminates the dead space.
-
-### 4. Grey border / box around the product image
-The image container uses `bg-muted/20` and `rounded-2xl overflow-hidden` — for transparent PNGs this paints a grey rectangle behind the product.
+### 2. Reference angles → unified typography & spacing
+Currently the "Extra angles improve AI accuracy" header is `text-[11px]` muted while the tiles are large 88px chunks with green check badges + dashed borders + filled borders mixed.
 
 Fix:
-- Change `bg-muted/20` → `bg-transparent` (or remove the background entirely) on the image wrapper at line 865.
-- Keep `object-contain` so non-square photos still display fully without crop.
+- **Header**: change to the same `text-[11px] font-semibold uppercase tracking-wider text-muted-foreground` style as `PRODUCT DETAILS` → "EXTRA ANGLES" with the small "(improves AI accuracy)" caption underneath in `text-[11px] text-muted-foreground/70`. Unifies it with the rest of the page.
+- **Tiles**: keep 88px size but unify all 5 to one style — `rounded-xl border border-dashed border-border/60 bg-muted/20`. Remove the bg-muted/10 vs bg-muted/20 inconsistency. Filled state: same `rounded-xl border border-border` (no green check disc — replace with subtle ring or just the filled image, since label already proves it's set).
+- **Spacing**: `flex gap-2.5 flex-wrap` so on a narrow right column they wrap instead of overflowing.
+- Keep the collapsible chevron, just align it to the right of the new header.
 
-### 5. Product Details labels look "off / different from rest of platform"
-The `<Label>` elements use `text-xs font-medium` without an explicit text color, so they inherit `text-card-foreground`, while the section header uses `text-muted-foreground`. Visually the labels look slightly muted/grey and inconsistent with the rest of the app where field labels are crisper.
+### 3. Footer → no extra grey container
+Today the sticky footer uses `bg-background/80 backdrop-blur border-t border-border/60` *inside* the form area, which renders as the "random grey area" in the screenshot.
 
 Fix:
-- Add `text-foreground` to the four `<Label>` elements (Product Name, Product Type, Description, Dimensions) in the Product Details card so they match the rest of the app's form labels.
-- No changes to placeholders (those already use the standard `placeholder:text-muted-foreground` from the Input component).
+- Remove `border-t`, `bg-background/80`, `backdrop-blur` from the sticky footer wrapper.
+- Use a clean `flex justify-end gap-3 pt-2` row, not sticky on desktop. Keep sticky behavior **only on mobile** (`sm:static sticky bottom-0 bg-background sm:bg-transparent`) where it actually helps.
+- Buttons keep current style (`rounded-xl`).
 
 ### Files touched
-- `src/pages/AddProduct.tsx` (~3 lines — drop outer card in editing branch)
-- `src/components/app/PageHeader.tsx` (~1 line — tighten spacing)
-- `src/components/app/ManualProductTab.tsx` (~10 lines — remove inner wrapper, side-by-side layout, transparent image bg, label color)
+- `src/components/app/ManualProductTab.tsx` — image tile + Main label, angles header, tile styles, footer container (~30 lines, contained edits)
 
 ### Out of scope
-- No backend, mutation, AI-analysis, or field changes
-- No tab restructuring on Add Product
-- No changes to the empty-state dropzone (only the filled image state)
+- No changes to AI analysis flow, mutations, or fields
+- No changes to the empty-state dropzone
+- No changes to AddProduct.tsx or PageHeader.tsx
 
 ### Acceptance
-- Edit Product shows one consistent card per section — no triple borders
-- Compact gap between Sophia tip and the form
-- Product image fills its area sensibly with reference angles next to it on desktop, stacked on mobile
-- Transparent product images render without a grey box behind them
-- Form labels match the rest of the platform (same crisp foreground color)
-- Save / Cancel and AI analysis flow unchanged
+- Image sits in a defined square/portrait tile with a clear "MAIN PHOTO" label above — no floating badge
+- "EXTRA ANGLES" header matches PRODUCT DETAILS typography
+- All 5 angle tiles share one consistent border/background style
+- No extra grey strip behind Cancel / Save Changes on desktop
+- Mobile: footer still sticks for thumb reach
+- Save / Cancel and AI flow unchanged
+
