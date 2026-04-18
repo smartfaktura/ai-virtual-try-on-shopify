@@ -153,12 +153,15 @@ export function AppShell({ children }: AppShellProps) {
             : isEarnCredits
               ? 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
               : isActive(item.path)
-                ? 'bg-sidebar-primary/15 text-sidebar-primary ring-1 ring-inset ring-sidebar-primary/20'
+                ? 'text-white'
                 : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
         )}
         title={collapsed ? item.label : undefined}
       >
-        <item.icon className={cn('w-[18px] h-[18px] flex-shrink-0', isActive(item.path) && !isComingSoon && !isEarnCredits && 'text-sidebar-primary')} />
+        {!isComingSoon && !isEarnCredits && isActive(item.path) && !collapsed && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-white" />
+        )}
+        <item.icon className={cn('w-[18px] h-[18px] flex-shrink-0', isActive(item.path) && !isComingSoon && !isEarnCredits && 'text-white')} />
         {!collapsed && (
           <span className="flex items-center gap-2">
             {item.label}
