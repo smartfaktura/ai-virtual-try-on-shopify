@@ -1,26 +1,37 @@
 
 
-## Improve "Start here" CTA labels on /app dashboard
+## Update returning-user dashboard cards to match new style
 
-### Issue
-All three "Start here" cards use the generic "Open" CTA. User wants distinct, action-led labels per card.
+### Context
+The screenshot shows the **new-user** dashboard ("Tools" section with 3 cards: Create Product Visuals, Create with Prompt, Explore Examples) — but the CTAs still say "Open" instead of the action-led labels we agreed last turn. That's because my previous edit only updated the "Start here" / returning-user grid in `Dashboard.tsx`, not the new-user "Tools" grid the user is currently viewing.
 
-### Plan — `src/pages/Dashboard.tsx` (lines 355, 372, 389)
+The user now wants the **returning-user** cards updated to the same new visual style as these "Tools" cards (icon tile on top, title, description, full-width pill CTA), AND have the proper action-led labels everywhere.
 
-Update only the button label text inside the three cards in the "Start here" grid:
+### Investigation needed
+I need to read `src/pages/Dashboard.tsx` to confirm:
+1. Where the new-user "Tools" grid lives (and whether its CTAs are still "Open" — looks like yes from screenshot)
+2. The current shape of the returning-user "Start here" grid (where I previously changed labels)
+3. Whether they share a card component or are duplicated inline
 
-| Card | Current CTA | New CTA |
-|------|-------------|---------|
-| Create Product Visuals | Open | **Start creating** |
-| Create with Prompt (Freestyle Studio) | Open | **Open studio** |
-| Explore Examples | Open | **Browse looks** |
+### Plan
 
-No structural, styling, icon, or routing changes — just the label text inside each `<Button>`. Trailing `ArrowRight` icon kept.
-
-Note: card #2's title is currently "Create with Prompt", not "Freestyle Studio" as the user referenced — only the CTA changes; title stays as-is unless the user asks otherwise.
+1. **Read `src/pages/Dashboard.tsx`** to map both grids.
+2. **Update new-user "Tools" cards CTAs** from "Open" → action-led labels:
+   - Create Product Visuals → **Start creating**
+   - Create with Prompt → **Open studio**
+   - Explore Examples → **Browse looks**
+3. **Restyle returning-user "Start here" cards** to match the new "Tools" card aesthetic shown in screenshot:
+   - Square rounded icon tile (muted bg) at top-left
+   - Title (lg, semibold)
+   - Description (muted, 2 lines)
+   - Full-width dark pill CTA with arrow at bottom
+   - Same border / padding / hover treatment as Tools cards
+4. **Keep CTAs identical across both grids** so new and returning users see the same action-led labels.
+5. No route changes, no icon changes (reuse existing Lucide icons), no other dashboard sections touched.
 
 ### Acceptance
-- Three distinct, action-led CTAs on the dashboard "Start here" cards
-- Same visual style, sizing, icons, routes
-- No other dashboard sections touched
+- Both new-user and returning-user dashboards show identical card styling (matching screenshot)
+- All three CTAs use action-led labels: "Start creating", "Open studio", "Browse looks"
+- No "Open" text remains on either dashboard variant
+- Routes unchanged
 
