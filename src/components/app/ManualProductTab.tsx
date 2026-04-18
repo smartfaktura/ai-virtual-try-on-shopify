@@ -866,7 +866,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Main photo
               </span>
-              <div className="relative group w-[140px] h-[170px] sm:w-[180px] sm:h-[220px] rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center">
+              <div className="relative group w-[160px] sm:w-[200px] aspect-[4/5] rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center">
                 <img
                   src={singleImage.previewUrl}
                   alt={title || 'Product preview'}
