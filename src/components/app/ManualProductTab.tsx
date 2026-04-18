@@ -1110,11 +1110,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       {/* More Details (optional, collapsible) — only after image uploaded */}
       {singleImage && (
         <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="rounded-2xl border bg-card p-4 sm:p-5 animate-fade-in">
-          <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
-            <Package className="w-3.5 h-3.5" />
-            <span className="font-medium">More details</span>
-            <span className="text-muted-foreground/60">(optional)</span>
-            <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', moreDetailsOpen && 'rotate-180')} />
+          <CollapsibleTrigger className="flex items-center gap-2 w-full pt-1 pb-1 border-b border-border/50 hover:opacity-80 transition-opacity">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              More details
+            </span>
+            <span className="text-[11px] text-muted-foreground/70">(optional)</span>
+            <ChevronDown className={cn('w-3.5 h-3.5 ml-auto text-muted-foreground transition-transform', moreDetailsOpen && 'rotate-180')} />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
