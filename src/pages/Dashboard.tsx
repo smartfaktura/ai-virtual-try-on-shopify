@@ -4,12 +4,12 @@ import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Euro, Clock, Play, Palette, Wand2, Film, Clapperboard, RotateCw, LayoutGrid } from 'lucide-react';
+import { Image, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Palette, Wand2, Film, Clapperboard, RotateCw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
+import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 
 
 
