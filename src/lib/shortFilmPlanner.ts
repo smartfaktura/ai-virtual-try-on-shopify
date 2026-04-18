@@ -7,6 +7,16 @@ import type {
   StoryStructureOption,
   ShotPlanItem,
 } from '@/types/shortFilm';
+import type {
+  ContentIntent, Platform, PaceMode, ProductCategoryKey, EndingStyle,
+} from '@/types/commerceVideo';
+import {
+  pickBestStructureForIntent, getStructureByValue,
+} from '@/lib/commerceVideo/storyStructures';
+import { getCategoryModule } from '@/lib/commerceVideo/categoryModules';
+import { applyClarityFirst } from '@/lib/commerceVideo/clarityFirst';
+import { planDuration } from '@/lib/commerceVideo/durationPlanner';
+import { pickEnding } from '@/lib/commerceVideo/endingPlanner';
 
 /* ------------------------------------------------------------------ */
 /*  Film Type Presets                                                   */
