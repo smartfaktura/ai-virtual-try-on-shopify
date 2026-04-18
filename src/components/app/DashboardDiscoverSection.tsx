@@ -157,7 +157,7 @@ export function DashboardDiscoverSection() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 min-h-[820px] sm:min-h-[760px] lg:min-h-[680px]">
         <div className="flex items-center justify-between">
           <Skeleton className="h-7 w-40" />
           <Skeleton className="h-5 w-16" />
@@ -174,7 +174,7 @@ export function DashboardDiscoverSection() {
   if (allItems.length === 0) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-h-[820px] sm:min-h-[760px] lg:min-h-[680px]">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Steal the Look</h2>
@@ -190,11 +190,13 @@ export function DashboardDiscoverSection() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {visible.map((item) => (
+        {visible.map((item, idx) => (
           <DiscoverCard
             key={item.type === 'preset' ? item.data.id : item.data.poseId}
             item={item}
             aspectRatioOverride="3/4"
+            eager={idx < 8}
+            fetchPriority={idx === 0 ? 'high' : undefined}
             onClick={() => setSelectedItem(item)}
             onRecreate={(e) => {
               e.stopPropagation();

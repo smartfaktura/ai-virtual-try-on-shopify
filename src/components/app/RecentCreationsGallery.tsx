@@ -131,8 +131,7 @@ export function RecentCreationsGallery() {
       return top;
     },
     enabled: !!user,
-    refetchInterval: 60_000,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const openItem = useCallback((item: CreationItem) => {
@@ -165,19 +164,9 @@ export function RecentCreationsGallery() {
   }, [isMobile, activeItemId, openItem]);
 
 
-  // Preload first 4 images to eliminate shimmer for above-fold cards
-  useEffect(() => {
-    if (creations.length > 0) {
-      creations.slice(0, 4).forEach((item) => {
-        const img = new window.Image();
-        img.src = item.imageUrl;
-      });
-    }
-  }, [creations]);
-
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 min-h-[680px] sm:min-h-[480px] lg:min-h-[360px]">
         <Skeleton className="h-7 w-48" />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -193,7 +182,7 @@ export function RecentCreationsGallery() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-h-[680px] sm:min-h-[480px] lg:min-h-[360px]">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Recent Creations</h2>
@@ -202,8 +191,9 @@ export function RecentCreationsGallery() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {creations.slice(0, 8).map((item) => {
+        {creations.slice(0, 8).map((item, idx) => {
           const isActive = isMobile && activeItemId === item.id;
+          const isAboveFold = idx < 4;
 
           return (
             <div
@@ -223,7 +213,8 @@ export function RecentCreationsGallery() {
                   src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
                   alt={item.label}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
+                  loading={isAboveFold ? 'eager' : 'lazy'}
+                  fetchPriority={idx === 0 ? 'high' : undefined}
                   aspectRatio="3/4"
                   onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
                 />
