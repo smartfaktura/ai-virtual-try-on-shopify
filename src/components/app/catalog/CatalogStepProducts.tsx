@@ -382,51 +382,9 @@ export function CatalogStepProducts({
                   )}
                 </>
               )}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ── Tab: Import URL ──────────────────────────────── */}
-      {activeTab === 'url' && (
-        <div className="rounded-2xl border border-border bg-card p-8 space-y-5">
-          <div>
-            <h4 className="text-sm font-medium text-foreground">Import from Website</h4>
-            <p className="text-xs text-muted-foreground mt-1">Paste a product page URL and we'll extract the details automatically.</p>
           </div>
-          <div className="flex gap-2">
-            <Input
-              placeholder="https://example.com/product/blue-jacket"
-              value={importUrl}
-              onChange={e => setImportUrl(e.target.value)}
-              className="flex-1 rounded-xl"
-            />
-            <Button
-              disabled
-            >
-              Coming Soon
-            </Button>
-          </div>
-          <p className="text-[11px] text-muted-foreground">URL import is coming soon. Use "My Products" to add items for now.</p>
-        </div>
-      )}
-
-      {/* ── Tab: CSV Upload ──────────────────────────────── */}
-      {activeTab === 'csv' && (
-        <div className="rounded-2xl border border-border bg-card p-8 space-y-5">
-          <div>
-            <h4 className="text-sm font-medium text-foreground">Upload Product CSV</h4>
-            <p className="text-xs text-muted-foreground mt-1">Bulk-import products from a spreadsheet.</p>
-          </div>
-          <div className="rounded-2xl border-2 border-dashed border-border transition-colors duration-200 p-12 text-center">
-            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
-              <Upload className="w-5 h-5 text-muted-foreground/50" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">CSV import coming soon</p>
-            <p className="text-xs text-muted-foreground mt-1">Use "My Products" to add items for now.</p>
-          </div>
-        </div>
-      )}
+        )}
+      </>
 
       {/* ── Floating Selection Bar ────────────────────────── */}
       {selectedProductIds.size > 0 && (
