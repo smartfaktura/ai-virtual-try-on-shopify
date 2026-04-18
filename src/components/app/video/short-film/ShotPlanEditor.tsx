@@ -147,7 +147,9 @@ export function ShotPlanEditor({
             const canHaveVo = shot.duration_sec >= MIN_VO_DURATION;
             const showVo = layers.voiceover && canHaveVo;
             const showSfx = layers.sfx;
-            const shotVoEnabled = shot.vo_enabled !== false;
+            const hasScript = !!(shot.script_line && shot.script_line.trim());
+            // Checkbox reflects reality: only "on" when user explicitly enabled AND there's narration text
+            const shotVoEnabled = shot.vo_enabled !== false && hasScript;
 
             return (
               <div key={`${shot.shot_index}-${idx}`} className="space-y-1">
