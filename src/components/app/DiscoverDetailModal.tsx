@@ -776,6 +776,7 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                   navigate(`/app/freestyle?${params.toString()}`);
                 }
               }}
+              size="pill"
               className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               Recreate this
