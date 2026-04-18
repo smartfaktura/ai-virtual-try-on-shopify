@@ -128,7 +128,7 @@ function ContentPreferencesSection() {
         ))}
       </div>
       <div className="flex items-center gap-3">
-        <Button size="sm" onClick={handleSave} disabled={saving}>
+        <Button size="pill" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : 'Save preferences'}
         </Button>
         <button
@@ -402,8 +402,8 @@ export default function Settings() {
 
             {/* Billing CTA */}
             {plan !== 'free' ? (
-              <Button variant="secondary" size="sm" className="w-full" onClick={handlePortal} disabled={portalLoading}>
-                {portalLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5 mr-1.5" />}
+              <Button variant="secondary" size="pill" className="w-full" onClick={handlePortal} disabled={portalLoading}>
+                {portalLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <ExternalLink className="w-4 h-4 mr-1.5" />}
                 {portalLoading ? 'Redirecting…' : 'Manage Billing & Invoices'}
               </Button>
             ) : (
@@ -426,13 +426,13 @@ export default function Settings() {
           </div>
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button
-              className={`px-4 py-2 text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+              className={`h-10 px-4 text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
               onClick={() => setBillingPeriod('monthly')}
             >
               Monthly
             </button>
             <button
-              className={`px-4 py-2 text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+              className={`h-10 px-4 text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
               onClick={() => setBillingPeriod('annual')}
             >
               Annual (Save 20%)
@@ -477,7 +477,7 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
-              <Button size="lg" onClick={() => window.location.href = 'mailto:hello@vovv.ai?subject=Enterprise%20Plan%20Inquiry'} className="shrink-0">
+              <Button size="pill" onClick={() => window.location.href = 'mailto:hello@vovv.ai?subject=Enterprise%20Plan%20Inquiry'} className="shrink-0">
                 Contact Sales
               </Button>
             </div>
@@ -593,7 +593,7 @@ export default function Settings() {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button size="pill" onClick={handleSave} disabled={isSaving}>
             {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
         </div>
@@ -619,6 +619,7 @@ export default function Settings() {
                   </div>
                 )}
                 <Button
+                  size="pill"
                   onClick={handleGenerateAssetPreviews}
                   disabled={isGenerating}
                   variant="secondary"

@@ -419,23 +419,23 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
         <div className="flex items-center justify-between px-7 py-4 border-t border-border/40 shrink-0">
           <Button
             variant="ghost"
-            size="sm"
+            size="pill"
             onClick={handleBack}
             disabled={stepIndex === 0}
             className="gap-1.5 text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
           {currentStep === 'review' ? (
-            <Button size="sm" onClick={handleUse} className="gap-1.5 bg-foreground hover:bg-foreground/90 text-background shadow-md">
-              <Sparkles className="w-3.5 h-3.5" />
+            <Button size="pill" onClick={handleUse} className="gap-1.5 shadow-md">
+              <Sparkles className="w-4 h-4" />
               Use This Prompt
             </Button>
           ) : (
-            <Button size="sm" onClick={handleNext} disabled={!canAdvance} className="gap-1.5 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-40">
+            <Button size="pill" onClick={handleNext} disabled={!canAdvance} className="gap-1.5 disabled:opacity-40">
               Next
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </Button>
           )}
         </div>
