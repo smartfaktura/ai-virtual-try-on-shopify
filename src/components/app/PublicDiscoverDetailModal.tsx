@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ export function PublicDiscoverDetailModal({
     ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
     : isPreset ? 'Freestyle' : 'Scene';
 
-  return (
+  return createPortal(
     <div
       className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
       style={{ margin: 0, padding: 0 }}
@@ -241,6 +242,7 @@ export function PublicDiscoverDetailModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

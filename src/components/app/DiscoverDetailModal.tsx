@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Input } from '@/components/ui/input';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -169,7 +170,7 @@ export function DiscoverDetailModal({
     ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
     : isPreset ? 'Freestyle' : 'Scene';
 
-  return (
+  return createPortal(
     <div
       className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
       style={{ margin: 0, padding: 0 }}
@@ -872,6 +873,7 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
