@@ -39,6 +39,22 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Detect returning user (has at least one completed generation job)
+  const { data: hasGenerated } = useQuery({
+    queryKey: ['dashboard-has-generated', user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('generation_jobs')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'completed');
+      return (count ?? 0) > 0;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isReturning = hasGenerated === true;
+
   if (profileError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -61,10 +77,10 @@ export default function Dashboard() {
         <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            Welcome{profile?.first_name || profile?.display_name ? `, ${firstName}` : ''} 👋
+            {isReturning ? 'Welcome back' : 'Welcome'}{profile?.first_name || profile?.display_name ? `, ${firstName}` : ''} 👋
           </h1>
           <p className="text-lg text-muted-foreground mt-2 max-w-xl">
-            Your AI photography studio is ready. Choose how you want to start.
+            Your AI photography studio is ready — choose how you want to start
           </p>
 
           {/* Out-of-credits / low-credits CTA */}
@@ -92,7 +108,7 @@ export default function Dashboard() {
 
         {/* Start here — 3-card grid */}
         <div className="space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Start here</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{isReturning ? 'Continue creating' : 'Start here'}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Card 1 — Product Visuals */}
             <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
@@ -106,7 +122,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
-                Start creating
+                {isReturning ? 'Create now' : 'Start creating'}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
