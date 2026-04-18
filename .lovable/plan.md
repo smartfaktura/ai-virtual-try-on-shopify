@@ -1,21 +1,29 @@
 
 
-## Tighten /app/workflows request banner spacing on mobile
+## Add spacing above "Missing a Visual Type" request banner so it doesn't overlap workflow cards
 
 ### Issue
-On mobile, the "Missing a Visual Type for your brand?" card has cramped spacing — the title sits too close to the full-width "Share Request" button and the card padding feels tight. Avatar row is hidden on mobile (good), but the gap between the heading block and the CTA is only `gap-3` and there's no subtitle/breathing room.
+Looking at the screenshot, the "Missing a Visual Type for your brand?" banner sits flush against the workflow cards grid above it (Catalog Studio / Freestyle Studio row). There's no top margin separating the banner from the grid — on both desktop and mobile it reads as cramped/overlapping.
 
-### Plan — `src/components/app/WorkflowRequestBanner.tsx`
+My previous edit only touched internal padding + the mobile gap inside the banner. It didn't add any outside spacing between the banner and the grid above.
 
-1. **Increase mobile padding**: `p-4 sm:p-6` → `p-5 sm:p-6` for a touch more breathing room.
-2. **Increase vertical gap on mobile** between title block and button: `gap-3 sm:gap-4` → `gap-4 sm:gap-4` (collapsed flex column needs more vertical air than row).
-3. **Show a short subtitle on mobile** too, so the heading doesn't sit naked above the button. Currently `hidden sm:block`. Change to always visible but keep it tight (`text-xs text-muted-foreground mt-1`). This adds a natural visual buffer between title and CTA.
-4. **Tighten title leading** and add a hair of bottom margin: keep `leading-snug`, ensure `mt-0.5` on subtitle becomes `mt-1` for cleaner rhythm.
-5. **Button**: keep full-width on mobile but add `mt-1` on the button (only when stacked) via the existing `gap` increase — no extra class needed once gap is bumped.
+### Root cause
+`WorkflowRequestBanner.tsx` root container has `mb-20 sm:mb-0` (bottom margin only, for the mobile bottom nav). It has no `mt-*`. Whatever places it (likely `Workflows.tsx`) doesn't wrap it with sufficient top spacing either.
+
+### Plan
+
+**`src/components/app/WorkflowRequestBanner.tsx`** — add top margin to the root container so the banner is visually separated from the cards grid above it on every viewport:
+
+- Change root `className` from:
+  `rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6 mb-20 sm:mb-0`
+- To:
+  `rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6 mt-8 sm:mt-12 mb-20 sm:mb-0`
+
+`mt-8` (32px) on mobile and `mt-12` (48px) on desktop matches the vertical rhythm used elsewhere on `/app/workflows` between sections.
 
 ### Acceptance
-- On mobile, clear breathing room between title, subtitle, and "Share Request" button
-- Subtitle now visible on mobile (helpful context)
-- Desktop layout unchanged
-- No trailing periods added to subtitle (it already ends with a period because it's two clauses joined by em-dash + has a period — keep as-is since it's body copy, not a header subtitle)
+- Clear visible gap between the workflow cards grid and the request banner on mobile (~32px) and desktop (~48px)
+- No overlap, no cramped feel
+- Internal banner spacing unchanged from previous fix
+- Bottom margin (mobile nav clearance) preserved
 
