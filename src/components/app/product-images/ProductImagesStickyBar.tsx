@@ -69,9 +69,9 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
           </div>
           <div className="flex items-center gap-2">
             {step > 1 && step <= 4 && (
-              <Button variant="outline" size="sm" className="h-8 text-xs flex-shrink-0" onClick={onBack}>Back</Button>
+              <Button variant="outline" className="flex-shrink-0" onClick={onBack}>Back</Button>
             )}
-            <Button size="sm" disabled={!canProceed} onClick={onNext} className="gap-1.5 h-8 text-xs flex-1">
+            <Button size="pill" disabled={!canProceed} onClick={onNext} className="gap-1.5 flex-1">
               {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
               {ctaLabel}
               {!showGenIcon && <ArrowRight className="w-3.5 h-3.5" />}
@@ -124,9 +124,9 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
 
           <div className="flex items-center gap-2 flex-shrink-0">
             {step > 1 && step <= 4 && (
-              <Button variant="outline" size="sm" onClick={onBack}>Back</Button>
+              <Button variant="outline" onClick={onBack}>Back</Button>
             )}
-            <Button size="sm" disabled={!canProceed} onClick={onNext} className="gap-1.5">
+            <Button size="pill" disabled={!canProceed} onClick={onNext} className="gap-1.5">
               {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
               {ctaLabel}
               {!showGenIcon && <ArrowRight className="w-3.5 h-3.5" />}

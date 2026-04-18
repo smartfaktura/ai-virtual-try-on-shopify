@@ -78,7 +78,7 @@ export function CatalogStepBackgroundsV2({
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ChevronLeft className="w-4 h-4" /> Back
         </Button>
-        <Button onClick={onNext} disabled={!canProceed} className="gap-2">
+        <Button onClick={onNext} disabled={!canProceed} size="pill" className="gap-2">
           Next: Shots <ChevronRight className="w-4 h-4" />
         </Button>
       </div>

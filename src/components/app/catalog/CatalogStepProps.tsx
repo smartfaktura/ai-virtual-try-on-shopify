@@ -402,7 +402,7 @@ export function CatalogStepProps({
           <Button variant="outline" onClick={onBack} className="gap-2">
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
-          <Button onClick={onNext} className="gap-2">
+          <Button onClick={onNext} size="pill" className="gap-2">
             {totalWithProps > 0 ? `Next (${totalWithProps} shots with props)` : (
               <><SkipForward className="w-3.5 h-3.5" /> Skip: No Props</>
             )}
