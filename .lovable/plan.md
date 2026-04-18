@@ -1,42 +1,20 @@
 
 
-## Bigger, more readable Metric Cards
+## Tighten metric card numbers + equalize card heights
 
-### Root cause
-`MetricCard` is undersized for the dashboard grid:
-- Title: `text-[10px] sm:text-xs` — barely readable on mobile
-- Value: `text-base sm:text-xl` (16/20px) — visually weak
-- Suffix: `text-xs` — too quiet
-- Card height: `100px / 140px` with `p-2.5 sm:p-5` padding
-- Border radius `rounded-xl` — inconsistent with sibling dashboard cards (`rounded-2xl`, `p-6`)
+### Issues seen at 1276px viewport
+1. `text-3xl sm:text-4xl` (36px) numbers too large — overpowering and pushing some cards taller than others.
+2. Cards in the row have inconsistent heights because some have `suffix`, some have `description`, some have `progress` bar, some have `action` button — `min-h` only sets a floor, not equal height.
 
-This makes the metrics row feel like a secondary toolbar, not a confident headline row.
+### Changes — `src/components/app/MetricCard.tsx`
 
-### Change — `src/components/app/MetricCard.tsx`
-
-Bump to a more generous, design-system-aligned card:
-
-| Token | Before | After |
-|---|---|---|
-| Container | `rounded-xl p-2.5 sm:p-5 h-[100px] sm:h-[140px]` | `rounded-2xl p-4 sm:p-6 min-h-[120px] sm:min-h-[160px]` |
-| Border | `border-border/40` | `border-border` (matches Start-here cards) |
-| Hover | `hover:border-border/80 hover:shadow-sm` | `hover:border-primary/30 hover:shadow-lg transition-all duration-300` (matches Start-here / More-tools cards) |
-| Icon | `w-3 h-3 sm:w-3.5 sm:h-3.5` | `w-4 h-4` |
-| Title | `text-[10px] sm:text-xs font-medium` | `text-sm font-medium` |
-| Title gap to value | `mt-1.5 sm:mt-2` | `mt-3` |
-| **Value** (the big number) | `text-base sm:text-xl font-bold` | `text-3xl sm:text-4xl font-bold` (matches credit pill `text-2xl` and dashboard headings; commands attention) |
-| Suffix / body | `text-xs text-muted-foreground/70` | `text-sm text-muted-foreground mt-2 leading-relaxed` |
-| Description (no-value variant: "No recent workflow", "Generate to discover") | `text-sm font-medium` | `text-xl sm:text-2xl font-bold text-foreground leading-tight` (so it visually ranks as a "value", not body copy) |
-| Loading skeletons | small bars | match new heights (`h-4 w-20`, `h-9 w-28`, `h-4 w-32`) |
-| Trend pill | `text-xs` | unchanged, but bumped `mt-2` |
-
-### Mobile grid spacing
-In `src/pages/Dashboard.tsx` line 575: keep `grid-cols-2 md:grid-cols-3 lg:grid-cols-5` but bump gap from `gap-2 sm:gap-4` → `gap-3 sm:gap-4` so the larger cards breathe properly on mobile.
+1. **Number size down one step**: `text-3xl sm:text-4xl` → `text-2xl sm:text-3xl` (24/30px). Still clearly the hero (matches credits pill `text-2xl`), no longer overpowering.
+2. **Description (no-value) variant**: `text-xl sm:text-2xl` → `text-base sm:text-lg font-semibold` so empty-state cards don't visually outweigh real numbers.
+3. **Equal heights**: replace `min-h-[120px] sm:min-h-[160px]` with fixed `h-[140px] sm:h-[170px]` so every card in the grid is identical regardless of content (suffix/progress/action).
+4. Keep `flex flex-col justify-between` so top content sits at top, progress/action sit at bottom.
 
 ### Acceptance
-- Numbers (€30, 0h, 48) appear at `text-3xl`/`text-4xl` — clearly the visual hero of each card, in line with the credit pill in the sidebar.
-- Titles ("Cost Saved", "Time Saved", "Credits") readable at `text-sm` on mobile (no more 10px).
-- Cards visually match the "Start here" / "More tools" cards: `rounded-2xl`, hover lift, primary-tinted border on hover.
-- No-value cards ("No recent workflow", "Generate to discover") read as proper headlines instead of muted body text.
-- Loading skeletons resize to prevent layout shift.
+- All 5 metric cards in the dashboard row are exactly the same height.
+- Numbers feel confident but not oversized — roughly matching the credits pill in the sidebar.
+- Empty-state copy ("No recent workflow", "Generate to discover") sits as a clear subtitle, not competing with real numeric values.
 
