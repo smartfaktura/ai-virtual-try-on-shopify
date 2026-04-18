@@ -115,7 +115,7 @@ export default function BrandProfiles() {
   return (
     <PageHeader
       title="Brand Profiles"
-      subtitle="Define your brand's visual identity for consistent image generation."
+      subtitle="Define your brand's visual identity for consistent image generation"
     >
       <div className="space-y-6">
         {/* Actions */}
@@ -136,7 +136,7 @@ export default function BrandProfiles() {
         ) : profiles.length === 0 ? (
           <EmptyStateCard
             heading="No brand profiles yet"
-            description="Create your first Brand Profile to ensure every generated image matches your brand's visual identity."
+            description="Create your first Brand Profile to ensure every generated image matches your brand's visual identity"
             action={{ content: 'Create Brand Profile', onAction: () => navigate('/app/brand-profiles/new') }}
             icon={<Palette className="w-10 h-10 text-muted-foreground" />}
           />

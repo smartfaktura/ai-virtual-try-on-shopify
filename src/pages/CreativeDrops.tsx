@@ -339,7 +339,7 @@ export default function CreativeDrops() {
               ) : filteredDrops.length === 0 ? (
                 <EmptyStateCard
                   heading="No drops yet"
-                  description="Create your first drop to start generating creative assets automatically."
+                  description="Create your first drop to start generating creative assets automatically"
                   action={{
                     content: 'Create your first drop',
                     onAction: () => {
@@ -373,7 +373,7 @@ export default function CreativeDrops() {
               ) : schedules.length === 0 ? (
                 <EmptyStateCard
                   heading="No scheduled drops yet"
-                  description="Set up your first scheduled drop to automate visual generation for your products."
+                  description="Set up your first scheduled drop to automate visual generation for your products"
                   action={{ content: 'Create Drop', onAction: openWizard }}
                   icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
                 />
