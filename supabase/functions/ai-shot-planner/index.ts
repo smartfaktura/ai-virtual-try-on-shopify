@@ -140,8 +140,8 @@ serve(async (req) => {
       : `- sfx_prompt (string: MUST be empty string "" — SFX is disabled by the user)
 - sfx_trigger_at (number: 0)`;
 
-    const systemPrompt = `You are a cinematic short film director specializing in E-COMMERCE PRODUCT and BRAND films.
-IMPORTANT: This is a product/brand advertisement film. Every script_line MUST sell the product or reinforce the brand. Style/mood presets affect VISUALS ONLY — never reference visual aesthetics in voiceover scripts.
+    const systemPrompt = `You are a cinematic director for COMMERCE VIDEO content (product showcases, PDP videos, social, creator-style, brand mood, launch teasers, feature/benefit, performance ads). Adapt your direction to the CONTENT INTENT provided. Do NOT assume every video is a hard-sell ad.
+Style/mood presets affect VISUALS ONLY — never reference visual aesthetics in voiceover scripts.
 You MUST generate shots that follow the EXACT role sequence provided. Do NOT invent your own roles.
 
 VALID ROLES (use ONLY these): ${VALID_ROLES.join(", ")}
@@ -149,6 +149,7 @@ VALID ROLES (use ONLY these): ${VALID_ROLES.join(", ")}
 VALID SCENE TYPES: ${VALID_SCENE_TYPES.join(", ")}
 
 VALID CAMERA MOTIONS: ${VALID_CAMERA_MOTIONS.join(", ")}
+${intentBlock}${platformBlock}${paceBlock}${priorityBlock}${categoryBlock}${audienceBlock}${offerBlock}${clarityBlock}${endingBlock}
 
 Return ONLY valid JSON with this structure:
 {
@@ -170,8 +171,7 @@ Each shot object MUST have exactly these fields:
 ${scriptLineInstruction}
 ${sfxInstruction}
 
-The total of all duration_sec values MUST equal exactly 15 seconds.
-Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments.
+DURATION: Total duration should fit the intent — social/teaser ~6–10s, showcase/PDP ~8–12s, brand mood/editorial ~10–15s. Do NOT force exactly 15s unless the intent calls for it. Use cinematic, role-weighted pacing (NOT equal splits).
 Vary camera motions and scene types for cinematic interest.
 
 MUSIC DIRECTION: The "music_direction" field should describe SPECIFIC instrumentation (e.g. "minimal piano with deep sub-bass"), a BPM range, and an energy arc (e.g. "builds from sparse to layered strings at resolve"). Be precise — this drives AI music generation.`;
@@ -179,19 +179,20 @@ MUSIC DIRECTION: The "music_direction" field should describe SPECIFIC instrument
     const userPrompt = `Film type: ${filmType}${filmDescription ? ` — ${filmDescription}` : ""}
 Story structure: ${storyStructure}
 REQUIRED ROLE SEQUENCE (follow this exactly): ${roleSequence.join(" → ")}
-Target total duration: 15 seconds
 Number of shots: ${roleSequence.length}
+${contentIntent ? `Content intent: ${contentIntent}` : ""}
+${platform ? `Platform: ${platform}` : ""}
 ${tone ? `Tone/mood: ${tone}` : ""}
 ${tonePresetText ? `VISUAL STYLE ONLY (do NOT reference in script_line — this is for camera/lighting/color only): ${tonePresetText}` : ""}
 ${stylePresetNames ? `VISUAL STYLE ONLY: ${stylePresetNames}` : ""}
 ${scenePresetNames ? `Scene environment (visual only): ${scenePresetNames}` : ""}
 ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
-Audio preferences: ${wantVoiceover ? "Voiceover ENABLED" : "Voiceover DISABLED"}, ${wantSfx ? "SFX ENABLED" : "SFX DISABLED"}
+Audio preferences: ${wantVoiceover ? "Voiceover ENABLED" : "Voiceover DISABLED"}, ${wantSfx ? "SFX ENABLED" : "SFX DISABLED"}${soundMode ? ` (soundMode=${soundMode})` : ""}
 
 Generate exactly ${roleSequence.length} shots following the role sequence: ${roleSequence.join(", ")}.
 Each shot's "role" field MUST match the corresponding role in the sequence.
-${wantVoiceover ? 'CRITICAL: script_line word budget is ~2 words per second of shot duration. A 2s hook = "Feel the power." (3 words). A 4s reveal = "Something extraordinary, designed for you." (6 words). Do NOT write long sentences for short shots. For character_visible shots with script_line, write natural dialogue the character would say.' : "IMPORTANT: Leave script_line as empty string for ALL shots — user disabled voiceover."}
-Remember: cinematic pacing (NOT equal splits)${wantSfx ? ", sfx_prompt for sound effects, sfx_trigger_at for timing" : ""}, and music_direction for the overall music track.`;
+${wantVoiceover ? 'CRITICAL: script_line word budget is ~2 words per second of shot duration. Match phrasing to content intent. For character_visible shots with script_line, write natural dialogue.' : "IMPORTANT: Leave script_line as empty string for ALL shots — voiceover is disabled."}
+Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for sound effects, sfx_trigger_at for timing" : ""}, and music_direction for the overall music track.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
