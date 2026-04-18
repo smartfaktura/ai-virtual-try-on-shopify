@@ -32,8 +32,8 @@ function calculateCreditCost(
     const dur = String(payload?.duration || "5");
     const audio = String(payload?.audioMode || "silent");
     const motion = String(payload?.cameraMotion || "");
+    if (jobType === "video_multishot") return 40; // flat rate for short film / multi-shot
     let cost = dur === "10" ? 18 : 10;
-    if (jobType === "video_multishot") cost = 25; // multi-shot premium
     if (audio === "ambient") cost += 4;
     if (["product_orbit", "premium_handheld"].includes(motion)) cost += 2;
     return cost;

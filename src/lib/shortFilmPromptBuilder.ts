@@ -333,29 +333,14 @@ export function buildShotPrompt(
 /**
  * Estimate total credits for the entire short film.
  */
+export const SHORT_FILM_FLAT_COST = 40;
+
 export function estimateShortFilmCredits(
-  shotCount: number,
-  settings: ShortFilmSettings,
+  _shotCount: number,
+  _settings: ShortFilmSettings,
 ): number {
-  const totalDuration = Math.min(shotCount * 3, 15);
-  const videoCost = totalDuration <= 5 ? 10 : totalDuration <= 10 ? 18 : 25;
-
-  // Use audioLayers if available, fall back to audioMode
-  const layers = settings.audioLayers;
-  let audioAdd = 0;
-  if (layers) {
-    if (layers.music) audioAdd += 8;
-    if (layers.sfx) audioAdd += 4;
-    if (layers.voiceover) audioAdd += 8;
-  } else {
-    audioAdd = settings.audioMode === 'ambient' ? 0
-      : settings.audioMode === 'voiceover' ? 12
-      : settings.audioMode === 'music' ? 8
-      : settings.audioMode === 'full_mix' ? 16
-      : 0;
-  }
-
-  return videoCost + audioAdd + 5;
+  // Flat rate — server enforces the same value in enqueue-generation.
+  return SHORT_FILM_FLAT_COST;
 }
 
 /**
