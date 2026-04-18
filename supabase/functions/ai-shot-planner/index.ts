@@ -330,6 +330,30 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
           remaining -= validShots[i].duration_sec;
         }
       }
+    } else if (total < cap) {
+      // Expand-up: distribute remaining seconds onto priority shots so the film hits the target.
+      let deficit = cap - total;
+      const PRIORITY_ROLES = ["product_reveal", "product_moment", "brand_finish", "hero_shot", "lifestyle_moment"];
+      const priorityIdx = validShots
+        .map((s: any, i: number) => ({ i, role: s.role, dur: s.duration_sec }))
+        .filter((x: any) => PRIORITY_ROLES.includes(x.role) && x.dur < 15)
+        .sort((a: any, b: any) => PRIORITY_ROLES.indexOf(a.role) - PRIORITY_ROLES.indexOf(b.role))
+        .map((x: any) => x.i);
+      const order = priorityIdx.length > 0
+        ? priorityIdx
+        : validShots.map((_: any, i: number) => i).sort((a: number, b: number) => validShots[b].duration_sec - validShots[a].duration_sec);
+      let guard = 0;
+      while (deficit > 0 && guard++ < 100) {
+        for (const i of order) {
+          if (deficit <= 0) break;
+          if (validShots[i].duration_sec < 15) {
+            validShots[i].duration_sec += 1;
+            deficit -= 1;
+          }
+        }
+        // If no priority shot could absorb, distribute to any shot
+        if (deficit > 0 && validShots.every((s: any) => s.duration_sec >= 15)) break;
+      }
     }
 
     return new Response(JSON.stringify({ shots: validShots, ...(musicDirection ? { music_direction: musicDirection } : {}) }), {
