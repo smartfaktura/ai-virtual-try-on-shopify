@@ -140,6 +140,14 @@ export function ShotPlanEditor({
         </div>
       ) : (
         <div className="space-y-2">
+          {layers.voiceover && shots.length > 0 && shots.every(s => !s.script_line?.trim()) && (
+            <div className="rounded-md border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Voiceover is on, but no narration is written yet.</span>{' '}
+              {onPlanModeChange && planMode === 'auto'
+                ? 'Switch to AI Director and Regenerate to auto-write scripts, or type narration in any shot below.'
+                : 'Type narration into any shot below to enable its voiceover.'}
+            </div>
+          )}
           {shots.map((shot, idx) => {
             const wordCount = (shot.script_line || '').split(/\s+/).filter(Boolean).length;
             const maxWords = Math.floor(shot.duration_sec * WORDS_PER_SEC);
@@ -147,7 +155,9 @@ export function ShotPlanEditor({
             const canHaveVo = shot.duration_sec >= MIN_VO_DURATION;
             const showVo = layers.voiceover && canHaveVo;
             const showSfx = layers.sfx;
-            const shotVoEnabled = shot.vo_enabled !== false;
+            const hasScript = !!(shot.script_line && shot.script_line.trim());
+            // Checkbox reflects reality: only "on" when user explicitly enabled AND there's narration text
+            const shotVoEnabled = shot.vo_enabled !== false && hasScript;
 
             return (
               <div key={`${shot.shot_index}-${idx}`} className="space-y-1">
@@ -168,24 +178,40 @@ export function ShotPlanEditor({
                     {showVo && (
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => onUpdateShot?.(idx, { ...shot, vo_enabled: !shotVoEnabled })}
+                          onClick={() => {
+                            if (!hasScript) return; // can't enable without text
+                            onUpdateShot?.(idx, { ...shot, vo_enabled: !shotVoEnabled });
+                          }}
+                          disabled={!hasScript}
                           className={cn(
                             'h-4 w-4 rounded border flex items-center justify-center shrink-0 transition-colors',
                             shotVoEnabled
                               ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-muted-foreground/40 bg-background'
+                              : 'border-muted-foreground/40 bg-background',
+                            !hasScript && 'opacity-50 cursor-not-allowed'
                           )}
-                          title={shotVoEnabled ? 'Disable voiceover for this shot' : 'Enable voiceover for this shot'}
+                          title={
+                            !hasScript
+                              ? 'Add narration text below to enable voiceover'
+                              : shotVoEnabled ? 'Disable voiceover for this shot' : 'Enable voiceover for this shot'
+                          }
                         >
                           {shotVoEnabled && <Check className="h-2.5 w-2.5" />}
                         </button>
                         <Mic className="h-3 w-3 text-muted-foreground shrink-0" />
                         <Input
                           value={shot.script_line || ''}
-                          onChange={e => onUpdateShot?.(idx, { ...shot, script_line: e.target.value || undefined })}
-                          placeholder={shotVoEnabled ? 'Voiceover narration for this shot...' : 'Voiceover disabled'}
-                          disabled={!shotVoEnabled}
-                          className={cn('text-xs h-7 bg-muted/30 border-muted', !shotVoEnabled && 'opacity-50')}
+                          onChange={e => {
+                            const val = e.target.value;
+                            // Auto-enable VO when user types text; auto-disable when cleared
+                            onUpdateShot?.(idx, {
+                              ...shot,
+                              script_line: val || undefined,
+                              vo_enabled: val.trim().length > 0 ? true : false,
+                            });
+                          }}
+                          placeholder="Add narration text to enable voiceover…"
+                          className="text-xs h-7 bg-muted/30 border-muted"
                         />
                         <span className={cn(
                           'text-[9px] shrink-0 w-12 text-right font-mono',
