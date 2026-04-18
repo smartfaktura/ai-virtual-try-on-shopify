@@ -141,7 +141,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   const isUpscaled = activeItem.quality?.startsWith('upscaled_') || activeItem.quality === 'upscaled';
   const upscaleLabel = activeItem.quality === 'upscaled_4k' ? '4K' : activeItem.quality === 'upscaled_2k' ? '2K' : activeItem.quality === 'upscaled' ? 'HD' : null;
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
