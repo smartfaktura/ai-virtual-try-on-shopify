@@ -280,18 +280,28 @@ const SEVERITY_MAP: Record<Severity, { label: string; classes: string }> = {
   low: { label: 'low', classes: 'border-border text-muted-foreground bg-muted/40' },
 };
 
-const INCONSISTENCIES: Array<{
+type Inconsistency = {
+  id: string;
   title: string;
   why: string;
   suggested: string;
+  /** The single canonical winner (what to standardize on). */
+  canonical: string;
+  /** Patterns that should be retired. */
+  deprecated: string[];
   severity: Severity;
   variants: { label: string; node: React.ReactNode }[];
-}> = [
+};
+
+const INCONSISTENCIES: Inconsistency[] = [
   {
+    id: 'status-pills',
     title: 'Status pill colors',
     severity: 'high',
     why: 'Generation/library/trend chips use ad-hoc emerald/amber/red/blue while shadcn Badge uses semantic tokens.',
-    suggested: 'Add success/warning variants to Badge; remove inline color classes. Use <StatusBadge> for jobs.',
+    suggested: 'Use <StatusBadge> for all job/library/video/trend states.',
+    canonical: '<StatusBadge status="…" />',
+    deprecated: ['inline bg-emerald-500/10', 'inline bg-blue-500/10', '.status-badge--*'],
     variants: [
       { label: 'StatusBadge (queued)', node: <StatusBadge status="queued" /> },
       { label: 'StatusBadge (generating)', node: <StatusBadge status="generating" /> },
@@ -301,75 +311,96 @@ const INCONSISTENCIES: Array<{
     ],
   },
   {
+    id: 'overlay-drift',
     title: 'Confirmation overlay drift',
     severity: 'high',
     why: 'Dialog, AlertDialog, Sheet, and Drawer all used for confirmations across the app.',
-    suggested: 'AlertDialog for destructive confirms; Dialog for content; Sheet for side flows; Drawer for mobile.',
+    suggested: 'Wrap destructive confirms in <ConfirmDialog>; reserve Dialog for content/forms.',
+    canonical: '<ConfirmDialog> for destructive · <Dialog> for forms · <Sheet> for side flows · <Drawer> for mobile',
+    deprecated: ['ad-hoc Dialog "Are you sure?" patterns', 'inline AlertDialog boilerplate'],
     variants: [
+      { label: 'ConfirmDialog (canonical)', node: <Badge>Destructive confirm</Badge> },
       { label: 'Dialog', node: <Badge variant="outline">Centered modal</Badge> },
-      { label: 'AlertDialog', node: <Badge variant="outline">Destructive confirm</Badge> },
       { label: 'Sheet', node: <Badge variant="outline">Side panel</Badge> },
       { label: 'Drawer', node: <Badge variant="outline">Bottom mobile sheet</Badge> },
     ],
   },
   {
+    id: 'button-heights',
     title: 'Button height conventions',
     severity: 'high',
     why: 'shadcn Button uses h-10/h-9/h-11; ad-hoc menu buttons in AppShell use raw <button class="h-10">.',
     suggested: 'Always use <Button> from components/ui/button.tsx; remove ad-hoc <button> styling.',
+    canonical: '<Button variant size>',
+    deprecated: ['raw <button class="h-10 px-3 …">', 'div with role="button"'],
     variants: [
       { label: 'shadcn default (h-10)', node: <Button>Action</Button> },
       { label: 'ad-hoc menu button', node: <button className="h-10 px-3 py-2 text-sm hover:bg-muted rounded-md transition-colors">Action</button> },
     ],
   },
   {
+    id: 'card-padding',
     title: 'Card padding drift',
     severity: 'med',
     why: 'p-3, p-4, p-5, p-6 used on visually similar cards across the app.',
-    suggested: 'Standardize to p-4 (mobile) / p-5 (desktop) for content cards.',
+    suggested: 'Use the <Card density="…"> prop instead of overriding padding ad-hoc.',
+    canonical: '<Card density="comfortable|compact|dense"> → p-5 / p-4 / p-3',
+    deprecated: ['random p-6 on content cards', 'mixed p-4/p-5 in same surface family'],
     variants: [
-      { label: 'p-3', node: <div className="rounded-xl border border-border bg-card p-3 w-44 h-20 text-xs">p-3 card</div> },
-      { label: 'p-4', node: <div className="rounded-xl border border-border bg-card p-4 w-44 h-20 text-xs">p-4 card</div> },
-      { label: 'p-5', node: <div className="rounded-xl border border-border bg-card p-5 w-44 h-20 text-xs">p-5 card</div> },
-      { label: 'p-6', node: <div className="rounded-xl border border-border bg-card p-6 w-44 h-20 text-xs">p-6 card</div> },
+      { label: 'dense (p-3)', node: <div className="rounded-2xl border border-border bg-card p-3 w-44 h-20 text-xs">dense</div> },
+      { label: 'compact (p-4)', node: <div className="rounded-2xl border border-border bg-card p-4 w-44 h-20 text-xs">compact</div> },
+      { label: 'comfortable (p-5)', node: <div className="rounded-2xl border border-border bg-card p-5 w-44 h-20 text-xs">comfortable</div> },
+      { label: 'p-6 (deprecated)', node: <div className="rounded-2xl border border-border bg-card p-6 w-44 h-20 text-xs">p-6</div> },
     ],
   },
   {
+    id: 'radius-drift',
     title: 'Radius drift on similar surfaces',
     severity: 'med',
     why: 'Cards mix rounded-lg / rounded-xl / rounded-2xl on identical contexts.',
-    suggested: 'Cards = rounded-xl, pills = rounded-full, inputs = rounded-md.',
+    suggested: 'Cards = rounded-2xl (Card default), pills = rounded-full, inputs = rounded-md.',
+    canonical: 'rounded-2xl for cards · rounded-full for pills · rounded-md for inputs',
+    deprecated: ['rounded-lg / rounded-xl on card surfaces'],
     variants: [
       { label: 'rounded-lg', node: <div className="h-12 w-32 bg-card border border-border rounded-lg" /> },
       { label: 'rounded-xl', node: <div className="h-12 w-32 bg-card border border-border rounded-xl" /> },
-      { label: 'rounded-2xl', node: <div className="h-12 w-32 bg-card border border-border rounded-2xl" /> },
+      { label: 'rounded-2xl (canonical)', node: <div className="h-12 w-32 bg-card border border-border rounded-2xl" /> },
     ],
   },
   {
+    id: 'skeletons',
     title: 'Skeleton patterns',
     severity: 'med',
     why: 'Skeleton component, custom shimmer divs, and animate-pulse boxes coexist.',
     suggested: 'Use <Skeleton /> exclusively; deprecate ad-hoc shimmers.',
+    canonical: '<Skeleton className="…" />',
+    deprecated: ['<div class="animate-pulse bg-muted">', 'custom shimmer keyframes'],
     variants: [
       { label: 'Skeleton', node: <Skeleton className="h-4 w-32" /> },
       { label: 'ad-hoc pulse', node: <div className="h-4 w-32 bg-muted animate-pulse rounded" /> },
     ],
   },
   {
+    id: 'pagination',
     title: 'Two pagination styles',
     severity: 'med',
     why: 'shadcn Pagination component vs custom prev/next button rows.',
     suggested: 'Standardize on shadcn Pagination.',
+    canonical: '<Pagination> from components/ui/pagination.tsx',
+    deprecated: ['custom prev/next button rows'],
     variants: [
       { label: 'shadcn Pagination', node: <Badge variant="outline">‹ 1 2 3 ›</Badge> },
       { label: 'custom prev/next', node: <div className="flex gap-2"><Button size="sm" variant="outline">Prev</Button><Button size="sm" variant="outline">Next</Button></div> },
     ],
   },
   {
+    id: 'muted-text',
     title: 'Muted text variants',
     severity: 'low',
-    why: 'Three muted-text patterns coexist across pages.',
-    suggested: 'Use text-muted-foreground exclusively; remove /60 and /80 opacity variants.',
+    why: 'Three muted-text patterns coexist across pages (~420 occurrences in 41 files).',
+    suggested: 'Use text-muted-foreground exclusively; remove /60 /70 /80 opacity variants.',
+    canonical: 'text-muted-foreground',
+    deprecated: ['text-foreground/60', 'text-foreground/70', 'text-foreground/80'],
     variants: [
       { label: 'text-muted-foreground', node: <p className="text-sm text-muted-foreground">Helper text</p> },
       { label: 'text-foreground/60', node: <p className="text-sm text-foreground/60">Helper text</p> },
@@ -377,36 +408,47 @@ const INCONSISTENCIES: Array<{
     ],
   },
   {
+    id: 'section-labels',
     title: 'Section label styles',
     severity: 'low',
     why: 'Two patterns for tiny section headers — uppercase tracked vs muted xs.',
-    suggested: 'Pick one (uppercase tracking-widest preferred for nav groups).',
+    suggested: 'Use the .section-label utility class (text-[10px] uppercase tracking-widest muted).',
+    canonical: '.section-label',
+    deprecated: ['ad-hoc text-xs uppercase tracking-wider text-muted-foreground'],
     variants: [
-      { label: 'uppercase tracking', node: <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Section</div> },
+      { label: '.section-label (canonical)', node: <div className="section-label">Section</div> },
       { label: 'plain xs muted', node: <div className="text-xs text-muted-foreground">Section</div> },
     ],
   },
   {
+    id: 'heading-scales',
     title: 'Heading scales',
     severity: 'low',
     why: 'PageHeader uses text-2xl sm:text-3xl, but several admin pages render raw <h1 class="text-2xl">.',
     suggested: 'Always use <PageHeader title=… />.',
+    canonical: '<PageHeader title="…" subtitle="…">',
+    deprecated: ['raw <h1 class="text-2xl …"> in pages'],
     variants: [
       { label: 'PageHeader title', node: <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Page title</h1> },
       { label: 'raw text-2xl', node: <h1 className="text-2xl font-semibold">Page title</h1> },
     ],
   },
   {
+    id: 'tooltip-hovercard',
     title: 'Tooltip vs HoverCard overlap',
     severity: 'low',
     why: 'Tooltip and HoverCard both used to show hover info — sometimes interchangeably.',
     suggested: 'Tooltip for short labels (<60ch); HoverCard for rich previews with media.',
+    canonical: 'Tooltip = short text · HoverCard = rich media',
+    deprecated: ['HoverCard for one-line tooltips'],
     variants: [
       { label: 'Tooltip', node: <Badge variant="outline">Short text only</Badge> },
       { label: 'HoverCard', node: <Badge variant="outline">Rich card preview</Badge> },
     ],
   },
 ];
+
+const RESOLVED_STORAGE_KEY = 'ui-audit-resolved-v1';
 
 // ─── TOC ──────────────────────────────────────────────────────────────────────
 
