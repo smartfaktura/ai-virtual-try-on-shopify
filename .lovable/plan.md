@@ -1,68 +1,52 @@
 
+## UI Audit page — comprehensive coverage + "where used" annotations
 
-## Internal UI Style Audit page (`/app/admin/ui-audit`)
+### Current gaps
+The current `/app/admin/ui-audit` shows core primitives (typography, buttons, inputs, basic cards/badges) but is missing many real-world surfaces. The user wants **everything** + **where each style is used**.
 
-A single, scrollable, admin-only page that renders **the actual components** currently used across the app — labelled with their variant names, sizes, and source — so we can spot inconsistencies before standardizing.
+### What I'll add
 
-### Route + access
-- New route in `src/App.tsx`: `/admin/ui-audit` → `<AdminUIAudit />`.
-- New page: `src/pages/AdminUIAudit.tsx`. Guarded with `useIsAdmin()` → `<Navigate to="/app" />` for non-admins (same pattern as `AdminFeedback`).
-- Sidebar/user-menu link in `AppShell.tsx` user dropdown: "UI Style Audit" (admin-only chunk that already lists other admin links).
+**1. "Where used" pattern (applied to every audit block)**
+A small `<UsedIn paths={["..."]} />` line under each example showing the actual files/routes (e.g. `Workflows · /app/workflows · WorkflowCardCompact.tsx`). Rendered as a tiny muted caption with a code-style monospace chip.
 
-### Page architecture
-- Use existing `PageHeader` + a sticky in-page TOC (left rail on desktop, top tabs on mobile) jumping to each section.
-- Each section is wrapped in a small reusable local component `<AuditSection title="..." anchor="..." />` and `<AuditSpec label="..." value="..." />` for the metadata table beside each example.
-- Each example block renders **the live component** + a side panel listing: variant name, file source (e.g. `components/ui/button.tsx`), tailwind classes, computed font-size / line-height / radius (read from a small helper that uses `getComputedStyle` on a hidden ref → display real px values, not assumptions).
+**2. New sections to add**
 
-### Sections (in order)
+- **Modals & Dialogs** — `Dialog`, `AlertDialog`, `Sheet` (right/left/top/bottom), `Drawer` (mobile), `Popover`, `HoverCard`, `Tooltip`, `ContextMenu`, `DropdownMenu`. Live mini-triggers for each.
+- **Toasts & Notifications** — sonner toast (success/error/info/loading), shadcn `Toast`, banner-style alerts (`Alert` default + destructive), inline status banners (e.g. credits low banner from AppShell).
+- **Navigation** — `Tabs` (underline + pills), `NavigationMenu`, `Breadcrumb`, `Pagination`, sidebar group label (`section-label`), sidebar item active/inactive, top bar pattern.
+- **Data display** — `Table`, `Accordion`, `Collapsible`, `Separator`, `ScrollArea`, `Avatar` (sizes), `AspectRatio`, `Progress`, `Skeleton` (line/circle/card), `Calendar`, `Carousel`.
+- **Workflow surfaces** — live preview of `WorkflowCardCompact`, `FreestylePromptCard`, `WorkflowAnimatedThumbnail`, activity card, generation phase card (`/app/generate/...` step 5), empty state on Library.
+- **Step / wizard patterns** — Product Images 6-step header, Short Film stepper, Catalog Studio anchor/derivative cards.
+- **Generation & Library cards** — generation preview tile, library asset card (Draft / Brand Ready / Publish chips), lightbox header, metric/stat card from dashboard.
+- **Pricing & billing surfaces** — plan card (Starter/Growth/Pro), credits balance pill, "no credits" modal, value drawer (post-gen conversion layer 2), Stripe checkout return banner.
+- **Auth surfaces** — sign-in card, OAuth button, magic link confirmation panel.
+- **Marketing/landing snippets** — premium hero heading (`landing-pages-full-system`), public marquee chip, CTA button gradient — clearly labelled "Marketing only — not /app".
+- **Forms in the wild** — admin scene editor row, model overrides toggle row, search + filter bar (Library/Discover), bulk-action toolbar.
+- **Status & state chips** — generation states (queued / running / completed / failed), library status (Draft / Brand Ready / Publish), trend watch status, video processing chip.
+- **Loading & empty states** — full-page loader, inline spinner, branded animated phase icons (Step 5), empty Library, empty Discover, empty Activity, error retry card.
+- **Lightbox & overlays** — image lightbox header, download/share toolbar, keyboard hints.
+- **Mobile-specific patterns** — bottom sheet, mobile sticky CTA, mobile sidebar trigger, compact pill row (just normalized in `FreestylePromptCard`).
 
-1. **Typography** — render h1–h4, body lg/md/sm, caption, label, helper, muted, button text, badge text. Pull samples from real usage (e.g. `PageHeader` title, dashboard stat label, `Label` component, `text-muted-foreground` paragraph). Show computed px size/weight/line-height/letter-spacing via the helper.
+**3. Enhanced "Inconsistencies" section**
+Expand the existing list with newly-discovered drifts surfaced while building each section above (e.g. tooltip vs hovercard overlap, two pagination styles, three skeleton patterns, dialog vs alertdialog vs sheet for confirmations).
 
-2. **Buttons** — every variant from `components/ui/button.tsx` (`default`, `destructive`, `outline`, `secondary`, `ghost`, `link`) × every size (`default`, `sm`, `lg`, `icon`) + loading (with `Loader2`), disabled, and **non-standard buttons** found in the wild (e.g. custom `bg-primary` buttons in `AppShell`, freestyle send button). Side-by-side grid for easy comparison.
+**4. UX improvements to the audit page itself**
+- Sticky **search bar** at top → filters visible blocks by name / file path / class.
+- Section anchor TOC on left rail (desktop) — grows to cover all new sections.
+- Each block gets a small **"Copy classes"** button (copies the tailwind string for that example).
+- Density toggle (Compact / Comfortable) so it stays scannable when it grows long.
 
-3. **Inputs / form controls** — `Input`, `Textarea`, `Select`, `Combobox` (if present), `Switch`, `Checkbox`, `RadioGroup`, search input pattern, `Label` + helper text + error state.
-
-4. **Cards / containers** — `Card`, `card-elevated`, `card-luxury`, `metric-card`, `template-card`, `generation-preview`, modal content block (`DialogContent`), empty state container, list row container. Render each with a sample child + spec panel (radius, shadow, padding, bg).
-
-5. **Badges / chips / status pills** — all `Badge` variants + `.status-badge--success/warning/critical/info` from `index.css` + any inline pill patterns found.
-
-6. **Layout & spacing** — visual ruler cards showing real values used: page padding (`PageHeader` wrapper), section gap, card padding (`p-3` / `p-4` / `p-5` / `p-6`), grid gap, form field gap, title→subtitle, subtitle→content, button group gap, badge→text gap. Each rendered as a labelled spacer block (e.g. `gap-4 = 16px` with a coloured 16px box).
-
-7. **Borders / radius / shadows** — swatches for every border color token (`--border`, `--input`), divider styles, radius scale (`sm`, `md`, `lg`, `xl`, `2xl`, `full`), shadow scale (`shadow-sm`, `shadow`, `shadow-md`, `card-elevated`, `metric-card:hover`), and surface layers (`--background`, `--surface`, `--surface-subdued`, `--surface-hovered`, `--surface-pressed`, `--surface-selected`, `--card`, `--popover`, `--muted`).
-
-8. **Page structure patterns** — render mini mock-ups: page header (title + subtitle + actions), section header, empty state layout, list/grid wrapper, modal header/body/footer, sidebar group label.
-
-9. **Inconsistencies / likely duplicates** — a manually-curated, expandable list (data-driven array at top of file so we can grow it). Each entry: title, the two variants side-by-side, why they conflict, suggested unification. Seeded entries from what I've already seen in the codebase:
-   - **3+ card paddings in active use**: `p-3`, `p-4`, `p-5`, `p-6` across `WorkflowCardCompact`, `FreestylePromptCard` (just normalized), dashboard cards, admin tables.
-   - **Two button height conventions**: shadcn `Button` (`h-10` / `h-9` / `h-11`) vs ad-hoc `<button class="h-10 px-3 ...">` in `AppShell` user menu.
-   - **Three "muted text" styles**: `text-muted-foreground`, `text-foreground/60`, `text-foreground/80`.
-   - **Two "section label" styles**: `.section-label` (uppercase tracking-widest) vs `text-xs text-muted-foreground` headers.
-   - **Two badge systems**: shadcn `<Badge>` vs `.status-badge--*` CSS classes.
-   - **Radius drift**: `rounded-md` (default), `rounded-lg`, `rounded-xl`, `rounded-2xl` mixed on similar surfaces (cards vs pills).
-   - **Two divider patterns**: `border-b border-border` vs `.section-divider::after`.
-   - **Two heading scales**: `PageHeader` title vs raw `<h1 class="text-2xl">` in some admin pages.
-
-### Helper utilities (inline, in the same file to keep it self-contained)
-- `useComputedStyle(ref, props[])` — returns real computed px values for the spec panels.
-- `<SwatchBox color="hsl(var(--border))" label="--border" />`
-- `<RadiusBox radius="rounded-xl" />`
-- `<ShadowBox className="shadow-md" label="shadow-md" />`
-- `<SpacerBox size={16} label="gap-4" />`
-
-### Files touched
-- **New**: `src/pages/AdminUIAudit.tsx` (~600–800 lines, all sections inline; no backend, no new components in `components/ui`).
-- **Edited**: `src/App.tsx` — add lazy import + route.
-- **Edited**: `src/components/app/AppShell.tsx` — add "UI Style Audit" link inside the existing admin user-menu block.
-
-### Out of scope (per constraints)
-- No actual component refactors / unification yet — this is purely visibility.
-- No database, no edge functions, no new shadcn components.
-- No mobile-first redesign of the audit page itself — desktop-first with basic responsive stacking.
+### Implementation
+- All work in **`src/pages/AdminUIAudit.tsx`** (extend, no new routes).
+- Add small inline helpers: `<UsedIn>`, `<CopyClasses>`, search filter state, density context.
+- Keep render of real components — no mocks. For things requiring open-state (Dialog/Sheet/Popover/Toast), render a button that opens a tiny labelled instance.
+- No backend changes, no schema changes, no edits outside this file.
 
 ### Acceptance
-- Admin can navigate to `/app/admin/ui-audit` from the user menu.
-- Non-admin users get redirected to `/app`.
-- Page renders all 9 sections with live component examples + spec panels showing real computed values.
-- "Inconsistencies" section visibly shows side-by-side duplicates with notes.
-- No regressions in any existing route.
+- Every section listed above renders live examples with variant name + tailwind classes + computed values + "Used in" file/route caption.
+- Search filters across all blocks instantly.
+- Inconsistencies section grows to reflect new findings.
+- Page remains admin-only and desktop-first responsive.
 
+### File touched
+- `src/pages/AdminUIAudit.tsx` (extended significantly, ~1500–2000 lines total).
