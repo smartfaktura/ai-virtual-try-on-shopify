@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   backAction?: { content: string; onAction: () => void };
   actions?: React.ReactNode;
   children: React.ReactNode;
