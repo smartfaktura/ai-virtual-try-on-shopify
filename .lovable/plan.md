@@ -1,38 +1,26 @@
 
+## Mobile fit fix — pills overflow on 390px
 
-## Freestyle card — fix overflow + remove watermark
-
-### Issues from screenshot
-1. **Pills overflow** — "Generate" pill clips off the right edge ("Gener..."); "Scene" pill clips on the left.
-2. **Empty space top + bottom** — content block isn't truly centered, prompt sits with too much vertical breathing room while pills hang off-screen.
-3. **VOVV.AI watermark** — user wants it removed.
+From screenshot at 390px: "Scene" clips left, "Generate" clips right. Pills row exceeds card width.
 
 ### Root cause
-- Inner block uses `w-[88%]` AND pills use horizontal padding `px-2 py-0.5` with avatar `w-5 h-5` + label text. Total pill row width exceeds 88% of container at 1276px viewport when the card sits in a 4-col grid (~290px wide).
-- `justify-center` + `flex-nowrap` + `overflow-hidden` causes pills wider than container to overflow symmetrically (clipping both edges).
+At 390px viewport, the card spans nearly full width (~358px). Inner block has `px-3` (24px total) leaving ~334px for pills. Current mobile pill widths still exceed this when 4 pills sit in `flex-nowrap` + `justify-center` — overflow distributes symmetrically and clips both edges.
 
-### Changes (single file: `src/components/app/FreestylePromptCard.tsx`)
+### Fix (single file: `src/components/app/FreestylePromptCard.tsx`)
 
-**1. Remove VOVV.AI watermark**
-Delete lines 143–150 entirely.
+**1. Hide the pill labels on mobile, keep only the avatar/icon circles**
+- Wrap each pill's text label in a `hidden sm:inline` span. Mobile shows just the small circle/icon — tight, elegant, no clipping.
+- Generate pill: keep the Zap icon visible, hide "Generate" label on mobile.
 
-**2. Make inner block fit container width**
-- Change `w-[88%]` → `w-full px-4` (desktop) / `w-full px-3` (mobile). Gives pills the full available width to breathe.
+**2. Tighten further as backup**
+- Mobile inner padding: `px-3` → `px-2`.
+- Mobile pill: `px-1` → `p-1` (square, just hugs the avatar).
+- Mobile gap: keep `gap-1`.
 
-**3. Make pills fit cleanly**
-- Reduce pill padding: `px-2` → `px-1.5` (desktop), `px-1.5` → `px-1` (mobile).
-- Reduce avatar size: `w-5 h-5` → `w-4 h-4` desktop; `w-4 h-4` → `w-3.5 h-3.5` mobile.
-- Tighten gap between pills: `gap-1.5` → `gap-1` desktop; keep `gap-1` mobile.
-- Tighten icon-to-label gap inside pill: `gap-1` → `gap-0.5`.
-- Allow gentle shrink: keep `flex-nowrap` but remove `overflow-hidden` on the row so nothing clips; the reduced widths above will fit at all card sizes in the grid.
-
-**4. Tighten vertical composition**
-- Reduce prompt bar `min-h`: `110px` → `92px` desktop; `88px` → `76px` mobile. Less wasted vertical space, prompt + pills sit as a balanced cluster.
-- Reduce gap between prompt bar and pills: `gap-3` → `gap-2.5`.
+**3. Keep desktop unchanged**
+Desktop still shows full labels (Scene · Model · Product · Generate) — the previous fix already works there.
 
 ### Acceptance
-- All 4 pills (Scene, Model, Product, Generate) fully visible, no clipping at 4-col, 3-col, 2-col grid widths.
-- No VOVV.AI watermark.
-- Prompt bar and pills feel like a centered, balanced cluster — no large empty band above or below.
-- Card height + padding still byte-identical to sibling `WorkflowCardCompact`.
-
+- 390px: 4 small circular pills fit comfortably centered, no clipping.
+- ≥640px (sm+): Full labeled pills as today.
+- No other layout changes.
