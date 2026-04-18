@@ -143,7 +143,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
         <div
           className={cn(
             'relative z-10 w-full flex flex-col items-center gap-2.5 transition-opacity duration-500',
-            mobileCompact ? 'px-3' : 'px-4',
+            mobileCompact ? 'px-2' : 'px-4',
             isFading ? 'opacity-0' : 'opacity-100',
           )}
           style={{ transitionTimingFunction: APPLE_EASE }}
@@ -197,7 +197,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
                   className={cn(
                     'inline-flex items-center gap-0.5 rounded-full border font-medium flex-shrink-0',
                     'transition-all duration-500',
-                    mobileCompact ? 'px-1 py-0.5 text-[9px]' : 'px-1.5 py-0.5 text-[10px]',
+                    mobileCompact ? 'p-1 text-[9px]' : 'px-1.5 py-0.5 text-[10px]',
                     isGenerate
                       ? 'bg-primary border-primary text-primary-foreground'
                       : 'bg-background/60 border-border/40 text-foreground/75 backdrop-blur-sm',
@@ -219,7 +219,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
                   ) : (
                     <Zap className={cn(mobileCompact ? 'w-2.5 h-2.5' : 'w-3 h-3')} />
                   )}
-                  {step.label}
+                  <span className={cn(mobileCompact && 'hidden sm:inline')}>{step.label}</span>
                 </span>
               );
             })}
