@@ -144,35 +144,6 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // Fetch 30-day generation count (actual images, not job rows)
-  const { data: generatedCount = 0, isLoading: generatedLoading } = useQuery({
-    queryKey: ['dashboard-generated-30d', user?.id],
-    queryFn: async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const iso = thirtyDaysAgo.toISOString();
-
-      const { data: jobs, error: e1 } = await supabase
-        .from('generation_jobs')
-        .select('requested_count')
-        .eq('status', 'completed')
-        .gte('created_at', iso);
-      if (e1) throw e1;
-      const jobImages = (jobs || []).reduce((sum, j) => sum + (j.requested_count || 0), 0);
-
-      const { count: freestyleCount, error: e2 } = await supabase
-        .from('freestyle_generations')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', iso);
-      if (e2) throw e2;
-
-      return jobImages + (freestyleCount ?? 0);
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    placeholderData: (prev: number | undefined) => prev,
-  });
-
   // Fetch active schedule count
   const { data: scheduleCount = 0, isLoading: schedulesLoading } = useQuery({
     queryKey: ['dashboard-schedule-count', user?.id],
@@ -188,49 +159,6 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev: number | undefined) => prev,
   });
-
-  // Fetch last completed job's workflow
-  const { data: lastJob } = useQuery({
-    queryKey: ['dashboard-last-job', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('generation_jobs')
-        .select('workflow_slug, workflow_id, workflows(name, slug)')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch most-used workflow
-  const { data: topWorkflow } = useQuery({
-    queryKey: ['dashboard-top-workflow', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('generation_jobs')
-        .select('workflow_slug, workflow_id, workflows(name, slug)')
-        .eq('status', 'completed')
-        .limit(500);
-      const counts: Record<string, { count: number; name: string; slug: string }> = {};
-      (data || []).forEach(j => {
-        const wf = j.workflows as any;
-        if (wf?.name) {
-          const key = wf.name;
-          if (!counts[key]) counts[key] = { count: 0, name: wf.name, slug: wf.slug };
-          counts[key].count++;
-        }
-      });
-      const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
-      return sorted[0] || null;
-    },
-    enabled: !!user,
-    staleTime: 10 * 60 * 1000,
-  });
-
 
 
   // Critical error state — show recovery UI instead of blank skeletons
