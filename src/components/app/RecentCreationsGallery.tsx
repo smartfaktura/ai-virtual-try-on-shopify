@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
