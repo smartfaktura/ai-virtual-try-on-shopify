@@ -42,7 +42,7 @@ export function WorkflowRequestBanner() {
   };
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 sm:p-6 mb-20 sm:mb-0">
+    <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6 mb-20 sm:mb-0">
       {submitted ? (
         <div className="flex items-center gap-3 py-2">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -54,7 +54,7 @@ export function WorkflowRequestBanner() {
           </div>
         </div>
       ) : !expanded ? (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             {/* Avatar stack — hidden on mobile to free space */}
             <div className="hidden sm:flex -space-x-2.5 shrink-0">
@@ -88,7 +88,7 @@ export function WorkflowRequestBanner() {
               <p className="text-sm font-semibold text-foreground leading-snug">
                 Missing a Visual Type for your brand?
               </p>
-              <p className="hidden sm:block text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-muted-foreground mt-1">
                 Tell us what you need — we'll build it and add it to our lineup.
               </p>
             </div>
