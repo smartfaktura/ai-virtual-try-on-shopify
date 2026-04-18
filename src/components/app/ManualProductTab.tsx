@@ -1116,21 +1116,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
             <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', moreDetailsOpen && 'rotate-180')} />
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">Weight</Label>
-                <Input placeholder="e.g. 250g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} className="h-8 text-xs" />
+                <Label className="text-xs font-medium text-foreground">Weight</Label>
+                <Input placeholder="e.g. 250g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">Color</Label>
-                <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} className="h-8 text-xs" />
+                <Label className="text-xs font-medium text-foreground">Color</Label>
+                <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">Materials</Label>
-                <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} className="h-8 text-xs" />
+                <Label className="text-xs font-medium text-foreground">Materials</Label>
+                <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} />
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground/60 mt-1.5">
+            <p className="text-[11px] text-muted-foreground/70 mt-2">
               Weight and materials help the AI generate more realistic product scenes.
             </p>
           </CollapsibleContent>
