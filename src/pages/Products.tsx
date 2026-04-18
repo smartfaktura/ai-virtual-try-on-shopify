@@ -232,7 +232,7 @@ export default function Products() {
   const headerActions = showToolbar && products.length > 0 ? (
     <Button
       onClick={() => openAddDrawer('manual', undefined, false)}
-      className="hidden sm:inline-flex h-11 px-5 text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
+      className="hidden sm:inline-flex text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
     >
       <Plus className="w-4 h-4 mr-2" />
       Add Products
