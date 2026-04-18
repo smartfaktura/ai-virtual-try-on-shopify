@@ -91,6 +91,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: tryonShowcase1,
     objectPosition: 'center',
+    interval: 750,
     backgrounds: [tryonShowcase1, tryonShowcase2, tryonShowcase3, tryonShowcase4, tryonShowcase5, tryonShowcase6],
     recipe: [
       { image: tryonProduct, label: 'Product' },
