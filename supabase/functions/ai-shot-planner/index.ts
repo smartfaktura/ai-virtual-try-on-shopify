@@ -69,6 +69,9 @@ serve(async (req) => {
       referenceDescriptions, customRoles, structureRoles,
       filmDescription, tonePresetText, stylePresetNames, scenePresetNames,
       audioLayers,
+      // ── Commerce Video Engine inputs (Phase 2) ──────────────────────
+      contentIntent, platform, paceMode, productPriority, clarityFirst,
+      category, audienceContext, offerContext, soundMode, endingStyle,
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -82,13 +85,54 @@ serve(async (req) => {
           ? structureRoles.slice(0, 6)
           : ["hook", "product_reveal", "detail_closeup", "brand_finish"];
 
-    // Resolve audio layer preferences — skip generating content the user doesn't want
-    const wantVoiceover = audioLayers?.voiceover !== false;
-    const wantSfx = audioLayers?.sfx !== false;
+    // Resolve audio layer preferences — soundMode (commerce) takes precedence when present.
+    let wantVoiceover = audioLayers?.voiceover !== false;
+    let wantSfx = audioLayers?.sfx !== false;
+    if (typeof soundMode === "string") {
+      const noVO = ["silent_first", "caption_first", "music_only", "no_voiceover", "music_plus_sfx"];
+      if (noVO.includes(soundMode)) wantVoiceover = false;
+      if (soundMode === "silent_first" || soundMode === "caption_first") wantSfx = false;
+      if (soundMode === "voiceover_plus_music") wantSfx = false;
+    }
+
+    // ── Intent-aware guidance block ─────────────────────────────────
+    const INTENT_GUIDANCE: Record<string, string> = {
+      product_showcase: "Premium product showcase. Hero readability is critical. Avoid heavy abstraction. Pacing elegant. Voiceover (if any) clarifies value without hard sell.",
+      product_detail_film: "Slow, premium, macro/detail-led. Emphasize craftsmanship, material, texture. Voiceover may be minimal or omitted. Do NOT force a CTA.",
+      pdp_video: "Marketplace clarity-first. High product-visible time. At least one clean hero and one clear detail. Ending must be unambiguous and product-clear. No abstract teasing.",
+      social_content: "Vertical-native feel. Faster hook, native energy, more movement. Casual, creator-friendly tone allowed.",
+      creator_style_content: "Human/product interaction natural. Framing can feel handheld. Script observational, not promotional.",
+      launch_teaser: "Tease → reveal → finish. Build mystery early then commit to product. Avoid hard CTA unless launch offer exists.",
+      brand_mood_film: "Atmosphere can lead. Product still legible. Voiceover sparse or omitted. Soft resolve ending.",
+      campaign_editorial: "Editorial, human-with-product. Premium pacing. Logo-safe luxury close.",
+      feature_benefit_video: "Clear feature beats with benefit payoff. Voiceover allowed and helpful. Soft CTA OK.",
+      performance_ad: "Fast hook, dense info, clear close. CTA can be direct.",
+    };
+    const intentBlock = contentIntent && INTENT_GUIDANCE[contentIntent]
+      ? `\nCONTENT INTENT (${contentIntent}): ${INTENT_GUIDANCE[contentIntent]}`
+      : "";
+    const platformBlock = platform ? `\nPLATFORM: ${platform}` : "";
+    const paceBlock = paceMode ? `\nPACE: ${paceMode}` : "";
+    const priorityBlock = productPriority ? `\nPRODUCT PRIORITY: ${productPriority}` : "";
+    const categoryBlock = category ? `\nPRODUCT CATEGORY: ${category}` : "";
+    const audienceBlock = audienceContext ? `\nAUDIENCE: ${audienceContext}` : "";
+    const offerBlock = offerContext ? `\nOFFER CONTEXT: ${offerContext}` : "";
+    const clarityBlock = clarityFirst
+      ? `\nCLARITY-FIRST MODE: prefer stable cameras, ensure hero + detail, avoid silhouette/abstract framing.`
+      : "";
+    const endingBlock = endingStyle && endingStyle !== "auto"
+      ? `\nENDING STYLE: ${endingStyle} (final shot must reflect this).`
+      : "";
+
+    // Voiceover guidance now adapts to intent.
+    const persuasiveIntent = contentIntent === "performance_ad" || contentIntent === "feature_benefit_video";
+    const voiceoverGuidance = persuasiveIntent
+      ? `Voiceover should be persuasive and conversion-focused. Sell features and benefits, create desire.`
+      : `Voiceover (if any) should clarify value and product presence WITHOUT sounding like a hard sell. For brand_mood_film and product_detail_film, prefer minimal, descriptive, premium phrasing — or omit. For creator/social content, conversational and observational is fine.`;
 
     const scriptLineInstruction = wantVoiceover
-      ? `- script_line (string: PRODUCT/BRAND-FOCUSED voiceover copy — sell the product, highlight features, benefits, brand promise. Create desire and urgency. Do NOT describe visual aesthetics, mood, or style. Examples of GOOD: "Precision-engineered for perfection." "Crafted from the finest materials." "Elevate every moment." Examples of BAD (do NOT write these): "Moody shadows dance across surfaces." "Iridescent light cascades." CRITICAL word budget: ~2 words per second. A 2s shot = max 3-4 words. A 3s shot = max 6 words. A 4s shot = max 8 words. A 5s shot = max 10 words. For character_visible shots, write natural product-endorsement dialogue.)`
-      : `- script_line (string: MUST be empty string "" — voiceover is disabled by the user)`;
+      ? `- script_line (string: ${voiceoverGuidance} Do NOT describe visual aesthetics. Word budget: ~2 words per second of shot duration.)`
+      : `- script_line (string: MUST be empty string "" — voiceover is disabled for this sound mode)`;
 
     const sfxInstruction = wantSfx
       ? `- sfx_prompt (string: descriptive sound effect prompt, 5-20 words, matching scene environment and mood)
@@ -96,8 +140,8 @@ serve(async (req) => {
       : `- sfx_prompt (string: MUST be empty string "" — SFX is disabled by the user)
 - sfx_trigger_at (number: 0)`;
 
-    const systemPrompt = `You are a cinematic short film director specializing in E-COMMERCE PRODUCT and BRAND films.
-IMPORTANT: This is a product/brand advertisement film. Every script_line MUST sell the product or reinforce the brand. Style/mood presets affect VISUALS ONLY — never reference visual aesthetics in voiceover scripts.
+    const systemPrompt = `You are a cinematic director for COMMERCE VIDEO content (product showcases, PDP videos, social, creator-style, brand mood, launch teasers, feature/benefit, performance ads). Adapt your direction to the CONTENT INTENT provided. Do NOT assume every video is a hard-sell ad.
+Style/mood presets affect VISUALS ONLY — never reference visual aesthetics in voiceover scripts.
 You MUST generate shots that follow the EXACT role sequence provided. Do NOT invent your own roles.
 
 VALID ROLES (use ONLY these): ${VALID_ROLES.join(", ")}
@@ -105,6 +149,7 @@ VALID ROLES (use ONLY these): ${VALID_ROLES.join(", ")}
 VALID SCENE TYPES: ${VALID_SCENE_TYPES.join(", ")}
 
 VALID CAMERA MOTIONS: ${VALID_CAMERA_MOTIONS.join(", ")}
+${intentBlock}${platformBlock}${paceBlock}${priorityBlock}${categoryBlock}${audienceBlock}${offerBlock}${clarityBlock}${endingBlock}
 
 Return ONLY valid JSON with this structure:
 {
@@ -126,8 +171,7 @@ Each shot object MUST have exactly these fields:
 ${scriptLineInstruction}
 ${sfxInstruction}
 
-The total of all duration_sec values MUST equal exactly 15 seconds.
-Use shorter durations (2s) for hook/tease shots and longer durations (4-5s) for hero/reveal moments.
+DURATION: Total duration should fit the intent — social/teaser ~6–10s, showcase/PDP ~8–12s, brand mood/editorial ~10–15s. Do NOT force exactly 15s unless the intent calls for it. Use cinematic, role-weighted pacing (NOT equal splits).
 Vary camera motions and scene types for cinematic interest.
 
 MUSIC DIRECTION: The "music_direction" field should describe SPECIFIC instrumentation (e.g. "minimal piano with deep sub-bass"), a BPM range, and an energy arc (e.g. "builds from sparse to layered strings at resolve"). Be precise — this drives AI music generation.`;
@@ -135,19 +179,20 @@ MUSIC DIRECTION: The "music_direction" field should describe SPECIFIC instrument
     const userPrompt = `Film type: ${filmType}${filmDescription ? ` — ${filmDescription}` : ""}
 Story structure: ${storyStructure}
 REQUIRED ROLE SEQUENCE (follow this exactly): ${roleSequence.join(" → ")}
-Target total duration: 15 seconds
 Number of shots: ${roleSequence.length}
+${contentIntent ? `Content intent: ${contentIntent}` : ""}
+${platform ? `Platform: ${platform}` : ""}
 ${tone ? `Tone/mood: ${tone}` : ""}
 ${tonePresetText ? `VISUAL STYLE ONLY (do NOT reference in script_line — this is for camera/lighting/color only): ${tonePresetText}` : ""}
 ${stylePresetNames ? `VISUAL STYLE ONLY: ${stylePresetNames}` : ""}
 ${scenePresetNames ? `Scene environment (visual only): ${scenePresetNames}` : ""}
 ${referenceDescriptions ? `Reference context: ${referenceDescriptions}` : ""}
-Audio preferences: ${wantVoiceover ? "Voiceover ENABLED" : "Voiceover DISABLED"}, ${wantSfx ? "SFX ENABLED" : "SFX DISABLED"}
+Audio preferences: ${wantVoiceover ? "Voiceover ENABLED" : "Voiceover DISABLED"}, ${wantSfx ? "SFX ENABLED" : "SFX DISABLED"}${soundMode ? ` (soundMode=${soundMode})` : ""}
 
 Generate exactly ${roleSequence.length} shots following the role sequence: ${roleSequence.join(", ")}.
 Each shot's "role" field MUST match the corresponding role in the sequence.
-${wantVoiceover ? 'CRITICAL: script_line word budget is ~2 words per second of shot duration. A 2s hook = "Feel the power." (3 words). A 4s reveal = "Something extraordinary, designed for you." (6 words). Do NOT write long sentences for short shots. For character_visible shots with script_line, write natural dialogue the character would say.' : "IMPORTANT: Leave script_line as empty string for ALL shots — user disabled voiceover."}
-Remember: cinematic pacing (NOT equal splits)${wantSfx ? ", sfx_prompt for sound effects, sfx_trigger_at for timing" : ""}, and music_direction for the overall music track.`;
+${wantVoiceover ? 'CRITICAL: script_line word budget is ~2 words per second of shot duration. Match phrasing to content intent. For character_visible shots with script_line, write natural dialogue.' : "IMPORTANT: Leave script_line as empty string for ALL shots — voiceover is disabled."}
+Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for sound effects, sfx_trigger_at for timing" : ""}, and music_direction for the overall music track.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -243,11 +288,18 @@ Remember: cinematic pacing (NOT equal splits)${wantSfx ? ", sfx_prompt for sound
       };
     });
 
-    // Verify total doesn't exceed 15s
+    // Adaptive duration cap — when commerce intent is provided, cap softly to intent-appropriate max.
+    // Falls back to the legacy 15s cap when no intent is supplied.
+    const INTENT_MAX: Record<string, number> = {
+      social_content: 10, creator_style_content: 13, performance_ad: 13,
+      feature_benefit_video: 14, pdp_video: 11, product_showcase: 13,
+      product_detail_film: 15, launch_teaser: 11, brand_mood_film: 15, campaign_editorial: 15,
+    };
+    const cap = (contentIntent && INTENT_MAX[contentIntent]) || 15;
     const total = validShots.reduce((sum: number, s: any) => sum + s.duration_sec, 0);
-    if (total > 15) {
-      const scale = 15 / total;
-      let remaining = 15;
+    if (total > cap) {
+      const scale = cap / total;
+      let remaining = cap;
       for (let i = 0; i < validShots.length; i++) {
         if (i === validShots.length - 1) {
           validShots[i].duration_sec = Math.max(1, remaining);

@@ -368,6 +368,16 @@ export function useShortFilmProject() {
           stylePresetNames: stylePresetNames || undefined,
           scenePresetNames: scenePresetNames || undefined,
           audioLayers: settings.audioLayers || { music: true, sfx: true, voiceover: false },
+          // ── Commerce Video Engine context (Phase 2) ───────────────
+          contentIntent: contentIntent ?? undefined,
+          platform,
+          paceMode,
+          productPriority,
+          clarityFirst: clarityFirstMode,
+          soundMode,
+          endingStyle,
+          audienceContext: audienceContext || undefined,
+          offerContext: offerContext || undefined,
         },
       });
       if (error) throw new Error(error.message);
@@ -392,7 +402,7 @@ export function useShortFilmProject() {
     } finally {
       setIsAiPlanning(false);
     }
-  }, [filmType, storyStructure, settings.shotDuration, settings.tone, references, customRoles]);
+  }, [filmType, storyStructure, settings.shotDuration, settings.tone, settings.audioLayers, references, customRoles, contentIntent, platform, paceMode, productPriority, clarityFirstMode, soundMode, endingStyle, audienceContext, offerContext]);
 
   const goNext = useCallback(() => {
     const idx = steps.indexOf(step);
