@@ -743,7 +743,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           <Button
             onClick={handleSubmit}
             disabled={isUploading || anyBatchAnalyzing || batchItems.some(b => !b.title.trim())}
-            className="min-w-[120px] rounded-xl"
+            className="min-w-[120px]"
           >
             {isUploading ? (
               <>
