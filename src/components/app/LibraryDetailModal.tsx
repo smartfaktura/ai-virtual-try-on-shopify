@@ -7,6 +7,7 @@ import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maxim
 import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/brandedToast';
