@@ -761,9 +761,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
   // ── SINGLE PRODUCT MODE UI ──
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="space-y-4 sm:space-y-5">
       {/* Image Section */}
-      <div className="space-y-2">
+      <div className="rounded-2xl border bg-card p-3 sm:p-4 space-y-2">
         {singleImage && isAnalyzing && (
           <div className="flex items-center gap-1.5 text-[11px] text-primary">
             <Sparkles className="w-3 h-3 animate-pulse" />
