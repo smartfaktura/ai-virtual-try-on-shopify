@@ -1,37 +1,18 @@
 
 
 ## Goal
-Restyle the "Share to Explore" and "Tag Us, Win a Free Year" cards in `LibraryDetailModal.tsx` to match the visual hierarchy of the "HELP US IMPROVE" feedback card directly above them.
+On `/app/catalog/new` Step 1 (Products), remove the "My Products", "Import URL", and "Upload CSV" tabs entirely. Keep only the empty-state placeholder ("No products yet" + Add button) — and when products exist, just render the library view directly (no tab bar).
 
-## Pattern to mirror (from ContextualFeedbackCard)
-```
-[icon]  [UPPERCASE BADGE LABEL]
-Body sentence as text-sm text-muted-foreground
-[action button]
-```
+## Change
+File: `src/components/app/catalog/CatalogStepProducts.tsx`
 
-- Header row: `MessageSquarePlus`-style icon + small `Badge variant="secondary"` with classes `text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider`
-- The current bold title becomes the **badge label** (uppercased)
-- The current subtitle/description becomes the **body text** styled as `text-sm text-muted-foreground` (same as "How was this result?")
-- Buttons unchanged (already match — outline pill)
-
-## Changes to `src/components/app/LibraryDetailModal.tsx` (lines 405-452)
-
-**Card 1 — Share to Explore**
-- Header badge: `SHARE TO EXPLORE` (Trophy icon kept, tinted to match — `text-primary` ok)
-- Body (text-sm muted): `Submit your best work · Win up to 10,000 credits`
-- Button unchanged
-
-**Card 2 — Tag Us, Win a Free Year**
-- Header badge: `TAG US · WIN A FREE YEAR` (AtSign icon kept)
-- Body (text-sm muted): existing sentence with @vovv.ai / #vovvai links — switch from `text-xs` to `text-sm`, keep underlined links
-- Button unchanged
-
-Also add a top dismiss `X` button? **No** — out of scope; only typography/header treatment changes.
-
-## Files touched
-- `src/components/app/LibraryDetailModal.tsx` (only the two card blocks at lines ~405-452)
+1. **Remove the tab bar** (lines 168-173) — no more `UnderlineTab` row.
+2. **Remove the `activeTab === 'url'` block** (lines 427-449) — Import URL panel.
+3. **Remove the `activeTab === 'csv'` block** (lines ~451-465) — Upload CSV panel.
+4. **Unwrap the `activeTab === 'library'` conditional** (line 176) — render its contents directly so the placeholder + library grid are always shown.
+5. Remove now-unused imports / state: `activeTab`, `setActiveTab`, `UnderlineTab` component, and unused icons (`Globe`, `Upload`) if no longer referenced after cleanup.
 
 ## Out of scope
-- Card spacing, button styles, icons themselves, copy rewording, consolidation into one card.
+- The "Add Your First Product" button + empty-state copy stay exactly as-is.
+- No changes to header, badge, search bar, grid, or selection toolbar.
 
