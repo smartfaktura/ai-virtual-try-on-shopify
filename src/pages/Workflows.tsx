@@ -579,8 +579,8 @@ export default function Workflows() {
         <section className="space-y-4">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Recent Creations</h2>
-              <p className="text-base text-muted-foreground mt-1.5">Pick up where you left off.</p>
+              <h2 className="text-lg font-semibold tracking-tight">Recent Creations</h2>
+              <p className="text-sm text-muted-foreground mt-1">Pick up where you left off.</p>
             </div>
             <Button variant="ghost" size="sm" className="gap-1 shrink-0" onClick={() => navigate('/app/library')}>
               View All

@@ -237,8 +237,8 @@ export default function VideoHub() {
       {/* Showcase */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Showcase</h2>
-          <p className="text-base text-muted-foreground mt-1.5">See what's possible</p>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">Showcase</h2>
+          <p className="text-sm text-muted-foreground mt-1">See what's possible</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {Array.from({ length: 10 }, (_, i) => (
@@ -267,7 +267,7 @@ export default function VideoHub() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">In Progress</h2>
+                  <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
                   <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
                     {processingVideos.length}
                   </Badge>
@@ -291,7 +291,7 @@ export default function VideoHub() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Completed Videos</h2>
+                  <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
                   {completedVideos.length > 0 && (
                     <Badge variant="secondary" className="text-xs">
                       {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
