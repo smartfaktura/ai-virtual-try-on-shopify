@@ -36,7 +36,8 @@ export function CreditPackCard({ pack, onPurchase, isLoading, disabled }: Credit
           <p className="text-xs text-muted-foreground">≈ {Math.round(pack.credits / 10)} images</p>
           <Button
             variant={pack.popular ? 'default' : 'outline'}
-            className="w-full min-h-[44px]"
+            size="pill"
+            className="w-full"
             onClick={() => onPurchase(pack.packId)}
             disabled={disabled || isLoading}
           >
