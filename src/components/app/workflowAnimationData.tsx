@@ -136,6 +136,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: ugcResult1,
     objectPosition: 'center',
+    interval: 750,
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
     recipe: [
       { image: ugcProduct, label: 'Product' },
