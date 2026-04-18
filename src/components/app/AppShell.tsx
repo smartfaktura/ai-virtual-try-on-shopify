@@ -275,7 +275,7 @@ export function AppShell({ children }: AppShellProps) {
                   <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName}</p>
                   <p className="text-[11px] text-sidebar-foreground/40 truncate">{userEmail}</p>
                 </div>
-                <ChevronUp className="w-3.5 h-3.5 text-sidebar-foreground/30 flex-shrink-0" />
+                <ChevronUp className="w-4 h-4 text-sidebar-foreground/30 flex-shrink-0" />
               </>
             )}
           </button>
