@@ -345,7 +345,7 @@ export default function Products() {
         {showToolbar && products.length > 0 && (
           <Button
             onClick={() => openAddDrawer('manual', undefined, false)}
-            className="sm:hidden w-full h-11 text-sm font-medium"
+            className="sm:hidden w-full text-sm font-medium"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Products
