@@ -558,6 +558,25 @@ export default function AdminUIAudit() {
   const [query, setQuery] = useState('');
   const [density, setDensity] = useState<Density>('comfortable');
   const [onlyDrift, setOnlyDrift] = useState(false);
+  const [resolved, setResolved] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      return JSON.parse(localStorage.getItem(RESOLVED_STORAGE_KEY) || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RESOLVED_STORAGE_KEY, JSON.stringify(resolved));
+    } catch {
+      /* noop */
+    }
+  }, [resolved]);
+
+  const toggleResolved = (id: string) =>
+    setResolved((prev) => ({ ...prev, [id]: !prev[id] }));
 
   if (isLoading) {
     return (
@@ -568,7 +587,12 @@ export default function AdminUIAudit() {
   }
   if (!isRealAdmin) return <Navigate to="/app" replace />;
 
-  const filteredDrift = INCONSISTENCIES.filter((i) => matchesSearch(query, i.title, i.why, i.suggested, i.severity));
+  const filteredDrift = INCONSISTENCIES.filter((i) =>
+    matchesSearch(query, i.title, i.why, i.suggested, i.canonical, i.severity, ...i.deprecated),
+  );
+  const totalDrift = INCONSISTENCIES.length;
+  const resolvedCount = INCONSISTENCIES.filter((i) => resolved[i.id]).length;
+  const progressPct = totalDrift === 0 ? 0 : Math.round((resolvedCount / totalDrift) * 100);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -611,17 +635,30 @@ export default function AdminUIAudit() {
                 </Button>
               )}
             </div>
+            {/* Progress bar */}
+            <div className="mt-3 flex items-center gap-3">
+              <div className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                Resolved {resolvedCount} / {totalDrift}
+              </div>
+              <Progress value={progressPct} className="h-1.5 flex-1" />
+              <div className="text-[11px] font-mono text-muted-foreground tabular-nums w-9 text-right">{progressPct}%</div>
+              {resolvedCount > 0 && (
+                <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={() => setResolved({})}>
+                  Reset
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
             {/* TOC */}
             <nav className="lg:sticky lg:top-32 lg:self-start space-y-0.5 rounded-xl border border-border bg-card p-3 h-fit max-h-[calc(100vh-10rem)] overflow-auto z-20">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-2 pb-2">Sections</div>
+              <div className="section-label px-2 pb-2">Sections</div>
               {TOC.map((t) => (
                 <a
                   key={t.id}
                   href={`#${t.id}`}
-                  className="block px-2 py-1.5 text-xs rounded-md hover:bg-muted text-foreground/80 hover:text-foreground transition-colors"
+                  className="block px-2 py-1.5 text-xs rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {t.label}
                 </a>
@@ -634,7 +671,7 @@ export default function AdminUIAudit() {
               <AuditSection
                 title="★ Inconsistencies / drift to resolve"
                 anchor="inconsistencies"
-                description="Manually curated — sorted by severity. Tackle high first when standardizing."
+                description="Manually curated — sorted by severity. Toggle the checkbox when an inconsistency is fixed across the codebase. Progress is saved locally."
               >
                 <div className="space-y-4">
                   {filteredDrift.length === 0 && (
@@ -642,26 +679,77 @@ export default function AdminUIAudit() {
                   )}
                   {filteredDrift.map((item) => {
                     const sev = SEVERITY_MAP[item.severity];
+                    const isDone = !!resolved[item.id];
                     return (
-                      <div key={item.title} className="rounded-xl border border-amber-500/30 bg-amber-500/[0.04] p-4">
-                        <div className="flex items-start gap-2">
-                          <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'rounded-2xl border p-4 transition-colors',
+                          isDone
+                            ? 'border-emerald-500/30 bg-emerald-500/[0.04]'
+                            : 'border-amber-500/30 bg-amber-500/[0.04]',
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id={`drift-${item.id}`}
+                            checked={isDone}
+                            onCheckedChange={() => toggleResolved(item.id)}
+                            className="mt-0.5"
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <div className="text-sm font-semibold">{item.title}</div>
+                              <label
+                                htmlFor={`drift-${item.id}`}
+                                className={cn(
+                                  'text-sm font-semibold cursor-pointer',
+                                  isDone && 'line-through text-muted-foreground',
+                                )}
+                              >
+                                {item.title}
+                              </label>
                               <Badge variant="outline" className={cn('text-[10px] uppercase tracking-widest', sev.classes)}>
                                 {sev.label}
                               </Badge>
+                              {isDone && (
+                                <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-700 border-emerald-500/30">
+                                  <Check className="w-3 h-3 mr-1" /> resolved
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">{item.why}</div>
-                            <div className="text-xs mt-1">
-                              <span className="font-semibold text-emerald-700">Suggested: </span>
-                              <span className="text-foreground/80">{item.suggested}</span>
+
+                            {/* Canonical vs Deprecated */}
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/[0.04] p-2.5">
+                                <div className="section-label flex items-center gap-1 mb-1">
+                                  <Check className="w-3 h-3 text-emerald-700" /> Canonical
+                                </div>
+                                <code className="text-[11px] font-mono text-foreground break-words">{item.canonical}</code>
+                              </div>
+                              <div className="rounded-lg border border-destructive/30 bg-destructive/[0.04] p-2.5">
+                                <div className="section-label flex items-center gap-1 mb-1">
+                                  <X className="w-3 h-3 text-destructive" /> Deprecated
+                                </div>
+                                <ul className="space-y-0.5">
+                                  {item.deprecated.map((d) => (
+                                    <li key={d} className="text-[11px] font-mono text-muted-foreground break-words">
+                                      • {d}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
                             </div>
+
+                            <div className="text-xs mt-2">
+                              <span className="font-semibold text-foreground">Action: </span>
+                              <span className="text-muted-foreground">{item.suggested}</span>
+                            </div>
+
                             <div className="mt-3 flex flex-wrap gap-3">
                               {item.variants.map((v) => (
                                 <div key={v.label} className="rounded-lg border border-border bg-card p-3 space-y-2">
-                                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{v.label}</div>
+                                  <div className="section-label">{v.label}</div>
                                   <div>{v.node}</div>
                                 </div>
                               ))}
