@@ -235,6 +235,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Picture Perspectives': {
     mode: 'carousel',
     background: '/images/perspectives/VOVVAI-Perspectives-1.jpg',
+    interval: 750,
     backgrounds: [
       '/images/perspectives/VOVVAI-Perspectives-1.jpg',
       '/images/perspectives/VOVVAI-Perspectives-2.jpg',
