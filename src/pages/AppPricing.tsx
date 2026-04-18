@@ -439,7 +439,7 @@ export default function AppPricing() {
                             variant={cta.variant}
                             disabled={cta.disabled}
                             onClick={() => handlePlanSelect(p)}
-                            className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                            className="w-full text-[11px] font-medium h-8 px-2"
                           >
                             {cta.label}
                           </Button>
