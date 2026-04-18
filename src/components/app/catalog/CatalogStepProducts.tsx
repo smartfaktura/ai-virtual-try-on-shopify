@@ -44,34 +44,6 @@ function ProductCardSkeleton() {
   );
 }
 
-/* ── Underline Tab ───────────────────────────────────────── */
-function UnderlineTab({
-  active, onClick, icon: Icon, label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ElementType;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'relative flex items-center gap-1.5 pb-2.5 text-sm font-medium transition-colors duration-200 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        active
-          ? 'text-foreground'
-          : 'text-muted-foreground hover:text-foreground/70'
-      )}
-    >
-      <Icon className="w-4 h-4" />
-      {label}
-      {active && (
-        <span className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-primary" />
-      )}
-    </button>
-  );
-}
 
 /* ── Main Component ──────────────────────────────────────── */
 export function CatalogStepProducts({
