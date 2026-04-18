@@ -81,7 +81,7 @@ export default function AddProduct() {
       </div>
 
       {isEditing ? (
-        <div>
+        <div className="rounded-2xl border bg-card p-4 sm:p-6">
           {editingProduct && (
             <ManualProductTab
               onProductAdded={handleDone}
