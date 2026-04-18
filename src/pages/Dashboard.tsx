@@ -78,21 +78,12 @@ export default function Dashboard() {
       <div className="space-y-8 sm:space-y-10">
         <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         <div>
-          {greetingReady ? (
-            <>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                {isReturning ? 'Welcome back' : 'Welcome'}{profile?.first_name || profile?.display_name ? `, ${firstName}` : ''} 👋
-              </h1>
-              <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
-                Your AI photography studio is ready — choose how you want to start
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="h-8 sm:h-9 w-64 rounded-md bg-muted animate-pulse" />
-              <div className="h-6 w-80 max-w-full rounded-md bg-muted animate-pulse mt-2" />
-            </>
-          )}
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            {hasGenerated === false ? 'Welcome' : 'Welcome back'}{profile?.first_name || profile?.display_name ? `, ${firstName}` : ''} 👋
+          </h1>
+          <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
+            Your AI photography studio is ready — choose how you want to start
+          </p>
 
           {/* Out-of-credits / low-credits CTA */}
           {(isEmpty || balance < 4) && (
