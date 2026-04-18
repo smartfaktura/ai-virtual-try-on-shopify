@@ -1,71 +1,73 @@
 
-The user is frustrated — global primitive changes aren't enough because many buttons across `/app` have hardcoded class overrides (`h-11`, `h-12`, `rounded-full`, `rounded-md`, `px-6`, custom font sizes) that bypass the new defaults. I need to do a real sweep.
+The previous sweep missed several files. User reports `/app/models` still has bad buttons, and library preview card modals too. Let me grep for remaining offenders before planning.
+<lov-tool-use id="toolu_vrtx_01SrP4XRteL2dbrLf6XJAdrs" name="code--search_files" integration-id="code" data="{\"query\": \"className=\\\"[^\\\"]*\\\\b(h-11|h-12|rounded-xl|rounded-md|rounded-2xl|text-base|px-6|px-8)\\\\b\", \"include_patterns\": \"src/pages/**,src/components/app/**\", \"exclude_patterns\": \"*Sidebar*,*CreditIndicator*,Dashboard.tsx,Landing*\"}">
+</lov-tool-use>
 
-Let me scope what I know:
-- Dashboard hero CTAs use `min-h-[44px] rounded-full` inline → these are intentional pills
-- Sidebar pills are bespoke (white-bg shimmer) → leave alone
-- Page-header CTAs (like "Add Products") should be `size="pill"` → already done for one
-- Form/modal buttons should be default `h-10 rounded-lg` → done at primitive level
-- BUT countless pages override with `h-11`, `rounded-full`, etc.
+<lov-tool-use id="toolu_vrtx_011LW95QPvJNRK9VDfnAdBv1" name="code--search_files" integration-id="code" data="{\"query\": \"rounded-full\", \"include_patterns\": \"src/pages/Models.tsx,src/components/app/LibraryDetailModal.tsx,src/components/app/library/**\"}">
+</lov-tool-use>
 
-I need to:
-1. Grep the entire `/app` surface for hardcoded button height/radius overrides
-2. Categorize each by intent (page-header CTA → pill, form/modal → default, sidebar/special → leave)
-3. Strip overrides so they inherit, OR convert to `size="pill"` for hero CTAs
-4. Same audit for inputs/selects/textareas (less common to override)
+<lov-tool-use id="toolu_vrtx_011fDHrjxM25iaHuzJ6GsAB6" name="code--list_dir" integration-id="code" data="{\"dir_path\": \"src/pages\"}">
+</lov-tool-use>
 
-Plan:
+<lov-tool-use id="toolu_vrtx_016ABbQRwAw3R1j8jn2zhfPH" name="code--search_files" integration-id="code" data="{\"query\": \"className=\\\"[^\\\"]*(h-11|h-12|rounded-xl|rounded-2xl|text-base)\", \"include_patterns\": \"src/pages/**,src/components/app/**\", \"exclude_patterns\": \"*Sidebar*,*CreditIndicator*,Dashboard*,Landing*\"}">
+</lov-tool-use>
 
-### The real problem
-Global primitive defaults are correct now, but ~50+ buttons across the app hardcode `h-11`, `h-12`, `rounded-full`, `px-6`, `text-base` etc. directly via `className`, which overrides the defaults. Same applies to inputs/selects in some places.
+<lov-tool-use id="toolu_vrtx_018J9urST4zT22rn5X9TeybQ" name="code--list_dir" integration-id="code" data="{\"dir_path\": \"src/pages\"}">
+</lov-tool-use>
+The search shows MANY non-button matches (cards, containers using rounded-xl/2xl which is fine). I need to scope to `<Button` and form controls specifically. Let me also check the actual /app/models page which is `BrandModels.tsx` and library cards/modals.
+<lov-tool-use id="toolu_vrtx_01CcC9odehrtPCbv1H6CrvCF" name="code--search_files" integration-id="code" data="{\"exclude_patterns\": \"*Sidebar*,Dashboard*,Landing*,TryFree*,Home*,About*,Pricing*,Blog*,Careers*,Press*,Team*,Contact*,Privacy*,Terms*,Cookie*,Changelog*,HelpCenter*,Status*,NotFound*,Auth*,ResetPassword*,Public*\", \"include_patterns\": \"src/pages/**,src/components/app/**\", \"query\": \"(<Button|<Input|<Textarea|<SelectTrigger)[^>]*className=\\\"[^\\\"]*\\\\b(h-11|h-12|h-9|rounded-full|rounded-xl|rounded-2xl|rounded-md|text-base|px-6|px-7|px-8)\\\\b\"}">
+</lov-tool-use>
 
-We need a **codebase sweep** — not more primitive tweaks.
+<lov-tool-use id="toolu_vrtx_01RbhBtbtuAqx7YDhjZsf1Yy" name="code--view" integration-id="code" data="{\"file_path\": \"src/pages/BrandModels.tsx\"}">
+</lov-tool-use>
+I have enough context. The /app/models is `BrandModels.tsx`. The user has consistent pain — many `<Button>` and form controls with hardcoded `h-11/h-12/rounded-xl/rounded-full/rounded-md/text-base/px-6/px-7/px-8` overrides across 33 app files (excluding marketing).
 
-### Standard (locked in)
+Let me present a tight plan.
+
+<lov-plan>
+
+### Real fix: full sweep of 33 files
+
+The previous sweep missed many because it didn't scope to `<Button|<Input|<Textarea|<SelectTrigger>` elements specifically. New audit found **358 override matches across 33 files** in `src/pages/**` and `src/components/app/**` (marketing/landing pages excluded).
+
+### Standard (locked, no debate)
 | Element | Spec |
 |---|---|
 | Page-header / hero CTA | `size="pill"` → `h-10 rounded-full px-5` |
-| Standard button (forms, modals, toolbars) | default → `h-10 rounded-lg px-4` |
+| Standard button | default → `h-10 rounded-lg px-4` |
 | Small button (chips, table actions) | `size="sm"` → `h-8 rounded-lg` |
-| Input / Select / Textarea | `h-10 rounded-lg px-3.5 text-sm` |
-| Sidebar pills, CreditIndicator, special shimmer CTAs | **leave untouched** (intentional) |
-| Dashboard 6 hero cards (`min-h-[44px]`) | **leave** (oversized for empty-state cards by design) |
+| Input / Select / Textarea | inherit defaults: `h-10 rounded-lg px-3.5 text-sm` |
 
-### Sweep plan
+### Override patterns to strip
+On `<Button>`, `<Input>`, `<Textarea>`, `<SelectTrigger>`:
+- `h-9` (when not paired with `size="sm"`), `h-11`, `h-12` → strip
+- `rounded-md`, `rounded-xl`, `rounded-2xl` → strip
+- `rounded-full` (on standard buttons) → convert to `size="pill"` if it's a primary/header CTA, otherwise strip
+- `text-base`, `text-sm` (on Inputs — already default), `px-6/7/8`, `py-5/6` → strip
 
-**Step 1 — Audit (grep)**
-Find all override patterns:
-- `<Button ... className="...h-11..."` / `h-12` / `h-9` (when not `sm`)
-- `<Button ... className="...rounded-full..."` (likely should be `size="pill"`)
-- `<Button ... className="...rounded-md..."` (force-downgrade from new default)
-- `<Button ... className="...px-6..."` / `px-8`
-- `<Input/Select/Textarea ... className="...h-11..."` / `h-12` / `rounded-full`
+Container `rounded-xl/2xl` on `<div>`, `<Card>`, `<TabsList>` etc. is FINE and stays — only stripping from interactive primitives.
 
-Scope: `src/pages/**`, `src/components/app/**`, `src/components/ui/**` (exclude `button.tsx`, `input.tsx`, `select.tsx`, `textarea.tsx` themselves).
+### Files to edit (33)
 
-**Step 2 — Triage each hit**
-- Page-header / "primary action on page" → convert to `size="pill"`, strip height/radius/padding overrides, keep `font-semibold`/`shadow-*`/`gap-*`
-- Form/dialog/inline action → strip `h-11`/`h-12`/`rounded-full`/`px-6`/`text-base`, let default apply
-- Already-correct exceptions (sidebar, CreditIndicator, dashboard 6 hero cards, auth pages, marketing/landing) → **skip**
-- Inputs/selects with override → strip to inherit defaults
+**Pages (18):**
+`AddProduct.tsx`, `AdminFeedback.tsx`, `AdminModels.tsx`, `AdminPlanPopups.tsx`, `AdminProductImageScenes.tsx`, `AdminScenes.tsx`, `AdminTrendWatch.tsx`, `BrandModels.tsx`, `CreativeDrops.tsx`, `Discover.tsx`, `Freestyle.tsx`, `Jobs.tsx`, `MobileUpload.tsx`, `Onboarding.tsx`, `ProductImages.tsx`, `Settings.tsx`, `Templates.tsx`, `TryShot.tsx`, `Workflows.tsx`
 
-**Step 3 — Apply**
-Bulk edits across files. Estimated 30-60 file touches, mostly 1-3 lines each.
-
-**Step 4 — Verify**
-After edits, re-grep for the same patterns to confirm zero leftovers (excluding the explicit skip-list).
+**App components (15):**
+`AdminSubmissionsPanel.tsx`, `BrandProfileWizard.tsx` (if present), `CreativeDropWizard.tsx`, `DiscoverDetailModal.tsx`, `DropDetailModal.tsx`, `LibraryDetailModal.tsx`, `ManualProductTab.tsx`, `NoCreditsModal.tsx`, `ProductsEmptyUpload.tsx`, `StoreImportTab.tsx`, `WorkflowCard.tsx`, `WorkflowPreviewModal.tsx`, `freestyle/*`, `library/*`, `video/*` (any with overrides)
 
 ### Skip-list (intentional, do not touch)
-- `src/components/app/AppSidebar*.tsx` — bespoke white-bg pills with shimmer
-- `src/components/app/CreditIndicator.tsx` — Top-up pill
-- `src/pages/Dashboard.tsx` — 6 hero CTAs use `min-h-[44px]` inside large empty-state cards (intentional one notch larger than `pill`)
-- `src/pages/Landing*.tsx` / marketing — public pages, not `/app`
-- `src/pages/Auth.tsx` / signup / login — separate visual context
+- `src/components/app/AppSidebar*.tsx` — bespoke shimmer pills
+- `src/components/app/CreditIndicator.tsx`
+- `src/pages/Dashboard.tsx` — 6 hero cards with `min-h-[44px]` (oversized by design)
+- `src/pages/features/**`, `Landing*.tsx`, `TryFree.tsx`, `Home.tsx`, `Pricing.tsx`, `About.tsx`, `Auth.tsx`, public pages — marketing context
+- Sub-buttons inside FreestyleSettingsChips and similar chip-groups using `<button>` (not `<Button>`) — those are visual chips, not CTAs
 
-### Files (estimate)
-~30-50 files in `src/pages/app/**` and `src/components/app/**`. I'll list them after the audit grep.
+### Process
+1. For each of the 33 files, run targeted `line_replace` per offending line: strip the override classes, convert primary header/modal-footer CTAs to `size="pill"`.
+2. Re-run grep audit; only skip-list matches should remain.
+3. Spot-check `/app/models`, `/app/library` (detail modal), `/app/products`, `/app/freestyle`, `/app/workflows`, `/app/jobs`, `/app/onboarding`.
 
 ### Acceptance
-- `grep -r "h-11\|h-12\|rounded-full\|rounded-md\|px-6\|px-8\|text-base" src/pages src/components/app | grep "<Button\|className"` returns only the skip-list
-- Visual scan of `/app/products`, `/app/library`, `/app/freestyle`, `/app/workflows`, `/app/brand-profiles`, `/app/discover`, `/app/perspectives`, `/app/catalog`, `/app/video/*`, `/app/learn`, modals, settings → all CTAs visually consistent (pill for headers, lg for inline)
-- Form inputs / selects / textareas all `h-10 rounded-lg`
+- Grep `(<Button|<Input|<Textarea|<SelectTrigger)[^>]*className="[^"]*\b(h-9|h-11|h-12|rounded-md|rounded-xl|rounded-2xl|rounded-full|text-base|px-6|px-7|px-8)\b"` returns ZERO hits in `src/pages/**` and `src/components/app/**` (excluding skip-list).
+- Library detail modal, BrandModels (/app/models), all wizard footers visually consistent: `h-10 rounded-lg` form fields, `h-10 rounded-full` (pill) for primary CTAs, `h-10 rounded-lg` for secondary.
+
