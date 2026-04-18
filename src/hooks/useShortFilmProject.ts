@@ -26,6 +26,8 @@ import {
 } from '@/types/commerceVideo';
 import { migrateLegacyDraft } from '@/lib/commerceVideo/migrate';
 import { buildProductFidelity } from '@/lib/commerceVideo/productFidelity';
+import { validateProject } from '@/lib/commerceVideo/preflight';
+import { logProjectMetadata, logShotMetadata } from '@/lib/commerceVideo/analytics';
 
 interface ShotStatus {
   shot_index: number;
@@ -725,7 +727,7 @@ export function useShortFilmProject() {
     } finally {
       setIsGeneratingAudio(false);
     }
-  }, [user, settings, shots, filmType, projectId, uploadAudioToStorage, references]);
+  }, [user, settings, shots, filmType, projectId, uploadAudioToStorage, references, soundMode]);
 
   // ─── Retry single audio track ──────────────────────────────
   const retryAudioForShot = useCallback(async (shotIndex: number, type: 'sfx' | 'voiceover') => {
@@ -848,6 +850,37 @@ export function useShortFilmProject() {
 
     setIsGenerating(true);
     setShotStatuses(shots.map(s => ({ shot_index: s.shot_index, status: 'pending' })));
+
+    // ── Phase 4 telemetry: log project + shot metadata (best-effort) ──
+    try {
+      const totalDur = shots.reduce((s, x) => s + (x.duration_sec || 0), 0);
+      const preflight = validateProject({
+        intent: contentIntent, platform, soundMode, endingStyle,
+        shots, references, settings, clarityFirst: clarityFirstMode,
+      });
+      logProjectMetadata(draftProjectId, {
+        contentIntent, platform, soundMode, paceMode, productPriority, endingStyle,
+        clarityFirst: clarityFirstMode,
+        shotCount: shots.length,
+        totalDurationSec: totalDur,
+        preflight,
+      });
+      logShotMetadata(draftProjectId, shots.map(s => ({
+        shotIndex: s.shot_index,
+        role: s.role,
+        durationSec: s.duration_sec,
+        fidelityFlags: {
+          clarity_first: s.clarity_first,
+          branding: s.branding_accuracy_priority,
+          material: s.material_accuracy_priority,
+          shape: s.shape_accuracy_priority,
+          text: s.text_legibility_priority,
+        },
+        referenceStrategy: s.reference_strategy,
+      })));
+    } catch (err) {
+      console.warn('[ShortFilm] telemetry failed (non-blocking)', err);
+    }
 
     let generationSucceeded = false;
     try {
