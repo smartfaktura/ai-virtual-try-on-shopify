@@ -8,7 +8,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { cn } from '@/lib/utils';
 import {
   ChevronRight, Package, Search, LayoutGrid, List, Check,
-  Globe, Upload, Download, Plus, Sparkles,
+  Download, Plus, Sparkles,
 } from 'lucide-react';
 
 interface UserProduct {
@@ -44,34 +44,6 @@ function ProductCardSkeleton() {
   );
 }
 
-/* ── Underline Tab ───────────────────────────────────────── */
-function UnderlineTab({
-  active, onClick, icon: Icon, label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ElementType;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'relative flex items-center gap-1.5 pb-2.5 text-sm font-medium transition-colors duration-200 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        active
-          ? 'text-foreground'
-          : 'text-muted-foreground hover:text-foreground/70'
-      )}
-    >
-      <Icon className="w-4 h-4" />
-      {label}
-      {active && (
-        <span className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-primary" />
-      )}
-    </button>
-  );
-}
 
 /* ── Main Component ──────────────────────────────────────── */
 export function CatalogStepProducts({
@@ -81,9 +53,7 @@ export function CatalogStepProducts({
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
-  const [importUrl, setImportUrl] = useState('');
   
-  const [activeTab, setActiveTab] = useState<'library' | 'url' | 'csv'>('library');
 
   const filtered = products.filter(p =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -165,17 +135,9 @@ export function CatalogStepProducts({
         )}
       </div>
 
-      {/* ── Underline Tabs ───────────────────────────────── */}
-      <div className="flex gap-3 sm:gap-6 border-b border-border overflow-x-auto">
-        <UnderlineTab active={activeTab === 'library'} onClick={() => setActiveTab('library')} icon={Package} label="My Products" />
-        <UnderlineTab active={activeTab === 'url'} onClick={() => setActiveTab('url')} icon={Globe} label="Import URL" />
-        <UnderlineTab active={activeTab === 'csv'} onClick={() => setActiveTab('csv')} icon={Upload} label="Upload CSV" />
-      </div>
-
-      {/* ── Tab: Library ─────────────────────────────────── */}
-      {activeTab === 'library' && (
-        <>
-          {products.length === 0 ? (
+      {/* ── Library ─────────────────────────────────────── */}
+      <>
+        {products.length === 0 ? (
             <div className="text-center py-20 rounded-2xl border-2 border-dashed border-border bg-muted/20">
               <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
                 <Package className="w-7 h-7 text-muted-foreground/40" />
@@ -419,51 +381,9 @@ export function CatalogStepProducts({
                   )}
                 </>
               )}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ── Tab: Import URL ──────────────────────────────── */}
-      {activeTab === 'url' && (
-        <div className="rounded-2xl border border-border bg-card p-8 space-y-5">
-          <div>
-            <h4 className="text-sm font-medium text-foreground">Import from Website</h4>
-            <p className="text-xs text-muted-foreground mt-1">Paste a product page URL and we'll extract the details automatically.</p>
           </div>
-          <div className="flex gap-2">
-            <Input
-              placeholder="https://example.com/product/blue-jacket"
-              value={importUrl}
-              onChange={e => setImportUrl(e.target.value)}
-              className="flex-1 rounded-xl"
-            />
-            <Button
-              disabled
-            >
-              Coming Soon
-            </Button>
-          </div>
-          <p className="text-[11px] text-muted-foreground">URL import is coming soon. Use "My Products" to add items for now.</p>
-        </div>
-      )}
-
-      {/* ── Tab: CSV Upload ──────────────────────────────── */}
-      {activeTab === 'csv' && (
-        <div className="rounded-2xl border border-border bg-card p-8 space-y-5">
-          <div>
-            <h4 className="text-sm font-medium text-foreground">Upload Product CSV</h4>
-            <p className="text-xs text-muted-foreground mt-1">Bulk-import products from a spreadsheet.</p>
-          </div>
-          <div className="rounded-2xl border-2 border-dashed border-border transition-colors duration-200 p-12 text-center">
-            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
-              <Upload className="w-5 h-5 text-muted-foreground/50" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">CSV import coming soon</p>
-            <p className="text-xs text-muted-foreground mt-1">Use "My Products" to add items for now.</p>
-          </div>
-        </div>
-      )}
+        )}
+      </>
 
       {/* ── Floating Selection Bar ────────────────────────── */}
       {selectedProductIds.size > 0 && (
