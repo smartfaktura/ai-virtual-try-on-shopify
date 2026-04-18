@@ -4,7 +4,7 @@ import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
-  TrendingUp, BookOpen, Clock, Camera, GraduationCap, LifeBuoy,
+  TrendingUp, BookOpen, Clock, Camera, GraduationCap, LifeBuoy, Bug,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
@@ -322,6 +322,13 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <LifeBuoy className="w-4 h-4" />
                   Help & Support
+                </button>
+                <button
+                  onClick={() => { navigate('/app/bug-bounty'); setUserMenuOpen(false); }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <Bug className="w-4 h-4" />
+                  Bug Bounty
                 </button>
                 <button
                   onClick={() => { setEarnCreditsOpen(true); setUserMenuOpen(false); }}

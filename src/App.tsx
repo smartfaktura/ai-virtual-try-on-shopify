@@ -55,6 +55,7 @@ const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const Learn = lazy(() => import('@/pages/Learn'));
 const LearnGuide = lazy(() => import('@/pages/LearnGuide'));
 const AppHelp = lazy(() => import('@/pages/AppHelp'));
+const BugBounty = lazy(() => import('@/pages/BugBounty'));
 
 const AdminTrendWatch = lazy(() => import('@/pages/AdminTrendWatch'));
 const AdminSceneLibrary = lazy(() => import('@/pages/AdminSceneLibrary'));
@@ -211,6 +212,7 @@ const App = () => {
                         <Route path="/learn/freestyle" element={<LearnGuide />} />
                         <Route path="/learn/:section/:slug" element={<LearnGuide />} />
                         <Route path="/help" element={<AppHelp />} />
+                        <Route path="/bug-bounty" element={<BugBounty />} />
                         
                         <Route path="/models" element={<BrandModels />} />
                         <Route path="/admin/models" element={<AdminModels />} />
