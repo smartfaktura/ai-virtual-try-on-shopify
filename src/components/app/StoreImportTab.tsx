@@ -301,14 +301,8 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       <div className="space-y-2">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Works with</p>
         <div className="flex items-center gap-1.5 flex-wrap">
-          {[
-            { name: 'Shopify',     dot: 'bg-emerald-500' },
-            { name: 'Etsy',        dot: 'bg-orange-500' },
-            { name: 'Amazon',      dot: 'bg-amber-500' },
-            { name: 'WooCommerce', dot: 'bg-violet-500' },
-          ].map(({ name, dot }) => (
-            <span key={name} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
-              <span className={cn('w-1.5 h-1.5 rounded-full', dot)} />
+          {['Shopify', 'Etsy', 'Amazon', 'WooCommerce'].map((name) => (
+            <span key={name} className="inline-flex items-center rounded-full border border-border bg-background/60 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
               {name}
             </span>
           ))}
