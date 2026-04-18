@@ -60,32 +60,32 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   const cardContent = (
     <div
-      className={`rounded-xl border border-border/40 bg-card p-2.5 sm:p-5 h-[100px] sm:h-[140px] flex flex-col justify-between transition-all duration-200 hover:border-border/80 hover:shadow-sm ${onClick ? 'cursor-pointer' : ''}`}
+      className={`rounded-2xl border border-border bg-card p-4 sm:p-6 min-h-[120px] sm:min-h-[160px] flex flex-col justify-between transition-all duration-300 hover:border-primary/30 hover:shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <div>
         <div className="flex items-center gap-1.5">
-          {Icon && <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground/60" />}
-          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">{title}</span>
+          {Icon && <Icon className="w-4 h-4 text-muted-foreground/70" />}
+          <span className="text-sm font-medium text-muted-foreground">{title}</span>
         </div>
 
         {value !== undefined ? (
-          <div className="mt-1.5 sm:mt-2">
-            <p className="text-base sm:text-xl font-bold text-foreground tracking-tight leading-none whitespace-nowrap">{value}</p>
+          <div className="mt-3">
+            <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none whitespace-nowrap">{value}</p>
             {suffix && (
-              <p className="text-xs text-muted-foreground/70 leading-snug mt-1">{suffix}</p>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{suffix}</p>
             )}
           </div>
         ) : description ? (
-          <div className="mt-2">
-            <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">{description}</p>
+          <div className="mt-3">
+            <p className="text-xl sm:text-2xl font-bold text-foreground leading-tight line-clamp-2">{description}</p>
           </div>
         ) : null}
 
         {trend && (
-          <p className={`text-xs font-medium mt-1 ${trend.direction === 'up' ? 'text-primary' : 'text-destructive'}`}>
+          <p className={`text-xs font-medium mt-2 ${trend.direction === 'up' ? 'text-primary' : 'text-destructive'}`}>
             {trend.direction === 'up' ? '↑' : '↓'} {Math.abs(trend.value)}%
           </p>
         )}
