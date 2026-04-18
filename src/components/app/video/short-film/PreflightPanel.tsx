@@ -16,9 +16,8 @@ export function PreflightPanel({ result }: Props) {
     : 'Needs work';
 
   const ringColor =
-    score >= 85 ? 'text-emerald-500'
-    : score >= 70 ? 'text-foreground'
-    : score >= 50 ? 'text-amber-500'
+    score >= 70 ? 'text-foreground'
+    : score >= 50 ? 'text-muted-foreground'
     : 'text-destructive';
 
   return (
@@ -52,8 +51,8 @@ export function PreflightPanel({ result }: Props) {
       {warnings.length > 0 && (
         <ul className="space-y-1.5">
           {warnings.map(w => (
-            <li key={w.id} className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500">
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <li key={w.id} className="flex items-start gap-2 text-sm text-foreground">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
               <span>{w.message}</span>
             </li>
           ))}
@@ -72,8 +71,8 @@ export function PreflightPanel({ result }: Props) {
       )}
 
       {errors.length === 0 && warnings.length === 0 && suggestions.length === 0 && (
-        <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-500">
-          <CheckCircle2 className="h-4 w-4" />
+        <div className="flex items-center gap-2 text-sm text-foreground">
+          <CheckCircle2 className="h-4 w-4 text-primary" />
           Everything checks out — go for it.
         </div>
       )}
