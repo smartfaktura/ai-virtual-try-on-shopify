@@ -206,13 +206,16 @@ export function AppShell({ children }: AppShellProps) {
           <button
             onClick={() => handleNav('/app/generate/product-images')}
             className={cn(
-              'w-full h-10 flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
+              'relative overflow-hidden w-full h-10 flex items-center justify-center gap-2 rounded-full bg-white text-[hsl(var(--sidebar-background))] text-sm font-semibold transition-[filter] duration-150 hover:brightness-105 shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]',
               isCollapsed ? 'px-2' : 'px-4'
             )}
             title={isCollapsed ? 'Create Visuals' : undefined}
           >
-            <Sparkles className={cn('flex-shrink-0', isCollapsed ? 'w-4 h-4' : 'w-[18px] h-[18px]')} />
-            {!isCollapsed && 'Create Visuals'}
+            <span className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent)] bg-[length:200%_100%] animate-shimmer mix-blend-overlay pointer-events-none" />
+            <span className="relative flex items-center gap-2">
+              <Sparkles className={cn('flex-shrink-0', isCollapsed ? 'w-4 h-4' : 'w-[18px] h-[18px]')} />
+              {!isCollapsed && 'Create Visuals'}
+            </span>
           </button>
         </div>
 
