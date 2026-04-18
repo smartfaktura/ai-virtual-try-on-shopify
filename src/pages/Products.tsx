@@ -234,21 +234,21 @@ export default function Products() {
       title="Products"
       subtitle="Upload once and reuse across every Visual Type"
     >
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Top bar — hidden when user has zero products */}
         {showToolbar && (
         <div className="flex flex-col sm:flex-row gap-3 justify-between">
-          <div className="relative max-w-sm flex-1">
+          <div className="relative w-full sm:max-w-sm sm:flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-11 sm:h-10"
             />
           </div>
-          <div className="flex items-center gap-2">
-            {/* View toggle */}
+          {/* Desktop-only inline view toggle + CTA */}
+          <div className="hidden sm:flex items-center gap-2">
             <div className="flex items-center border rounded-md">
               <Button
                 variant="ghost"
@@ -277,11 +277,41 @@ export default function Products() {
         </div>
         )}
 
-        {/* Filter bar — hidden when user has zero products */}
+        {/* Mobile-only primary CTA — full width, dominant */}
+        {showToolbar && products.length > 0 && (
+          <Button
+            onClick={() => openAddDrawer('manual', undefined, false)}
+            className="sm:hidden w-full h-11 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Products
+          </Button>
+        )}
+
+        {/* Tools row — view toggle (mobile) + filters in one line */}
         {showToolbar && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex sm:hidden items-center border rounded-md shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('h-9 w-9 rounded-r-none', viewMode === 'grid' && 'bg-muted')}
+              onClick={() => setViewMode('grid')}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('h-9 w-9 rounded-l-none', viewMode === 'list' && 'bg-muted')}
+              onClick={() => setViewMode('list')}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[160px] h-9 text-xs">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] h-9 text-xs">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -293,7 +323,7 @@ export default function Products() {
           </Select>
 
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-            <SelectTrigger className="w-[150px] h-9 text-xs">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[150px] h-9 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -304,7 +334,6 @@ export default function Products() {
             </SelectContent>
           </Select>
 
-          {/* Active filter badges */}
           {typeFilter !== 'all' && (
             <Badge variant="secondary" className="gap-1 text-xs cursor-pointer" onClick={() => setTypeFilter('all')}>
               {typeFilter}
