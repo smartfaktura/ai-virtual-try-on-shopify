@@ -1,99 +1,86 @@
 
-## Design unification pass — keep the look, kill the drift
+## Phase 2 + 3 — Sweep `/app` to one consistent visual system
 
-Goal: standardize the *system* without changing the *aesthetic*. Lock canonical tokens for the patterns the audit page exposed, then sweep the codebase to use them.
+Goal: make every `/app` page feel like one app — same spacing, same chips, same cards, same muted text — without changing the aesthetic. Use the canonical decisions already locked in Phase 1.
 
-### Strategy
-Don't redesign — **codify what already looks right**, retire what doesn't, and make the wrong choice impossible going forward.
+### What gets standardized
 
-### Canonical decisions (from audit findings)
+**1. Page rhythm (every `/app/*` route)**
+- Every page wraps content in `<PageHeader title=... subtitle=...>` → guarantees same top spacing, same `space-y-8 sm:space-y-10` between sections, same h1 size.
+- Sweep pages currently using raw `<h1>` or custom wrappers: `/app/freestyle`, `/app/library`, `/app/discover`, `/app/workflows`, `/app/video/*`, `/app/admin/*`, `/app/learn`, `/app/billing`.
 
-**1. Cards — one padding scale, one radius**
-- Canonical: `rounded-2xl` + `p-5` (desktop) / `p-4` (mobile compact) / `p-3` (dense rows only).
-- Retire: ad-hoc `rounded-lg`/`rounded-xl` on card surfaces, random `p-6`.
-- Action: extend `<Card>` with `density` prop (`comfortable` | `compact` | `dense`) → maps to the 3 paddings. Update `card.tsx` default radius to `rounded-2xl`.
+**2. Cards (one radius, one padding scale)**
+- All app cards → `<Card density="comfortable|compact|dense">` (radius now `rounded-2xl` by default from Phase 1).
+- Normalize: `WorkflowCardCompact`, `FreestylePromptCard`, dashboard metric cards, library asset card, activity card, pricing cards, admin table-row cards.
+- Remove ad-hoc `p-4`/`p-6`/`rounded-xl` overrides.
 
-**2. Buttons — shadcn only**
-- Canonical: `<Button variant size>` everywhere. No raw `<button class="h-10 px-3 …">`.
-- Action: codemod-style sweep of `AppShell` user menu, send buttons, and any freestyle buttons → replace with `<Button>`. Add ESLint-style note in audit page header.
+**3. Muted text — single token**
+- Replace `text-foreground/60`, `/70`, `/80` → `text-muted-foreground` across `src/`.
+- Done file-by-file with visual verification on key pages.
 
-**3. Muted text — one token**
-- Canonical: `text-muted-foreground`.
-- Retire: `text-foreground/60`, `text-foreground/80`, `text-foreground/70`.
-- Action: global find/replace across `src/`, verify visually on 5–6 key pages.
+**4. Section labels — single class**
+- Replace ad-hoc `text-xs uppercase tracking-wider text-muted-foreground` → `.section-label`.
+- Hits: settings panels, admin sub-headers, sidebar groups, freestyle setting groups.
 
-**4. Section labels — one class**
-- Canonical: `.section-label` (uppercase, tracking-widest, `text-[10px]` muted).
-- Retire: ad-hoc `text-xs uppercase tracking-wider text-muted-foreground` repeats.
-- Action: ensure `.section-label` exists in `index.css`, sweep usages.
+**5. Status pills — `<StatusBadge>` only**
+- Replace inline colored pills (amber/green/red bg+text combos) in: library cards, video hub, trend watch, generation activity, admin tables.
+- `<Badge>` reserved for neutral chips (BETA, count, "New").
 
-**5. Status — one source of truth**
-- Canonical: `<StatusBadge>` for job/library/video/trend states. `<Badge>` only for neutral chips (BETA, Coming Soon, count).
-- Retire: inline `bg-amber-50 text-amber-900` pills, `.status-badge--*` CSS classes (fold into `StatusBadge`).
-- Action: extend `StatusBadge` config to cover library (Draft/Brand Ready/Publish), trend, video. Delete `.status-badge--*` from `index.css`.
+**6. Buttons — `<Button>` only in app chrome**
+- Replace raw `<button class="h-X px-Y …">` patterns in `AppShell` user menu, send buttons, freestyle action buttons → `<Button variant size>`.
+- Chip-style triggers (e.g. `FreestyleSettingsChips`) stay as-is — they're a deliberate variant; documented in audit.
 
-**6. Headings — `PageHeader` only**
-- Canonical: every page route renders title via `<PageHeader>`. No raw `<h1 class="text-2xl">` in pages.
-- Action: sweep admin pages → wrap in `PageHeader`.
+**7. Dividers**
+- `<Separator />` for content separation; structural rows keep `border-b border-border`.
+- Remove `.section-divider::after` custom CSS usages.
 
-**7. Dividers — one pattern**
-- Canonical: `<Separator />` for content, `border-b border-border` for structural rows.
-- Retire: `.section-divider::after` custom CSS.
+**8. Confirmations**
+- Migrate scattered `Dialog`-based "Are you sure?" flows → `<ConfirmDialog>` (built in Phase 1).
+- Targets: delete product, delete model, clear library, cancel subscription, etc.
 
-**8. Confirmation overlays — one rule**
-- Canonical: `AlertDialog` for destructive confirms, `Dialog` for content/forms, `Sheet` for secondary panels (mobile becomes `Drawer` automatically via wrapper).
-- Action: add a tiny `<ConfirmDialog>` wrapper around `AlertDialog` so we stop reinventing it; audit existing `Dialog` confirmations and migrate.
+**9. Skeletons**
+- Replace 2 known shimmer-div patterns with `<Skeleton>`.
 
-**9. Skeletons — one component**
-- Canonical: `<Skeleton>` only. Retire shimmer divs in lists.
-- Action: replace 2 known shimmer patterns.
+**10. Spacing rhythm (verify, don't reinvent)**
+- Section internal: `space-y-4`. Form fields: `space-y-2`. Button groups: `gap-2`. Chip rows: `gap-2` (desktop) / `gap-1` (mobile).
 
-**10. Spacing rhythm — locked scale**
-- Canonical: page `space-y-8 sm:space-y-10` (already in `PageHeader`); section internal `space-y-4`; form fields `space-y-2`; button groups `gap-2`.
-- Action: document in audit page; no code change unless drift found.
+### Execution
 
-### Execution plan (3 phases, no visual redesign)
+Done in waves to keep diffs reviewable:
 
-**Phase 1 — Tokens & primitives (low risk, high leverage)**
-- Update `card.tsx`: default `rounded-2xl`, add `density` prop.
-- Extend `StatusBadge` to absorb library/trend/video states.
-- Confirm/clean `.section-label` in `index.css`; remove `.status-badge--*` CSS.
-- Add `<ConfirmDialog>` wrapper.
+**Wave A — Page shells (visible structural unification)**
+Wrap every top-level `/app/*` page in `<PageHeader>`. Single largest visual win.
 
-**Phase 2 — Sweep (mechanical replacements)**
-- Replace `text-foreground/60|70|80` → `text-muted-foreground` (verify per file).
-- Replace ad-hoc status pills → `<StatusBadge>`.
-- Replace raw `<button>` in app chrome → `<Button>`.
-- Replace ad-hoc section labels → `.section-label`.
+**Wave B — Cards & status pills**
+Apply `density` prop, swap inline pills for `<StatusBadge>`. Touches the most-visited surfaces (Library, Workflows, Video Hub, Discover).
 
-**Phase 3 — Page-level normalizations**
-- Wrap admin pages without `PageHeader` → use `PageHeader`.
-- Normalize card paddings on `WorkflowCardCompact`, `FreestylePromptCard`, dashboard cards, admin tables to the 3-step density scale.
-- Migrate stray `Dialog` confirmations → `ConfirmDialog`.
+**Wave C — Muted text + section labels + dividers**
+Mechanical sweep across `src/`. Verified per file.
 
-### Audit page updates (tracking)
-- Add a "Canonical vs Deprecated" column to each Inconsistency entry showing the **chosen winner** + a Done/Todo checkbox state (local state, not persisted).
-- Add a top-of-page progress bar: "X / Y inconsistencies resolved" computed from the same list.
+**Wave D — Buttons + confirmations + skeletons**
+App chrome buttons, confirm flows, shimmer cleanup.
+
+**Wave E — Audit page sync**
+Tick off each resolved inconsistency in the Phase 1 progress tracker on `/app/admin/ui-audit` so progress is visible.
 
 ### Out of scope
-- No new visual language, no color palette change, no font change.
-- No new shadcn components beyond the `ConfirmDialog` thin wrapper.
+- No color/typography/font change.
+- No new components beyond what Phase 1 already added.
+- No marketing/landing page changes.
 - No backend, no schema changes.
 
 ### Acceptance
-- `card.tsx`, `StatusBadge.tsx`, `index.css` updated with canonical decisions.
-- All `text-foreground/<opacity>` muted patterns replaced.
-- Status pills unified through `<StatusBadge>`.
-- Admin pages render via `PageHeader`.
-- Audit page shows canonical winners + resolved/todo state per inconsistency.
-- Visual diff on `/app`, `/app/workflows`, `/app/library`, `/app/discover`, `/app/admin/*` shows no aesthetic change — only consistency.
+- Every `/app` page uses `<PageHeader>` → identical top spacing + section rhythm.
+- Zero `text-foreground/{60,70,80}` left in `src/`.
+- Zero inline status pills outside `StatusBadge`.
+- All app cards use `density` prop (or default), all `rounded-2xl`.
+- Confirmations route through `ConfirmDialog`.
+- Audit page progress bar shows the resolved inconsistencies.
+- Visual diff: tighter, more uniform — but no aesthetic shift.
 
 ### Files touched (estimate)
-- `src/components/ui/card.tsx`
-- `src/components/app/StatusBadge.tsx`
-- `src/index.css`
-- `src/components/ui/confirm-dialog.tsx` (new, thin wrapper)
-- `src/components/app/AppShell.tsx` (button + label sweep)
-- `src/components/app/WorkflowCardCompact.tsx`, `FreestylePromptCard.tsx` (padding normalization)
-- ~10–15 page/component files for muted-text + status-pill sweep
-- `src/pages/AdminUIAudit.tsx` (canonical/deprecated annotations + progress)
+- ~8–12 page files for `PageHeader` wrapping
+- ~6–10 component files for card density + status pills
+- ~15–25 files for muted-text/section-label sweep
+- 3–5 confirmation flows migrated
+- `src/pages/AdminUIAudit.tsx` (progress sync)
