@@ -299,6 +299,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
               <div className="space-y-2.5 pt-2">
                 <Button
                   onClick={handleDownload}
+                  size="pill"
                   className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
                   <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
@@ -382,9 +383,9 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   variant="ghost"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="w-full text-xs font-medium text-destructive hover:bg-destructive/10"
+                  className="w-full font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  <Trash2 className="w-4 h-4 mr-1.5" />
                   {deleting ? 'Deleting…' : 'Delete'}
                 </Button>
               </div>
@@ -412,6 +413,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </p>
                 <Button
                   onClick={() => setSubmitDiscoverOpen(true)}
+                  size="pill"
                   className="w-full font-medium"
                 >
                   <Send className="w-4 h-4 mr-2" /> Submit for Review
@@ -434,8 +436,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </p>
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="h-9 rounded-lg text-xs font-medium gap-1.5"
+                  className="font-medium gap-1.5"
                   onClick={() => {
                     navigator.clipboard.writeText('Created with @vovv.ai #vovvai');
                     setCaptionCopied(true);
@@ -443,7 +444,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                     toast.success('Caption copied!');
                   }}
                 >
-                  {captionCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {captionCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   {captionCopied ? 'Copied!' : 'Copy Caption'}
                 </Button>
               </div>
