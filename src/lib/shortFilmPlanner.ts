@@ -418,3 +418,136 @@ export function formatCameraMotion(motion: string): string {
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 }
+
+/* ------------------------------------------------------------------ */
+/*  Intent-aware planner (Phase 2 — Commerce Video Engine)             */
+/* ------------------------------------------------------------------ */
+
+export interface CommercePlannerContext {
+  contentIntent?: ContentIntent | null;
+  platform?: Platform;
+  paceMode?: PaceMode;
+  category?: ProductCategoryKey;
+  clarityFirstMode?: boolean;
+  endingStyle?: EndingStyle;
+  offerContext?: string;
+  /** When true, auto-pick a structure for the given intent if the user
+   *  has not explicitly selected one. */
+  autoPickStructure?: boolean;
+}
+
+/**
+ * Build a shot plan that's aware of content intent, category, pace,
+ * clarity-first mode, and adaptive duration. Falls back to the legacy
+ * `generateShotPlan` behavior when no commerce context is provided.
+ */
+export function generateCommerceShotPlan(
+  filmType: FilmType,
+  structure: StoryStructure,
+  shotDuration: '5' | '10' = '5',
+  ctx: CommercePlannerContext = {},
+): ShotPlanItem[] {
+  // 1) Resolve roles — prefer commerce structure if intent given and either
+  //    user picked a commerce structure value or asked for auto-pick.
+  let roles: string[] | undefined;
+  const commerceDef =
+    getStructureByValue(structure as string) ||
+    (ctx.autoPickStructure ? pickBestStructureForIntent(ctx.contentIntent ?? null) : null);
+
+  if (commerceDef) {
+    roles = commerceDef.roles.slice(0, 6);
+  }
+
+  let plan: ShotPlanItem[];
+  if (roles && roles.length > 0) {
+    plan = roles.map((role, index) => {
+      const defaults = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.hook;
+      return {
+        shot_index: index + 1,
+        role,
+        purpose: defaults.purpose || '',
+        scene_type: defaults.scene_type || 'general',
+        camera_motion: defaults.camera_motion || 'static',
+        subject_motion: defaults.subject_motion || 'minimal',
+        duration_sec: getDefaultDurationForRole(role),
+        script_line: defaults.script_line,
+        sfx_prompt: 'subtle cinematic ambient sound',
+        sfx_trigger_at: 0,
+        product_visible: defaults.product_visible ?? false,
+        character_visible: defaults.character_visible ?? false,
+        preservation_strength: defaults.preservation_strength || 'medium',
+      };
+    });
+  } else {
+    plan = generateShotPlan(filmType, structure, shotDuration);
+  }
+
+  // 2) Category bias — bump preservation on categories with high fidelity needs
+  if (ctx.category) {
+    const cat = getCategoryModule(ctx.category);
+    for (const s of plan) {
+      if (cat.preferredShotRoles.includes(s.role) && s.product_visible) {
+        if (s.preservation_strength === 'low') s.preservation_strength = 'medium';
+      }
+    }
+  }
+
+  // 3) Adaptive duration — choose total based on intent/platform/pace/category
+  const dur = planDuration({
+    intent: ctx.contentIntent ?? null,
+    platform: ctx.platform,
+    pace: ctx.paceMode,
+    category: ctx.category,
+    clarityFirst: ctx.clarityFirstMode,
+    shotCount: plan.length,
+  });
+  // Distribute target total across shots, keeping cinematic role weights
+  const weights = plan.map(s => getDefaultDurationForRole(s.role));
+  const weightSum = weights.reduce((a, b) => a + b, 0) || plan.length;
+  let remaining = dur.totalSec;
+  plan.forEach((s, i) => {
+    if (i === plan.length - 1) {
+      s.duration_sec = Math.max(1, Math.min(15, remaining));
+    } else {
+      const share = Math.max(1, Math.round((weights[i] / weightSum) * dur.totalSec));
+      s.duration_sec = Math.min(15, share);
+      remaining -= s.duration_sec;
+    }
+  });
+
+  // 4) Clarity-first transformations
+  if (ctx.clarityFirstMode) {
+    const result = applyClarityFirst(plan);
+    plan = result.shots;
+    if (result.changes.length > 0) {
+      console.log('[commerce-planner] clarity-first changes:', result.changes);
+    }
+  }
+
+  // 5) Ending style — adjust last shot's scene_type to match resolved ending
+  const ending = pickEnding({
+    intent: ctx.contentIntent ?? null,
+    platform: ctx.platform,
+    clarityFirst: ctx.clarityFirstMode,
+    offerContext: ctx.offerContext,
+    category: ctx.category,
+    userOverride: ctx.endingStyle,
+  });
+  if (plan.length > 0) {
+    const last = plan[plan.length - 1];
+    if (ending === 'product_close' || ending === 'marketplace_clean_end') {
+      last.scene_type = 'hero_end_frame';
+      last.product_visible = true;
+    } else if (ending === 'detail_close') {
+      last.scene_type = 'macro_closeup';
+      last.product_visible = true;
+    } else if (ending === 'atmosphere_resolve') {
+      last.scene_type = 'resolve_wide';
+    } else if (ending === 'logo_safe_luxury_end' || ending === 'clean_brand_close') {
+      last.scene_type = 'hero_end_frame';
+    }
+  }
+
+  return plan;
+}
+
