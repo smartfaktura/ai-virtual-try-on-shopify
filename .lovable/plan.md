@@ -1,46 +1,21 @@
 
 
-## Enable favorite + status actions on mobile in /app/library
+## Tighten /app/workflows request banner spacing on mobile
 
 ### Issue
-On mobile (`/app/library`), users can't:
-1. Favorite an image
-2. Mark as Brand Ready / Ready to Publish
+On mobile, the "Missing a Visual Type for your brand?" card has cramped spacing — the title sits too close to the full-width "Share Request" button and the card padding feels tight. Avatar row is hidden on mobile (good), but the gap between the heading block and the CTA is only `gap-3` and there's no subtitle/breathing room.
 
-### Root cause
-In `src/components/app/LibraryImageCard.tsx`, the entire action overlay (favorite heart + three-dot status menu + download) is wrapped in:
-```tsx
-className="... hidden [@media(hover:hover)]:flex"
-```
-That `[@media(hover:hover)]` query only matches devices with a real hover capability — i.e. desktop with a mouse. On touch devices (phones/tablets) the overlay is permanently hidden, so there is no way to tap the heart or the three-dot menu.
+### Plan — `src/components/app/WorkflowRequestBanner.tsx`
 
-There's no fallback long-press, no tap-to-reveal, no persistent action row for mobile.
-
-### Plan
-
-**1. `src/components/app/LibraryImageCard.tsx` — make actions accessible on touch**
-
-Replace the hover-only overlay with a responsive pattern:
-- **Desktop (hover:hover)**: keep existing behavior — overlay appears on hover (or when menu is open).
-- **Touch devices**: render a persistent, lightweight action row — a small heart button (top-right) and a three-dot menu button (top-left) — both sitting on a soft gradient/scrim so they read on any image. Tapping the three-dot opens the same `DropdownMenu` with Brand Ready / Ready to Publish / Reset to Draft. Tapping the heart toggles favorite.
-- Hide the persistent touch row when `selectMode` is active (checkbox takes over) or when `isUpscaling`.
-- Keep the bottom status pill + date + download visible on hover for desktop; on mobile, surface the small status pill as a corner badge when `assetStatus !== 'draft'` so users see state at a glance, and put download inside the three-dot menu (new "Download" item) so a single mobile menu covers all actions.
-
-**2. Mobile menu additions**
-Add `Download` as a `DropdownMenuItem` in the same status menu so mobile users get download parity without needing the hover overlay.
-
-### Technical notes
-- Use Tailwind's `[@media(hover:none)]:flex` + `[@media(hover:hover)]:hidden` to scope the persistent touch row, mirroring the existing inverse query on the hover overlay. No JS device detection needed — pure CSS, SSR-safe.
-- All buttons keep `e.stopPropagation()` so they don't trigger the card's `onClick` (which opens the lightbox).
-- No changes to data hooks (`useLibraryFavorites`, `useLibraryAssetStatus`) — purely a UI accessibility fix.
-
-### Files
-- `src/components/app/LibraryImageCard.tsx` — add persistent touch action row, add Download to status menu
+1. **Increase mobile padding**: `p-4 sm:p-6` → `p-5 sm:p-6` for a touch more breathing room.
+2. **Increase vertical gap on mobile** between title block and button: `gap-3 sm:gap-4` → `gap-4 sm:gap-4` (collapsed flex column needs more vertical air than row).
+3. **Show a short subtitle on mobile** too, so the heading doesn't sit naked above the button. Currently `hidden sm:block`. Change to always visible but keep it tight (`text-xs text-muted-foreground mt-1`). This adds a natural visual buffer between title and CTA.
+4. **Tighten title leading** and add a hair of bottom margin: keep `leading-snug`, ensure `mt-0.5` on subtitle becomes `mt-1` for cleaner rhythm.
+5. **Button**: keep full-width on mobile but add `mt-1` on the button (only when stacked) via the existing `gap` increase — no extra class needed once gap is bumped.
 
 ### Acceptance
-- On mobile `/app/library`, tapping the heart on a card toggles favorite (filters under "Favorites" tab update).
-- On mobile, tapping the three-dot opens menu with Brand Ready / Ready to Publish / Reset to Draft / Download — selecting an option updates the card and the corresponding tab filter.
-- Desktop hover behavior unchanged.
-- Select mode and upscaling overlay still hide the touch action row.
-- Status badge visible at-a-glance on mobile when not draft.
+- On mobile, clear breathing room between title, subtitle, and "Share Request" button
+- Subtitle now visible on mobile (helpful context)
+- Desktop layout unchanged
+- No trailing periods added to subtitle (it already ends with a period because it's two clauses joined by em-dash + has a period — keep as-is since it's body copy, not a header subtitle)
 
