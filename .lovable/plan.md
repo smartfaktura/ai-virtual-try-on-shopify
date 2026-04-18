@@ -1,20 +1,27 @@
 
 
-## Tighten metric card numbers + equalize card heights
+## Subtitle period consistency — remove trailing periods
 
-### Issues seen at 1276px viewport
-1. `text-3xl sm:text-4xl` (36px) numbers too large — overpowering and pushing some cards taller than others.
-2. Cards in the row have inconsistent heights because some have `suffix`, some have `description`, some have `progress` bar, some have `action` button — `min-h` only sets a floor, not equal height.
+### Context
+Memory Core rule: "no terminal periods in headers." The user is questioning whether subtitles like "Your next visuals are just a click away" should have periods. Per project convention: **no**.
 
-### Changes — `src/components/app/MetricCard.tsx`
+Current screenshots show:
+- "Your next visuals are just a click away" — no period ✓
+- "Click any visual to recreate it with your product." — has period ✗
+- "Your latest generated visuals" — no period ✓
 
-1. **Number size down one step**: `text-3xl sm:text-4xl` → `text-2xl sm:text-3xl` (24/30px). Still clearly the hero (matches credits pill `text-2xl`), no longer overpowering.
-2. **Description (no-value) variant**: `text-xl sm:text-2xl` → `text-base sm:text-lg font-semibold` so empty-state cards don't visually outweigh real numbers.
-3. **Equal heights**: replace `min-h-[120px] sm:min-h-[160px]` with fixed `h-[140px] sm:h-[170px]` so every card in the grid is identical regardless of content (suffix/progress/action).
-4. Keep `flex flex-col justify-between` so top content sits at top, progress/action sit at bottom.
+Inconsistent. Need to extend the no-period rule to subtitles too and clean up offenders.
+
+### Plan
+
+1. Grep all `subtitle=` props and short tagline strings across `src/pages/**` and `src/components/app/**` for trailing periods.
+2. Remove trailing `.` from single-sentence subtitles/taglines (keep periods only in multi-sentence body copy).
+3. Focus on Dashboard first (the page user is viewing): "Click any visual to recreate it with your product." → "Click any visual to recreate it with your product"
+4. Sweep `PageHeader subtitle=`, section subtitles ("Recent Creations" etc.), and EmptyStateCard descriptions across visible app pages.
+5. Update memory Core rule to explicitly cover subtitles: "no terminal periods in headers or single-sentence subtitles."
 
 ### Acceptance
-- All 5 metric cards in the dashboard row are exactly the same height.
-- Numbers feel confident but not oversized — roughly matching the credits pill in the sidebar.
-- Empty-state copy ("No recent workflow", "Generate to discover") sits as a clear subtitle, not competing with real numeric values.
+- All single-sentence subtitles across `/app` pages render without trailing period.
+- Multi-sentence body copy keeps proper punctuation.
+- Memory rule clarified for future consistency.
 
