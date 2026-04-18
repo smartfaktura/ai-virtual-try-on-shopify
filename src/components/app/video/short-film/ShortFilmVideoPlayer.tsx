@@ -58,27 +58,35 @@ function SingleVideoPlayer({
     const onFrame = () => {
       if (video.paused || video.ended) return;
       const t = video.currentTime;
-      const d = video.duration || 1;
+      const d = video.duration;
       setCurrentTime(t);
-      setProgress((t / d) * 100);
+      if (d > 0 && isFinite(d)) {
+        setProgress(Math.min(100, Math.max(0, (t / d) * 100)));
+      }
       rafRef.current = requestAnimationFrame(onFrame);
     };
 
     const onPlay = () => { rafRef.current = requestAnimationFrame(onFrame); };
     const onPause = () => { cancelAnimationFrame(rafRef.current); };
-    const onLoadedMetadata = () => { setDuration(video.duration); };
+    const onDurationKnown = () => {
+      if (video.duration > 0 && isFinite(video.duration)) {
+        setDuration(video.duration);
+      }
+    };
 
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
-    video.addEventListener('loadedmetadata', onLoadedMetadata);
-    if (video.duration) setDuration(video.duration);
+    video.addEventListener('loadedmetadata', onDurationKnown);
+    video.addEventListener('durationchange', onDurationKnown);
+    onDurationKnown();
     if (!video.paused) { rafRef.current = requestAnimationFrame(onFrame); }
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
-      video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      video.removeEventListener('loadedmetadata', onDurationKnown);
+      video.removeEventListener('durationchange', onDurationKnown);
     };
   }, []);
 

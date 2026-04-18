@@ -189,7 +189,7 @@ Each shot object MUST have exactly these fields:
 ${scriptLineInstruction}
 ${sfxInstruction}
 
-DURATION: Total duration should fit the intent — social/teaser ~6–10s, showcase/PDP ~8–12s, brand mood/editorial ~10–15s. Do NOT force exactly 15s unless the intent calls for it. Use cinematic, role-weighted pacing (NOT equal splits).
+DURATION: Total duration MUST equal exactly 15 seconds across all shots combined. Use cinematic, role-weighted pacing (NOT equal splits) — but the sum of all duration_sec values MUST equal 15.
 Vary camera motions and scene types for cinematic interest.
 
 MUSIC DIRECTION: The "music_direction" field should describe SPECIFIC instrumentation (e.g. "minimal piano with deep sub-bass"), a BPM range, and an energy arc (e.g. "builds from sparse to layered strings at resolve"). Be precise — this drives AI music generation.`;
@@ -329,6 +329,30 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
           validShots[i].duration_sec = Math.max(1, Math.round(validShots[i].duration_sec * scale));
           remaining -= validShots[i].duration_sec;
         }
+      }
+    } else if (total < cap) {
+      // Expand-up: distribute remaining seconds onto priority shots so the film hits the target.
+      let deficit = cap - total;
+      const PRIORITY_ROLES = ["product_reveal", "product_moment", "brand_finish", "hero_shot", "lifestyle_moment"];
+      const priorityIdx = validShots
+        .map((s: any, i: number) => ({ i, role: s.role, dur: s.duration_sec }))
+        .filter((x: any) => PRIORITY_ROLES.includes(x.role) && x.dur < 15)
+        .sort((a: any, b: any) => PRIORITY_ROLES.indexOf(a.role) - PRIORITY_ROLES.indexOf(b.role))
+        .map((x: any) => x.i);
+      const order = priorityIdx.length > 0
+        ? priorityIdx
+        : validShots.map((_: any, i: number) => i).sort((a: number, b: number) => validShots[b].duration_sec - validShots[a].duration_sec);
+      let guard = 0;
+      while (deficit > 0 && guard++ < 100) {
+        for (const i of order) {
+          if (deficit <= 0) break;
+          if (validShots[i].duration_sec < 15) {
+            validShots[i].duration_sec += 1;
+            deficit -= 1;
+          }
+        }
+        // If no priority shot could absorb, distribute to any shot
+        if (deficit > 0 && validShots.every((s: any) => s.duration_sec >= 15)) break;
       }
     }
 
