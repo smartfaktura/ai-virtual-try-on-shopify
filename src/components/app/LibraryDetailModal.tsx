@@ -532,6 +532,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           }}
         />
       )}
-    </>
+    </>,
+    document.body
   );
 }
