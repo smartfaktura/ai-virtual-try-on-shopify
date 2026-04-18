@@ -368,6 +368,16 @@ export function useShortFilmProject() {
           stylePresetNames: stylePresetNames || undefined,
           scenePresetNames: scenePresetNames || undefined,
           audioLayers: settings.audioLayers || { music: true, sfx: true, voiceover: false },
+          // ── Commerce Video Engine context (Phase 2) ───────────────
+          contentIntent: contentIntent ?? undefined,
+          platform,
+          paceMode,
+          productPriority,
+          clarityFirst: clarityFirstMode,
+          soundMode,
+          endingStyle,
+          audienceContext: audienceContext || undefined,
+          offerContext: offerContext || undefined,
         },
       });
       if (error) throw new Error(error.message);
