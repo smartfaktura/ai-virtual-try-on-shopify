@@ -1,42 +1,24 @@
 
 
-## Dashboard — drop redundant "Continue creating" H2 for returning users
+## Dashboard — remove "Start here" H2 entirely
 
 Scope: `src/pages/Dashboard.tsx` only.
 
-### Problem
-Returning users see two stacked headlines:
-- H1: "Welcome back, Tomas 👋" + subtitle "Your AI photography studio is ready — choose how you want to start"
-- H2: "Continue creating" (immediately below, redundant)
-
-The H2 repeats the intent already set by the H1 + subtitle, creating visual noise and weak rhythm.
-
 ### Change
-In the "Start here" section (lines ~110–112), conditionally render the H2:
-- **Returning users** (`isReturning === true`): omit the H2 entirely. Cards follow directly after the welcome subtitle with proper spacing.
-- **New users** (`isReturning === false`): keep the existing "Start here" H2 (acts as orientation for first-time users).
+Remove the conditional H2 ("Start here") that currently renders for new users. Cards follow directly after the welcome H1 + subtitle for everyone.
 
 ### Implementation
-Replace:
+In the "Start here" section (~lines 110–113), delete:
 ```tsx
-<div className="space-y-4">
-  <h2 className="text-2xl sm:text-3xl font-bold ...">{isReturning ? 'Continue creating' : 'Start here'}</h2>
-  <div className="grid ...">
+{!isReturning && (
+  <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Start here</h2>
+)}
 ```
 
-With:
-```tsx
-<div className="space-y-4">
-  {!isReturning && (
-    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Start here</h2>
-  )}
-  <div className="grid ...">
-```
-
-Spacing: the parent wrapper already uses `space-y-8 sm:space-y-10`, so the cards will sit naturally below the welcome block with consistent rhythm. No extra margin tweaks needed.
+Keep the `<div className="space-y-4">` wrapper — parent `space-y-8 sm:space-y-10` already provides clean rhythm between the welcome block and cards.
 
 ### Acceptance
-- Returning user: Welcome H1 + subtitle → 3 cards directly (no "Continue creating" header)
-- New user: unchanged — "Start here" H2 still appears above cards
+- Both new and returning users: Welcome H1 + subtitle → 3 action cards directly
+- No "Start here" or "Continue creating" H2 anywhere on `/app`
 - All other dashboard sections untouched
 
