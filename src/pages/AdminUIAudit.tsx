@@ -280,18 +280,28 @@ const SEVERITY_MAP: Record<Severity, { label: string; classes: string }> = {
   low: { label: 'low', classes: 'border-border text-muted-foreground bg-muted/40' },
 };
 
-const INCONSISTENCIES: Array<{
+type Inconsistency = {
+  id: string;
   title: string;
   why: string;
   suggested: string;
+  /** The single canonical winner (what to standardize on). */
+  canonical: string;
+  /** Patterns that should be retired. */
+  deprecated: string[];
   severity: Severity;
   variants: { label: string; node: React.ReactNode }[];
-}> = [
+};
+
+const INCONSISTENCIES: Inconsistency[] = [
   {
+    id: 'status-pills',
     title: 'Status pill colors',
     severity: 'high',
     why: 'Generation/library/trend chips use ad-hoc emerald/amber/red/blue while shadcn Badge uses semantic tokens.',
-    suggested: 'Add success/warning variants to Badge; remove inline color classes. Use <StatusBadge> for jobs.',
+    suggested: 'Use <StatusBadge> for all job/library/video/trend states.',
+    canonical: '<StatusBadge status="…" />',
+    deprecated: ['inline bg-emerald-500/10', 'inline bg-blue-500/10', '.status-badge--*'],
     variants: [
       { label: 'StatusBadge (queued)', node: <StatusBadge status="queued" /> },
       { label: 'StatusBadge (generating)', node: <StatusBadge status="generating" /> },
@@ -301,75 +311,96 @@ const INCONSISTENCIES: Array<{
     ],
   },
   {
+    id: 'overlay-drift',
     title: 'Confirmation overlay drift',
     severity: 'high',
     why: 'Dialog, AlertDialog, Sheet, and Drawer all used for confirmations across the app.',
-    suggested: 'AlertDialog for destructive confirms; Dialog for content; Sheet for side flows; Drawer for mobile.',
+    suggested: 'Wrap destructive confirms in <ConfirmDialog>; reserve Dialog for content/forms.',
+    canonical: '<ConfirmDialog> for destructive · <Dialog> for forms · <Sheet> for side flows · <Drawer> for mobile',
+    deprecated: ['ad-hoc Dialog "Are you sure?" patterns', 'inline AlertDialog boilerplate'],
     variants: [
+      { label: 'ConfirmDialog (canonical)', node: <Badge>Destructive confirm</Badge> },
       { label: 'Dialog', node: <Badge variant="outline">Centered modal</Badge> },
-      { label: 'AlertDialog', node: <Badge variant="outline">Destructive confirm</Badge> },
       { label: 'Sheet', node: <Badge variant="outline">Side panel</Badge> },
       { label: 'Drawer', node: <Badge variant="outline">Bottom mobile sheet</Badge> },
     ],
   },
   {
+    id: 'button-heights',
     title: 'Button height conventions',
     severity: 'high',
     why: 'shadcn Button uses h-10/h-9/h-11; ad-hoc menu buttons in AppShell use raw <button class="h-10">.',
     suggested: 'Always use <Button> from components/ui/button.tsx; remove ad-hoc <button> styling.',
+    canonical: '<Button variant size>',
+    deprecated: ['raw <button class="h-10 px-3 …">', 'div with role="button"'],
     variants: [
       { label: 'shadcn default (h-10)', node: <Button>Action</Button> },
       { label: 'ad-hoc menu button', node: <button className="h-10 px-3 py-2 text-sm hover:bg-muted rounded-md transition-colors">Action</button> },
     ],
   },
   {
+    id: 'card-padding',
     title: 'Card padding drift',
     severity: 'med',
     why: 'p-3, p-4, p-5, p-6 used on visually similar cards across the app.',
-    suggested: 'Standardize to p-4 (mobile) / p-5 (desktop) for content cards.',
+    suggested: 'Use the <Card density="…"> prop instead of overriding padding ad-hoc.',
+    canonical: '<Card density="comfortable|compact|dense"> → p-5 / p-4 / p-3',
+    deprecated: ['random p-6 on content cards', 'mixed p-4/p-5 in same surface family'],
     variants: [
-      { label: 'p-3', node: <div className="rounded-xl border border-border bg-card p-3 w-44 h-20 text-xs">p-3 card</div> },
-      { label: 'p-4', node: <div className="rounded-xl border border-border bg-card p-4 w-44 h-20 text-xs">p-4 card</div> },
-      { label: 'p-5', node: <div className="rounded-xl border border-border bg-card p-5 w-44 h-20 text-xs">p-5 card</div> },
-      { label: 'p-6', node: <div className="rounded-xl border border-border bg-card p-6 w-44 h-20 text-xs">p-6 card</div> },
+      { label: 'dense (p-3)', node: <div className="rounded-2xl border border-border bg-card p-3 w-44 h-20 text-xs">dense</div> },
+      { label: 'compact (p-4)', node: <div className="rounded-2xl border border-border bg-card p-4 w-44 h-20 text-xs">compact</div> },
+      { label: 'comfortable (p-5)', node: <div className="rounded-2xl border border-border bg-card p-5 w-44 h-20 text-xs">comfortable</div> },
+      { label: 'p-6 (deprecated)', node: <div className="rounded-2xl border border-border bg-card p-6 w-44 h-20 text-xs">p-6</div> },
     ],
   },
   {
+    id: 'radius-drift',
     title: 'Radius drift on similar surfaces',
     severity: 'med',
     why: 'Cards mix rounded-lg / rounded-xl / rounded-2xl on identical contexts.',
-    suggested: 'Cards = rounded-xl, pills = rounded-full, inputs = rounded-md.',
+    suggested: 'Cards = rounded-2xl (Card default), pills = rounded-full, inputs = rounded-md.',
+    canonical: 'rounded-2xl for cards · rounded-full for pills · rounded-md for inputs',
+    deprecated: ['rounded-lg / rounded-xl on card surfaces'],
     variants: [
       { label: 'rounded-lg', node: <div className="h-12 w-32 bg-card border border-border rounded-lg" /> },
       { label: 'rounded-xl', node: <div className="h-12 w-32 bg-card border border-border rounded-xl" /> },
-      { label: 'rounded-2xl', node: <div className="h-12 w-32 bg-card border border-border rounded-2xl" /> },
+      { label: 'rounded-2xl (canonical)', node: <div className="h-12 w-32 bg-card border border-border rounded-2xl" /> },
     ],
   },
   {
+    id: 'skeletons',
     title: 'Skeleton patterns',
     severity: 'med',
     why: 'Skeleton component, custom shimmer divs, and animate-pulse boxes coexist.',
     suggested: 'Use <Skeleton /> exclusively; deprecate ad-hoc shimmers.',
+    canonical: '<Skeleton className="…" />',
+    deprecated: ['<div class="animate-pulse bg-muted">', 'custom shimmer keyframes'],
     variants: [
       { label: 'Skeleton', node: <Skeleton className="h-4 w-32" /> },
       { label: 'ad-hoc pulse', node: <div className="h-4 w-32 bg-muted animate-pulse rounded" /> },
     ],
   },
   {
+    id: 'pagination',
     title: 'Two pagination styles',
     severity: 'med',
     why: 'shadcn Pagination component vs custom prev/next button rows.',
     suggested: 'Standardize on shadcn Pagination.',
+    canonical: '<Pagination> from components/ui/pagination.tsx',
+    deprecated: ['custom prev/next button rows'],
     variants: [
       { label: 'shadcn Pagination', node: <Badge variant="outline">‹ 1 2 3 ›</Badge> },
       { label: 'custom prev/next', node: <div className="flex gap-2"><Button size="sm" variant="outline">Prev</Button><Button size="sm" variant="outline">Next</Button></div> },
     ],
   },
   {
+    id: 'muted-text',
     title: 'Muted text variants',
     severity: 'low',
-    why: 'Three muted-text patterns coexist across pages.',
-    suggested: 'Use text-muted-foreground exclusively; remove /60 and /80 opacity variants.',
+    why: 'Three muted-text patterns coexist across pages (~420 occurrences in 41 files).',
+    suggested: 'Use text-muted-foreground exclusively; remove /60 /70 /80 opacity variants.',
+    canonical: 'text-muted-foreground',
+    deprecated: ['text-foreground/60', 'text-foreground/70', 'text-foreground/80'],
     variants: [
       { label: 'text-muted-foreground', node: <p className="text-sm text-muted-foreground">Helper text</p> },
       { label: 'text-foreground/60', node: <p className="text-sm text-foreground/60">Helper text</p> },
@@ -377,36 +408,47 @@ const INCONSISTENCIES: Array<{
     ],
   },
   {
+    id: 'section-labels',
     title: 'Section label styles',
     severity: 'low',
     why: 'Two patterns for tiny section headers — uppercase tracked vs muted xs.',
-    suggested: 'Pick one (uppercase tracking-widest preferred for nav groups).',
+    suggested: 'Use the .section-label utility class (text-[10px] uppercase tracking-widest muted).',
+    canonical: '.section-label',
+    deprecated: ['ad-hoc text-xs uppercase tracking-wider text-muted-foreground'],
     variants: [
-      { label: 'uppercase tracking', node: <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Section</div> },
+      { label: '.section-label (canonical)', node: <div className="section-label">Section</div> },
       { label: 'plain xs muted', node: <div className="text-xs text-muted-foreground">Section</div> },
     ],
   },
   {
+    id: 'heading-scales',
     title: 'Heading scales',
     severity: 'low',
     why: 'PageHeader uses text-2xl sm:text-3xl, but several admin pages render raw <h1 class="text-2xl">.',
     suggested: 'Always use <PageHeader title=… />.',
+    canonical: '<PageHeader title="…" subtitle="…">',
+    deprecated: ['raw <h1 class="text-2xl …"> in pages'],
     variants: [
       { label: 'PageHeader title', node: <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Page title</h1> },
       { label: 'raw text-2xl', node: <h1 className="text-2xl font-semibold">Page title</h1> },
     ],
   },
   {
+    id: 'tooltip-hovercard',
     title: 'Tooltip vs HoverCard overlap',
     severity: 'low',
     why: 'Tooltip and HoverCard both used to show hover info — sometimes interchangeably.',
     suggested: 'Tooltip for short labels (<60ch); HoverCard for rich previews with media.',
+    canonical: 'Tooltip = short text · HoverCard = rich media',
+    deprecated: ['HoverCard for one-line tooltips'],
     variants: [
       { label: 'Tooltip', node: <Badge variant="outline">Short text only</Badge> },
       { label: 'HoverCard', node: <Badge variant="outline">Rich card preview</Badge> },
     ],
   },
 ];
+
+const RESOLVED_STORAGE_KEY = 'ui-audit-resolved-v1';
 
 // ─── TOC ──────────────────────────────────────────────────────────────────────
 
@@ -516,6 +558,25 @@ export default function AdminUIAudit() {
   const [query, setQuery] = useState('');
   const [density, setDensity] = useState<Density>('comfortable');
   const [onlyDrift, setOnlyDrift] = useState(false);
+  const [resolved, setResolved] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      return JSON.parse(localStorage.getItem(RESOLVED_STORAGE_KEY) || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RESOLVED_STORAGE_KEY, JSON.stringify(resolved));
+    } catch {
+      /* noop */
+    }
+  }, [resolved]);
+
+  const toggleResolved = (id: string) =>
+    setResolved((prev) => ({ ...prev, [id]: !prev[id] }));
 
   if (isLoading) {
     return (
@@ -526,7 +587,12 @@ export default function AdminUIAudit() {
   }
   if (!isRealAdmin) return <Navigate to="/app" replace />;
 
-  const filteredDrift = INCONSISTENCIES.filter((i) => matchesSearch(query, i.title, i.why, i.suggested, i.severity));
+  const filteredDrift = INCONSISTENCIES.filter((i) =>
+    matchesSearch(query, i.title, i.why, i.suggested, i.canonical, i.severity, ...i.deprecated),
+  );
+  const totalDrift = INCONSISTENCIES.length;
+  const resolvedCount = INCONSISTENCIES.filter((i) => resolved[i.id]).length;
+  const progressPct = totalDrift === 0 ? 0 : Math.round((resolvedCount / totalDrift) * 100);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -569,17 +635,30 @@ export default function AdminUIAudit() {
                 </Button>
               )}
             </div>
+            {/* Progress bar */}
+            <div className="mt-3 flex items-center gap-3">
+              <div className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                Resolved {resolvedCount} / {totalDrift}
+              </div>
+              <Progress value={progressPct} className="h-1.5 flex-1" />
+              <div className="text-[11px] font-mono text-muted-foreground tabular-nums w-9 text-right">{progressPct}%</div>
+              {resolvedCount > 0 && (
+                <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={() => setResolved({})}>
+                  Reset
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
             {/* TOC */}
             <nav className="lg:sticky lg:top-32 lg:self-start space-y-0.5 rounded-xl border border-border bg-card p-3 h-fit max-h-[calc(100vh-10rem)] overflow-auto z-20">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-2 pb-2">Sections</div>
+              <div className="section-label px-2 pb-2">Sections</div>
               {TOC.map((t) => (
                 <a
                   key={t.id}
                   href={`#${t.id}`}
-                  className="block px-2 py-1.5 text-xs rounded-md hover:bg-muted text-foreground/80 hover:text-foreground transition-colors"
+                  className="block px-2 py-1.5 text-xs rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {t.label}
                 </a>
@@ -592,7 +671,7 @@ export default function AdminUIAudit() {
               <AuditSection
                 title="★ Inconsistencies / drift to resolve"
                 anchor="inconsistencies"
-                description="Manually curated — sorted by severity. Tackle high first when standardizing."
+                description="Manually curated — sorted by severity. Toggle the checkbox when an inconsistency is fixed across the codebase. Progress is saved locally."
               >
                 <div className="space-y-4">
                   {filteredDrift.length === 0 && (
@@ -600,26 +679,77 @@ export default function AdminUIAudit() {
                   )}
                   {filteredDrift.map((item) => {
                     const sev = SEVERITY_MAP[item.severity];
+                    const isDone = !!resolved[item.id];
                     return (
-                      <div key={item.title} className="rounded-xl border border-amber-500/30 bg-amber-500/[0.04] p-4">
-                        <div className="flex items-start gap-2">
-                          <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'rounded-2xl border p-4 transition-colors',
+                          isDone
+                            ? 'border-emerald-500/30 bg-emerald-500/[0.04]'
+                            : 'border-amber-500/30 bg-amber-500/[0.04]',
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id={`drift-${item.id}`}
+                            checked={isDone}
+                            onCheckedChange={() => toggleResolved(item.id)}
+                            className="mt-0.5"
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <div className="text-sm font-semibold">{item.title}</div>
+                              <label
+                                htmlFor={`drift-${item.id}`}
+                                className={cn(
+                                  'text-sm font-semibold cursor-pointer',
+                                  isDone && 'line-through text-muted-foreground',
+                                )}
+                              >
+                                {item.title}
+                              </label>
                               <Badge variant="outline" className={cn('text-[10px] uppercase tracking-widest', sev.classes)}>
                                 {sev.label}
                               </Badge>
+                              {isDone && (
+                                <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-700 border-emerald-500/30">
+                                  <Check className="w-3 h-3 mr-1" /> resolved
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">{item.why}</div>
-                            <div className="text-xs mt-1">
-                              <span className="font-semibold text-emerald-700">Suggested: </span>
-                              <span className="text-foreground/80">{item.suggested}</span>
+
+                            {/* Canonical vs Deprecated */}
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/[0.04] p-2.5">
+                                <div className="section-label flex items-center gap-1 mb-1">
+                                  <Check className="w-3 h-3 text-emerald-700" /> Canonical
+                                </div>
+                                <code className="text-[11px] font-mono text-foreground break-words">{item.canonical}</code>
+                              </div>
+                              <div className="rounded-lg border border-destructive/30 bg-destructive/[0.04] p-2.5">
+                                <div className="section-label flex items-center gap-1 mb-1">
+                                  <X className="w-3 h-3 text-destructive" /> Deprecated
+                                </div>
+                                <ul className="space-y-0.5">
+                                  {item.deprecated.map((d) => (
+                                    <li key={d} className="text-[11px] font-mono text-muted-foreground break-words">
+                                      • {d}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
                             </div>
+
+                            <div className="text-xs mt-2">
+                              <span className="font-semibold text-foreground">Action: </span>
+                              <span className="text-muted-foreground">{item.suggested}</span>
+                            </div>
+
                             <div className="mt-3 flex flex-wrap gap-3">
                               {item.variants.map((v) => (
                                 <div key={v.label} className="rounded-lg border border-border bg-card p-3 space-y-2">
-                                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{v.label}</div>
+                                  <div className="section-label">{v.label}</div>
                                   <div>{v.node}</div>
                                 </div>
                               ))}

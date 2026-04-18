@@ -2,8 +2,35 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
+/**
+ * Canonical card density scale (see /app/admin/ui-audit).
+ * - comfortable: p-5 (default desktop content cards)
+ * - compact:     p-4 (mobile compact + most app cards)
+ * - dense:       p-3 (rows, tight grids)
+ * Use the `density` prop instead of overriding padding ad-hoc.
+ */
+type CardDensity = "comfortable" | "compact" | "dense";
+
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  density?: CardDensity;
+}
+
+const densityToPadding: Record<CardDensity, string> = {
+  comfortable: "p-5",
+  compact: "p-4",
+  dense: "p-3",
+};
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, density, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-2xl border bg-card text-card-foreground shadow-sm",
+      density && densityToPadding[density],
+      className,
+    )}
+    {...props}
+  />
 ));
 Card.displayName = "Card";
 
