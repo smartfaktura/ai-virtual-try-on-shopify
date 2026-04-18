@@ -90,6 +90,6 @@ export interface AudioAssets {
   perShotAudio: { shotIndex: number; url: string; type: 'sfx' | 'voiceover'; offset_sec?: number }[];
 }
 
-export type ShortFilmStep = 'film_type' | 'references' | 'story' | 'shot_plan' | 'settings' | 'review';
+export type ShortFilmStep = 'film_type' | 'content_intent' | 'references' | 'story' | 'shot_plan' | 'settings' | 'review';
 
 export type AudioPhase = 'idle' | 'music' | 'sfx' | 'voiceover' | 'done' | 'partial';
