@@ -150,9 +150,9 @@
     ring: 1px solid rgba(0, 0, 0, 0.03);
   }
 
-  /* Section label — whisper-level uppercase heading */
+  /* Section label — canonical tiny uppercase heading. Use this everywhere. */
   .section-label {
-    @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
+    @apply text-[10px] font-semibold uppercase tracking-widest text-muted-foreground;
   }
 
   /* Section divider — label with extending line */
@@ -174,25 +174,10 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
-  /* Status badges */
+  /* Status badges — DEPRECATED. Use <StatusBadge> from src/components/app/StatusBadge.tsx.
+     Kept as base class only for any legacy markup; do NOT add new usages. */
   .status-badge {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  .status-badge--success {
-    @apply bg-slate-100 text-slate-800;
-  }
-
-  .status-badge--warning {
-    @apply bg-amber-50 text-amber-900;
-  }
-
-  .status-badge--critical {
-    @apply bg-red-50 text-red-900;
-  }
-
-  .status-badge--info {
-    @apply bg-slate-100 text-slate-700;
   }
 
   /* Template cards */
