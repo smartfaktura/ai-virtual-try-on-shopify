@@ -53,6 +53,24 @@ const SFX_TRIGGER_DEFAULTS: Record<string, number> = {
   end_frame: 0,
 };
 
+const VO_FALLBACK_BY_ROLE: Record<string, string> = {
+  hook: "Look closer.",
+  intro: "Meet the new essential.",
+  tease: "Something new is coming.",
+  atmosphere: "Crafted with intention.",
+  build: "Designed to stand out.",
+  product_reveal: "Here it is.",
+  product_moment: "Made for moments like this.",
+  product_focus: "Every detail considered.",
+  detail_closeup: "Crafted in every detail.",
+  highlight: "Built to perform.",
+  lifestyle_moment: "Made for everyday.",
+  human_interaction: "Made to be lived in.",
+  resolve: "This is the one.",
+  brand_finish: "Crafted for everyday.",
+  end_frame: "Available now.",
+};
+
 function snapToValidValue(val: string, validList: string[], fallback: string): string {
   if (validList.includes(val)) return val;
   const lower = val.toLowerCase().replace(/[\s-]/g, "_");
