@@ -140,6 +140,14 @@ export function ShotPlanEditor({
         </div>
       ) : (
         <div className="space-y-2">
+          {layers.voiceover && shots.length > 0 && shots.every(s => !s.script_line?.trim()) && (
+            <div className="rounded-md border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Voiceover is on, but no narration is written yet.</span>{' '}
+              {onPlanModeChange && planMode === 'auto'
+                ? 'Switch to AI Director and Regenerate to auto-write scripts, or type narration in any shot below.'
+                : 'Type narration into any shot below to enable its voiceover.'}
+            </div>
+          )}
           {shots.map((shot, idx) => {
             const wordCount = (shot.script_line || '').split(/\s+/).filter(Boolean).length;
             const maxWords = Math.floor(shot.duration_sec * WORDS_PER_SEC);
