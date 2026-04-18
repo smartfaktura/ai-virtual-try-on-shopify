@@ -4,12 +4,12 @@ import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Euro, Clock, Play, Palette, Wand2, Film, Clapperboard, RotateCw, LayoutGrid } from 'lucide-react';
+import { Image, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Palette, Wand2, Film, Clapperboard, RotateCw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
+import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 
 
 
@@ -35,9 +35,10 @@ import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { balance, isEmpty, openBuyModal } = useCredits();
+  const { balance, isEmpty, openBuyModal, plan, planConfig } = useCredits();
   const [startModalOpen, setStartModalOpen] = useState(false);
   const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Fetch user profile (first_name)
   const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
@@ -143,35 +144,6 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // Fetch 30-day generation count (actual images, not job rows)
-  const { data: generatedCount = 0, isLoading: generatedLoading } = useQuery({
-    queryKey: ['dashboard-generated-30d', user?.id],
-    queryFn: async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const iso = thirtyDaysAgo.toISOString();
-
-      const { data: jobs, error: e1 } = await supabase
-        .from('generation_jobs')
-        .select('requested_count')
-        .eq('status', 'completed')
-        .gte('created_at', iso);
-      if (e1) throw e1;
-      const jobImages = (jobs || []).reduce((sum, j) => sum + (j.requested_count || 0), 0);
-
-      const { count: freestyleCount, error: e2 } = await supabase
-        .from('freestyle_generations')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', iso);
-      if (e2) throw e2;
-
-      return jobImages + (freestyleCount ?? 0);
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    placeholderData: (prev: number | undefined) => prev,
-  });
-
   // Fetch active schedule count
   const { data: scheduleCount = 0, isLoading: schedulesLoading } = useQuery({
     queryKey: ['dashboard-schedule-count', user?.id],
@@ -187,49 +159,6 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev: number | undefined) => prev,
   });
-
-  // Fetch last completed job's workflow
-  const { data: lastJob } = useQuery({
-    queryKey: ['dashboard-last-job', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('generation_jobs')
-        .select('workflow_slug, workflow_id, workflows(name, slug)')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch most-used workflow
-  const { data: topWorkflow } = useQuery({
-    queryKey: ['dashboard-top-workflow', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('generation_jobs')
-        .select('workflow_slug, workflow_id, workflows(name, slug)')
-        .eq('status', 'completed')
-        .limit(500);
-      const counts: Record<string, { count: number; name: string; slug: string }> = {};
-      (data || []).forEach(j => {
-        const wf = j.workflows as any;
-        if (wf?.name) {
-          const key = wf.name;
-          if (!counts[key]) counts[key] = { count: 0, name: wf.name, slug: wf.slug };
-          counts[key].count++;
-        }
-      });
-      const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
-      return sorted[0] || null;
-    },
-    enabled: !!user,
-    staleTime: 10 * 60 * 1000,
-  });
-
 
 
   // Critical error state — show recovery UI instead of blank skeletons
@@ -518,7 +447,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 sm:space-y-10">
       <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
-      {/* Welcome greeting + CTA */}
+      {/* Welcome greeting */}
       <div>
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
@@ -526,118 +455,10 @@ export default function Dashboard() {
         <p className="text-lg text-muted-foreground mt-2 max-w-xl">
           Your next visuals are just a click away
         </p>
-
-        <div className="flex flex-col gap-3 mt-3 sm:mt-5">
-          <div className="relative">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:overflow-visible sm:flex-wrap sm:[mask-image:none]">
-              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
-                <Layers className="w-3.5 h-3.5" />
-                Visual Studio
-              </Button>
-              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/freestyle')}>
-                <Wand2 className="w-3.5 h-3.5" />
-                Create with Prompt
-              </Button>
-              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/discover')}>
-                <Compass className="w-3.5 h-3.5" />
-                Explore
-              </Button>
-              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/library')}>
-                <Image className="w-3.5 h-3.5" />
-                Library
-              </Button>
-              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => setEarnCreditsOpen(true)}>
-                <Gift className="w-3.5 h-3.5" />
-                Earn Credits
-              </Button>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Out-of-credits CTA */}
-      {isEmpty && (
-        <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-primary shrink-0" />
-            <div>
-              <p className="font-semibold text-sm">You're out of credits</p>
-              <p className="text-sm text-muted-foreground">Get credits to start creating.</p>
-            </div>
-          </div>
-          <Button onClick={openBuyModal} className="rounded-full font-semibold shrink-0">
-            Get Credits
-          </Button>
-        </div>
-      )}
-
-      {/* Metrics Row — 5 value-driven cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <MetricCard
-          title="Cost Saved"
-          value={`€${(generatedCount * 30).toLocaleString()}`}
-          suffix="vs traditional photoshoots"
-          icon={Euro}
-          tooltip={{ text: "Based on €30 average cost per professional product photo", memberName: "Omar", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-omar.jpg'), { quality: 60 }) }}
-        />
-        <MetricCard
-          title="Time Saved"
-          value={`${Math.round(generatedCount * 20 / 60)}h`}
-          suffix="no shooting or editing needed"
-          icon={Clock}
-          tooltip={{ text: "Estimated 20 min saved per image vs traditional workflow", memberName: "Max", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-max.jpg'), { quality: 60 }) }}
-        />
-        <MetricCard
-          title="Credits"
-          value={balance}
-          suffix="available"
-          icon={Wallet}
-          onClick={openBuyModal}
-          progress={Math.max(0, Math.round((balance / 300) * 100))}
-          progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
-          tooltip={{ text: "Credits refresh monthly based on your plan", memberName: "Kenji", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 }) }}
-        />
-        <MetricCard
-          title="Continue Last"
-          icon={Play}
-          description={(lastJob?.workflows as any)?.name || 'No recent workflow'}
-          action={lastJob ? {
-            label: 'Continue',
-            onClick: () => {
-              const slug = (lastJob.workflows as any)?.slug || 'product-images';
-              const routeMap: Record<string, string> = { 'product-on-model': 'product-images' };
-              navigate(`/app/generate/${routeMap[slug] || slug}`);
-            },
-          } : undefined}
-          tooltip={{ text: "Pick up where you left off", memberName: "Sophia", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 }) }}
-        />
-        <div className="hidden md:block">
-          <MetricCard
-            title="Top Style"
-            popoverAlign="end"
-            icon={Palette}
-            description={topWorkflow?.name || 'Generate to discover'}
-            action={topWorkflow ? {
-              label: 'Recreate',
-              onClick: () => navigate(`/app/generate/${topWorkflow.slug}`),
-            } : undefined}
-            tooltip={{ text: "Your most-used workflow based on completed jobs", memberName: "Sienna", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-sienna.jpg'), { quality: 60 }) }}
-          />
-        </div>
-      </div>
-
-      {/* Steal This Look */}
-      <DashboardDiscoverSection />
-
-      {/* Tip Card */}
-      <DashboardTipCard />
-
-      {/* Recent Creations Gallery */}
-      <RecentCreationsGallery />
-
-      {/* Tools */}
+      {/* Tools — 3 cards */}
       <div className="space-y-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -678,6 +499,73 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Quick actions */}
+      <div className="space-y-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Quick actions</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/brand-profiles')}>
+            <Palette className="w-3.5 h-3.5" /> Brand Profiles
+          </Button>
+          <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/library')}>
+            <Image className="w-3.5 h-3.5" /> My Library
+          </Button>
+          <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/video')}>
+            <Clapperboard className="w-3.5 h-3.5" /> Video Studio
+          </Button>
+          <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
+            <Layers className="w-3.5 h-3.5" /> Visual Studio
+          </Button>
+          <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => setEarnCreditsOpen(true)}>
+            <Gift className="w-3.5 h-3.5" /> Earn Credits
+          </Button>
+        </div>
+      </div>
+
+      {/* Plan & Credits */}
+      {(() => {
+        const canUpgrade = !!planConfig.nextPlanId && planConfig.nextPlanId !== 'enterprise';
+        const monthly = planConfig.monthlyCredits;
+        const isInfinite = monthly === Infinity;
+        const usagePercent = isInfinite ? 100 : Math.min(100, Math.max(2, (balance / (monthly || 1)) * 100));
+        return (
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current plan</span>
+                <Badge variant="secondary" className="rounded-full">{planConfig.name}</Badge>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-foreground tracking-tight">{balance.toLocaleString()}</span>
+                <span className="text-sm text-muted-foreground">/ {isInfinite ? '∞' : monthly.toLocaleString()} credits this period</span>
+              </div>
+              <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-500"
+                  style={{ width: `${usagePercent}%` }}
+                />
+              </div>
+            </div>
+            <div className="shrink-0">
+              <Button
+                className="rounded-full font-semibold gap-2 min-h-[44px] px-6"
+                onClick={() => (canUpgrade ? setUpgradeOpen(true) : openBuyModal())}
+              >
+                {canUpgrade ? 'Upgrade plan' : 'Top up credits'}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Steal This Look */}
+      <DashboardDiscoverSection />
+
+      {/* Tip Card */}
+      <DashboardTipCard />
+
+      {/* Recent Creations Gallery */}
+      <RecentCreationsGallery />
 
       {/* Recent Jobs */}
       <div className="space-y-4">
@@ -796,6 +684,7 @@ export default function Dashboard() {
 
       <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
       <EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />
+      <UpgradePlanModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 }
