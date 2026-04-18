@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
+import { ScenePreviewThumb } from '@/components/admin/ScenePreviewThumb';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
 const CATEGORIES = [
@@ -602,12 +603,12 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
         !scene.is_active ? 'opacity-50 border-dashed' : 'border-border'
       } ${editingId === scene.id ? 'border-primary/40 bg-primary/[0.02]' : 'hover:bg-muted/20'}`}>
         {/* Thumbnail — bigger on mobile */}
-        <div className="w-full sm:w-10 h-32 sm:h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0 border border-border/40">
-          {scene.preview_image_url ? (
-            <img src={scene.preview_image_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <Camera className="w-6 h-6 sm:w-4 sm:h-4 text-muted-foreground/40" />
-          )}
+        <div className="w-full sm:w-10 h-32 sm:h-10 rounded-md overflow-hidden bg-muted flex-shrink-0 border border-border/40">
+          <ScenePreviewThumb
+            url={scene.preview_image_url}
+            className="w-full h-full"
+            iconClassName="w-6 h-6 sm:w-4 sm:h-4"
+          />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
