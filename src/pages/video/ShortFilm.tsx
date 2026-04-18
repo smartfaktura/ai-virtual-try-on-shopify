@@ -177,7 +177,11 @@ export default function ShortFilm() {
     resetProject();
   }, [resetProject]);
 
-  const hideBar = step === 'review' && isGenerating;
+  // Hide the wizard sticky bar while:
+  //  - shots are still generating
+  //  - shots are done but music is still being generated (avoid showing stale Back/Generate CTAs)
+  const musicInProgress = videosDone && musicEnabled && !musicDone;
+  const hideBar = step === 'review' && (isGenerating || musicInProgress);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-28">
