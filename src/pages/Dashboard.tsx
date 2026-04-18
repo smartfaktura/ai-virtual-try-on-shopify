@@ -78,12 +78,21 @@ export default function Dashboard() {
       <div className="space-y-8 sm:space-y-10">
         <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-            {isReturning ? 'Welcome back' : 'Welcome'}{profile?.first_name || profile?.display_name ? `, ${firstName}` : ''} 👋
-          </h1>
-          <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
-            Your AI photography studio is ready — choose how you want to start
-          </p>
+          {greetingReady ? (
+            <>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+                {isReturning ? 'Welcome back' : 'Welcome'}{profile?.first_name || profile?.display_name ? `, ${firstName}` : ''} 👋
+              </h1>
+              <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
+                Your AI photography studio is ready — choose how you want to start
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="h-8 sm:h-9 w-64 rounded-md bg-muted animate-pulse" />
+              <div className="h-6 w-80 max-w-full rounded-md bg-muted animate-pulse mt-2" />
+            </>
+          )}
 
           {/* Out-of-credits / low-credits CTA */}
           {(isEmpty || balance < 4) && (
@@ -122,9 +131,19 @@ export default function Dashboard() {
                   Create brand-ready visuals tailored to your product and category.
                 </p>
               </div>
-              <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
-                {isReturning ? 'Create now' : 'Start creating'}
-                <ArrowRight className="w-4 h-4" />
+              <Button
+                className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25"
+                onClick={() => navigate('/app/generate/product-images')}
+                disabled={!greetingReady}
+              >
+                {greetingReady ? (
+                  <>
+                    {isReturning ? 'Create now' : 'Start creating'}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <span className="h-4 w-24 rounded bg-primary-foreground/20 animate-pulse" />
+                )}
               </Button>
             </div>
 
