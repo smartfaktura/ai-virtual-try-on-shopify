@@ -18,6 +18,13 @@ import type {
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { toSignedUrl } from '@/lib/signedUrl';
+import {
+  DEFAULT_CONTENT_INTENT, DEFAULT_PLATFORM, DEFAULT_SOUND_MODE,
+  DEFAULT_PACE_MODE, DEFAULT_PRODUCT_PRIORITY, DEFAULT_ENDING_STYLE,
+  type ContentIntent, type Platform, type SoundMode, type PaceMode,
+  type ProductPriority, type EndingStyle,
+} from '@/types/commerceVideo';
+import { migrateLegacyDraft } from '@/lib/commerceVideo/migrate';
 
 interface ShotStatus {
   shot_index: number;
@@ -42,6 +49,16 @@ interface DraftState {
   settings: ShortFilmSettings;
   planMode: 'auto' | 'ai';
   customRoles?: string[];
+  // Commerce-video extensions (Phase 1) — all optional for backward compat
+  contentIntent?: ContentIntent;
+  platform?: Platform;
+  soundMode?: SoundMode;
+  paceMode?: PaceMode;
+  productPriority?: ProductPriority;
+  endingStyle?: EndingStyle;
+  audienceContext?: string;
+  offerContext?: string;
+  clarityFirstMode?: boolean;
 }
 
 const DEFAULT_SETTINGS: ShortFilmSettings = {
@@ -111,7 +128,18 @@ export function useShortFilmProject() {
   const [audioPhase, setAudioPhase] = useState<AudioPhase>('idle');
   const [audioShotStatuses, setAudioShotStatuses] = useState<AudioShotStatus[]>([]);
 
-  const steps: ShortFilmStep[] = ['film_type', 'references', 'story', 'shot_plan', 'settings', 'review'];
+  // ── Commerce Video Engine state (Phase 1) ────────────────────────────
+  const [contentIntent, setContentIntent] = useState<ContentIntent | null>(null);
+  const [platform, setPlatform] = useState<Platform>(DEFAULT_PLATFORM);
+  const [soundMode, setSoundMode] = useState<SoundMode>(DEFAULT_SOUND_MODE);
+  const [paceMode, setPaceMode] = useState<PaceMode>(DEFAULT_PACE_MODE);
+  const [productPriority, setProductPriority] = useState<ProductPriority>(DEFAULT_PRODUCT_PRIORITY);
+  const [endingStyle, setEndingStyle] = useState<EndingStyle>(DEFAULT_ENDING_STYLE);
+  const [audienceContext, setAudienceContext] = useState<string>('');
+  const [offerContext, setOfferContext] = useState<string>('');
+  const [clarityFirstMode, setClarityFirstMode] = useState<boolean>(false);
+
+  const steps: ShortFilmStep[] = ['film_type', 'content_intent', 'references', 'story', 'shot_plan', 'settings', 'review'];
   const currentStepIndex = steps.indexOf(step);
 
   const totalCredits = useMemo(
@@ -122,6 +150,7 @@ export function useShortFilmProject() {
   const canAdvance = useMemo(() => {
     switch (step) {
       case 'film_type': return !!filmType;
+      case 'content_intent': return !!contentIntent;
       case 'references': return true;
       case 'story': return !!storyStructure && (storyStructure !== 'custom' || customRoles.length >= 2);
       case 'shot_plan': return shots.length > 0 && !isAiPlanning;
@@ -129,13 +158,18 @@ export function useShortFilmProject() {
       case 'review': return !isGenerating;
       default: return false;
     }
-  }, [step, filmType, storyStructure, shots, isGenerating, isAiPlanning, customRoles]);
+  }, [step, filmType, contentIntent, storyStructure, shots, isGenerating, isAiPlanning, customRoles]);
 
   // ─── Save Draft ────────────────────────────────────────────
   const saveDraft = useCallback(async () => {
     if (!user) return;
     const draftState: DraftState = {
       step, filmType, storyStructure, references, shots, settings, planMode, customRoles,
+      contentIntent: contentIntent ?? undefined,
+      platform, soundMode, paceMode, productPriority, endingStyle,
+      audienceContext: audienceContext || undefined,
+      offerContext: offerContext || undefined,
+      clarityFirstMode,
     };
 
     try {
@@ -169,7 +203,8 @@ export function useShortFilmProject() {
       console.error('[ShortFilm] Save draft failed:', err);
       toast.error('Failed to save draft');
     }
-  }, [user, step, filmType, storyStructure, references, shots, settings, planMode, customRoles, draftProjectId]);
+  }, [user, step, filmType, storyStructure, references, shots, settings, planMode, customRoles, draftProjectId,
+      contentIntent, platform, soundMode, paceMode, productPriority, endingStyle, audienceContext, offerContext, clarityFirstMode]);
 
   // ─── Load Draft ────────────────────────────────────────────
   const loadDraft = useCallback(async (projectIdToLoad: string) => {
@@ -181,13 +216,14 @@ export function useShortFilmProject() {
         .single();
 
       if (data?.draft_state_json) {
-        const d = data.draft_state_json as unknown as DraftState;
+        // Run migration on legacy drafts to fill new commerce-video defaults
+        const d = migrateLegacyDraft(data.draft_state_json as unknown as DraftState);
         setStep(d.step || 'film_type');
         setFilmType(d.filmType || null);
         setStoryStructure(d.storyStructure || null);
         setReferences(d.references || []);
         setShots(d.shots || []);
-        
+
         // Backward compat: migrate old audioMode to audioLayers
         const restoredSettings = d.settings || DEFAULT_SETTINGS;
         if (!restoredSettings.audioLayers) {
@@ -199,9 +235,21 @@ export function useShortFilmProject() {
           restoredSettings.audioLayers = { music: true, sfx: true, voiceover: false };
         }
         setSettings(restoredSettings);
-        
+
         setPlanMode(d.planMode || 'ai');
         setCustomRoles(d.customRoles || []);
+
+        // Restore commerce-video fields (always present after migration)
+        setContentIntent(d.contentIntent ?? null);
+        setPlatform(d.platform ?? DEFAULT_PLATFORM);
+        setSoundMode(d.soundMode ?? DEFAULT_SOUND_MODE);
+        setPaceMode(d.paceMode ?? DEFAULT_PACE_MODE);
+        setProductPriority(d.productPriority ?? DEFAULT_PRODUCT_PRIORITY);
+        setEndingStyle(d.endingStyle ?? DEFAULT_ENDING_STYLE);
+        setAudienceContext(d.audienceContext ?? '');
+        setOfferContext(d.offerContext ?? '');
+        setClarityFirstMode(!!d.clarityFirstMode);
+
         setDraftProjectId(data.id);
         setProjectId(data.id);
 
@@ -401,6 +449,16 @@ export function useShortFilmProject() {
     setIsGeneratingAudio(false);
     setAudioPhase('idle');
     setAudioShotStatuses([]);
+    // Reset commerce-video state
+    setContentIntent(null);
+    setPlatform(DEFAULT_PLATFORM);
+    setSoundMode(DEFAULT_SOUND_MODE);
+    setPaceMode(DEFAULT_PACE_MODE);
+    setProductPriority(DEFAULT_PRODUCT_PRIORITY);
+    setEndingStyle(DEFAULT_ENDING_STYLE);
+    setAudienceContext('');
+    setOfferContext('');
+    setClarityFirstMode(false);
     try { sessionStorage.removeItem('sf_active_project'); } catch {}
   }, []);
 
@@ -1104,6 +1162,25 @@ export function useShortFilmProject() {
     audioShotStatuses,
     retryAudioForShot,
     previewAudio,
+    // ── Commerce Video Engine (Phase 1) ──
+    contentIntent,
+    setContentIntent,
+    platform,
+    setPlatform,
+    soundMode,
+    setSoundMode,
+    paceMode,
+    setPaceMode,
+    productPriority,
+    setProductPriority,
+    endingStyle,
+    setEndingStyle,
+    audienceContext,
+    setAudienceContext,
+    offerContext,
+    setOfferContext,
+    clarityFirstMode,
+    setClarityFirstMode,
   };
 }
 

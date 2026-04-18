@@ -4,6 +4,7 @@ import type { ShortFilmStep } from '@/types/shortFilm';
 
 const STEP_LABELS: Record<ShortFilmStep, string> = {
   film_type: 'Film Type',
+  content_intent: 'Intent',
   references: 'References',
   story: 'Story',
   shot_plan: 'Shot Plan',
@@ -12,7 +13,8 @@ const STEP_LABELS: Record<ShortFilmStep, string> = {
 };
 
 const CTA_LABELS: Record<ShortFilmStep, string> = {
-  film_type: 'Next: Add References',
+  film_type: 'Next: Content Intent',
+  content_intent: 'Next: Add References',
   references: 'Next: Story Structure',
   story: 'Next: Shot Plan',
   shot_plan: 'Next: Settings',

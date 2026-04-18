@@ -1,9 +1,10 @@
 import { cn } from '@/lib/utils';
-import { Check, Film, Image, BookOpen, LayoutGrid, Settings, Play } from 'lucide-react';
+import { Check, Film, Image, BookOpen, LayoutGrid, Settings, Play, Target } from 'lucide-react';
 import type { ShortFilmStep } from '@/types/shortFilm';
 
 const STEP_CONFIG: Record<ShortFilmStep, { label: string; icon: typeof Film }> = {
   film_type: { label: 'Film Type', icon: Film },
+  content_intent: { label: 'Intent', icon: Target },
   references: { label: 'References', icon: Image },
   story: { label: 'Story', icon: BookOpen },
   shot_plan: { label: 'Shot Plan', icon: LayoutGrid },
