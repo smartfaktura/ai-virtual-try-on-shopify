@@ -27,16 +27,16 @@ export interface DurationPlan {
 }
 
 const INTENT_RANGES: Partial<Record<ContentIntent, [number, number]>> = {
-  social_content: [5, 9],
-  creator_style_content: [7, 12],
-  performance_ad: [8, 13],
-  feature_benefit_video: [9, 13],
-  pdp_video: [6, 10],
-  product_showcase: [8, 12],
-  product_detail_film: [10, 15],
-  launch_teaser: [6, 10],
-  brand_mood_film: [10, 15],
-  campaign_editorial: [10, 15],
+  social_content: [13, 15],
+  creator_style_content: [13, 15],
+  performance_ad: [13, 15],
+  feature_benefit_video: [13, 15],
+  pdp_video: [13, 15],
+  product_showcase: [13, 15],
+  product_detail_film: [13, 15],
+  launch_teaser: [13, 15],
+  brand_mood_film: [13, 15],
+  campaign_editorial: [13, 15],
 };
 
 const PLATFORM_BIAS: Partial<Record<Platform, number>> = {
