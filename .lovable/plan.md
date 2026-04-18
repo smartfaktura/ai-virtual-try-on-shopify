@@ -1,26 +1,37 @@
 
 
 ## Goal
-Restyle the sidebar **"Create Visuals"** CTA in `AppShell.tsx` to match the **"Upgrade"** button look from `CreditIndicator` — solid white pill, dark text, subtle shadow, shimmer overlay.
+Restyle the "Share to Explore" and "Tag Us, Win a Free Year" cards in `LibraryDetailModal.tsx` to match the visual hierarchy of the "HELP US IMPROVE" feedback card directly above them.
 
-## Change
-In `src/components/app/AppShell.tsx` (lines 206-216), replace the button's classes:
+## Pattern to mirror (from ContextualFeedbackCard)
+```
+[icon]  [UPPERCASE BADGE LABEL]
+Body sentence as text-sm text-muted-foreground
+[action button]
+```
 
-- `bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25`
-  →
-- `bg-white text-[hsl(var(--sidebar-background))] hover:brightness-105 shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]`
-- Add `relative overflow-hidden` to host the shimmer
-- Wrap icon + label in a `<span className="relative">` so they sit above the shimmer
-- Add the same shimmer span used in `CreditIndicator`:
-  ```
-  <span className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent)] bg-[length:200%_100%] animate-shimmer mix-blend-overlay pointer-events-none" />
-  ```
+- Header row: `MessageSquarePlus`-style icon + small `Badge variant="secondary"` with classes `text-[10px] px-1.5 py-0 font-semibold uppercase tracking-wider`
+- The current bold title becomes the **badge label** (uppercased)
+- The current subtitle/description becomes the **body text** styled as `text-sm text-muted-foreground` (same as "How was this result?")
+- Buttons unchanged (already match — outline pill)
 
-Keeps: full-width, h-10, rounded-full, gap, collapsed/expanded behavior, Sparkles icon, click handler, title tooltip.
+## Changes to `src/components/app/LibraryDetailModal.tsx` (lines 405-452)
+
+**Card 1 — Share to Explore**
+- Header badge: `SHARE TO EXPLORE` (Trophy icon kept, tinted to match — `text-primary` ok)
+- Body (text-sm muted): `Submit your best work · Win up to 10,000 credits`
+- Button unchanged
+
+**Card 2 — Tag Us, Win a Free Year**
+- Header badge: `TAG US · WIN A FREE YEAR` (AtSign icon kept)
+- Body (text-sm muted): existing sentence with @vovv.ai / #vovvai links — switch from `text-xs` to `text-sm`, keep underlined links
+- Button unchanged
+
+Also add a top dismiss `X` button? **No** — out of scope; only typography/header treatment changes.
 
 ## Files touched
-- `src/components/app/AppShell.tsx` (one button only)
+- `src/components/app/LibraryDetailModal.tsx` (only the two card blocks at lines ~405-452)
 
 ## Out of scope
-Other sidebar items, Upgrade button, layout, spacing.
+- Card spacing, button styles, icons themselves, copy rewording, consolidation into one card.
 
