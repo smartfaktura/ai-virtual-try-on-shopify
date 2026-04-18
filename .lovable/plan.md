@@ -1,16 +1,26 @@
 
 
 ## Goal
-On the asset/lightbox panel, make the **"Submit for Review"** button match the **"Copy Caption"** button styling exactly — same variant, size, and visual weight. No other changes.
+Restyle the sidebar **"Create Visuals"** CTA in `AppShell.tsx` to match the **"Upgrade"** button look from `CreditIndicator` — solid white pill, dark text, subtle shadow, shimmer overlay.
 
-## Approach
-1. Grep for "Submit for Review" and "Copy Caption" to locate the host component (likely a lightbox/asset panel in `src/components/app/library/**`).
-2. Read both button definitions side-by-side.
-3. Update "Submit for Review" button's classes/variant/size to mirror "Copy Caption" — keep handler & label intact.
+## Change
+In `src/components/app/AppShell.tsx` (lines 206-216), replace the button's classes:
 
-## Files likely touched
-- One file (the panel that renders both cards) — to be confirmed by grep before editing.
+- `bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25`
+  →
+- `bg-white text-[hsl(var(--sidebar-background))] hover:brightness-105 shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]`
+- Add `relative overflow-hidden` to host the shimmer
+- Wrap icon + label in a `<span className="relative">` so they sit above the shimmer
+- Add the same shimmer span used in `CreditIndicator`:
+  ```
+  <span className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent)] bg-[length:200%_100%] animate-shimmer mix-blend-overlay pointer-events-none" />
+  ```
+
+Keeps: full-width, h-10, rounded-full, gap, collapsed/expanded behavior, Sparkles icon, click handler, title tooltip.
+
+## Files touched
+- `src/components/app/AppShell.tsx` (one button only)
 
 ## Out of scope
-- No card consolidation, no modal changes, no copy edits.
+Other sidebar items, Upgrade button, layout, spacing.
 
