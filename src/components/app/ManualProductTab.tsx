@@ -868,7 +868,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                   Main photo
                 </span>
               </div>
-              <div className="relative group w-[180px] h-[180px] aspect-square rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center mt-2">
+              <div className="relative group w-[180px] h-[180px] aspect-square rounded-xl overflow-hidden flex items-center justify-center mt-2">
                 <img
                   src={singleImage.previewUrl}
                   alt={title || 'Product preview'}
@@ -1110,11 +1110,11 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       {/* More Details (optional, collapsible) — only after image uploaded */}
       {singleImage && (
         <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="rounded-2xl border bg-card p-4 sm:p-5 animate-fade-in">
-          <CollapsibleTrigger className="flex items-center gap-2 w-full pt-1 pb-1 border-b border-border/50 hover:opacity-80 transition-opacity">
+          <CollapsibleTrigger className={cn('flex items-center gap-2 w-full pt-1 pb-1 hover:opacity-80 transition-opacity', moreDetailsOpen && 'border-b border-border/50')}>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               More details
             </span>
-            <span className="text-[11px] text-muted-foreground/70">(optional)</span>
+            <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/60 ml-1.5">optional</span>
             <ChevronDown className={cn('w-3.5 h-3.5 ml-auto text-muted-foreground transition-transform', moreDetailsOpen && 'rotate-180')} />
           </CollapsibleTrigger>
           <CollapsibleContent>
