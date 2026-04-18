@@ -572,7 +572,7 @@ export default function Dashboard() {
       )}
 
       {/* Metrics Row — 5 value-driven cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <MetricCard
           title="Cost Saved"
           value={`€${(generatedCount * 30).toLocaleString()}`}
