@@ -216,8 +216,8 @@ export default function Dashboard() {
         {/* Video Showcase */}
         <div className="space-y-4" style={{ contentVisibility: 'auto', containIntrinsicSize: '900px' }}>
           <div>
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">Your Products, In Motion</h2>
-            <p className="text-sm text-muted-foreground mt-1">AI-generated video ads ready in minutes, not weeks.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Your Products, In Motion</h2>
+            <p className="text-base text-muted-foreground mt-1.5">AI-generated video ads ready in minutes, not weeks.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {Array.from({ length: 10 }, (_, i) => (
