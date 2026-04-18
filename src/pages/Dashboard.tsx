@@ -163,7 +163,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <DashboardDiscoverSection />
+        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
+          <DashboardDiscoverSection />
+        </div>
 
         {/* Create Video Section */}
         <div className="space-y-4">
@@ -212,7 +214,7 @@ export default function Dashboard() {
         </div>
 
         {/* Video Showcase */}
-        <div className="space-y-4">
+        <div className="space-y-4" style={{ contentVisibility: 'auto', containIntrinsicSize: '900px' }}>
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Your Products, In Motion</h2>
             <p className="text-base text-muted-foreground mt-1.5">AI-generated video ads ready in minutes, not weeks.</p>
@@ -263,7 +265,9 @@ export default function Dashboard() {
         </div>
 
         {/* What You Can Create — showcase gallery */}
-        <RecentCreationsGallery />
+        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
+          <RecentCreationsGallery />
+        </div>
 
         <FeedbackBanner />
 
