@@ -551,27 +551,23 @@ export default function Jobs() {
                 />
               );
             }
-            return (
-              <div className="py-8">
-                {!searchQuery ? (
-                  <EmptyStateCard
-                    heading="Your library is empty"
-                    description="Generated visuals land here, ready to review, favorite, and publish."
-                    icon={<ImagePlus className="w-8 h-8 text-muted-foreground" />}
-                    actions={[
-                      { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
-                      { content: 'Try Freestyle', onAction: () => navigate('/app/freestyle'), variant: 'outline' },
-                    ]}
-                  />
-                ) : (
-                  <EmptyStateCard
-                    heading="No results found"
-                    description="No results match your search."
-                    action={{ content: 'Clear search', onAction: () => setSearchQuery('') }}
-                    icon={<Image className="w-7 h-7 text-muted-foreground" />}
-                  />
-                )}
-              </div>
+            return !searchQuery ? (
+              <EmptyStateCard
+                heading="Your library is empty"
+                description="Generated visuals land here, ready to review, favorite, and publish."
+                icon={<ImagePlus className="w-8 h-8 text-muted-foreground" />}
+                actions={[
+                  { content: 'Open Visual Studio', onAction: () => navigate('/app/workflows'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
+                  { content: 'Try Freestyle', onAction: () => navigate('/app/freestyle'), variant: 'outline' },
+                ]}
+              />
+            ) : (
+              <EmptyStateCard
+                heading="No results found"
+                description="No results match your search."
+                action={{ content: 'Clear search', onAction: () => setSearchQuery('') }}
+                icon={<Image className="w-7 h-7 text-muted-foreground" />}
+              />
             );
           })()
         ) : (
