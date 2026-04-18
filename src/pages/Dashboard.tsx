@@ -238,7 +238,7 @@ export default function Dashboard() {
         <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            Welcome, {firstName} 👋
+            Welcome{profile?.first_name || profile?.display_name ? `, ${firstName}` : ''} 👋
           </h1>
           <p className="text-lg text-muted-foreground mt-2 max-w-xl">
             Your AI photography studio is ready. Choose how you want to start.
