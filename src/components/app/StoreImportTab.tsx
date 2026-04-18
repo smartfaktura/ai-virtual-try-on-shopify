@@ -264,14 +264,28 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <Input
               id="store-url"
-              placeholder="https://myshop.com/products/..."
+              placeholder="Paste product link"
               value={url}
               onChange={(e) => { setUrl(e.target.value); setImportError(null); }}
-              className="pl-9 focus-visible:ring-offset-0"
+              className="pl-9 pr-16 h-12 text-base sm:h-10 sm:text-sm focus-visible:ring-offset-0"
               disabled={isImporting}
             />
+            {!url && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const t = await navigator.clipboard.readText();
+                    if (t) { setUrl(t.trim()); setImportError(null); }
+                  } catch { /* permission denied — silently no-op */ }
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 px-2.5 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                Paste
+              </button>
+            )}
           </div>
-          <Button onClick={handleImport} disabled={isImporting || !url.trim()}>
+          <Button onClick={handleImport} disabled={isImporting || !url.trim()} className="h-12 sm:h-10 px-5">
             {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Import'}
           </Button>
         </div>
@@ -284,13 +298,24 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
       </div>
 
       {/* Supported platforms */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {['Shopify', 'Etsy', 'Amazon', 'WooCommerce'].map((p) => (
-          <Badge key={p} variant="secondary" className="text-[10px] px-2 py-0.5 font-normal">
-            {p}
-          </Badge>
-        ))}
-        <span className="text-[11px] text-muted-foreground">+ any product page</span>
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Works with</p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {[
+            { name: 'Shopify',     dot: 'bg-emerald-500' },
+            { name: 'Etsy',        dot: 'bg-orange-500' },
+            { name: 'Amazon',      dot: 'bg-amber-500' },
+            { name: 'WooCommerce', dot: 'bg-violet-500' },
+          ].map(({ name, dot }) => (
+            <span key={name} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1 text-[11px] font-medium text-foreground/80">
+              <span className={cn('w-1.5 h-1.5 rounded-full', dot)} />
+              {name}
+            </span>
+          ))}
+          <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
+            + any product page
+          </span>
+        </div>
       </div>
 
       {/* Error card */}

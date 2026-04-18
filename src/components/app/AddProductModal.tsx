@@ -57,6 +57,7 @@ const METHOD_META: Record<AddProductTab, { label: string; sub: string; title: st
 };
 
 const METHOD_ORDER: AddProductTab[] = ['manual', 'store', 'csv', 'mobile', 'shopify'];
+const MOBILE_METHOD_ORDER: AddProductTab[] = ['manual', 'store'];
 
 export function AddProductModal({ open, onOpenChange, onProductAdded, editingProduct, initialTab, initialFiles, compact = false, onSwitchMethod }: AddProductModalProps) {
   const handleClose = () => onOpenChange(false);
@@ -133,12 +134,11 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
       {/* Mobile: keep compact pill row */}
       {isMobile ? (
         <div className="shrink-0">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2 px-1">Method</p>
           <div className="grid grid-cols-2 gap-2">
-            {METHOD_ORDER.map((id, idx) => {
+            {MOBILE_METHOD_ORDER.map((id, idx) => {
               const { label, sub, icon: Icon } = METHOD_META[id];
               const active = activeTab === id;
-              const isLastOdd = idx === METHOD_ORDER.length - 1 && METHOD_ORDER.length % 2 === 1;
+              const isLastOdd = idx === MOBILE_METHOD_ORDER.length - 1 && MOBILE_METHOD_ORDER.length % 2 === 1;
               return (
                 <button
                   key={id}
@@ -231,8 +231,8 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[92vh] flex flex-col">
-          <DrawerHeader className="px-5 pt-4 pb-3 text-left shrink-0">
+        <DrawerContent className="max-h-[88vh] flex flex-col">
+          <DrawerHeader className="px-5 pt-3 pb-2 text-left shrink-0">
             <DrawerTitle className="text-lg font-semibold tracking-tight flex items-center gap-2">
               {isCompact && onSwitchMethod && (
                 <button
