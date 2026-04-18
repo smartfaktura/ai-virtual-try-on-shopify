@@ -1,38 +1,46 @@
 
 
-The screenshot shows three sections in the Library/Freestyle modal sidebar with inconsistent visual treatment:
+Three surfaces with CTA buttons that bypass the unified `h-10 rounded-lg` (default) / `h-10 rounded-full` (`size="pill"`) standard. All currently use `size="sm"` or hardcoded `min-h-[44px]` / icon-only sizing chains.
 
-1. **"Help us improve"** — white card, `border-primary/20`, padded
-2. **"Share to Explore"** — gray muted background card, different padding
-3. **"Tag Us, Win a Free Year"** — light bordered card, different again
+### 1. `src/components/app/freestyle/PromptBuilderQuiz.tsx` (lines 419–441)
 
-Goal: unify into a consistent **stacked card system** with matching surface, padding, border, and rhythm.
+Footer Back / Next / Use This Prompt currently use `size="sm"` with `w-3.5 h-3.5` icons.
 
-### Investigation needed
-- Find the parent container that renders these three blocks (likely `LibraryDetailModal.tsx` for the latter two, plus the `ContextualFeedbackCard` for the first).
-- Check `FreestyleDetailModal` (or equivalent) to see the same trio.
+Changes:
+- **Back** → `<Button variant="ghost" size="pill" className="gap-1.5 text-muted-foreground hover:text-foreground">` + icon `w-4 h-4`
+- **Next** → `<Button size="pill" onClick={handleNext} disabled={!canAdvance} className="gap-1.5 disabled:opacity-40">` (drop the redundant `bg-foreground text-background` overrides — let primary variant handle it). Icon `w-4 h-4`.
+- **Use This Prompt** → `<Button size="pill" onClick={handleUse} className="gap-1.5 shadow-md">` + icon `w-4 h-4`
 
-### Fix
+### 2. `src/components/app/UpgradePlanModal.tsx` (lines 374–419) — Top-up & Upgrade modals
 
-**Unified card style** for all three blocks:
-- Surface: `bg-card border border-border/60 rounded-xl`
-- Padding: `p-4`
-- Header: icon (16px, `text-primary` for first, `text-muted-foreground` for others) + title (`text-sm font-semibold text-foreground`)
-- Subtitle / body: `text-xs text-muted-foreground` with `mt-1` then `mt-3` before action
-- CTA: full-width `<Button size="pill">` (primary filled for "Submit for Review", `variant="outline"` for "Copy Caption")
-- Vertical gap between cards: `space-y-3`
+All four footer buttons use `min-h-[44px]` (~44px) instead of standard `h-10`.
 
-**Files to update:**
+Changes (all 4 buttons):
+- **Maybe later / Compare plans** (outline) → `<Button variant="outline" size="pill" ...>` — drop `min-h-[44px]`
+- **Continue to checkout** (primary, both topup & upgrade branches) → `<Button size="pill" ... className="gap-2">` — drop `min-h-[44px]`
 
-1. **`src/components/app/ContextualFeedbackCard.tsx`** — change `bannerClass` from `bg-card border border-primary/20 rounded-xl px-4 py-3` → `bg-card border border-border/60 rounded-xl p-4`. Drop the `border-primary/20` accent so it matches siblings.
+### 3. `src/pages/Settings.tsx`
 
-2. **`src/components/app/LibraryDetailModal.tsx`** (Share to Explore + Tag Us blocks, ~lines 395–450) — replace the muted `bg-muted/40` / different border treatments with the unified `bg-card border border-border/60 rounded-xl p-4`. Standardize header (icon + title), body copy spacing, and CTA placement.
+- Line 131 **Save preferences** → drop `size="sm"`, add `size="pill"`
+- Line 405 **Manage Billing & Invoices** → change `size="sm"` to `size="pill"`, keep `variant="secondary"` and `w-full`
+- Lines 428–439 **Monthly / Annual toggle** — these are segmented toggle buttons, NOT CTAs. Standardize internal height to `h-10` (currently `py-2` ≈ 36px). Change to `h-10 px-4 text-sm font-medium` so the toggle group is 40px tall matching the system.
+- Line 480 **Contact Sales** → drop `size="lg"`, use `size="pill"` so it matches other CTAs
+- Line 596 **Save Settings** (footer) → add `size="pill"`
+- Line 621 **Regenerate All Previews** (admin) → add `size="pill"`, keep `variant="secondary"`
 
-3. **Freestyle equivalent** — locate via grep (`Share to Explore` / `Tag Us`) and apply same wrapper if duplicated, or confirm it reuses `LibraryDetailModal`.
+### 4. `src/components/app/CreditPackCard.tsx` (line 37–44) — buy credits button
+
+This appears in Settings credit-pack grid AND Pricing page.
+
+Changes:
+- Replace `className="w-full min-h-[44px]"` with `size="pill" className="w-full"` so it inherits `h-10 rounded-full text-sm`. Keep `variant={pack.popular ? 'default' : 'outline'}`.
+
+### Out of scope
+- Plan cards CTA (`PlanCard.tsx`) — leave as is; they're large card CTAs that warrant the 44px height for tap target on mobile. Only change if user calls them out.
+- Tiny inline text links (`text-xs ... underline`) like "Switch to annual & save 20%", "View past invoices", "Cancel subscription", "Reset to onboarding selection" — these are intentional text links, not buttons.
 
 ### Acceptance
-- All three blocks share identical surface (`bg-card`), border (`border-border/60`), radius (`rounded-xl`), and padding (`p-4`)
-- Consistent header rhythm: icon + bold title, muted subtitle below, CTA at bottom
-- Vertical spacing between blocks = `space-y-3`
-- "Submit for Review" remains a filled pill; "Copy Caption" is outline default
+- Prompt Builder footer Back / Next / Use This Prompt all render at `h-10 rounded-full` with `text-sm` and `w-4` icons.
+- Top up / Upgrade modal footers: secondary outline + primary buttons both `h-10 rounded-full`.
+- Settings: Save preferences, Manage Billing, Contact Sales, Save Settings, Regenerate All Previews, and credit-pack Buy Credits all `h-10 rounded-full`. Monthly/Annual segmented toggle is 40px tall.
 
