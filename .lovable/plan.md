@@ -1,66 +1,67 @@
 
 
-## Dashboard scroll lag investigation
+## /app/workflows — unified 750ms carousel tempo with staggered starts
 
-### Problem
-User reports `/app` dashboard lags during fast scroll (up or down) even after the page has fully loaded. Need to identify the cause and propose a fix.
+### Goal
+All carousel-mode workflow thumbnails on `/app/workflows` cycle their images every **750ms** (the "0.75 tempo"), but each card starts its first swap at a different offset so the page doesn't pulse in sync.
 
-### Hypothesis (from code review)
+### Findings
+- `WorkflowAnimatedThumbnail` carousel uses `scene.interval ?? 2500` ms (`src/components/app/WorkflowAnimatedThumbnail.tsx`, line 241) inside a single `setInterval` keyed off `currentRef`.
+- Scene data (`src/components/app/workflowAnimationData.tsx`) currently sets:
+  - `Product Visuals`: 750
+  - `Catalog Studio`: 500
+  - All other carousel workflows (`Virtual Try-On Set`, `Product Listing Set`, `Selfie / UGC Set`, `Picture Perspectives`, plus Flat Lay / Mirror Selfie if carousel): no `interval` → fall back to 2500.
+- `upscale` and `staging` modes have their own internal timing and should NOT be touched.
 
-Looking at `src/pages/Dashboard.tsx`, the most likely culprit is the **Video Showcase section**:
+### Changes
 
+**1. `src/components/app/workflowAnimationData.tsx` — set `interval: 750` on every carousel scene**
+Apply `interval: 750` to:
+- Virtual Try-On Set
+- Product Listing Set
+- Selfie / UGC Set
+- Flat Lay Set (if carousel)
+- Mirror Selfie Set (if carousel)
+- Picture Perspectives
+- Catalog Studio (change 500 → 750)
+- Product Visuals (already 750, leave)
+
+Skip `Image Upscaling` (upscale mode) and `Interior / Exterior Staging` (staging mode).
+
+**2. `src/components/app/WorkflowAnimatedThumbnail.tsx` — add per-card random start offset**
+In `CarouselThumbnail`, before the main `setInterval`, schedule a one-time `setTimeout` with a random offset in `[0, INTERVAL)` ms that performs one advance, then starts the regular interval. This guarantees:
+- Every card cycles at the same 750ms rhythm (visually unified tempo).
+- Cards never tick on the same frame across the page (offsets distributed across the 750ms window).
+
+Implementation sketch:
 ```tsx
-{Array.from({ length: 10 }, (_, i) => (
-  <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted">
-    <LazyVideo src={`/videos/showcase/showcase-${i + 1}.mp4`} />
-  </div>
-))}
+useEffect(() => {
+  if (!isActive || backgrounds.length <= 1) return;
+  const offset = Math.random() * INTERVAL; // 0–750ms jitter
+  let interval: ReturnType<typeof setInterval>;
+  const advance = () => {
+    const next = (currentRef.current + 1) % backgrounds.length;
+    currentRef.current = next;
+    setCurrent(next);
+    setProgressKey((k) => k + 1);
+  };
+  const initial = setTimeout(() => {
+    advance();
+    interval = setInterval(advance, INTERVAL);
+  }, offset);
+  return () => { clearTimeout(initial); if (interval) clearInterval(interval); };
+}, [isActive, backgrounds.length, INTERVAL]);
 ```
 
-Combined with `LazyVideo` behavior:
-- 10 autoplay/loop `<video>` elements stacked in a grid
-- `IntersectionObserver` with `rootMargin: 200px` mounts videos eagerly
-- Once mounted, videos stay mounted forever — even when scrolled far away
-- All 10 videos play simultaneously after a single scroll-through, decoding frames continuously
-
-Additional suspects:
-1. `RecentCreationsGallery` — likely contains more media
-2. `DashboardDiscoverSection` — image/video grid
-3. No `content-visibility: auto` on heavy sections, so the browser repaints/relayouts everything during scroll
-
-### Plan
-
-**1. Make `LazyVideo` truly lazy (mount AND unmount)**
-Change `LazyVideo` so that when a video scrolls **out** of view (with a generous margin), it pauses and unmounts. Re-mounts when it scrolls back in. This caps the number of simultaneously-decoding videos to ~3-5 at any time instead of all 10+.
-
-```tsx
-// Keep observer alive (don't disconnect after first intersection)
-// Track isIntersecting state, unmount when out of view + buffer
-```
-
-Use a larger `rootMargin` for unmount (e.g., 600px) than mount (200px) to avoid thrash near the edge.
-
-**2. Add `content-visibility: auto` to heavy sections**
-Wrap the Video Showcase, RecentCreationsGallery, and DashboardDiscoverSection in containers with:
-```tsx
-style={{ contentVisibility: 'auto', containIntrinsicSize: '600px' }}
-```
-This lets the browser skip painting/layout for off-screen sections during scroll.
-
-**3. Reduce `preload` aggressiveness**
-Already `preload="metadata"` — good. Confirm no change needed.
-
-**4. (Optional) Throttle simultaneous playback**
-If unmount/remount alone isn't enough, add a small `IntersectionObserver` ratio threshold so videos only `play()` when ≥50% visible, and `pause()` otherwise — keeps DOM but stops frame decoding.
-
-### Files to change
-- `src/components/ui/LazyVideo.tsx` — proper mount/unmount + pause-on-leave
-- `src/pages/Dashboard.tsx` — add `content-visibility: auto` to the 3 heavy sections (Video Showcase, RecentCreationsGallery wrapper, DashboardDiscoverSection wrapper)
+The progress bar (`wf-progress-fill ${INTERVAL}ms`) automatically matches the new tempo since it reads `INTERVAL`.
 
 ### Acceptance
-- Fast scroll up/down on `/app` feels smooth on desktop and tablet
-- At most ~4-5 videos actively decoding at once
-- Off-screen sections don't trigger layout/paint during scroll
-- No visible flicker when videos re-enter viewport
-- Mobile experience unchanged or improved
+- Every carousel thumbnail on `/app/workflows` swaps images every 750ms.
+- Cards visibly tick at different moments — no synchronized "page flash".
+- Upscale and Staging cards behave exactly as before.
+- Mobile, tablet, desktop unchanged structurally.
+
+### Files touched
+- `src/components/app/workflowAnimationData.tsx` (add/adjust `interval: 750` on ~6 scenes)
+- `src/components/app/WorkflowAnimatedThumbnail.tsx` (random start offset in carousel `useEffect`, ~10 lines)
 
