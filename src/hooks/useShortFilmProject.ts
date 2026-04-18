@@ -486,11 +486,17 @@ export function useShortFilmProject() {
 
     const sourceImageUrl = getSourceImageForShot(shot, references);
 
+    const fidelity = buildProductFidelity({
+      hasPackagingRef: references.some(r => r.role === 'packaging'),
+    });
     const { prompt, negative_prompt } = buildShotPrompt(shot, {
       filmType,
       tone: settings.tone || '',
       settings,
       references,
+      contentIntent: contentIntent ?? undefined,
+      fidelity,
+      clarityFirst: clarityFirstMode,
     });
 
     try {
