@@ -232,7 +232,20 @@ export default function Products() {
   return (
     <PageHeader
       title="Products"
-      subtitle="Upload once, reuse across every Visual Type"
+      subtitle={
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-foreground/80 font-medium">Upload once</span>
+          <span className="text-muted-foreground">— reuse across every Visual Type</span>
+          {products.length > 0 && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+              <span className="text-xs text-muted-foreground/80">
+                {products.length} {products.length === 1 ? 'product' : 'products'}
+              </span>
+            </>
+          )}
+        </span>
+      }
     >
       <div className="space-y-4">
         {/* Top bar — hidden when user has zero products */}
