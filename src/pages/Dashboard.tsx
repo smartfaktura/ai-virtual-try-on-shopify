@@ -109,9 +109,6 @@ export default function Dashboard() {
 
         {/* Start here — 3-card grid */}
         <div className="space-y-4">
-          {!isReturning && (
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Start here</h2>
-          )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Card 1 — Product Visuals */}
             <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
