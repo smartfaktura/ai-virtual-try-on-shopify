@@ -173,7 +173,7 @@ export function DropCard(props: Props) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 rounded-lg text-xs gap-1.5"
+                    className="h-8 text-xs gap-1.5"
                     onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
                   >
                     {schedule.active ? (

@@ -250,7 +250,7 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
                 variant="ghost"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
+                className="w-full h-10 text-xs font-medium text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                 {deleting ? 'Deleting…' : 'Delete'}

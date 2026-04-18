@@ -571,7 +571,7 @@ function CalendarView({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl hover:bg-muted/60"
+            className="h-8 w-8 sm:h-9 sm:w-9 hover:bg-muted/60"
             onClick={() => setMonthOffset(o => o - 1)}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -608,7 +608,7 @@ function CalendarView({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl hover:bg-muted/60"
+            className="h-8 w-8 sm:h-9 sm:w-9 hover:bg-muted/60"
             onClick={() => setMonthOffset(o => o + 1)}
           >
             <ChevronRight className="w-4 h-4" />
