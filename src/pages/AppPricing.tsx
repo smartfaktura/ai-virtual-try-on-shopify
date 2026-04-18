@@ -439,7 +439,7 @@ export default function AppPricing() {
                             variant={cta.variant}
                             disabled={cta.disabled}
                             onClick={() => handlePlanSelect(p)}
-                            className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                            className="w-full text-[11px] font-medium h-8 px-2"
                           >
                             {cta.label}
                           </Button>
@@ -486,7 +486,7 @@ export default function AppPricing() {
                           variant={cta.variant}
                           disabled={cta.disabled}
                           onClick={() => handlePlanSelect(p)}
-                          className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                          className="w-full text-[11px] font-medium h-8 px-2"
                         >
                           {cta.label}
                         </Button>
@@ -548,7 +548,7 @@ export default function AppPricing() {
                   variant={cta.variant}
                   disabled={cta.disabled}
                   onClick={() => handlePlanSelect(p)}
-                  className="w-full mt-4 rounded-lg"
+                  className="w-full mt-4"
                 >
                   {cta.label}
                 </Button>
@@ -706,18 +706,18 @@ export default function AppPricing() {
           {isFreeUser ? (
             <Button
               onClick={() => document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-              className="rounded-xl min-h-[44px] gap-2"
+              className="min-h-[44px] gap-2"
             >
               Choose a plan
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Button>
           ) : (
-            <Button onClick={() => setTopupOpen(true)} className="rounded-xl min-h-[44px] gap-2">
+            <Button onClick={() => setTopupOpen(true)} className="min-h-[44px] gap-2">
               Top up credits
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Button>
           )}
-          <Button variant="outline" onClick={() => navigate('/contact')} className="rounded-xl min-h-[44px]">
+          <Button variant="outline" onClick={() => navigate('/contact')} className="min-h-[44px]">
             Talk to sales
           </Button>
         </div>

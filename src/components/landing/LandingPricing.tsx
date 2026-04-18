@@ -351,7 +351,7 @@ export function LandingPricing() {
                               size="sm"
                               variant={isRec ? 'default' : 'outline'}
                               onClick={() => navigate(user ? '/app/settings' : '/auth')}
-                              className="w-full rounded-lg text-[11px] font-medium h-8 px-2"
+                              className="w-full text-[11px] font-medium h-8 px-2"
                             >
                               {isFree ? 'Start Free' : `Get ${p.name}`}
                             </Button>
