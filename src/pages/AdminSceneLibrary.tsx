@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Copy, Archive, Sparkles, Loader2, Grid, List } from 'lucide-react';
 import { TREND_CATEGORIES } from '@/components/app/trend-watch/constants';
 import { format } from 'date-fns';
+import { ScenePreviewThumb } from '@/components/admin/ScenePreviewThumb';
 
 export default function AdminSceneLibrary() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
@@ -108,7 +109,7 @@ export default function AdminSceneLibrary() {
               onClick={() => { setSelectedRecipe(recipe); setEditDrawerOpen(true); }}
             >
               {recipe.preview_image_url && (
-                <img src={recipe.preview_image_url} alt="" className="w-full h-32 object-cover rounded-lg" />
+                <ScenePreviewThumb url={recipe.preview_image_url} className="w-full h-32 rounded-lg" />
               )}
               <div>
                 <div className="flex items-center gap-2">
@@ -148,7 +149,7 @@ export default function AdminSceneLibrary() {
               onClick={() => { setSelectedRecipe(recipe); setEditDrawerOpen(true); }}
             >
               {recipe.preview_image_url && (
-                <img src={recipe.preview_image_url} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                <ScenePreviewThumb url={recipe.preview_image_url} className="w-12 h-12 rounded-lg flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <span className="font-medium text-sm">{recipe.name}</span>
@@ -209,7 +210,7 @@ function SceneEditDrawer({ recipe, open, onOpenChange, onUpdate, onGeneratePromp
 
         <div className="space-y-4 mt-4">
           {recipe.preview_image_url && (
-            <img src={recipe.preview_image_url} alt="" className="w-full h-40 object-cover rounded-lg" />
+            <ScenePreviewThumb url={recipe.preview_image_url} className="w-full h-40 rounded-lg" />
           )}
 
           {TEXT_FIELDS.map(field => (
