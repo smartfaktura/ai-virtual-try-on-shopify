@@ -863,14 +863,16 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start">
             {/* Main image — labeled tile */}
             <div className="space-y-2 shrink-0">
-              <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Main photo
-              </span>
-              <div className="relative group w-[160px] sm:w-[200px] aspect-[4/5] rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center">
+              <div className="flex items-center gap-2 pt-1 pb-1 border-b border-border/50">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Main photo
+                </span>
+              </div>
+              <div className="relative group w-[180px] h-[180px] aspect-square rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center mt-2">
                 <img
                   src={singleImage.previewUrl}
                   alt={title || 'Product preview'}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
                 <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   {!isEditing && (
@@ -928,30 +930,30 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
             {/* Reference Angles — beside main image on desktop, stacked on mobile */}
             <div className="flex-1 min-w-0 w-full">
-              <div className="space-y-0.5">
-                <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="flex items-center justify-between gap-2 pt-1 pb-1 border-b border-border/50">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Extra angles
                 </span>
-                <span className="block text-[11px] text-muted-foreground/70">
+                <span className="text-[11px] text-muted-foreground/70">
                   Improves AI accuracy
                 </span>
               </div>
               <div className="flex gap-2.5 flex-wrap pt-3">
                 {([
-                  { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
-                  { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
-                  { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
-                  { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
-                  { label: 'Texture', shortLabel: 'Texture', state: textureImage, setter: setTextureImage, Icon: Droplets },
-                ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
-                  <div key={shortLabel} className="relative">
+                  { label: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
+                  { label: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
+                  { label: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
+                  { label: 'Packaging', state: packagingImage, setter: setPackagingImage, Icon: Package },
+                  { label: 'Texture', state: textureImage, setter: setTextureImage, Icon: Droplets },
+                ] as const).map(({ label, state, setter, Icon }) => (
+                  <div key={label} className="relative">
                     {state ? (
                       <HoverCard openDelay={200} closeDelay={100}>
                         <HoverCardTrigger asChild>
                           <div className="relative group/ref w-[88px] h-[88px] rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
                             <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
-                              <span className="text-[11px] text-white font-medium">{label}</span>
+                              <span className="text-[10px] text-white font-medium">{label}</span>
                             </div>
                             <button
                               onClick={(e) => { e.preventDefault(); setter(null); }}
@@ -967,10 +969,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                         </HoverCardContent>
                       </HoverCard>
                     ) : (
-                      <label className="flex flex-col items-center justify-center w-[88px] h-[88px] rounded-xl border border-dashed border-border/60 bg-muted/20 hover:border-primary/30 hover:bg-muted/30 cursor-pointer transition-all gap-1">
-                        <Plus className="w-4 h-4 text-muted-foreground/40" />
-                        <Icon className="w-4 h-4 text-muted-foreground/50" />
-                        <span className="text-[11px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
+                      <label className="flex flex-col items-center justify-center w-[88px] h-[88px] rounded-xl border border-dashed border-border/60 bg-muted/20 hover:border-primary/30 hover:bg-muted/30 cursor-pointer transition-all gap-1.5 px-1">
+                        <Icon className="w-5 h-5 text-muted-foreground/50" />
+                        <span className="text-[10px] text-muted-foreground/60 font-medium leading-tight text-center truncate max-w-full">{label}</span>
                         <input
                           type="file"
                           accept="image/*"
