@@ -184,7 +184,7 @@ export default function VideoHub() {
     <div className="space-y-8 max-w-5xl mx-auto">
       <PageHeader
         title="Create Videos"
-        subtitle="Turn product shots, campaign visuals, and reference frames into polished short videos."
+        subtitle="Turn product shots, campaign visuals, and reference frames into polished short videos"
       >
         <div />
       </PageHeader>
@@ -194,14 +194,14 @@ export default function VideoHub() {
         <VideoWorkflowCard
           icon={Film}
           title="Animate Image"
-          description="Turn one still image into a polished short video."
+          description="Turn one still image into a polished short video"
           bestFor={['Product hero', 'Campaign motion', 'Social ads']}
           to="/app/video/animate"
         />
         <VideoWorkflowCard
           icon={ArrowRightLeft}
           title="Start & End Video"
-          description="Create a smooth video between a start image and an end image."
+          description="Create a smooth video between a start image and an end image"
           bestFor={['Product reveals', 'Before / after', 'Smooth transitions']}
           to="/app/video/start-end"
           disabled
@@ -210,7 +210,7 @@ export default function VideoHub() {
         <VideoWorkflowCard
           icon={Layers}
           title="Create Ad Sequence"
-          description="Build a cinematic mini ad from several visuals."
+          description="Build a cinematic mini ad from several visuals"
           bestFor={['Product launches', 'Multi-frame ads', 'Brand teasers']}
           to="/app/video/ad-sequence"
           disabled
@@ -219,7 +219,7 @@ export default function VideoHub() {
         <VideoWorkflowCard
           icon={Users}
           title="Consistent Model Video"
-          description="Create videos with stronger subject consistency."
+          description="Create videos with stronger subject consistency"
           bestFor={['Spokesmodels', 'Fashion clips', 'Creator content']}
           to="/app/video/consistent-model"
           disabled
@@ -228,7 +228,7 @@ export default function VideoHub() {
         <VideoWorkflowCard
           icon={Clapperboard}
           title="Short Film"
-          description="Plan and generate a premium multi-shot brand film."
+          description="Plan and generate a premium multi-shot brand film"
           bestFor={['Brand storytelling', 'Multi-shot', 'Campaign films']}
           to="/app/video/short-film"
         />

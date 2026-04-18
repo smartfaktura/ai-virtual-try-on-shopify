@@ -532,7 +532,7 @@ export default function AnimateVideo() {
     <div className="max-w-4xl mx-auto space-y-6">
       <PageHeader
         title="Animate Image"
-        subtitle="Turn a still product image into a polished commercial video."
+        subtitle="Turn a still product image into a polished commercial video"
         backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
       >
         <div />

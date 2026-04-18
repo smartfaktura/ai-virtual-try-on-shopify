@@ -232,7 +232,7 @@ export default function Products() {
   return (
     <PageHeader
       title="Products"
-      subtitle="Upload once. Reuse across every Visual Type."
+      subtitle="Upload once, reuse across every Visual Type"
     >
       <div className="space-y-4">
         {/* Top bar — hidden when user has zero products */}
@@ -345,7 +345,7 @@ export default function Products() {
               return (
                 <EmptyStateCard
                   heading="No products match your filters"
-                  description="Try a different search term or clear filters."
+                  description="Try a different search term or clear filters"
                 />
               );
             }
