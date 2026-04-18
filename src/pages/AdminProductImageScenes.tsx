@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
+import { ScenePreviewThumb } from '@/components/admin/ScenePreviewThumb';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
 const CATEGORIES = [
