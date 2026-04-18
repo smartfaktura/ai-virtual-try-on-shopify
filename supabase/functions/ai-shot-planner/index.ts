@@ -131,7 +131,7 @@ serve(async (req) => {
       : `Voiceover (if any) should clarify value and product presence WITHOUT sounding like a hard sell. For brand_mood_film and product_detail_film, prefer minimal, descriptive, premium phrasing — or omit. For creator/social content, conversational and observational is fine.`;
 
     const scriptLineInstruction = wantVoiceover
-      ? `- script_line (string: ${voiceoverGuidance} Do NOT describe visual aesthetics. Word budget: ~2 words per second of shot duration.)`
+      ? `- script_line (string: ${voiceoverGuidance} Word budget: ~2 words per second of shot duration. MANDATORY: every shot with duration_sec >= 2 MUST have a non-empty script_line. NEVER return an empty string when voiceover is enabled. Do NOT describe visual aesthetics.)`
       : `- script_line (string: MUST be empty string "" — voiceover is disabled for this sound mode)`;
 
     const sfxInstruction = wantSfx
