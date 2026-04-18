@@ -238,31 +238,19 @@ export function AppShell({ children }: AppShellProps) {
         {/* Credits */}
         <div className={cn('border-t border-white/[0.06] pt-4', isCollapsed ? 'px-2 pb-2' : 'px-4 pb-3')}>
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-2">
-              <button
-                onClick={openBuyModal}
-                className="flex flex-col items-center gap-1"
-                title={`${balance} credits`}
-              >
-                <div className={cn(
-                  'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
-                  isEmpty ? 'bg-destructive/30' : 'bg-primary/20 hover:bg-primary/30'
-                )}>
-                  <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-red-400' : 'text-sidebar-foreground/70')} />
-                </div>
-                <span className={cn(
-                  'text-[10px] font-bold',
-                  isEmpty ? 'text-red-400' : 'text-sidebar-foreground/50'
-                )}>{balance}</span>
-              </button>
-              <button
-                onClick={() => navigate('/app/settings')}
-                title="Upgrade plan"
-                className="text-sidebar-foreground/30 hover:text-sidebar-foreground/60 transition-colors"
-              >
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <button
+              onClick={openBuyModal}
+              title={`${balance} credits`}
+              className={cn(
+                'flex flex-col items-center gap-1 w-full px-1.5 py-1.5 rounded-2xl border transition-colors',
+                isEmpty
+                  ? 'bg-white text-[hsl(var(--sidebar-background))] border-transparent hover:brightness-105'
+                  : 'bg-white/[0.06] border-white/10 text-sidebar-foreground hover:bg-white/[0.10]'
+              )}
+            >
+              <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-[hsl(var(--sidebar-background))]' : 'text-sidebar-foreground/60')} />
+              <span className="text-xs font-semibold tracking-tight">{balance}</span>
+            </button>
           ) : (
             <CreditIndicator />
           )}
