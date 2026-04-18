@@ -18,6 +18,13 @@ import type {
 } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
 import { toSignedUrl } from '@/lib/signedUrl';
+import {
+  DEFAULT_CONTENT_INTENT, DEFAULT_PLATFORM, DEFAULT_SOUND_MODE,
+  DEFAULT_PACE_MODE, DEFAULT_PRODUCT_PRIORITY, DEFAULT_ENDING_STYLE,
+  type ContentIntent, type Platform, type SoundMode, type PaceMode,
+  type ProductPriority, type EndingStyle,
+} from '@/types/commerceVideo';
+import { migrateLegacyDraft } from '@/lib/commerceVideo/migrate';
 
 interface ShotStatus {
   shot_index: number;
