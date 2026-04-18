@@ -292,7 +292,7 @@ export default function Dashboard() {
   // --- RESOLVING STATE — neutral placeholder while we determine mode ---
   if (dashboardMode === 'resolving') {
     return (
-      <div className="space-y-12 sm:space-y-16">
+      <div className="space-y-8 sm:space-y-10">
         <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         <div>
           <div className="h-10 w-64 bg-muted/40 rounded-lg animate-pulse" />
@@ -305,7 +305,7 @@ export default function Dashboard() {
   // --- FIRST-RUN DASHBOARD ---
   if (dashboardMode === 'new') {
     return (
-      <div className="space-y-12 sm:space-y-16">
+      <div className="space-y-8 sm:space-y-10">
         <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -516,7 +516,7 @@ export default function Dashboard() {
 
   // --- RETURNING USER DASHBOARD ---
   return (
-    <div className="space-y-12 sm:space-y-16">
+    <div className="space-y-8 sm:space-y-10">
       <SEOHead title="Dashboard — VOVV.AI" description="Your AI photography studio dashboard." noindex />
       {/* Welcome greeting + CTA */}
       <div>
