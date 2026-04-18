@@ -25,6 +25,7 @@ import {
   type ProductPriority, type EndingStyle,
 } from '@/types/commerceVideo';
 import { migrateLegacyDraft } from '@/lib/commerceVideo/migrate';
+import { buildProductFidelity } from '@/lib/commerceVideo/productFidelity';
 
 interface ShotStatus {
   shot_index: number;
