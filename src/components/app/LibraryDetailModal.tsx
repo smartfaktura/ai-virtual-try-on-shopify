@@ -299,19 +299,20 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
               <div className="space-y-2.5 pt-2">
                 <Button
                   onClick={handleDownload}
-                  size="pill"
-                  className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+                  size="pill-lg"
+                  className="w-full text-base font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
                   <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
                 </Button>
 
                 <Button
                   variant="outline"
+                  size="pill-lg"
                   onClick={() => {
                     navigate(`/app/freestyle?editImage=${encodeURIComponent(activeItem.imageUrl)}&imageRole=edit`);
                     onClose();
                   }}
-                  className="w-full font-medium"
+                  className="w-full text-base font-medium"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit Image
@@ -320,6 +321,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 {activeItem.source === 'freestyle' && onCopySettings && (
                   <Button
                     variant="outline"
+                    size="pill-lg"
                     onClick={() => {
                       onCopySettings({
                         prompt: activeItem.prompt || '',
@@ -330,7 +332,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                       });
                       onClose();
                     }}
-                    className="w-full font-medium"
+                    className="w-full text-base font-medium"
                   >
                     <ClipboardCopy className="w-4 h-4 mr-2" />
                     Copy to Editor
@@ -340,8 +342,9 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 {isUpscaling ? (
                   <Button
                     variant="outline"
+                    size="pill-lg"
                     disabled
-                    className="w-full font-medium"
+                    className="w-full text-base font-medium"
                   >
                     <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
                     Enhancing in progress…
@@ -349,8 +352,9 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 ) : (
                   <Button
                     variant="outline"
+                    size="pill-lg"
                     onClick={() => setUpscaleModalOpen(true)}
-                    className="w-full font-medium"
+                    className="w-full text-base font-medium"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
                     {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
@@ -359,8 +363,9 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
 
                 <Button
                   variant="outline"
+                  size="pill-lg"
                   onClick={() => navigate(`/app/perspectives?source=${encodeURIComponent(activeItem.imageUrl)}`)}
-                  className="w-full font-medium"
+                  className="w-full text-base font-medium"
                 >
                   <Layers className="w-4 h-4 mr-2" />
                   Generate Perspectives
@@ -368,11 +373,12 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
 
                 <Button
                   variant="outline"
+                  size="pill-lg"
                   onClick={() => {
                     navigate(`/app/video/animate?imageUrl=${encodeURIComponent(activeItem.imageUrl)}`);
                     onClose();
                   }}
-                  className="w-full font-medium"
+                  className="w-full text-base font-medium"
                 >
                   <Video className="w-4 h-4 mr-2" />
                   Generate Video
@@ -400,28 +406,32 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 resultId={activeItem?.id}
                 imageUrl={activeItem?.imageUrl}
                 triggerType="result_ready"
+                className="[&>div]:bg-muted/30 [&>div]:border-border/30"
               />
 
               {/* Share to Discover */}
-              <div className="bg-card border border-border/60 rounded-xl p-4">
+              <div className="bg-muted/30 border border-border/30 rounded-xl p-4">
+                <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/60 uppercase mb-2">Bonus</p>
                 <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-primary shrink-0" />
+                  <Trophy className="w-4 h-4 text-muted-foreground shrink-0" />
                   <h3 className="text-sm font-semibold text-foreground">Share to Explore</h3>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Submit your best work · Win up to 10,000 credits
                 </p>
                 <Button
+                  variant="outline"
+                  size="pill-sm"
                   onClick={() => setSubmitDiscoverOpen(true)}
-                  size="pill"
-                  className="mt-3 w-full font-medium"
+                  className="mt-3 w-full font-medium text-foreground/80"
                 >
-                  <Send className="w-4 h-4 mr-2" /> Submit for Review
+                  <Send className="w-3.5 h-3.5 mr-1.5" /> Submit for Review
                 </Button>
               </div>
 
               {/* Social tag promo */}
-              <div className="bg-card border border-border/60 rounded-xl p-4">
+              <div className="bg-muted/30 border border-border/30 rounded-xl p-4">
+                <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/60 uppercase mb-2">Community</p>
                 <div className="flex items-center gap-2">
                   <AtSign className="w-4 h-4 text-muted-foreground shrink-0" />
                   <h3 className="text-sm font-semibold text-foreground">Tag Us, Win a Free Year</h3>
@@ -436,8 +446,8 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </p>
                 <Button
                   variant="outline"
-                  size="pill"
-                  className="mt-3 w-full font-medium gap-1.5"
+                  size="pill-sm"
+                  className="mt-3 w-full font-medium gap-1.5 text-foreground/80"
                   onClick={() => {
                     navigator.clipboard.writeText('Created with @vovv.ai #vovvai');
                     setCaptionCopied(true);
@@ -445,7 +455,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                     toast.success('Caption copied!');
                   }}
                 >
-                  {captionCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {captionCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {captionCopied ? 'Copied!' : 'Copy Caption'}
                 </Button>
               </div>
