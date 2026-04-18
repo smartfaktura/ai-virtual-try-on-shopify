@@ -134,16 +134,9 @@ export default function Dashboard() {
               <Button
                 className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25"
                 onClick={() => navigate('/app/generate/product-images')}
-                disabled={!greetingReady}
               >
-                {greetingReady ? (
-                  <>
-                    {isReturning ? 'Create now' : 'Start creating'}
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  <span className="h-4 w-24 rounded bg-primary-foreground/20 animate-pulse" />
-                )}
+                {hasGenerated === false ? 'Start creating' : 'Create now'}
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
 
