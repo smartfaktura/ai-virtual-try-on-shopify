@@ -21,6 +21,8 @@ interface DiscoverCardProps {
   hideLabels?: boolean;
   hidePrompt?: boolean;
   aspectRatioOverride?: string;
+  eager?: boolean;
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 function getGenerationLabel(item: DiscoverItem): string {
@@ -31,7 +33,7 @@ function getGenerationLabel(item: DiscoverItem): string {
   return 'Freestyle';
 }
 
-export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels, hidePrompt, aspectRatioOverride }: DiscoverCardProps) {
+export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels, hidePrompt, aspectRatioOverride, eager, fetchPriority }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
   const isPreset = item.type === 'preset';
@@ -54,7 +56,8 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
             src={getOptimizedUrl(imageUrl, { quality: 60 })}
             alt={isScene ? item.data.name : item.data.title}
             className="w-full h-full object-cover block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
-            loading="lazy"
+            loading={eager ? 'eager' : 'lazy'}
+            fetchPriority={fetchPriority}
           />
         </div>
       ) : (
@@ -62,7 +65,8 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
           src={getOptimizedUrl(imageUrl, { quality: 60 })}
           alt={isScene ? item.data.name : item.data.title}
           className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
-          loading="lazy"
+          loading={eager ? 'eager' : 'lazy'}
+          fetchPriority={fetchPriority}
         />
       )}
 

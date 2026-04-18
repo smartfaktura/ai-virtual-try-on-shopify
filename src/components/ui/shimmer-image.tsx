@@ -34,13 +34,9 @@ export const ShimmerImage = forwardRef<HTMLImageElement, ShimmerImageProps>(
     },
     forwardedRef,
   ) {
-    // Eagerly check browser cache to avoid shimmer flash on remount
-    const [loaded, setLoaded] = useState(() => {
-      if (!src || typeof window === 'undefined') return false;
-      const img = new Image();
-      img.src = src;
-      return img.complete && img.naturalWidth > 0;
-    });
+    const isEager = rest.loading === 'eager';
+    // For eager-loaded images, skip the shimmer entirely (they're part of initial paint).
+    const [loaded, setLoaded] = useState(isEager);
     const [errored, setErrored] = useState(false);
 
     // Ref callback: if the image is already cached, skip shimmer immediately

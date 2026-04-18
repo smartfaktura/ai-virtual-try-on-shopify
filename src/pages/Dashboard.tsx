@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
+import { LazyVideo } from '@/components/ui/LazyVideo';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -220,14 +221,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {Array.from({ length: 10 }, (_, i) => (
               <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted">
-                <video
-                  src={`/videos/showcase/showcase-${i + 1}.mp4`}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
+                <LazyVideo src={`/videos/showcase/showcase-${i + 1}.mp4`} />
               </div>
             ))}
           </div>
