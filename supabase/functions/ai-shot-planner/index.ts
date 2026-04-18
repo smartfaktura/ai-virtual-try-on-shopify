@@ -189,7 +189,7 @@ Each shot object MUST have exactly these fields:
 ${scriptLineInstruction}
 ${sfxInstruction}
 
-DURATION: Total duration should fit the intent — social/teaser ~6–10s, showcase/PDP ~8–12s, brand mood/editorial ~10–15s. Do NOT force exactly 15s unless the intent calls for it. Use cinematic, role-weighted pacing (NOT equal splits).
+DURATION: Total duration MUST equal exactly 15 seconds across all shots combined. Use cinematic, role-weighted pacing (NOT equal splits) — but the sum of all duration_sec values MUST equal 15.
 Vary camera motions and scene types for cinematic interest.
 
 MUSIC DIRECTION: The "music_direction" field should describe SPECIFIC instrumentation (e.g. "minimal piano with deep sub-bass"), a BPM range, and an energy arc (e.g. "builds from sparse to layered strings at resolve"). Be precise — this drives AI music generation.`;
