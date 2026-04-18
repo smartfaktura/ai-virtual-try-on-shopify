@@ -1,78 +1,49 @@
 
 
-## /app/products — desktop toolbar refactor
+## /app/products — unify toolbar on desktop/tablet + bolder Add Products
 
-Scope: `src/pages/Products.tsx` only. Desktop layout (`sm:` and up). Mobile stays as-is.
+Scope: `src/pages/Products.tsx` only. Mobile (`<sm`) layout untouched.
 
-### Current problem
-- Search left, filters below, view toggle + Add Products grouped right → feels disconnected
-- Add Products visually clumped with grid/list toggle (utility) instead of being the page-level primary action
-- Two-row toolbar with awkward empty space
+### Changes
 
-### New desktop structure (3 rows)
+**1. One-line toolbar on desktop & tablet (`sm:` and up)**
+
+Merge the current 2 rows (search row + filter row) into a single row:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Products                                  [+ Add Products] │   ← Header row (PageHeader actions slot)
-│ Upload once and reuse across every Visual Type           │
-├─────────────────────────────────────────────────────────┤
-│ [🔍 Search products........................]   [▦ ☰]  │   ← Toolbar row
-├─────────────────────────────────────────────────────────┤
-│ [All Types ▾]  [Newest first ▾]                         │   ← Filter row
-└─────────────────────────────────────────────────────────┘
-   product grid (unchanged)
+[🔍 Search......]   [All Types ▾]  [Newest first ▾]   ······   [▦ ☰]
 ```
 
-### Implementation
+- Search: `flex-1 max-w-md` on the left
+- Filters: `All Types` + `Newest first` selects right next to search
+- View toggle: pushed to the far right with `ml-auto`
+- All controls share `h-10` for clean alignment
+- Remove the now-redundant separate filter row on `sm+`; mobile keeps its own search + tools row exactly as-is
 
-**1. Move desktop "Add Products" into PageHeader `actions` slot** (`src/pages/Products.tsx`)
-- `PageHeader` already supports an `actions` prop rendered top-right next to the title
-- Pass the Add Products button via `actions={<Button …>Add Products</Button>}` for `sm:` and up
-- Hide it inside the toolbar block on desktop (was previously grouped with view toggle)
-- Mobile full-width CTA below search stays unchanged (`sm:hidden`)
+**2. Tablet placeholder shortened**
 
-**2. Restructure toolbar block (lines ~237–324)**
+Use shorter placeholder on `sm` (tablet) where horizontal space is tighter:
+- `placeholder="Search"` from `sm` to `md`
+- `placeholder="Search products..."` on `md+` and on mobile
 
-Desktop layout becomes:
-```tsx
-{/* Toolbar row: search (left) + view toggle (right) */}
-<div className="hidden sm:flex items-center justify-between gap-3">
-  <div className="relative w-full max-w-md">
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-    <Input placeholder="Search products..." className="pl-9 h-10" />
-  </div>
-  <div className="flex items-center border rounded-md shrink-0">
-    {/* grid / list toggle — h-9 w-9, ghost styling, no border accent */}
-  </div>
-</div>
+Implementation: two inputs swapped via responsive `hidden`/`block` classes, OR (cleaner) single input with placeholder reading from a value derived from `useIsMobile`/window — go with the two-input swap for simplicity (`sm:hidden`, `hidden sm:block md:hidden`, `hidden md:block`).
 
-{/* Filter row: selects only, left-aligned */}
-<div className="hidden sm:flex items-center gap-2">
-  <Select>…All Types…</Select>
-  <Select>…Newest first…</Select>
-  {/* active filter badge + clear (unchanged) */}
-</div>
-```
+Actually simpler: keep one input and set placeholder dynamically using a small `useEffect`+resize listener — but to avoid re-renders just use Tailwind by rendering different inputs conditionally. We'll use 3 conditional inputs (mobile, tablet sm-only, desktop md+) — only one mounts visually.
 
-Mobile keeps current layout (search → full-width Add Products → unified tools row with toggle+filters).
+**3. Bigger, more connected Add Products in header**
 
-**3. Reduce visual weight of view toggle**
-- Use lighter border (`border-border`) and ghost button styling so it reads as utility, not action
-- Keep `h-9 w-9` icon-only buttons
+The button currently sits far away (top-right, small). Make it feel grounded:
+- Bump size: `h-10` → `h-11`, add `px-5`, `text-sm font-semibold`
+- Add subtle shadow: `shadow-sm hover:shadow-md transition-shadow`
+- Keep position in `PageHeader actions` slot but ensure it visually balances with title (no other change needed; PageHeader already aligns it to the title row)
 
-**4. Spacing & alignment**
-- Wrapper: `space-y-3 sm:space-y-3` (tighter rhythm on desktop too — was `sm:space-y-4`)
-- All toolbar rows align to the same left edge as the product grid (no `max-w` shifts)
-- Search input width: `max-w-md` on desktop (was `max-w-sm`) — fills more of the row, removes empty floaty feel
-- Heights unified: search `h-10`, selects `h-10` (bumped from `h-9`), toggle `h-10` wrapper containing `h-9 w-9` buttons
-- PageHeader subtitle margin already tight (`mt-1.5`) — no change needed
+### File touched
+- `src/pages/Products.tsx` — toolbar block (lines 248–365) + headerActions button (lines 232–240)
 
 ### Acceptance
-- Desktop: Add Products lives in the header row next to the title, separated from the grid/list toggle
-- Toolbar row = search left + view toggle right, on a single line
-- Filter row = All Types + Newest first, left-aligned, on its own line
-- All controls share consistent `h-10` height
-- Search input visibly wider, eliminating empty space
-- Mobile layout unchanged (already approved)
-- Product grid untouched
+- Desktop (`md+`): Search + All Types + Newest first + view toggle on ONE line
+- Tablet (`sm` to `md`): same one-line layout, but search placeholder reads "Search"
+- Mobile: unchanged (search → full-width Add Products → tools row)
+- Add Products button visibly larger (h-11, px-5, semibold) with subtle shadow, feels anchored to header
+- All desktop controls aligned at `h-10`
 
