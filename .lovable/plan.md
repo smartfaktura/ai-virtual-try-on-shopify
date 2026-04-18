@@ -1,19 +1,27 @@
 
 
-## Show out-of-credits banner when balance < 4
+## Fix non-functional "Earn Credits" button in user menu
 
-### Change in `src/pages/Dashboard.tsx`
-Update the hero condition that currently renders only when `isEmpty` (balance === 0) to also render when balance is below 4.
+### Problem
+In `src/components/app/AppShell.tsx` line 323–328, the "Earn Credits" button in the user dropdown menu is missing its `onClick` handler. The `EarnCreditsModal` and `setEarnCreditsOpen` state are already wired up (line 487), but the button never triggers them.
 
-- Replace `{isEmpty ? (...banner...) : (...balance line...)}` with: render banner when `isEmpty || balance < 4`, otherwise render nothing (per previous decision to drop the inline `{balance} credits available` line).
-- Banner copy stays dynamic:
-  - `isEmpty` → title "You're out of credits", body "Get credits to start creating", CTA "Get Credits"
-  - `balance < 4` (not empty) → title "Running low on credits", body `Only ${balance} credits left — top up to avoid interruptions`, CTA "Get Credits"
-- Same styling, same position (right after subtitle), same `openBuyModal` action.
+### Fix
+Add the missing onClick to the button:
+
+```tsx
+<button
+  onClick={() => { setEarnCreditsOpen(true); setUserMenuOpen(false); }}
+  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
+>
+  <Gift className="w-4 h-4" />
+  Earn Credits
+</button>
+```
+
+This matches the pattern used by the other items in the same menu (close menu + perform action).
 
 ### Acceptance
-- Balance 0 → banner shown ("out of credits" copy)
-- Balance 1–3 → banner shown ("running low" copy)
-- Balance ≥ 4 → no banner, clean hero
-- No other dashboard sections touched
+- Clicking "Earn Credits" in the user dropdown opens the `EarnCreditsModal`
+- User menu closes when clicked
+- No console errors
 
