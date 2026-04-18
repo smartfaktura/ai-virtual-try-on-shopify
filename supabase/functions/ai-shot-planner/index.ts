@@ -291,9 +291,9 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
     // Adaptive duration cap — when commerce intent is provided, cap softly to intent-appropriate max.
     // Falls back to the legacy 15s cap when no intent is supplied.
     const INTENT_MAX: Record<string, number> = {
-      social_content: 10, creator_style_content: 13, performance_ad: 13,
-      feature_benefit_video: 14, pdp_video: 11, product_showcase: 13,
-      product_detail_film: 15, launch_teaser: 11, brand_mood_film: 15, campaign_editorial: 15,
+      social_content: 15, creator_style_content: 15, performance_ad: 15,
+      feature_benefit_video: 15, pdp_video: 15, product_showcase: 15,
+      product_detail_film: 15, launch_teaser: 15, brand_mood_film: 15, campaign_editorial: 15,
     };
     const cap = (contentIntent && INTENT_MAX[contentIntent]) || 15;
     const total = validShots.reduce((sum: number, s: any) => sum + s.duration_sec, 0);
