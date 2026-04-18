@@ -89,11 +89,6 @@ export function ContentIntentStep({ value, onChange }: ContentIntentStepProps) {
                   : 'border-border/60 hover:border-border',
               )}
             >
-              {opt.recommendsClarityFirst && (
-                <span className="absolute top-2.5 right-2.5 text-[9px] uppercase tracking-wider text-primary font-semibold px-1.5 py-0.5 rounded bg-primary/10">
-                  Clarity
-                </span>
-              )}
               <div className="flex items-start gap-3">
                 <div className={cn(
                   'flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors',
@@ -102,10 +97,17 @@ export function ContentIntentStep({ value, onChange }: ContentIntentStepProps) {
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className={cn(
-                    'text-sm font-medium tracking-tight pr-14',
-                    isActive ? 'text-foreground' : 'text-foreground/90',
-                  )}>{opt.label}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className={cn(
+                      'text-sm font-medium tracking-tight',
+                      isActive ? 'text-foreground' : 'text-foreground/90',
+                    )}>{opt.label}</p>
+                    {opt.recommendsClarityFirst && (
+                      <span className="text-[9px] uppercase tracking-wider text-primary font-semibold px-1.5 py-0.5 rounded bg-primary/10 leading-none">
+                        Clarity
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{opt.description}</p>
                 </div>
               </div>
