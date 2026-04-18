@@ -1,43 +1,47 @@
 
-The user is focused on **spacing and border-radius**, not the white-bg-shimmer treatment. Looking at what's different:
 
-**Sidebar pill buttons** (CreditIndicator "Top up", sidebar "Create / Open Studio / Browse Look"):
-- `rounded-full` (fully pill)
-- Tight padding: `h-8 px-3.5` or `h-9 px-4`
-- Compact, snappy feel
+### Why you don't see the change on "Add Products"
 
-**Page CTAs** (Add Products, default shadcn `<Button>`):
-- `rounded-md` (6px corners — boxy)
-- Taller padding: `h-10 px-4 py-2`
-- Heavier, more "form-button" feel
+The global default I changed is `h-9`, but `src/pages/Products.tsx` hard-codes `h-11 px-5` directly on the `<Button>`, which overrides the new default. Tailwind's `h-11` wins over `h-9` because it's applied last via the `className` prop.
 
-The mismatch is the corner radius and height making the page buttons feel like form controls while the sidebar feels like premium nav CTAs.
+Two locations in `src/pages/Products.tsx`:
+- Line 235 (desktop): `className="hidden sm:inline-flex h-11 px-5 ..."`
+- Line 348 (mobile): `className="sm:hidden w-full h-11 ..."`
 
-### Recommendation
-Move the whole app to **softly rounded, slightly more compact** primary buttons — the pill aesthetic without going full `rounded-full` everywhere (which can feel gimmicky on wide buttons like "Save Changes").
+### Fix
+Remove the `h-11 px-5` / `h-11` overrides so the button inherits the new `h-9 px-4 rounded-lg` default. Keep everything else (`shadow-sm hover:shadow-md`, `font-semibold`, mobile `w-full`).
 
-**Concrete change to `buttonVariants` in `src/components/ui/button.tsx`:**
-- Base: `rounded-md` → `rounded-lg` (matches the 8–12px radius used on cards, inputs, sidebar tiles)
-- `size.default`: `h-10 px-4` → `h-9 px-4` (one notch tighter, matches sidebar h-9)
-- `size.lg`: `h-11 px-8` → `h-10 px-6 rounded-lg`
-- `size.sm`: stays `h-9` but `rounded-md` → `rounded-lg`
-- Add new `size="pill"` → `h-9 px-4 rounded-full` for cases where we want the sidebar-style pill (icon + label CTAs like "Generate", "Top up", "Create").
+**Desktop (line 233–239):**
+```tsx
+<Button
+  onClick={() => openAddDrawer('manual', undefined, false)}
+  className="hidden sm:inline-flex font-semibold shadow-sm hover:shadow-md transition-shadow"
+>
+  <Plus className="w-4 h-4 mr-2" />
+  Add Products
+</Button>
+```
 
-This way:
-- All standard page buttons (Add Products, Save Changes, Cancel) get softer corners + tighter height → quietly matches the sidebar's premium feel
-- Pill remains available as an opt-in for hero CTAs
-- No bespoke white-bg shimmer treatment leaks into page content (which would look out of place on a light bg)
+**Mobile (line 346–352):**
+```tsx
+<Button
+  onClick={() => openAddDrawer('manual', undefined, false)}
+  className="sm:hidden w-full font-medium"
+>
+  <Plus className="w-4 h-4 mr-2" />
+  Add Products
+</Button>
+```
+
+After this, "Add Products" will be `h-9` with `rounded-lg` corners — visually consistent with the rest of the app and noticeably tighter/softer than today.
+
+### Optional follow-up (not in this change)
+Other pages may also override `h-10`/`h-11` on individual buttons (forms, modals, "Save Changes" etc.). If you want, I can do a sweep next to strip those overrides so the global default actually takes effect everywhere.
 
 ### Files
-- `src/components/ui/button.tsx` (~6 lines — variants only)
-
-### Out of scope
-- No changes to `CreditIndicator` or sidebar nav buttons (they keep their bespoke white-pill style for dark sidebar contrast)
-- No per-page button rewrites — the variant change cascades automatically
-- No color/variant changes
+- `src/pages/Products.tsx` (~4 lines)
 
 ### Acceptance
-- "Add Products", "Save Changes", "Cancel" and similar buttons across the app render with `rounded-lg` corners and `h-9` height
-- Sidebar Top up / Create / Open Studio / Browse Look unchanged
-- New `size="pill"` available for future hero CTAs
-- No layout breakage on existing button-heavy pages (forms, modals, tables)
+- "Add Products" (desktop + mobile) renders at `h-9` with `rounded-lg` corners
+- Matches the height/radius of other standard `<Button>`s across the app
+- Shadow + font weight preserved; mobile stays full-width
