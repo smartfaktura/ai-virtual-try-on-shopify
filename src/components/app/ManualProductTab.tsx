@@ -866,11 +866,11 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Main photo
               </span>
-              <div className="relative group w-[140px] h-[170px] sm:w-[180px] sm:h-[220px] rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center">
+              <div className="relative group w-[160px] sm:w-[200px] aspect-[4/5] rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center">
                 <img
                   src={singleImage.previewUrl}
                   alt={title || 'Product preview'}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   {!isEditing && (
@@ -928,74 +928,67 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
             {/* Reference Angles — beside main image on desktop, stacked on mobile */}
             <div className="flex-1 min-w-0 w-full">
-              <Collapsible open={anglesOpen} onOpenChange={setAnglesOpen}>
-                <CollapsibleTrigger className="flex items-start gap-2 w-full group/trigger">
-                  <div className="flex-1 text-left space-y-0.5">
-                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Extra angles
-                    </span>
-                    <span className="block text-[11px] text-muted-foreground/70">
-                      Improves AI accuracy
-                    </span>
+              <div className="space-y-0.5">
+                <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Extra angles
+                </span>
+                <span className="block text-[11px] text-muted-foreground/70">
+                  Improves AI accuracy
+                </span>
+              </div>
+              <div className="flex gap-2.5 flex-wrap pt-3">
+                {([
+                  { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
+                  { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
+                  { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
+                  { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
+                  { label: 'Texture', shortLabel: 'Texture', state: textureImage, setter: setTextureImage, Icon: Droplets },
+                ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
+                  <div key={shortLabel} className="relative">
+                    {state ? (
+                      <HoverCard openDelay={200} closeDelay={100}>
+                        <HoverCardTrigger asChild>
+                          <div className="relative group/ref w-[88px] h-[88px] rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
+                            <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
+                              <span className="text-[11px] text-white font-medium">{label}</span>
+                            </div>
+                            <button
+                              onClick={(e) => { e.preventDefault(); setter(null); }}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent side="top" className="w-[200px] p-1.5">
+                          <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
+                          <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
+                        </HoverCardContent>
+                      </HoverCard>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-[88px] h-[88px] rounded-xl border border-dashed border-border/60 bg-muted/20 hover:border-primary/30 hover:bg-muted/30 cursor-pointer transition-all gap-1">
+                        <Plus className="w-4 h-4 text-muted-foreground/40" />
+                        <Icon className="w-4 h-4 text-muted-foreground/50" />
+                        <span className="text-[11px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file && file.type.startsWith('image/')) {
+                              if (state) revokeTrackedObjectUrl(state.previewUrl);
+                              setter({ file, previewUrl: createTrackedObjectUrl(file) });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    )}
                   </div>
-                  <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/50 mt-1 transition-transform", anglesOpen && "rotate-180")} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3">
-                  <div className="flex gap-2.5 flex-wrap">
-                    {([
-                      { label: 'Back view', shortLabel: 'Back', state: backImage, setter: setBackImage, Icon: RotateCcw },
-                      { label: 'Side view', shortLabel: 'Side', state: sideImage, setter: setSideImage, Icon: ArrowRight },
-                      { label: 'Inside', shortLabel: 'Inside', state: insideImage, setter: setInsideImage, Icon: FolderOpen },
-                      { label: 'Packaging', shortLabel: 'Pack', state: packagingImage, setter: setPackagingImage, Icon: Package },
-                      { label: 'Texture', shortLabel: 'Texture', state: textureImage, setter: setTextureImage, Icon: Droplets },
-                    ] as const).map(({ label, shortLabel, state, setter, Icon }) => (
-                      <div key={shortLabel} className="relative">
-                        {state ? (
-                          <HoverCard openDelay={200} closeDelay={100}>
-                            <HoverCardTrigger asChild>
-                              <div className="relative group/ref w-[88px] h-[88px] rounded-xl overflow-hidden border border-border bg-muted/20 cursor-pointer hover:shadow-md hover:shadow-primary/5 transition-shadow">
-                                <img src={state.previewUrl} alt={label} className="w-full h-full object-cover" />
-                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
-                                  <span className="text-[11px] text-white font-medium">{label}</span>
-                                </div>
-                                <button
-                                  onClick={(e) => { e.preventDefault(); setter(null); }}
-                                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </HoverCardTrigger>
-                            <HoverCardContent side="top" className="w-[200px] p-1.5">
-                              <img src={state.previewUrl} alt={label} className="w-full rounded-lg object-contain" />
-                              <p className="text-[10px] text-muted-foreground text-center mt-1">{label}</p>
-                            </HoverCardContent>
-                          </HoverCard>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center w-[88px] h-[88px] rounded-xl border border-dashed border-border/60 bg-muted/20 hover:border-primary/30 hover:bg-muted/30 cursor-pointer transition-all gap-1">
-                            <Plus className="w-4 h-4 text-muted-foreground/40" />
-                            <Icon className="w-4 h-4 text-muted-foreground/50" />
-                            <span className="text-[11px] text-muted-foreground/60 font-medium leading-tight text-center">{label}</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file && file.type.startsWith('image/')) {
-                                  if (state) revokeTrackedObjectUrl(state.previewUrl);
-                                  setter({ file, previewUrl: createTrackedObjectUrl(file) });
-                                }
-                                e.target.value = '';
-                              }}
-                            />
-                          </label>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -1123,21 +1116,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
             <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', moreDetailsOpen && 'rotate-180')} />
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">Weight</Label>
-                <Input placeholder="e.g. 250g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} className="h-8 text-xs" />
+                <Label className="text-xs font-medium text-foreground">Weight</Label>
+                <Input placeholder="e.g. 250g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">Color</Label>
-                <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} className="h-8 text-xs" />
+                <Label className="text-xs font-medium text-foreground">Color</Label>
+                <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">Materials</Label>
-                <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} className="h-8 text-xs" />
+                <Label className="text-xs font-medium text-foreground">Materials</Label>
+                <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} />
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground/60 mt-1.5">
+            <p className="text-[11px] text-muted-foreground/70 mt-2">
               Weight and materials help the AI generate more realistic product scenes.
             </p>
           </CollapsibleContent>
