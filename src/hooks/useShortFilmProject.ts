@@ -402,7 +402,7 @@ export function useShortFilmProject() {
     } finally {
       setIsAiPlanning(false);
     }
-  }, [filmType, storyStructure, settings.shotDuration, settings.tone, references, customRoles]);
+  }, [filmType, storyStructure, settings.shotDuration, settings.tone, settings.audioLayers, references, customRoles, contentIntent, platform, paceMode, productPriority, clarityFirstMode, soundMode, endingStyle, audienceContext, offerContext]);
 
   const goNext = useCallback(() => {
     const idx = steps.indexOf(step);
