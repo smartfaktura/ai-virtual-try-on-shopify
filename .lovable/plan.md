@@ -1,73 +1,40 @@
 
-The previous sweep missed several files. User reports `/app/models` still has bad buttons, and library preview card modals too. Let me grep for remaining offenders before planning.
-<lov-tool-use id="toolu_vrtx_01SrP4XRteL2dbrLf6XJAdrs" name="code--search_files" integration-id="code" data="{\"query\": \"className=\\\"[^\\\"]*\\\\b(h-11|h-12|rounded-xl|rounded-md|rounded-2xl|text-base|px-6|px-8)\\\\b\", \"include_patterns\": \"src/pages/**,src/components/app/**\", \"exclude_patterns\": \"*Sidebar*,*CreditIndicator*,Dashboard.tsx,Landing*\"}">
-</lov-tool-use>
 
-<lov-tool-use id="toolu_vrtx_011LW95QPvJNRK9VDfnAdBv1" name="code--search_files" integration-id="code" data="{\"query\": \"rounded-full\", \"include_patterns\": \"src/pages/Models.tsx,src/components/app/LibraryDetailModal.tsx,src/components/app/library/**\"}">
-</lov-tool-use>
+The Product Images sticky bar (`ProductImagesStickyBar.tsx`) has CTAs using `size="sm"` with hardcoded `h-8 text-xs` on mobile and default size on desktop — inconsistent with the unified `h-10 rounded-lg` / `size="pill"` standard.
 
-<lov-tool-use id="toolu_vrtx_011fDHrjxM25iaHuzJ6GsAB6" name="code--list_dir" integration-id="code" data="{\"dir_path\": \"src/pages\"}">
-</lov-tool-use>
+Same pattern likely exists in other workflow sticky bars: Catalog (`CatalogStepShots.tsx` — already saw it uses default `<Button>` but Back/Next inline), Perspectives, Short Film, Text-to-Product, Brand Models wizards.
 
-<lov-tool-use id="toolu_vrtx_016ABbQRwAw3R1j8jn2zhfPH" name="code--search_files" integration-id="code" data="{\"query\": \"className=\\\"[^\\\"]*(h-11|h-12|rounded-xl|rounded-2xl|text-base)\", \"include_patterns\": \"src/pages/**,src/components/app/**\", \"exclude_patterns\": \"*Sidebar*,*CreditIndicator*,Dashboard*,Landing*\"}">
-</lov-tool-use>
+### Fix
 
-<lov-tool-use id="toolu_vrtx_018J9urST4zT22rn5X9TeybQ" name="code--list_dir" integration-id="code" data="{\"dir_path\": \"src/pages\"}">
-</lov-tool-use>
-The search shows MANY non-button matches (cards, containers using rounded-xl/2xl which is fine). I need to scope to `<Button` and form controls specifically. Let me also check the actual /app/models page which is `BrandModels.tsx` and library cards/modals.
-<lov-tool-use id="toolu_vrtx_01CcC9odehrtPCbv1H6CrvCF" name="code--search_files" integration-id="code" data="{\"exclude_patterns\": \"*Sidebar*,Dashboard*,Landing*,TryFree*,Home*,About*,Pricing*,Blog*,Careers*,Press*,Team*,Contact*,Privacy*,Terms*,Cookie*,Changelog*,HelpCenter*,Status*,NotFound*,Auth*,ResetPassword*,Public*\", \"include_patterns\": \"src/pages/**,src/components/app/**\", \"query\": \"(<Button|<Input|<Textarea|<SelectTrigger)[^>]*className=\\\"[^\\\"]*\\\\b(h-11|h-12|h-9|rounded-full|rounded-xl|rounded-2xl|rounded-md|text-base|px-6|px-7|px-8)\\\\b\"}">
-</lov-tool-use>
+**Standard for wizard sticky bars:**
+- Primary CTA (Next / Generate / Continue): `size="pill"` → `h-10 rounded-full`
+- Secondary (Back): default size → `h-10 rounded-lg`
+- Strip `size="sm"`, `h-8`, `text-xs`, `text-[10px]` overrides on the buttons themselves (chip badges keep their tiny text — that's fine)
 
-<lov-tool-use id="toolu_vrtx_01RbhBtbtuAqx7YDhjZsf1Yy" name="code--view" integration-id="code" data="{\"file_path\": \"src/pages/BrandModels.tsx\"}">
-</lov-tool-use>
-I have enough context. The /app/models is `BrandModels.tsx`. The user has consistent pain — many `<Button>` and form controls with hardcoded `h-11/h-12/rounded-xl/rounded-full/rounded-md/text-base/px-6/px-7/px-8` overrides across 33 app files (excluding marketing).
+### Files to fix
 
-Let me present a tight plan.
+1. **`src/components/app/product-images/ProductImagesStickyBar.tsx`** — both mobile + desktop Back/Next buttons → unify to `size="pill"` (primary) and default (Back). Remove `h-8 text-xs` mobile overrides on buttons.
 
-<lov-plan>
+2. **`src/components/app/catalog/CatalogStepShots.tsx`** — Back/Next inline footer (lines ~159-163): convert primary to `size="pill"`, Back stays default. Already clean but verify.
 
-### Real fix: full sweep of 33 files
+3. **`src/components/app/catalog/CatalogStepProducts.tsx`** + any other `CatalogStep*.tsx` footer buttons — same treatment.
 
-The previous sweep missed many because it didn't scope to `<Button|<Input|<Textarea|<SelectTrigger>` elements specifically. New audit found **358 override matches across 33 files** in `src/pages/**` and `src/components/app/**` (marketing/landing pages excluded).
+4. **Sweep other workflow wizards** for sticky/footer Back/Next/Continue/Generate buttons:
+   - `src/components/app/perspectives/**` 
+   - `src/components/app/short-film/**` / `src/pages/video/ShortFilm*.tsx`
+   - `src/components/app/text-to-product/**`
+   - `src/components/app/brand-models/**` wizard
+   - Any `*StickyBar*`, `*Footer*`, `*Wizard*` in `src/components/app/**`
 
-### Standard (locked, no debate)
-| Element | Spec |
-|---|---|
-| Page-header / hero CTA | `size="pill"` → `h-10 rounded-full px-5` |
-| Standard button | default → `h-10 rounded-lg px-4` |
-| Small button (chips, table actions) | `size="sm"` → `h-8 rounded-lg` |
-| Input / Select / Textarea | inherit defaults: `h-10 rounded-lg px-3.5 text-sm` |
-
-### Override patterns to strip
-On `<Button>`, `<Input>`, `<Textarea>`, `<SelectTrigger>`:
-- `h-9` (when not paired with `size="sm"`), `h-11`, `h-12` → strip
-- `rounded-md`, `rounded-xl`, `rounded-2xl` → strip
-- `rounded-full` (on standard buttons) → convert to `size="pill"` if it's a primary/header CTA, otherwise strip
-- `text-base`, `text-sm` (on Inputs — already default), `px-6/7/8`, `py-5/6` → strip
-
-Container `rounded-xl/2xl` on `<div>`, `<Card>`, `<TabsList>` etc. is FINE and stays — only stripping from interactive primitives.
-
-### Files to edit (33)
-
-**Pages (18):**
-`AddProduct.tsx`, `AdminFeedback.tsx`, `AdminModels.tsx`, `AdminPlanPopups.tsx`, `AdminProductImageScenes.tsx`, `AdminScenes.tsx`, `AdminTrendWatch.tsx`, `BrandModels.tsx`, `CreativeDrops.tsx`, `Discover.tsx`, `Freestyle.tsx`, `Jobs.tsx`, `MobileUpload.tsx`, `Onboarding.tsx`, `ProductImages.tsx`, `Settings.tsx`, `Templates.tsx`, `TryShot.tsx`, `Workflows.tsx`
-
-**App components (15):**
-`AdminSubmissionsPanel.tsx`, `BrandProfileWizard.tsx` (if present), `CreativeDropWizard.tsx`, `DiscoverDetailModal.tsx`, `DropDetailModal.tsx`, `LibraryDetailModal.tsx`, `ManualProductTab.tsx`, `NoCreditsModal.tsx`, `ProductsEmptyUpload.tsx`, `StoreImportTab.tsx`, `WorkflowCard.tsx`, `WorkflowPreviewModal.tsx`, `freestyle/*`, `library/*`, `video/*` (any with overrides)
-
-### Skip-list (intentional, do not touch)
-- `src/components/app/AppSidebar*.tsx` — bespoke shimmer pills
-- `src/components/app/CreditIndicator.tsx`
-- `src/pages/Dashboard.tsx` — 6 hero cards with `min-h-[44px]` (oversized by design)
-- `src/pages/features/**`, `Landing*.tsx`, `TryFree.tsx`, `Home.tsx`, `Pricing.tsx`, `About.tsx`, `Auth.tsx`, public pages — marketing context
-- Sub-buttons inside FreestyleSettingsChips and similar chip-groups using `<button>` (not `<Button>`) — those are visual chips, not CTAs
+   For each: strip `size="sm"`, `h-8`, `h-9`, `h-11`, `text-xs` from `<Button>`, use `size="pill"` for primary CTA.
 
 ### Process
-1. For each of the 33 files, run targeted `line_replace` per offending line: strip the override classes, convert primary header/modal-footer CTAs to `size="pill"`.
-2. Re-run grep audit; only skip-list matches should remain.
-3. Spot-check `/app/models`, `/app/library` (detail modal), `/app/products`, `/app/freestyle`, `/app/workflows`, `/app/jobs`, `/app/onboarding`.
+- Grep `(<Button)[^>]*(size="sm"|h-8|h-9|h-11|text-xs)` in `src/components/app/{product-images,catalog,perspectives,short-film,text-to-product,brand-models,video,freestyle}/**` and `src/pages/video/**`
+- For each match in a wizard footer / sticky bar context: convert primary to `size="pill"`, secondary (Back) to default, strip overrides
+- Keep mobile compact dot indicators / step labels / credit chips untouched (those are not buttons)
 
 ### Acceptance
-- Grep `(<Button|<Input|<Textarea|<SelectTrigger)[^>]*className="[^"]*\b(h-9|h-11|h-12|rounded-md|rounded-xl|rounded-2xl|rounded-full|text-base|px-6|px-7|px-8)\b"` returns ZERO hits in `src/pages/**` and `src/components/app/**` (excluding skip-list).
-- Library detail modal, BrandModels (/app/models), all wizard footers visually consistent: `h-10 rounded-lg` form fields, `h-10 rounded-full` (pill) for primary CTAs, `h-10 rounded-lg` for secondary.
+- All wizard Next/Back/Generate buttons render at `h-10` with `rounded-full` (primary pill) or `rounded-lg` (secondary), `text-sm` font
+- Mobile and desktop visually identical button sizing
+- Spot-check `/app/generate/product-images` (all 4 steps), `/app/generate/catalog`, `/app/perspectives`, `/app/video/short-film`, `/app/video/text-to-product`, `/app/models` wizard
 
