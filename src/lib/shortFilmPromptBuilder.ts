@@ -1,11 +1,23 @@
 import type { ShotPlanItem, ShortFilmSettings, FilmType } from '@/types/shortFilm';
 import type { ReferenceAsset } from '@/components/app/video/short-film/ReferenceUploadPanel';
+import type {
+  ContentIntent,
+  ProductCategoryKey,
+  ProductFidelity,
+} from '@/types/commerceVideo';
+import { getCategoryModule } from '@/lib/commerceVideo/categoryModules';
+import { continuityToPromptHints } from '@/lib/commerceVideo/continuityEngine';
 
 interface PromptContext {
   filmType: FilmType;
   tone: string;
   settings: ShortFilmSettings;
   references: ReferenceAsset[];
+  // ── Commerce Video Engine context (Phase 3, all optional) ──────
+  contentIntent?: ContentIntent;
+  category?: ProductCategoryKey;
+  fidelity?: ProductFidelity;
+  clarityFirst?: boolean;
 }
 
 /* ─── Cinematic tone presets per film type ─── */
