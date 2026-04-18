@@ -1,7 +1,18 @@
 import { Coins } from 'lucide-react';
 import { ShotCard } from './ShotCard';
+import { PreflightPanel } from './PreflightPanel';
 import { FILM_TYPE_OPTIONS, STORY_STRUCTURE_OPTIONS } from '@/lib/shortFilmPlanner';
+import { CONTENT_INTENT_OPTIONS } from '@/lib/commerceVideo/contentIntents';
+import { validateProject } from '@/lib/commerceVideo/preflight';
 import type { ShotPlanItem, FilmType, StoryStructure, ShortFilmSettings } from '@/types/shortFilm';
+import type { ReferenceAsset } from './ReferenceUploadPanel';
+import type {
+  ContentIntent,
+  Platform,
+  SoundMode,
+  EndingStyle,
+} from '@/types/commerceVideo';
+import { useMemo } from 'react';
 
 interface ShortFilmReviewSummaryProps {
   filmType: FilmType | null;
@@ -9,6 +20,13 @@ interface ShortFilmReviewSummaryProps {
   shots: ShotPlanItem[];
   settings: ShortFilmSettings;
   totalCredits: number;
+  // ── Commerce Video Engine context (Phase 4) ──
+  references?: ReferenceAsset[];
+  contentIntent?: ContentIntent | null;
+  platform?: Platform;
+  soundMode?: SoundMode;
+  endingStyle?: EndingStyle;
+  clarityFirst?: boolean;
 }
 
 const AUDIO_LABELS: Record<string, string> = {
@@ -25,10 +43,32 @@ export function ShortFilmReviewSummary({
   shots,
   settings,
   totalCredits,
+  references = [],
+  contentIntent = null,
+  platform,
+  soundMode,
+  endingStyle,
+  clarityFirst,
 }: ShortFilmReviewSummaryProps) {
   const filmLabel = FILM_TYPE_OPTIONS.find(f => f.value === filmType)?.label || filmType?.replace(/_/g, ' ') || '--';
   const structureLabel = STORY_STRUCTURE_OPTIONS.find(s => s.value === storyStructure)?.label || storyStructure?.replace(/_/g, ' ') || '--';
   const audioLabel = AUDIO_LABELS[settings.audioMode] || settings.audioMode;
+  const intentLabel = CONTENT_INTENT_OPTIONS.find(i => i.value === contentIntent)?.label || contentIntent?.replace(/_/g, ' ') || '--';
+
+  const preflight = useMemo(
+    () =>
+      validateProject({
+        intent: contentIntent,
+        platform,
+        soundMode,
+        endingStyle,
+        shots,
+        references,
+        settings,
+        clarityFirst,
+      }),
+    [contentIntent, platform, soundMode, endingStyle, shots, references, settings, clarityFirst],
+  );
 
   return (
     <div className="space-y-6">
@@ -39,8 +79,18 @@ export function ShortFilmReviewSummary({
         </p>
       </div>
 
+      <PreflightPanel result={preflight} />
+
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span className="text-muted-foreground">Intent</span>
+            <p className="font-medium text-foreground capitalize">{intentLabel}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Platform</span>
+            <p className="font-medium text-foreground capitalize">{(platform || 'general').replace(/_/g, ' ')}</p>
+          </div>
           <div>
             <span className="text-muted-foreground">Film Type</span>
             <p className="font-medium text-foreground">{filmLabel}</p>
@@ -56,6 +106,14 @@ export function ShortFilmReviewSummary({
           <div>
             <span className="text-muted-foreground">Audio</span>
             <p className="font-medium text-foreground">{audioLabel}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Ending</span>
+            <p className="font-medium text-foreground capitalize">{(endingStyle || 'auto').replace(/_/g, ' ')}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Clarity-first</span>
+            <p className="font-medium text-foreground">{clarityFirst ? 'On' : 'Off'}</p>
           </div>
         </div>
       </div>
