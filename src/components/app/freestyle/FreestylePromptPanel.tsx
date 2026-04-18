@@ -474,9 +474,9 @@ export function FreestylePromptPanel({
                           <Button
                             onClick={onGenerate}
                             disabled={!canGenerate}
-                            size="lg"
+                            size="pill"
                             className={cn(
-                              "h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto",
+                              "gap-2 font-semibold w-full sm:w-auto",
                               canGenerate
                                 ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
                                 : "bg-muted text-muted-foreground shadow-none pointer-events-none"
