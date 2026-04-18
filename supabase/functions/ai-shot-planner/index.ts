@@ -288,11 +288,18 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
       };
     });
 
-    // Verify total doesn't exceed 15s
+    // Adaptive duration cap — when commerce intent is provided, cap softly to intent-appropriate max.
+    // Falls back to the legacy 15s cap when no intent is supplied.
+    const INTENT_MAX: Record<string, number> = {
+      social_content: 10, creator_style_content: 13, performance_ad: 13,
+      feature_benefit_video: 14, pdp_video: 11, product_showcase: 13,
+      product_detail_film: 15, launch_teaser: 11, brand_mood_film: 15, campaign_editorial: 15,
+    };
+    const cap = (contentIntent && INTENT_MAX[contentIntent]) || 15;
     const total = validShots.reduce((sum: number, s: any) => sum + s.duration_sec, 0);
-    if (total > 15) {
-      const scale = 15 / total;
-      let remaining = 15;
+    if (total > cap) {
+      const scale = cap / total;
+      let remaining = cap;
       for (let i = 0; i < validShots.length; i++) {
         if (i === validShots.length - 1) {
           validShots[i].duration_sec = Math.max(1, remaining);
