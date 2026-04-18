@@ -155,7 +155,71 @@ export function LibraryImageCard({
         );
       })()}
 
-      {/* Hover overlay — hidden in select mode */}
+      {/* Touch-device persistent action row (no hover capability) */}
+      {!selectMode && !isUpscaling && (onToggleFavorite || onSetStatus) && (
+        <div className="absolute inset-x-0 top-0 z-[5] flex justify-between p-2 bg-gradient-to-b from-black/40 to-transparent pointer-events-none [@media(hover:hover)]:hidden">
+          <div className="pointer-events-auto">
+            {onSetStatus && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white"
+                    aria-label="Asset actions"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-[180px]" onClick={(e) => e.stopPropagation()}>
+                  {assetStatus !== 'brand_ready' && (
+                    <DropdownMenuItem onClick={() => onSetStatus('brand_ready')}>
+                      <Shield className="w-3.5 h-3.5 mr-2" />
+                      Brand Ready
+                    </DropdownMenuItem>
+                  )}
+                  {assetStatus !== 'ready_to_publish' && (
+                    <DropdownMenuItem onClick={() => onSetStatus('ready_to_publish')}>
+                      <Send className="w-3.5 h-3.5 mr-2" />
+                      Ready to Publish
+                    </DropdownMenuItem>
+                  )}
+                  {assetStatus !== 'draft' && (
+                    <DropdownMenuItem onClick={() => onSetStatus('draft')}>
+                      <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                      Reset to Draft
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => downloadImage(item.imageUrl, `${buildLibraryFileName(item)}.png`)}>
+                    <Download className="w-3.5 h-3.5 mr-2" />
+                    Download
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+          <div className="flex items-center gap-2 pointer-events-auto">
+            {assetStatus !== 'draft' && (
+              <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm", statusInfo.className)}>
+                {statusInfo.label}
+              </span>
+            )}
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(e);
+                }}
+                className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white"
+                aria-label="Toggle favorite"
+              >
+                <Heart className={cn("w-4 h-4", isFavorited && "fill-rose-500 text-rose-500")} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Hover overlay — hidden in select mode, desktop only */}
       {!selectMode && (
         <div className={cn("absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex", isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
           {/* Top: three-dot menu + favorite */}
