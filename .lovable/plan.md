@@ -1,22 +1,23 @@
 
 
-## Match Recent Creations heading size to other dashboard sections
+## Fix /app/models subtitle
 
 ### Issue
-On `/app`, the "Recent Creations" heading + "Your latest generated visuals" subtitle render smaller than sibling section headings on the dashboard. Same issue on "Recent Activity".
+Current `/app/models` subtitle is two sentences with a period: "Unlimited custom AI models — any gender, age, ethnicity, or body type. Built to match your brand identity."
 
-### Root cause
-- `RecentCreationsGallery.tsx` uses `text-xl sm:text-2xl` for h2, `text-base` for subtitle
-- `ActivityFeed.tsx` uses `text-xl sm:text-2xl` for h2
-- Other dashboard sections use larger `text-2xl sm:text-3xl font-bold tracking-tight` headings
+Violates Core memory rule: no terminal periods on single-sentence subtitles, and the user wants it as **one engaging statement**.
 
 ### Plan
+1. Locate the Models page (likely `src/pages/Models.tsx` or `src/pages/app/Models.tsx`) — confirm via search.
+2. Replace the two-sentence subtitle with a single engaging statement, no trailing period.
 
-1. **`src/components/app/RecentCreationsGallery.tsx`** — bump heading from `text-xl sm:text-2xl` → `text-2xl sm:text-3xl`. Subtitle stays `text-base text-muted-foreground` (already no period ✓).
-2. **`src/components/app/ActivityFeed.tsx`** — bump heading `text-xl sm:text-2xl` → `text-2xl sm:text-3xl` for parity.
+**Proposed copy:**
+> `"Unlimited custom AI models built to match your brand — any gender, age, ethnicity, or body type"`
+
+Reads as one continuous thought, leads with the value ("Unlimited custom AI models built to match your brand"), then expands with the dimensions of customization.
 
 ### Acceptance
-- "Recent Creations" and "Recent Activity" headings on `/app` match other dashboard section headings
-- Subtitle remains quiet `text-base` muted body
-- No trailing periods
+- One sentence, no trailing period
+- Same information density, more engaging flow
+- Matches memory Core rule
 
