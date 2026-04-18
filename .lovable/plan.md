@@ -1,83 +1,78 @@
 
 
-## /app/products — mobile UX refactor
+## /app/products — desktop toolbar refactor
 
-Scope: `src/pages/Products.tsx` only. Mobile-first reorder + visual polish. Desktop layout stays untouched (`sm:` breakpoint).
+Scope: `src/pages/Products.tsx` only. Desktop layout (`sm:` and up). Mobile stays as-is.
 
-### New mobile order (top → down)
-1. Title + subtitle (already PageHeader — tighten only via existing `space-y-4` → keep)
-2. **Search** (full width)
-3. **Add Products** — full-width primary CTA (mobile only)
-4. **Tools row** — single horizontal row: `[view toggle] [All Types] [Newest first]`
+### Current problem
+- Search left, filters below, view toggle + Add Products grouped right → feels disconnected
+- Add Products visually clumped with grid/list toggle (utility) instead of being the page-level primary action
+- Two-row toolbar with awkward empty space
 
-Desktop (`sm+`) keeps current 2-row layout: search/CTA on right, filters below.
+### New desktop structure (3 rows)
 
-### Implementation in `src/pages/Products.tsx` (lines 237–324)
+```
+┌─────────────────────────────────────────────────────────┐
+│ Products                                  [+ Add Products] │   ← Header row (PageHeader actions slot)
+│ Upload once and reuse across every Visual Type           │
+├─────────────────────────────────────────────────────────┤
+│ [🔍 Search products........................]   [▦ ☰]  │   ← Toolbar row
+├─────────────────────────────────────────────────────────┤
+│ [All Types ▾]  [Newest first ▾]                         │   ← Filter row
+└─────────────────────────────────────────────────────────┘
+   product grid (unchanged)
+```
 
-Replace the toolbar block with a mobile-aware structure:
+### Implementation
 
+**1. Move desktop "Add Products" into PageHeader `actions` slot** (`src/pages/Products.tsx`)
+- `PageHeader` already supports an `actions` prop rendered top-right next to the title
+- Pass the Add Products button via `actions={<Button …>Add Products</Button>}` for `sm:` and up
+- Hide it inside the toolbar block on desktop (was previously grouped with view toggle)
+- Mobile full-width CTA below search stays unchanged (`sm:hidden`)
+
+**2. Restructure toolbar block (lines ~237–324)**
+
+Desktop layout becomes:
 ```tsx
-<div className="space-y-3 sm:space-y-4">
-  {showToolbar && (
-    <>
-      {/* Row 1: Search — full width on all sizes, capped on desktop via flex */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-11 sm:h-10" />
-        </div>
-        {/* Desktop-only inline CTA + view toggle (preserves current desktop layout) */}
-        <div className="hidden sm:flex items-center gap-2">
-          {/* existing view toggle + Add Products button */}
-        </div>
-      </div>
+{/* Toolbar row: search (left) + view toggle (right) */}
+<div className="hidden sm:flex items-center justify-between gap-3">
+  <div className="relative w-full max-w-md">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+    <Input placeholder="Search products..." className="pl-9 h-10" />
+  </div>
+  <div className="flex items-center border rounded-md shrink-0">
+    {/* grid / list toggle — h-9 w-9, ghost styling, no border accent */}
+  </div>
+</div>
 
-      {/* Mobile-only primary CTA — full width, dominant */}
-      {products.length > 0 && (
-        <Button onClick={() => openAddDrawer('manual', undefined, false)} className="sm:hidden w-full h-11 text-sm font-medium">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Products
-        </Button>
-      )}
-
-      {/* Tools row — view toggle + filters in one line */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center border rounded-md shrink-0">
-          {/* view toggle buttons (h-9 w-9 each) */}
-        </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] h-9 text-xs">
-            <SelectValue placeholder="All Types" />
-          </SelectTrigger>
-          {/* items unchanged */}
-        </Select>
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-          <SelectTrigger className="flex-1 sm:flex-none sm:w-[150px] h-9 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          {/* items unchanged */}
-        </Select>
-        {/* active filter badge + clear (unchanged) */}
-      </div>
-    </>
-  )}
-  {/* products grid — unchanged */}
+{/* Filter row: selects only, left-aligned */}
+<div className="hidden sm:flex items-center gap-2">
+  <Select>…All Types…</Select>
+  <Select>…Newest first…</Select>
+  {/* active filter badge + clear (unchanged) */}
 </div>
 ```
 
-### Key details
-- **Mobile CTA**: `sm:hidden w-full h-11` — single dominant action below search.
-- **Desktop CTA**: hidden on mobile via `hidden sm:flex` wrapper — keeps current right-aligned look.
-- **Tools row**: view toggle moves into the same row as filters (`flex items-center gap-2 flex-wrap`). On mobile the two Selects use `flex-1` so they share the remaining width evenly next to the icon-only view toggle. On desktop they revert to fixed widths.
-- **Search input**: `h-11` on mobile (bigger tap target), `sm:h-10` on desktop.
-- **Spacing rhythm**: `space-y-3` on mobile (tighter, ~12px), `sm:space-y-4` on desktop.
-- Modal already opens as a bottom Drawer on mobile (verified in `AddProductModal`) — context preserved, no redirect.
-- No change to product grid, empty state, or non-mobile behavior.
+Mobile keeps current layout (search → full-width Add Products → unified tools row with toggle+filters).
+
+**3. Reduce visual weight of view toggle**
+- Use lighter border (`border-border`) and ghost button styling so it reads as utility, not action
+- Keep `h-9 w-9` icon-only buttons
+
+**4. Spacing & alignment**
+- Wrapper: `space-y-3 sm:space-y-3` (tighter rhythm on desktop too — was `sm:space-y-4`)
+- All toolbar rows align to the same left edge as the product grid (no `max-w` shifts)
+- Search input width: `max-w-md` on desktop (was `max-w-sm`) — fills more of the row, removes empty floaty feel
+- Heights unified: search `h-10`, selects `h-10` (bumped from `h-9`), toggle `h-10` wrapper containing `h-9 w-9` buttons
+- PageHeader subtitle margin already tight (`mt-1.5`) — no change needed
 
 ### Acceptance
-- Mobile `/app/products`: order is Title → Search → full-width Add Products → tools row (toggle + 2 filters in one line)
-- Add Products visually dominates above filters on mobile
-- Desktop layout unchanged
-- Filters + view toggle align on one row on mobile (flex-wrap fallback if too narrow)
-- Drawer opens on tap (already wired)
+- Desktop: Add Products lives in the header row next to the title, separated from the grid/list toggle
+- Toolbar row = search left + view toggle right, on a single line
+- Filter row = All Types + Newest first, left-aligned, on its own line
+- All controls share consistent `h-10` height
+- Search input visibly wider, eliminating empty space
+- Mobile layout unchanged (already approved)
+- Product grid untouched
 
