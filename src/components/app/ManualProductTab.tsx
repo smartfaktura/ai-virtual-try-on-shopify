@@ -859,14 +859,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </div>
 
         ) : (
-          /* Main image + reference angle slots — stacked vertically */
-          <div className="rounded-xl border border-border/50 bg-muted/10 p-3 space-y-3">
+          /* Main image + reference angles — side-by-side on desktop */
+          <div className="flex flex-col sm:flex-row gap-4">
             {/* Main image — constrained width */}
-            <div className="relative group rounded-2xl overflow-hidden bg-muted/20 max-w-[280px] w-full min-w-0">
+            <div className="relative group rounded-2xl overflow-hidden bg-transparent max-w-[280px] w-full min-w-0 shrink-0">
               <img
                 src={singleImage.previewUrl}
                 alt={title || 'Product preview'}
-                className="w-full max-h-[200px] object-contain rounded-2xl"
+                className="w-full max-h-[240px] object-contain rounded-2xl"
               />
               <div className="absolute top-2 left-2">
                 <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-background/70 backdrop-blur-sm">
@@ -926,7 +926,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               </div>
             </div>
 
-            {/* Reference Angles — collapsible section below main image */}
+            {/* Reference Angles — beside main image on desktop, stacked on mobile */}
+            <div className="flex-1 min-w-0">
             <Collapsible open={anglesOpen} onOpenChange={setAnglesOpen}>
                 <>
 

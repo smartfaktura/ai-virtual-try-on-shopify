@@ -29,7 +29,7 @@ export function PageHeader({ title, subtitle, backAction, actions, children }: P
           <p className="text-base text-muted-foreground mt-1.5">{subtitle}</p>
         )}
       </div>
-      <div className="space-y-8 sm:space-y-10">{children}</div>
+      <div className="space-y-4 sm:space-y-6">{children}</div>
     </div>
   );
 }
