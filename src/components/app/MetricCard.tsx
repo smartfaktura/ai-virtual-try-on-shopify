@@ -60,7 +60,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   const cardContent = (
     <div
-      className={`rounded-2xl border border-border bg-card p-4 sm:p-6 min-h-[120px] sm:min-h-[160px] flex flex-col justify-between transition-all duration-300 hover:border-primary/30 hover:shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
+      className={`rounded-2xl border border-border bg-card p-4 sm:p-6 h-[140px] sm:h-[170px] flex flex-col justify-between transition-all duration-300 hover:border-primary/30 hover:shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
