@@ -108,7 +108,7 @@ export default function Dashboard() {
 
         {/* Start here — 3-card grid */}
         <div className="space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Start here</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{isReturning ? 'Continue creating' : 'Start here'}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Card 1 — Product Visuals */}
             <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
@@ -122,7 +122,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/generate/product-images')}>
-                Start creating
+                {isReturning ? 'Create now' : 'Start creating'}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
