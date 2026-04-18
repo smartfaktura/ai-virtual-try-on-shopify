@@ -1,22 +1,19 @@
 
 
-## Unify dashboard — use new-user layout for everyone
+## Show out-of-credits banner when balance < 4
 
-### Plan
-In `src/pages/Dashboard.tsx`, remove the returning-user branch entirely and render the new-user layout for all authenticated users (regardless of `generatedCount` / first-visit state).
+### Change in `src/pages/Dashboard.tsx`
+Update the hero condition that currently renders only when `isEmpty` (balance === 0) to also render when balance is below 4.
 
-### Changes
-1. **Delete the returning-user JSX block** (Welcome back heading + Tools + Quick actions + Plan & Credits + Discover + Recent + Feedback sections).
-2. **Always render the new-user layout** — the one with the "Tools" cards (Create Product Visuals / Create with Prompt / Explore Examples) the user already approved.
-3. **Update the greeting** in the unified layout to be friendly for both first-time AND returning users: keep the welcome line but use a name-aware greeting like `Welcome{firstName ? `, ${firstName}` : ''} 👋` so returning users still feel acknowledged.
-4. **Cleanup**: remove now-unused imports, queries, state, and modals only used by the deleted branch (`UpgradePlanModal`, `upgradeOpen`, `EarnCreditsModal` if unused, `DashboardDiscoverSection` if unused, `lastJob`/`topWorkflow`/`generatedCount` queries, `useCredits` destructure if unused, etc.).
-5. Keep `LowCreditsBanner` at top so credit status is still visible.
-6. New-user layout's existing structure (Tools cards + whatever else it currently shows) stays untouched.
+- Replace `{isEmpty ? (...banner...) : (...balance line...)}` with: render banner when `isEmpty || balance < 4`, otherwise render nothing (per previous decision to drop the inline `{balance} credits available` line).
+- Banner copy stays dynamic:
+  - `isEmpty` → title "You're out of credits", body "Get credits to start creating", CTA "Get Credits"
+  - `balance < 4` (not empty) → title "Running low on credits", body `Only ${balance} credits left — top up to avoid interruptions`, CTA "Get Credits"
+- Same styling, same position (right after subtitle), same `openBuyModal` action.
 
 ### Acceptance
-- All users see the same dashboard (the current new-user layout)
-- No conditional first-visit branching
-- Greeting works for both new and returning users
-- No dead imports / unused queries / console errors
-- `/app` route still loads cleanly
+- Balance 0 → banner shown ("out of credits" copy)
+- Balance 1–3 → banner shown ("running low" copy)
+- Balance ≥ 4 → no banner, clean hero
+- No other dashboard sections touched
 
