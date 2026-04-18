@@ -859,7 +859,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </div>
 
         ) : (
-          /* Main image + reference angle slots — stacked vertically */>
+          /* Main image + reference angle slots — stacked vertically */
           <div className="rounded-xl border border-border/50 bg-muted/10 p-3 space-y-3">
             {/* Main image — constrained width */}
             <div className="relative group rounded-2xl overflow-hidden bg-muted/20 max-w-[280px] w-full min-w-0">
