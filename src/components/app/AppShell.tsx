@@ -285,8 +285,8 @@ export function AppShell({ children }: AppShellProps) {
             <>
               <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
               <div className={cn(
-                'absolute bottom-full mb-2 w-52 bg-popover border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden',
-                isCollapsed ? 'left-1/2 -translate-x-1/2' : 'left-3'
+                'absolute w-52 max-w-[calc(100vw-2rem)] bg-popover border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden',
+                isCollapsed ? 'left-full ml-2 bottom-0' : 'left-3 bottom-full mb-2'
               )}>
                 <div className="px-3 py-2.5 border-b border-border">
                   <p className="text-sm font-semibold">{displayName}</p>
