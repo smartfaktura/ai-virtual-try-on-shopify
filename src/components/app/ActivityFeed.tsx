@@ -141,7 +141,7 @@ export function ActivityFeed() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Activity</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Recent Activity</h2>
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="divide-y divide-border">
           {activities.map((activity) => {
