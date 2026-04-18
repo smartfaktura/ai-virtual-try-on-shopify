@@ -135,16 +135,9 @@ export function CatalogStepProducts({
         )}
       </div>
 
-      {/* ── Underline Tabs ───────────────────────────────── */}
-      <div className="flex gap-3 sm:gap-6 border-b border-border overflow-x-auto">
-        <UnderlineTab active={activeTab === 'library'} onClick={() => setActiveTab('library')} icon={Package} label="My Products" />
-        <UnderlineTab active={activeTab === 'url'} onClick={() => setActiveTab('url')} icon={Globe} label="Import URL" />
-        <UnderlineTab active={activeTab === 'csv'} onClick={() => setActiveTab('csv')} icon={Upload} label="Upload CSV" />
-      </div>
-
-      {/* ── Tab: Library ─────────────────────────────────── */}
-      {activeTab === 'library' && (
-        <>
+      {/* ── Library ─────────────────────────────────────── */}
+      <>
+        {products.length === 0 ? (
           {products.length === 0 ? (
             <div className="text-center py-20 rounded-2xl border-2 border-dashed border-border bg-muted/20">
               <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
