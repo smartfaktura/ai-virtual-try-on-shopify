@@ -143,7 +143,7 @@ export function FreestylePromptCard({ onSelect, mobileCompact }: Props) {
         <div
           className={cn(
             'relative z-10 w-full flex flex-col items-center gap-2.5 transition-opacity duration-500',
-            mobileCompact ? 'px-3' : 'px-4',
+            mobileCompact ? 'px-2' : 'px-4',
             isFading ? 'opacity-0' : 'opacity-100',
           )}
           style={{ transitionTimingFunction: APPLE_EASE }}
