@@ -60,7 +60,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   const cardContent = (
     <div
-      className={`rounded-2xl border border-border bg-card p-4 sm:p-6 min-h-[120px] sm:min-h-[160px] flex flex-col justify-between transition-all duration-300 hover:border-primary/30 hover:shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
+      className={`rounded-2xl border border-border bg-card p-4 sm:p-6 h-[140px] sm:h-[170px] flex flex-col justify-between transition-all duration-300 hover:border-primary/30 hover:shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -73,14 +73,14 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
         {value !== undefined ? (
           <div className="mt-3">
-            <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none whitespace-nowrap">{value}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-none whitespace-nowrap">{value}</p>
             {suffix && (
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{suffix}</p>
             )}
           </div>
         ) : description ? (
           <div className="mt-3">
-            <p className="text-xl sm:text-2xl font-bold text-foreground leading-tight line-clamp-2">{description}</p>
+            <p className="text-base sm:text-lg font-semibold text-foreground leading-tight line-clamp-2">{description}</p>
           </div>
         ) : null}
 
