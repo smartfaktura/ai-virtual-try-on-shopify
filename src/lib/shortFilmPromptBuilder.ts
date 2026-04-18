@@ -237,7 +237,13 @@ const HUMAN_NEGATIVES = [
 
 /**
  * Build a cinematic video prompt for a single shot in a short film.
- * Produces high-end cinematographic language optimized for Kling v3.
+ *
+ * Phase 3 priority model (truncation order = P3 → P2, never P1):
+ *  P1 — product identity lock, must-preserve, role objective, framing,
+ *       reference tokens, category hard constraints, continuity, intent
+ *       guidance, clarity-first constraints.
+ *  P2 — camera/subject motion, user notes, pace, product priority.
+ *  P3 — tone flavor, lens mood, lighting nuance, color grading.
  */
 export function buildShotPrompt(
   shot: ShotPlanItem,
@@ -246,47 +252,89 @@ export function buildShotPrompt(
 ): { prompt: string; negative_prompt: string } {
   const MAX_PROMPT_LENGTH = 510;
   const roleCine = lookupRoleCinematic(shot.role);
+  const categoryMod = context.category ? getCategoryModule(context.category) : undefined;
+  const fidelity = context.fidelity;
+  const clarityFirst = !!(context.clarityFirst || shot.clarity_first);
 
-  // Priority 1 — must have
+  // ── P1 — mandatory, never truncated ─────────────────────────────
   const p1: string[] = [];
+
+  // Reference token (highest priority — anchors product identity).
   if (typeof imageIndex === 'number' && imageIndex >= 1) {
     p1.push(`Feature subject from <<<image_${imageIndex}>>>.`);
   }
 
-  // For character-visible shots, add human directives with speech alignment
+  // Product identity lock.
+  if (fidelity?.productName) {
+    p1.push(`Product: ${fidelity.productName}. Preserve identity exactly.`);
+  }
+  const mustPreserve = fidelity?.mustPreserveAttributes?.slice(0, 3);
+  if (mustPreserve?.length) {
+    p1.push(`Must preserve: ${mustPreserve.join('; ')}.`);
+  }
+
+  // Per-shot fidelity priorities (compact form).
+  const fidelityFlags: string[] = [];
+  if (shot.branding_accuracy_priority === 'high') fidelityFlags.push('logos exact');
+  if (shot.text_legibility_priority === 'high')   fidelityFlags.push('text legible');
+  if (shot.shape_accuracy_priority === 'high')    fidelityFlags.push('shape true');
+  if (shot.material_accuracy_priority === 'high') fidelityFlags.push('material accurate');
+  if (fidelityFlags.length) {
+    p1.push(`Fidelity: ${fidelityFlags.join(', ')}.`);
+  }
+
+  // Character speech alignment (still P1 when present).
   if (shot.character_visible) {
     p1.push('Natural portrait, authentic expression, professional model.');
     if (shot.script_line && shot.vo_enabled !== false) {
       p1.push(`Character delivering line: "${shot.script_line}" — match mouth movement and expression to speech cadence, natural lip movement.`);
-    } else {
-      p1.push('Character in conversation, expressive gesture.');
     }
   }
 
+  // Role objective.
   p1.push(roleCine.directive);
 
-  // Inject scene_type framing directive (P1 — critical for Kling shot composition)
+  // Scene-type framing (P1 — composition is non-negotiable).
   const framingDirective = SCENE_TYPE_FRAMING[shot.scene_type];
-  if (framingDirective) {
-    p1.push(framingDirective);
-  }
+  if (framingDirective) p1.push(framingDirective);
 
   p1.push(shot.purpose);
 
-  // Priority 1.5 — user-selected style & scene presets (high priority, should not be truncated)
+  // Continuity locks.
+  const continuityHints = continuityToPromptHints(shot.continuity_lock);
+  if (continuityHints.length) {
+    p1.push(continuityHints.join(' '));
+  }
+
+  // Clarity-first constraint (only when active).
+  if (clarityFirst) {
+    p1.push('Clarity-first: product fully readable, stable framing, no obscuring abstraction.');
+  }
+
+  // Category hard constraint — single compact line.
+  if (categoryMod?.mandatoryCoverage?.length) {
+    p1.push(`Category emphasis: ${categoryMod.mandatoryCoverage.slice(0, 2).join('; ')}.`);
+  }
+
+  // Intent guidance — single short line.
+  if (context.contentIntent) {
+    const intentLine = INTENT_PROMPT_HINT[context.contentIntent];
+    if (intentLine) p1.push(intentLine);
+  }
+
+  // User-selected style/scene preset names (P1 — explicit user choice).
   const styleRef = context.references?.find(r => r.role === 'style' && !r.url && r.name);
   if (styleRef?.name) {
     const keywords = styleRef.name.includes(':') ? styleRef.name.split(':').slice(1).join(':').trim() : styleRef.name;
     if (keywords) p1.push(`Visual style: ${keywords}.`);
   }
-
   const sceneRef = context.references?.find(r => r.role === 'scene' && !r.url && r.name);
   if (sceneRef?.name) {
     const sceneDesc = sceneRef.name.includes(':') ? sceneRef.name.split(':').slice(1).join(':').trim() : sceneRef.name;
     if (sceneDesc) p1.push(`Environment: ${sceneDesc}.`);
   }
 
-  // Priority 2 — important
+  // ── P2 — important, truncated only after P3 is gone ─────────────
   const p2: string[] = [];
   if (shot.camera_motion && shot.camera_motion !== 'static') {
     p2.push(`Smooth ${shot.camera_motion.replace(/_/g, ' ')} camera movement.`);
@@ -294,53 +342,68 @@ export function buildShotPrompt(
   if (shot.subject_motion && shot.subject_motion !== 'none') {
     p2.push(`Subject motion: ${shot.subject_motion.replace(/_/g, ' ')}.`);
   }
-  if (shot.user_notes) {
-    p2.push(shot.user_notes);
-  }
+  if (shot.user_notes) p2.push(shot.user_notes);
 
-  const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
-  p2.push(`Cinematic 4K ${tonePreset}.`);
-
-  // Priority 3 — nice to have
+  // ── P3 — stylistic, truncated first ─────────────────────────────
   const p3: string[] = [];
+  const tonePreset = TONE_PRESETS[context.filmType] || context.tone || TONE_PRESETS.custom;
+  p3.push(`Cinematic 4K ${tonePreset}.`);
   p3.push(roleCine.lighting);
   p3.push(roleCine.lens);
   if (shot.script_line && !shot.character_visible) {
     p3.push(`Visual matches: "${shot.script_line}".`);
   }
-  if (shot.preservation_strength === 'high') {
-    p3.push('Maintain strong visual consistency with references.');
-  } else if (shot.preservation_strength === 'medium') {
-    p3.push('Maintain visual consistency with reference styling.');
-  }
   p3.push('Professional color grading, film-grade production.');
 
-  // Build prompt respecting char limit
+  // ── Assemble with strict priority budget ────────────────────────
+  // P1 is always kept (even if it exceeds budget — never silently drop fidelity).
   let prompt = p1.join(' ');
-  for (const part of [...p2, ...p3]) {
+  // Add P2 first (more important than style flavor), then P3.
+  for (const part of p2) {
+    const next = prompt + ' ' + part;
+    if (next.length > MAX_PROMPT_LENGTH) break;
+    prompt = next;
+  }
+  for (const part of p3) {
     const next = prompt + ' ' + part;
     if (next.length > MAX_PROMPT_LENGTH) break;
     prompt = next;
   }
 
-  // Hard truncate safety net
-  if (prompt.length > MAX_PROMPT_LENGTH) {
+  // Soft truncation safety only on overflow that comes from oversized P1.
+  if (prompt.length > MAX_PROMPT_LENGTH * 1.05) {
     const trimmed = prompt.slice(0, MAX_PROMPT_LENGTH);
     const lastDot = trimmed.lastIndexOf('.');
     prompt = lastDot > MAX_PROMPT_LENGTH * 0.6 ? trimmed.slice(0, lastDot + 1) : trimmed.replace(/\s\S*$/, '');
   }
 
-  // Build negative prompt — add human-specific negatives when character is visible
+  // ── Negatives ───────────────────────────────────────────────────
   const allNegatives = [...BASE_NEGATIVES, ...roleCine.negatives];
-  if (shot.character_visible) {
-    allNegatives.push(...HUMAN_NEGATIVES);
+  if (shot.character_visible) allNegatives.push(...HUMAN_NEGATIVES);
+  if (categoryMod?.negatives?.length) allNegatives.push(...categoryMod.negatives);
+  if (clarityFirst) {
+    allNegatives.push('obscured product', 'silhouette only', 'extreme abstraction', 'unreadable label');
   }
 
   return {
     prompt,
-    negative_prompt: allNegatives.join(', '),
+    negative_prompt: Array.from(new Set(allNegatives)).join(', '),
   };
 }
+
+/* ─── Compact intent-aware prompt hints (P1) ─── */
+const INTENT_PROMPT_HINT: Record<ContentIntent, string> = {
+  product_showcase:      'Premium product showcase, hero clarity, elegant pacing.',
+  product_detail_film:   'Detail film: macro craftsmanship, no hard sell.',
+  pdp_video:             'PDP loop: maximum product clarity, minimal abstraction.',
+  social_content:        'Social-native energy, vertical-friendly framing.',
+  creator_style_content: 'Creator-native, observational, believable interaction.',
+  launch_teaser:         'Tease then reveal, build anticipation cleanly.',
+  brand_mood_film:       'Brand mood, atmospheric, sparse and emotive.',
+  campaign_editorial:    'Editorial campaign, human × product, cinematic.',
+  feature_benefit_video: 'Feature stack, clean brand finish.',
+  performance_ad:        'Direct response, hook first, clear closing logic.',
+};
 
 /**
  * Estimate total credits for the entire short film.
