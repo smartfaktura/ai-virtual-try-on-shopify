@@ -260,7 +260,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: '/images/catalog-studio/VOVVAI-Catalog-Studio-1.jpg',
     objectPosition: 'center',
-    interval: 500,
+    interval: 750,
     backgrounds: [
       '/images/catalog-studio/VOVVAI-Catalog-Studio-1.jpg',
       '/images/catalog-studio/VOVVAI-Catalog-Studio-2.jpg',
