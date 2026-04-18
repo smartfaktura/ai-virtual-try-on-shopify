@@ -894,12 +894,19 @@ export function useShortFilmProject() {
         await supabase.from('video_inputs').insert(inputRows);
       }
 
+      const sharedFidelity = buildProductFidelity({
+        hasPackagingRef: references.some(r => /packag/i.test(r.name || '')),
+        hasLogo: references.some(r => r.role === 'logo'),
+      });
       const shotRows = shots.map((shot) => {
         const { prompt, negative_prompt } = buildShotPrompt(shot, {
           filmType,
           tone: settings.tone || '',
           settings,
           references,
+          contentIntent: contentIntent ?? undefined,
+          fidelity: sharedFidelity,
+          clarityFirst: clarityFirstMode,
         });
         return {
           project_id: currentProjectId!,
@@ -951,6 +958,9 @@ export function useShortFilmProject() {
           tone: settings.tone || '',
           settings,
           references,
+          contentIntent: contentIntent ?? undefined,
+          fidelity: sharedFidelity,
+          clarityFirst: clarityFirstMode,
         }, imageIdx);
 
         // Capture negative prompt from first shot (base negatives are shared)
