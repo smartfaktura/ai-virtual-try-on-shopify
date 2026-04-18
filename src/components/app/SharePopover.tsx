@@ -3,6 +3,7 @@ import { Share2, Link2, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/lib/brandedToast';
+import { Button } from '@/components/ui/button';
 
 interface SharePopoverProps {
   url: string;
