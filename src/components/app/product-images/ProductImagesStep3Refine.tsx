@@ -2474,7 +2474,22 @@ export function ProductImagesStep3Refine({
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots. Optional.</p>
+                  {autoPickedPresetName && !allModelScenesHaveOutfitHint && (
+                    <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5 flex-wrap">
+                      <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                      <span>
+                        Auto-styled with <span className="font-medium text-foreground">{autoPickedPresetName}</span> — change anytime below.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clearAutoPick}
+                        className="text-primary hover:underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </p>
+                  )}
                   {hasMultipleCategories && !allModelScenesHaveOutfitHint && (
                     <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 mt-2 flex items-center gap-1.5">
                       <Info className="w-3 h-3 flex-shrink-0 text-primary" />
