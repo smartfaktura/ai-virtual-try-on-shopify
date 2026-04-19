@@ -122,6 +122,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [expandedChips, setExpandedChips] = useState<Record<string, boolean>>({});
   const [singleChipsExpanded, setSingleChipsExpanded] = useState(false);
 
+  // Per-item expand/collapse for batch cards. When AI analysis fills the fields,
+  // we collapse the card to a tidy row so the modal stays scannable.
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  // Single product mode: user-toggled "show full editor" flag
+  const [singleExpanded, setSingleExpanded] = useState(false);
+
   // Edit mode
   const isEditing = !!editingProduct;
 
@@ -667,113 +673,160 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
         >
-          {batchItems.map((item) => (
-            <div
-              key={item.id}
-              className="group relative rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-md"
-            >
-              <div className="flex gap-3 p-3">
-                {/* Thumbnail */}
-                <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted/30">
-                  <img
-                    src={item.previewUrl}
-                    alt={item.title || 'Product'}
-                    className="w-full h-full object-cover"
-                  />
-                  {item.isAnalyzing && (
-                    <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                    </div>
-                  )}
-                </div>
+          {batchItems.map((item) => {
+            const aiFilled = !!item.title.trim() && !!item.productType.trim();
+            const isExpanded = expandedItems[item.id] ?? (item.isAnalyzing || !aiFilled);
 
-                {/* Fields */}
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="grid grid-cols-2 gap-2 flex-1">
-                      <Input
-                        placeholder={item.isAnalyzing ? 'Analyzing…' : 'Product name *'}
-                        value={item.title}
-                        onChange={(e) => updateBatchItem(item.id, 'title', e.target.value)}
-                        maxLength={200}
-                        className={cn(
-                          'h-8 text-xs',
-                          item.isAnalyzing && !item.manualEdits.title && 'animate-pulse ring-1 ring-primary/30'
-                        )}
-                      />
-                      <Input
-                        placeholder={item.isAnalyzing ? 'Analyzing…' : 'Type (e.g. Shoes)'}
-                        value={item.productType}
-                        onChange={(e) => updateBatchItem(item.id, 'productType', e.target.value)}
-                        maxLength={100}
-                        className={cn(
-                          'h-8 text-xs',
-                          item.isAnalyzing && !item.manualEdits.productType && 'animate-pulse ring-1 ring-primary/30'
-                        )}
-                      />
-                    </div>
-                    <button
-                      onClick={() => removeBatchItem(item.id)}
-                      className="w-6 h-6 shrink-0 rounded-full bg-muted/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+            if (!isExpanded) {
+              // ── Collapsed compact row ──
+              return (
+                <div
+                  key={item.id}
+                  className="group flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 transition-all hover:shadow-sm"
+                >
+                  <div className="relative w-12 h-12 shrink-0 rounded-md overflow-hidden bg-muted/30">
+                    <img src={item.previewUrl} alt={item.title} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{item.title || 'Untitled product'}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{item.productType || '—'}</p>
+                  </div>
+                  <button
+                    onClick={() => setExpandedItems(prev => ({ ...prev, [item.id]: true }))}
+                    aria-label="Edit"
+                    className="w-7 h-7 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-center transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => removeBatchItem(item.id)}
+                    aria-label="Remove"
+                    className="w-7 h-7 shrink-0 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            }
+
+            // ── Expanded editable card ──
+            return (
+              <div
+                key={item.id}
+                className="group relative rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-md"
+              >
+                <div className="flex gap-3 p-3">
+                  {/* Thumbnail */}
+                  <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted/30">
+                    <img
+                      src={item.previewUrl}
+                      alt={item.title || 'Product'}
+                      className="w-full h-full object-cover"
+                    />
+                    {item.isAnalyzing && (
+                      <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                      </div>
+                    )}
                   </div>
 
-                  {/* Quick type chips — collapsible */}
-                  {!item.isAnalyzing && (
-                    <>
-                      {(!item.productType || expandedChips[item.id]) ? (
-                        <div className="flex flex-wrap gap-1">
-                          {QUICK_TYPES.map((t) => (
-                            <Badge
-                              key={t}
-                              variant={item.productType === t ? 'default' : 'outline'}
-                              className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
-                              onClick={() => {
-                                updateBatchItem(item.id, 'productType', item.productType === t ? '' : t);
-                                if (item.productType !== t) setExpandedChips(prev => ({ ...prev, [item.id]: false }));
-                              }}
-                            >
-                              {t}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <span
-                          onClick={() => setExpandedChips(prev => ({ ...prev, [item.id]: true }))}
-                          className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
+                  {/* Fields */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <div className="grid grid-cols-2 gap-2 flex-1">
+                        <Input
+                          placeholder={item.isAnalyzing ? 'Analyzing…' : 'Product name *'}
+                          value={item.title}
+                          onChange={(e) => updateBatchItem(item.id, 'title', e.target.value)}
+                          maxLength={200}
+                          className={cn(
+                            'h-8 text-xs',
+                            item.isAnalyzing && !item.manualEdits.title && 'animate-pulse ring-1 ring-primary/30'
+                          )}
+                        />
+                        <Input
+                          placeholder={item.isAnalyzing ? 'Analyzing…' : 'Type (e.g. Shoes)'}
+                          value={item.productType}
+                          onChange={(e) => updateBatchItem(item.id, 'productType', e.target.value)}
+                          maxLength={100}
+                          className={cn(
+                            'h-8 text-xs',
+                            item.isAnalyzing && !item.manualEdits.productType && 'animate-pulse ring-1 ring-primary/30'
+                          )}
+                        />
+                      </div>
+                      {aiFilled && !item.isAnalyzing && (
+                        <button
+                          onClick={() => setExpandedItems(prev => ({ ...prev, [item.id]: false }))}
+                          aria-label="Collapse"
+                          className="w-6 h-6 shrink-0 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors"
                         >
-                          Change category
-                        </span>
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
                       )}
-                    </>
-                  )}
+                      <button
+                        onClick={() => removeBatchItem(item.id)}
+                        className="w-6 h-6 shrink-0 rounded-full bg-muted/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <Textarea
-                      placeholder={item.isAnalyzing ? 'Analyzing…' : 'Brief description…'}
-                      value={item.description}
-                      onChange={(e) => updateBatchItem(item.id, 'description', e.target.value)}
-                      maxLength={500}
-                      rows={2}
-                      className={cn(
-                        'resize-none min-h-0 text-xs',
-                        item.isAnalyzing && !item.manualEdits.description && 'animate-pulse ring-1 ring-primary/30'
-                      )}
-                    />
-                    <Input
-                      placeholder="Dimensions (optional)"
-                      value={item.dimensions}
-                      onChange={(e) => updateBatchItem(item.id, 'dimensions', e.target.value)}
-                      maxLength={100}
-                      className="h-8 text-xs self-start"
-                    />
+                    {/* Quick type chips — collapsible */}
+                    {!item.isAnalyzing && (
+                      <>
+                        {(!item.productType || expandedChips[item.id]) ? (
+                          <div className="flex flex-wrap gap-1">
+                            {QUICK_TYPES.map((t) => (
+                              <Badge
+                                key={t}
+                                variant={item.productType === t ? 'default' : 'outline'}
+                                className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
+                                onClick={() => {
+                                  updateBatchItem(item.id, 'productType', item.productType === t ? '' : t);
+                                  if (item.productType !== t) setExpandedChips(prev => ({ ...prev, [item.id]: false }));
+                                }}
+                              >
+                                {t}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span
+                            onClick={() => setExpandedChips(prev => ({ ...prev, [item.id]: true }))}
+                            className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
+                          >
+                            Change category
+                          </span>
+                        )}
+                      </>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Textarea
+                        placeholder={item.isAnalyzing ? 'Analyzing…' : 'Brief description…'}
+                        value={item.description}
+                        onChange={(e) => updateBatchItem(item.id, 'description', e.target.value)}
+                        maxLength={500}
+                        rows={2}
+                        className={cn(
+                          'resize-none min-h-0 text-xs',
+                          item.isAnalyzing && !item.manualEdits.description && 'animate-pulse ring-1 ring-primary/30'
+                        )}
+                      />
+                      <Input
+                        placeholder="Dimensions (optional)"
+                        value={item.dimensions}
+                        onChange={(e) => updateBatchItem(item.id, 'dimensions', e.target.value)}
+                        maxLength={100}
+                        className="h-8 text-xs self-start"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Progress */}
@@ -786,8 +839,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pt-2 sticky bottom-0 bg-background pb-1">
+        {/* Sticky footer actions — always visible above the modal's bottom edge */}
+        <div className="sticky bottom-0 -mx-5 sm:-mx-7 px-5 sm:px-7 -mb-5 sm:-mb-7 pb-5 sm:pb-7 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2">
           <Button variant="ghost" onClick={onClose} disabled={isUploading} >
             Cancel
           </Button>
@@ -1203,7 +1256,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* Footer — only shown when an image is present */}
       {singleImage && (
-        <div className="flex justify-end gap-3 pt-2 pb-1 sm:static sticky bottom-0 bg-background sm:bg-transparent animate-fade-in">
+        <div className="sticky bottom-0 -mx-5 sm:-mx-7 px-5 sm:px-7 -mb-5 sm:-mb-7 pb-5 sm:pb-7 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2 animate-fade-in">
           <Button variant="ghost" onClick={onClose} disabled={isUploading} >
             Cancel
           </Button>
