@@ -1256,7 +1256,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* Footer — only shown when an image is present */}
       {singleImage && (
-        <div className="flex justify-end gap-3 pt-2 pb-1 sm:static sticky bottom-0 bg-background sm:bg-transparent animate-fade-in">
+        <div className="sticky bottom-0 -mx-7 px-7 -mb-7 pb-5 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2 animate-fade-in">
           <Button variant="ghost" onClick={onClose} disabled={isUploading} >
             Cancel
           </Button>
