@@ -51,7 +51,7 @@ export function useOutfitPresets() {
     if (!user) return null;
     const { data, error } = await supabase
       .from('user_outfit_presets')
-      .insert({ user_id: user.id, name, config: config as unknown as Record<string, unknown>, category, gender })
+      .insert([{ user_id: user.id, name, config: config as unknown as Record<string, unknown>, category, gender }])
       .select()
       .single();
     if (error) return null;
