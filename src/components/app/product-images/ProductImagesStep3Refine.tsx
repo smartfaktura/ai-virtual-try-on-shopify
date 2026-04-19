@@ -36,8 +36,10 @@ import {
   TOP_TYPES, BOTTOM_TYPES, OUTERWEAR_TYPES, DRESS_TYPES, SHOE_TYPES,
   BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES, COVER_UP_TYPES,
   JEWELRY_NECKLACES, JEWELRY_EARRINGS, JEWELRY_BRACELETS, JEWELRY_RINGS, JEWELRY_METALS,
-  pickDefaultPreset,
+  pickDefaultPreset, pickDefaultPresetPerProduct,
 } from '@/lib/outfitVocabulary';
+import { AiStylistCard } from './AiStylistCard';
+import { toast } from '@/lib/brandedToast';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
@@ -1907,30 +1909,71 @@ export function ProductImagesStep3Refine({
     return Array.from(cats);
   }, [selectedProductsList, analyses, primaryCategory]);
 
-  // Auto-pick a sensible default outfit on first mount when nothing is configured.
-  const [autoPickedPresetName, setAutoPickedPresetName] = useState<string | null>(null);
+  // ── AI Stylist: per-product auto-pick ──
+  // Each selected product gets its own preset suited to its category.
+  // Stored in details.outfitConfigByProduct so the prompt builder can resolve
+  // the right outfit for each product at generation time.
+  const [restyleSeed, setRestyleSeed] = useState(0);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const autoPickedRef = useRef(false);
+
+  // Build the per-product picks (productId → preset) used by both the AI Stylist card
+  // and the auto-apply effect below. Recomputed when products, categories, or seed change.
+  const perProductPicks = useMemo(() => {
+    if (selectedProductsList.length === 0) return {} as Record<string, ReturnType<typeof pickDefaultPreset>>;
+    const items = selectedProductsList.map(p => ({
+      id: p.id,
+      categories: [analyses[p.id]?.category, primaryCategory].filter(Boolean) as string[],
+    }));
+    return pickDefaultPresetPerProduct(items, restyleSeed);
+  }, [selectedProductsList, analyses, primaryCategory, restyleSeed]);
+
+  // Apply the per-product picks on first mount (silent) — and again whenever Re-style is clicked.
   useEffect(() => {
-    if (autoPickedRef.current) return;
     if (!hasPersonBlock) return;
     const cfg = details.outfitConfig;
-    const hasAnySlot = cfg && Object.keys(cfg).some(k => {
+    const hasGlobal = cfg && Object.keys(cfg).some(k => {
       const v = (cfg as Record<string, unknown>)[k];
       return v !== undefined && v !== null && v !== '';
     });
-    if (hasAnySlot) { autoPickedRef.current = true; return; }
-    const picked = pickDefaultPreset(selectedProductCategories);
-    if (picked) {
+    const hasPerProduct = details.outfitConfigByProduct && Object.keys(details.outfitConfigByProduct).length > 0;
+    // First mount with any existing user customization → leave alone
+    if (!autoPickedRef.current && (hasGlobal || hasPerProduct)) {
       autoPickedRef.current = true;
-      setAutoPickedPresetName(picked.name);
-      update({ outfitConfig: picked.config });
+      return;
     }
+    // Apply (or re-apply on restyle)
+    if (Object.keys(perProductPicks).length === 0) return;
+    const map: Record<string, OutfitConfig> = {};
+    for (const [pid, preset] of Object.entries(perProductPicks)) {
+      if (preset) map[pid] = preset.config;
+    }
+    autoPickedRef.current = true;
+    update({ outfitConfigByProduct: map, outfitConfig: undefined });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPersonBlock, selectedProductCategories]);
+  }, [hasPersonBlock, restyleSeed, perProductPicks]);
+
+  const handleRestyle = useCallback(() => {
+    setRestyleSeed(s => s + 1);
+    const count = selectedProductsList.length;
+    toast.success(`Re-styled ${count} ${count === 1 ? 'product' : 'products'}`);
+  }, [selectedProductsList.length]);
+
+  // Picks shown in the card (productId → preset name), filtered to current selection
+  const stylistCardPicks = useMemo(() => {
+    return selectedProductsList
+      .map(p => ({
+        product: p,
+        presetName: perProductPicks[p.id]?.name || '',
+      }))
+      .filter(x => !!x.presetName);
+  }, [selectedProductsList, perProductPicks]);
+
+  // Legacy single-name fallback (used in Edit-Outfit override card)
+  const autoPickedPresetName = stylistCardPicks[0]?.presetName || null;
 
   const clearAutoPick = useCallback(() => {
-    setAutoPickedPresetName(null);
-    update({ outfitConfig: {} });
+    update({ outfitConfig: {}, outfitConfigByProduct: {} });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -2476,26 +2519,11 @@ export function ProductImagesStep3Refine({
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots. Optional.</p>
-                  {autoPickedPresetName && !allModelScenesHaveOutfitHint && (
-                    <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5 flex-wrap">
-                      <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                      <span>
-                        Auto-styled with <span className="font-medium text-foreground">{autoPickedPresetName}</span> — change anytime below.
-                      </span>
-                      <button
-                        type="button"
-                        onClick={clearAutoPick}
-                        className="text-primary hover:underline cursor-pointer"
-                      >
-                        Clear
-                      </button>
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
                   {hasMultipleCategories && !allModelScenesHaveOutfitHint && (
                     <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 mt-2 flex items-center gap-1.5">
                       <Info className="w-3 h-3 flex-shrink-0 text-primary" />
-                      Mixed categories — outfit slots are auto-adjusted per product at generation time (e.g., Bottom is skipped for skirt products).
+                      Mixed categories — each product is styled separately to fit its own silhouette.
                     </p>
                   )}
                 </div>
@@ -2552,7 +2580,7 @@ export function ProductImagesStep3Refine({
                     </div>
                   </div>
                 ) : (
-                  /* Standard outfit panel */
+                  /* Standard outfit panel — AI Stylist card by default, full editor on Customize */
                   <>
                     {someModelScenesHaveOutfitHint && (
                       <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 flex items-center gap-1.5">
@@ -2560,78 +2588,35 @@ export function ProductImagesStep3Refine({
                         Some shots have their own styling direction — outfit settings apply to remaining shots only.
                       </p>
                     )}
-                    <ZaraOutfitPanel
-                      details={details}
-                      update={update}
-                      primaryCategory={primaryCategory}
-                      modelGender={selectedModelGender}
-                      analyses={analyses}
-                      selectedProductIds={selectedProductIds}
-                      allProducts={allProducts}
-                      productCategories={selectedProductCategories}
-                    />
+
+                    {stylistCardPicks.length > 0 && (
+                      <AiStylistCard
+                        picks={stylistCardPicks}
+                        onRestyle={handleRestyle}
+                        onToggleCustomize={() => setCustomizeOpen(o => !o)}
+                        customizeOpen={customizeOpen}
+                      />
+                    )}
+
+                    {customizeOpen && (
+                      <div className="space-y-3 pt-1">
+                        <p className="text-[11px] text-muted-foreground italic">
+                          Editing here applies a single outfit to all your products (overrides per-product picks).
+                        </p>
+                        <ZaraOutfitPanel
+                          details={details}
+                          update={update}
+                          primaryCategory={primaryCategory}
+                          modelGender={selectedModelGender}
+                          analyses={analyses}
+                          selectedProductIds={selectedProductIds}
+                          allProducts={allProducts}
+                          productCategories={selectedProductCategories}
+                        />
+                      </div>
+                    )}
                   </>
                 )}
-
-                {/* Wardrobe summary — explains in plain language what is active and where it applies */}
-                {stylingPreview.mode !== 'hidden' && (() => {
-                  const sourceLabel = (src: 'scene' | 'user' | 'default', overrideActive: boolean) => {
-                    if (src === 'scene') return "Uses this shot's built-in styling";
-                    if (src === 'user') return overrideActive ? 'Uses your selections above (forced on all shots)' : 'Uses your selections above';
-                    return 'Uses automatic styling';
-                  };
-                  const sourceClass = (src: 'scene' | 'user' | 'default') => {
-                    if (src === 'scene') return 'bg-primary/10 text-primary border-primary/20';
-                    if (src === 'user') return 'bg-foreground/5 text-foreground border-border';
-                    return 'bg-muted text-muted-foreground border-border';
-                  };
-                  const totalShots = stylingSourceByScene.length;
-                  return (
-                    <div className="space-y-2 pt-1 rounded-lg border border-border/60 bg-muted/20 p-3">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Wardrobe summary</p>
-
-                      {userOutfitFilled ? (
-                        <div className="space-y-1">
-                          <p className="text-xs text-foreground">
-                            Applies to {totalShots} model {totalShots === 1 ? 'shot' : 'shots'} — using your selections above:
-                          </p>
-                          <ul className="text-[11px] text-muted-foreground space-y-0.5 pl-4 list-disc marker:text-muted-foreground/50">
-                            {userOutfitSummaryParts.map((p, i) => <li key={i}>{p}</li>)}
-                          </ul>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          No custom outfit selected. Shots will use built-in scene styling or automatic styling.
-                        </p>
-                      )}
-
-                      {stylingPreview.mode === 'uniform' ? (
-                        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
-                          <span>{`All ${stylingPreview.count} model ${stylingPreview.count === 1 ? 'shot' : 'shots'}:`}</span>
-                          <span className={cn('px-1.5 py-0.5 rounded border font-medium', sourceClass(stylingPreview.source))}>
-                            {sourceLabel(stylingPreview.source, stylingPreview.overrideActive)}
-                          </span>
-                        </p>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-muted-foreground">Per-shot breakdown:</p>
-                          {stylingPreview.rows.map(({ scene, source }) => (
-                            <div key={scene.id} className="flex items-center justify-between gap-2 text-[11px]">
-                              <span className="truncate text-muted-foreground">{scene.title}</span>
-                              <span className={cn('flex-shrink-0 px-1.5 py-0.5 rounded border font-medium', sourceClass(source))}>
-                                {sourceLabel(source, stylingPreview.overrideActive)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <p className="text-[10px] text-muted-foreground/80 italic pt-0.5">
-                        Outfit edits here apply across your selected model shots — this is not a per-shot wardrobe editor.
-                      </p>
-                    </div>
-                  );
-                })()}
 
                 <Collapsible>
                   <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
