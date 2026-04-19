@@ -122,6 +122,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [expandedChips, setExpandedChips] = useState<Record<string, boolean>>({});
   const [singleChipsExpanded, setSingleChipsExpanded] = useState(false);
 
+  // Per-item expand/collapse for batch cards. When AI analysis fills the fields,
+  // we collapse the card to a tidy row so the modal stays scannable.
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  // Single product mode: user-toggled "show full editor" flag
+  const [singleExpanded, setSingleExpanded] = useState(false);
+
   // Edit mode
   const isEditing = !!editingProduct;
 
