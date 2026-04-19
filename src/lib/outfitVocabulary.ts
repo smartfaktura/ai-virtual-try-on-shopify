@@ -954,3 +954,62 @@ export function pickDefaultPreset(categories: string[] | undefined): BuiltInPres
   const neutral = pool.find(isNeutralPreset);
   return neutral || pool[0];
 }
+
+// Stable string hash → non-negative int (used for deterministic per-product variety)
+function hashString(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Pick a curated preset for a single product, deterministically varied by `seed`.
+ * Bumping `seed` (e.g. via the "Re-style" button) yields a different but still on-category pick.
+ */
+export function pickPresetForProduct(
+  productId: string,
+  categories: string[] | undefined,
+  seed = 0,
+): BuiltInPreset | null {
+  const candidates = filterPresetsByCategories(categories);
+  if (candidates.length === 0) return null;
+  const recommended = candidates.filter(p => p.recommended);
+  const pool = recommended.length > 0 ? recommended : candidates;
+  const idx = hashString(`${productId}::${seed}`) % pool.length;
+  return pool[idx];
+}
+
+/**
+ * Pick a different curated preset per product. Each product gets a category-appropriate
+ * look; the same productId+seed deterministically yields the same result so re-mounts are stable.
+ * Tries to avoid duplicate preset names within a single batch when the pool is large enough.
+ */
+export function pickDefaultPresetPerProduct(
+  products: Array<{ id: string; categories?: string[] }>,
+  seed = 0,
+): Record<string, BuiltInPreset> {
+  const result: Record<string, BuiltInPreset> = {};
+  const usedIds = new Set<string>();
+  for (const p of products) {
+    const cats = p.categories && p.categories.length > 0 ? p.categories : undefined;
+    const candidates = filterPresetsByCategories(cats);
+    if (candidates.length === 0) continue;
+    const recommended = candidates.filter(c => c.recommended);
+    const pool = recommended.length > 0 ? recommended : candidates;
+    // Pick deterministically, then walk forward to dodge duplicates if pool allows it
+    const start = hashString(`${p.id}::${seed}`) % pool.length;
+    let pick = pool[start];
+    if (pool.length > usedIds.size) {
+      for (let i = 0; i < pool.length; i++) {
+        const cand = pool[(start + i) % pool.length];
+        if (!usedIds.has(cand.id)) { pick = cand; break; }
+      }
+    }
+    usedIds.add(pick.id);
+    result[p.id] = pick;
+  }
+  return result;
+}
