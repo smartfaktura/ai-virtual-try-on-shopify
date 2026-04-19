@@ -1,36 +1,41 @@
 
 
-## Issues confirmed
+## Real root causes (re-checked the actual code)
 
-### Issue 1 — Horizontal scrollbar at bottom of modal
-The sticky footer in `ManualProductTab.tsx` (line 1259) uses `-mx-5 sm:-mx-7` negative margins to bleed the white footer background to the drawer edges. But the scroll container in `AddProductModal.tsx` (line 286: `<div className="px-7 pb-7 flex flex-col flex-1 min-h-0">`) has **no `overflow-x-hidden`**. The negative-margin overflow triggers a stray horizontal scrollbar (visible in the screenshot as the gray bar above "Switch method").
+### Issue 1 — Horizontal scrollbar (still there)
+My previous fix added `overflow-x-hidden` to the **outer** wrappers in `AddProductModal.tsx` (lines 251, 286). But in **compact mode**, there's a **second nested scroll container** at line 114:
 
-### Issue 2 — "Strange container and line" after Product Details
-What looks like a stray line is actually two stacked things:
-1. The horizontal scrollbar from Issue 1.
-2. The collapsed **"More Details (optional)"** Collapsible card right below it (line 1216) — rendered as its own bordered card even when closed. With nothing inside, it reads as an awkward empty container.
+```tsx
+const compactBody = (
+  <div className="flex flex-col flex-1 min-h-0 min-w-0">
+    <div className="flex-1 min-h-0 min-w-0 overflow-y-auto pr-1 -mr-1">  ← THIS one has no overflow-x-hidden
+      {activeBody}
+    </div>
+```
+
+The sticky footer's `-mx-7` overflows INSIDE this inner scroller, causing the horizontal scrollbar visible in the screenshot. The outer fix never reaches it.
+
+### Issue 2 — "Thin line crashing design"
+The `Product Details` section header (line 1106) has `border-b border-border/50` underneath it. Combined with the card's own outer border, this creates an awkward thin internal divider that visually splits the card — exactly what the user is complaining about. It's design noise.
 
 ## Fix (2 small edits)
 
-### Fix A — Kill the horizontal scrollbar
-In `src/components/app/AddProductModal.tsx`, add `overflow-x-hidden` to the desktop sheet body wrapper (line 286) and the mobile drawer wrapper (line 251). This contains the sticky footer's negative-margin bleed without affecting vertical scroll.
+### Fix A — Add `overflow-x-hidden` to the inner compact scroller
+`src/components/app/AddProductModal.tsx` line 114: add `overflow-x-hidden` to the inner scroll wrapper inside `compactBody`. This contains the sticky footer's negative-margin bleed properly.
 
-### Fix B — Make the collapsed "More Details" disappear visually
-In `src/components/app/ManualProductTab.tsx` (line 1217), restyle the `Collapsible` so when **closed**, it renders as a borderless inline link/button (e.g., "More details (optional) ▾") instead of a full bordered card. When **open**, it expands into the bordered card with the form fields. This matches the minimalist aesthetic and removes the awkward empty container.
+### Fix B — Remove the awkward border-b from the Product Details header
+`src/components/app/ManualProductTab.tsx` line 1106: drop `border-b border-border/50` (and the `pb-1`) from the header row. Keep just the uppercase label + analyzing badge — clean, no internal divider. The card's outer border is enough visual containment.
 
-Approach:
-- Drop the always-on `rounded-2xl border bg-card p-4 sm:p-5` classes from the root `Collapsible`.
-- Apply card styling conditionally only when `moreDetailsOpen === true`.
-- When closed, render a slim inline trigger row (small text + chevron, no border) centered or left-aligned under the Product Details card.
+Same treatment should apply to the `More Details` collapsible trigger (line 1218) when open — it also has `border-b border-border/50`. Remove it for consistency.
 
 ## Files to edit
 
-- `src/components/app/AddProductModal.tsx` — add `overflow-x-hidden` to the two body scroll wrappers (mobile drawer + desktop sheet).
-- `src/components/app/ManualProductTab.tsx` — make the "More Details" Collapsible borderless when collapsed; only render the bordered card when expanded.
+- `src/components/app/AddProductModal.tsx` — add `overflow-x-hidden` to the inner compact scroller (line 114).
+- `src/components/app/ManualProductTab.tsx` — remove `border-b border-border/50` from Product Details header (line 1106) and from More Details trigger (line 1218).
 
 ## Result
 
-- No more horizontal scrollbar appearing inside the modal.
-- "More Details" collapses to a tidy inline link instead of an empty bordered card. When clicked, it expands into a proper card with the optional fields.
-- Modal looks clean: Product Details card → discreet "More details ▾" link → sticky Add Product footer.
+- No more horizontal scrollbar inside the modal in compact mode.
+- Product Details card looks clean — single outer border, no internal hairline split.
+- "More Details" expanded state matches the same clean look.
 
