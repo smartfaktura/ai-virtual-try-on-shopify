@@ -7,7 +7,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
 import { useOutfitPresets, type UserOutfitPreset } from '@/hooks/useOutfitPresets';
-import { applyPresetWithLocks, type ConflictResolution } from '@/lib/outfitConflictResolver';
+import { applyPresetWithLocks, type ConflictResolution, type OutfitSlotKey } from '@/lib/outfitConflictResolver';
 import { toast } from 'sonner';
 import type { OutfitConfig } from '@/components/app/product-images/types';
 import { cn } from '@/lib/utils';
@@ -20,11 +20,25 @@ interface OutfitPresetBarProps {
   gender?: string;
 }
 
+function presetIsRelevant(preset: UserOutfitPreset, resolution: ConflictResolution): boolean {
+  const cfg = (preset.config || {}) as Record<string, unknown>;
+  const definedSlots = Object.keys(cfg).filter(k => {
+    const v = cfg[k];
+    return v !== undefined && v !== null && v !== '';
+  });
+  if (definedSlots.length === 0) return false;
+  return definedSlots.some(slot => resolution.availableSlots.includes(slot as OutfitSlotKey));
+}
+
 export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, gender }: OutfitPresetBarProps) {
   const { builtIn, userPresets, savePreset, deletePreset } = useOutfitPresets();
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const relevantBuiltIn = builtIn.filter(p => presetIsRelevant(p, resolution));
+  const relevantUser = userPresets.filter(p => presetIsRelevant(p, resolution));
+  const noRelevantPresets = relevantBuiltIn.length === 0 && relevantUser.length === 0;
 
   const handleLoad = (preset: UserOutfitPreset) => {
     const cleaned = applyPresetWithLocks(preset.config, resolution);
@@ -62,7 +76,7 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {builtIn.map(p => (
+        {relevantBuiltIn.map(p => (
           <button
             key={p.id}
             onClick={() => handleLoad(p)}
@@ -73,7 +87,7 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
             {p.name}
           </button>
         ))}
-        {userPresets.map(p => (
+        {relevantUser.map(p => (
           <div key={p.id} className="inline-flex items-center gap-0.5 rounded-full border bg-background hover:bg-muted transition-colors">
             <button
               onClick={() => handleLoad(p)}
@@ -90,6 +104,12 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
             </button>
           </div>
         ))}
+
+        {noRelevantPresets && resolution.availableSlots.length > 0 && (
+          <span className="text-[11px] text-muted-foreground italic self-center">
+            No presets fit this product — configure accessories below
+          </span>
+        )}
 
         <Popover open={saveOpen} onOpenChange={setSaveOpen}>
           <PopoverTrigger asChild>
