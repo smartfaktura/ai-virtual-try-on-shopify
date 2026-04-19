@@ -1,51 +1,42 @@
 
-## Investigation: outfit selections not appearing in generated image
+## Investigation: is the outfit overriding the scene's editorial direction?
 
-User generated a "Black Ruched Crop Top" but the outfit pieces they picked in Step 3 (bottom, shoes, etc.) didn't show up in the final image. Let me trace why.
+User's concern: outfit now appears, but it feels like it's dominating the shot — overriding scene's color palette, pose, lighting mood, composition. Need to verify how the auto-injected directive is placed in the prompt.
 
-### Likely root causes (ranked)
+### What I need to check
 
-**1. Most likely — Template missing `{{outfitDirective}}` token**
-From memory `mem://features/product-images/product-aware-outfit-system`: outfit pieces only reach the AI when the scene template explicitly contains the `{{outfitDirective}}` token. The plan called this out as deferred work ("~509 templates missing the token"). The scene "Interior Window Light Editorial" (visible in edge logs) is likely one of them → outfit data is built correctly but never injected into the final prompt sent to Gemini.
+1. **Where in the prompt the fallback directive lands** — Phase 3a fix appends outfit at the END of the prompt with `prompt += ' ' + directive`. End-of-prompt instructions get HIGH weight in Gemini → likely the cause.
+2. **What the directive string actually says** — `defaultOutfitDirective()` may be too prescriptive (e.g., dictating colors that fight scene's `aestheticColor`, or adding pose/styling language that competes with scene direction).
+3. **Token-equipped scenes** — where `{{outfitDirective}}` IS placed inside templates (typically mid-prompt, framed as wardrobe note, not styling direction). Compare phrasing + position.
 
-**2. Possible — `wantsPeople` flag not triggered**
-From `mem://tech-stack/generation-character-and-anatomical-consistency`: outfit only renders if the engine flags the scene as needing a person. If the scene template doesn't trigger that flag, the model generates product-only and skips outfit entirely.
+### Hypothesis
 
-**3. Possible — New extended slots not picked up by prompt builder**
-Phase 1 updated `productImagePromptBuilder.ts`, but the actual string assembly may still read only the legacy `top/bottom/shoes` keys when building the directive that goes into `{{outfitDirective}}`. Worth grepping.
+The fallback path does two things wrong vs. the token path:
+- **Position**: appended at end → reads as the most important instruction
+- **Phrasing**: likely uses imperative wardrobe language ("wearing X, Y, Z") without the softening framing that template-embedded directives have ("Wardrobe note: model wears...")
 
-**4. Less likely — Crop top locks `top` slot, user only added accessories below**
-If the resolver locked `top` to the crop top and the user expected the locked slot itself to add styling (it can't — it IS the product), some confusion is normal. But the user says "nothing showing as I selected" implying they did pick other slots.
+This makes Gemini treat the outfit as the hero of the shot instead of as a wardrobe spec subordinate to the scene's editorial direction (lighting, color story, pose, composition all set by the scene template).
 
-### Investigation steps (read-only, this turn)
+### Proposed fix (Phase 3b — small, surgical)
 
-1. Grep `{{outfitDirective}}` across `custom_scenes.prompt_template` and built-in scene templates to confirm coverage gap
-2. Read `productImagePromptBuilder.ts` to see if `buildStructuredOutfitString` is called, and whether the result is actually placed into the final prompt for scenes WITHOUT the token (fallback)
-3. Check the latest `generation_jobs` row for this user to see the final assembled prompt that was sent
-4. Check `wantsPeople` detection logic for "Interior Window Light Editorial"
+Adjust the fallback injection to be **scene-subordinate**:
 
-### Proposed fix (Phase 3a — small, safe)
+1. **Insert position** — place directive RIGHT AFTER the product anchor block (early in prompt, near `[PRODUCT]` / `{{personDirective}}`), not at the end. Matches where token-based templates put it.
+2. **Phrasing** — wrap as a non-dominant wardrobe note: `"Wardrobe (do not alter scene mood, lighting, or color palette): model wears [outfit]. Scene direction, pose, framing, and color story below take priority."`
+3. **Strip color-conflict risk** — if scene template contains `{{aestheticColor}}` or similar, the outfit color words must NOT override the resolved aesthetic palette. Add a one-liner safeguard: `"Outfit colors are accents only; overall image color palette is set by scene direction above."`
+4. **Keep pose/composition out of outfit string** — `defaultOutfitDirective` should describe ONLY garments + colors + materials, never pose, framing, or mood. Audit and strip any styling adjectives that crept in.
 
-**Make outfit injection automatic when token is missing:**
+### Files to inspect (read-only this turn)
+- `src/lib/productImagePromptBuilder.ts` — the fallback injection block + `defaultOutfitDirective` function
+- One token-equipped scene template from `custom_scenes` to compare phrasing/position
 
-If a scene needs people (`wantsPeople = true`) AND the template has no `{{outfitDirective}}` token AND the user provided outfit data → the prompt builder appends the directive automatically at the end of the prompt (e.g., "Model is wearing: black wide-leg trousers, white sneakers, gold hoops").
-
-This:
-- Fixes the immediate bug (user's selections render no matter what scene they picked)
-- Avoids touching all 500+ templates
-- Has zero impact on scenes that already have the token (the token-based injection still wins, fallback only activates when token is absent)
-- Has zero impact on product-only scenes (`wantsPeople = false` → directive skipped, just like today)
-
-**Files touched:**
-- `src/lib/productImagePromptBuilder.ts` — single function, ~15-line addition
-
-### After confirmation
-
-Once I'm in default mode I'll:
-1. Read the 3 files above to confirm the diagnosis
-2. Pull the saved prompt from the user's last `generation_jobs` row to see exactly what was sent
-3. Apply the fix only if diagnosis confirms it
-4. Report back what the actual injected prompt looks like for their next generation
+### Files touched (next turn, after approval)
+- `src/lib/productImagePromptBuilder.ts` — adjust fallback position + wrap phrasing + audit `defaultOutfitDirective`
 
 ### Risk
-Very low. Pure additive logic — adds a fallback path; doesn't change existing behavior for token-equipped scenes.
+Very low. Same fallback path, just better placement + softer framing. Token-equipped scenes unaffected (they bypass this path entirely).
+
+### After fix — what user should see
+- Scene's editorial mood, lighting, color palette stay intact (e.g., "Interior Window Light Editorial" keeps its warm window-light direction)
+- Outfit pieces appear on the model as wardrobe, not as the styling brief
+- Aesthetic color tokens still control overall palette; outfit colors read as accents
