@@ -1,33 +1,25 @@
 
-## Fix "Create Your Brand Model" button (broken route)
+## Fix product thumbnail zoom in Style & Outfit (AI Stylist card)
+
+### Problem
+In the Style & Outfit AI Stylist card (screenshot), product images sit small inside the 48×48 tile with empty padding around — same issue as before but in this second card. User wants them to fill the placeholder edge-to-edge without being over-zoomed.
 
 ### Cause
-The button calls `window.open('/app/brand-models', '_blank')`, but that route doesn't exist. The actual route registered in `App.tsx` is `/app/models` (component: `BrandModels`). So the new tab opens to a 404 / blank page — the user perceives it as "not working".
+In `AiStylistCard.tsx` the tile uses `object-contain` on a transparent product image with extra background padding (`bg-muted/30` + `border`), so small/tall garments shrink to fit and leave whitespace.
 
 ### Fix
-Replace the URL in **both** affected buttons:
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` (line 165)
-- `src/components/app/catalog/CatalogStepModelsV2.tsx` (line 116)
+In `src/components/app/product-images/AiStylistCard.tsx` (the product list `<li>` thumbnail, ~lines 53-60):
 
-From:
-```ts
-window.open('/app/brand-models', '_blank')
-```
-To:
-```ts
-window.open('/app/models', '_blank')
-```
+- Switch the image from `object-contain` → `object-cover` so it fills the tile.
+- Add `scale-110` (or `scale-105`) on the `<img>` to gently zoom transparent product cutouts so they reach the edges without cropping meaningful detail.
+- Keep tile size at `w-12 h-12`, remove the inner `bg-muted/30` tint so the image sits flush.
 
-### Optional UX upgrade (recommended)
-Opening in a new tab forces the user to leave the wizard mid-flow and lose context. Better: use `useNavigate()` and navigate in the same tab (the user can return via back button), OR keep `_blank` but at least to the correct URL.
+Result: product fills the placeholder cleanly, just enough zoom to remove whitespace, no excessive crop.
 
-I'll use **same-tab `navigate('/app/models')`** to match how the rest of the app navigates between Studio sections. If you prefer keeping the new-tab behavior, say so and I'll just fix the URL.
-
-### Files
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-- `src/components/app/catalog/CatalogStepModelsV2.tsx`
+### File
+- `src/components/app/product-images/AiStylistCard.tsx`
 
 ### Validation
-1. Click "Create Your Brand Model" in Step 3 (Product Images) → lands on `/app/models` Brand Models page
-2. Same click in Catalog Studio Models step → same destination
-3. After creating a model and returning, it appears under "Your Brand Models"
+1. Black Ruched Crop Top → fills 48×48 tile, no empty space
+2. Cream Ribbed Knit T-Shirt → same, no excessive crop
+3. Wider products (bags, shoes) still fully visible
