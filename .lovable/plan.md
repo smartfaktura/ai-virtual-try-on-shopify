@@ -1,29 +1,49 @@
 
-## Status: partially fixed
 
-✅ Step 2 priority fetch loads only the relevant category first (swimwear in your test).
-❌ The "rest" background fetch still pulls all ~3000 rows with `select=*` including heavy `prompt_template` (multi-MB).
-❌ `generation_queue` polls every 4s even when idle.
+## What I see
 
-## Two remaining fixes
+On `/app/freestyle`, the console is firing two React warnings:
 
-### Fix A — Make the "rest" background fetch lazy + slim
-In `useProductImageScenes.ts`:
-1. **Defer the rest fetch** until the user actually navigates past Step 2 (or after a 3s idle delay). Currently it kicks off immediately after priority resolves, racing the wizard's own work.
-2. **Drop `prompt_template` from the rest fetch**. The wizard only needs prompts for the *selected* scenes at generation time — those are already in the priority cache. For the "rest" (scenes the user hasn't picked), we only need title/preview/category for the picker UI. Add a `slim` mode to `fetchScenesExcludingCategories` that omits `prompt_template`, `created_at`, `updated_at`.
-3. If the user later switches to a scene from the "rest" set, fetch its full row on demand (single-row query, instant).
+1. **`Badge`** (`src/components/ui/badge.tsx`) is a plain function component but something inside `ImageCard` passes a ref to it.
+2. **`ImageCard`** (`src/components/app/freestyle/FreestyleGallery.tsx`) is a plain function component but something inside `FreestyleGallery` passes a ref to it.
 
-### Fix B — Back off `generation_queue` polling when idle
-In the queue polling hook:
-- Poll every **4s** while jobs are active.
-- Back off to **20s** when the last 3 polls returned empty.
-- Reset to 4s the moment a new job is enqueued (already covered by the optimistic update path).
+The "Error — The app encountered an error" toast in the screenshot is from a **different** flow (Add Products on `/app/products`) — not from the page the user is currently on. Without a reproducible payload for that, I'll address the live, diagnosable issue: the two ref warnings.
 
-## Files to edit
-- `src/hooks/useProductImageScenes.ts` — defer + slim the rest fetch, add on-demand single-row lookup helper.
-- `src/hooks/useGenerationQueue.ts` (or whichever hook owns the queue poll) — adaptive interval.
+These warnings are dev-mode noise today, but they break any feature that *does* try to read those refs (tooltips, focus management, animations) — so worth fixing cleanly.
+
+## Fix (small, surgical)
+
+### 1. Wrap `Badge` in `React.forwardRef`
+File: `src/components/ui/badge.tsx`
+
+```tsx
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, ...props }, ref) => (
+    <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />
+  ),
+);
+Badge.displayName = "Badge";
+```
+
+### 2. Wrap `ImageCard` in `React.forwardRef`
+File: `src/components/app/freestyle/FreestyleGallery.tsx`
+
+Convert the `function ImageCard({...})` declaration into a `forwardRef` component that accepts a forwarded `ref` on its root `<div>` (both the `natural` branch and the default branch). Add a `displayName`.
+
+No other behavior changes.
 
 ## Result
-- After Step 2 paints, network goes quiet instead of downloading another 5–10 MB.
-- Idle pages stop hammering `generation_queue` every 4s.
-- No behavior change for the user — selecting any scene still works because either (a) it's in the priority cache, or (b) it triggers a tiny single-row fetch.
+
+- Both React warnings disappear on `/app/freestyle`.
+- Any future `Tooltip`, `Slot`, or animation library that asChild-wraps a `Badge` or `ImageCard` will work without breakage.
+- Zero functional change to gallery rendering.
+
+## Files to edit
+
+- `src/components/ui/badge.tsx` — convert to `forwardRef`.
+- `src/components/app/freestyle/FreestyleGallery.tsx` — convert `ImageCard` to `forwardRef`, attach ref to root `<div>` in both branches.
+
+## Note on the screenshot toast
+
+The "Error — The app encountered an error" in the Add Products modal is a separate, currently non-reproducible event. If you can reopen Add Products and trigger it again, the console/network at that moment will let me pinpoint it. I can address it in a follow-up.
+
