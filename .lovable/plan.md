@@ -1,51 +1,69 @@
 
-## Plan: "Edit Outfit" override for scene-controlled outfits + Appearance audit
+## Investigation: presets vs swimwear conflict resolution
 
-### Part A — Edit Outfit override
+### What user sees
+On a bikini product, the "Outfit Presets" row still shows **Quiet Luxury Neutral, Streetwear Y2K, Editorial Black, Beach Linen** — but for swimwear we just hid `top`, `bottom`, `outerwear`, `shoes`. So clicking "Quiet Luxury Neutral" (which presumably defines a top + bottom + shoes outfit) does… what exactly?
 
-**Current behavior**
-When ANY selected scene has `outfit_hint`, the Style & Outfit panel is fully replaced by the banner ("Outfit is directed by your selected shots") and the user has zero way to override. Scene `outfit_hint` always wins in `productImagePromptBuilder.ts`.
+### How it actually behaves today
 
-**Proposed change**
+In `OutfitPresetBar.tsx`:
+```ts
+const handleLoad = (preset) => {
+  const cleaned = applyPresetWithLocks(preset.config, resolution);
+  onLoad({ ...currentConfig, ...cleaned });
+};
+```
 
-1. **Add "Edit outfit" button** inside the takeover banner (right-aligned, ghost style).
-2. **Click reveals the full OutfitSlotCard grid below the banner** (collapsible, smooth expand). Banner copy updates to: *"Scene styling is active. Your edits will override it for this generation."*
-3. **Add a per-product flag** `outfitOverrideEnabled: boolean` (UI state only, lives in Step 3 component state — no DB change).
-4. **Prompt builder priority update** (`productImagePromptBuilder.ts`): when `outfitOverrideEnabled === true` AND user `outfitConfig` has any non-empty slot → use user's outfit and IGNORE `scene.outfitHint`. Falls back to scene hint otherwise (today's behavior).
-5. **Visual cue**: when override is active, banner switches to a subtle "Custom outfit active · Reset to scene styling" pill so the user always knows which mode they're in.
+`applyPresetWithLocks` (in `outfitConflictResolver.ts`) already strips:
+- the `lockedSlot` key (here: `top`)
+- every key in `hiddenSlots` (here: `dress`, `outerwear`, `bottom`, `shoes`)
 
-**Why this is safe**
-- Pure additive UI + one extra branch in the prompt builder priority chain
-- Scene-hint default behavior unchanged for users who don't click Edit
-- No DB migration, no schema change
-- Multi-scene case: override applies to ALL selected scenes uniformly (matches how scene-hint takeover already works)
+So for a bikini, loading "Quiet Luxury Neutral" silently drops top/bottom/shoes/outerwear/dress and only its **accessories** (bag, jewelry, watch, eyewear, hat, belt) — if the preset defines any — flow through.
 
-**Files touched**
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — banner + button + collapsible outfit grid (~30 lines)
-- `src/lib/productImagePromptBuilder.ts` — priority flip when override flag is set (~5 lines)
+**The result:** clicking the preset is technically safe (no broken prompt), but visually it's **misleading UX** — most presets don't define accessories, so the click does almost nothing. User thinks "I picked Quiet Luxury Neutral" but the panel doesn't change visibly. Confusing.
 
----
+### Two reasonable fixes
 
-### Part B — Appearance setup audit
+**Option A — Hide irrelevant presets entirely (cleanest)**
+For each preset, check if any of its config keys overlap with `availableSlots`. If zero overlap → don't render the chip. So on swimwear:
+- "Quiet Luxury Neutral" → top/bottom/shoes only → hidden
+- "Beach Linen" → if it has bag/hat/eyewear → kept
+- Built-in presets that are pure-clothing → all hidden
+- Show a one-line empty state: *"No outfit presets fit this product type — pick accessories below"*
 
-User asks "does appearance setup work?" — I need to verify before claiming. Will inspect this turn (read-only):
+**Option B — Show but mark as "No effect" / disabled**
+Greys out incompatible presets with a tooltip "Doesn't apply to swimwear". More discoverable but visually noisy.
 
-- The Appearance section UI in Step 3 (skin tone / hair / makeup / etc. controls)
-- Whether selections flow into `outfitConfig` or a separate `appearanceConfig`
-- Whether the prompt builder reads those fields and injects them into the final prompt
-- Whether `wantsPeople` / `personDirective` token picks them up
+### Recommendation
+**Option A.** ZARA-grade restraint = don't show options that don't do anything. Same philosophy we already used to hide irrelevant slots.
 
-**If broken**: separate small fix in next turn — wire appearance fields into `personDirective` builder so they actually reach Gemini.
+Bonus: same logic applies cleanly to other product types — fragrance presets won't show "Editorial Black" either, etc. Free win across categories.
 
-**If working**: confirm to user with the exact prompt fragment that gets injected so they can trust it.
+### Implementation (one file, ~15 lines)
 
----
+In `OutfitPresetBar.tsx`:
+1. Add a `presetIsRelevant(preset, resolution)` helper:
+   ```ts
+   const cfg = preset.config || {};
+   const definedSlots = Object.keys(cfg).filter(k => cfg[k]);
+   return definedSlots.some(slot => resolution.availableSlots.includes(slot));
+   ```
+2. Filter `builtIn` and `userPresets` arrays through it before rendering.
+3. If both filtered arrays are empty AND `availableSlots.length > 0` → render small muted hint "No presets fit this product — configure accessories below".
+4. If `availableSlots.length === 0` → don't render preset row at all (already handled by parent panel).
+
+### Files touched
+- `src/components/app/product-images/OutfitPresetBar.tsx` — filter + empty state (~15 lines)
+
+### Side-effect check
+- Non-fashion / non-swimwear products: most presets define top+bottom+shoes which all stay available → no presets get hidden → zero visible change
+- "Save current" button stays visible always (user can still save accessory-only outfits as a swimwear preset)
+- User-saved presets get filtered the same way → if they saved "My beach look" with hat+eyewear, it stays visible on bikinis ✓
 
 ### Risk
-Very low. Part A is additive UI + one prompt-builder branch. Part B is read-only audit this turn; any fix will be a small targeted edit.
+Very low. Pure UI filter on top of the resolution we already compute. No prompt builder change, no DB change.
 
-### Validation after Part A ships
-1. Pick a scene with `outfit_hint` (e.g., "Coastal Editorial") + jeans → banner appears with Edit button
-2. Click Edit → outfit grid expands, banner copy updates
-3. Pick a top color/material → generate → outfit appears in image, scene mood preserved
-4. Click "Reset to scene styling" → grid collapses, scene hint takes over again
+### Validation after fix
+1. Bikini product → preset row shows only presets with accessory slots (likely just "Save current" + empty hint, or "Beach Linen" if it has accessories defined)
+2. Regular tee → all 4 built-in presets still show
+3. Save a bikini accessories-only preset → reappears correctly on next bikini upload
