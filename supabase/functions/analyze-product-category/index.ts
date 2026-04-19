@@ -71,6 +71,30 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["home-decor", /armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
 ];
 
+/** Demote overly-broad "garments" to a more specific subcategory based on title/description */
+const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
+  [/streetwear|graphic tee|oversized tee|urban wear|box logo|drop shoulder/i, "streetwear"],
+  [/hoodie|hooded sweatshirt|zip-?up hoodie/i, "hoodies"],
+  [/\bjeans?\b|denim|skinny jean|wide-?leg|mom jean/i, "jeans"],
+  [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
+  [/jacket|blazer|bomber|puffer|parka|trench/i, "jackets"],
+  [/activewear|legging|sports bra|\byoga\b|gym wear/i, "activewear"],
+  [/swimwear|bikini|swimsuit|swim trunks/i, "swimwear"],
+  [/lingerie|\bbra\b|underwear|corset/i, "lingerie"],
+];
+
+function refineGenericGarments(analysis: Record<string, unknown>, title: string, description: string): void {
+  if (analysis.category !== "garments") return;
+  const haystack = `${title || ""} ${description || ""}`;
+  for (const [pattern, refined] of GARMENTS_REFINEMENT_PATTERNS) {
+    if (pattern.test(haystack)) {
+      console.log(`Garments refinement: "garments" -> "${refined}" (matched: "${title}")`);
+      analysis.category = refined;
+      return;
+    }
+  }
+}
+
 function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
   const cat = analysis.category as string | undefined;
 
@@ -243,7 +267,8 @@ Return ONLY the JSON object, no markdown fences, no explanation.`;
       });
     }
 
-    // Post-processing: title-based category fallback
+    // Post-processing: demote overly-broad "garments" first, then title-based fallback
+    refineGenericGarments(analysis, title || "", description || "");
     applyCategoryFallback(analysis, title || "");
 
     // Normalize booleans
