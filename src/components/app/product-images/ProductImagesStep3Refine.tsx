@@ -1624,7 +1624,7 @@ function ZaraOutfitPanel({
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
 
   // Resolve conflicts based on the first selected product (or primary category fallback)
-  const firstProductId = selectedProductIds[0];
+  const firstProductId = Array.from(selectedProductIds)[0];
   const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
   const firstProduct = allProducts.find(p => p.id === firstProductId);
   const resolution = useMemo(
