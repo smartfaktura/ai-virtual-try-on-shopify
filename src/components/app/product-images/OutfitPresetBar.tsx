@@ -32,8 +32,11 @@ function presetIsRelevant(preset: UserOutfitPreset, resolution: ConflictResoluti
   return definedSlots.some(slot => resolution.availableSlots.includes(slot as OutfitSlotKey));
 }
 
-export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, gender }: OutfitPresetBarProps) {
-  const { builtIn, userPresets, savePreset, deletePreset } = useOutfitPresets();
+export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, gender, productCategories }: OutfitPresetBarProps) {
+  const filterCats = productCategories && productCategories.length > 0
+    ? productCategories
+    : (category ? [category] : undefined);
+  const { builtIn, userPresets, savePreset, deletePreset } = useOutfitPresets(filterCats);
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -73,7 +76,7 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-muted-foreground" />
           <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">
-            Outfit Presets
+            Suggested looks for your products
           </span>
         </div>
       </div>
