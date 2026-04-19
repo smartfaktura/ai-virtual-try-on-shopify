@@ -1,7 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, RefreshCw, CheckCircle, Archive, Loader2 } from 'lucide-react';
+import { Download, RefreshCw, CheckCircle, Archive, Loader2, Sparkles } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 import { useState, useMemo } from 'react';
@@ -23,9 +24,10 @@ interface Step6Props {
   results: Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>;
   onGenerateMore: () => void;
   onGoToLibrary: () => void;
+  onStartNew?: () => void;
 }
 
-export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary }: Step6Props) {
+export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary, onStartNew }: Step6Props) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -172,6 +174,18 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           <Button variant="outline" onClick={onGenerateMore} className="gap-1.5">
             <RefreshCw className="w-4 h-4" />Generate More
           </Button>
+          {onStartNew && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" onClick={onStartNew} className="gap-1.5">
+                    <Sparkles className="w-4 h-4" />Start New
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Begin a fresh project with new products</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Button variant="outline" onClick={handleDownloadAll} disabled={downloading || totalImages === 0} className="gap-1.5">
             {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}{downloading ? 'Downloading…' : 'Download All'}
           </Button>
