@@ -632,7 +632,10 @@ export default function Products() {
         open={addOpen}
         onOpenChange={(o) => {
           setAddOpen(o);
-          if (!o) setAddInitialFiles(undefined);
+          if (!o) {
+            setAddInitialFiles(undefined);
+            setAddCompact(false);
+          }
         }}
         onProductAdded={() => {
           queryClient.invalidateQueries({ queryKey: ['user-products'] });
