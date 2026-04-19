@@ -10,7 +10,7 @@ const corsHeaders = {
 const VALID_CATEGORIES = new Set([
   "fragrance", "beauty-skincare", "makeup-lipsticks", "bags-accessories", "backpacks",
   "wallets-cardholders", "belts", "scarves", "hats-small", "shoes", "sneakers", "boots",
-  "high-heels", "garments", "dresses", "hoodies", "streetwear", "jeans", "jackets",
+  "high-heels", "garments", "dresses", "hoodies", "jeans", "jackets",
   "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
   "home-decor", "furniture", "tech-devices", "food", "beverages", "supplements-wellness",
@@ -33,7 +33,6 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/high heel|stiletto|pump|platform heel|kitten heel|wedge heel/i, "high-heels"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
   [/hoodie|hooded sweatshirt/i, "hoodies"],
-  [/streetwear|graphic tee|oversized tee|urban wear/i, "streetwear"],
   [/\bjeans\b|denim|skinny jeans|wide-leg jeans|mom jeans/i, "jeans"],
   [/jacket|blazer|bomber|puffer|windbreaker|parka|trench coat/i, "jackets"],
   [/activewear|sportswear|\byoga\b|gym wear|athletic|workout|legging|sports bra/i, "activewear"],
@@ -73,7 +72,6 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
 
 /** Demote overly-broad "garments" to a more specific subcategory based on title/description */
 const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
-  [/streetwear|graphic tee|oversized tee|urban wear|box logo|drop shoulder/i, "streetwear"],
   [/hoodie|hooded sweatshirt|zip-?up hoodie/i, "hoodies"],
   [/\bjeans?\b|denim|skinny jean|wide-?leg|mom jean/i, "jeans"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
@@ -148,7 +146,7 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, streetwear, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above

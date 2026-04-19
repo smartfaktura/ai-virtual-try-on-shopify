@@ -39,8 +39,8 @@ export type TemplateCategory = 'garments' | 'beauty-skincare' | 'makeup-lipstick
   | 'shoes' | 'bags-accessories' | 'tech-devices' | 'hats-small' | 'other'
   | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves'
   | 'jewellery-necklaces' | 'jewellery-earrings' | 'jewellery-bracelets' | 'jewellery-rings' | 'watches'
-  | 'dresses' | 'hoodies' | 'streetwear' | 'sneakers' | 'boots' | 'high-heels'
-  | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'jackets' | 'skirts';
+  | 'dresses' | 'hoodies' | 'sneakers' | 'boots' | 'high-heels'
+  | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'jackets';
 
 export interface PromptBlueprint {
   sceneDescription: string;

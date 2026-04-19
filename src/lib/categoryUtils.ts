@@ -24,7 +24,6 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   // Fashion
   [['dress', 'gown', 'maxi dress', 'midi dress', 'sundress', 'cocktail dress'], 'dresses' as TemplateCategory],
   [['hoodie', 'hooded sweatshirt', 'zip-up hoodie', 'pullover hoodie'], 'hoodies' as TemplateCategory],
-  [['streetwear', 'graphic tee', 'oversized tee', 'urban wear'], 'streetwear' as TemplateCategory],
   [['jeans', 'denim', 'skinny jeans', 'wide-leg jeans', 'mom jeans'], 'jeans' as TemplateCategory],
   [['jacket', 'blazer', 'bomber', 'puffer', 'windbreaker', 'parka', 'trench coat'], 'jackets' as TemplateCategory],
   [['activewear', 'sportswear', 'yoga', 'gym wear', 'athletic', 'workout', 'legging', 'sports bra'], 'activewear' as TemplateCategory],
@@ -35,8 +34,7 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'bronzer', 'highlighter', 'primer', 'eyeliner', 'lip gloss', 'lip liner', 'contour', 'rouge', 'cheek'], 'makeup-lipsticks' as TemplateCategory],
   [['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'shampoo', 'conditioner', 'body wash', 'lotion', 'retinol'], 'beauty-skincare' as TemplateCategory],
   // Generic parents
-  [['skirt', 'mini skirt', 'maxi skirt', 'midi skirt', 'pleated skirt', 'pencil skirt', 'a-line skirt', 'wrap skirt', 'tulle skirt', 'tennis skirt'], 'skirts' as TemplateCategory],
-  [['sweater', 'shirt', 'apparel', 'pants', 'coat', 'blouse', 'top', 'shorts', 'clothing', 'tank', 'jogger', 'cardigan', 'vest', 'romper', 'jumpsuit', 'sweatshirt', 'pullover'], 'garments' as TemplateCategory],
+  [['sweater', 'shirt', 'apparel', 'pants', 'coat', 'blouse', 'top', 'shorts', 'clothing', 'tank', 'jogger', 'cardigan', 'vest', 'romper', 'jumpsuit', 'sweatshirt', 'pullover', 'graphic tee', 'oversized tee', 'streetwear', 'urban wear', 'skirt', 'mini skirt', 'maxi skirt', 'midi skirt', 'pleated skirt', 'pencil skirt', 'a-line skirt', 'wrap skirt', 'tulle skirt', 'tennis skirt'], 'garments' as TemplateCategory],
   [['perfume', 'cologne', 'fragrance', 'eau de', 'parfum'], 'fragrance' as TemplateCategory],
   [['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'kombucha', 'smoothie', 'energy drink', 'drink', 'lemonade', 'milk'], 'beverages' as TemplateCategory],
   [['cereal', 'granola', 'chocolate', 'honey', 'jam', 'sauce', 'snack', 'candy', 'chips', 'protein bar', 'cookie', 'food', 'olive oil'], 'food' as TemplateCategory],
@@ -96,7 +94,6 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   watches: 'Watches',
   dresses: 'Dresses',
   hoodies: 'Hoodies',
-  streetwear: 'Streetwear',
   sneakers: 'Sneakers',
   boots: 'Boots',
   'high-heels': 'High Heels',
@@ -107,7 +104,6 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   kidswear: 'Kidswear',
   jeans: 'Jeans',
   jackets: 'Jackets',
-  skirts: 'Skirts',
 };
 
 /**

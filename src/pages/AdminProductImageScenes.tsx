@@ -33,12 +33,10 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
     label: 'Fashion',
     items: [
       { value: 'garments', label: 'Clothing & Apparel' },
-      { value: 'streetwear', label: 'Streetwear' },
       { value: 'hoodies', label: 'Hoodies' },
       { value: 'jeans', label: 'Jeans' },
       { value: 'dresses', label: 'Dresses' },
       { value: 'jackets', label: 'Jackets' },
-      { value: 'skirts', label: 'Skirts' },
       { value: 'activewear', label: 'Activewear' },
       { value: 'swimwear', label: 'Swimwear' },
       { value: 'lingerie', label: 'Lingerie' },

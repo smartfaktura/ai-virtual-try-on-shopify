@@ -37,7 +37,7 @@ export type ProductCategory =
   | 'garments' | 'home-decor' | 'furniture' | 'tech-devices'
   | 'food' | 'beverages' | 'supplements-wellness' | 'other'
   | 'lingerie' | 'swimwear' | 'activewear' | 'kidswear'
-  | 'dresses' | 'hoodies' | 'streetwear' | 'jeans' | 'jackets'
+  | 'dresses' | 'hoodies' | 'jeans' | 'jackets'
   | 'sneakers' | 'boots' | 'high-heels'
   | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'eyewear'
   | 'watches' | 'jewellery-necklaces' | 'jewellery-earrings'
