@@ -1,42 +1,53 @@
 
-## Investigation: is the outfit overriding the scene's editorial direction?
+## Plan: Swimwear-aware outfit slots
 
-User's concern: outfit now appears, but it feels like it's dominating the shot — overriding scene's color palette, pose, lighting mood, composition. Need to verify how the auto-injected directive is placed in the prompt.
+### The problem
+User uploaded swimwear → Style & Outfit panel still shows Top, Bottom, Outerwear, Shoes etc. For swimwear, none of those make sense. Only **accessories** (sunglasses, hat, bag, jewelry, watch) should appear. Shoes should be hidden by default (barefoot/beach).
 
-### What I need to check
+### Root cause
+`src/lib/outfitConflictResolver.ts` already has a swimwear branch, but it's too permissive:
 
-1. **Where in the prompt the fallback directive lands** — Phase 3a fix appends outfit at the END of the prompt with `prompt += ' ' + directive`. End-of-prompt instructions get HIGH weight in Gemini → likely the cause.
-2. **What the directive string actually says** — `defaultOutfitDirective()` may be too prescriptive (e.g., dictating colors that fight scene's `aestheticColor`, or adding pose/styling language that competes with scene direction).
-3. **Token-equipped scenes** — where `{{outfitDirective}}` IS placed inside templates (typically mid-prompt, framed as wardrobe note, not styling direction). Compare phrasing + position.
+```ts
+// Generic bikini → treat as set
+return { lockedSlot: 'top', hiddenSlots: new Set(['dress', 'outerwear']),
+         availableSlots: ['shoes', ...ACCESSORY_SLOTS], hideOutfitPanel: false };
+```
 
-### Hypothesis
+Two issues:
+1. `shoes` is in `availableSlots` → shouldn't be (beach context)
+2. `bottom` is NOT hidden for the bikini-set case → leaks through as a configurable slot
+3. One-piece swimsuit branch hides top/bottom/outerwear but still leaves `shoes` available
 
-The fallback path does two things wrong vs. the token path:
-- **Position**: appended at end → reads as the most important instruction
-- **Phrasing**: likely uses imperative wardrobe language ("wearing X, Y, Z") without the softening framing that template-embedded directives have ("Wardrobe note: model wears...")
+### Fix (one file, ~10 lines)
 
-This makes Gemini treat the outfit as the hero of the shot instead of as a wardrobe spec subordinate to the scene's editorial direction (lighting, color story, pose, composition all set by the scene template).
+Update all 3 swimwear branches in `resolveOutfitConflicts`:
 
-### Proposed fix (Phase 3b — small, surgical)
+| Case | Locked | Hidden | Available |
+|------|--------|--------|-----------|
+| One-piece / monokini | `dress` | top, bottom, outerwear, shoes | accessories only |
+| Bikini top only | `top` | dress, outerwear, bottom, shoes | accessories only |
+| Bikini bottom only | `bottom` | dress, outerwear, top, shoes | accessories only |
+| Generic bikini set | `top` | dress, outerwear, bottom, shoes | accessories only |
 
-Adjust the fallback injection to be **scene-subordinate**:
+Same logic for `cat === 'swimwear'`.
 
-1. **Insert position** — place directive RIGHT AFTER the product anchor block (early in prompt, near `[PRODUCT]` / `{{personDirective}}`), not at the end. Matches where token-based templates put it.
-2. **Phrasing** — wrap as a non-dominant wardrobe note: `"Wardrobe (do not alter scene mood, lighting, or color palette): model wears [outfit]. Scene direction, pose, framing, and color story below take priority."`
-3. **Strip color-conflict risk** — if scene template contains `{{aestheticColor}}` or similar, the outfit color words must NOT override the resolved aesthetic palette. Add a one-liner safeguard: `"Outfit colors are accents only; overall image color palette is set by scene direction above."`
-4. **Keep pose/composition out of outfit string** — `defaultOutfitDirective` should describe ONLY garments + colors + materials, never pose, framing, or mood. Audit and strip any styling adjectives that crept in.
+### Why no shoes by default
+Beach / pool / water editorial = barefoot. If a user really wants sandals, Phase 4 can add a tiny "+ Add footwear" escape hatch — but for v1 the cleanest ZARA-grade behavior is barefoot default.
 
-### Files to inspect (read-only this turn)
-- `src/lib/productImagePromptBuilder.ts` — the fallback injection block + `defaultOutfitDirective` function
-- One token-equipped scene template from `custom_scenes` to compare phrasing/position
+### Side-effect check
+- Prompt builder already skips empty/hidden slots → no broken prompts
+- Scene-hint takeover banner unaffected
+- Presets: `applyPresetWithLocks` already strips hidden keys silently → loading a "casual outfit" preset onto a bikini cleanly drops top/bottom/shoes
+- Non-swimwear products: zero change
 
-### Files touched (next turn, after approval)
-- `src/lib/productImagePromptBuilder.ts` — adjust fallback position + wrap phrasing + audit `defaultOutfitDirective`
+### File touched
+- `src/lib/outfitConflictResolver.ts` — swimwear block only (~10 lines)
+
+### Validation after fix
+1. Upload bikini top → only accessories appear in Style & Outfit
+2. Upload one-piece swimsuit → only accessories appear, dress slot locked to product
+3. Upload generic "swimwear set" → top locks to product, accessories show, no shoes
+4. Upload regular tee → unchanged (top/bottom/shoes/outerwear all show)
 
 ### Risk
-Very low. Same fallback path, just better placement + softer framing. Token-equipped scenes unaffected (they bypass this path entirely).
-
-### After fix — what user should see
-- Scene's editorial mood, lighting, color palette stay intact (e.g., "Interior Window Light Editorial" keeps its warm window-light direction)
-- Outfit pieces appear on the model as wardrobe, not as the styling brief
-- Aesthetic color tokens still control overall palette; outfit colors read as accents
+Very low. Single function, single category branch, additive hide list.
