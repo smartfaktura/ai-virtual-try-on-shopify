@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ export function CatalogStepModelsV2({
   onBack, onNext, canProceed,
 }: CatalogStepModelsV2Props) {
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
+  const navigate = useNavigate();
 
   const filteredLibrary = useMemo(() => {
     if (genderFilter === 'all') return libraryModels;
@@ -113,7 +115,7 @@ export function CatalogStepModelsV2({
           </div>
         ) : (
           <button
-            onClick={() => window.open('/app/brand-models', '_blank')}
+            onClick={() => navigate('/app/models')}
             className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-5 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <div className="flex items-center gap-3">
