@@ -230,9 +230,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (now - t > 1000) recentFilesDedupeRef.current.delete(k);
     }
     files = files.filter(f => {
-      const sig = `${f.name}|${f.size}|${f.lastModified}`;
+      // Use size|type as signature. Paste handlers create independent files via
+      // `pasted-${Date.now()}.png` whose names differ by 0-2ms across listeners,
+      // so name-based dedup misses. size+type is stable across both listeners.
+      const sig = `${f.size}|${f.type}`;
       const prev = recentFilesDedupeRef.current.get(sig);
-      if (prev && now - prev < 300) {
+      if (prev && now - prev < 500) {
         console.warn('Duplicate file paste/add suppressed:', sig);
         return false;
       }
@@ -416,6 +419,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     // If parent is feeding us initialFiles (drawer mode), parent already handles paste.
     if (initialFiles !== undefined) return;
     const handlePaste = (e: ClipboardEvent) => {
+      // If a parent (e.g. Products.tsx) already handled this paste, skip.
+      if (e.defaultPrevented) return;
       const items = e.clipboardData?.items;
       if (!items) return;
       const imageFiles: File[] = [];
