@@ -2453,6 +2453,43 @@ export function ProductImagesStep3Refine({
             <p className="text-xs text-muted-foreground mt-0.5">Only a few choices are needed for selected shots.</p>
           </div>
 
+          {/* Background style card — shown first so users can pick the backdrop before model/outfit */}
+          {bgScenes.length > 0 && (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Paintbrush className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold">Background style</span>
+                    {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 0 && (
+                      <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
+                        ×{details.backgroundTone.split(',').filter(Boolean).length} selected
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Applies to {bgScenes.length} selected shot{bgScenes.length !== 1 ? 's' : ''}.</p>
+                </div>
+                {!details.backgroundTone && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                    <Paintbrush className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                    <span className="text-[11px] text-primary/60 font-medium">Select a background color for your selected scenes</span>
+                  </div>
+                )}
+                <BackgroundSwatchSelector
+                  value={details.backgroundTone || ''}
+                  onChange={v => update({ backgroundTone: v })}
+                  details={details}
+                  update={update}
+                  savedColors={savedColors}
+                  canSave={canSave}
+                  onSaveColor={(hex) => saveColor({ hex })}
+                  onSaveGradient={(from, to) => saveGradient({ from, to })}
+                  onDeleteSavedColor={deleteColor}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Choose model card */}
           {scenesNeedingModel.length > 0 && (
            <Card>
@@ -2639,42 +2676,6 @@ export function ProductImagesStep3Refine({
             </Card>
           )}
 
-          {/* Background style card */}
-          {bgScenes.length > 0 && (
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Paintbrush className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold">Background style</span>
-                    {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 0 && (
-                      <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
-                        ×{details.backgroundTone.split(',').filter(Boolean).length} selected
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Applies to {bgScenes.length} selected shot{bgScenes.length !== 1 ? 's' : ''}.</p>
-                </div>
-                {!details.backgroundTone && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
-                    <Paintbrush className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
-                    <span className="text-[11px] text-primary/60 font-medium">Select a background color for your selected scenes</span>
-                  </div>
-                )}
-                <BackgroundSwatchSelector
-                  value={details.backgroundTone || ''}
-                  onChange={v => update({ backgroundTone: v })}
-                  details={details}
-                  update={update}
-                  savedColors={savedColors}
-                  canSave={canSave}
-                  onSaveColor={(hex) => saveColor({ hex })}
-                  onSaveGradient={(from, to) => saveGradient({ from, to })}
-                  onDeleteSavedColor={deleteColor}
-                />
-              </CardContent>
-            </Card>
-          )}
 
           {/* Aesthetic Color card */}
           {aestheticColorScenes.length > 0 && (
