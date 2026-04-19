@@ -356,11 +356,22 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     runBatchAnalysis(newItems);
   }, [singleImage, batchItems.length, isBatchMode, title, productType, description, isAnalyzing, isEditing, analyzeImage]);
 
-  // Run AI analysis with concurrency limit
+  // Run AI analysis with concurrency limit + 30s safety timeout per item
   const runBatchAnalysis = useCallback((items: BatchItem[]) => {
     const queue = [...items];
     const concurrency = 3;
     let active = 0;
+
+    // Safety timeout: force-clear isAnalyzing after 30s
+    items.forEach((item) => {
+      setTimeout(() => {
+        setBatchItems(prev => prev.map(b => {
+          if (b.id !== item.id || !b.isAnalyzing) return b;
+          console.warn('Analysis safety timeout hit for', b.id);
+          return { ...b, isAnalyzing: false };
+        }));
+      }, 30000);
+    });
 
     const next = () => {
       while (active < concurrency && queue.length > 0) {
