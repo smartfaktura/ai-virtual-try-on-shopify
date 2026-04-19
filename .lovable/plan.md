@@ -1,69 +1,56 @@
 
-## Investigation: presets vs swimwear conflict resolution
+## Investigation: empty Jewelry section + missing "Beach Overlays" on bikinis
 
-### What user sees
-On a bikini product, the "Outfit Presets" row still shows **Quiet Luxury Neutral, Streetwear Y2K, Editorial Black, Beach Linen** — but for swimwear we just hid `top`, `bottom`, `outerwear`, `shoes`. So clicking "Quiet Luxury Neutral" (which presumably defines a top + bottom + shoes outfit) does… what exactly?
+### Two separate issues to verify
 
-### How it actually behaves today
+**Issue 1 — Jewelry section renders but is empty**
+Screenshot shows `JEWELRY` header with no chips below it. Either:
+- a) The slot has zero options defined in the vocabulary
+- b) Options exist but are filtered out (gender filter? category filter?)
+- c) Render bug — header shows but options array is empty
 
-In `OutfitPresetBar.tsx`:
-```ts
-const handleLoad = (preset) => {
-  const cleaned = applyPresetWithLocks(preset.config, resolution);
-  onLoad({ ...currentConfig, ...cleaned });
-};
-```
+**Issue 2 — "Beach overlays" / beach-context wardrobe missing for bikinis**
+User remembers a "beach" themed slot or overlay (sarong, kaftan cover-up, kimono, towel, beach shirt) that used to appear on swimwear and now doesn't. Likely a swimwear-specific accessory slot we removed when we tightened the swimwear branch in `outfitConflictResolver.ts`.
 
-`applyPresetWithLocks` (in `outfitConflictResolver.ts`) already strips:
-- the `lockedSlot` key (here: `top`)
-- every key in `hiddenSlots` (here: `dress`, `outerwear`, `bottom`, `shoes`)
+### What I need to inspect (read-only this turn)
 
-So for a bikini, loading "Quiet Luxury Neutral" silently drops top/bottom/shoes/outerwear/dress and only its **accessories** (bag, jewelry, watch, eyewear, hat, belt) — if the preset defines any — flow through.
+1. `src/lib/outfitVocabulary.ts` — find the JEWELRY slot definition, count options, check if there are gender/category filters trimming them on this product
+2. The OutfitSlotCard / ZaraOutfitPanel render path — confirm whether empty slots should be hidden vs rendered with empty body
+3. Search for "beach", "sarong", "kaftan", "cover-up", "overlay" across the outfit system to see if a swimwear-specific category ever existed
+4. Re-check the swimwear branch in `outfitConflictResolver.ts` — does it omit a slot that used to carry beach pieces (e.g., a `coverUp` or `overlay` slot)?
 
-**The result:** clicking the preset is technically safe (no broken prompt), but visually it's **misleading UX** — most presets don't define accessories, so the click does almost nothing. User thinks "I picked Quiet Luxury Neutral" but the panel doesn't change visibly. Confusing.
+### Likely root causes (to confirm in the read pass)
 
-### Two reasonable fixes
+- **Jewelry empty**: probably gender-filtered (e.g., no men's jewelry options when current model preset = male) OR the vocabulary genuinely has 0 entries and the section renders an empty container — should hide entirely when empty
+- **Missing beach overlays**: most likely a `coverUp`/`overlay` slot that was either (a) never wired into `availableSlots` for swimwear, or (b) got dropped when we hardened the hidden list. Less likely but possible: it lived under `outerwear` and got hidden by our last fix — meaning a "kaftan/sarong/kimono cover-up" sub-vocab is being suppressed.
 
-**Option A — Hide irrelevant presets entirely (cleanest)**
-For each preset, check if any of its config keys overlap with `availableSlots`. If zero overlap → don't render the chip. So on swimwear:
-- "Quiet Luxury Neutral" → top/bottom/shoes only → hidden
-- "Beach Linen" → if it has bag/hat/eyewear → kept
-- Built-in presets that are pure-clothing → all hidden
-- Show a one-line empty state: *"No outfit presets fit this product type — pick accessories below"*
+### Plan after read pass (one or two small fixes)
 
-**Option B — Show but mark as "No effect" / disabled**
-Greys out incompatible presets with a tooltip "Doesn't apply to swimwear". More discoverable but visually noisy.
+**Fix A — Jewelry empty state**
+Either: add gender-neutral jewelry options if vocab is bare, OR hide the slot card entirely when the filtered options array is empty (cleaner ZARA behavior — don't show a header with no chips).
 
-### Recommendation
-**Option A.** ZARA-grade restraint = don't show options that don't do anything. Same philosophy we already used to hide irrelevant slots.
+**Fix B — Restore beach overlays for swimwear**
+- If a dedicated `coverUp` slot exists: add it to swimwear's `availableSlots`
+- If "beach overlays" lived inside `outerwear` (kaftan, sarong, kimono, beach shirt): unhide `outerwear` for swimwear BUT have the vocabulary auto-filter to only beach-appropriate items when category = swimwear (gated sub-vocab)
+- Cleanest path: add a swimwear-only `coverUp` slot to `OutfitSlotKey` + vocab (sarong, kaftan, kimono, oversized shirt, beach pareo, mesh dress) and surface it in the swimwear branch alongside accessories
 
-Bonus: same logic applies cleanly to other product types — fragrance presets won't show "Editorial Black" either, etc. Free win across categories.
+### Files likely touched (after read confirms diagnosis)
+- `src/lib/outfitVocabulary.ts` — jewelry options + new coverUp vocab
+- `src/lib/outfitConflictResolver.ts` — add `coverUp` to swimwear `availableSlots`
+- `src/components/app/product-images/types.ts` — add `coverUp?: string` to `OutfitConfig`
+- Slot card render — hide empty sections (1-line guard)
+- Prompt builder — surface `coverUp` value when present
 
-### Implementation (one file, ~15 lines)
-
-In `OutfitPresetBar.tsx`:
-1. Add a `presetIsRelevant(preset, resolution)` helper:
-   ```ts
-   const cfg = preset.config || {};
-   const definedSlots = Object.keys(cfg).filter(k => cfg[k]);
-   return definedSlots.some(slot => resolution.availableSlots.includes(slot));
-   ```
-2. Filter `builtIn` and `userPresets` arrays through it before rendering.
-3. If both filtered arrays are empty AND `availableSlots.length > 0` → render small muted hint "No presets fit this product — configure accessories below".
-4. If `availableSlots.length === 0` → don't render preset row at all (already handled by parent panel).
-
-### Files touched
-- `src/components/app/product-images/OutfitPresetBar.tsx` — filter + empty state (~15 lines)
-
-### Side-effect check
-- Non-fashion / non-swimwear products: most presets define top+bottom+shoes which all stay available → no presets get hidden → zero visible change
-- "Save current" button stays visible always (user can still save accessory-only outfits as a swimwear preset)
-- User-saved presets get filtered the same way → if they saved "My beach look" with hat+eyewear, it stays visible on bikinis ✓
+### Why this is safe
+- Empty-slot hide is purely visual
+- New `coverUp` slot is additive, gated to swimwear only
+- No DB migration, no schema change, no impact on existing categories
 
 ### Risk
-Very low. Pure UI filter on top of the resolution we already compute. No prompt builder change, no DB change.
+Low. All changes are scoped to vocabulary + the swimwear branch + one render guard.
 
 ### Validation after fix
-1. Bikini product → preset row shows only presets with accessory slots (likely just "Save current" + empty hint, or "Beach Linen" if it has accessories defined)
-2. Regular tee → all 4 built-in presets still show
-3. Save a bikini accessories-only preset → reappears correctly on next bikini upload
+1. Bikini → Jewelry section either shows options OR is hidden (no empty header)
+2. Bikini → new "Cover-up" section shows with sarong/kaftan/kimono/oversized shirt
+3. Pick "kaftan" + generate → kaftan appears as overlay over bikini in shot
+4. Regular tee → no Cover-up slot, jewelry unchanged
