@@ -1,28 +1,33 @@
 
-## Add "Apply my outfit to all shots" toggle
+## Fix "Create Your Brand Model" button (broken route)
 
-### Where
-In `ProductImagesStep3Refine.tsx`, replace the current static hint line ("Some shots have their own styling direction…") with a compact toggle row that flips the existing `details.outfitOverrideEnabled` flag.
+### Cause
+The button calls `window.open('/app/brand-models', '_blank')`, but that route doesn't exist. The actual route registered in `App.tsx` is `/app/models` (component: `BrandModels`). So the new tab opens to a 404 / blank page — the user perceives it as "not working".
 
-### UI
+### Fix
+Replace the URL in **both** affected buttons:
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` (line 165)
+- `src/components/app/catalog/CatalogStepModelsV2.tsx` (line 116)
+
+From:
+```ts
+window.open('/app/brand-models', '_blank')
 ```
-ⓘ  Some shots have their own styling direction.
-   Apply my outfit to all shots                        [ ⚪ Switch ]
+To:
+```ts
+window.open('/app/models', '_blank')
 ```
-- Only renders when at least one selected scene has `outfit_hint` (existing condition).
-- `Switch` bound to `details.outfitOverrideEnabled`.
-- When ON: subtitle changes to "Your outfit selection will override all curated styling."
-- Switch is disabled (with tooltip "Pick an outfit first") until an outfit exists — either AI Stylist auto-pick or manual `outfitConfig` is set.
 
-### Wiring
-- Reuse existing `outfitOverrideEnabled` field (already in `DetailSettings`, already honored in `productImagePromptBuilder.ts`). No new state, no new prompt logic.
-- Toggle handler: `updateDetails({ outfitOverrideEnabled: checked })`.
+### Optional UX upgrade (recommended)
+Opening in a new tab forces the user to leave the wizard mid-flow and lose context. Better: use `useNavigate()` and navigate in the same tab (the user can return via back button), OR keep `_blank` but at least to the correct URL.
+
+I'll use **same-tab `navigate('/app/models')`** to match how the rest of the app navigates between Studio sections. If you prefer keeping the new-tab behavior, say so and I'll just fix the URL.
 
 ### Files
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — replace the hint `<p>` with toggle row using existing `Switch` component.
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+- `src/components/app/catalog/CatalogStepModelsV2.tsx`
 
 ### Validation
-1. Select shots where some have `outfit_hint` → toggle row appears
-2. Toggle disabled until outfit picked (AI Stylist counts) → tooltip explains
-3. Flip ON → all shots use your outfit on generate; OFF → curated styling restored
-4. No `outfit_hint` scenes selected → row hidden (unchanged behavior)
+1. Click "Create Your Brand Model" in Step 3 (Product Images) → lands on `/app/models` Brand Models page
+2. Same click in Catalog Studio Models step → same destination
+3. After creating a model and returning, it appears under "Your Brand Models"
