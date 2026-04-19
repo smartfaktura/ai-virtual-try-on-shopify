@@ -1,138 +1,40 @@
 
-## Plan: ZARA-grade Style & Outfit (final)
+## Plan: Phase 2 — Wire ZARA outfit system into Step 3 (zero-risk surgical edit)
 
-### 1. Edge case: "What if user uploads a jacket?"
+### What changes
+Only the **outfit picker block** inside `ProductImagesStep3Refine.tsx` gets swapped. Model picker, person styling toggle, packaging refs, scene selection, and all sibling flows are untouched.
 
-**Answer:** `outerwear` slot locks to the jacket. Below it, `top` slot opens with a friendly prompt: **"What's underneath your jacket?"** with quick-pick chips (Crop top, T-shirt, Shirt, Knit, Tank, Bodysuit, "Nothing — bare"). Same for `bottom`.
+### Surgical scope
+1. **Locate** the existing outfit UI block (current flat dropdowns for top/bottom/shoes). Read 30 lines above + below to map exact boundaries.
+2. **Replace ONLY that block** with three new pieces:
+   - `<OutfitPresetBar>` (top)
+   - Conditional **scene-hint takeover banner** (when any selected scene has `outfit_hint` AND user hasn't clicked Override)
+   - **Slot grid** rendering `<OutfitSlotCard>` per available slot, driven by `outfitConflictResolver.resolveConflicts(productAnalysis)`
+3. **Wire state** — reuse the existing `outfitConfig` state setter that already lives in this file. The new components write into the same `OutfitConfig` shape (now extended), so downstream prompt-builder + Step 4 review keep working.
+4. **Add 2 small local state hooks**: `overrideSceneHint: boolean` and `expandedAccessories: boolean`. Both default `false`.
 
-**If user picks nothing:** the AI gets a smart default written into the prompt — `"a simple white fitted t-shirt"` for tops, `"straight-leg neutral trousers"` for bottoms. We never send a half-empty outfit to the model (causes random/ugly results). Defaults are picked per product color: dark jacket → light tee, light jacket → black tee.
+### Why it won't crash
+- `OutfitConfig` schema change is **additive** — existing fields (`top`, `bottom`, `shoes`, `accessories`) still exist. Old saved configs read fine.
+- New components are already built + tested in isolation (Phase 1).
+- Conflict resolver returns safe defaults (`{ availableSlots: ['top','bottom','shoes'], hiddenSlots: [], lockedSlot: null }`) when product category is unknown → behaves like today.
+- Prompt builder already updated in Phase 1 to render new slots AND skip empty ones → no broken prompts.
+- Zero edits to: model picker, person toggle, packaging, scene selection, multi-product loop, generation trigger, credits logic.
 
-**Empty-slot defaults table** (used when user skips):
-| Missing slot | Default |
-|---|---|
-| top | white fitted t-shirt |
-| bottom | straight-leg neutral trousers (matches jacket tone) |
-| shoes | clean white low-top sneakers |
-| dress (if dress product) | n/a |
+### Edge cases handled
+- **No product analysis yet** → resolver returns default 3 slots, identical to current behavior.
+- **Non-fashion product** (perfume, candle) → resolver returns `{ availableSlots: [] }` → outfit block hides itself with single line "Outfit not needed for this product."
+- **Scene with `outfit_hint`** → block replaced by banner; clicking Override reveals full picker.
+- **Multi-scene selection mixing hint + non-hint scenes** → banner shown only if ALL selected scenes have hints (safer default).
+- **Loading a preset that conflicts with locked product slot** → resolver strips conflicting keys silently before merging.
 
-User sees these defaults as ghost-text placeholders ("Auto: white tee") so they know what'll happen — and can override with one click.
+### Files touched
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — ONE block replaced (~80-120 lines swapped), no other section edited
+- (No new files, no DB changes, no migrations — Phase 1 already shipped those)
 
----
-
-### 2. Conflict matrix — explained for non-coders
-
-**What it is:** A simple rulebook the app follows so the picker never lets you make impossible outfits. Example: you can't wear two t-shirts at once, and you don't need pants under a dress.
-
-**How it works in plain English:**
-
-| You uploaded | App auto-fills | App hides | You can still pick |
-|---|---|---|---|
-| **A t-shirt / crop top** | "Top = your shirt" | nothing hidden | jacket on top, pants, shoes, accessories |
-| **Trousers / jeans / skirt** | "Bottom = your pants" | nothing hidden | top, jacket, shoes, accessories |
-| **A dress** | "Dress = your dress" | top + bottom (you don't need them) | jacket, shoes, accessories |
-| **A jacket / blazer / coat** | "Jacket = your jacket" | nothing hidden | what's underneath (top), pants, shoes, accessories |
-| **Swimsuit (one-piece)** | "Outfit = your swimsuit" | top + bottom | shoes, hat, sunglasses, jewelry, bag |
-| **Bikini top** | "Top = your bikini top" | nothing hidden | bikini bottom, accessories |
-| **Lingerie set** | "Top + Bottom = your set" | dress, jacket | shoes, accessories |
-| **Shoes / boots / heels** | "Shoes = your product" | nothing hidden | full outfit above |
-| **Bag / hat / jewelry / sunglasses / watch / belt** | matching slot only | nothing hidden | full outfit |
-| **Non-fashion (perfume, candle, tech)** | nothing | the whole outfit panel disappears | (model can wear free-text) |
-
-**"Silent" means:** hidden slots don't appear at all in the UI — no greyed-out boxes, no error messages. You only see what makes sense for your product. Cleaner, less confusing.
-
----
-
-### 3. Full accessory plan — every slot, every option
-
-Each accessory has a **Type** picker → reveals **Sub-style** + **Color** + (sometimes) **Material**.
-
-#### Hat
-- **Type:** Cap, Bucket hat, Beanie, Wide-brim, Fedora, Beret, Visor, Cowboy, Straw
-- **Sub-style:** (Cap → trucker / dad / 5-panel / snapback) · (Beanie → cuffed / slouchy / fisherman) · (Wide-brim → felt / straw / rancher)
-- **Color:** swatches + custom
-- **Material:** Cotton, Wool, Felt, Straw, Nylon, Leather
-
-#### Bag
-- **Type:** Tote, Shoulder, Crossbody, Clutch, Baguette, Bucket, Top-handle, Backpack, Belt-bag
-- **Sub-style:** (Tote → structured / slouchy / mini) · (Crossbody → camera / saddle / messenger)
-- **Color** + **Material:** Leather, Suede, Canvas, Nylon, Patent, Knit
-
-#### Jewelry (multi-select)
-- **Necklace:** Layered chains, Pendant, Choker, Pearl strand, Statement
-- **Earrings:** Hoops (small/medium/large), Studs, Drops, Ear cuffs, Statement
-- **Bracelet:** Tennis, Bangle, Cuff, Beaded, Charm
-- **Ring:** Single statement, Stack, Signet, Band
-- **Metal:** Gold, Silver, Rose-gold, Mixed metals
-
-#### Eyewear
-- **Type:** Sunglasses, Optical
-- **Frame shape:** Aviator, Wayfarer, Cat-eye, Round, Oval, Square, Rimless, Shield, Oversized
-- **Lens tint:** Black, Brown, Mirror, Gradient, Clear, Yellow, Blue
-- **Frame color:** Tortoise, Black, Gold, Silver, Clear, White
-
-#### Belt
-- **Type:** Classic dress, Wide statement, Skinny, Chain, Western, Braided
-- **Buckle:** Minimal, Logo plate, Western, Double-ring
-- **Color** + **Material:** Leather, Suede, Fabric, Metal
-
-#### Watch
-- **Style:** Minimal dress, Sport/diver, Chronograph, Digital, Vintage, Smart
-- **Strap:** Leather, Metal mesh, Steel link, Nylon NATO, Rubber
-- **Face color** + **Case metal:** Gold, Silver, Black, Rose-gold
-
-#### Scarf (optional v2)
-- **Type:** Silk square, Long wool, Bandana, Pashmina
-- **Pattern:** Solid, Stripes, Floral, Logo print, Animal
-
----
-
-### 4. UI layout (Step 3) — locked design
-
-```text
-┌─ Style & Outfit ─────────────────────────────────────┐
-│ Direction:  [Studio] [Editorial] [Minimal] [Street]  │
-│                                                       │
-│ ─ Outfit Presets ─────────────────────────────────── │
-│ [Quiet Luxury] [Streetwear] [Editorial Black]        │
-│ [Beach Linen]  [+ Save current]   My presets ▾       │
-│                                                       │
-│ ─ Outfit ─────────────────────────────────────────── │
-│ ┌─ 🔒 OUTERWEAR ─── [thumb] Your Black Blazer ────┐ │
-│ └────────────────────────────────────────────────┘ │
-│ ┌─ TOP · "What's underneath?" ───── auto: white tee ┐│
-│ │ Quick: [Crop top][T-shirt][Shirt][Knit][Tank]    ││
-│ │ Sub: ◯◯◯◯  Color: ⚪⚫🟤  Material: ▾            ││
-│ └─────────────────────────────────────────────────┘│
-│ ┌─ BOTTOM ─────────── auto: straight trousers ────┐│
-│ │ Type: [Trousers][Jeans][Skirt][Shorts]           ││
-│ │ Style: [Wide][Tapered][Cargo]…  Color: ⚪⚫🟤    ││
-│ └─────────────────────────────────────────────────┘│
-│ ┌─ SHOES ──────────── auto: white sneakers ───────┐│
-│ │ Type · Sub · Color                                ││
-│ └─────────────────────────────────────────────────┘│
-│                                                       │
-│ ▸ Accessories  (Bag · Jewelry · Eyewear · Hat ·     │
-│                Belt · Watch)         [tap to open]   │
-└──────────────────────────────────────────────────────┘
-```
-
-When scene has admin `outfit_hint` → entire block replaced by:
-```
-🎬 This scene has a styled outfit
-   "vintage tweed · brown loafers"   [Override]
-```
-
----
-
-### 5. Files touched
-- `src/components/app/product-images/types.ts` — extend `OutfitConfig`
-- NEW `src/lib/outfitVocabulary.ts` — all type/sub-style/color lists + smart defaults
-- NEW `src/lib/outfitConflictResolver.ts` — the rulebook from §2
-- NEW `src/components/app/product-images/OutfitSlotCard.tsx` — reusable slot
-- NEW `src/components/app/product-images/OutfitPresetBar.tsx`
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — wire it all up
-- `src/lib/productImagePromptBuilder.ts` — render new slots + apply defaults
-- DB migration: `user_outfit_presets` table + RLS
+### Validation steps after edit
+1. Visual check Step 3 with: a tee product, a dress product, a jacket product, a fragrance product, a scene with `outfit_hint`.
+2. Confirm prompt preview in Step 4 still renders correctly for each.
+3. Save + load a preset.
 
 ### Risk
-Low. Schema is additive, defaults prevent broken prompts, scene-hint takeover removes the silent-override bug.
+**Very low.** Single file, single block, additive schema, fallback defaults at every layer. Worst case = outfit block looks slightly off → revert via chat history (one click).
