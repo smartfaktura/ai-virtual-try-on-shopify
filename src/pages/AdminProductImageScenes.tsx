@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
@@ -28,22 +28,72 @@ import { Link } from 'react-router-dom';
 import { ScenePreviewThumb } from '@/components/admin/ScenePreviewThumb';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
-const CATEGORIES = [
-  { value: 'fragrance', label: 'Fragrance' },
-  { value: 'beauty-skincare', label: 'Beauty & Skincare' },
-  { value: 'makeup-lipsticks', label: 'Makeup & Lipsticks' },
-  { value: 'bags-accessories', label: 'Bags & Accessories' },
-  { value: 'hats-small', label: 'Hats & Small Accessories' },
-  { value: 'shoes', label: 'Shoes' },
-  { value: 'garments', label: 'Clothing & Apparel' },
-  { value: 'home-decor', label: 'Home Decor' },
-  { value: 'furniture', label: 'Furniture' },
-  { value: 'tech-devices', label: 'Tech / Devices' },
-  { value: 'food', label: 'Food & Snacks' },
-  { value: 'beverages', label: 'Beverages' },
-  { value: 'supplements-wellness', label: 'Supplements & Wellness' },
-  { value: 'other', label: 'Other / Custom' },
+const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[] }[] = [
+  {
+    label: 'Fashion',
+    items: [
+      { value: 'garments', label: 'Clothing & Apparel' },
+      { value: 'streetwear', label: 'Streetwear' },
+      { value: 'hoodies', label: 'Hoodies' },
+      { value: 'jeans', label: 'Jeans' },
+      { value: 'dresses', label: 'Dresses' },
+      { value: 'jackets', label: 'Jackets' },
+      { value: 'skirts', label: 'Skirts' },
+      { value: 'activewear', label: 'Activewear' },
+      { value: 'swimwear', label: 'Swimwear' },
+      { value: 'lingerie', label: 'Lingerie' },
+    ],
+  },
+  {
+    label: 'Accessories',
+    items: [
+      { value: 'bags-accessories', label: 'Bags & Accessories' },
+      { value: 'shoes', label: 'Shoes' },
+      { value: 'hats-small', label: 'Hats & Small Accessories' },
+    ],
+  },
+  {
+    label: 'Beauty',
+    items: [
+      { value: 'beauty-skincare', label: 'Beauty & Skincare' },
+      { value: 'makeup-lipsticks', label: 'Makeup & Lipsticks' },
+      { value: 'fragrance', label: 'Fragrance' },
+    ],
+  },
+  {
+    label: 'Home',
+    items: [
+      { value: 'home-decor', label: 'Home Decor' },
+      { value: 'furniture', label: 'Furniture' },
+    ],
+  },
+  {
+    label: 'Tech',
+    items: [
+      { value: 'tech-devices', label: 'Tech / Devices' },
+    ],
+  },
+  {
+    label: 'Food & Drink',
+    items: [
+      { value: 'food', label: 'Food & Snacks' },
+      { value: 'beverages', label: 'Beverages' },
+    ],
+  },
+  {
+    label: 'Wellness',
+    items: [
+      { value: 'supplements-wellness', label: 'Supplements & Wellness' },
+    ],
+  },
+  {
+    label: 'Other',
+    items: [
+      { value: 'other', label: 'Other / Custom' },
+    ],
+  },
 ];
+const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
 const TRIGGER_BLOCKS = ALL_TRIGGER_KEYS;
 
@@ -756,7 +806,12 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
           >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+              {CATEGORY_GROUPS.map(group => (
+                <SelectGroup key={group.label}>
+                  <SelectLabel>{group.label}</SelectLabel>
+                  {group.items.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                </SelectGroup>
+              ))}
             </SelectContent>
           </Select>
         </div>
