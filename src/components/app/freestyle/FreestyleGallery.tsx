@@ -446,6 +446,7 @@ const ImageCard = forwardRef<HTMLDivElement, ImageCardProps>(function ImageCard(
   if (natural) {
     return (
       <div
+        ref={ref}
         className={cn(
           'group relative inline-block cursor-pointer animate-fade-in',
           !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer rounded-xl',
@@ -481,6 +482,7 @@ const ImageCard = forwardRef<HTMLDivElement, ImageCardProps>(function ImageCard(
 
   return (
     <div
+      ref={ref}
       className={cn(
         'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer animate-fade-in',
         !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
@@ -512,7 +514,8 @@ const ImageCard = forwardRef<HTMLDivElement, ImageCardProps>(function ImageCard(
       {actionButtons}
     </div>
   );
-}
+});
+ImageCard.displayName = 'ImageCard';
 
 export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopySettings, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, failedEntries = [], onDismissFailed, onRetryFailed, onLoadMore, hasMore, isFetchingMore, upscalingSourceIds }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
