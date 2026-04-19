@@ -140,6 +140,7 @@ export default function Products() {
         e.preventDefault();
         setAddInitialTab('manual');
         setAddInitialFiles(files);
+        setAddCompact(true);
         setAddOpen(true);
       }
     };
