@@ -113,6 +113,17 @@ export const BELT_TYPES: GarmentTypeOption[] = [
   { id: 'braided', label: 'Braided', materials: ['leather', 'suede'] },
 ];
 
+// ── Beach cover-ups (swimwear context) ──
+export const COVER_UP_TYPES: GarmentTypeOption[] = [
+  { id: 'sarong', label: 'Sarong', subtypes: ['wrap', 'tied', 'long', 'short'], materials: ['cotton', 'linen', 'silk', 'chiffon'] },
+  { id: 'kaftan', label: 'Kaftan', subtypes: ['flowy', 'embroidered', 'sheer', 'belted'], materials: ['cotton', 'linen', 'silk', 'chiffon'] },
+  { id: 'kimono', label: 'Kimono', subtypes: ['short', 'long', 'sheer', 'fringed'], materials: ['silk', 'chiffon', 'cotton'] },
+  { id: 'beach-shirt', label: 'Beach shirt', subtypes: ['oversized', 'cropped', 'linen', 'sheer'], materials: ['linen', 'cotton', 'gauze'] },
+  { id: 'mesh-dress', label: 'Mesh dress', subtypes: ['mini', 'midi', 'crochet'], materials: ['mesh', 'crochet', 'knit'] },
+  { id: 'pareo', label: 'Pareo', subtypes: ['printed', 'solid', 'fringed'], materials: ['cotton', 'silk', 'chiffon'] },
+  { id: 'cover-up-dress', label: 'Cover-up dress', subtypes: ['terry', 'crochet', 'sheer'], materials: ['terry', 'cotton', 'crochet'] },
+];
+
 export const WATCH_TYPES: GarmentTypeOption[] = [
   { id: 'minimal', label: 'Minimal dress', subtypes: ['ultra-thin', 'roman numerals'], materials: ['leather strap', 'mesh', 'steel link'] },
   { id: 'sport', label: 'Sport / diver', subtypes: ['chronograph', 'GMT'], materials: ['rubber', 'steel link', 'NATO nylon'] },

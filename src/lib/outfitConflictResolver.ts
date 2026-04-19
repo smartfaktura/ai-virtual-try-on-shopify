@@ -7,7 +7,7 @@ import type { OutfitConfig } from '@/components/app/product-images/types';
 
 export type OutfitSlotKey =
   | 'outerwear' | 'top' | 'bottom' | 'dress' | 'shoes'
-  | 'bag' | 'hat' | 'eyewear' | 'belt' | 'watch' | 'jewelry';
+  | 'bag' | 'hat' | 'eyewear' | 'belt' | 'watch' | 'jewelry' | 'coverUp';
 
 export interface ConflictResolution {
   /** Slot the product fills automatically — locked, shown with thumbnail. */
@@ -22,7 +22,7 @@ export interface ConflictResolution {
 
 const ALL_SLOTS: OutfitSlotKey[] = [
   'outerwear', 'top', 'bottom', 'dress', 'shoes',
-  'bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry',
+  'bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry', 'coverUp',
 ];
 
 const ACCESSORY_SLOTS: OutfitSlotKey[] = ['bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'];
@@ -68,13 +68,21 @@ export function resolveOutfitConflicts(
     return { lockedSlot: 'top', hiddenSlots: new Set(['dress', 'outerwear', 'bottom']), availableSlots: ['shoes', ...ACCESSORY_SLOTS], hideOutfitPanel: false };
   }
 
-  // ── Swimwear ── beach/pool context: hide all clothing slots + shoes (barefoot default), accessories only
+  // ── Swimwear ── beach/pool context: hide all clothing slots + shoes (barefoot default), accessories + cover-ups only
   if (cat === 'swimwear' || match(gt, ['swimsuit', 'swimwear', 'bikini', 'one-piece'])) {
-    if (match(gt, ['one-piece', 'monokini'])) return build('dress', ['top', 'bottom', 'outerwear', 'shoes']);
-    if (match(gt, ['bikini top', 'top'])) return build('top', ['dress', 'outerwear', 'bottom', 'shoes']);
-    if (match(gt, ['bikini bottom', 'bottom'])) return build('bottom', ['dress', 'outerwear', 'top', 'shoes']);
+    const swimAvail: OutfitSlotKey[] = ['coverUp', ...ACCESSORY_SLOTS];
+    if (match(gt, ['one-piece', 'monokini'])) {
+      const r = build('dress', ['top', 'bottom', 'outerwear', 'shoes']);
+      return { ...r, availableSlots: [...r.availableSlots.filter(s => s !== 'coverUp' ? true : true)] };
+    }
+    if (match(gt, ['bikini top', 'top'])) {
+      return { lockedSlot: 'top', hiddenSlots: new Set(['dress', 'outerwear', 'bottom', 'shoes']), availableSlots: swimAvail, hideOutfitPanel: false };
+    }
+    if (match(gt, ['bikini bottom', 'bottom'])) {
+      return { lockedSlot: 'bottom', hiddenSlots: new Set(['dress', 'outerwear', 'top', 'shoes']), availableSlots: swimAvail, hideOutfitPanel: false };
+    }
     // Generic bikini → treat as set, lock top, hide bottom + shoes
-    return { lockedSlot: 'top', hiddenSlots: new Set(['dress', 'outerwear', 'bottom', 'shoes']), availableSlots: [...ACCESSORY_SLOTS], hideOutfitPanel: false };
+    return { lockedSlot: 'top', hiddenSlots: new Set(['dress', 'outerwear', 'bottom', 'shoes']), availableSlots: swimAvail, hideOutfitPanel: false };
   }
 
   // ── Outerwear ──

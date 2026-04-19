@@ -34,7 +34,8 @@ import { OutfitPresetBar } from './OutfitPresetBar';
 import { resolveOutfitConflicts, type OutfitSlotKey } from '@/lib/outfitConflictResolver';
 import {
   TOP_TYPES, BOTTOM_TYPES, OUTERWEAR_TYPES, DRESS_TYPES, SHOE_TYPES,
-  BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES,
+  BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES, COVER_UP_TYPES,
+  JEWELRY_NECKLACES, JEWELRY_EARRINGS, JEWELRY_BRACELETS, JEWELRY_RINGS, JEWELRY_METALS,
 } from '@/lib/outfitVocabulary';
 
 /* ══════════════════════════════════════════════
@@ -1602,6 +1603,7 @@ const SLOT_TYPES: Record<OutfitSlotKey, { label: string; types: typeof TOP_TYPES
   bottom:    { label: 'Bottom', types: BOTTOM_TYPES, ghost: 'Auto: straight-leg trousers' },
   dress:     { label: 'Dress', types: DRESS_TYPES },
   shoes:     { label: 'Shoes', types: SHOE_TYPES, ghost: 'Auto: white low-top sneakers' },
+  coverUp:   { label: 'Cover-up', types: COVER_UP_TYPES, hint: 'Beach overlay' },
   bag:       { label: 'Bag', types: BAG_TYPES, isAccessory: true },
   hat:       { label: 'Hat', types: HAT_TYPES, isAccessory: true },
   eyewear:   { label: 'Eyewear', types: EYEWEAR_TYPES, isAccessory: true },
@@ -1651,7 +1653,7 @@ function ZaraOutfitPanel({
   }
 
   // Split available slots into garments (always shown) vs accessories (collapsible)
-  const garmentOrder: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes'];
+  const garmentOrder: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp'];
   const garmentSlots = garmentOrder.filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
   const accessorySlots = (['bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'] as OutfitSlotKey[])
     .filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
@@ -1709,6 +1711,63 @@ function ZaraOutfitPanel({
               {accessorySlots.map(slot => {
                 const meta = SLOT_TYPES[slot];
                 const isLocked = resolution.lockedSlot === slot;
+                // ── Special: jewelry uses JewelryConfig (necklace/earrings/bracelet/ring/metal) ──
+                if (slot === 'jewelry') {
+                  const jv = config.jewelry || {};
+                  const updateJewelry = (patch: Partial<typeof jv>) => {
+                    const next = { ...jv, ...patch };
+                    // Clean undefined entries
+                    Object.keys(next).forEach(k => {
+                      if (!(next as Record<string, unknown>)[k]) delete (next as Record<string, unknown>)[k];
+                    });
+                    const hasAny = Object.keys(next).length > 0;
+                    update({ outfitConfig: { ...config, jewelry: hasAny ? next : undefined } });
+                  };
+                  const ChipRow = ({ label, options, current, field }: { label: string; options: string[]; current?: string; field: keyof typeof jv }) => (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-muted-foreground/70 w-16 shrink-0">{label}</span>
+                      {options.map(opt => {
+                        const active = current === opt;
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => updateJewelry({ [field]: active ? undefined : opt } as Partial<typeof jv>)}
+                            className={cn(
+                              'h-6 px-2 rounded-md text-[10px] font-medium border transition-colors',
+                              active ? 'bg-foreground text-background border-foreground' : 'bg-muted/30 hover:bg-muted border-border/50',
+                            )}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                  const hasAny = Object.keys(jv).length > 0;
+                  return (
+                    <div key={slot} className="rounded-xl border bg-card/40 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">JEWELRY</span>
+                        {hasAny && (
+                          <button
+                            onClick={() => update({ outfitConfig: { ...config, jewelry: undefined } })}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="Clear jewelry"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <ChipRow label="Necklace" options={JEWELRY_NECKLACES} current={jv.necklace} field="necklace" />
+                      <ChipRow label="Earrings" options={JEWELRY_EARRINGS} current={jv.earrings} field="earrings" />
+                      <ChipRow label="Bracelet" options={JEWELRY_BRACELETS} current={jv.bracelet} field="bracelet" />
+                      <ChipRow label="Ring" options={JEWELRY_RINGS} current={jv.ring} field="ring" />
+                      <ChipRow label="Metal" options={JEWELRY_METALS} current={jv.metal} field="metal" />
+                    </div>
+                  );
+                }
+                // Default OutfitPiece-based slot (bag, hat, eyewear, belt, watch)
+                if (meta.types.length === 0) return null;
                 const value = (config as Record<string, OutfitPiece | undefined>)[slot];
                 return (
                   <OutfitSlotCard
