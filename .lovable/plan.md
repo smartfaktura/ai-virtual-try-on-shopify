@@ -1,51 +1,50 @@
 
 
-## Root cause (now confirmed)
+## Root causes (confirmed by logs + code reading)
 
-When the Add Product drawer is open on `/app/products` and the user presses Cmd/Ctrl+V once, **two paste listeners fire for the same event**:
+### Bug 1: Duplicate cards from one paste
+The dedup signature is `name|size|lastModified`, but **both paste handlers create files with `pasted-${Date.now()}.png` independently** — `Products.tsx` line 134 AND `ManualProductTab.tsx` line ~424 both call `new File([blob], 'pasted-${Date.now()}...')`. `Date.now()` differs by 0–2ms between the two listeners, so the **filenames differ** → dedup misses → 2 cards.
 
-1. **`src/pages/Products.tsx`** lines 119–146 — window-level `paste` listener that captures the file and calls `setAddInitialFiles(files)` + `setAddOpen(true)`. This causes `ManualProductTab` to receive the file via the `initialFiles` prop, and the `useEffect` at line 153 calls `addFiles(initialFiles)`.
+The "early return when `initialFiles !== undefined`" guard in `ManualProductTab` doesn't help because on the first paste, `initialFiles` is still `undefined` from the previous render — both handlers fire on the same event before React re-renders.
 
-2. **`src/components/app/ManualProductTab.tsx`** lines 371–392 — document-level `paste` listener that captures the same file and calls `addFiles([file])` directly.
+### Bug 2: Analyze always fails with "position 1 column 2"
+Edge function logs show the AI returns **perfectly valid JSON**, but our sanitization step (line 134) is **breaking it**:
 
-Both run on the same Cmd+V event → `addFiles` runs twice with the same file → **2 cards appear from 1 paste**, and the second `addFiles` triggers the "single → batch" promotion path (lines 240–276) which creates the messy state where one card is empty and the other is stuck "Analyzing".
+```ts
+sanitized = jsonStr.replace(/[\x00-\x1F\x7F]/g, ch => 
+  ch === '\n' ? '\\n' : ...  // converts STRUCTURAL newlines to literal '\n' escape
+);
+```
 
-The previously-diagnosed JSON-parse failure in `analyze-product-image` is a real but secondary issue — it makes the analyze step fail silently. The PRIMARY bug is the duplicate-paste capture.
+JSON allows raw whitespace newlines between tokens but does **NOT** allow a literal `\n` escape sequence outside string values. So `{\n  "title"` becomes `{\n  "title"` (literal backslash-n) → parser chokes at position 1. Every analyze call fails. The client clears the spinner via the soft-fail toast — but card #2 keeps trying because of the safety timeout race.
 
-## Fix plan
+## Fix plan (small, decisive)
 
-### Fix 1 (primary) — Stop the duplicate paste capture
-File: `src/components/app/ManualProductTab.tsx`, lines 371–393.
+### Fix A — Kill duplicate paste at the source
+In `src/components/app/ManualProductTab.tsx`:
 
-When the drawer is open AND `Products.tsx`'s window-level paste handler is active, the document-level one is redundant. Two options, I'll do BOTH:
+**Remove the document-level paste handler entirely** (lines ~415–439). The page-level handler in `Products.tsx` already covers every paste case for the drawer. For the standalone `/app/add-product` page (if it exists without a parent paste handler), keep paste capture by adding the listener **only when `initialFiles === undefined` AND not in editing mode**, AND add a window-level guard `e.defaultPrevented` check so we skip if `Products.tsx` already handled it (`Products.tsx` already calls `e.preventDefault()` on line 139).
 
-- **(a) Remove the duplicate document-level paste handler entirely.** The `Products.tsx` window-level handler already covers this case (it always fires when the user pastes anywhere on the page). The drawer is always reached via that page, so its files get forwarded via `initialFiles`. For `AddProduct.tsx` standalone page, it doesn't have its own paste handler, but we can keep paste behavior by routing through a single source of truth.
-- **(b) Add a guard** so that even if both handlers existed, the same file (same name + size + lastModified) added within 300ms is rejected as a duplicate. This is the belt-and-suspenders defense.
+**Also fix the dedup signature** to use file content size + first 1KB hash isn't worth it; instead use `${file.size}|${blob_first_bytes_marker}` is overkill. Simpler: **dedup on `(size, type)` within 500ms** for paste-originated files (they always have unique-timestamped names but same size+type). This catches the dual-listener case reliably.
 
-Implementation: drop the `useEffect` at lines 371–393. Add a small `recentFilesDedupeRef` set in `addFiles` that rejects files matching a recently-added signature within 300ms.
+### Fix B — Stop corrupting valid JSON
+In `supabase/functions/analyze-product-image/index.ts`:
 
-### Fix 2 (secondary) — Robust JSON parsing in the edge function
-File: `supabase/functions/analyze-product-image/index.ts`, line 109.
+Replace the broad `replace(/[\x00-\x1F\x7F]/g, ...)` with a **string-aware** sanitizer that only escapes control chars **inside string values**, leaving structural whitespace alone. Walk the extracted JSON respecting `inString` state (we already do this in `extractJsonObject` — reuse that pattern).
 
-Replace the greedy regex `/\{[\s\S]*\}/` with:
-1. Strip ` ```json ` and ` ``` ` markdown fences.
-2. Find the first `{` and walk forward counting brace depth to extract the matching `}`.
-3. If `JSON.parse` still fails, return HTTP 200 with `{ error: "Could not parse AI response" }` (soft fail — same path as gateway-unavailable, so the client clears its spinner gracefully).
+Or simpler: **just try `JSON.parse(jsonStr)` first** without any sanitization (the AI nearly always returns clean JSON), and only fall back to sanitization if that fails — and the fallback should escape control chars **only when inside a quoted string**.
 
-### Fix 3 (resilience) — Surface errors + safety timeout in client
-File: `src/components/app/ManualProductTab.tsx`, lines 173–207 and `runBatchAnalysis` 329–350.
-
-- In the catch path, also show a single debounced toast: *"AI analysis unavailable for some items — please fill in manually."*
-- In `runBatchAnalysis`, attach a 30-second safety timeout per item: if `isAnalyzing` is still true after 30s, force-clear it.
+### Fix C — Test it works end-to-end
+Use `supabase--curl_edge_functions` to send a real image to `analyze-product-image` and confirm we get a parsed JSON response, not `{ error: "Could not parse..." }`.
 
 ## Files to edit
 
-- `src/components/app/ManualProductTab.tsx` — remove duplicate paste handler, add file-signature dedupe in `addFiles`, add safety timeout in `runBatchAnalysis`, debounced error toast in `analyzeImage` catch.
-- `supabase/functions/analyze-product-image/index.ts` — robust JSON extraction, soft-fail HTTP 200.
+- `src/components/app/ManualProductTab.tsx` — remove document-level paste handler (or guard with `e.defaultPrevented`); change dedup signature to `size|type` with 500ms window.
+- `supabase/functions/analyze-product-image/index.ts` — replace broken sanitizer with string-aware version (try raw parse first, then string-aware fallback).
 
 ## Result
 
-- Pasting one image creates exactly one card. No more phantom duplicates.
-- Even when the AI returns malformed JSON, the spinner clears and the user sees a single helpful toast instead of a permanently-stuck "Analyzing…" state.
-- No regression for drag-drop, browse, or CSV uploads (those don't go through paste handlers).
+- One paste → one card. Verified by the dedup using `size|type` (paste blobs always share these), even when names differ by milliseconds.
+- Analyze actually returns parsed `{ title, productType, description }` → cards populate fields immediately, no more permanent "Analyzing…".
+- No regression for drag-drop (different files have different size/type combos), file picker (real filenames are stable), or CSV upload (different code path).
 
