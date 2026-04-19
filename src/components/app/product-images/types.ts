@@ -37,6 +37,7 @@ export interface OutfitConfig {
   belt?: OutfitPiece;
   watch?: OutfitPiece;
   jewelry?: JewelryConfig;
+  coverUp?: OutfitPiece;   // beach cover-ups for swimwear (sarong, kaftan, kimono, etc.)
 
   // Legacy free-text accessories (kept for backward compatibility)
   accessories?: string;
