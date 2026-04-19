@@ -1380,6 +1380,15 @@ export default function ProductImages() {
               <ProductImagesStep6Results
                 results={results}
                 onGenerateMore={() => { resetGenerationState(); setStep(2); }}
+                onStartNew={() => {
+                  resetGenerationState();
+                  setSelectedProductIds(new Set());
+                  setSelectedSceneIds(new Set());
+                  setPerCategoryScenes(new Map());
+                  setSceneExtraRefs({});
+                  setDetails(INITIAL_DETAILS);
+                  setStep(1);
+                }}
                 onGoToLibrary={() => navigate('/app/library')}
               />
             )}
