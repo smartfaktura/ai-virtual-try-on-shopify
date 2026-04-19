@@ -248,7 +248,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
             </DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">{subtitle}</DrawerDescription>
           </DrawerHeader>
-          <div className="px-5 pb-5 overflow-y-auto flex-1 min-h-0">
+          <div className="px-5 pb-5 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
             {isEdit ? editContent : tabsContent}
           </div>
         </DrawerContent>
@@ -281,9 +281,9 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         </SheetHeader>
 
         {isEdit ? (
-          <div className="px-7 pb-7 overflow-y-auto flex-1 min-h-0">{editContent}</div>
+          <div className="px-7 pb-7 overflow-y-auto overflow-x-hidden flex-1 min-h-0">{editContent}</div>
         ) : (
-          <div className="px-7 pb-7 flex flex-col flex-1 min-h-0">{tabsContent}</div>
+          <div className="px-7 pb-7 flex flex-col flex-1 min-h-0 overflow-x-hidden">{tabsContent}</div>
         )}
       </SheetContent>
     </Sheet>
