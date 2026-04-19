@@ -20,11 +20,25 @@ interface OutfitPresetBarProps {
   gender?: string;
 }
 
+function presetIsRelevant(preset: UserOutfitPreset, resolution: ConflictResolution): boolean {
+  const cfg = (preset.config || {}) as Record<string, unknown>;
+  const definedSlots = Object.keys(cfg).filter(k => {
+    const v = cfg[k];
+    return v !== undefined && v !== null && v !== '';
+  });
+  if (definedSlots.length === 0) return false;
+  return definedSlots.some(slot => resolution.availableSlots.includes(slot as OutfitSlotKey));
+}
+
 export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, gender }: OutfitPresetBarProps) {
   const { builtIn, userPresets, savePreset, deletePreset } = useOutfitPresets();
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const relevantBuiltIn = builtIn.filter(p => presetIsRelevant(p, resolution));
+  const relevantUser = userPresets.filter(p => presetIsRelevant(p, resolution));
+  const noRelevantPresets = relevantBuiltIn.length === 0 && relevantUser.length === 0;
 
   const handleLoad = (preset: UserOutfitPreset) => {
     const cleaned = applyPresetWithLocks(preset.config, resolution);
