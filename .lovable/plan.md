@@ -1,132 +1,89 @@
 
-## Clarify what “Your outfit” means in Step 3
+## Category-aware curated preset library + smart auto-pick
 
-### What is happening now
-The screenshot shows the real problem clearly:
+### What you're asking for
+1. **Big curated library** of looks per garment category — sourced from Zara/COS/Aritzia/Massimo Dutti current trend codes
+2. **Auto-pick a sensible default** the moment Step 3 opens, so the user never lands on "nothing styled"
+3. Keep manual editing + user-saved presets exactly as they are today
 
-- every row says **“Your outfit”**
-- but there is **no per-shot editor**
-- and the UI does **not show what outfit that actually means**
+### The library (authored in `src/lib/outfitVocabulary.ts`)
 
-So the current list is technically true but useless. In the current system, outfit editing is **global**, not per shot:
+Replace the current 4 starter `BUILT_IN_PRESETS` with ~60 looks tagged by category. Each preset is a real `OutfitConfig` using existing vocabulary (so prompt builder needs zero changes). Color values reference neutrals where possible so `{{aestheticColor}}` cohesion still works.
 
-- you pick **Top / Bottom / Shoes / Accessories** once in the panel above
-- those picks apply to all eligible on-model shots
-- scenes with their own curated `outfit_hint` can still override that unless global override is enabled
+**Coverage (≈60 looks total):**
 
-That means **“Your outfit” really means “this shot uses the global outfit picks from above”**. The UI never says that, so it feels broken.
+| Category tag | Count | Example look names (Zara/Cos trend-coded) |
+|---|---|---|
+| `tops` (tee, blouse, shirt, tank) | 6 | Clean Minimal Denim, Tucked Trouser Polish, Quiet Luxury Knit, Office Siren, Coastal Linen, Y2K Baby-Tee |
+| `hoodies / sweatshirts` | 6 | Off-Duty Layered, Athleisure Clean, Streetwear Baggy, Quiet Luxury Hoodie, Tech-wear Mono, Y2K Layered |
+| `knits / cardigans` | 5 | Sandstone Layering, Heritage Cable, Long-line Cardi & Slip, Polo-Knit Prep, Open-Knit Beach |
+| `dresses` | 7 | Slip-Dress Minimal, Garden Party Midi, Resort Eclectic, Black-Tie Slip, Sweater-over-Slip, Tea-Dress Boots, Y2K Mini |
+| `jeans / denim` | 6 | Western Modern, Café Casual Loafer, Quiet Luxury Denim, Street Editorial Baggy, Coastal Light-Wash, Y2K Low-Rise |
+| `trousers / tailoring` | 5 | Office Siren, Tonal Tailoring, Wide-Leg & Tank, Pleated Heritage, Cargo Tech |
+| `skirts` | 4 | Pencil & Knit, Pleated Midi Prep, Mini & Boot, Maxi Resort |
+| `shorts` | 3 | Bermuda Tailored, Denim Café, Cargo Tech |
+| `jackets / blazers / coats` | 6 | Biker Edge, Equestrian Heritage, Tailored Weekend, Workwear Chore, Trench Quiet Luxury, Puffer Sport |
+| `swimwear` | 4 | Beach Walk Linen, Resort Pool Kaftan, Sunset Cover-Up, Bare Hero |
+| `activewear` | 4 | Studio Pilates, Run Club, Yoga Flow, Sport Editorial |
+| `lingerie` | 3 | Editorial Bare, Robe Layered, Minimal Boudoir |
+| `shoes / sneakers / boots / heels` | 4 | Shoe-led looks where shoe is locked + curated rest |
+| Universal fallback | 6 | Coastal Minimal, Quiet Luxury, Street Editorial, Resort Eclectic, Sport Editorial, Y2K Pop |
 
-### Root issue
-This is mostly a **UX wording + presentation problem**, not a prompt-engine problem:
-
-1. **The label is vague**
-   “Your outfit” does not tell the user:
-   - global vs per-shot
-   - what exact pieces are active
-   - whether the scene is editable here or not
-
-2. **The list becomes noisy when all shots use the same source**
-   In your screenshot, six rows all say the same thing. That should be one summary, not six repetitive pills.
-
-3. **There is no visible link between the chips above and the shot labels below**
-   The panel should explicitly say:
-   - what you selected
-   - how many shots it affects
-   - which shots, if any, are exceptions
-
-### Implementation plan
-
-#### 1. Replace vague labels with plain language
-Update the per-shot source labels in `ProductImagesStep3Refine.tsx`:
-
-- `Your outfit` → `Uses your selections above`
-- `Your outfit (override)` → `Uses your selections above (forced on all shots)`
-- `Scene styling` → `Uses this shot’s built-in styling`
-- `Category default — pick outfit` → `Uses automatic styling`
-
-This makes the meaning immediately understandable.
-
-#### 2. Add a global outfit summary directly above the shot list
-Under the outfit panel, add a compact summary card like:
-
-```text
-Applies to 6 model shots
-Using your selections above:
-Top: white cropped top
-Bottom: black tailored trousers
-Accessories: gold jewelry
+Each entry shape:
+```ts
+{
+  id: 'preset-quiet-luxury-knit',
+  name: 'Quiet Luxury Knit',
+  category: ['tops', 'knits'],          // matches multiple product categories
+  recommended: true,                     // candidate for auto-pick
+  config: {
+    top: { garment: 'knit', subtype: 'crewneck', color: 'cream', material: 'cashmere' },
+    bottom: { garment: 'trousers', subtype: 'tailored', color: 'beige', material: 'wool' },
+    shoes: { garment: 'loafer', subtype: 'penny', color: 'brown', material: 'leather' },
+    jewelry: { earrings: 'Small hoops', metal: 'Gold' },
+  },
+}
 ```
 
-If nothing is selected:
+### Auto-pick logic (the "always have a sensible default" part)
 
-```text
-No custom outfit selected
-Shots will use built-in scene styling or automatic styling
-```
+In `ProductImagesStep3Refine.tsx`, on first mount of Step 3:
 
-This answers “what is here?” without making users decode the row badges.
+1. If `details.outfitConfig` already has any slot filled → do nothing (user picked or coming back)
+2. Otherwise, run `pickDefaultPreset(selectedProducts)`:
+   - Filter `BUILT_IN_PRESETS` by union of selected products' categories
+   - Prefer entries flagged `recommended: true`
+   - Prefer neutral palette (cream/beige/black/white) so `{{aestheticColor}}` blends well
+   - Pick the first match → silently apply to `details.outfitConfig`
+3. Show a tiny non-intrusive line under the panel header:
+   > *Auto-styled with **Quiet Luxury Knit** — change anytime below.*
+   
+   With a small "Clear" link to reset to nothing.
 
-#### 3. Only show the per-shot list when sources are mixed
-If all eligible shots use the same source, replace the repetitive list with one sentence:
+User overrides win immediately — picking another preset, opening Customize, or clearing all replaces the auto-pick and the helper line disappears.
 
-```text
-All 6 model shots use your selections above
-```
+### UI changes (minimal, no new section)
 
-Only render the detailed per-shot breakdown when there is a mix, for example:
-- some shots use built-in scene styling
-- some use global outfit picks
-- some fall back to automatic styling
+In the existing presets bar inside the outfit editor:
+- Section label: *"Suggested looks for your products"*
+- Filter visible built-ins by current product categories (union)
+- Append universal fallbacks at the end
+- Sub-group user-saved looks under: *"Your saved looks"* (existing `useOutfitPresets.userPresets` flow stays untouched)
 
-That keeps the section useful instead of cluttered.
+Add the auto-pick helper line near the top of the Style & Outfit panel.
 
-#### 4. Add one explicit explanation: editing is global, not per-shot
-Small helper copy under the summary:
+### Files touched
+- `src/lib/outfitVocabulary.ts` — expand `BUILT_IN_PRESETS` to ~60 category-tagged looks with `category[]` + `recommended` flag
+- `src/hooks/useOutfitPresets.ts` — add optional `categoryFilter: string[]` param; filter `builtIn` array accordingly; expose `pickDefault(productCategories)` helper
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — wire auto-pick on mount, helper line + Clear link, pass current product categories to the hook, update presets bar label/grouping
 
-```text
-Outfit edits here apply across your selected model shots. This is not a per-shot wardrobe editor.
-```
-
-That directly addresses the confusion in your message.
-
-#### 5. Show exactly which shots are exceptions
-When sources are mixed, keep the row list, but only surface the exceptions clearly:
-
-```text
-Luxury Street Walk — Uses this shot’s built-in styling
-Resort Seaside Apparel Story — Uses your selections above
-```
-
-This makes the section about differences, not repetition.
-
-### Files to update
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-  - rewrite source labels
-  - add global outfit summary
-  - collapse identical-source lists
-  - add “global, not per-shot” helper copy
-
-Optional small helper extraction if needed:
-- `src/lib/productImagePromptBuilder.ts` or a small UI helper file
-  - reuse outfit description logic to turn `outfitConfig` into human-readable summary text for the UI
-
-### Expected result
-After this change, the user will understand:
-
-- what outfit is currently active
-- whether it is coming from their global picks or the scene itself
-- that editing above affects all eligible shots
-- which shots are exceptions, if any
+### Risk
+Very low. Pure data + small filter/auto-pick logic. No prompt-builder, schema, or edge-function changes. Falls back to today's behavior if filter yields zero matches (universal fallbacks always present).
 
 ### Validation
-1. Select top + bottom only  
-   → UI says exactly what was selected and that it applies to all eligible model shots
-
-2. Select 6 scenes and all use the same source  
-   → no repetitive 6-row list; just one clear summary
-
-3. Select mixed scenes where one has built-in scene styling  
-   → summary plus only the exception rows
-
-4. Turn override on  
-   → summary explicitly says selections are forced across all shots
+1. Open Step 3 with a hoodie selected → outfit silently filled with a hoodie-appropriate look + helper line shown
+2. Presets bar shows hoodie/sweatshirt looks first, universal fallbacks below
+3. Click another preset → auto-pick line disappears, new look applied
+4. Click "Clear" on the helper line → outfit emptied, behaves like before
+5. Mixed cart (dress + jeans + sneakers) → presets bar shows union; auto-pick chooses a recommended look matching at least one category
+6. Generate → produced shots use the auto-picked outfit cohesively with aesthetic color
