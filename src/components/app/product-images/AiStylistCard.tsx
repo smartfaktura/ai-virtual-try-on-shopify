@@ -41,7 +41,7 @@ export const AiStylistCard: React.FC<Props> = ({ picks, onRestyle, onToggleCusto
             key={product.id}
             className="flex items-center gap-3 rounded-lg bg-card border border-border/60 px-3 py-2"
           >
-            <ProductThumbnail src={product.image_url} alt={product.title} className="w-9 h-9 rounded-md flex-shrink-0" />
+            <ProductThumbnail imageUrl={product.image_url} alt={product.title} size="sm" className="w-9 h-9 rounded-md flex-shrink-0" />
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <span className="text-xs font-medium text-foreground truncate">{product.title}</span>
               <span className="text-muted-foreground/60 text-xs flex-shrink-0">→</span>
