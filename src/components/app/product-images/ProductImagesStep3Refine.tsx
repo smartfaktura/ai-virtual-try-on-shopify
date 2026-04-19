@@ -2339,22 +2339,15 @@ export function ProductImagesStep3Refine({
                         Some shots have their own styling direction — outfit settings apply to remaining shots only.
                       </p>
                     )}
-                    <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-                    <Separator className="opacity-40" />
-                    <div className="space-y-1">
-                      <Collapsible>
-                        <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/customize">
-                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90 flex-shrink-0" />
-                          <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Outfit</span>
-                          <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getOutfitSummary(details.outfitConfig) || 'Auto'}</span>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="space-y-2 pt-2 pb-1 pl-6">
-                            <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} analyses={analyses} selectedProductIds={selectedProductIds} allProducts={allProducts} />
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </div>
+                    <ZaraOutfitPanel
+                      details={details}
+                      update={update}
+                      primaryCategory={primaryCategory}
+                      modelGender={selectedModelGender}
+                      analyses={analyses}
+                      selectedProductIds={selectedProductIds}
+                      allProducts={allProducts}
+                    />
                   </>
                 )}
 
