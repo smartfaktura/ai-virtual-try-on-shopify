@@ -1668,6 +1668,7 @@ function ZaraOutfitPanel({
         onLoad={handleLoadPreset}
         category={firstAnalysis?.category || primaryCategory}
         gender={modelGender}
+        productCategories={productCategories}
       />
 
       <div className="space-y-2">
