@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,12 +48,30 @@ function dbToFrontend(d: DbScene): ProductImageScene {
 
 // ── Fetch helpers ──
 
-// Slim column list for client picker / display / sort. Excludes admin-only metadata.
-// `prompt_template` is REQUIRED client-side for prompt building (buildDynamicPrompt).
+// Full client column list — includes `prompt_template` because the wizard's
+// buildDynamicPrompt runs locally on selected scenes.
 const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+
+// Ultra-slim columns for the deferred "rest" fetch — only what the picker UI
+// needs (title / preview / category / ordering). Heavy `prompt_template`,
+// `description`, and timestamps are fetched on-demand if a user picks one of
+// these scenes (see fetchSceneById).
+const SLIM_REST_COLUMNS = 'id,scene_id,title,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
 
 function selectCols(includePromptTemplate: boolean): string {
   return includePromptTemplate ? '*' : CLIENT_COLUMNS;
+}
+
+// On-demand single-row fetch — used when the user picks a scene that came from
+// the slim "rest" payload and we need its full prompt_template + description.
+async function fetchSceneById(id: string): Promise<DbScene | null> {
+  const { data, error } = await supabase
+    .from('product_image_scenes' as any)
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as DbScene) ?? null;
 }
 
 async function fetchAllScenes(includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
@@ -88,14 +107,22 @@ async function fetchScenesByCategories(categories: string[], includePromptTempla
   return (data || []) as unknown as DbScene[];
 }
 
-async function fetchScenesExcludingCategories(categories: string[], includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
+async function fetchScenesExcludingCategories(
+  categories: string[],
+  includePromptTemplate = false,
+  activeOnly = true,
+  slim = false,
+): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
   let from = 0;
+  // When slim=true we ignore includePromptTemplate and use the ultra-slim
+  // column list — caller is signalling "I only need picker metadata".
+  const cols = slim ? SLIM_REST_COLUMNS : selectCols(includePromptTemplate);
   while (true) {
     let q = supabase
       .from('product_image_scenes' as any)
-      .select(selectCols(includePromptTemplate))
+      .select(cols)
       .not('category_collection', 'in', `(${categories.join(',')})`)
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
@@ -232,7 +259,9 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // Client wizard NEEDS prompt_template (buildDynamicPrompt builds prompts locally).
   const includePromptTemplate = options?.includePromptTemplate ?? true;
   const activeOnly = !(options?.includeInactive ?? false);
-  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}`;
+  // Slim mode = wizard client (priority + active only). Admin paths keep full payload.
+  const useSlimRest = !!hasPriority && activeOnly;
+  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}${useSlimRest ? '-slimrest' : ''}`;
 
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
@@ -243,10 +272,19 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Defer the heavy "rest" fetch by ~3s after priority resolves so it doesn't
+  // race the wizard's own work (image uploads, analysis calls, navigation).
+  const [restEnabled, setRestEnabled] = useState(false);
+  useEffect(() => {
+    if (!hasPriority || !priorityScenes) return;
+    const t = window.setTimeout(() => setRestEnabled(true), 3000);
+    return () => window.clearTimeout(t);
+  }, [hasPriority, priorityScenes]);
+
   const { data: restScenes, isLoading: isLoadingRest } = useQuery({
     queryKey: [...QUERY_KEY_REST, cacheVariant, priorityCats],
-    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly),
-    enabled: !!hasPriority && !!priorityScenes,
+    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly, useSlimRest),
+    enabled: !!hasPriority && !!priorityScenes && restEnabled,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -330,5 +368,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
     upsertScene,
     deleteScene,
     updateScene,
+    /** On-demand single-row fetch for scenes that came from the slim "rest" payload. */
+    fetchSceneById,
   };
 }
