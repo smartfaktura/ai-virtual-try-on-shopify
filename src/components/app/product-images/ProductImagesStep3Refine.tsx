@@ -34,7 +34,8 @@ import { OutfitPresetBar } from './OutfitPresetBar';
 import { resolveOutfitConflicts, type OutfitSlotKey } from '@/lib/outfitConflictResolver';
 import {
   TOP_TYPES, BOTTOM_TYPES, OUTERWEAR_TYPES, DRESS_TYPES, SHOE_TYPES,
-  BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES,
+  BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES, COVER_UP_TYPES,
+  JEWELRY_NECKLACES, JEWELRY_EARRINGS, JEWELRY_BRACELETS, JEWELRY_RINGS, JEWELRY_METALS,
 } from '@/lib/outfitVocabulary';
 
 /* ══════════════════════════════════════════════
@@ -1602,6 +1603,7 @@ const SLOT_TYPES: Record<OutfitSlotKey, { label: string; types: typeof TOP_TYPES
   bottom:    { label: 'Bottom', types: BOTTOM_TYPES, ghost: 'Auto: straight-leg trousers' },
   dress:     { label: 'Dress', types: DRESS_TYPES },
   shoes:     { label: 'Shoes', types: SHOE_TYPES, ghost: 'Auto: white low-top sneakers' },
+  coverUp:   { label: 'Cover-up', types: COVER_UP_TYPES, hint: 'Beach overlay' },
   bag:       { label: 'Bag', types: BAG_TYPES, isAccessory: true },
   hat:       { label: 'Hat', types: HAT_TYPES, isAccessory: true },
   eyewear:   { label: 'Eyewear', types: EYEWEAR_TYPES, isAccessory: true },
@@ -1651,7 +1653,7 @@ function ZaraOutfitPanel({
   }
 
   // Split available slots into garments (always shown) vs accessories (collapsible)
-  const garmentOrder: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes'];
+  const garmentOrder: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp'];
   const garmentSlots = garmentOrder.filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
   const accessorySlots = (['bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'] as OutfitSlotKey[])
     .filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
