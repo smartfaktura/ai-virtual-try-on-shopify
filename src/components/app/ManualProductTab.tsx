@@ -230,9 +230,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (now - t > 1000) recentFilesDedupeRef.current.delete(k);
     }
     files = files.filter(f => {
-      const sig = `${f.name}|${f.size}|${f.lastModified}`;
+      // Use size|type as signature. Paste handlers create independent files via
+      // `pasted-${Date.now()}.png` whose names differ by 0-2ms across listeners,
+      // so name-based dedup misses. size+type is stable across both listeners.
+      const sig = `${f.size}|${f.type}`;
       const prev = recentFilesDedupeRef.current.get(sig);
-      if (prev && now - prev < 300) {
+      if (prev && now - prev < 500) {
         console.warn('Duplicate file paste/add suppressed:', sig);
         return false;
       }
