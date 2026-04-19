@@ -415,6 +415,9 @@ export interface DetailSettings {
 
   // Custom outfit styling note (used when scenes have outfit_hint — user can append extra direction)
   customOutfitNote?: string;
+
+  // When true, user-defined outfitConfig overrides scene's outfit_hint (Edit Outfit override)
+  outfitOverrideEnabled?: boolean;
 }
 
 export interface GenerationPlan {
