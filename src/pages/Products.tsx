@@ -99,6 +99,7 @@ export default function Products() {
       if (files.length) {
         setAddInitialTab('manual');
         setAddInitialFiles(files);
+        setAddCompact(true);
         setAddOpen(true);
       }
     };
