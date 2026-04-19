@@ -1,41 +1,33 @@
 
 
-## Real root causes (re-checked the actual code)
+The user wants me to fix the streetwear miscategorization. Based on the previous investigation, the issue is that Gemini broadly returns `garments` for streetwear items, and there's no specificity override.
 
-### Issue 1 — Horizontal scrollbar (still there)
-My previous fix added `overflow-x-hidden` to the **outer** wrappers in `AddProductModal.tsx` (lines 251, 286). But in **compact mode**, there's a **second nested scroll container** at line 114:
+## Fix
 
-```tsx
-const compactBody = (
-  <div className="flex flex-col flex-1 min-h-0 min-w-0">
-    <div className="flex-1 min-h-0 min-w-0 overflow-y-auto pr-1 -mr-1">  ← THIS one has no overflow-x-hidden
-      {activeBody}
-    </div>
-```
+In `supabase/functions/analyze-product-category/index.ts`, add a **post-processing specificity override** that runs after Gemini's response: if Gemini returned `garments` (broad) but the title/description matches streetwear keywords, demote to `streetwear`. Same pattern can demote `garments` → `hoodies`, `jeans`, `dresses`, `jackets`, `activewear`, `swimwear`, `lingerie` when keywords match — fixing a whole class of "too broad" misclassifications, not just streetwear.
 
-The sticky footer's `-mx-7` overflows INSIDE this inner scroller, causing the horizontal scrollbar visible in the screenshot. The outer fix never reaches it.
+### Logic
 
-### Issue 2 — "Thin line crashing design"
-The `Product Details` section header (line 1106) has `border-b border-border/50` underneath it. Combined with the card's own outer border, this creates an awkward thin internal divider that visually splits the card — exactly what the user is complaining about. It's design noise.
+After Gemini returns its answer, if `category === 'garments'`, run keyword check on `title + description`:
+- `streetwear|graphic tee|oversized tee|urban wear|box logo|drop shoulder` → `streetwear`
+- `hoodie|hooded sweatshirt|zip-up hoodie` → `hoodies`
+- `jean|denim|skinny jean|wide-leg|mom jean` → `jeans`
+- `dress|gown|maxi dress|midi dress|sundress` → `dresses`
+- `jacket|blazer|bomber|puffer|parka|trench` → `jackets`
+- `activewear|legging|sports bra|yoga|gym wear` → `activewear`
+- `swimwear|bikini|swimsuit|swim trunks` → `swimwear`
+- `lingerie|bra|underwear|corset` → `lingerie`
+- `skirt|mini skirt|midi skirt|pleated skirt` → `skirts`
 
-## Fix (2 small edits)
+This runs **before** the existing `applyCategoryFallback`, so AI's specific answers still win — only `garments` triggers the demotion.
 
-### Fix A — Add `overflow-x-hidden` to the inner compact scroller
-`src/components/app/AddProductModal.tsx` line 114: add `overflow-x-hidden` to the inner scroll wrapper inside `compactBody`. This contains the sticky footer's negative-margin bleed properly.
+## File to edit
 
-### Fix B — Remove the awkward border-b from the Product Details header
-`src/components/app/ManualProductTab.tsx` line 1106: drop `border-b border-border/50` (and the `pb-1`) from the header row. Keep just the uppercase label + analyzing badge — clean, no internal divider. The card's outer border is enough visual containment.
-
-Same treatment should apply to the `More Details` collapsible trigger (line 1218) when open — it also has `border-b border-border/50`. Remove it for consistency.
-
-## Files to edit
-
-- `src/components/app/AddProductModal.tsx` — add `overflow-x-hidden` to the inner compact scroller (line 114).
-- `src/components/app/ManualProductTab.tsx` — remove `border-b border-border/50` from Product Details header (line 1106) and from More Details trigger (line 1218).
+- `supabase/functions/analyze-product-category/index.ts` — add `refineGenericGarments(category, title, description)` helper, call it right after Gemini returns.
 
 ## Result
 
-- No more horizontal scrollbar inside the modal in compact mode.
-- Product Details card looks clean — single outer border, no internal hairline split.
-- "More Details" expanded state matches the same clean look.
+- "Streetwear hoodie", "graphic tee", "oversized tee" etc. are correctly classified as `streetwear` (or `hoodies`) instead of falling into the generic `garments` bucket.
+- Existing AI-correct categorizations are untouched.
+- Same fix benefits other commonly-broad answers (jeans, dresses, jackets, activewear).
 
