@@ -218,6 +218,10 @@ const QUERY_KEY_REST = ['product-image-scenes-rest'];
 interface UseProductImageScenesOptions {
   /** When provided, fetches these categories first (instant) and the rest in background */
   priorityCategories?: string[];
+  /** Admin-only: include heavy prompt_template column. Default true for client (needed by prompt builder). */
+  includePromptTemplate?: boolean;
+  /** Admin-only: include inactive (hidden) scenes too. Default false. */
+  includeInactive?: boolean;
 }
 
 export function useProductImageScenes(options?: UseProductImageScenesOptions) {
@@ -225,19 +229,23 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   const qc = useQueryClient();
   const priorityCats = options?.priorityCategories;
   const hasPriority = priorityCats && priorityCats.length > 0;
+  // Client wizard NEEDS prompt_template (buildDynamicPrompt builds prompts locally).
+  const includePromptTemplate = options?.includePromptTemplate ?? true;
+  const activeOnly = !(options?.includeInactive ?? false);
+  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}`;
 
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
   const { data: priorityScenes, isLoading: isLoadingPriority } = useQuery({
-    queryKey: [...QUERY_KEY_PRIORITY, priorityCats],
-    queryFn: () => fetchScenesByCategories(priorityCats!),
+    queryKey: [...QUERY_KEY_PRIORITY, cacheVariant, priorityCats],
+    queryFn: () => fetchScenesByCategories(priorityCats!, includePromptTemplate, activeOnly),
     enabled: !!hasPriority,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: restScenes, isLoading: isLoadingRest } = useQuery({
-    queryKey: [...QUERY_KEY_REST, priorityCats],
-    queryFn: () => fetchScenesExcludingCategories(priorityCats!),
+    queryKey: [...QUERY_KEY_REST, cacheVariant, priorityCats],
+    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly),
     enabled: !!hasPriority && !!priorityScenes,
     staleTime: 5 * 60 * 1000,
   });
@@ -245,8 +253,8 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // ── Mode B: Full fetch (no priority — admin, review, results) ──
 
   const { data: allRawScenes, isLoading: isLoadingAll } = useQuery({
-    queryKey: QUERY_KEY_ALL,
-    queryFn: fetchAllScenes,
+    queryKey: [...QUERY_KEY_ALL, cacheVariant],
+    queryFn: () => fetchAllScenes(includePromptTemplate, activeOnly),
     enabled: !hasPriority,
     staleTime: 5 * 60 * 1000,
   });
