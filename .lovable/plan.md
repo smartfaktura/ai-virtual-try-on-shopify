@@ -1,50 +1,60 @@
 
 
-## Root causes (confirmed by logs + code reading)
+## What user wants
 
-### Bug 1: Duplicate cards from one paste
-The dedup signature is `name|size|lastModified`, but **both paste handlers create files with `pasted-${Date.now()}.png` independently** — `Products.tsx` line 134 AND `ManualProductTab.tsx` line ~424 both call `new File([blob], 'pasted-${Date.now()}...')`. `Date.now()` differs by 0–2ms between the two listeners, so the **filenames differ** → dedup misses → 2 cards.
+When a user pastes an image into the Add Products modal (or anywhere on `/app/products`), instead of showing the full method picker (Upload / URL / CSV / Mobile / Shopify) alongside the upload area, the modal should **immediately collapse to just the Upload workflow** — paste = implicit method selection. The pasted image becomes a mini preview inside the upload tab, and a small "Switch method" link remains as an escape hatch.
 
-The "early return when `initialFiles !== undefined`" guard in `ManualProductTab` doesn't help because on the first paste, `initialFiles` is still `undefined` from the previous render — both handlers fire on the same event before React re-renders.
+## Good news: infrastructure already exists
 
-### Bug 2: Analyze always fails with "position 1 column 2"
-Edge function logs show the AI returns **perfectly valid JSON**, but our sanitization step (line 134) is **breaking it**:
+`AddProductModal` already supports a `compact` prop (lines 80, 112–130 of `src/components/app/AddProductModal.tsx`):
+- Hides the "Method" rail with all 5 cards
+- Header switches from "Add Products / Upload images or import…" to the active method's title/subtitle (e.g. "Upload images / Drag, drop, or browse to upload product photos.")
+- Adds a back arrow + "Switch method" link to return to the full picker
 
-```ts
-sanitized = jsonStr.replace(/[\x00-\x1F\x7F]/g, ch => 
-  ch === '\n' ? '\\n' : ...  // converts STRUCTURAL newlines to literal '\n' escape
-);
-```
+The compact path is already wired in `Products.tsx` (`addCompact` state, `onSwitchMethod` reset). It's just **never set to `true` by the paste/drop handlers**.
 
-JSON allows raw whitespace newlines between tokens but does **NOT** allow a literal `\n` escape sequence outside string values. So `{\n  "title"` becomes `{\n  "title"` (literal backslash-n) → parser chokes at position 1. Every analyze call fails. The client clears the spinner via the soft-fail toast — but card #2 keeps trying because of the safety timeout race.
+## The fix (one file, ~3 lines)
 
-## Fix plan (small, decisive)
+**File: `src/pages/Products.tsx`**
 
-### Fix A — Kill duplicate paste at the source
-In `src/components/app/ManualProductTab.tsx`:
+In both side-effect handlers, set `setAddCompact(true)` alongside the existing state updates:
 
-**Remove the document-level paste handler entirely** (lines ~415–439). The page-level handler in `Products.tsx` already covers every paste case for the drawer. For the standalone `/app/add-product` page (if it exists without a parent paste handler), keep paste capture by adding the listener **only when `initialFiles === undefined` AND not in editing mode**, AND add a window-level guard `e.defaultPrevented` check so we skip if `Products.tsx` already handled it (`Products.tsx` already calls `e.preventDefault()` on line 139).
+1. **Paste handler** (line ~140) — when files are captured from clipboard:
+   ```ts
+   setAddInitialTab('manual');
+   setAddInitialFiles(files);
+   setAddCompact(true);   // ← new
+   setAddOpen(true);
+   ```
 
-**Also fix the dedup signature** to use file content size + first 1KB hash isn't worth it; instead use `${file.size}|${blob_first_bytes_marker}` is overkill. Simpler: **dedup on `(size, type)` within 500ms** for paste-originated files (they always have unique-timestamped names but same size+type). This catches the dual-listener case reliably.
+2. **Drop handler** (line ~100) — when files are dropped on the page:
+   ```ts
+   setAddInitialTab('manual');
+   setAddInitialFiles(files);
+   setAddCompact(true);   // ← new
+   setAddOpen(true);
+   ```
 
-### Fix B — Stop corrupting valid JSON
-In `supabase/functions/analyze-product-image/index.ts`:
+3. **Reset on close** (line ~633) — also reset compact so reopening via the "Add Products" button shows the full picker again:
+   ```ts
+   onOpenChange={(o) => {
+     setAddOpen(o);
+     if (!o) {
+       setAddInitialFiles(undefined);
+       setAddCompact(false);   // ← new
+     }
+   }}
+   ```
 
-Replace the broad `replace(/[\x00-\x1F\x7F]/g, ...)` with a **string-aware** sanitizer that only escapes control chars **inside string values**, leaving structural whitespace alone. Walk the extracted JSON respecting `inString` state (we already do this in `extractJsonObject` — reuse that pattern).
-
-Or simpler: **just try `JSON.parse(jsonStr)` first** without any sanitization (the AI nearly always returns clean JSON), and only fall back to sanitization if that fails — and the fallback should escape control chars **only when inside a quoted string**.
-
-### Fix C — Test it works end-to-end
-Use `supabase--curl_edge_functions` to send a real image to `analyze-product-image` and confirm we get a parsed JSON response, not `{ error: "Could not parse..." }`.
-
-## Files to edit
-
-- `src/components/app/ManualProductTab.tsx` — remove document-level paste handler (or guard with `e.defaultPrevented`); change dedup signature to `size|type` with 500ms window.
-- `supabase/functions/analyze-product-image/index.ts` — replace broken sanitizer with string-aware version (try raw parse first, then string-aware fallback).
+That's it. No changes to `AddProductModal.tsx`, `ManualProductTab.tsx`, or any tab component — they already handle the pasted file as an `initialFile` and render the preview card.
 
 ## Result
 
-- One paste → one card. Verified by the dedup using `size|type` (paste blobs always share these), even when names differ by milliseconds.
-- Analyze actually returns parsed `{ title, productType, description }` → cards populate fields immediately, no more permanent "Analyzing…".
-- No regression for drag-drop (different files have different size/type combos), file picker (real filenames are stable), or CSV upload (different code path).
+- User on `/app/products` presses Cmd/Ctrl+V → drawer opens directly into "Upload images" mode with the pasted product preview card visible. The other 4 method options (Product URL, CSV, Mobile, Shopify) are **hidden**. Header reads "Upload images / Drag, drop, or browse…". A "Switch method" link is available if they change their mind.
+- Same behavior when dragging a file onto the page.
+- Clicking the "Add Products" button (no paste/drop) still opens the full method picker as before — unchanged.
+
+## File to edit
+
+- `src/pages/Products.tsx` — 3 small additions (set `addCompact` true in paste & drop handlers, reset it on close).
 
