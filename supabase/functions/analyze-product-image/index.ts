@@ -93,11 +93,45 @@ Return ONLY the JSON object, no markdown or explanation.`,
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "";
 
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse AI response");
+    // Strip markdown code fences (```json ... ``` or ``` ... ```)
+    const stripped = content
+      .replace(/```(?:json)?\s*/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    // Find first '{' and walk forward counting brace depth to extract matching '}'
+    function extractJsonObject(text: string): string | null {
+      const start = text.indexOf("{");
+      if (start === -1) return null;
+      let depth = 0;
+      let inString = false;
+      let escape = false;
+      for (let i = start; i < text.length; i++) {
+        const ch = text[i];
+        if (escape) { escape = false; continue; }
+        if (ch === "\\") { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === "{") depth++;
+        else if (ch === "}") {
+          depth--;
+          if (depth === 0) return text.slice(start, i + 1);
+        }
+      }
+      return null;
+    }
+
+    const jsonStr = extractJsonObject(stripped);
+    if (!jsonStr) {
+      console.error("No JSON object found in AI content:", content.slice(0, 500));
+      return new Response(
+        JSON.stringify({ error: "Could not parse AI response" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Sanitize: fix unescaped control characters inside JSON string values
-    const sanitized = jsonMatch[0].replace(/[\x00-\x1F\x7F]/g, (ch: string) => {
+    const sanitized = jsonStr.replace(/[\x00-\x1F\x7F]/g, (ch: string) => {
       switch (ch) {
         case '\n': return '\\n';
         case '\r': return '\\r';
@@ -106,7 +140,16 @@ Return ONLY the JSON object, no markdown or explanation.`,
       }
     });
 
-    const parsed = JSON.parse(sanitized);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(sanitized);
+    } catch (parseErr) {
+      console.error("JSON.parse failed:", parseErr, "raw:", jsonStr.slice(0, 500));
+      return new Response(
+        JSON.stringify({ error: "Could not parse AI response" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

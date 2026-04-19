@@ -176,6 +176,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         if (target) {
           setBatchItems(prev => prev.map(b => b.id === target.batchId ? { ...b, isAnalyzing: false } : b));
         }
+        notifyAnalysisSoftFail();
         return;
       }
       if (data) {
@@ -201,14 +202,44 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (target) {
         setBatchItems(prev => prev.map(b => b.id === target.batchId ? { ...b, isAnalyzing: false } : b));
       }
+      notifyAnalysisSoftFail();
     } finally {
       if (!target) setIsAnalyzing(false);
     }
   }, []);
 
+  // Debounced soft-fail toast (one per ~5s window)
+  const lastSoftFailToastRef = useRef(0);
+  const notifyAnalysisSoftFail = useCallback(() => {
+    const now = Date.now();
+    if (now - lastSoftFailToastRef.current < 5000) return;
+    lastSoftFailToastRef.current = now;
+    toast.error('AI analysis unavailable for some items — please fill in manually.');
+  }, []);
+
+  // Dedupe guard: reject same file (name+size+lastModified) added within 300ms
+  const recentFilesDedupeRef = useRef<Map<string, number>>(new Map());
+
   // Process files: 1 file = single mode, 2+ = batch mode
   const addFiles = useCallback((files: File[]) => {
     if (isEditing) return; // Edit mode only handles single image replacement
+
+    const now = Date.now();
+    // Cleanup old entries
+    for (const [k, t] of recentFilesDedupeRef.current.entries()) {
+      if (now - t > 1000) recentFilesDedupeRef.current.delete(k);
+    }
+    files = files.filter(f => {
+      const sig = `${f.name}|${f.size}|${f.lastModified}`;
+      const prev = recentFilesDedupeRef.current.get(sig);
+      if (prev && now - prev < 300) {
+        console.warn('Duplicate file paste/add suppressed:', sig);
+        return false;
+      }
+      recentFilesDedupeRef.current.set(sig, now);
+      return true;
+    });
+    if (files.length === 0) return;
 
     const validFiles = files.filter(f => {
       if (!f.type.startsWith('image/')) {
@@ -325,11 +356,22 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     runBatchAnalysis(newItems);
   }, [singleImage, batchItems.length, isBatchMode, title, productType, description, isAnalyzing, isEditing, analyzeImage]);
 
-  // Run AI analysis with concurrency limit
+  // Run AI analysis with concurrency limit + 30s safety timeout per item
   const runBatchAnalysis = useCallback((items: BatchItem[]) => {
     const queue = [...items];
     const concurrency = 3;
     let active = 0;
+
+    // Safety timeout: force-clear isAnalyzing after 30s
+    items.forEach((item) => {
+      setTimeout(() => {
+        setBatchItems(prev => prev.map(b => {
+          if (b.id !== item.id || !b.isAnalyzing) return b;
+          console.warn('Analysis safety timeout hit for', b.id);
+          return { ...b, isAnalyzing: false };
+        }));
+      }, 30000);
+    });
 
     const next = () => {
       while (active < concurrency && queue.length > 0) {
@@ -367,8 +409,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     reader.readAsDataURL(file);
   }, [analyzeImage, singleImage, createTrackedObjectUrl, revokeTrackedObjectUrl]);
 
-  // Clipboard paste
+  // Clipboard paste handling lives at the page level (Products.tsx) and forwards files via initialFiles.
+  // For the standalone /app/products/new page (AddProduct.tsx) we still want paste support, so we keep
+  // a single document-level listener but ONLY when there is no parent-provided initialFiles flow.
   useEffect(() => {
+    // If parent is feeding us initialFiles (drawer mode), parent already handles paste.
+    if (initialFiles !== undefined) return;
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -390,7 +436,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [addFiles, handleEditImageReplace, isEditing]);
+  }, [addFiles, handleEditImageReplace, isEditing, initialFiles]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
