@@ -1909,30 +1909,71 @@ export function ProductImagesStep3Refine({
     return Array.from(cats);
   }, [selectedProductsList, analyses, primaryCategory]);
 
-  // Auto-pick a sensible default outfit on first mount when nothing is configured.
-  const [autoPickedPresetName, setAutoPickedPresetName] = useState<string | null>(null);
+  // ── AI Stylist: per-product auto-pick ──
+  // Each selected product gets its own preset suited to its category.
+  // Stored in details.outfitConfigByProduct so the prompt builder can resolve
+  // the right outfit for each product at generation time.
+  const [restyleSeed, setRestyleSeed] = useState(0);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const autoPickedRef = useRef(false);
+
+  // Build the per-product picks (productId → preset) used by both the AI Stylist card
+  // and the auto-apply effect below. Recomputed when products, categories, or seed change.
+  const perProductPicks = useMemo(() => {
+    if (selectedProductsList.length === 0) return {} as Record<string, ReturnType<typeof pickDefaultPreset>>;
+    const items = selectedProductsList.map(p => ({
+      id: p.id,
+      categories: [analyses[p.id]?.category, primaryCategory].filter(Boolean) as string[],
+    }));
+    return pickDefaultPresetPerProduct(items, restyleSeed);
+  }, [selectedProductsList, analyses, primaryCategory, restyleSeed]);
+
+  // Apply the per-product picks on first mount (silent) — and again whenever Re-style is clicked.
   useEffect(() => {
-    if (autoPickedRef.current) return;
     if (!hasPersonBlock) return;
     const cfg = details.outfitConfig;
-    const hasAnySlot = cfg && Object.keys(cfg).some(k => {
+    const hasGlobal = cfg && Object.keys(cfg).some(k => {
       const v = (cfg as Record<string, unknown>)[k];
       return v !== undefined && v !== null && v !== '';
     });
-    if (hasAnySlot) { autoPickedRef.current = true; return; }
-    const picked = pickDefaultPreset(selectedProductCategories);
-    if (picked) {
+    const hasPerProduct = details.outfitConfigByProduct && Object.keys(details.outfitConfigByProduct).length > 0;
+    // First mount with any existing user customization → leave alone
+    if (!autoPickedRef.current && (hasGlobal || hasPerProduct)) {
       autoPickedRef.current = true;
-      setAutoPickedPresetName(picked.name);
-      update({ outfitConfig: picked.config });
+      return;
     }
+    // Apply (or re-apply on restyle)
+    if (Object.keys(perProductPicks).length === 0) return;
+    const map: Record<string, OutfitConfig> = {};
+    for (const [pid, preset] of Object.entries(perProductPicks)) {
+      if (preset) map[pid] = preset.config;
+    }
+    autoPickedRef.current = true;
+    update({ outfitConfigByProduct: map, outfitConfig: undefined });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPersonBlock, selectedProductCategories]);
+  }, [hasPersonBlock, restyleSeed, perProductPicks]);
+
+  const handleRestyle = useCallback(() => {
+    setRestyleSeed(s => s + 1);
+    const count = selectedProductsList.length;
+    toast.success(`Re-styled ${count} ${count === 1 ? 'product' : 'products'}`);
+  }, [selectedProductsList.length]);
+
+  // Picks shown in the card (productId → preset name), filtered to current selection
+  const stylistCardPicks = useMemo(() => {
+    return selectedProductsList
+      .map(p => ({
+        product: p,
+        presetName: perProductPicks[p.id]?.name || '',
+      }))
+      .filter(x => !!x.presetName);
+  }, [selectedProductsList, perProductPicks]);
+
+  // Legacy single-name fallback (used in Edit-Outfit override card)
+  const autoPickedPresetName = stylistCardPicks[0]?.presetName || null;
 
   const clearAutoPick = useCallback(() => {
-    setAutoPickedPresetName(null);
-    update({ outfitConfig: {} });
+    update({ outfitConfig: {}, outfitConfigByProduct: {} });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
