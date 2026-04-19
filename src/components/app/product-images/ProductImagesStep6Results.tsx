@@ -24,9 +24,10 @@ interface Step6Props {
   results: Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>;
   onGenerateMore: () => void;
   onGoToLibrary: () => void;
+  onStartNew?: () => void;
 }
 
-export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary }: Step6Props) {
+export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary, onStartNew }: Step6Props) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
