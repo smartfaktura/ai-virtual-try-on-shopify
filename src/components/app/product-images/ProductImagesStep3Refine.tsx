@@ -2011,6 +2011,34 @@ export function ProductImagesStep3Refine({
     return personScenes.some(s => !!s.outfitHint) && !allModelScenesHaveOutfitHint;
   }, [selectedScenes, allModelScenesHaveOutfitHint]);
 
+  // ── Per-scene styling source preview (matches resolveOutfitHintText logic in promptBuilder) ──
+  const userOutfitFilled = useMemo(() => {
+    const cfg = details.outfitConfig;
+    if (cfg) {
+      if (cfg.top?.garment || cfg.bottom?.garment || cfg.shoes?.garment ||
+          cfg.outerwear?.garment || cfg.dress?.garment || cfg.coverUp?.garment ||
+          cfg.bag?.garment || cfg.hat?.garment || cfg.eyewear?.garment ||
+          cfg.belt?.garment || cfg.watch?.garment ||
+          (cfg.jewelry && Object.keys(cfg.jewelry).length > 0) ||
+          (cfg.accessories && cfg.accessories.length > 0)) return true;
+    }
+    return !!(details.outfitTop || details.outfitBottom || details.outfitShoes || details.outfitAccessories);
+  }, [details.outfitConfig, details.outfitTop, details.outfitBottom, details.outfitShoes, details.outfitAccessories]);
+
+  const stylingSourceByScene = useMemo(() => {
+    const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
+    return personScenes.map(s => {
+      const overrideActive = !!details.outfitOverrideEnabled && userOutfitFilled;
+      let source: 'scene' | 'user' | 'default';
+      if (overrideActive) source = 'user';
+      else if (s.outfitHint) source = 'scene';
+      else if (userOutfitFilled) source = 'user';
+      else source = 'default';
+      return { scene: s, source };
+    });
+  }, [selectedScenes, details.outfitOverrideEnabled, userOutfitFilled]);
+
+
   // Shot card collapse
   const SHOTS_LIMIT = 8;
   const [showAllShots, setShowAllShots] = useState(false);
