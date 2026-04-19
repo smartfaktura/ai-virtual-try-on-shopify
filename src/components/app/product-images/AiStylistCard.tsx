@@ -49,11 +49,11 @@ export const AiStylistCard: React.FC<Props> = ({ picks, onRestyle, onToggleCusto
             key={product.id}
             className="flex items-center gap-3 rounded-lg bg-card border border-border/60 px-3 py-2"
           >
-            <div className="w-12 h-12 rounded-lg bg-muted/30 border border-border/40 overflow-hidden flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-lg border border-border/40 overflow-hidden flex items-center justify-center flex-shrink-0">
               <img
                 src={getOptimizedUrl(product.image_url, { quality: 70 })}
                 alt={product.title}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover scale-110"
               />
             </div>
             <div className="flex-1 min-w-0 flex items-center gap-2">
