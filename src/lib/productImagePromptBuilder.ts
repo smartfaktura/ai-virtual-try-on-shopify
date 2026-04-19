@@ -871,7 +871,10 @@ function hasUserDefinedOutfit(details: DetailSettings): boolean {
   const cfg = details.outfitConfig;
   if (cfg) {
     if (cfg.top?.garment || cfg.bottom?.garment || cfg.shoes?.garment ||
-        cfg.outerwear?.garment || cfg.dress?.garment ||
+        cfg.outerwear?.garment || cfg.dress?.garment || cfg.coverUp?.garment ||
+        cfg.bag?.garment || cfg.hat?.garment || cfg.eyewear?.garment ||
+        cfg.belt?.garment || cfg.watch?.garment ||
+        (cfg.jewelry && Object.keys(cfg.jewelry).length > 0) ||
         (cfg.accessories && cfg.accessories.length > 0)) return true;
   }
   return !!(details.outfitTop || details.outfitBottom || details.outfitShoes || details.outfitAccessories);
