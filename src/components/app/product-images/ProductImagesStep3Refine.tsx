@@ -1616,7 +1616,7 @@ function ZaraOutfitPanel({
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
   primaryCategory?: string;
-  modelGender?: 'male' | 'female';
+  modelGender?: string;
   analyses: Record<string, ProductAnalysis | undefined>;
   selectedProductIds: string[];
   allProducts: UserProduct[];
