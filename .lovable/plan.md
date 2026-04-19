@@ -1,51 +1,36 @@
 
 
-## What user wants
+## Issues confirmed
 
-Two related UX issues in the compact "Upload images" mode:
+### Issue 1 — Horizontal scrollbar at bottom of modal
+The sticky footer in `ManualProductTab.tsx` (line 1259) uses `-mx-5 sm:-mx-7` negative margins to bleed the white footer background to the drawer edges. But the scroll container in `AddProductModal.tsx` (line 286: `<div className="px-7 pb-7 flex flex-col flex-1 min-h-0">`) has **no `overflow-x-hidden`**. The negative-margin overflow triggers a stray horizontal scrollbar (visible in the screenshot as the gray bar above "Switch method").
 
-1. **Action buttons hidden** — the "Add product" / "Cancel" footer is below the fold and the user has to scroll to find it. Especially after AI analysis fills the form, there's no obvious "done" affordance.
-2. **Card too tall when 1+ images pasted** — the giant 88px reference slot grid + product details form takes most of the viewport. After AI auto-fills the fields, the user usually just wants to confirm and submit. The big editable card should collapse into a compact row, with an option to expand if they want to edit.
+### Issue 2 — "Strange container and line" after Product Details
+What looks like a stray line is actually two stacked things:
+1. The horizontal scrollbar from Issue 1.
+2. The collapsed **"More Details (optional)"** Collapsible card right below it (line 1216) — rendered as its own bordered card even when closed. With nothing inside, it reads as an awkward empty container.
 
-## Plan
+## Fix (2 small edits)
 
-### Fix 1 — Sticky footer with primary action
+### Fix A — Kill the horizontal scrollbar
+In `src/components/app/AddProductModal.tsx`, add `overflow-x-hidden` to the desktop sheet body wrapper (line 286) and the mobile drawer wrapper (line 251). This contains the sticky footer's negative-margin bleed without affecting vertical scroll.
 
-In `src/components/app/ManualProductTab.tsx`, the footer with "Add product" / "Cancel" buttons currently scrolls with content. Make it **sticky to the bottom of the modal** with a subtle top border + background blur. This guarantees the primary CTA is always visible no matter how much the user scrolls or how many images they paste.
+### Fix B — Make the collapsed "More Details" disappear visually
+In `src/components/app/ManualProductTab.tsx` (line 1217), restyle the `Collapsible` so when **closed**, it renders as a borderless inline link/button (e.g., "More details (optional) ▾") instead of a full bordered card. When **open**, it expands into the bordered card with the form fields. This matches the minimalist aesthetic and removes the awkward empty container.
 
 Approach:
-- Wrap the existing button row in a `sticky bottom-0` container with `bg-background/95 backdrop-blur` + `border-t` + negative horizontal margins to bleed to drawer edges.
-- The scroll container in `AddProductModal` already handles overflow — sticky will pin to its bottom edge.
-
-### Fix 2 — Auto-collapse cards once AI analysis completes
-
-In `ManualProductTab.tsx`, the batch item card (and single-item card) currently always shows the full editable form. Change behavior:
-
-- **While analyzing**: show current card with spinner.
-- **After analysis completes successfully** (title + productType filled): auto-collapse into a **compact row** showing:
-  - thumbnail (48px)
-  - product name + type (small subtitle)
-  - "Edit" pencil button → expands the card back to full form
-  - remove (×) button
-- **If analysis failed** or user manually expanded: show full editable card.
-
-Track an `isCollapsed` boolean per item (default `true` once analysis succeeds, `false` while analyzing or on fail). Clicking Edit toggles to `false`; the card can be re-collapsed via a small chevron in the expanded header.
-
-### Fix 3 — Smarter "single → batch" threshold
-
-Currently the first paste shows the giant single-card form. From the second paste onward it promotes to batch. Keep that behavior but apply the same collapse logic to the single card too — once AI fills it, collapse to the same compact row. This keeps the modal short and the sticky "Add product" CTA right under the row.
+- Drop the always-on `rounded-2xl border bg-card p-4 sm:p-5` classes from the root `Collapsible`.
+- Apply card styling conditionally only when `moreDetailsOpen === true`.
+- When closed, render a slim inline trigger row (small text + chevron, no border) centered or left-aligned under the Product Details card.
 
 ## Files to edit
 
-- `src/components/app/ManualProductTab.tsx`
-  - Add sticky footer wrapper around the action buttons.
-  - Add per-item `isCollapsed` state (set true when analysis succeeds).
-  - Render compact-row variant when collapsed; wire Edit button to expand.
-  - Apply the same collapsed-row treatment to the single-item card.
+- `src/components/app/AddProductModal.tsx` — add `overflow-x-hidden` to the two body scroll wrappers (mobile drawer + desktop sheet).
+- `src/components/app/ManualProductTab.tsx` — make the "More Details" Collapsible borderless when collapsed; only render the bordered card when expanded.
 
 ## Result
 
-- "Add product" and "Cancel" buttons are **always visible** at the bottom of the drawer, even with multiple pasted images.
-- After AI fills the details, each product collapses into a tidy one-line row (thumb + name + type + edit/remove). User can click "Add product" immediately, or click Edit on any row to fine-tune.
-- Modal stays short and scannable; matches the "minimalist luxury restraint" aesthetic in core memory.
+- No more horizontal scrollbar appearing inside the modal.
+- "More Details" collapses to a tidy inline link instead of an empty bordered card. When clicked, it expands into a proper card with the optional fields.
+- Modal looks clean: Product Details card → discreet "More details ▾" link → sticky Add Product footer.
 
