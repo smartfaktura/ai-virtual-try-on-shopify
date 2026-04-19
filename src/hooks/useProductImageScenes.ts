@@ -259,7 +259,9 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // Client wizard NEEDS prompt_template (buildDynamicPrompt builds prompts locally).
   const includePromptTemplate = options?.includePromptTemplate ?? true;
   const activeOnly = !(options?.includeInactive ?? false);
-  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}`;
+  // Slim mode = wizard client (priority + active only). Admin paths keep full payload.
+  const useSlimRest = !!hasPriority && activeOnly;
+  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}${useSlimRest ? '-slimrest' : ''}`;
 
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
@@ -270,10 +272,19 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Defer the heavy "rest" fetch by ~3s after priority resolves so it doesn't
+  // race the wizard's own work (image uploads, analysis calls, navigation).
+  const [restEnabled, setRestEnabled] = useState(false);
+  useEffect(() => {
+    if (!hasPriority || !priorityScenes) return;
+    const t = window.setTimeout(() => setRestEnabled(true), 3000);
+    return () => window.clearTimeout(t);
+  }, [hasPriority, priorityScenes]);
+
   const { data: restScenes, isLoading: isLoadingRest } = useQuery({
     queryKey: [...QUERY_KEY_REST, cacheVariant, priorityCats],
-    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly),
-    enabled: !!hasPriority && !!priorityScenes,
+    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly, useSlimRest),
+    enabled: !!hasPriority && !!priorityScenes && restEnabled,
     staleTime: 5 * 60 * 1000,
   });
 
