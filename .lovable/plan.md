@@ -1,53 +1,26 @@
 
-The user wants me to audit the conflict-resolution logic for fashion/apparel products to ensure that when a user uploads a product (t-shirt, jacket, trousers, dress, skirt, swimwear, etc.) and locks outfit pieces, the system correctly nullifies conflicting slots — so the AI doesn't render a t-shirt over their t-shirt product, or pants over their dress.
+## Plan: Revert the OUTFIT LOCK safety-net
 
-## Investigation needed
-1. Read `getConflictingSlots(garmentType)` — what categories does it know about? what slots does it nullify per category?
-2. Read `analyze-product-category` output — what `garmentType` / `category` values can a fashion product receive?
-3. Cross-reference: for every fashion category the analyzer can return, does the conflict resolver have a matching rule?
-4. Check the OUTFIT LOCK safety-net path — does it call `getConflictingSlots` correctly?
+You want the previous safety-net auto-injection removed. No new conflict rules added.
 
-## Plan
+### What gets removed
+In `src/lib/productImagePromptBuilder.ts`, delete the safety-net block (around line 1332) that auto-appends `OUTFIT LOCK: ...` to prompts when a scene needs a person but the template lacks `{{outfitDirective}}`.
 
-**Step 1 — Audit (read-only, in this turn)**
-I'll scan:
-- `src/lib/productImagePromptBuilder.ts` → `getConflictingSlots`, safety-net injection
-- `src/lib/productOutfitConflicts.ts` (or wherever the resolver lives)
-- `supabase/functions/analyze-product-category/index.ts` → category list (already visible: 35 categories incl. dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, garments, shoes, sneakers, boots, high-heels)
-- The Step 3 outfit slot UI to confirm slot names (top / bottom / shoes / accessories / outerwear?)
+### What stays untouched
+- `{{outfitDirective}}` and `{{personDirective}}` token replacement (normal template path) — unchanged.
+- `getConflictingSlots()` — unchanged.
+- Step 3 outfit picker UI — unchanged.
+- All scene templates — unchanged.
 
-**Step 2 — Build conflict matrix**
-Produce a table: every fashion category × every outfit slot → keep / nullify / warn.
+### Consequence (so you know)
+The original bug returns: scene templates missing `{{outfitDirective}}` (the ~509 templates including "Vintage Cinematic Campaign") will silently drop your locked outfit pieces. If you want to address that later, the clean path is patching the templates themselves — separate plan when you're ready.
 
-Expected rules to verify:
-| Product category | Slots to nullify |
-|---|---|
-| dresses | top + bottom (dress = full body) |
-| garments (generic top) | top |
-| hoodies | top + outerwear |
-| jackets | outerwear (NOT top — user can wear t-shirt under) |
-| jeans / trousers / garments-bottom | bottom |
-| activewear | top + bottom (typically full set) — needs decision |
-| swimwear | top + bottom (one-piece) OR top OR bottom (bikini set) — ambiguous |
-| lingerie | top + bottom (intimate set) |
-| skirts (under garments today?) | bottom |
-| shoes / sneakers / boots / high-heels | shoes |
-| kidswear | top + bottom (full set) |
+### Memory update
+Update `mem://features/product-images/product-aware-outfit-system` to remove the safety-net documentation and note that locked outfits only apply when templates explicitly include the token.
 
-**Step 3 — Identify gaps**
-Likely gaps I expect to find:
-- Skirts not a distinct category → falls under "garments" → nullifies wrong slot
-- Activewear/swimwear ambiguity (one-piece vs two-piece) not handled
-- "garments" is too broad — same rule for shirt vs. pants vs. skirt is wrong
-- Jacket may be over-nullifying (blocking inner top)
-- Outerwear slot may not exist in `outfitConfig` — needs adding
+### Files touched
+- `src/lib/productImagePromptBuilder.ts` (remove one block)
+- `mem://features/product-images/product-aware-outfit-system` (doc update)
 
-**Step 4 — Fix proposal (next turn, after you approve)**
-- Refine `getConflictingSlots` with explicit per-category rules
-- Add sub-detection inside "garments" using `analysis.garmentType` (shirt / pants / skirt / dress)
-- Decide swimwear/activewear policy (suggest: nullify both for safety)
-- Optionally add an `outerwear` slot if jackets need to layer over tops
-- Add logged warnings when conflicts auto-fire so you can audit
-
-## Deliverable in this audit turn
-A clear conflict matrix + list of concrete gaps (with file/line refs). No code changes. Then you choose which gaps to fix.
+### Risk
+None. Pure revert of additive logic.
