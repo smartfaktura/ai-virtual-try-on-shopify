@@ -76,7 +76,7 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {builtIn.map(p => (
+        {relevantBuiltIn.map(p => (
           <button
             key={p.id}
             onClick={() => handleLoad(p)}
@@ -87,7 +87,7 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
             {p.name}
           </button>
         ))}
-        {userPresets.map(p => (
+        {relevantUser.map(p => (
           <div key={p.id} className="inline-flex items-center gap-0.5 rounded-full border bg-background hover:bg-muted transition-colors">
             <button
               onClick={() => handleLoad(p)}
@@ -104,6 +104,12 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
             </button>
           </div>
         ))}
+
+        {noRelevantPresets && resolution.availableSlots.length > 0 && (
+          <span className="text-[11px] text-muted-foreground italic self-center">
+            No presets fit this product — configure accessories below
+          </span>
+        )}
 
         <Popover open={saveOpen} onOpenChange={setSaveOpen}>
           <PopoverTrigger asChild>
