@@ -1618,7 +1618,7 @@ function ZaraOutfitPanel({
   primaryCategory?: string;
   modelGender?: string;
   analyses: Record<string, ProductAnalysis | undefined>;
-  selectedProductIds: string[];
+  selectedProductIds: Set<string>;
   allProducts: UserProduct[];
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
