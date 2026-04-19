@@ -1593,6 +1593,146 @@ interface Step3RefineProps {
 }
 
 /* ══════════════════════════════════════════════
+   ZARA Outfit Panel — product-aware slot grid
+   ══════════════════════════════════════════════ */
+
+const SLOT_TYPES: Record<OutfitSlotKey, { label: string; types: typeof TOP_TYPES; ghost?: string; hint?: string; isAccessory?: boolean }> = {
+  outerwear: { label: 'Outerwear', types: OUTERWEAR_TYPES },
+  top:       { label: 'Top', types: TOP_TYPES, ghost: 'Auto: white fitted tee' },
+  bottom:    { label: 'Bottom', types: BOTTOM_TYPES, ghost: 'Auto: straight-leg trousers' },
+  dress:     { label: 'Dress', types: DRESS_TYPES },
+  shoes:     { label: 'Shoes', types: SHOE_TYPES, ghost: 'Auto: white low-top sneakers' },
+  bag:       { label: 'Bag', types: BAG_TYPES, isAccessory: true },
+  hat:       { label: 'Hat', types: HAT_TYPES, isAccessory: true },
+  eyewear:   { label: 'Eyewear', types: EYEWEAR_TYPES, isAccessory: true },
+  belt:      { label: 'Belt', types: BELT_TYPES, isAccessory: true },
+  watch:     { label: 'Watch', types: WATCH_TYPES, isAccessory: true },
+  jewelry:   { label: 'Jewelry', types: [], isAccessory: true },
+};
+
+function ZaraOutfitPanel({
+  details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts,
+}: {
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+  primaryCategory?: string;
+  modelGender?: 'male' | 'female';
+  analyses: Record<string, ProductAnalysis | undefined>;
+  selectedProductIds: string[];
+  allProducts: UserProduct[];
+}) {
+  const [accessoriesOpen, setAccessoriesOpen] = useState(false);
+
+  // Resolve conflicts based on the first selected product (or primary category fallback)
+  const firstProductId = selectedProductIds[0];
+  const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
+  const firstProduct = allProducts.find(p => p.id === firstProductId);
+  const resolution = useMemo(
+    () => resolveOutfitConflicts(
+      firstAnalysis?.category || primaryCategory,
+      firstAnalysis?.garmentType,
+    ),
+    [firstAnalysis, primaryCategory],
+  );
+
+  const config: OutfitConfig = details.outfitConfig || {};
+  const updateSlot = (slot: OutfitSlotKey, piece: OutfitPiece | undefined) => {
+    const next: OutfitConfig = { ...config };
+    if (piece) (next as Record<string, unknown>)[slot] = piece;
+    else delete (next as Record<string, unknown>)[slot];
+    update({ outfitConfig: next });
+  };
+  const handleLoadPreset = (cfg: OutfitConfig) => update({ outfitConfig: cfg });
+
+  if (resolution.hideOutfitPanel) {
+    return (
+      <p className="text-xs text-muted-foreground italic px-1">Outfit not needed for this product.</p>
+    );
+  }
+
+  // Split available slots into garments (always shown) vs accessories (collapsible)
+  const garmentOrder: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes'];
+  const garmentSlots = garmentOrder.filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
+  const accessorySlots = (['bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'] as OutfitSlotKey[])
+    .filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
+
+  return (
+    <div className="space-y-3">
+      <OutfitPresetBar
+        currentConfig={config}
+        resolution={resolution}
+        onLoad={handleLoadPreset}
+        category={firstAnalysis?.category || primaryCategory}
+        gender={modelGender}
+      />
+
+      <div className="space-y-2">
+        {garmentSlots.map(slot => {
+          const meta = SLOT_TYPES[slot];
+          const isLocked = resolution.lockedSlot === slot;
+          const value = (config as Record<string, OutfitPiece | undefined>)[slot];
+          // Show "add layer" CTA on TOP slot when outerwear is available + not yet picked
+          const showAddLayer = slot === 'top'
+            && resolution.availableSlots.includes('outerwear')
+            && !config.outerwear
+            && !isLocked;
+          return (
+            <OutfitSlotCard
+              key={slot}
+              label={meta.label.toUpperCase()}
+              hint={slot === 'top' && resolution.lockedSlot === 'outerwear' ? "What's underneath?" : undefined}
+              ghostDefault={meta.ghost}
+              types={meta.types}
+              value={value}
+              onChange={(p) => updateSlot(slot, p)}
+              locked={isLocked}
+              productThumb={isLocked ? firstProduct?.imageUrl : undefined}
+              productName={isLocked ? firstProduct?.title : undefined}
+              onAddLayer={showAddLayer ? () => updateSlot('outerwear', { garment: 'jacket', color: '' }) : undefined}
+              layerLabel="+ Add layer over (jacket, blazer, cardigan)"
+            />
+          );
+        })}
+      </div>
+
+      {accessorySlots.length > 0 && (
+        <Collapsible open={accessoriesOpen} onOpenChange={setAccessoriesOpen}>
+          <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/acc">
+            <ChevronRight className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform flex-shrink-0', accessoriesOpen && 'rotate-90')} />
+            <span className="text-xs font-semibold text-muted-foreground group-hover/acc:text-foreground transition-colors">Accessories</span>
+            <span className="text-[11px] text-muted-foreground/60 truncate ml-1">
+              {accessorySlots.map(s => SLOT_TYPES[s].label).join(' · ')}
+            </span>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="space-y-2 pt-2">
+              {accessorySlots.map(slot => {
+                const meta = SLOT_TYPES[slot];
+                const isLocked = resolution.lockedSlot === slot;
+                const value = (config as Record<string, OutfitPiece | undefined>)[slot];
+                return (
+                  <OutfitSlotCard
+                    key={slot}
+                    label={meta.label.toUpperCase()}
+                    types={meta.types}
+                    value={value}
+                    onChange={(p) => updateSlot(slot, p)}
+                    locked={isLocked}
+                    productThumb={isLocked ? firstProduct?.imageUrl : undefined}
+                    productName={isLocked ? firstProduct?.title : undefined}
+                    showFit={false}
+                  />
+                );
+              })}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
    Component
    ══════════════════════════════════════════════ */
 
