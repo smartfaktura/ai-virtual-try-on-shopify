@@ -36,8 +36,10 @@ import {
   TOP_TYPES, BOTTOM_TYPES, OUTERWEAR_TYPES, DRESS_TYPES, SHOE_TYPES,
   BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES, COVER_UP_TYPES,
   JEWELRY_NECKLACES, JEWELRY_EARRINGS, JEWELRY_BRACELETS, JEWELRY_RINGS, JEWELRY_METALS,
-  pickDefaultPreset,
+  pickDefaultPreset, pickDefaultPresetPerProduct,
 } from '@/lib/outfitVocabulary';
+import { AiStylistCard } from './AiStylistCard';
+import { toast } from '@/lib/brandedToast';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
