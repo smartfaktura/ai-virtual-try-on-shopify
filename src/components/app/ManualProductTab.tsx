@@ -201,9 +201,19 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (target) {
         setBatchItems(prev => prev.map(b => b.id === target.batchId ? { ...b, isAnalyzing: false } : b));
       }
+      notifyAnalysisSoftFail();
     } finally {
       if (!target) setIsAnalyzing(false);
     }
+  }, []);
+
+  // Debounced soft-fail toast (one per ~5s window)
+  const lastSoftFailToastRef = useRef(0);
+  const notifyAnalysisSoftFail = useCallback(() => {
+    const now = Date.now();
+    if (now - lastSoftFailToastRef.current < 5000) return;
+    lastSoftFailToastRef.current = now;
+    toast.error('AI analysis unavailable for some items — please fill in manually.');
   }, []);
 
   // Dedupe guard: reject same file (name+size+lastModified) added within 300ms
