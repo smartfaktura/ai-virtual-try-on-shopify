@@ -1151,7 +1151,7 @@ export default function ProductImages() {
                       {/* Add Product Card — opens full AddProductModal */}
                       <button
                         type="button"
-                        onClick={() => setAddProductOpen(true)}
+                        onClick={() => { setAddProductCompact(true); setAddProductTab('manual'); setAddProductOpen(true); }}
                         className="group flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all cursor-pointer overflow-hidden"
                       >
                         <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/40">
@@ -1214,8 +1214,11 @@ export default function ProductImages() {
             </div>
             <AddProductModal
               open={addProductOpen}
-              onOpenChange={setAddProductOpen}
+              onOpenChange={(o) => { setAddProductOpen(o); if (!o) setAddProductCompact(true); }}
               onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+              compact={addProductCompact}
+              initialTab={addProductTab}
+              onSwitchMethod={() => setAddProductCompact(false)}
             />
           </>
         )}
