@@ -47,16 +47,26 @@ function dbToFrontend(d: DbScene): ProductImageScene {
 
 // ── Fetch helpers ──
 
-async function fetchAllScenes(): Promise<DbScene[]> {
+// Slim column list for client picker / display / sort. Excludes admin-only metadata.
+// `prompt_template` is REQUIRED client-side for prompt building (buildDynamicPrompt).
+const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+
+function selectCols(includePromptTemplate: boolean): string {
+  return includePromptTemplate ? '*' : CLIENT_COLUMNS;
+}
+
+async function fetchAllScenes(includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
   let from = 0;
   while (true) {
-    const { data, error } = await supabase
+    let q = supabase
       .from('product_image_scenes' as any)
-      .select('*')
+      .select(selectCols(includePromptTemplate))
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
+    if (activeOnly) q = q.eq('is_active', true);
+    const { data, error } = await q;
     if (error) throw error;
     const batch = (data || []) as unknown as DbScene[];
     all = all.concat(batch);
@@ -66,27 +76,31 @@ async function fetchAllScenes(): Promise<DbScene[]> {
   return all;
 }
 
-async function fetchScenesByCategories(categories: string[]): Promise<DbScene[]> {
-  const { data, error } = await supabase
+async function fetchScenesByCategories(categories: string[], includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
+  let q = supabase
     .from('product_image_scenes' as any)
-    .select('*')
+    .select(selectCols(includePromptTemplate))
     .in('category_collection', categories)
     .order('sort_order', { ascending: true });
+  if (activeOnly) q = q.eq('is_active', true);
+  const { data, error } = await q;
   if (error) throw error;
   return (data || []) as unknown as DbScene[];
 }
 
-async function fetchScenesExcludingCategories(categories: string[]): Promise<DbScene[]> {
+async function fetchScenesExcludingCategories(categories: string[], includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
   let from = 0;
   while (true) {
-    const { data, error } = await supabase
+    let q = supabase
       .from('product_image_scenes' as any)
-      .select('*')
+      .select(selectCols(includePromptTemplate))
       .not('category_collection', 'in', `(${categories.join(',')})`)
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
+    if (activeOnly) q = q.eq('is_active', true);
+    const { data, error } = await q;
     if (error) throw error;
     const batch = (data || []) as unknown as DbScene[];
     all = all.concat(batch);
@@ -204,6 +218,10 @@ const QUERY_KEY_REST = ['product-image-scenes-rest'];
 interface UseProductImageScenesOptions {
   /** When provided, fetches these categories first (instant) and the rest in background */
   priorityCategories?: string[];
+  /** Admin-only: include heavy prompt_template column. Default true for client (needed by prompt builder). */
+  includePromptTemplate?: boolean;
+  /** Admin-only: include inactive (hidden) scenes too. Default false. */
+  includeInactive?: boolean;
 }
 
 export function useProductImageScenes(options?: UseProductImageScenesOptions) {
@@ -211,19 +229,23 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   const qc = useQueryClient();
   const priorityCats = options?.priorityCategories;
   const hasPriority = priorityCats && priorityCats.length > 0;
+  // Client wizard NEEDS prompt_template (buildDynamicPrompt builds prompts locally).
+  const includePromptTemplate = options?.includePromptTemplate ?? true;
+  const activeOnly = !(options?.includeInactive ?? false);
+  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}`;
 
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
   const { data: priorityScenes, isLoading: isLoadingPriority } = useQuery({
-    queryKey: [...QUERY_KEY_PRIORITY, priorityCats],
-    queryFn: () => fetchScenesByCategories(priorityCats!),
+    queryKey: [...QUERY_KEY_PRIORITY, cacheVariant, priorityCats],
+    queryFn: () => fetchScenesByCategories(priorityCats!, includePromptTemplate, activeOnly),
     enabled: !!hasPriority,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: restScenes, isLoading: isLoadingRest } = useQuery({
-    queryKey: [...QUERY_KEY_REST, priorityCats],
-    queryFn: () => fetchScenesExcludingCategories(priorityCats!),
+    queryKey: [...QUERY_KEY_REST, cacheVariant, priorityCats],
+    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly),
     enabled: !!hasPriority && !!priorityScenes,
     staleTime: 5 * 60 * 1000,
   });
@@ -231,8 +253,8 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // ── Mode B: Full fetch (no priority — admin, review, results) ──
 
   const { data: allRawScenes, isLoading: isLoadingAll } = useQuery({
-    queryKey: QUERY_KEY_ALL,
-    queryFn: fetchAllScenes,
+    queryKey: [...QUERY_KEY_ALL, cacheVariant],
+    queryFn: () => fetchAllScenes(includePromptTemplate, activeOnly),
     enabled: !hasPriority,
     staleTime: 5 * 60 * 1000,
   });
