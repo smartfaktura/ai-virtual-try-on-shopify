@@ -111,7 +111,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
   const compactBody = (
     <div className="flex flex-col flex-1 min-h-0 min-w-0">
-      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto pr-1 -mr-1">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden pr-1 -mr-1">
         {activeBody}
       </div>
       {onSwitchMethod && (
