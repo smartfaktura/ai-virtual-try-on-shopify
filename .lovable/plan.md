@@ -1,40 +1,51 @@
 
-## Plan: Phase 2 — Wire ZARA outfit system into Step 3 (zero-risk surgical edit)
+## Investigation: outfit selections not appearing in generated image
 
-### What changes
-Only the **outfit picker block** inside `ProductImagesStep3Refine.tsx` gets swapped. Model picker, person styling toggle, packaging refs, scene selection, and all sibling flows are untouched.
+User generated a "Black Ruched Crop Top" but the outfit pieces they picked in Step 3 (bottom, shoes, etc.) didn't show up in the final image. Let me trace why.
 
-### Surgical scope
-1. **Locate** the existing outfit UI block (current flat dropdowns for top/bottom/shoes). Read 30 lines above + below to map exact boundaries.
-2. **Replace ONLY that block** with three new pieces:
-   - `<OutfitPresetBar>` (top)
-   - Conditional **scene-hint takeover banner** (when any selected scene has `outfit_hint` AND user hasn't clicked Override)
-   - **Slot grid** rendering `<OutfitSlotCard>` per available slot, driven by `outfitConflictResolver.resolveConflicts(productAnalysis)`
-3. **Wire state** — reuse the existing `outfitConfig` state setter that already lives in this file. The new components write into the same `OutfitConfig` shape (now extended), so downstream prompt-builder + Step 4 review keep working.
-4. **Add 2 small local state hooks**: `overrideSceneHint: boolean` and `expandedAccessories: boolean`. Both default `false`.
+### Likely root causes (ranked)
 
-### Why it won't crash
-- `OutfitConfig` schema change is **additive** — existing fields (`top`, `bottom`, `shoes`, `accessories`) still exist. Old saved configs read fine.
-- New components are already built + tested in isolation (Phase 1).
-- Conflict resolver returns safe defaults (`{ availableSlots: ['top','bottom','shoes'], hiddenSlots: [], lockedSlot: null }`) when product category is unknown → behaves like today.
-- Prompt builder already updated in Phase 1 to render new slots AND skip empty ones → no broken prompts.
-- Zero edits to: model picker, person toggle, packaging, scene selection, multi-product loop, generation trigger, credits logic.
+**1. Most likely — Template missing `{{outfitDirective}}` token**
+From memory `mem://features/product-images/product-aware-outfit-system`: outfit pieces only reach the AI when the scene template explicitly contains the `{{outfitDirective}}` token. The plan called this out as deferred work ("~509 templates missing the token"). The scene "Interior Window Light Editorial" (visible in edge logs) is likely one of them → outfit data is built correctly but never injected into the final prompt sent to Gemini.
 
-### Edge cases handled
-- **No product analysis yet** → resolver returns default 3 slots, identical to current behavior.
-- **Non-fashion product** (perfume, candle) → resolver returns `{ availableSlots: [] }` → outfit block hides itself with single line "Outfit not needed for this product."
-- **Scene with `outfit_hint`** → block replaced by banner; clicking Override reveals full picker.
-- **Multi-scene selection mixing hint + non-hint scenes** → banner shown only if ALL selected scenes have hints (safer default).
-- **Loading a preset that conflicts with locked product slot** → resolver strips conflicting keys silently before merging.
+**2. Possible — `wantsPeople` flag not triggered**
+From `mem://tech-stack/generation-character-and-anatomical-consistency`: outfit only renders if the engine flags the scene as needing a person. If the scene template doesn't trigger that flag, the model generates product-only and skips outfit entirely.
 
-### Files touched
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — ONE block replaced (~80-120 lines swapped), no other section edited
-- (No new files, no DB changes, no migrations — Phase 1 already shipped those)
+**3. Possible — New extended slots not picked up by prompt builder**
+Phase 1 updated `productImagePromptBuilder.ts`, but the actual string assembly may still read only the legacy `top/bottom/shoes` keys when building the directive that goes into `{{outfitDirective}}`. Worth grepping.
 
-### Validation steps after edit
-1. Visual check Step 3 with: a tee product, a dress product, a jacket product, a fragrance product, a scene with `outfit_hint`.
-2. Confirm prompt preview in Step 4 still renders correctly for each.
-3. Save + load a preset.
+**4. Less likely — Crop top locks `top` slot, user only added accessories below**
+If the resolver locked `top` to the crop top and the user expected the locked slot itself to add styling (it can't — it IS the product), some confusion is normal. But the user says "nothing showing as I selected" implying they did pick other slots.
+
+### Investigation steps (read-only, this turn)
+
+1. Grep `{{outfitDirective}}` across `custom_scenes.prompt_template` and built-in scene templates to confirm coverage gap
+2. Read `productImagePromptBuilder.ts` to see if `buildStructuredOutfitString` is called, and whether the result is actually placed into the final prompt for scenes WITHOUT the token (fallback)
+3. Check the latest `generation_jobs` row for this user to see the final assembled prompt that was sent
+4. Check `wantsPeople` detection logic for "Interior Window Light Editorial"
+
+### Proposed fix (Phase 3a — small, safe)
+
+**Make outfit injection automatic when token is missing:**
+
+If a scene needs people (`wantsPeople = true`) AND the template has no `{{outfitDirective}}` token AND the user provided outfit data → the prompt builder appends the directive automatically at the end of the prompt (e.g., "Model is wearing: black wide-leg trousers, white sneakers, gold hoops").
+
+This:
+- Fixes the immediate bug (user's selections render no matter what scene they picked)
+- Avoids touching all 500+ templates
+- Has zero impact on scenes that already have the token (the token-based injection still wins, fallback only activates when token is absent)
+- Has zero impact on product-only scenes (`wantsPeople = false` → directive skipped, just like today)
+
+**Files touched:**
+- `src/lib/productImagePromptBuilder.ts` — single function, ~15-line addition
+
+### After confirmation
+
+Once I'm in default mode I'll:
+1. Read the 3 files above to confirm the diagnosis
+2. Pull the saved prompt from the user's last `generation_jobs` row to see exactly what was sent
+3. Apply the fix only if diagnosis confirms it
+4. Report back what the actual injected prompt looks like for their next generation
 
 ### Risk
-**Very low.** Single file, single block, additive schema, fallback defaults at every layer. Worst case = outfit block looks slightly off → revert via chat history (one click).
+Very low. Pure additive logic — adds a fallback path; doesn't change existing behavior for token-equipped scenes.
