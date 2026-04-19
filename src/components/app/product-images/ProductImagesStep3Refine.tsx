@@ -2038,6 +2038,53 @@ export function ProductImagesStep3Refine({
     });
   }, [selectedScenes, details.outfitOverrideEnabled, userOutfitFilled]);
 
+  // Human-readable summary of what's in outfitConfig (e.g. "Top: white cropped tee")
+  const userOutfitSummaryParts = useMemo<string[]>(() => {
+    const cfg = details.outfitConfig;
+    const parts: string[] = [];
+    if (!cfg) {
+      if (details.outfitTop) parts.push(`Top: ${details.outfitTop}`);
+      if (details.outfitBottom) parts.push(`Bottom: ${details.outfitBottom}`);
+      if (details.outfitShoes) parts.push(`Shoes: ${details.outfitShoes}`);
+      if (details.outfitAccessories) parts.push(`Accessories: ${details.outfitAccessories}`);
+      return parts;
+    }
+    const describe = (label: string, p?: { garment?: string; color?: string; fit?: string; material?: string; subtype?: string }) => {
+      if (!p?.garment) return;
+      const bits = [p.color, p.fit, p.material, p.subtype, p.garment].filter(Boolean);
+      parts.push(`${label}: ${bits.join(' ')}`);
+    };
+    describe('Outerwear', cfg.outerwear);
+    describe('Top', cfg.top);
+    describe('Bottom', cfg.bottom);
+    describe('Dress', cfg.dress);
+    describe('Cover-up', cfg.coverUp);
+    describe('Shoes', cfg.shoes);
+    describe('Bag', cfg.bag);
+    describe('Hat', cfg.hat);
+    describe('Eyewear', cfg.eyewear);
+    describe('Belt', cfg.belt);
+    describe('Watch', cfg.watch);
+    if (cfg.jewelry && Object.keys(cfg.jewelry).length > 0) {
+      const jBits = Object.entries(cfg.jewelry).filter(([, v]) => !!v).map(([k, v]) => `${k}: ${v}`);
+      if (jBits.length) parts.push(`Jewelry: ${jBits.join(', ')}`);
+    }
+    if (cfg.accessories) parts.push(`Accessories: ${cfg.accessories}`);
+    return parts;
+  }, [details.outfitConfig, details.outfitTop, details.outfitBottom, details.outfitShoes, details.outfitAccessories]);
+
+  // Decide how to render the styling preview: hidden / single-summary / mixed-list
+  const stylingPreview = useMemo(() => {
+    const rows = stylingSourceByScene;
+    const overrideActive = !!details.outfitOverrideEnabled && userOutfitFilled;
+    if (rows.length === 0) return { mode: 'hidden' as const, overrideActive };
+    const sources = new Set(rows.map(r => r.source));
+    if (sources.size === 1) {
+      return { mode: 'uniform' as const, source: rows[0].source, count: rows.length, overrideActive };
+    }
+    return { mode: 'mixed' as const, rows, overrideActive };
+  }, [stylingSourceByScene, details.outfitOverrideEnabled, userOutfitFilled]);
+
 
   // Shot card collapse
   const SHOTS_LIMIT = 8;
@@ -2468,28 +2515,65 @@ export function ProductImagesStep3Refine({
                   </>
                 )}
 
-                {/* Per-scene styling source preview — shows exactly which shots use scene styling vs your outfit vs default */}
-                {stylingSourceByScene.length > 0 && (
-                  <div className="space-y-1.5 pt-1">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Styling per shot</p>
-                    <div className="space-y-1">
-                      {stylingSourceByScene.map(({ scene, source }) => {
-                        const labelMap = {
-                          scene: { text: 'Scene styling', cls: 'bg-primary/10 text-primary border-primary/20' },
-                          user: { text: details.outfitOverrideEnabled && userOutfitFilled ? 'Your outfit (override)' : 'Your outfit', cls: 'bg-foreground/5 text-foreground border-border' },
-                          default: { text: 'Category default — pick outfit', cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' },
-                        } as const;
-                        const meta = labelMap[source];
-                        return (
-                          <div key={scene.id} className="flex items-center justify-between gap-2 text-[11px]">
-                            <span className="truncate text-muted-foreground">{scene.title}</span>
-                            <span className={cn('flex-shrink-0 px-1.5 py-0.5 rounded border font-medium', meta.cls)}>{meta.text}</span>
-                          </div>
-                        );
-                      })}
+                {/* Wardrobe summary — explains in plain language what is active and where it applies */}
+                {stylingPreview.mode !== 'hidden' && (() => {
+                  const sourceLabel = (src: 'scene' | 'user' | 'default', overrideActive: boolean) => {
+                    if (src === 'scene') return "Uses this shot's built-in styling";
+                    if (src === 'user') return overrideActive ? 'Uses your selections above (forced on all shots)' : 'Uses your selections above';
+                    return 'Uses automatic styling';
+                  };
+                  const sourceClass = (src: 'scene' | 'user' | 'default') => {
+                    if (src === 'scene') return 'bg-primary/10 text-primary border-primary/20';
+                    if (src === 'user') return 'bg-foreground/5 text-foreground border-border';
+                    return 'bg-muted text-muted-foreground border-border';
+                  };
+                  const totalShots = stylingSourceByScene.length;
+                  return (
+                    <div className="space-y-2 pt-1 rounded-lg border border-border/60 bg-muted/20 p-3">
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Wardrobe summary</p>
+
+                      {userOutfitFilled ? (
+                        <div className="space-y-1">
+                          <p className="text-xs text-foreground">
+                            Applies to {totalShots} model {totalShots === 1 ? 'shot' : 'shots'} — using your selections above:
+                          </p>
+                          <ul className="text-[11px] text-muted-foreground space-y-0.5 pl-4 list-disc marker:text-muted-foreground/50">
+                            {userOutfitSummaryParts.map((p, i) => <li key={i}>{p}</li>)}
+                          </ul>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          No custom outfit selected. Shots will use built-in scene styling or automatic styling.
+                        </p>
+                      )}
+
+                      {stylingPreview.mode === 'uniform' ? (
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                          <span>{`All ${stylingPreview.count} model ${stylingPreview.count === 1 ? 'shot' : 'shots'}:`}</span>
+                          <span className={cn('px-1.5 py-0.5 rounded border font-medium', sourceClass(stylingPreview.source))}>
+                            {sourceLabel(stylingPreview.source, stylingPreview.overrideActive)}
+                          </span>
+                        </p>
+                      ) : (
+                        <div className="space-y-1">
+                          <p className="text-[11px] text-muted-foreground">Per-shot breakdown:</p>
+                          {stylingPreview.rows.map(({ scene, source }) => (
+                            <div key={scene.id} className="flex items-center justify-between gap-2 text-[11px]">
+                              <span className="truncate text-muted-foreground">{scene.title}</span>
+                              <span className={cn('flex-shrink-0 px-1.5 py-0.5 rounded border font-medium', sourceClass(source))}>
+                                {sourceLabel(source, stylingPreview.overrideActive)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-muted-foreground/80 italic pt-0.5">
+                        Outfit edits here apply across your selected model shots — this is not a per-shot wardrobe editor.
+                      </p>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 <Collapsible>
                   <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
