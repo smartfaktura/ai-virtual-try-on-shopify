@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Paintbrush, User, Users, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
@@ -2619,12 +2621,41 @@ export function ProductImagesStep3Refine({
                 ) : (
                   /* Standard outfit panel — AI Stylist card by default, full editor on Customize */
                   <>
-                    {someModelScenesHaveOutfitHint && (
-                      <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 flex items-center gap-1.5">
-                        <Info className="w-3 h-3 flex-shrink-0 text-primary" />
-                        Some shots have their own styling direction — outfit settings apply to remaining shots only.
-                      </p>
-                    )}
+                    {someModelScenesHaveOutfitHint && (() => {
+                      const hasOutfit = stylistCardPicks.length > 0
+                        || (details.outfitConfig && Object.keys(details.outfitConfig).some(k => k !== 'name' && (details.outfitConfig as any)[k]))
+                        || (details.outfitConfigByProduct && Object.keys(details.outfitConfigByProduct).length > 0);
+                      const isOn = !!details.outfitOverrideEnabled;
+                      return (
+                        <div className="bg-muted/50 rounded-md px-2.5 py-2 flex items-start gap-2">
+                          <Info className="w-3 h-3 flex-shrink-0 text-primary mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] text-muted-foreground leading-snug">
+                              {isOn
+                                ? 'Your outfit selection will override all curated styling'
+                                : 'Some shots have their own styling direction'}
+                            </p>
+                          </div>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[11px] text-foreground/80 whitespace-nowrap">Apply my outfit to all shots</span>
+                                  <Switch
+                                    checked={isOn}
+                                    disabled={!hasOutfit}
+                                    onCheckedChange={(checked) => update({ outfitOverrideEnabled: checked })}
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              {!hasOutfit && (
+                                <TooltipContent side="top">Pick an outfit first</TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      );
+                    })()}
 
                     {stylistCardPicks.length > 0 && (
                       <AiStylistCard
