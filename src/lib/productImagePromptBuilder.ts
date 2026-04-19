@@ -638,33 +638,66 @@ export function getConflictingSlots(garmentType?: string): Set<OutfitSlot> {
 
 // ── Build structured outfit string from OutfitConfig ──
 export function buildStructuredOutfitString(config: OutfitConfig, skipSlots?: Set<OutfitSlot>): string {
-  const describePiece = (piece?: OutfitPiece): string => {
+  const describePiece = (piece?: OutfitPiece, fallbackGarment?: string): string => {
     if (!piece || !piece.garment) return '';
     const parts: string[] = [];
     if (piece.color) parts.push(piece.color);
     if (piece.material) parts.push(piece.material);
     if (piece.fit) parts.push(`${piece.fit}-fit`);
-    parts.push(piece.garment);
-    return parts.join(' ');
+    if (piece.subtype) parts.push(piece.subtype);
+    parts.push(piece.garment || fallbackGarment || '');
+    return parts.filter(Boolean).join(' ').trim();
   };
 
   const segments: string[] = [];
-  if (!skipSlots?.has('top')) {
-    const top = describePiece(config.top);
-    if (top) segments.push(`Top: ${top}`);
+
+  // Layering order: outerwear → top/dress → bottom → shoes
+  const outerwear = describePiece(config.outerwear);
+  if (outerwear) segments.push(`Outerwear: ${outerwear}`);
+
+  if (config.dress?.garment) {
+    const dress = describePiece(config.dress);
+    if (dress) segments.push(`Dress: ${dress}`);
+  } else {
+    if (!skipSlots?.has('top')) {
+      const top = describePiece(config.top);
+      if (top) segments.push(`Top: ${top}`);
+    }
+    if (!skipSlots?.has('bottom')) {
+      const bottom = describePiece(config.bottom);
+      if (bottom) segments.push(`Bottom: ${bottom}`);
+    }
   }
-  if (!skipSlots?.has('bottom')) {
-    const bottom = describePiece(config.bottom);
-    if (bottom) segments.push(`Bottom: ${bottom}`);
-  }
+
   if (!skipSlots?.has('shoes')) {
     const shoes = describePiece(config.shoes);
     if (shoes) segments.push(`Shoes: ${shoes}`);
   }
 
-  if (segments.length === 0) return '';
+  // Accessories
+  const accParts: string[] = [];
+  const bag = describePiece(config.bag); if (bag) accParts.push(`bag (${bag})`);
+  const hat = describePiece(config.hat); if (hat) accParts.push(`hat (${hat})`);
+  const eyewear = describePiece(config.eyewear); if (eyewear) accParts.push(`eyewear (${eyewear})`);
+  const belt = describePiece(config.belt); if (belt) accParts.push(`belt (${belt})`);
+  const watch = describePiece(config.watch); if (watch) accParts.push(`watch (${watch})`);
+  if (config.jewelry) {
+    const j = config.jewelry;
+    const jewelryBits: string[] = [];
+    if (j.necklace) jewelryBits.push(j.necklace.toLowerCase() + ' necklace');
+    if (j.earrings) jewelryBits.push(j.earrings.toLowerCase() + ' earrings');
+    if (j.bracelet) jewelryBits.push(j.bracelet.toLowerCase() + ' bracelet');
+    if (j.ring) jewelryBits.push(j.ring.toLowerCase() + ' ring');
+    if (jewelryBits.length) {
+      const metal = j.metal ? ` in ${j.metal.toLowerCase()}` : '';
+      accParts.push(`jewelry (${jewelryBits.join(', ')}${metal})`);
+    }
+  }
+  if (config.accessories && config.accessories !== 'none') accParts.push(config.accessories);
+
+  if (segments.length === 0 && accParts.length === 0) return '';
   const outfitStr = segments.join('; ');
-  const accStr = config.accessories && config.accessories !== 'none' ? ` Accessories: ${config.accessories}.` : '';
+  const accStr = accParts.length ? ` Accessories: ${accParts.join(', ')}.` : '';
   return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials, same shoes. Clothing must NOT compete with the product.${accStr}`;
 }
 
