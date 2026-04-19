@@ -2011,6 +2011,34 @@ export function ProductImagesStep3Refine({
     return personScenes.some(s => !!s.outfitHint) && !allModelScenesHaveOutfitHint;
   }, [selectedScenes, allModelScenesHaveOutfitHint]);
 
+  // ── Per-scene styling source preview (matches resolveOutfitHintText logic in promptBuilder) ──
+  const userOutfitFilled = useMemo(() => {
+    const cfg = details.outfitConfig;
+    if (cfg) {
+      if (cfg.top?.garment || cfg.bottom?.garment || cfg.shoes?.garment ||
+          cfg.outerwear?.garment || cfg.dress?.garment || cfg.coverUp?.garment ||
+          cfg.bag?.garment || cfg.hat?.garment || cfg.eyewear?.garment ||
+          cfg.belt?.garment || cfg.watch?.garment ||
+          (cfg.jewelry && Object.keys(cfg.jewelry).length > 0) ||
+          (cfg.accessories && cfg.accessories.length > 0)) return true;
+    }
+    return !!(details.outfitTop || details.outfitBottom || details.outfitShoes || details.outfitAccessories);
+  }, [details.outfitConfig, details.outfitTop, details.outfitBottom, details.outfitShoes, details.outfitAccessories]);
+
+  const stylingSourceByScene = useMemo(() => {
+    const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
+    return personScenes.map(s => {
+      const overrideActive = !!details.outfitOverrideEnabled && userOutfitFilled;
+      let source: 'scene' | 'user' | 'default';
+      if (overrideActive) source = 'user';
+      else if (s.outfitHint) source = 'scene';
+      else if (userOutfitFilled) source = 'user';
+      else source = 'default';
+      return { scene: s, source };
+    });
+  }, [selectedScenes, details.outfitOverrideEnabled, userOutfitFilled]);
+
+
   // Shot card collapse
   const SHOTS_LIMIT = 8;
   const [showAllShots, setShowAllShots] = useState(false);
@@ -2438,6 +2466,29 @@ export function ProductImagesStep3Refine({
                       allProducts={allProducts}
                     />
                   </>
+                )}
+
+                {/* Per-scene styling source preview — shows exactly which shots use scene styling vs your outfit vs default */}
+                {stylingSourceByScene.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Styling per shot</p>
+                    <div className="space-y-1">
+                      {stylingSourceByScene.map(({ scene, source }) => {
+                        const labelMap = {
+                          scene: { text: 'Scene styling', cls: 'bg-primary/10 text-primary border-primary/20' },
+                          user: { text: details.outfitOverrideEnabled && userOutfitFilled ? 'Your outfit (override)' : 'Your outfit', cls: 'bg-foreground/5 text-foreground border-border' },
+                          default: { text: 'Category default — pick outfit', cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' },
+                        } as const;
+                        const meta = labelMap[source];
+                        return (
+                          <div key={scene.id} className="flex items-center justify-between gap-2 text-[11px]">
+                            <span className="truncate text-muted-foreground">{scene.title}</span>
+                            <span className={cn('flex-shrink-0 px-1.5 py-0.5 rounded border font-medium', meta.cls)}>{meta.text}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
 
                 <Collapsible>
