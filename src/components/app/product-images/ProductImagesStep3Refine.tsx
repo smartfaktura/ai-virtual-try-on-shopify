@@ -1894,6 +1894,44 @@ export function ProductImagesStep3Refine({
   );
   const isMultiProduct = selectedProductsList.length > 1;
 
+  // Union of selected product categories — drives preset filtering + auto-pick
+  const selectedProductCategories = useMemo(() => {
+    const cats = new Set<string>();
+    for (const p of selectedProductsList) {
+      const cat = analyses[p.id]?.category;
+      if (cat) cats.add(cat);
+    }
+    if (cats.size === 0 && primaryCategory) cats.add(primaryCategory);
+    return Array.from(cats);
+  }, [selectedProductsList, analyses, primaryCategory]);
+
+  // Auto-pick a sensible default outfit on first mount when nothing is configured.
+  const [autoPickedPresetName, setAutoPickedPresetName] = useState<string | null>(null);
+  const autoPickedRef = useRef(false);
+  useEffect(() => {
+    if (autoPickedRef.current) return;
+    if (!hasPersonBlock) return;
+    const cfg = details.outfitConfig;
+    const hasAnySlot = cfg && Object.keys(cfg).some(k => {
+      const v = (cfg as Record<string, unknown>)[k];
+      return v !== undefined && v !== null && v !== '';
+    });
+    if (hasAnySlot) { autoPickedRef.current = true; return; }
+    const picked = pickDefaultPreset(selectedProductCategories);
+    if (picked) {
+      autoPickedRef.current = true;
+      setAutoPickedPresetName(picked.name);
+      update({ outfitConfig: picked.config });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasPersonBlock, selectedProductCategories]);
+
+  const clearAutoPick = useCallback(() => {
+    setAutoPickedPresetName(null);
+    update({ outfitConfig: {} });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Per-product reference upload handler — stores as trigger:{type}:{productId}
   const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
     if (!onSceneExtraRefsChange) return;
