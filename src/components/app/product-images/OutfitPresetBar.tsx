@@ -7,7 +7,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
 import { useOutfitPresets, type UserOutfitPreset } from '@/hooks/useOutfitPresets';
-import { applyPresetWithLocks, type ConflictResolution } from '@/lib/outfitConflictResolver';
+import { applyPresetWithLocks, type ConflictResolution, type OutfitSlotKey } from '@/lib/outfitConflictResolver';
 import { toast } from 'sonner';
 import type { OutfitConfig } from '@/components/app/product-images/types';
 import { cn } from '@/lib/utils';
