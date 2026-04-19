@@ -1686,7 +1686,7 @@ function ZaraOutfitPanel({
               value={value}
               onChange={(p) => updateSlot(slot, p)}
               locked={isLocked}
-              productThumb={isLocked ? firstProduct?.imageUrl : undefined}
+              productThumb={isLocked ? firstProduct?.image_url : undefined}
               productName={isLocked ? firstProduct?.title : undefined}
               onAddLayer={showAddLayer ? () => updateSlot('outerwear', { garment: 'jacket', color: '' }) : undefined}
               layerLabel="+ Add layer over (jacket, blazer, cardigan)"
@@ -1718,7 +1718,7 @@ function ZaraOutfitPanel({
                     value={value}
                     onChange={(p) => updateSlot(slot, p)}
                     locked={isLocked}
-                    productThumb={isLocked ? firstProduct?.imageUrl : undefined}
+                    productThumb={isLocked ? firstProduct?.image_url : undefined}
                     productName={isLocked ? firstProduct?.title : undefined}
                     showFit={false}
                   />
