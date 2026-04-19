@@ -1,8 +1,8 @@
-// ── DB-backed outfit presets (cross-device sync) ──
-import { useEffect, useState, useCallback } from 'react';
+// ── DB-backed outfit presets (cross-device sync) + curated category-aware built-ins ──
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { OutfitConfig } from '@/components/app/product-images/types';
-import { BUILT_IN_PRESETS } from '@/lib/outfitVocabulary';
+import { BUILT_IN_PRESETS, filterPresetsByCategories, pickDefaultPreset } from '@/lib/outfitVocabulary';
 
 export interface UserOutfitPreset {
   id: string;
@@ -11,17 +11,20 @@ export interface UserOutfitPreset {
   category?: string | null;
   gender?: string | null;
   isBuiltIn?: boolean;
+  recommended?: boolean;
   createdAt?: string;
 }
 
-const builtInAsPresets: UserOutfitPreset[] = BUILT_IN_PRESETS.map(p => ({
+const toUserPreset = (p: typeof BUILT_IN_PRESETS[number]): UserOutfitPreset => ({
   id: p.id,
   name: p.name,
   config: p.config,
+  category: p.category[0] || null,
   isBuiltIn: true,
-}));
+  recommended: p.recommended,
+});
 
-export function useOutfitPresets() {
+export function useOutfitPresets(categoryFilter?: string[]) {
   const [userPresets, setUserPresets] = useState<UserOutfitPreset[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +49,12 @@ export function useOutfitPresets() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // Filter built-ins by union of selected product categories. Universal fallbacks always appended.
+  const builtIn = useMemo(() => {
+    const filtered = filterPresetsByCategories(categoryFilter);
+    return filtered.map(toUserPreset);
+  }, [categoryFilter]);
+
   const savePreset = useCallback(async (name: string, config: OutfitConfig, category?: string, gender?: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -64,13 +73,20 @@ export function useOutfitPresets() {
     await refresh();
   }, [refresh]);
 
+  // Pick a sensible default preset for the current categories (recommended + neutral palette).
+  const pickDefault = useCallback((categories?: string[]): UserOutfitPreset | null => {
+    const p = pickDefaultPreset(categories ?? categoryFilter);
+    return p ? toUserPreset(p) : null;
+  }, [categoryFilter]);
+
   return {
-    builtIn: builtInAsPresets,
+    builtIn,
     userPresets,
-    allPresets: [...builtInAsPresets, ...userPresets],
+    allPresets: [...builtIn, ...userPresets],
     loading,
     savePreset,
     deletePreset,
     refresh,
+    pickDefault,
   };
 }

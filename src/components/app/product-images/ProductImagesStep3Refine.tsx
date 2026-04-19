@@ -36,6 +36,7 @@ import {
   TOP_TYPES, BOTTOM_TYPES, OUTERWEAR_TYPES, DRESS_TYPES, SHOE_TYPES,
   BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES, COVER_UP_TYPES,
   JEWELRY_NECKLACES, JEWELRY_EARRINGS, JEWELRY_BRACELETS, JEWELRY_RINGS, JEWELRY_METALS,
+  pickDefaultPreset,
 } from '@/lib/outfitVocabulary';
 
 /* ══════════════════════════════════════════════
@@ -1613,7 +1614,7 @@ const SLOT_TYPES: Record<OutfitSlotKey, { label: string; types: typeof TOP_TYPES
 };
 
 function ZaraOutfitPanel({
-  details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts,
+  details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts, productCategories,
 }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
@@ -1622,6 +1623,7 @@ function ZaraOutfitPanel({
   analyses: Record<string, ProductAnalysis | undefined>;
   selectedProductIds: Set<string>;
   allProducts: UserProduct[];
+  productCategories?: string[];
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
 
@@ -1666,6 +1668,7 @@ function ZaraOutfitPanel({
         onLoad={handleLoadPreset}
         category={firstAnalysis?.category || primaryCategory}
         gender={modelGender}
+        productCategories={productCategories}
       />
 
       <div className="space-y-2">
@@ -1892,6 +1895,44 @@ export function ProductImagesStep3Refine({
     [allProducts, selectedProductIds],
   );
   const isMultiProduct = selectedProductsList.length > 1;
+
+  // Union of selected product categories — drives preset filtering + auto-pick
+  const selectedProductCategories = useMemo(() => {
+    const cats = new Set<string>();
+    for (const p of selectedProductsList) {
+      const cat = analyses[p.id]?.category;
+      if (cat) cats.add(cat);
+    }
+    if (cats.size === 0 && primaryCategory) cats.add(primaryCategory);
+    return Array.from(cats);
+  }, [selectedProductsList, analyses, primaryCategory]);
+
+  // Auto-pick a sensible default outfit on first mount when nothing is configured.
+  const [autoPickedPresetName, setAutoPickedPresetName] = useState<string | null>(null);
+  const autoPickedRef = useRef(false);
+  useEffect(() => {
+    if (autoPickedRef.current) return;
+    if (!hasPersonBlock) return;
+    const cfg = details.outfitConfig;
+    const hasAnySlot = cfg && Object.keys(cfg).some(k => {
+      const v = (cfg as Record<string, unknown>)[k];
+      return v !== undefined && v !== null && v !== '';
+    });
+    if (hasAnySlot) { autoPickedRef.current = true; return; }
+    const picked = pickDefaultPreset(selectedProductCategories);
+    if (picked) {
+      autoPickedRef.current = true;
+      setAutoPickedPresetName(picked.name);
+      update({ outfitConfig: picked.config });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasPersonBlock, selectedProductCategories]);
+
+  const clearAutoPick = useCallback(() => {
+    setAutoPickedPresetName(null);
+    update({ outfitConfig: {} });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Per-product reference upload handler — stores as trigger:{type}:{productId}
   const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
@@ -2435,7 +2476,22 @@ export function ProductImagesStep3Refine({
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots. Optional.</p>
+                  {autoPickedPresetName && !allModelScenesHaveOutfitHint && (
+                    <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5 flex-wrap">
+                      <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                      <span>
+                        Auto-styled with <span className="font-medium text-foreground">{autoPickedPresetName}</span> — change anytime below.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clearAutoPick}
+                        className="text-primary hover:underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </p>
+                  )}
                   {hasMultipleCategories && !allModelScenesHaveOutfitHint && (
                     <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 mt-2 flex items-center gap-1.5">
                       <Info className="w-3 h-3 flex-shrink-0 text-primary" />
@@ -2481,6 +2537,7 @@ export function ProductImagesStep3Refine({
                         analyses={analyses}
                         selectedProductIds={selectedProductIds}
                         allProducts={allProducts}
+                        productCategories={selectedProductCategories}
                       />
                     )}
 
@@ -2511,6 +2568,7 @@ export function ProductImagesStep3Refine({
                       analyses={analyses}
                       selectedProductIds={selectedProductIds}
                       allProducts={allProducts}
+                      productCategories={selectedProductCategories}
                     />
                   </>
                 )}
