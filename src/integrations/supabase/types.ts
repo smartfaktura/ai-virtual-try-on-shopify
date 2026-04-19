@@ -1870,6 +1870,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_outfit_presets: {
+        Row: {
+          category: string | null
+          config: Json
+          created_at: string
+          gender: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          config?: Json
+          created_at?: string
+          gender?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          config?: Json
+          created_at?: string
+          gender?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_products: {
         Row: {
           analysis_json: Json | null

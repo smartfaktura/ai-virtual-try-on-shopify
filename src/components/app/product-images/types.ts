@@ -6,16 +6,39 @@ export type PIStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 // ── Structured outfit system ──
 export interface OutfitPiece {
-  garment: string;
-  color: string;
-  fit?: string;
-  material?: string;
+  garment: string;        // e.g. "trousers", "jacket", "sneakers"
+  color: string;          // hex or name
+  fit?: string;           // slim / relaxed / oversized / cropped
+  material?: string;      // cotton, leather, wool…
+  subtype?: string;       // wide-leg, biker, chelsea boot, bucket hat…
+  detail?: string;        // free-text power-user note
+}
+
+export interface JewelryConfig {
+  necklace?: string;
+  earrings?: string;
+  bracelet?: string;
+  ring?: string;
+  metal?: string;         // gold / silver / rose-gold / mixed
 }
 
 export interface OutfitConfig {
+  // Clothing layers (top → bottom in stacking order)
+  outerwear?: OutfitPiece; // jacket / blazer / coat / cardigan
   top?: OutfitPiece;
   bottom?: OutfitPiece;
+  dress?: OutfitPiece;     // full-body — replaces top+bottom
   shoes?: OutfitPiece;
+
+  // Accessories (each optional)
+  bag?: OutfitPiece;
+  hat?: OutfitPiece;
+  eyewear?: OutfitPiece;
+  belt?: OutfitPiece;
+  watch?: OutfitPiece;
+  jewelry?: JewelryConfig;
+
+  // Legacy free-text accessories (kept for backward compatibility)
   accessories?: string;
   name?: string;
 }
