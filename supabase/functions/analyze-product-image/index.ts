@@ -130,25 +130,38 @@ Return ONLY the JSON object, no markdown or explanation.`,
       );
     }
 
-    // Sanitize: fix unescaped control characters inside JSON string values
-    const sanitized = jsonStr.replace(/[\x00-\x1F\x7F]/g, (ch: string) => {
-      switch (ch) {
-        case '\n': return '\\n';
-        case '\r': return '\\r';
-        case '\t': return '\\t';
-        default: return '';
-      }
-    });
-
     let parsed: unknown;
     try {
-      parsed = JSON.parse(sanitized);
-    } catch (parseErr) {
-      console.error("JSON.parse failed:", parseErr, "raw:", jsonStr.slice(0, 500));
-      return new Response(
-        JSON.stringify({ error: "Could not parse AI response" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Most of the time the AI returns clean JSON — try raw parse first.
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      // Fallback: only escape control chars that appear INSIDE string values.
+      let sanitized = "";
+      let inString = false;
+      let escape = false;
+      for (let i = 0; i < jsonStr.length; i++) {
+        const ch = jsonStr[i];
+        if (escape) { sanitized += ch; escape = false; continue; }
+        if (ch === "\\") { sanitized += ch; escape = true; continue; }
+        if (ch === '"') { inString = !inString; sanitized += ch; continue; }
+        if (inString && (ch.charCodeAt(0) < 0x20 || ch === "\x7F")) {
+          if (ch === "\n") sanitized += "\\n";
+          else if (ch === "\r") sanitized += "\\r";
+          else if (ch === "\t") sanitized += "\\t";
+          // drop other control chars
+          continue;
+        }
+        sanitized += ch;
+      }
+      try {
+        parsed = JSON.parse(sanitized);
+      } catch (parseErr) {
+        console.error("JSON.parse failed:", parseErr, "raw:", jsonStr.slice(0, 500));
+        return new Response(
+          JSON.stringify({ error: "Could not parse AI response" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     return new Response(JSON.stringify(parsed), {
