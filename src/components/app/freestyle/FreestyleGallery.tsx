@@ -319,22 +319,7 @@ function getProviderLabel(provider: string): string {
   return provider.slice(0, 5).toUpperCase();
 }
 
-function ImageCard({
-  img,
-  idx,
-  onDownload,
-  onExpand,
-  onDelete,
-  onCopySettings,
-  onAddAsScene,
-  onAddAsModel,
-  onShareToDiscover,
-  onAddToDiscover,
-  className,
-  natural,
-  isUpscaling,
-  isAdmin,
-}: {
+type ImageCardProps = {
   img: GalleryImage;
   idx: number;
   onDownload: (imageUrl: string, index: number) => void;
@@ -349,7 +334,24 @@ function ImageCard({
   natural?: boolean;
   isUpscaling?: boolean;
   isAdmin?: boolean;
-}) {
+};
+
+const ImageCard = forwardRef<HTMLDivElement, ImageCardProps>(function ImageCard({
+  img,
+  idx,
+  onDownload,
+  onExpand,
+  onDelete,
+  onCopySettings,
+  onAddAsScene,
+  onAddAsModel,
+  onShareToDiscover,
+  onAddToDiscover,
+  className,
+  natural,
+  isUpscaling,
+  isAdmin,
+}, ref) {
   const [loaded, setLoaded] = useState(false);
   const prevSrcRef = useRef(img.url);
 
