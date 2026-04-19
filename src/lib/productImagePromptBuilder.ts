@@ -852,9 +852,22 @@ function buildNegativePrompt(scene: ProductImageScene, hasSolidHexBg = false): s
   return parts.join(' ');
 }
 
+// ── Detect if user has defined any outfit slot (used to allow override of scene hint) ──
+function hasUserDefinedOutfit(details: DetailSettings): boolean {
+  const cfg = details.outfitConfig;
+  if (cfg) {
+    if (cfg.top?.garment || cfg.bottom?.garment || cfg.shoes?.garment ||
+        cfg.outerwear?.garment || cfg.dress?.garment ||
+        (cfg.accessories && cfg.accessories.length > 0)) return true;
+  }
+  return !!(details.outfitTop || details.outfitBottom || details.outfitShoes || details.outfitAccessories);
+}
+
 // ── Shared outfit hint resolver ──
 function resolveOutfitHintText(scene: ProductImageScene, details: DetailSettings, productName?: string): string | undefined {
   if (!scene.outfitHint) return undefined;
+  // If user explicitly enabled outfit override AND has at least one slot defined → bypass scene hint
+  if (details.outfitOverrideEnabled && hasUserDefinedOutfit(details)) return undefined;
   const hex = details.aestheticColorHex;
   const label = details.aestheticColorLabel;
   const colorDesc = hex && /^#[0-9A-Fa-f]{6}$/.test(hex) ? (label ? `${label} (${hex})` : hex) : 'coordinated';
