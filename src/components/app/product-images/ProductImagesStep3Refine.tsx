@@ -1614,7 +1614,7 @@ const SLOT_TYPES: Record<OutfitSlotKey, { label: string; types: typeof TOP_TYPES
 };
 
 function ZaraOutfitPanel({
-  details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts,
+  details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts, productCategories,
 }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
@@ -1623,6 +1623,7 @@ function ZaraOutfitPanel({
   analyses: Record<string, ProductAnalysis | undefined>;
   selectedProductIds: Set<string>;
   allProducts: UserProduct[];
+  productCategories?: string[];
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
 
