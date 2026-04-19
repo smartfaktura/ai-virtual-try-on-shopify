@@ -1334,13 +1334,40 @@ export function buildDynamicPrompt(
     prompt += ' ' + camera;
   }
 
-  // Auto-inject outfit hint if scene defines one but template forgot {{outfitDirective}}
-  if (scene.outfitHint && !(template || '').includes('{{outfitDirective}}')) {
-    const resolvedHint = resolveOutfitHintText(scene, details, product.title);
-    if (resolvedHint && !prompt.includes(resolvedHint)) {
-      let hint = resolvedHint;
-      if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
-      prompt += ` OUTFIT DIRECTION — ${hint}`;
+  // Auto-inject outfit directive if template forgot {{outfitDirective}}
+  // Priority: scene.outfitHint > user-provided outfitConfig/legacy outfit fields
+  if (!(template || '').includes('{{outfitDirective}}')) {
+    const sceneNeedsPerson =
+      (scene.triggerBlocks || []).includes('personDetails') ||
+      (scene.triggerBlocks || []).includes('actionDetails') ||
+      !!scene.outfitHint;
+
+    if (sceneNeedsPerson) {
+      const resolvedHint = resolveOutfitHintText(scene, details, product.title);
+      if (resolvedHint && !prompt.includes(resolvedHint)) {
+        let hint = resolvedHint;
+        if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
+        prompt += ` OUTFIT DIRECTION — ${hint}`;
+      } else if (!resolvedHint) {
+        // No scene hint — fall back to user-selected outfit (structured or legacy)
+        const hasUserOutfit =
+          !!details.outfitConfig ||
+          !!details.outfitTop ||
+          !!details.outfitBottom ||
+          !!details.outfitShoes ||
+          !!details.outfitAccessories;
+        if (hasUserOutfit) {
+          const directive = defaultOutfitDirective(
+            analysis?.category,
+            details,
+            (details as any).modelGender,
+            analysis?.garmentType
+          );
+          if (directive && !prompt.includes(directive)) {
+            prompt += ' ' + directive;
+          }
+        }
+      }
     }
   }
 
