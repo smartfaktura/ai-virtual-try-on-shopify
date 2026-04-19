@@ -1311,6 +1311,32 @@ export function buildDynamicPrompt(
     }
   }
 
+  // ── SAFETY NET: Auto-inject locked outfit when template forgot the tokens ──
+  // Many admin-authored templates omit {{outfitDirective}} / {{personDirective}},
+  // which silently drops the user's locked OutfitConfig (e.g. "camel cashmere
+  // tailored trousers"). This guarantees any explicitly-locked piece reaches the
+  // model regardless of template authoring quality. Respect product-aware
+  // conflict slots (e.g. don't inject "bottom" when product IS a skirt).
+  {
+    const tpl = template || '';
+    const sceneNeedsPerson = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
+    const templateAlreadyHandlesOutfit = tpl.includes('{{outfitDirective}}') || tpl.includes('{{personDirective}}');
+    const sceneHintAlreadyApplied = !!scene.outfitHint;
+    const hasLockedConfig = !!details.outfitConfig && (
+      !!details.outfitConfig.top?.garment ||
+      !!details.outfitConfig.bottom?.garment ||
+      !!details.outfitConfig.shoes?.garment ||
+      (!!details.outfitConfig.accessories && details.outfitConfig.accessories !== 'none')
+    );
+    if (sceneNeedsPerson && hasLockedConfig && !templateAlreadyHandlesOutfit && !sceneHintAlreadyApplied) {
+      const skipSlots = getConflictingSlots(analysis?.garmentType);
+      const lockedOutfit = buildStructuredOutfitString(details.outfitConfig!, skipSlots);
+      if (lockedOutfit && !prompt.includes('OUTFIT LOCK')) {
+        prompt += ' ' + lockedOutfit;
+      }
+    }
+  }
+
   // Append negative prompt
   const negatives = buildNegativePrompt(scene, !!bgHexForReinforcement);
   prompt += ' ' + negatives;
