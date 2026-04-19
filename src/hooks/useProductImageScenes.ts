@@ -47,16 +47,26 @@ function dbToFrontend(d: DbScene): ProductImageScene {
 
 // ── Fetch helpers ──
 
-async function fetchAllScenes(): Promise<DbScene[]> {
+// Slim column list for client picker / display / sort. Excludes admin-only metadata.
+// `prompt_template` is REQUIRED client-side for prompt building (buildDynamicPrompt).
+const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+
+function selectCols(includePromptTemplate: boolean): string {
+  return includePromptTemplate ? '*' : CLIENT_COLUMNS;
+}
+
+async function fetchAllScenes(includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
   let from = 0;
   while (true) {
-    const { data, error } = await supabase
+    let q = supabase
       .from('product_image_scenes' as any)
-      .select('*')
+      .select(selectCols(includePromptTemplate))
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
+    if (activeOnly) q = q.eq('is_active', true);
+    const { data, error } = await q;
     if (error) throw error;
     const batch = (data || []) as unknown as DbScene[];
     all = all.concat(batch);
@@ -66,27 +76,31 @@ async function fetchAllScenes(): Promise<DbScene[]> {
   return all;
 }
 
-async function fetchScenesByCategories(categories: string[]): Promise<DbScene[]> {
-  const { data, error } = await supabase
+async function fetchScenesByCategories(categories: string[], includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
+  let q = supabase
     .from('product_image_scenes' as any)
-    .select('*')
+    .select(selectCols(includePromptTemplate))
     .in('category_collection', categories)
     .order('sort_order', { ascending: true });
+  if (activeOnly) q = q.eq('is_active', true);
+  const { data, error } = await q;
   if (error) throw error;
   return (data || []) as unknown as DbScene[];
 }
 
-async function fetchScenesExcludingCategories(categories: string[]): Promise<DbScene[]> {
+async function fetchScenesExcludingCategories(categories: string[], includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
   let from = 0;
   while (true) {
-    const { data, error } = await supabase
+    let q = supabase
       .from('product_image_scenes' as any)
-      .select('*')
+      .select(selectCols(includePromptTemplate))
       .not('category_collection', 'in', `(${categories.join(',')})`)
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
+    if (activeOnly) q = q.eq('is_active', true);
+    const { data, error } = await q;
     if (error) throw error;
     const batch = (data || []) as unknown as DbScene[];
     all = all.concat(batch);
