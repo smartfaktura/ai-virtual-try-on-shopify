@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ColorPickerDialog } from '@/components/app/product-images/ColorPickerDialog';
 import { ProductThumbnail } from '@/components/app/product-images/ProductThumbnail';
 import { useUserSavedColors } from '@/hooks/useUserSavedColors';
