@@ -2311,15 +2311,45 @@ export function ProductImagesStep3Refine({
                 </div>
 
                 {allModelScenesHaveOutfitHint ? (
-                  /* Scene-controlled outfit — hide standard outfit panel */
+                  /* Scene-controlled outfit — with Edit Outfit override */
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                      <Shirt className="w-4 h-4 text-primary flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-medium">Outfit is directed by your selected shots</p>
-                        <p className="text-[11px] text-muted-foreground">Each shot has a curated styling direction — colors will match your aesthetic choice.</p>
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                      <Shirt className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        {details.outfitOverrideEnabled ? (
+                          <>
+                            <p className="text-xs font-medium">Custom outfit active</p>
+                            <p className="text-[11px] text-muted-foreground">Your outfit selection overrides the scene's styling for this generation.</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs font-medium">Outfit is directed by your selected shots</p>
+                            <p className="text-[11px] text-muted-foreground">Each shot has a curated styling direction — colors will match your aesthetic choice.</p>
+                          </>
+                        )}
                       </div>
+                      <Button
+                        variant={details.outfitOverrideEnabled ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7 text-[11px] px-2.5 flex-shrink-0"
+                        onClick={() => update({ outfitOverrideEnabled: !details.outfitOverrideEnabled })}
+                      >
+                        {details.outfitOverrideEnabled ? 'Reset to scene styling' : 'Edit outfit'}
+                      </Button>
                     </div>
+
+                    {details.outfitOverrideEnabled && (
+                      <ZaraOutfitPanel
+                        details={details}
+                        update={update}
+                        primaryCategory={primaryCategory}
+                        modelGender={selectedModelGender}
+                        analyses={analyses}
+                        selectedProductIds={selectedProductIds}
+                        allProducts={allProducts}
+                      />
+                    )}
+
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Custom styling note (optional)</Label>
                       <Textarea
