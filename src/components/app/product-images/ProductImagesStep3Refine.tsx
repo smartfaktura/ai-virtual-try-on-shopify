@@ -29,6 +29,13 @@ import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset, ProductAnalysis } from './types';
 import type { ModelProfile } from '@/types';
 import { getConflictingSlots, resolveGarmentType, type OutfitSlot } from '@/lib/productImagePromptBuilder';
+import { OutfitSlotCard } from './OutfitSlotCard';
+import { OutfitPresetBar } from './OutfitPresetBar';
+import { resolveOutfitConflicts, type OutfitSlotKey } from '@/lib/outfitConflictResolver';
+import {
+  TOP_TYPES, BOTTOM_TYPES, OUTERWEAR_TYPES, DRESS_TYPES, SHOE_TYPES,
+  BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES,
+} from '@/lib/outfitVocabulary';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
