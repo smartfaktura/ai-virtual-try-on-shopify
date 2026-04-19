@@ -674,6 +674,10 @@ export function buildStructuredOutfitString(config: OutfitConfig, skipSlots?: Se
     if (shoes) segments.push(`Shoes: ${shoes}`);
   }
 
+  // Cover-up (beach overlay for swimwear) — describe as a layer over the product
+  const coverUp = describePiece(config.coverUp);
+  if (coverUp) segments.push(`Cover-up layer: ${coverUp} worn loosely over the product`);
+
   // Accessories
   const accParts: string[] = [];
   const bag = describePiece(config.bag); if (bag) accParts.push(`bag (${bag})`);
@@ -704,7 +708,17 @@ export function buildStructuredOutfitString(config: OutfitConfig, skipSlots?: Se
 // ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
 function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string, garmentType?: string): string {
   // For categories where the product IS the outfit, enforce no additional clothing
+  // EXCEPTION: swimwear allows beach cover-ups + accessories from user's outfitConfig
   if (category === 'lingerie' || category === 'swimwear' || category === 'activewear' || category === 'kidswear') {
+    // If user has configured a cover-up or accessories for swimwear, surface those instead of the hard lock
+    if (category === 'swimwear' && details?.outfitConfig) {
+      const cfg = details.outfitConfig;
+      const hasCoverUpOrAcc = !!(cfg.coverUp?.garment || cfg.bag?.garment || cfg.hat?.garment || cfg.eyewear?.garment || cfg.jewelry);
+      if (hasCoverUpOrAcc) {
+        const structured = buildStructuredOutfitString(cfg, new Set(['top', 'bottom', 'shoes', 'dress'] as OutfitSlot[]));
+        if (structured) return structured + ' The product itself remains the primary on-body garment — no additional t-shirt, trousers, or jacket beyond the cover-up specified.';
+      }
+    }
     return 'OUTFIT LOCK — The product IS the outfit. Model wears ONLY the product — no additional clothing, no layering, no cover-ups. Show the product as-is on the body. Do NOT add any t-shirt, trousers, jacket, or other garment over or under the product.';
   }
 
