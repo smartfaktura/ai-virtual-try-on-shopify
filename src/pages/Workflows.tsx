@@ -151,7 +151,13 @@ export default function Workflows() {
         });
     },
     enabled: !!user,
-    refetchInterval: 10_000,
+    // Adaptive: only poll fast when there are active jobs that might finish.
+    refetchInterval: (query) => {
+      const data = query.state.data as ActiveJob[] | undefined;
+      const hasActive = (activeJobs?.length ?? 0) > 0;
+      if (hasActive) return 10_000;
+      return data && data.length > 0 ? 15_000 : 60_000;
+    },
   });
 
   // ── Recently failed workflow queue jobs (last 4h, auto-expire) ──
