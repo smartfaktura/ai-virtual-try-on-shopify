@@ -95,6 +95,8 @@ export default function ProductImages() {
   );
 
   const [addProductOpen, setAddProductOpen] = useState(false);
+  const [addProductCompact, setAddProductCompact] = useState(true);
+  const [addProductTab, setAddProductTab] = useState<AddProductTab>('manual');
   const [productSearch, setProductSearch] = useState('');
   
   const [visibleCount, setVisibleCount] = useState(25);
