@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, forwardRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -319,22 +319,7 @@ function getProviderLabel(provider: string): string {
   return provider.slice(0, 5).toUpperCase();
 }
 
-function ImageCard({
-  img,
-  idx,
-  onDownload,
-  onExpand,
-  onDelete,
-  onCopySettings,
-  onAddAsScene,
-  onAddAsModel,
-  onShareToDiscover,
-  onAddToDiscover,
-  className,
-  natural,
-  isUpscaling,
-  isAdmin,
-}: {
+type ImageCardProps = {
   img: GalleryImage;
   idx: number;
   onDownload: (imageUrl: string, index: number) => void;
@@ -349,7 +334,24 @@ function ImageCard({
   natural?: boolean;
   isUpscaling?: boolean;
   isAdmin?: boolean;
-}) {
+};
+
+const ImageCard = forwardRef<HTMLDivElement, ImageCardProps>(function ImageCard({
+  img,
+  idx,
+  onDownload,
+  onExpand,
+  onDelete,
+  onCopySettings,
+  onAddAsScene,
+  onAddAsModel,
+  onShareToDiscover,
+  onAddToDiscover,
+  className,
+  natural,
+  isUpscaling,
+  isAdmin,
+}, ref) {
   const [loaded, setLoaded] = useState(false);
   const prevSrcRef = useRef(img.url);
 
@@ -444,6 +446,7 @@ function ImageCard({
   if (natural) {
     return (
       <div
+        ref={ref}
         className={cn(
           'group relative inline-block cursor-pointer animate-fade-in',
           !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer rounded-xl',
@@ -479,6 +482,7 @@ function ImageCard({
 
   return (
     <div
+      ref={ref}
       className={cn(
         'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer animate-fade-in',
         !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
@@ -510,7 +514,8 @@ function ImageCard({
       {actionButtons}
     </div>
   );
-}
+});
+ImageCard.displayName = 'ImageCard';
 
 export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopySettings, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, failedEntries = [], onDismissFailed, onRetryFailed, onLoadMore, hasMore, isFetchingMore, upscalingSourceIds }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
