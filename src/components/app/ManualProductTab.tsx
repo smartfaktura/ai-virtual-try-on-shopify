@@ -206,9 +206,29 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     }
   }, []);
 
+  // Dedupe guard: reject same file (name+size+lastModified) added within 300ms
+  const recentFilesDedupeRef = useRef<Map<string, number>>(new Map());
+
   // Process files: 1 file = single mode, 2+ = batch mode
   const addFiles = useCallback((files: File[]) => {
     if (isEditing) return; // Edit mode only handles single image replacement
+
+    const now = Date.now();
+    // Cleanup old entries
+    for (const [k, t] of recentFilesDedupeRef.current.entries()) {
+      if (now - t > 1000) recentFilesDedupeRef.current.delete(k);
+    }
+    files = files.filter(f => {
+      const sig = `${f.name}|${f.size}|${f.lastModified}`;
+      const prev = recentFilesDedupeRef.current.get(sig);
+      if (prev && now - prev < 300) {
+        console.warn('Duplicate file paste/add suppressed:', sig);
+        return false;
+      }
+      recentFilesDedupeRef.current.set(sig, now);
+      return true;
+    });
+    if (files.length === 0) return;
 
     const validFiles = files.filter(f => {
       if (!f.type.startsWith('image/')) {
