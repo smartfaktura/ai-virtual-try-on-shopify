@@ -744,8 +744,16 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
   const outfitStr = parts.join(', ');
   const accStr = acc && acc !== 'none' ? ` Accessories: ${acc}.` : '';
 
-  if (!outfitStr) return 'OUTFIT LOCK — Wearing minimal, elegant styling — nothing competing with the product. This exact look must repeat identically in every on-model shot.';
-  return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials. Clothing must NOT compete with the product.${accStr}`;
+  // ── Aesthetic color story: ensure gap-scenes (no scene hint, no user outfit) still
+  // carry the user's chosen aesthetic color so wardrobe stays cohesive across the batch.
+  const hex = details?.aestheticColorHex;
+  const label = details?.aestheticColorLabel;
+  const colorTag = hex && /^#[0-9A-Fa-f]{6}$/.test(hex)
+    ? ` Wardrobe color story should align with the chosen aesthetic color ${label ? `${label} (${hex})` : hex} — keep the palette tonal, never let clothing colors clash with this aesthetic.`
+    : '';
+
+  if (!outfitStr) return `OUTFIT LOCK — Wearing minimal, elegant styling — nothing competing with the product. This exact look must repeat identically in every on-model shot.${colorTag}`;
+  return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials. Clothing must NOT compete with the product.${accStr}${colorTag}`;
 }
 
 // ── Person directive builder (skips auto values) ──
