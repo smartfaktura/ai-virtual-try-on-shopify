@@ -1,57 +1,132 @@
 
-## How outfit instructions are applied per-shot today
+## Clarify what “Your outfit” means in Step 3
 
-### The flow (per scene, independently)
-For **every** scene in your batch, the prompt builder runs `resolveOutfitHintText(scene, details)` and decides what wardrobe text to inject. There are 3 possible outcomes per scene:
+### What is happening now
+The screenshot shows the real problem clearly:
 
-| Scene has `outfit_hint`? | User edited outfit? | Result for that scene |
-|---|---|---|
-| ✅ Yes | Override OFF | Scene's `outfit_hint` injected (your "WARDROBE NOTE: …") |
-| ✅ Yes | Override ON + ≥1 slot filled | Scene hint **bypassed**, user outfit injected |
-| ❌ No | User has outfit slots filled | User's outfit injected as wardrobe note |
-| ❌ No | No user outfit | Falls through to category default (e.g., "neutral coordinated outfit") |
+- every row says **“Your outfit”**
+- but there is **no per-shot editor**
+- and the UI does **not show what outfit that actually means**
 
-### Why your last batch looked like "only 1 shot got styling"
-You picked, say, 3 scenes — only **1** of them had a curated `outfit_hint` in the DB (the scene-controlled one with the takeover banner). The other 2 had no `outfit_hint`. Because you didn't fill any slots in the Style & Outfit panel either (banner was hiding it), those 2 scenes fell into row 4 — they got the **category default** outfit text only ("simple coordinated tee + jeans + sneakers" type fallback). Not your aesthetic, not the scene's curation. That's the root of the inconsistency you noticed.
+So the current list is technically true but useless. In the current system, outfit editing is **global**, not per shot:
 
-### Three problems with current behavior
+- you pick **Top / Bottom / Shoes / Accessories** once in the panel above
+- those picks apply to all eligible on-model shots
+- scenes with their own curated `outfit_hint` can still override that unless global override is enabled
 
-1. **Outfit override is global, but scene hints are per-scene.** When you click "Edit outfit" today, your override only takes effect on scenes that *had* a hint. Scenes without a hint were already using your panel — but if the panel was empty (because the banner hid it), they got nothing custom.
+That means **“Your outfit” really means “this shot uses the global outfit picks from above”**. The UI never says that, so it feels broken.
 
-2. **No "fill the gaps" mode.** If 1 of 5 scenes has a hint, the user has no way to say "use the hint where it exists, use my outfit everywhere else" cleanly — that's actually the current default but it's invisible to the user, so it feels random.
+### Root issue
+This is mostly a **UX wording + presentation problem**, not a prompt-engine problem:
 
-3. **Aesthetic color leaks unevenly.** Scene hints resolve `{{aestheticColor}}` to your picked color. Scenes *without* hints fall back to category defaults that **ignore** your aesthetic color → the styling visibly diverges between shots.
+1. **The label is vague**
+   “Your outfit” does not tell the user:
+   - global vs per-shot
+   - what exact pieces are active
+   - whether the scene is editable here or not
 
-### Proposal — make it predictable + visible
+2. **The list becomes noisy when all shots use the same source**
+   In your screenshot, six rows all say the same thing. That should be one summary, not six repetitive pills.
 
-**A. Per-scene preview chip in Step 3 (read-only this turn — proposal)**
-Under the Style & Outfit panel, show a tiny list:
+3. **There is no visible link between the chips above and the shot labels below**
+   The panel should explicitly say:
+   - what you selected
+   - how many shots it affects
+   - which shots, if any, are exceptions
+
+### Implementation plan
+
+#### 1. Replace vague labels with plain language
+Update the per-shot source labels in `ProductImagesStep3Refine.tsx`:
+
+- `Your outfit` → `Uses your selections above`
+- `Your outfit (override)` → `Uses your selections above (forced on all shots)`
+- `Scene styling` → `Uses this shot’s built-in styling`
+- `Category default — pick outfit` → `Uses automatic styling`
+
+This makes the meaning immediately understandable.
+
+#### 2. Add a global outfit summary directly above the shot list
+Under the outfit panel, add a compact summary card like:
+
+```text
+Applies to 6 model shots
+Using your selections above:
+Top: white cropped top
+Bottom: black tailored trousers
+Accessories: gold jewelry
 ```
-Coastal Editorial    → Scene styling (sarong + linen shirt, sand tones)
-Studio Hero          → Your outfit (or "Category default — pick outfit")
-Beach Detail         → Your outfit (or "Category default — pick outfit")
+
+If nothing is selected:
+
+```text
+No custom outfit selected
+Shots will use built-in scene styling or automatic styling
 ```
-So before generating, you see exactly which scenes will be scene-controlled vs which will use your panel vs which will fall through to a default.
 
-**B. Apply user outfit to gap-scenes too**
-When `details.outfitConfig` has any slot filled, scenes **without** an `outfit_hint` should automatically use it (already happens in `defaultOutfitDirective`) **AND** explicitly carry the aesthetic color so they match the scene-controlled shots' color story. This is a one-line tweak in `defaultOutfitDirective` — pipe `aestheticColorHex/Label` into the wardrobe note.
+This answers “what is here?” without making users decode the row badges.
 
-**C. Override semantics clarified**
-- Override OFF (default): scene hint wins where it exists, user outfit fills the rest, defaults only when neither
-- Override ON: user outfit wins on **all** selected scenes (ignores all scene hints)
+#### 3. Only show the per-shot list when sources are mixed
+If all eligible shots use the same source, replace the repetitive list with one sentence:
 
-That matches mental model: "I want consistent styling across all shots = turn override on."
+```text
+All 6 model shots use your selections above
+```
 
-### Files that would change (after approval)
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — add the per-scene preview chip list (~25 lines)
-- `src/lib/productImagePromptBuilder.ts` — pipe aesthetic color into `defaultOutfitDirective` so gap-scenes match (~5 lines)
-- Optional: small banner copy update so it says "Active on N of M shots"
+Only render the detailed per-shot breakdown when there is a mix, for example:
+- some shots use built-in scene styling
+- some use global outfit picks
+- some fall back to automatic styling
 
-### Risk
-Low. Read-only preview chip + one-line color piping. Behavior of scene-hint shots unchanged.
+That keeps the section useful instead of cluttered.
 
-### Validation after fix
-1. Pick 3 scenes (1 with hint, 2 without) → preview chips show "Scene styling / Your outfit / Your outfit"
-2. Don't fill any slots → chips show "Scene styling / Default / Default" with subtle warning color
-3. Fill outfit + flip override ON → all 3 chips read "Your outfit (override active)"
-4. Generate → all 3 shots share consistent wardrobe colors keyed off the aesthetic palette
+#### 4. Add one explicit explanation: editing is global, not per-shot
+Small helper copy under the summary:
+
+```text
+Outfit edits here apply across your selected model shots. This is not a per-shot wardrobe editor.
+```
+
+That directly addresses the confusion in your message.
+
+#### 5. Show exactly which shots are exceptions
+When sources are mixed, keep the row list, but only surface the exceptions clearly:
+
+```text
+Luxury Street Walk — Uses this shot’s built-in styling
+Resort Seaside Apparel Story — Uses your selections above
+```
+
+This makes the section about differences, not repetition.
+
+### Files to update
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+  - rewrite source labels
+  - add global outfit summary
+  - collapse identical-source lists
+  - add “global, not per-shot” helper copy
+
+Optional small helper extraction if needed:
+- `src/lib/productImagePromptBuilder.ts` or a small UI helper file
+  - reuse outfit description logic to turn `outfitConfig` into human-readable summary text for the UI
+
+### Expected result
+After this change, the user will understand:
+
+- what outfit is currently active
+- whether it is coming from their global picks or the scene itself
+- that editing above affects all eligible shots
+- which shots are exceptions, if any
+
+### Validation
+1. Select top + bottom only  
+   → UI says exactly what was selected and that it applies to all eligible model shots
+
+2. Select 6 scenes and all use the same source  
+   → no repetitive 6-row list; just one clear summary
+
+3. Select mixed scenes where one has built-in scene styling  
+   → summary plus only the exception rows
+
+4. Turn override on  
+   → summary explicitly says selections are forced across all shots
