@@ -18,6 +18,8 @@ interface OutfitPresetBarProps {
   onLoad: (config: OutfitConfig) => void;
   category?: string;
   gender?: string;
+  /** Union of selected product categories — used to filter curated built-ins. */
+  productCategories?: string[];
 }
 
 function presetIsRelevant(preset: UserOutfitPreset, resolution: ConflictResolution): boolean {
