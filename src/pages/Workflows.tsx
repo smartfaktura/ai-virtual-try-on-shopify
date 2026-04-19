@@ -103,7 +103,11 @@ export default function Workflows() {
         });
     },
     enabled: !!user,
-    refetchInterval: 5_000,
+    // Adaptive polling: 5s while jobs are active, back off to 30s when idle.
+    refetchInterval: (query) => {
+      const data = query.state.data as ActiveJob[] | undefined;
+      return data && data.length > 0 ? 5_000 : 30_000;
+    },
   });
 
   // ── Recently completed workflow queue jobs (last 60s) ──
