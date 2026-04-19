@@ -1,45 +1,43 @@
 
 
-## Why methods are still showing
+## Goal
 
-The compact-mode fix only kicks in when the parent component passes `compact={true}` + `initialFiles` + `onSwitchMethod` to `<AddProductModal>`. On the page you're on (`/app/generate/product-images`, `src/pages/ProductImages.tsx` line 1213), the modal is mounted with **only** `open` / `onOpenChange` / `onProductAdded` — none of the compact props. So it always renders the full Method rail.
+Remove `streetwear` and `skirts` as standalone categories. Both should fold back into `garments` (Clothing & Apparel). Any product the AI was about to classify as streetwear/skirts will now be classified as `garments` and pick up the standard apparel scene library — no orphaned/empty category screens.
 
-Two separate flows on this page need to be unified:
+## Verification first (already checked)
 
-1. **Cmd+V / paste** → currently calls `handleQuickUpload` directly, never opens the modal. ✅ Already streamlined (no methods shown because no modal).
-2. **Click "Upload Image" card** → opens `AddProductModal` with no compact flag → full method rail shows. ❌ This is what your screenshot captures.
-3. **Drag-drop onto the modal after it's open** → the analyzing preview you see is from `ManualProductTab`, but the rail is still visible above it because compact wasn't enabled.
+- DB: 0 rows in `product_image_scenes` use `category_collection = 'streetwear'` or `'skirts'`. Safe to remove from the admin dropdown — no scenes get orphaned.
+- Code references found in 4 places that need cleanup.
 
-## Fix
+## Changes
 
-Make the "Upload Image" card on the Step 1 grid open the modal in **compact mode** pinned to the `manual` tab — exactly like the Products page does. The user can still click "Switch method" to reveal Product URL / CSV / Mobile / Shopify.
+### 1. `supabase/functions/analyze-product-category/index.ts`
+- Remove `"streetwear"` from `VALID_CATEGORIES` set.
+- Remove the `streetwear` and `skirt` entries from `TITLE_CATEGORY_PATTERNS` (so titles like "graphic tee" or "pleated skirt" no longer route to a missing category).
+- Remove the `streetwear` line from `GARMENTS_REFINEMENT_PATTERNS` (the demotion that turns generic `garments` into `streetwear`).
+- Remove `streetwear` from the system prompt's `VALID CATEGORIES` list sent to Gemini, so the model never proposes it.
+- Net effect: streetwear/skirt-like products land on `garments` and inherit Clothing & Apparel scenes.
 
-### Edits
+### 2. `src/lib/categoryUtils.ts`
+- Remove the `streetwear` rule (line 27) and the standalone `skirt` rule (line 38) from `DETECTION_RULES`.
+- Add `'skirt'`, `'mini skirt'`, `'maxi skirt'`, etc. into the existing `garments` keyword list (line 39) so skirts still get detected as Clothing & Apparel.
+- Remove `streetwear: 'Streetwear'` and `skirts: 'Skirts'` from `categoryLabels`.
 
-`src/pages/ProductImages.tsx`:
+### 3. `src/components/app/product-images/types.ts`
+- Remove `'streetwear'` and `'skirts'` from the `TemplateCategory` union (line 40 area).
 
-1. Add a small state for compact mode + the active tab:
-   ```ts
-   const [addProductCompact, setAddProductCompact] = useState(true);
-   const [addProductTab, setAddProductTab] = useState<AddProductTab>('manual');
-   ```
-2. When the "Upload Image" card is clicked (line 1152), set `compact=true`, `tab='manual'`, then open.
-3. Pass the props to `<AddProductModal>` (line 1213):
-   ```tsx
-   <AddProductModal
-     open={addProductOpen}
-     onOpenChange={(o) => { setAddProductOpen(o); if (!o) setAddProductCompact(true); }}
-     onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
-     compact={addProductCompact}
-     initialTab={addProductTab}
-     onSwitchMethod={() => setAddProductCompact(false)}
-   />
-   ```
-4. Import `AddProductTab` type from `@/components/app/AddProductModal`.
+### 4. `src/pages/AdminProductImageScenes.tsx`
+- Remove `{ value: 'streetwear', label: 'Streetwear' }` and `{ value: 'skirts', label: 'Skirts' }` from the Fashion group in `CATEGORY_GROUPS`.
+
+## Untouched (intentionally)
+
+- `src/lib/catalogEngine.ts` — `streetwear_clean` is a *photography style preset*, not a product category. Different system, leave alone.
+- `supabase/functions/generate-tryon/index.ts`, `CreativeDropWizard.tsx`, `FreestyleQuickPresets.tsx`, `studio-chat/index.ts` — all use `streetwear` as a *scene/aesthetic mood* label, not a product category. Leave alone.
+- DB: no migration needed (zero rows use these values).
 
 ## Result
 
-- Clicking **Upload Image** opens the modal directly into the upload pane — no method rail, just the dropzone + analyzing preview, with a small "Switch method" link at the bottom (and a back chevron in the header) to reveal the other 4 import methods if needed.
-- Behavior matches the Products page where this pattern already works.
-- Paste/drop on the page itself still bypasses the modal entirely (unchanged).
+- Edit dialog at `/app/admin/product-image-scenes` no longer offers Streetwear or Skirts.
+- AI product analyzer never returns `streetwear` or `skirts` — graphic tees, hoodies-style oversized tees, and any skirt land on `garments` (Clothing & Apparel) and get the proper scene library.
+- No empty category states, no orphaned scenes, no dead links.
 
