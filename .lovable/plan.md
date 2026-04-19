@@ -1,33 +1,44 @@
 
 
-The user wants me to fix the streetwear miscategorization. Based on the previous investigation, the issue is that Gemini broadly returns `garments` for streetwear items, and there's no specificity override.
+## What's happening
+
+The Edit dialog's **Category** dropdown in `/app/admin/product-image-scenes` is hardcoded to a 14-item list in `src/pages/AdminProductImageScenes.tsx` (lines 31–46):
+
+```
+fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, hats-small,
+shoes, garments, home-decor, furniture, tech-devices, food, beverages,
+supplements-wellness, other
+```
+
+But the product analyzer (`analyze-product-category` edge function — the fix we just shipped) classifies products into a **much richer set**: `streetwear`, `hoodies`, `jeans`, `dresses`, `jackets`, `activewear`, `swimwear`, `lingerie`, `skirts`, etc.
+
+So:
+- A scene tagged with `category_collection = 'streetwear'` shows up grouped under "streetwear" on the page (because grouping uses the raw value).
+- But when you click **Edit** on that scene, the dropdown can't represent `streetwear` — it silently falls back to `'other'` (line 754: `value={draft.category_collection || 'other'}`).
+- You have **no way** to reassign a scene to `hoodies`, `streetwear`, `dresses` etc. from the edit form.
 
 ## Fix
 
-In `supabase/functions/analyze-product-category/index.ts`, add a **post-processing specificity override** that runs after Gemini's response: if Gemini returned `garments` (broad) but the title/description matches streetwear keywords, demote to `streetwear`. Same pattern can demote `garments` → `hoodies`, `jeans`, `dresses`, `jackets`, `activewear`, `swimwear`, `lingerie` when keywords match — fixing a whole class of "too broad" misclassifications, not just streetwear.
+Expand the hardcoded `CATEGORIES` array in `AdminProductImageScenes.tsx` to include every category the analyzer can produce, so they're all selectable in the Edit dropdown. Group them visually with section headers (Fashion → garments / streetwear / hoodies / jeans / dresses / jackets / skirts / activewear / swimwear / lingerie; Accessories → bags / shoes / hats; Beauty → beauty-skincare / makeup / fragrance; Home → home-decor / furniture; Tech / Food & Drink / Wellness / Other) using `SelectGroup` + `SelectLabel` from the existing `Select` component.
 
-### Logic
+### Categories to add (matching the analyzer)
 
-After Gemini returns its answer, if `category === 'garments'`, run keyword check on `title + description`:
-- `streetwear|graphic tee|oversized tee|urban wear|box logo|drop shoulder` → `streetwear`
-- `hoodie|hooded sweatshirt|zip-up hoodie` → `hoodies`
-- `jean|denim|skinny jean|wide-leg|mom jean` → `jeans`
-- `dress|gown|maxi dress|midi dress|sundress` → `dresses`
-- `jacket|blazer|bomber|puffer|parka|trench` → `jackets`
-- `activewear|legging|sports bra|yoga|gym wear` → `activewear`
-- `swimwear|bikini|swimsuit|swim trunks` → `swimwear`
-- `lingerie|bra|underwear|corset` → `lingerie`
-- `skirt|mini skirt|midi skirt|pleated skirt` → `skirts`
+- **Fashion (new)**: `streetwear`, `hoodies`, `jeans`, `dresses`, `jackets`, `activewear`, `swimwear`, `lingerie`, `skirts`
+- Already present: `garments`, `bags-accessories`, `hats-small`, `shoes`, `fragrance`, `beauty-skincare`, `makeup-lipsticks`, `home-decor`, `furniture`, `tech-devices`, `food`, `beverages`, `supplements-wellness`, `other`
 
-This runs **before** the existing `applyCategoryFallback`, so AI's specific answers still win — only `garments` triggers the demotion.
+### Why this works
+
+- The DB column `category_collection` is just `text` — no enum, no constraint. Any string value is valid.
+- Once the dropdown lists the new options, you can open any scene → Edit → pick "Hoodies" (or any other) → Save. Scene moves to the correct group on the page.
+- New scenes created from scratch can also be assigned directly to `streetwear`, `hoodies`, etc.
 
 ## File to edit
 
-- `supabase/functions/analyze-product-category/index.ts` — add `refineGenericGarments(category, title, description)` helper, call it right after Gemini returns.
+- `src/pages/AdminProductImageScenes.tsx` — expand the `CATEGORIES` const (lines 31–46) with the new specific categories, and update the Category `<Select>` (lines 753–761) to render grouped sections using `SelectGroup` / `SelectLabel`.
 
 ## Result
 
-- "Streetwear hoodie", "graphic tee", "oversized tee" etc. are correctly classified as `streetwear` (or `hoodies`) instead of falling into the generic `garments` bucket.
-- Existing AI-correct categorizations are untouched.
-- Same fix benefits other commonly-broad answers (jeans, dresses, jackets, activewear).
+- Edit any shot → Category dropdown now shows Streetwear, Hoodies, Jeans, Dresses, Jackets, Activewear, Swimwear, Lingerie, Skirts (plus the existing categories), grouped under "Fashion / Accessories / Beauty / Home / Tech / Food & Drink / Wellness / Other" headers.
+- You can move a scene from one category (e.g., `garments`) to another (e.g., `hoodies` or `streetwear`) with a single Save.
+- The page grouping picks up the new value automatically — no schema or migration changes needed.
 
