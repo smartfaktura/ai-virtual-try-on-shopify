@@ -2568,6 +2568,7 @@ export function ProductImagesStep3Refine({
                       analyses={analyses}
                       selectedProductIds={selectedProductIds}
                       allProducts={allProducts}
+                      productCategories={selectedProductCategories}
                     />
                   </>
                 )}
