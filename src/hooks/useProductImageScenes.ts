@@ -368,5 +368,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
     upsertScene,
     deleteScene,
     updateScene,
+    /** On-demand single-row fetch for scenes that came from the slim "rest" payload. */
+    fetchSceneById,
   };
 }
