@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ColorPickerDialog } from '@/components/app/product-images/ColorPickerDialog';
 import { ProductThumbnail } from '@/components/app/product-images/ProductThumbnail';
 import { useUserSavedColors } from '@/hooks/useUserSavedColors';
@@ -56,6 +57,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   onMultiSelect?: (ids: string[]) => void;
   previewImages?: string[];
 }) {
+  const navigate = useNavigate();
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
   const [showAllModal, setShowAllModal] = useState(false);
   const [modalGender, setModalGender] = useState<'all' | 'female' | 'male'>('all');
@@ -162,7 +164,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
           </div>
         ) : (
           <button
-            onClick={() => window.open('/app/brand-models', '_blank')}
+            onClick={() => navigate('/app/models')}
             className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-4 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <div className="flex items-center gap-3">
@@ -1819,6 +1821,7 @@ export function ProductImagesStep3Refine({
   analyses = {},
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [uploadingSceneId, setUploadingSceneId] = useState<string | null>(null);
   const extraRefInputRef = useRef<HTMLInputElement>(null);
   const pendingSceneIdRef = useRef<string | null>(null);
