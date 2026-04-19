@@ -174,6 +174,18 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           <Button variant="outline" onClick={onGenerateMore} className="gap-1.5">
             <RefreshCw className="w-4 h-4" />Generate More
           </Button>
+          {onStartNew && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" onClick={onStartNew} className="gap-1.5">
+                    <Sparkles className="w-4 h-4" />Start New
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Begin a fresh project with new products</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Button variant="outline" onClick={handleDownloadAll} disabled={downloading || totalImages === 0} className="gap-1.5">
             {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}{downloading ? 'Downloading…' : 'Download All'}
           </Button>
