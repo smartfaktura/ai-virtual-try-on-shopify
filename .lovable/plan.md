@@ -1,29 +1,28 @@
 
-## Fix product image not filling thumbnail tile
+## Add "Apply my outfit to all shots" toggle
 
-### Cause
-In `AiStylistCard.tsx` the tile is `w-10 h-10` (40px) with `p-1` padding, leaving only ~32px for the image, AND uses `object-contain` which shrinks small/tall garments further. Result: a tiny icon-like image floating in a big empty box (visible in screenshot).
+### Where
+In `ProductImagesStep3Refine.tsx`, replace the current static hint line ("Some shots have their own styling direction…") with a compact toggle row that flips the existing `details.outfitOverrideEnabled` flag.
 
-### Fix
-In `src/components/app/product-images/AiStylistCard.tsx`:
-1. Make the tile bigger and squarer: `w-12 h-12` (48px), `rounded-lg`
-2. Remove inner `p-1` padding so the image uses the full tile
-3. Keep `object-contain` (so full garments stay visible, no crop) but on a larger frame it will look properly filled
-4. Add subtle `bg-muted/30` so any whitespace blends rather than looking empty
-
-Resulting tile:
-```tsx
-<div className="w-12 h-12 rounded-lg bg-muted/30 border border-border/40 overflow-hidden flex items-center justify-center flex-shrink-0">
-  <img src={getOptimizedUrl(product.image_url, { quality: 70 })}
-       alt={product.title}
-       className="w-full h-full object-contain" />
-</div>
+### UI
 ```
+ⓘ  Some shots have their own styling direction.
+   Apply my outfit to all shots                        [ ⚪ Switch ]
+```
+- Only renders when at least one selected scene has `outfit_hint` (existing condition).
+- `Switch` bound to `details.outfitOverrideEnabled`.
+- When ON: subtitle changes to "Your outfit selection will override all curated styling."
+- Switch is disabled (with tooltip "Pick an outfit first") until an outfit exists — either AI Stylist auto-pick or manual `outfitConfig` is set.
 
-### File
-- `src/components/app/product-images/AiStylistCard.tsx` (tile sizing + padding only)
+### Wiring
+- Reuse existing `outfitOverrideEnabled` field (already in `DetailSettings`, already honored in `productImagePromptBuilder.ts`). No new state, no new prompt logic.
+- Toggle handler: `updateDetails({ outfitOverrideEnabled: checked })`.
+
+### Files
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — replace the hint `<p>` with toggle row using existing `Switch` component.
 
 ### Validation
-1. Black Ruched Crop Top → image fills the 48×48 tile edge-to-edge, no empty padding around it
-2. Wider products (shoes, bags) still fully visible (no crop)
-3. Row height adjusts cleanly, no layout break
+1. Select shots where some have `outfit_hint` → toggle row appears
+2. Toggle disabled until outfit picked (AI Stylist counts) → tooltip explains
+3. Flip ON → all shots use your outfit on generate; OFF → curated styling restored
+4. No `outfit_hint` scenes selected → row hidden (unchanged behavior)
