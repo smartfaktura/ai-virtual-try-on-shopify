@@ -118,7 +118,7 @@ export function LandingNav() {
           ))}
           <div className="pt-3">
             <Button
-              size="sm"
+              size="lg"
               className="rounded-full w-full font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
               onClick={() => { setMobileOpen(false); navigate(user ? '/app' : '/auth'); }}
             >
