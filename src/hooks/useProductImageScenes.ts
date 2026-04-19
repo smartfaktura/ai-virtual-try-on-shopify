@@ -47,12 +47,30 @@ function dbToFrontend(d: DbScene): ProductImageScene {
 
 // ── Fetch helpers ──
 
-// Slim column list for client picker / display / sort. Excludes admin-only metadata.
-// `prompt_template` is REQUIRED client-side for prompt building (buildDynamicPrompt).
+// Full client column list — includes `prompt_template` because the wizard's
+// buildDynamicPrompt runs locally on selected scenes.
 const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+
+// Ultra-slim columns for the deferred "rest" fetch — only what the picker UI
+// needs (title / preview / category / ordering). Heavy `prompt_template`,
+// `description`, and timestamps are fetched on-demand if a user picks one of
+// these scenes (see fetchSceneById).
+const SLIM_REST_COLUMNS = 'id,scene_id,title,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
 
 function selectCols(includePromptTemplate: boolean): string {
   return includePromptTemplate ? '*' : CLIENT_COLUMNS;
+}
+
+// On-demand single-row fetch — used when the user picks a scene that came from
+// the slim "rest" payload and we need its full prompt_template + description.
+async function fetchSceneById(id: string): Promise<DbScene | null> {
+  const { data, error } = await supabase
+    .from('product_image_scenes' as any)
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as DbScene) ?? null;
 }
 
 async function fetchAllScenes(includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
