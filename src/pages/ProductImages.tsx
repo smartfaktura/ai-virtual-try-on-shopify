@@ -17,7 +17,7 @@ import { toast } from '@/lib/brandedToast';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { CATEGORY_KEYWORDS } from '@/components/app/product-images/ProductImagesStep2Scenes';
 import { getTriggeredBlocks, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from '@/components/app/product-images/detailBlockConfig';
-import { AddProductModal } from '@/components/app/AddProductModal';
+import { AddProductModal, type AddProductTab } from '@/components/app/AddProductModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +95,8 @@ export default function ProductImages() {
   );
 
   const [addProductOpen, setAddProductOpen] = useState(false);
+  const [addProductCompact, setAddProductCompact] = useState(true);
+  const [addProductTab, setAddProductTab] = useState<AddProductTab>('manual');
   const [productSearch, setProductSearch] = useState('');
   
   const [visibleCount, setVisibleCount] = useState(25);
@@ -1149,7 +1151,7 @@ export default function ProductImages() {
                       {/* Add Product Card — opens full AddProductModal */}
                       <button
                         type="button"
-                        onClick={() => setAddProductOpen(true)}
+                        onClick={() => { setAddProductCompact(true); setAddProductTab('manual'); setAddProductOpen(true); }}
                         className="group flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all cursor-pointer overflow-hidden"
                       >
                         <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/40">
@@ -1212,8 +1214,11 @@ export default function ProductImages() {
             </div>
             <AddProductModal
               open={addProductOpen}
-              onOpenChange={setAddProductOpen}
+              onOpenChange={(o) => { setAddProductOpen(o); if (!o) setAddProductCompact(true); }}
               onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+              compact={addProductCompact}
+              initialTab={addProductTab}
+              onSwitchMethod={() => setAddProductCompact(false)}
             />
           </>
         )}
