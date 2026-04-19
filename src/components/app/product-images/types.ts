@@ -405,6 +405,11 @@ export interface DetailSettings {
   // Structured outfit config (preferred over flat strings)
   outfitConfig?: OutfitConfig;
 
+  // Per-product outfit config — AI Stylist auto-pick assigns one preset per product
+  // so each product gets styled differently. Resolved at prompt build time:
+  // outfitConfigByProduct[productId] wins over global outfitConfig when present.
+  outfitConfigByProduct?: Record<string, OutfitConfig>;
+
   // Brand logo overlay text (used when brandLogoOverlay trigger is active)
   brandLogoText?: string;
 
