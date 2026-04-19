@@ -106,14 +106,22 @@ async function fetchScenesByCategories(categories: string[], includePromptTempla
   return (data || []) as unknown as DbScene[];
 }
 
-async function fetchScenesExcludingCategories(categories: string[], includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
+async function fetchScenesExcludingCategories(
+  categories: string[],
+  includePromptTemplate = false,
+  activeOnly = true,
+  slim = false,
+): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
   let from = 0;
+  // When slim=true we ignore includePromptTemplate and use the ultra-slim
+  // column list — caller is signalling "I only need picker metadata".
+  const cols = slim ? SLIM_REST_COLUMNS : selectCols(includePromptTemplate);
   while (true) {
     let q = supabase
       .from('product_image_scenes' as any)
-      .select(selectCols(includePromptTemplate))
+      .select(cols)
       .not('category_collection', 'in', `(${categories.join(',')})`)
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
