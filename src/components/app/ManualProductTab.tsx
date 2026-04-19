@@ -1214,8 +1214,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* More Details (optional, collapsible) — only after image uploaded */}
       {singleImage && (
-        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="rounded-2xl border bg-card p-4 sm:p-5 animate-fade-in">
-          <CollapsibleTrigger className={cn('flex items-center gap-2 w-full pt-1 pb-1 hover:opacity-80 transition-opacity', moreDetailsOpen && 'border-b border-border/50')}>
+        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className={cn('animate-fade-in transition-all', moreDetailsOpen && 'rounded-2xl border bg-card p-4 sm:p-5')}>
+          <CollapsibleTrigger className={cn('flex items-center gap-2 w-full hover:opacity-80 transition-opacity', moreDetailsOpen ? 'pt-1 pb-1 border-b border-border/50' : 'py-1.5 px-1')}>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               More details
             </span>
