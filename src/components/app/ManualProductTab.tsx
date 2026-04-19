@@ -840,7 +840,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         )}
 
         {/* Sticky footer actions — always visible above the modal's bottom edge */}
-        <div className="sticky bottom-0 -mx-7 px-7 -mb-7 pb-5 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2">
+        <div className="sticky bottom-0 -mx-5 sm:-mx-7 px-5 sm:px-7 -mb-5 sm:-mb-7 pb-5 sm:pb-7 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2">
           <Button variant="ghost" onClick={onClose} disabled={isUploading} >
             Cancel
           </Button>
@@ -1256,7 +1256,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* Footer — only shown when an image is present */}
       {singleImage && (
-        <div className="sticky bottom-0 -mx-7 px-7 -mb-7 pb-5 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2 animate-fade-in">
+        <div className="sticky bottom-0 -mx-5 sm:-mx-7 px-5 sm:px-7 -mb-5 sm:-mb-7 pb-5 sm:pb-7 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2 animate-fade-in">
           <Button variant="ghost" onClick={onClose} disabled={isUploading} >
             Cancel
           </Button>
