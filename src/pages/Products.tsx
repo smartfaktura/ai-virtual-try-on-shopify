@@ -99,6 +99,7 @@ export default function Products() {
       if (files.length) {
         setAddInitialTab('manual');
         setAddInitialFiles(files);
+        setAddCompact(true);
         setAddOpen(true);
       }
     };
@@ -139,6 +140,7 @@ export default function Products() {
         e.preventDefault();
         setAddInitialTab('manual');
         setAddInitialFiles(files);
+        setAddCompact(true);
         setAddOpen(true);
       }
     };
@@ -630,7 +632,10 @@ export default function Products() {
         open={addOpen}
         onOpenChange={(o) => {
           setAddOpen(o);
-          if (!o) setAddInitialFiles(undefined);
+          if (!o) {
+            setAddInitialFiles(undefined);
+            setAddCompact(false);
+          }
         }}
         onProductAdded={() => {
           queryClient.invalidateQueries({ queryKey: ['user-products'] });
