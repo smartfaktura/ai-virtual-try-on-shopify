@@ -92,29 +92,44 @@ export function OutfitPresetBar({ currentConfig, resolution, onLoad, category, g
             {p.name}
           </button>
         ))}
-        {relevantUser.map(p => (
-          <div key={p.id} className="inline-flex items-center gap-0.5 rounded-full border bg-background hover:bg-muted transition-colors">
-            <button
-              onClick={() => handleLoad(p)}
-              className="h-7 pl-2.5 pr-1 text-[11px] font-medium"
-            >
-              {p.name}
-            </button>
-            <button
-              onClick={() => handleDelete(p.id, p.name)}
-              className="h-7 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive"
-              aria-label={`Delete ${p.name}`}
-            >
-              <Trash2 className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
 
         {noRelevantPresets && resolution.availableSlots.length > 0 && (
           <span className="text-[11px] text-muted-foreground italic self-center">
             No presets fit this product — configure accessories below
           </span>
         )}
+      </div>
+
+      {relevantUser.length > 0 && (
+        <>
+          <div className="flex items-center gap-1.5 pt-1">
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">
+              Your saved looks
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {relevantUser.map(p => (
+              <div key={p.id} className="inline-flex items-center gap-0.5 rounded-full border bg-background hover:bg-muted transition-colors">
+                <button
+                  onClick={() => handleLoad(p)}
+                  className="h-7 pl-2.5 pr-1 text-[11px] font-medium"
+                >
+                  {p.name}
+                </button>
+                <button
+                  onClick={() => handleDelete(p.id, p.name)}
+                  className="h-7 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive"
+                  aria-label={`Delete ${p.name}`}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="flex flex-wrap gap-1.5">
 
         <Popover open={saveOpen} onOpenChange={setSaveOpen}>
           <PopoverTrigger asChild>
