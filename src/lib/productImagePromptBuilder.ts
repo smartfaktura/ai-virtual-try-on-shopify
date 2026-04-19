@@ -1336,6 +1336,9 @@ export function buildDynamicPrompt(
 
   // Auto-inject outfit directive if template forgot {{outfitDirective}}
   // Priority: scene.outfitHint > user-provided outfitConfig/legacy outfit fields
+  // Position: insert EARLY (right after product anchor) so scene direction at the
+  // end of the prompt keeps priority over wardrobe spec.
+  // Phrasing: scene-subordinate wardrobe note, never a styling brief.
   if (!(template || '').includes('{{outfitDirective}}')) {
     const sceneNeedsPerson =
       (scene.triggerBlocks || []).includes('personDetails') ||
@@ -1343,11 +1346,12 @@ export function buildDynamicPrompt(
       !!scene.outfitHint;
 
     if (sceneNeedsPerson) {
+      let injectedNote = '';
       const resolvedHint = resolveOutfitHintText(scene, details, product.title);
       if (resolvedHint && !prompt.includes(resolvedHint)) {
         let hint = resolvedHint;
         if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
-        prompt += ` OUTFIT DIRECTION — ${hint}`;
+        injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${hint} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction.`;
       } else if (!resolvedHint) {
         // No scene hint — fall back to user-selected outfit (structured or legacy)
         const hasUserOutfit =
@@ -1364,7 +1368,25 @@ export function buildDynamicPrompt(
             analysis?.garmentType
           );
           if (directive && !prompt.includes(directive)) {
-            prompt += ' ' + directive;
+            injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
+          }
+        }
+      }
+
+      if (injectedNote) {
+        // Insert RIGHT AFTER the product anchor block so scene direction keeps the last word.
+        // Anchor: prefer end of [PRODUCT]…sentence, then {{personDirective}} marker, else after first sentence.
+        const productAnchorMatch = prompt.match(/\[PRODUCT\][^.]*\.\s*/);
+        if (productAnchorMatch && productAnchorMatch.index !== undefined) {
+          const insertAt = productAnchorMatch.index + productAnchorMatch[0].length;
+          prompt = prompt.slice(0, insertAt) + injectedNote + ' ' + prompt.slice(insertAt);
+        } else {
+          const firstSentenceEnd = prompt.indexOf('. ');
+          if (firstSentenceEnd > 0 && firstSentenceEnd < 400) {
+            prompt = prompt.slice(0, firstSentenceEnd + 2) + injectedNote + ' ' + prompt.slice(firstSentenceEnd + 2);
+          } else {
+            // Last-resort fallback: prepend so scene text still follows
+            prompt = injectedNote + ' ' + prompt;
           }
         }
       }
