@@ -387,8 +387,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     reader.readAsDataURL(file);
   }, [analyzeImage, singleImage, createTrackedObjectUrl, revokeTrackedObjectUrl]);
 
-  // Clipboard paste
+  // Clipboard paste handling lives at the page level (Products.tsx) and forwards files via initialFiles.
+  // For the standalone /app/products/new page (AddProduct.tsx) we still want paste support, so we keep
+  // a single document-level listener but ONLY when there is no parent-provided initialFiles flow.
   useEffect(() => {
+    // If parent is feeding us initialFiles (drawer mode), parent already handles paste.
+    if (initialFiles !== undefined) return;
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -410,7 +414,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [addFiles, handleEditImageReplace, isEditing]);
+  }, [addFiles, handleEditImageReplace, isEditing, initialFiles]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
