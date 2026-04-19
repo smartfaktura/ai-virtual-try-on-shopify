@@ -267,7 +267,8 @@ Return ONLY the JSON object, no markdown fences, no explanation.`;
       });
     }
 
-    // Post-processing: title-based category fallback
+    // Post-processing: demote overly-broad "garments" first, then title-based fallback
+    refineGenericGarments(analysis, title || "", description || "");
     applyCategoryFallback(analysis, title || "");
 
     // Normalize booleans
