@@ -419,6 +419,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     // If parent is feeding us initialFiles (drawer mode), parent already handles paste.
     if (initialFiles !== undefined) return;
     const handlePaste = (e: ClipboardEvent) => {
+      // If a parent (e.g. Products.tsx) already handled this paste, skip.
+      if (e.defaultPrevented) return;
       const items = e.clipboardData?.items;
       if (!items) return;
       const imageFiles: File[] = [];
