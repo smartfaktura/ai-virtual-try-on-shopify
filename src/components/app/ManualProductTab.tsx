@@ -176,6 +176,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         if (target) {
           setBatchItems(prev => prev.map(b => b.id === target.batchId ? { ...b, isAnalyzing: false } : b));
         }
+        notifyAnalysisSoftFail();
         return;
       }
       if (data) {
