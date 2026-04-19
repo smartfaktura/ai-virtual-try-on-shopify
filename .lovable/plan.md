@@ -1,126 +1,138 @@
-# Plan: Premium Style & Outfit System (Step 3) + Scene Outfit Trigger Audit
 
-No code changes yet. This plan answers your two questions and proposes the upgrade.
+## Plan: ZARA-grade Style & Outfit (final)
 
----
+### 1. Edge case: "What if user uploads a jacket?"
 
-## Part A — Answers to your questions (audit only)
+**Answer:** `outerwear` slot locks to the jacket. Below it, `top` slot opens with a friendly prompt: **"What's underneath your jacket?"** with quick-pick chips (Crop top, T-shirt, Shirt, Knit, Tank, Bodysuit, "Nothing — bare"). Same for `bottom`.
 
-### Q1: "If we add outfit direction in `/app/admin/product-image-scenes`, will it trigger?"
-**Yes, partially.** The `outfit_hint` column on a scene IS injected into the prompt when that scene is selected (see `mem://features/product-images/scene-controlled-outfit-system`). It's appended as a styling directive during prompt build.
+**If user picks nothing:** the AI gets a smart default written into the prompt — `"a simple white fitted t-shirt"` for tops, `"straight-leg neutral trousers"` for bottoms. We never send a half-empty outfit to the model (causes random/ugly results). Defaults are picked per product color: dark jacket → light tee, light jacket → black tee.
 
-**But:** today it does NOT compete cleanly with the user's Step 3 lock. Current behavior:
-- Template has `{{outfitDirective}}` token → user's Step 3 lock wins.
-- Template has no token but has `outfit_hint` → admin hint wins, user lock is silently dropped.
-- Template has neither → nothing renders, AI freelances.
+**Empty-slot defaults table** (used when user skips):
+| Missing slot | Default |
+|---|---|
+| top | white fitted t-shirt |
+| bottom | straight-leg neutral trousers (matches jacket tone) |
+| shoes | clean white low-top sneakers |
+| dress (if dress product) | n/a |
 
-So admin `outfit_hint` IS a real trigger, but it overrides the user — the opposite of what you want for a "Style & Outfit" lock.
-
-### Q2: "Will outfit directions show up in Step 3 Style & Outfit?"
-**No.** Admin `outfit_hint` is invisible to the Step 3 UI. The user has no idea a scene already has a baked-in outfit, and no way to see/override it from the picker. It's a hidden backend field.
+User sees these defaults as ghost-text placeholders ("Auto: white tee") so they know what'll happen — and can override with one click.
 
 ---
 
-## Part B — Proposed Step 3 "Style & Outfit" overhaul
+### 2. Conflict matrix — explained for non-coders
 
-### B1. New outfit schema (extends `OutfitConfig` in `types.ts`)
-Structured slots beyond top/bottom/shoes:
+**What it is:** A simple rulebook the app follows so the picker never lets you make impossible outfits. Example: you can't wear two t-shirts at once, and you don't need pants under a dress.
 
-```
-outerwear  (jacket, blazer, coat, cardigan)  — layers OVER top
-top        (locked to product if product is a top)
-midLayer   (vest, overshirt) — optional, between top and outerwear
-bottom     (locked if product is a bottom)
-dress      (full-body — auto-nullifies top + bottom)
-shoes
-socks      (optional)
-belt
-bag        (handheld / shoulder / crossbody)
-hat
-eyewear    (sunglasses / optical)
-gloves
-scarf
-jewelry    (necklace, earrings, bracelet, ring — multi-select)
-watch
-```
+**How it works in plain English:**
 
-Each slot stores a structured `OutfitPiece`:
-```
-{ garment, subtype, color, fit?, material?, wash?, detail? }
-```
-Plus a free-text `notes` field per slot for power users.
-
-### B2. Sub-type vocabularies (premium control)
-Per garment, a curated subtype list. Examples:
-- **Trousers:** wide-leg, tapered, straight, cargo, pleated, tailored, jogger
-- **Jeans:** raw indigo, washed, distressed, black, white, light wash, mid wash, baggy, slim, bootcut
-- **Jacket:** denim, leather biker, bomber, blazer, trench, puffer, varsity, suede
-- **Dress:** mini, midi, maxi, slip, wrap, shirt-dress, knit, evening
-- **Shoes:** sneaker (low/high), loafer, boot (chelsea/combat/cowboy), heel, sandal, mule
-- **Bag:** tote, shoulder, crossbody, clutch, baguette, bucket
-- **Jewelry:** layered chains, hoop earrings, statement ring, tennis bracelet, etc.
-
-Full vocab will live in a single `outfitVocabulary.ts` config — easy to extend.
-
-### B3. Smart conflict resolution (per-product)
-Replaces today's simple `getConflictingSlots()`:
-
-| Product type | Auto-locked slot | Auto-nullified | User can still fill |
+| You uploaded | App auto-fills | App hides | You can still pick |
 |---|---|---|---|
-| Crop top, t-shirt, blouse, shirt | `top` = product | — | outerwear, bottom, shoes, accessories |
-| Trousers, jeans, skirt, shorts | `bottom` = product | — | top, outerwear, shoes, accessories |
-| Dress, jumpsuit, romper | `dress` = product | top, bottom | outerwear, shoes, accessories |
-| Jacket, coat, blazer | `outerwear` = product | — | top, bottom, shoes, accessories |
-| Swimwear (one-piece) | `dress` = product | top, bottom | shoes, accessories, hat, eyewear |
-| Swimwear (bikini top) | `top` = product | — | bottom, accessories |
-| Swimwear (bikini bottom) | `bottom` = product | — | top, accessories |
-| Lingerie set | `top` + `bottom` = product | dress, outerwear | shoes, accessories |
-| Shoes | `shoes` = product | — | everything else |
-| Bag | `bag` = product | — | everything else |
-| Hat | `hat` = product | — | everything else |
-| Jewelry / watch / eyewear | matching slot | — | everything else |
+| **A t-shirt / crop top** | "Top = your shirt" | nothing hidden | jacket on top, pants, shoes, accessories |
+| **Trousers / jeans / skirt** | "Bottom = your pants" | nothing hidden | top, jacket, shoes, accessories |
+| **A dress** | "Dress = your dress" | top + bottom (you don't need them) | jacket, shoes, accessories |
+| **A jacket / blazer / coat** | "Jacket = your jacket" | nothing hidden | what's underneath (top), pants, shoes, accessories |
+| **Swimsuit (one-piece)** | "Outfit = your swimsuit" | top + bottom | shoes, hat, sunglasses, jewelry, bag |
+| **Bikini top** | "Top = your bikini top" | nothing hidden | bikini bottom, accessories |
+| **Lingerie set** | "Top + Bottom = your set" | dress, jacket | shoes, accessories |
+| **Shoes / boots / heels** | "Shoes = your product" | nothing hidden | full outfit above |
+| **Bag / hat / jewelry / sunglasses / watch / belt** | matching slot only | nothing hidden | full outfit |
+| **Non-fashion (perfume, candle, tech)** | nothing | the whole outfit panel disappears | (model can wear free-text) |
 
-Detection uses `analysis.category` + `analysis.garmentType` (already on `ProductAnalysis`).
-
-### B4. Layering UX (your "jacket over crop top" problem)
-Current "Filled by your crop top" badge stays — but next to it, an **"+ Add layer over"** button appears for top/bottom/dress slots. Clicking opens the outerwear/midLayer slot directly with a labeled hint: "Layer over your [Crop Top]".
-
-Visual order in the picker mirrors how clothes stack: outerwear → top → midlayer → bottom → shoes → accessories row.
-
-### B5. Presets (save & reuse)
-New table `user_outfit_presets`:
-```
-id, user_id, name, config (jsonb OutfitConfig), category (optional),
-gender (optional), thumbnail_seed, created_at
-```
-- "Save as preset" button at top of Step 3 → modal asks for name.
-- "Load preset" dropdown shows user presets + built-in starters ("Quiet Luxury Neutral", "Streetwear Y2K", "Editorial Black", "Beach Linen", etc.).
-- Loading respects locks: a preset that includes `top` while the product IS a top → that slot is ignored, rest applies.
-
-### B6. Admin `outfit_hint` reconciliation
-Two clean options — pick one in your reply:
-- **Option A (recommended):** Admin `outfit_hint` becomes a *default* pre-filled in Step 3. User can edit/clear. User's edits always win.
-- **Option B:** Admin `outfit_hint` becomes a *fallback* — only used when user leaves outfit empty. User locks always override silently.
-
-Either way, the hidden-override behavior goes away.
+**"Silent" means:** hidden slots don't appear at all in the UI — no greyed-out boxes, no error messages. You only see what makes sense for your product. Cleaner, less confusing.
 
 ---
 
-## Part C — Files this would touch (when approved)
-- `src/components/app/product-images/types.ts` — extended `OutfitConfig` + new slot types
-- `src/components/app/product-images/ProductImagesStep3*.tsx` — new picker UI (layering, accessories grid, preset bar)
-- `src/lib/outfitVocabulary.ts` — NEW (subtype lists per garment)
-- `src/lib/productImagePromptBuilder.ts` — render new slots into `{{outfitDirective}}`, smarter conflict matrix
-- `src/lib/outfitConflictResolver.ts` — NEW (replaces `getConflictingSlots`)
+### 3. Full accessory plan — every slot, every option
+
+Each accessory has a **Type** picker → reveals **Sub-style** + **Color** + (sometimes) **Material**.
+
+#### Hat
+- **Type:** Cap, Bucket hat, Beanie, Wide-brim, Fedora, Beret, Visor, Cowboy, Straw
+- **Sub-style:** (Cap → trucker / dad / 5-panel / snapback) · (Beanie → cuffed / slouchy / fisherman) · (Wide-brim → felt / straw / rancher)
+- **Color:** swatches + custom
+- **Material:** Cotton, Wool, Felt, Straw, Nylon, Leather
+
+#### Bag
+- **Type:** Tote, Shoulder, Crossbody, Clutch, Baguette, Bucket, Top-handle, Backpack, Belt-bag
+- **Sub-style:** (Tote → structured / slouchy / mini) · (Crossbody → camera / saddle / messenger)
+- **Color** + **Material:** Leather, Suede, Canvas, Nylon, Patent, Knit
+
+#### Jewelry (multi-select)
+- **Necklace:** Layered chains, Pendant, Choker, Pearl strand, Statement
+- **Earrings:** Hoops (small/medium/large), Studs, Drops, Ear cuffs, Statement
+- **Bracelet:** Tennis, Bangle, Cuff, Beaded, Charm
+- **Ring:** Single statement, Stack, Signet, Band
+- **Metal:** Gold, Silver, Rose-gold, Mixed metals
+
+#### Eyewear
+- **Type:** Sunglasses, Optical
+- **Frame shape:** Aviator, Wayfarer, Cat-eye, Round, Oval, Square, Rimless, Shield, Oversized
+- **Lens tint:** Black, Brown, Mirror, Gradient, Clear, Yellow, Blue
+- **Frame color:** Tortoise, Black, Gold, Silver, Clear, White
+
+#### Belt
+- **Type:** Classic dress, Wide statement, Skinny, Chain, Western, Braided
+- **Buckle:** Minimal, Logo plate, Western, Double-ring
+- **Color** + **Material:** Leather, Suede, Fabric, Metal
+
+#### Watch
+- **Style:** Minimal dress, Sport/diver, Chronograph, Digital, Vintage, Smart
+- **Strap:** Leather, Metal mesh, Steel link, Nylon NATO, Rubber
+- **Face color** + **Case metal:** Gold, Silver, Black, Rose-gold
+
+#### Scarf (optional v2)
+- **Type:** Silk square, Long wool, Bandana, Pashmina
+- **Pattern:** Solid, Stripes, Floral, Logo print, Animal
+
+---
+
+### 4. UI layout (Step 3) — locked design
+
+```text
+┌─ Style & Outfit ─────────────────────────────────────┐
+│ Direction:  [Studio] [Editorial] [Minimal] [Street]  │
+│                                                       │
+│ ─ Outfit Presets ─────────────────────────────────── │
+│ [Quiet Luxury] [Streetwear] [Editorial Black]        │
+│ [Beach Linen]  [+ Save current]   My presets ▾       │
+│                                                       │
+│ ─ Outfit ─────────────────────────────────────────── │
+│ ┌─ 🔒 OUTERWEAR ─── [thumb] Your Black Blazer ────┐ │
+│ └────────────────────────────────────────────────┘ │
+│ ┌─ TOP · "What's underneath?" ───── auto: white tee ┐│
+│ │ Quick: [Crop top][T-shirt][Shirt][Knit][Tank]    ││
+│ │ Sub: ◯◯◯◯  Color: ⚪⚫🟤  Material: ▾            ││
+│ └─────────────────────────────────────────────────┘│
+│ ┌─ BOTTOM ─────────── auto: straight trousers ────┐│
+│ │ Type: [Trousers][Jeans][Skirt][Shorts]           ││
+│ │ Style: [Wide][Tapered][Cargo]…  Color: ⚪⚫🟤    ││
+│ └─────────────────────────────────────────────────┘│
+│ ┌─ SHOES ──────────── auto: white sneakers ───────┐│
+│ │ Type · Sub · Color                                ││
+│ └─────────────────────────────────────────────────┘│
+│                                                       │
+│ ▸ Accessories  (Bag · Jewelry · Eyewear · Hat ·     │
+│                Belt · Watch)         [tap to open]   │
+└──────────────────────────────────────────────────────┘
+```
+
+When scene has admin `outfit_hint` → entire block replaced by:
+```
+🎬 This scene has a styled outfit
+   "vintage tweed · brown loafers"   [Override]
+```
+
+---
+
+### 5. Files touched
+- `src/components/app/product-images/types.ts` — extend `OutfitConfig`
+- NEW `src/lib/outfitVocabulary.ts` — all type/sub-style/color lists + smart defaults
+- NEW `src/lib/outfitConflictResolver.ts` — the rulebook from §2
+- NEW `src/components/app/product-images/OutfitSlotCard.tsx` — reusable slot
+- NEW `src/components/app/product-images/OutfitPresetBar.tsx`
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — wire it all up
+- `src/lib/productImagePromptBuilder.ts` — render new slots + apply defaults
 - DB migration: `user_outfit_presets` table + RLS
-- (Optional) Admin scenes UI — surface `outfit_hint` as visible default vs. fallback per A/B
 
-## Out of scope
-- Patching the ~509 templates missing `{{outfitDirective}}` — separate plan when you say go.
-- Changing how generation actually wears layered pieces (prompt fidelity tuning comes after).
-
-## Questions before I code
-1. **Admin `outfit_hint` policy** — Option A (visible default) or Option B (silent fallback)?
-2. **Presets** — DB-backed (synced across devices) or localStorage only for v1?
-3. **Layering depth** — just `outerwear` over top, or also `midLayer` (vest/overshirt)?
-4. **Scope of v1** — full schema (all 14 slots) at once, or phase 1 = clothing+shoes+bag+jewelry, phase 2 = rest?
+### Risk
+Low. Schema is additive, defaults prevent broken prompts, scene-hint takeover removes the silent-override bug.
