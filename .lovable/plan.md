@@ -1,33 +1,25 @@
 
 
-## Investigate the real source of the duplicate-slug error in Wallets & Cardholders
+## Fix duplicate-slug collision in admin scene duplication
 
-### What I missed
-My previous SQL query returned a row that doesn't actually appear in your admin UI — likely because I matched on the wrong column or stale data. Your screenshot shows 29 shots in Wallets & Cardholders across 5 sub-categories, none titled "Interior View".
+### Problem
+When duplicating a scene to a category that already has a row with the target `scene_id` (often from earlier inactive copies not visible in the admin grid), the insert fails with `duplicate key value violates unique constraint "product_image_scenes_scene_id_key"`.
 
-### What I'll do (read-only investigation)
+### Fix
+Make `handleDuplicate` in `src/pages/AdminProductImageScenes.tsx` resilient to slug collisions by:
 
-1. **List every existing scene_id in `wallets-cardholders`** so we have ground truth:
-   ```sql
-   SELECT scene_id, title, sub_category 
-   FROM product_image_scenes 
-   WHERE category_collection = 'wallets-cardholders'
-   ORDER BY sub_category, title;
-   ```
+1. **Querying the database directly** for an exact `scene_id` match before inserting (instead of relying on the in-memory `existingIds` set, which only contains active scenes loaded by the wizard hook).
+2. **Auto-incrementing the suffix** until a free slug is found: try `{base}-{categorySuffix}`, then `{base}-{categorySuffix}-2`, `-3`, … up to `-20`.
+3. **Wrapping the final insert in a try/catch** that detects Postgres error code `23505` (unique violation) and retries once more with a short random suffix as a last resort.
 
-2. **Identify the source shot you're trying to duplicate** (from the previous screenshot context — the one that errored). Compute what `scene_id` the duplicate handler would generate for it (likely `{source_scene_id}-wallets` or `{source_scene_id}-bags-wallets`).
+### What changes
+- File: `src/pages/AdminProductImageScenes.tsx` only
+- Function: `handleDuplicate` (~lines 319–351)
+- No DB migration, no schema change, no other files touched
 
-3. **Cross-check** that exact generated `scene_id` against the list from step 1 to find the real collision.
-
-4. **Inspect the duplicate handler** in `src/pages/AdminProductImageScenes.tsx` to confirm the suffix pattern it uses, so the fix can be precise.
-
-### Deliverable
-A short, accurate report:
-- The exact `scene_id` that's colliding
-- Which existing row owns it (title + sub-category)
-- A one-paragraph fix recommendation (e.g., make duplicate handler append `-2`, `-3`, … until free, OR use a short random hash suffix)
-
-### Notes
-- Pure investigation — no DB writes, no code changes
-- After you see the report, you can decide whether to (a) delete the stale row, (b) rename your duplicate, or (c) have me patch the duplicate handler to auto-resolve collisions
+### Validation
+1. Try duplicating the same shot you got the error on → succeeds with slug `…-2` (or whatever number is free)
+2. Duplicate it again → succeeds with `…-3`
+3. Existing duplicate-to-empty-category flows still produce clean `…-{categorySuffix}` slugs (no unnecessary numbering)
+4. Toast shows the final scene_id used so you can confirm the suffix
 
