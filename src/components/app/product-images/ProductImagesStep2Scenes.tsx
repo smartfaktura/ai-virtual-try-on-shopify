@@ -9,6 +9,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
 import { cn } from '@/lib/utils';
+import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 /** Category label lookup */
 const CATEGORY_LABELS: Record<string, string> = {
