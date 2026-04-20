@@ -832,10 +832,14 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
 }) {
   const selectedCount = scenes.filter(s => selectedSceneIds.has(s.id)).length;
   const curatorColor = scenes.find(s => s.suggestedColors?.length)?.suggestedColors?.[0];
+  const hasEditableBackground = scenes.some(
+    s => s.promptTemplate?.includes('{{background}}') || s.triggerBlocks?.includes('aestheticColor')
+  );
+  const showLegend = hasEditableBackground || /essential/i.test(label);
 
   return (
     <div className="pt-3 pl-2">
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-1">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
         {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
         <div className="h-px flex-1 bg-border" />
@@ -849,6 +853,12 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
           {selectedCount > 0 && !allSelected && ` (${selectedCount}/${scenes.length})`}
         </Button>
       </div>
+      {showLegend && (
+        <p className="text-[11px] text-muted-foreground/80 mb-2 flex items-center gap-1">
+          <Paintbrush className="w-2.5 h-2.5" />
+          Backgrounds shown are editable in the next step
+        </p>
+      )}
       <div className={`grid ${gridClass} gap-2`}>
         {scenes.map(scene => (
           <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
