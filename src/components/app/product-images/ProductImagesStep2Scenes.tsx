@@ -236,23 +236,26 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
         <div className="flex items-center justify-center gap-1 h-4">
           {hasBackground && (
             <>
-              <div className="w-2.5 h-2.5 rounded-full bg-white border border-border" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
+              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/70" />
+              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Background</span>
+              <div className="w-2 h-2 rounded-full bg-white border border-border" />
+              <div className="w-2 h-2 rounded-full bg-[#E8EDE6]" />
+              <div className="w-2 h-2 rounded-full bg-[#F8ECE8]" />
+              <div className="w-2 h-2 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
             </>
           )}
-          {hasAestheticColor && (
+          {hasAestheticColor && !hasBackground && (
             <>
-              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/60" />
+              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/70" />
+              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Accent</span>
               {scene.suggestedColors && scene.suggestedColors.length > 0
-                ? scene.suggestedColors.slice(0, 4).map((c, i) => (
-                    <div key={i} className="w-2.5 h-2.5 rounded-full border border-border/60" style={{ backgroundColor: c.hex }} />
+                ? scene.suggestedColors.slice(0, 3).map((c, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full border border-border/60" style={{ backgroundColor: c.hex }} />
                   ))
                 : <>
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#5F8A8B]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#C4835B]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#8B9E7E]" />
+                    <div className="w-2 h-2 rounded-full bg-[#5F8A8B]" />
+                    <div className="w-2 h-2 rounded-full bg-[#C4835B]" />
+                    <div className="w-2 h-2 rounded-full bg-[#8B9E7E]" />
                   </>
               }
             </>
@@ -829,10 +832,14 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
 }) {
   const selectedCount = scenes.filter(s => selectedSceneIds.has(s.id)).length;
   const curatorColor = scenes.find(s => s.suggestedColors?.length)?.suggestedColors?.[0];
+  const hasEditableBackground = scenes.some(
+    s => s.promptTemplate?.includes('{{background}}') || s.triggerBlocks?.includes('aestheticColor')
+  );
+  const showLegend = hasEditableBackground || /essential/i.test(label);
 
   return (
     <div className="pt-3 pl-2">
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-1">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
         {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
         <div className="h-px flex-1 bg-border" />
@@ -846,6 +853,12 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
           {selectedCount > 0 && !allSelected && ` (${selectedCount}/${scenes.length})`}
         </Button>
       </div>
+      {showLegend && (
+        <p className="text-[11px] text-muted-foreground/80 mb-2 flex items-center gap-1">
+          <Paintbrush className="w-2.5 h-2.5" />
+          Backgrounds shown are editable in the next step
+        </p>
+      )}
       <div className={`grid ${gridClass} gap-2`}>
         {scenes.map(scene => (
           <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
