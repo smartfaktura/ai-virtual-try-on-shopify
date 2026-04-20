@@ -1,97 +1,41 @@
 
 
-## Duplicate 23 editorial scenes from Clothing & Apparel into Jackets
+## Why "Wallets & Cardholders" is missing from the admin category dropdown
 
-### What I'll do
-Copy 23 specific scenes from `garments` (Clothing & Apparel) into the `jackets` category, placing them under a new **Editorial Outerwear Portraits** sub-category with unique slugs.
+### Root cause
+The category dropdown on `/app/admin/product-image-scenes` (when editing a shot) is built from a **hardcoded** `CATEGORY_GROUPS` array in `src/pages/AdminProductImageScenes.tsx` (lines 31–93). That array is out of sync with the rest of the app.
 
-### Scenes to duplicate
-1. Fisheye Streetwear Studio
-2. Old Money Outdoor Portrait
-3. Sunlit Tailored Chair Pose
-4. Paris Curb Side Pose
-5. Soft Volume Lean
-6. Super Editorial Campaign
-7. Face Detail Product Glimpse
-8. Flash Night Fashion Campaign
-9. Minimal Mirror Pose
-10. Elevated Mirror UGC Pose
-11. Window Salon Editorial
-12. Flash Glamour Portrait
-13. Seated Sculpt Pose
-14. Sun Field Grounded Pose
-15. Desert Tailored Walk
-16. Elevated Stair Editorial
-17. City Steps Attitude
-18. Day Flash Shadow Portrait
-19. Folded Chair Composition
-20. Urban Bench Flash Editorial
-21. Luxury Door Statement
-22. Power Mirror Statement Selfie
-23. Side Profile Street Study
+**Missing from the admin dropdown** but valid everywhere else (types, Step 2 product picker, `useProductImageScenes`, `categoryUtils`):
+- Accessories: `backpacks`, `wallets-cardholders`, `belts`, `scarves`, `eyewear`, `watches`
+- Footwear (currently only `shoes` exists): `sneakers`, `boots`, `high-heels`
+- Jewelry group missing entirely: `jewellery-rings`, `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets`
+- Fashion: `kidswear`
 
-### Approach (single SQL via insert tool)
-1. **Verify** all 23 source titles exist in `garments` and confirm `jackets` is the exact category value.
-2. **Insert** duplicates with:
-   - `scene_id` = `{original_scene_id}-jackets` → guaranteed unique
-   - `id` = `gen_random_uuid()`
-   - `category_collection` → `'jackets'`
-   - `sub_category` → `'Editorial Outerwear Portraits'`
-   - All other fields copied as-is: `title`, `description`, `prompt_template`, `trigger_blocks`, `scene_type`, `preview_image_url`, `outfit_hint`, `use_scene_reference`, `requires_extra_reference`, `suggested_colors`, `is_active`, sort orders
+So when you edit a shot, the dropdown literally doesn't render those options — that's why Wallets & Cardholders isn't there.
 
-```sql
-INSERT INTO product_image_scenes (
-  scene_id, title, description, prompt_template, trigger_blocks,
-  category_collection, sub_category, scene_type, preview_image_url,
-  outfit_hint, use_scene_reference, requires_extra_reference,
-  suggested_colors, is_active, sort_order, category_sort_order, sub_category_sort_order
-)
-SELECT
-  scene_id || '-jackets',
-  title, description, prompt_template, trigger_blocks,
-  'jackets',
-  'Editorial Outerwear Portraits',
-  scene_type, preview_image_url,
-  outfit_hint, use_scene_reference, requires_extra_reference,
-  suggested_colors, is_active, sort_order, category_sort_order, sub_category_sort_order
-FROM product_image_scenes
-WHERE category_collection = 'garments'
-  AND title IN (
-    'Fisheye Streetwear Studio',
-    'Old Money Outdoor Portrait',
-    'Sunlit Tailored Chair Pose',
-    'Paris Curb Side Pose',
-    'Soft Volume Lean',
-    'Super Editorial Campaign',
-    'Face Detail Product Glimpse',
-    'Flash Night Fashion Campaign',
-    'Minimal Mirror Pose',
-    'Elevated Mirror UGC Pose',
-    'Window Salon Editorial',
-    'Flash Glamour Portrait',
-    'Seated Sculpt Pose',
-    'Sun Field Grounded Pose',
-    'Desert Tailored Walk',
-    'Elevated Stair Editorial',
-    'City Steps Attitude',
-    'Day Flash Shadow Portrait',
-    'Folded Chair Composition',
-    'Urban Bench Flash Editorial',
-    'Luxury Door Statement',
-    'Power Mirror Statement Selfie',
-    'Side Profile Street Study'
-  );
-```
+### Fix
+Update `CATEGORY_GROUPS` in `src/pages/AdminProductImageScenes.tsx` to match the canonical list used in `ProductImagesStep2Scenes.tsx` (`CATEGORY_LABELS` + `CATEGORY_GROUPS`).
+
+New structure:
+- **Fashion**: garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear
+- **Footwear**: shoes, sneakers, boots, high-heels
+- **Bags & Accessories**: bags-accessories, backpacks, **wallets-cardholders**, belts, scarves, hats-small, watches, eyewear
+- **Jewelry**: jewellery-rings, jewellery-necklaces, jewellery-earrings, jewellery-bracelets
+- **Beauty & Fragrance**: beauty-skincare, makeup-lipsticks, fragrance
+- **Home**: home-decor, furniture
+- **Tech**: tech-devices
+- **Food & Drink**: food, beverages
+- **Wellness**: supplements-wellness
+- **Other**: other
+
+Single-file change. No DB migration. After deploy:
+1. Open any shot in admin → category dropdown shows all 30+ options including Wallets & Cardholders.
+2. Existing scenes already saved with `wallets-cardholders` continue working (they do today — issue is dropdown only).
+3. New duplicates (like the recent jackets/dresses operations) can target Wallets & Cardholders.
 
 ### Validation
-1. Pre-check query → confirm all 23 source titles exist in `garments` (report any missing before inserting)
-2. Run insert → expect exactly 23 new rows
-3. Open `/app/admin/product-image-scenes` → filter Jackets → see new "Editorial Outerwear Portraits" sub-group with all 23 scenes
-4. Source `garments` rows untouched
-5. Slugs end with `-jackets` so no PK conflicts
-
-### Notes
-- Data operation only — no schema migration
-- If any titles aren't found exactly, I'll report which ones and ask before inserting
-- Jacket-specific prompt tweaks can be made in the admin panel afterward without affecting source garment scenes
+- Edit a shot → confirm Wallets & Cardholders appears under "Bags & Accessories" group.
+- Confirm Sneakers/Boots/High-heels appear under "Footwear".
+- Confirm Jewelry group renders with all 4 sub-types.
+- Save and reload → category persists correctly.
 
