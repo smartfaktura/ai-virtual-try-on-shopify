@@ -18,6 +18,8 @@ interface MissingRequestBannerProps {
   placeholder?: string;
   /** Compact mode for use inside popovers */
   compact?: boolean;
+  /** Show optional reference image URL field */
+  showImageLinkField?: boolean;
 }
 
 export function MissingRequestBanner({
