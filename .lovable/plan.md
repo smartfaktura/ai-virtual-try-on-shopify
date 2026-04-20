@@ -1,41 +1,57 @@
 
-## Step 6 results: previews load full-resolution (slow)
+## Add "Missing a scene?" request banner inside Recommended category
 
-### What I found
-In `ProductImagesStep6Results.tsx`, grid thumbnails use:
-```tsx
-<ShimmerImage src={img.url} ... />
+### Goal
+On `/app/generate/product-images` Step 2 (Shots), inside the always-open **Recommended** category, append a feedback-style banner letting users request a custom scene. Promise: "We'll create it in 1–2 business days." Optional: image link.
+
+### Reuse existing pattern
+We already have `MissingRequestBanner` (`src/components/app/MissingRequestBanner.tsx`) that does exactly this for models/scenes/workflows — submits to `feedback` table with `[scene-request]` prefix, shows success state, compact mode supported. It just needs one small extension: an **optional reference image URL field**.
+
+### Changes
+
+**1. Extend `MissingRequestBanner.tsx`**
+- Add prop `showImageLinkField?: boolean` (default false)
+- When true, render a small `<Input type="url">` under the textarea: placeholder "Optional: link to a reference image"
+- Append to message body when submitting: `\n\nReference: <url>` (only if filled)
+- Update success copy to: "Thanks! We'll create it in 1–2 business days."
+
+**2. Mount it in Step 2 inside the Recommended group**
+- File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+- Locate the Recommended category render path (the always-open one — likely near the `SubGroupSection` / `CategoryExpandedContent` block around lines 661 / 759 we touched recently)
+- After the last sub-group's scene grid in the Recommended category, render:
+  ```tsx
+  <MissingRequestBanner
+    category="scene"
+    title="Missing a scene? Tell us, we'll create it in 1–2 business days."
+    placeholder="Describe the scene, mood, or setting you need…"
+    showImageLinkField
+    compact
+  />
+  ```
+- Only render once per Recommended category block (not per sub-group)
+
+### Visual
 ```
-That's the **raw, full-size 2K PNG** (each ~3-6 MB). With 52 images, the browser is downloading **150-300 MB** before tiles fill in — exactly what your screenshot shows (mostly blank shimmers).
+RECOMMENDED FOR YOUR PRODUCTS
+  Essential Shots …
+  Color Stories …
+  Lifestyle …
 
-By contrast, `JobDetailModal` and most other grids in the app already wrap thumbnails with `getOptimizedUrl(url, { quality: 60 })`, which routes through Supabase's render endpoint (~50-150 KB per tile).
+  ┌──────────────────────────────────────────────┐
+  │ ✏️  Missing a scene? Tell us, we'll create   │
+  │     it in 1–2 business days.            ›    │
+  └──────────────────────────────────────────────┘
+```
+Expanded: textarea + optional URL input + Send Request button (matches existing compact style).
 
-The lightbox correctly shows the original full-res `img.url` — that part is fine.
-
-### Fix
-In `src/components/app/product-images/ProductImagesStep6Results.tsx`:
-
-1. **Grid thumbnails** — wrap with `getOptimizedUrl`:
-   ```tsx
-   <ShimmerImage
-     src={getOptimizedUrl(img.url, { quality: 65 })}
-     ...
-   />
-   ```
-   Quality only — no `width` param (per memory rule: width causes server-side crop zoom on full-bleed images).
-
-2. **Eager-load the first row** (first 4 images) so they appear instantly:
-   ```tsx
-   loading={i < 4 ? 'eager' : 'lazy'}
-   fetchPriority={i < 4 ? 'high' : 'auto'}
-   ```
-
-3. **Lightbox** stays untouched — still opens the original full-resolution URL when user clicks.
-
-### File
-- `src/components/app/product-images/ProductImagesStep6Results.tsx` (import `getOptimizedUrl`, update `<ShimmerImage>` props in the grid loop)
+### Files
+- `src/components/app/MissingRequestBanner.tsx` — add optional URL field
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — mount banner at end of Recommended category
 
 ### Validation
-1. Generate visuals → Step 6 grid fills within ~1-2s instead of 20-60s
-2. Click any tile → lightbox shows full-res original (unchanged)
-3. "Download All" / per-image download still pulls original quality (uses `img.url`, not the optimized URL)
+1. Step 2 → Recommended category shows banner at the bottom (after all sub-groups)
+2. Click banner → expands to textarea + optional reference URL input
+3. Submit with text only → row inserts into `feedback` with `[scene-request]` prefix
+4. Submit with URL filled → message includes `Reference: <url>` line
+5. Success state shows "Thanks! We'll create it in 1–2 business days."
+6. Banner does NOT appear in other categories (only Recommended)
