@@ -123,6 +123,16 @@ export function MissingRequestBanner({
             maxLength={500}
             autoFocus
           />
+          {showImageLinkField && (
+            <Input
+              type="url"
+              placeholder="Optional: link to a reference image"
+              value={referenceUrl}
+              onChange={(e) => setReferenceUrl(e.target.value)}
+              className={`${compact ? 'h-8 text-[11px]' : 'h-9 text-xs'} bg-background`}
+              maxLength={500}
+            />
+          )}
           <div className="flex items-center justify-between gap-2">
             <button
               onClick={() => { setExpanded(false); setMessage(''); }}
