@@ -33,25 +33,49 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
     label: 'Fashion',
     items: [
       { value: 'garments', label: 'Clothing & Apparel' },
+      { value: 'dresses', label: 'Dresses' },
       { value: 'hoodies', label: 'Hoodies' },
       { value: 'jeans', label: 'Jeans' },
-      { value: 'dresses', label: 'Dresses' },
       { value: 'jackets', label: 'Jackets' },
       { value: 'activewear', label: 'Activewear' },
       { value: 'swimwear', label: 'Swimwear' },
       { value: 'lingerie', label: 'Lingerie' },
+      { value: 'kidswear', label: 'Kidswear' },
     ],
   },
   {
-    label: 'Accessories',
+    label: 'Footwear',
+    items: [
+      { value: 'shoes', label: 'Shoes' },
+      { value: 'sneakers', label: 'Sneakers' },
+      { value: 'boots', label: 'Boots' },
+      { value: 'high-heels', label: 'High Heels' },
+    ],
+  },
+  {
+    label: 'Bags & Accessories',
     items: [
       { value: 'bags-accessories', label: 'Bags & Accessories' },
-      { value: 'shoes', label: 'Shoes' },
+      { value: 'backpacks', label: 'Backpacks' },
+      { value: 'wallets-cardholders', label: 'Wallets & Cardholders' },
+      { value: 'belts', label: 'Belts' },
+      { value: 'scarves', label: 'Scarves' },
       { value: 'hats-small', label: 'Hats & Small Accessories' },
+      { value: 'watches', label: 'Watches' },
+      { value: 'eyewear', label: 'Eyewear' },
     ],
   },
   {
-    label: 'Beauty',
+    label: 'Jewelry',
+    items: [
+      { value: 'jewellery-rings', label: 'Rings' },
+      { value: 'jewellery-necklaces', label: 'Necklaces' },
+      { value: 'jewellery-earrings', label: 'Earrings' },
+      { value: 'jewellery-bracelets', label: 'Bracelets' },
+    ],
+  },
+  {
+    label: 'Beauty & Fragrance',
     items: [
       { value: 'beauty-skincare', label: 'Beauty & Skincare' },
       { value: 'makeup-lipsticks', label: 'Makeup & Lipsticks' },
