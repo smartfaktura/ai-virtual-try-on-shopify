@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Trophy } from 'lucide-react';
-import { ShimmerImage } from '@/components/ui/shimmer-image';
+
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -130,16 +130,12 @@ export function ImageLightbox({
         'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200 overflow-hidden pt-14',
         isMobile ? 'max-w-[94vw] max-h-[90vh] px-1' : 'max-w-[90vw] max-h-[85vh]'
       )}>
-        <ShimmerImage
+        <img
           key={currentIndex}
           src={currentImage}
           alt={`Generated image ${currentIndex + 1}`}
           className={cn(
-            'max-w-full object-contain rounded-xl shadow-2xl shadow-black/40',
-            isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]'
-          )}
-          wrapperClassName={cn(
-            'flex items-center justify-center max-w-full',
+            'max-w-full w-auto h-auto object-contain rounded-xl shadow-2xl shadow-black/40',
             isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]'
           )}
         />
