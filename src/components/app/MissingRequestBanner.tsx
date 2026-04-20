@@ -27,11 +27,13 @@ export function MissingRequestBanner({
   title,
   placeholder,
   compact = false,
+  showImageLinkField = false,
 }: MissingRequestBannerProps) {
   const { user } = useAuth();
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
   const [message, setMessage] = useState('');
+  const [referenceUrl, setReferenceUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
