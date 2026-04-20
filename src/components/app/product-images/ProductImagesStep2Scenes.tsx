@@ -490,6 +490,13 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               gridClass={gridClass}
             />
           ))}
+          <MissingRequestBanner
+            category="scene"
+            title="Missing a scene? Tell us, we'll create it in 1–2 business days."
+            placeholder="Describe the scene, mood, or setting you need…"
+            showImageLinkField
+            compact
+          />
         </div>
       )}
 
