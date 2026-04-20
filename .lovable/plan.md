@@ -1,39 +1,18 @@
 
-## Replace compact scene banner with WorkflowRequestBanner-style design
+User wants me to verify the previous claim about analysis caching with actual code/DB checks, then plan a fix if needed.
 
-### What's wrong now
-Current `MissingRequestBanner` (compact mode) renders as a small dashed pill with chevron — looks cheap next to the polished `WorkflowRequestBanner` on `/app/workflows` (avatar stack + bold title + "Share Request" pill button).
+What I'll verify:
+1. Does `analyze-product-category` edge function write `version: 2` into the response?
+2. Does `useProductAnalysis.analyzeProducts` correctly skip cached items?
+3. Is `analysis_json` actually getting persisted in the DB?
 
-### Approach
-Create a new sibling component that mirrors `WorkflowRequestBanner` exactly but for **scenes** with the optional reference-image URL field.
+Looking at the hook code already in context:
+- Line ~37: `if (existing?.category && existing?.version === 2)` → cached
+- Line ~95-100: persists to `user_products.analysis_json` after fresh analysis
+- Session dedup via `analyzedOrInflight` ref
 
-### Changes
+Risk areas to confirm:
+- Does the edge function actually return `version: 2` in `data.analysis`? If not, **nothing gets cached** — every session re-analyzes.
+- Are there real rows with `analysis_json` populated in DB?
 
-**1. New file: `src/components/app/SceneRequestBanner.tsx`**
-- Copy `WorkflowRequestBanner.tsx` structure 1:1 (same wrapper classes, avatar stack, typography, Share Request button, expanded textarea layout, success state)
-- Replace copy:
-  - Collapsed title: **"Missing a scene for your products?"**
-  - Subtitle: **"Tell us what you need — we'll create it in 1–2 business days."**
-  - Expanded prompt: **"What scene would you like us to create?"**
-  - Textarea placeholder: **"Describe the scene, mood, or setting you need…"**
-  - Success: **"Thanks! We'll create it in 1–2 business days."**
-- Add **optional reference URL `<Input type="url">`** below the textarea (placeholder: "Optional: link to a reference image"), styled to match the textarea (`bg-background`, `text-sm`, `h-10`)
-- Submit prefix: `[scene-request]`, append `\n\nReference: <url>` when filled
-- Same Supabase `feedback` insert as existing banners
-
-**2. Mount in `ProductImagesStep2Scenes.tsx`**
-- Replace the current `<MissingRequestBanner …compact />` (lines 493-499) inside the Recommended block with `<SceneRequestBanner />`
-- Remove unused `MissingRequestBanner` import if no longer referenced
-- Keep position: bottom of Recommended category, before "Explore More"
-
-### Files
-- **New**: `src/components/app/SceneRequestBanner.tsx`
-- **Edit**: `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (swap component + clean import)
-
-### Validation
-1. `/app/generate/product-images` → Step 2 → bottom of Recommended shows the same large banner style as `/app/workflows` (avatar stack + bold title + "Share Request" button)
-2. Click "Share Request" → expands to textarea + optional URL input + Send Request
-3. Submit text only → row in `feedback` with `[scene-request]` prefix
-4. Submit with URL → message includes `Reference: <url>` line
-5. Success state shows team-style confirmation
-6. `/app/workflows` banner unchanged
+If both check out → no code changes needed, just confirm. If edge function is missing `version: 2` → 1-line fix.
