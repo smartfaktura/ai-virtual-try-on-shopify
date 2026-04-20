@@ -1,27 +1,39 @@
+## Make "Background editable" affordance obvious on Essential Shots
 
-## Add "Start New" button to Step 6 results
+User picked options **2 + 3** (skip the corner chip on the thumbnail).
 
-### Current behavior
-"Generate More" calls `onGenerateMore` which (per existing flow) returns to Step 1/2 with previous products, scenes, models, outfit, and details still loaded — useful for iterating, but no way to start fresh without manually clearing each step.
+### Changes
 
-### Change
-In `src/components/app/product-images/ProductImagesStep6Results.tsx`, add a third action button **"Start New"** alongside Generate More / Download All / View in Library. It calls a new prop `onStartNew` that fully resets the wizard state.
+**1. Labeled micro-row under scene title** (replaces bare colored dots)
 
-### Wiring
-1. **Step6 component** — add `onStartNew: () => void` prop, render button (icon: `Sparkles` or `Plus`, variant `outline`) between "Generate More" and "Download All".
-2. **Parent wizard** (`ProductImagesWizard.tsx` or equivalent that owns Step6) — pass `onStartNew={handleStartNew}` where `handleStartNew` resets all wizard slices (products, selectedScenes, models, outfitConfig, details, results, batchId) and navigates to Step 1. Reuse existing reset logic if present (likely there's an initial-state object or a `reset()` in the wizard store).
-
-### UI
 ```
-[ ↻ Generate More ]   [ ✨ Start New ]   [ 📦 Download All ]   [ ⬇ View in Library ]
+Background  ● ● ● ●
 ```
-Tooltip on Start New: "Begin a fresh project with new products"
 
-### Files
-- `src/components/app/product-images/ProductImagesStep6Results.tsx` — add prop + button
-- Parent wizard file that renders Step6 (need to locate — likely `ProductImagesWizard.tsx` or `pages/app/generate/ProductImages.tsx`) — add reset handler + pass prop
+- Leading paintbrush icon (`Palette` or `Paintbrush`, lucide, 10px) + word "Background"
+- Aesthetic-color scenes show "Accent" instead
+- Same dots as today, just framed by the label so users read them as choices, not decoration
+
+**2. One-line legend under Essential Shots sub-group headers**
+
+```
+ESSENTIAL SHOTS                                        Select All
+Backgrounds shown are editable in the next step
+```
+
+- `text-[11px] text-muted-foreground` 
+- Only renders when the sub-group label is "Essential Shots" OR contains scenes with `hasBackground` / `hasAestheticColor`
+
+### File
+
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+  - `SceneCard` (~lines 203-267): wrap the dot row with leading icon + label
+  - Sub-group header renderer (~lines 661, 759): inject the one-line legend below "Essential Shots" headers
 
 ### Validation
-1. Generate visuals → land on Step 6 → click "Start New" → wizard returns to Step 1 with no products, no scenes, no outfit, no model selected
-2. "Generate More" still preserves prior selections (unchanged)
-3. Credit balance unaffected
+
+1. Essential Shots cards show `Background ● ● ● ●` row instead of bare dots
+2. Aesthetic-color scenes show `Accent Color ● ● ●`
+3. Legend line appears once per Essential Shots block
+4. Non-editable scenes unchanged (no row, no legend)
+5. 3-col mobile layout: row stays on one line, no overflow
