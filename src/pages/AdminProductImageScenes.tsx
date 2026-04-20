@@ -317,33 +317,57 @@ export default function AdminProductImageScenes() {
   };
 
   const handleDuplicate = async (scene: DbScene) => {
-    const existingIds = new Set(rawScenes.map(s => s.scene_id));
-    let newId = `${scene.scene_id}-copy`;
-    let counter = 2;
-    while (existingIds.has(newId)) {
-      newId = `${scene.scene_id}-copy-${counter}`;
-      counter++;
-    }
+    // Find a free scene_id by checking the DB directly (active + inactive rows).
+    // The in-memory `rawScenes` only includes scenes loaded by the wizard hook,
+    // which can miss inactive copies and cause unique-constraint violations.
+    const base = `${scene.scene_id}-copy`;
+    const findFreeId = async (): Promise<string> => {
+      const candidates = [base, ...Array.from({ length: 19 }, (_, i) => `${base}-${i + 2}`)];
+      const { data, error } = await supabase
+        .from('product_image_scenes' as any)
+        .select('scene_id')
+        .in('scene_id', candidates);
+      if (error) throw error;
+      const taken = new Set((data ?? []).map((r: any) => r.scene_id));
+      const free = candidates.find(c => !taken.has(c));
+      if (free) return free;
+      // Fallback: short random suffix
+      return `${base}-${Math.random().toString(36).slice(2, 7)}`;
+    };
+
+    const buildPayload = (newId: string) => ({
+      scene_id: newId,
+      title: `${scene.title} (copy)`,
+      description: scene.description,
+      prompt_template: scene.prompt_template,
+      trigger_blocks: scene.trigger_blocks,
+      category_collection: scene.category_collection,
+      scene_type: scene.scene_type,
+      preview_image_url: scene.preview_image_url,
+      is_active: scene.is_active,
+      sort_order: scene.sort_order + 1,
+      sub_category: scene.sub_category,
+      category_sort_order: scene.category_sort_order,
+      requires_extra_reference: scene.requires_extra_reference,
+      sub_category_sort_order: scene.sub_category_sort_order,
+      use_scene_reference: scene.use_scene_reference ?? false,
+      suggested_colors: scene.suggested_colors,
+      outfit_hint: scene.outfit_hint,
+    });
+
     try {
-      await upsertScene.mutateAsync({
-        scene_id: newId,
-        title: `${scene.title} (copy)`,
-        description: scene.description,
-        prompt_template: scene.prompt_template,
-        trigger_blocks: scene.trigger_blocks,
-        category_collection: scene.category_collection,
-        scene_type: scene.scene_type,
-        preview_image_url: scene.preview_image_url,
-        is_active: scene.is_active,
-        sort_order: scene.sort_order + 1,
-        sub_category: scene.sub_category,
-        category_sort_order: scene.category_sort_order,
-        requires_extra_reference: scene.requires_extra_reference,
-        sub_category_sort_order: scene.sub_category_sort_order,
-        use_scene_reference: scene.use_scene_reference ?? false,
-        suggested_colors: scene.suggested_colors,
-        outfit_hint: scene.outfit_hint,
-      });
+      let newId = await findFreeId();
+      try {
+        await upsertScene.mutateAsync(buildPayload(newId));
+      } catch (e: any) {
+        // Race condition fallback: another row took the slug between check and insert.
+        if (e?.code === '23505' || /duplicate key/i.test(e?.message ?? '')) {
+          newId = `${base}-${Math.random().toString(36).slice(2, 7)}`;
+          await upsertScene.mutateAsync(buildPayload(newId));
+        } else {
+          throw e;
+        }
+      }
       toast.success(`Duplicated as ${newId}`);
     } catch (e: any) {
       toast.error(e.message);
