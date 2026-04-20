@@ -236,23 +236,26 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
         <div className="flex items-center justify-center gap-1 h-4">
           {hasBackground && (
             <>
-              <div className="w-2.5 h-2.5 rounded-full bg-white border border-border" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#E8EDE6]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#F8ECE8]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
+              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/70" />
+              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Background</span>
+              <div className="w-2 h-2 rounded-full bg-white border border-border" />
+              <div className="w-2 h-2 rounded-full bg-[#E8EDE6]" />
+              <div className="w-2 h-2 rounded-full bg-[#F8ECE8]" />
+              <div className="w-2 h-2 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
             </>
           )}
-          {hasAestheticColor && (
+          {hasAestheticColor && !hasBackground && (
             <>
-              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/60" />
+              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/70" />
+              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Accent</span>
               {scene.suggestedColors && scene.suggestedColors.length > 0
-                ? scene.suggestedColors.slice(0, 4).map((c, i) => (
-                    <div key={i} className="w-2.5 h-2.5 rounded-full border border-border/60" style={{ backgroundColor: c.hex }} />
+                ? scene.suggestedColors.slice(0, 3).map((c, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full border border-border/60" style={{ backgroundColor: c.hex }} />
                   ))
                 : <>
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#5F8A8B]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#C4835B]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#8B9E7E]" />
+                    <div className="w-2 h-2 rounded-full bg-[#5F8A8B]" />
+                    <div className="w-2 h-2 rounded-full bg-[#C4835B]" />
+                    <div className="w-2 h-2 rounded-full bg-[#8B9E7E]" />
                   </>
               }
             </>
