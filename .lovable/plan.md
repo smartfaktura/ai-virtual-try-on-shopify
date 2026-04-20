@@ -1,41 +1,33 @@
 
 
-## Why "Wallets & Cardholders" is missing from the admin category dropdown
+## Investigate the real source of the duplicate-slug error in Wallets & Cardholders
 
-### Root cause
-The category dropdown on `/app/admin/product-image-scenes` (when editing a shot) is built from a **hardcoded** `CATEGORY_GROUPS` array in `src/pages/AdminProductImageScenes.tsx` (lines 31–93). That array is out of sync with the rest of the app.
+### What I missed
+My previous SQL query returned a row that doesn't actually appear in your admin UI — likely because I matched on the wrong column or stale data. Your screenshot shows 29 shots in Wallets & Cardholders across 5 sub-categories, none titled "Interior View".
 
-**Missing from the admin dropdown** but valid everywhere else (types, Step 2 product picker, `useProductImageScenes`, `categoryUtils`):
-- Accessories: `backpacks`, `wallets-cardholders`, `belts`, `scarves`, `eyewear`, `watches`
-- Footwear (currently only `shoes` exists): `sneakers`, `boots`, `high-heels`
-- Jewelry group missing entirely: `jewellery-rings`, `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets`
-- Fashion: `kidswear`
+### What I'll do (read-only investigation)
 
-So when you edit a shot, the dropdown literally doesn't render those options — that's why Wallets & Cardholders isn't there.
+1. **List every existing scene_id in `wallets-cardholders`** so we have ground truth:
+   ```sql
+   SELECT scene_id, title, sub_category 
+   FROM product_image_scenes 
+   WHERE category_collection = 'wallets-cardholders'
+   ORDER BY sub_category, title;
+   ```
 
-### Fix
-Update `CATEGORY_GROUPS` in `src/pages/AdminProductImageScenes.tsx` to match the canonical list used in `ProductImagesStep2Scenes.tsx` (`CATEGORY_LABELS` + `CATEGORY_GROUPS`).
+2. **Identify the source shot you're trying to duplicate** (from the previous screenshot context — the one that errored). Compute what `scene_id` the duplicate handler would generate for it (likely `{source_scene_id}-wallets` or `{source_scene_id}-bags-wallets`).
 
-New structure:
-- **Fashion**: garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear
-- **Footwear**: shoes, sneakers, boots, high-heels
-- **Bags & Accessories**: bags-accessories, backpacks, **wallets-cardholders**, belts, scarves, hats-small, watches, eyewear
-- **Jewelry**: jewellery-rings, jewellery-necklaces, jewellery-earrings, jewellery-bracelets
-- **Beauty & Fragrance**: beauty-skincare, makeup-lipsticks, fragrance
-- **Home**: home-decor, furniture
-- **Tech**: tech-devices
-- **Food & Drink**: food, beverages
-- **Wellness**: supplements-wellness
-- **Other**: other
+3. **Cross-check** that exact generated `scene_id` against the list from step 1 to find the real collision.
 
-Single-file change. No DB migration. After deploy:
-1. Open any shot in admin → category dropdown shows all 30+ options including Wallets & Cardholders.
-2. Existing scenes already saved with `wallets-cardholders` continue working (they do today — issue is dropdown only).
-3. New duplicates (like the recent jackets/dresses operations) can target Wallets & Cardholders.
+4. **Inspect the duplicate handler** in `src/pages/AdminProductImageScenes.tsx` to confirm the suffix pattern it uses, so the fix can be precise.
 
-### Validation
-- Edit a shot → confirm Wallets & Cardholders appears under "Bags & Accessories" group.
-- Confirm Sneakers/Boots/High-heels appear under "Footwear".
-- Confirm Jewelry group renders with all 4 sub-types.
-- Save and reload → category persists correctly.
+### Deliverable
+A short, accurate report:
+- The exact `scene_id` that's colliding
+- Which existing row owns it (title + sub-category)
+- A one-paragraph fix recommendation (e.g., make duplicate handler append `-2`, `-3`, … until free, OR use a short random hash suffix)
+
+### Notes
+- Pure investigation — no DB writes, no code changes
+- After you see the report, you can decide whether to (a) delete the stale row, (b) rename your duplicate, or (c) have me patch the duplicate handler to auto-resolve collisions
 
