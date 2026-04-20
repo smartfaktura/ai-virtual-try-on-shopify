@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, RefreshCw, CheckCircle, Archive, Loader2, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 import { useState, useMemo } from 'react';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
