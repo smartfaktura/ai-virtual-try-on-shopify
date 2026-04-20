@@ -1,39 +1,67 @@
 
 
-## Fix lightbox cropping image bottom on results page
+## Duplicate 8 editorial scenes from Clothing & Apparel into Dresses
 
-### Problem
-On `/app/generate/product-images` results, opening the lightbox shows the image cropped (legs cut off) inside a square frame, even though the actual generated image is a full-body portrait.
+### What I'll do
+Copy 8 specific scenes from `garments` (Clothing & Apparel) into `dresses` category, placing them under the **Editorial Dress Portraits** sub-category with new unique slugs.
 
-### Root cause
-`ImageLightbox` wraps the `<img>` in `ShimmerImage`, whose wrapper is `relative overflow-hidden w-full h-full`. Inside the lightbox the parent is a flex column with only `max-w-[90vw] max-h-[85vh]` (no intrinsic width/height), so the wrapper sizes to its content but the `overflow-hidden` + wrapper geometry clips portrait images that exceed the wrapper's resolved box. The `<img>` itself has the right `max-h-[75vh] object-contain` rules, but it's being clipped by the shimmer wrapper, not by the image element.
+### Scenes to duplicate
+1. Old Money Outdoor Portrait
+2. Side Lean Attitude Pose
+3. Super Editorial Campaign
+4. Flash Night Fashion Campaign
+5. Flash Glamour Portrait
+6. Desert Tailored Walk
+7. Luxury Door Statement
+8. Power Mirror Statement Selfie
 
-### Fix
-In `src/components/app/ImageLightbox.tsx`, replace the `ShimmerImage` usage with a plain `<img>` for the lightbox view. The lightbox is fullscreen, modal, and only shows one image at a time — the shimmer placeholder adds no UX value and its wrapper introduces the clipping bug.
+### Approach (single SQL via insert tool)
+1. **Verify** exact `category_collection` for Dresses (likely `dresses`) and confirm all 8 source titles exist in `garments`.
+2. **Insert** duplicates with:
+   - `scene_id` = `{original_scene_id}-dresses` → guaranteed unique
+   - `id` = `gen_random_uuid()`
+   - `category_collection` → `'dresses'`
+   - `sub_category` → `'Editorial Dress Portraits'` (overrides original sub-category)
+   - All other fields copied as-is: `title`, `description`, `prompt_template`, `trigger_blocks`, `scene_type`, `preview_image_url`, `outfit_hint`, `use_scene_reference`, `requires_extra_reference`, `suggested_colors`, `is_active`, `sort_order`, `category_sort_order`, `sub_category_sort_order`
 
-Replacement (around lines 133–145):
-```tsx
-<img
-  key={currentIndex}
-  src={currentImage}
-  alt={`Generated image ${currentIndex + 1}`}
-  className={cn(
-    'max-w-full w-auto h-auto object-contain rounded-xl shadow-2xl shadow-black/40',
-    isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]'
-  )}
-/>
+```sql
+INSERT INTO product_image_scenes (
+  scene_id, title, description, prompt_template, trigger_blocks,
+  category_collection, sub_category, scene_type, preview_image_url,
+  outfit_hint, use_scene_reference, requires_extra_reference,
+  suggested_colors, is_active, sort_order, category_sort_order, sub_category_sort_order
+)
+SELECT
+  scene_id || '-dresses',
+  title, description, prompt_template, trigger_blocks,
+  'dresses',
+  'Editorial Dress Portraits',
+  scene_type, preview_image_url,
+  outfit_hint, use_scene_reference, requires_extra_reference,
+  suggested_colors, is_active, sort_order, category_sort_order, sub_category_sort_order
+FROM product_image_scenes
+WHERE category_collection = 'garments'
+  AND title IN (
+    'Old Money Outdoor Portrait',
+    'Side Lean Attitude Pose',
+    'Super Editorial Campaign',
+    'Flash Night Fashion Campaign',
+    'Flash Glamour Portrait',
+    'Desert Tailored Walk',
+    'Luxury Door Statement',
+    'Power Mirror Statement Selfie'
+  );
 ```
 
-Also remove the now-unused `ShimmerImage` import.
-
-### Why this is safe
-- Lightbox is a one-image-at-a-time modal — no grid shimmer needed.
-- Image already exists in the user's session (just clicked from grid where it loaded), so flash-of-empty is a non-issue.
-- All other consumers of `ShimmerImage` (grids, library, results thumbnails) are unaffected.
-
 ### Validation
-1. Open `/app/generate/product-images` → run a generation → click any portrait result.
-2. Lightbox should display the full image (head to feet) within `max-h-75vh`, never cropped.
-3. Test with both portrait (4:5) and landscape (16:9) outputs.
-4. Navigation arrows still work; counter still shows `N / total`.
+1. Pre-check query → confirm 8 source rows match exact titles in `garments` (no typos)
+2. Run insert → expect exactly 8 new rows
+3. Open `/app/admin/product-image-scenes` → filter Dresses → see new "Editorial Dress Portraits" sub-group with all 8 scenes
+4. Source `garments` rows untouched
+5. Slugs end with `-dresses` so no PK conflicts
+
+### Notes
+- Data operation only — no schema migration
+- If any of the 8 titles aren't found exactly, I'll report which ones and ask before inserting
+- Edits to dress-specific prompts (e.g., dress-aware styling tweaks) can be made in the admin panel afterward without affecting source garment scenes
 
