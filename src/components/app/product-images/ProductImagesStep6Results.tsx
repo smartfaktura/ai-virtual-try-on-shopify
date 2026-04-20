@@ -131,8 +131,10 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                   style={{ aspectRatio: img.aspectRatio ? img.aspectRatio.replace(':', '/') : '1/1' }}
                 >
                   <ShimmerImage
-                    src={img.url}
+                    src={getOptimizedUrl(img.url, { quality: 65 })}
                     alt={`${productName} - ${img.sceneName} - ${i + 1}`}
+                    loading={i < 4 ? 'eager' : 'lazy'}
+                    fetchPriority={i < 4 ? 'high' : 'auto'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
