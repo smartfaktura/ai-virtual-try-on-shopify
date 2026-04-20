@@ -9,7 +9,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
 import { cn } from '@/lib/utils';
-import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
+import { SceneRequestBanner } from '@/components/app/SceneRequestBanner';
 
 /** Category label lookup */
 const CATEGORY_LABELS: Record<string, string> = {
@@ -490,13 +490,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               gridClass={gridClass}
             />
           ))}
-          <MissingRequestBanner
-            category="scene"
-            title="Missing a scene? Tell us, we'll create it in 1–2 business days."
-            placeholder="Describe the scene, mood, or setting you need…"
-            showImageLinkField
-            compact
-          />
+          <SceneRequestBanner />
         </div>
       )}
 
