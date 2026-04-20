@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MessageSquarePlus, Loader2, Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +18,8 @@ interface MissingRequestBannerProps {
   placeholder?: string;
   /** Compact mode for use inside popovers */
   compact?: boolean;
+  /** Show optional reference image URL field */
+  showImageLinkField?: boolean;
 }
 
 export function MissingRequestBanner({
@@ -24,11 +27,13 @@ export function MissingRequestBanner({
   title,
   placeholder,
   compact = false,
+  showImageLinkField = false,
 }: MissingRequestBannerProps) {
   const { user } = useAuth();
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
   const [message, setMessage] = useState('');
+  const [referenceUrl, setReferenceUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -47,10 +52,14 @@ export function MissingRequestBanner({
   const handleSubmit = async () => {
     if (!message.trim()) return;
     setSubmitting(true);
+    const trimmedUrl = referenceUrl.trim();
+    const fullMessage = trimmedUrl
+      ? `[${category}-request] ${message.trim()}\n\nReference: ${trimmedUrl}`
+      : `[${category}-request] ${message.trim()}`;
     const { error } = await supabase.from('feedback').insert({
       user_id: user.id,
       type: 'feature',
-      message: `[${category}-request] ${message.trim()}`,
+      message: fullMessage,
       page_url: location.pathname,
       email: user.email,
     });
@@ -61,13 +70,14 @@ export function MissingRequestBanner({
     }
     setSubmitted(true);
     setMessage('');
+    setReferenceUrl('');
   };
 
   if (submitted) {
     return (
       <div className={`flex items-center gap-2 ${compact ? 'px-2 py-2' : 'px-4 py-3'} rounded-lg bg-primary/5 border border-primary/20`}>
         <Check className="w-3.5 h-3.5 text-primary shrink-0" />
-        <p className="text-[11px] text-primary font-medium">Thanks! We'll review your request shortly.</p>
+        <p className="text-[11px] text-primary font-medium">Thanks! We'll create it in 1–2 business days.</p>
       </div>
     );
   }
@@ -113,9 +123,19 @@ export function MissingRequestBanner({
             maxLength={500}
             autoFocus
           />
+          {showImageLinkField && (
+            <Input
+              type="url"
+              placeholder="Optional: link to a reference image"
+              value={referenceUrl}
+              onChange={(e) => setReferenceUrl(e.target.value)}
+              className={`${compact ? 'h-8 text-[11px]' : 'h-9 text-xs'} bg-background`}
+              maxLength={500}
+            />
+          )}
           <div className="flex items-center justify-between gap-2">
             <button
-              onClick={() => { setExpanded(false); setMessage(''); }}
+              onClick={() => { setExpanded(false); setMessage(''); setReferenceUrl(''); }}
               className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
             >
               Cancel
