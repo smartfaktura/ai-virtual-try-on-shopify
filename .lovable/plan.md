@@ -1,57 +1,39 @@
 
-## Add "Missing a scene?" request banner inside Recommended category
+## Replace compact scene banner with WorkflowRequestBanner-style design
 
-### Goal
-On `/app/generate/product-images` Step 2 (Shots), inside the always-open **Recommended** category, append a feedback-style banner letting users request a custom scene. Promise: "We'll create it in 1–2 business days." Optional: image link.
+### What's wrong now
+Current `MissingRequestBanner` (compact mode) renders as a small dashed pill with chevron — looks cheap next to the polished `WorkflowRequestBanner` on `/app/workflows` (avatar stack + bold title + "Share Request" pill button).
 
-### Reuse existing pattern
-We already have `MissingRequestBanner` (`src/components/app/MissingRequestBanner.tsx`) that does exactly this for models/scenes/workflows — submits to `feedback` table with `[scene-request]` prefix, shows success state, compact mode supported. It just needs one small extension: an **optional reference image URL field**.
+### Approach
+Create a new sibling component that mirrors `WorkflowRequestBanner` exactly but for **scenes** with the optional reference-image URL field.
 
 ### Changes
 
-**1. Extend `MissingRequestBanner.tsx`**
-- Add prop `showImageLinkField?: boolean` (default false)
-- When true, render a small `<Input type="url">` under the textarea: placeholder "Optional: link to a reference image"
-- Append to message body when submitting: `\n\nReference: <url>` (only if filled)
-- Update success copy to: "Thanks! We'll create it in 1–2 business days."
+**1. New file: `src/components/app/SceneRequestBanner.tsx`**
+- Copy `WorkflowRequestBanner.tsx` structure 1:1 (same wrapper classes, avatar stack, typography, Share Request button, expanded textarea layout, success state)
+- Replace copy:
+  - Collapsed title: **"Missing a scene for your products?"**
+  - Subtitle: **"Tell us what you need — we'll create it in 1–2 business days."**
+  - Expanded prompt: **"What scene would you like us to create?"**
+  - Textarea placeholder: **"Describe the scene, mood, or setting you need…"**
+  - Success: **"Thanks! We'll create it in 1–2 business days."**
+- Add **optional reference URL `<Input type="url">`** below the textarea (placeholder: "Optional: link to a reference image"), styled to match the textarea (`bg-background`, `text-sm`, `h-10`)
+- Submit prefix: `[scene-request]`, append `\n\nReference: <url>` when filled
+- Same Supabase `feedback` insert as existing banners
 
-**2. Mount it in Step 2 inside the Recommended group**
-- File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-- Locate the Recommended category render path (the always-open one — likely near the `SubGroupSection` / `CategoryExpandedContent` block around lines 661 / 759 we touched recently)
-- After the last sub-group's scene grid in the Recommended category, render:
-  ```tsx
-  <MissingRequestBanner
-    category="scene"
-    title="Missing a scene? Tell us, we'll create it in 1–2 business days."
-    placeholder="Describe the scene, mood, or setting you need…"
-    showImageLinkField
-    compact
-  />
-  ```
-- Only render once per Recommended category block (not per sub-group)
-
-### Visual
-```
-RECOMMENDED FOR YOUR PRODUCTS
-  Essential Shots …
-  Color Stories …
-  Lifestyle …
-
-  ┌──────────────────────────────────────────────┐
-  │ ✏️  Missing a scene? Tell us, we'll create   │
-  │     it in 1–2 business days.            ›    │
-  └──────────────────────────────────────────────┘
-```
-Expanded: textarea + optional URL input + Send Request button (matches existing compact style).
+**2. Mount in `ProductImagesStep2Scenes.tsx`**
+- Replace the current `<MissingRequestBanner …compact />` (lines 493-499) inside the Recommended block with `<SceneRequestBanner />`
+- Remove unused `MissingRequestBanner` import if no longer referenced
+- Keep position: bottom of Recommended category, before "Explore More"
 
 ### Files
-- `src/components/app/MissingRequestBanner.tsx` — add optional URL field
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — mount banner at end of Recommended category
+- **New**: `src/components/app/SceneRequestBanner.tsx`
+- **Edit**: `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (swap component + clean import)
 
 ### Validation
-1. Step 2 → Recommended category shows banner at the bottom (after all sub-groups)
-2. Click banner → expands to textarea + optional reference URL input
-3. Submit with text only → row inserts into `feedback` with `[scene-request]` prefix
-4. Submit with URL filled → message includes `Reference: <url>` line
-5. Success state shows "Thanks! We'll create it in 1–2 business days."
-6. Banner does NOT appear in other categories (only Recommended)
+1. `/app/generate/product-images` → Step 2 → bottom of Recommended shows the same large banner style as `/app/workflows` (avatar stack + bold title + "Share Request" button)
+2. Click "Share Request" → expands to textarea + optional URL input + Send Request
+3. Submit text only → row in `feedback` with `[scene-request]` prefix
+4. Submit with URL → message includes `Reference: <url>` line
+5. Success state shows team-style confirmation
+6. `/app/workflows` banner unchanged
