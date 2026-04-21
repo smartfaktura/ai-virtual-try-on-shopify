@@ -298,8 +298,8 @@ This overrides everything — the variation description is for the SURFACE STYLE
   let ugcBlock = "";
   if (ugcMood) {
     const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
-    const interaction = getProductInteraction(product.productType);
-    ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n`;
+    const interaction = interactionPhrase?.trim() || getProductInteraction(product.productType);
+    ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n${buildInteractionEnforcement(interaction)}`;
   }
 
   // Interior Design block — room type, wall color, flooring overrides
@@ -482,7 +482,7 @@ ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
   let processedTemplate = config.prompt_template;
   if (ugcMood) {
     const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
-    const interaction = getProductInteraction(product.productType);
+    const interaction = interactionPhrase?.trim() || getProductInteraction(product.productType);
     processedTemplate = processedTemplate
       .replace('{PRODUCT_INTERACTION}', interaction)
       .replace('{MOOD_DESCRIPTION}', moodDesc);
