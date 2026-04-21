@@ -118,6 +118,26 @@ function getProductInteraction(productType: string): string {
   return 'holding the product naturally near their face or chest';
 }
 
+function buildInteractionEnforcement(interaction: string): string {
+  const i = interaction.toLowerCase();
+  if (i.includes('wearing') || i.includes('worn ')) {
+    return `\nWEARING ENFORCEMENT (CRITICAL):\nThe product MUST be worn on the body in its correct anatomical position (top/shirt/dress → on torso with visible neckline/shoulders; jewelry → on finger/wrist/neck/ear; eyewear → on the face; shoes → on the feet; bag → on shoulder or carried in hand; hat → on the head). The product MUST NOT be held up to the camera, draped over the arm, hung on a hanger, laid on a surface, or shown on a mannequin. Visible body fit (shoulders, neckline, sleeves, drape on the body) is REQUIRED. If the product is a garment, the model is wearing it as part of the visible outfit — not holding it.\n`;
+  }
+  if (i.includes('applying')) {
+    return `\nAPPLICATION ENFORCEMENT: The application gesture MUST be visibly happening in-frame (fingers/brush touching skin, product mid-application). Do not show the product merely held next to the face.\n`;
+  }
+  if (i.includes('spraying')) {
+    return `\nSPRAY ENFORCEMENT: The spray gesture MUST be visibly happening (finger pressing the nozzle toward wrist/neck, fine mist or droplets implied). Do not show the bottle simply held up.\n`;
+  }
+  if (i.includes('tasting') || i.includes('sipping')) {
+    return `\nCONSUMPTION ENFORCEMENT: The tasting/sipping action MUST be visibly happening (lip contact, mid-sip, fork to mouth). Do not show the item merely held in front of the face.\n`;
+  }
+  if (i.includes('pouring')) {
+    return `\nPOURING ENFORCEMENT: The pour MUST be visibly happening (product tilted, contents falling into the open hand or container).\n`;
+  }
+  return '';
+}
+
 interface WorkflowRequest {
   workflow_id: string;
   product: {
@@ -1180,6 +1200,7 @@ serve(async (req) => {
             body.ugc_mood,
             body.theme,
             body.theme_notes,
+            body.interaction_phrase,
             aspectRatio,
             !!(body as Record<string, unknown>).batch_outfit_lock,
           );
