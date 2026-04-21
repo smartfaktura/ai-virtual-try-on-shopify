@@ -709,6 +709,53 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
         </CardContent></Card>
       )}
 
+      {/* UGC Outfit Selector — visible only when outfit is not locked by "Wearing" interaction */}
+      {isSelfieUgc && (() => {
+        const locked = isOutfitLockedByInteraction(ugcInteractionPhrase);
+        return (
+          <Card><CardContent className="p-5 space-y-4">
+            <div>
+              <h3 className="text-base font-semibold flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Outfit
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {locked
+                  ? "Outfit is locked by the product you're wearing."
+                  : 'Pick what your creator wears — Auto picks a smart default per scene.'}
+              </p>
+            </div>
+            {!locked && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {UGC_OUTFIT_PRESETS.map(preset => {
+                  const active = (ugcOutfit || 'auto') === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      onClick={() => setUgcOutfit(preset.id)}
+                      className={cn(
+                        'relative p-4 rounded-xl border-2 text-left transition-all flex flex-col gap-1',
+                        active
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border hover:border-primary/40'
+                      )}
+                    >
+                      {preset.recommended && (
+                        <span className="absolute -top-2.5 right-3 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-primary text-primary-foreground rounded-full">
+                          Popular
+                        </span>
+                      )}
+                      <p className="text-sm font-semibold">{preset.label}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{preset.vibe}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent></Card>
+        );
+      })()}
+
       {/* Framing Selector — only for Selfie/UGC */}
       {isSelfieUgc && (
         <Card><CardContent className="p-5">
