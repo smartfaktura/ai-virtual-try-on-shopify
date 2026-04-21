@@ -48,7 +48,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
 import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
 import { useConversionState } from '@/hooks/useConversionState';
-import { resolveUgcOutfitPhrase } from '@/lib/ugcOutfitPresets';
+import { resolveUgcOutfitPhrase, resolveUgcPairPhrase, isWearingInteraction, detectProductSlot } from '@/lib/ugcOutfitPresets';
 import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
@@ -977,6 +977,35 @@ export default function Generate() {
     return picked?.phrase;
   }, [isSelfieUgc, ugcInteraction, getInteractionOptionsForProduct]);
 
+  // Detect which wardrobe slot the selected product occupies (for pair-mode).
+  const resolveProductSlot = useCallback((product: Product | null) => {
+    if (!product) return 'other' as const;
+    const cat = (product as unknown as { analysis_json?: { category?: string } }).analysis_json?.category
+      || detectProductCategory(product) || '';
+    return detectProductSlot(cat, `${product.title || ''} ${product.productType || ''}`);
+  }, []);
+
+  // Resolve outfit phrase: pair-mode when wearing interaction, otherwise standard preset.
+  const resolveOutfitPhraseForProduct = useCallback((product: Product | null): string | undefined => {
+    if (!isSelfieUgc) return undefined;
+    const interaction = resolveUgcInteractionPhrase(product);
+    if (isWearingInteraction(interaction)) {
+      return resolveUgcPairPhrase(ugcOutfit, resolveProductSlot(product));
+    }
+    return resolveUgcOutfitPhrase(ugcOutfit, interaction);
+  }, [isSelfieUgc, ugcOutfit, resolveUgcInteractionPhrase, resolveProductSlot]);
+
+  // Reset outfit selection to "auto" whenever the wearing-mode flips to avoid carrying stale IDs.
+  const wearingModeRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!isSelfieUgc) return;
+    const wearing = isWearingInteraction(resolveUgcInteractionPhrase(selectedProduct));
+    if (wearingModeRef.current !== null && wearingModeRef.current !== wearing) {
+      setUgcOutfit('auto');
+    }
+    wearingModeRef.current = wearing;
+  }, [isSelfieUgc, ugcInteraction, selectedProduct, resolveUgcInteractionPhrase]);
+
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductPickerOpen(false);
@@ -1362,7 +1391,7 @@ export default function Generate() {
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
             interaction_phrase: resolveUgcInteractionPhrase(product),
-            outfit_phrase: isSelfieUgc ? resolveUgcOutfitPhrase(ugcOutfit, resolveUgcInteractionPhrase(product)) : undefined,
+            outfit_phrase: isSelfieUgc ? resolveOutfitPhraseForProduct(product) : undefined,
             batch_id: batchId,
           };
           if (modelProfile && base64ModelImage) {
@@ -1497,7 +1526,7 @@ export default function Generate() {
       additional_products: additionalProducts,
       ugc_mood: isSelfieUgc ? ugcMood : undefined,
       interaction_phrase: resolveUgcInteractionPhrase(selectedProduct),
-      outfit_phrase: isSelfieUgc ? resolveUgcOutfitPhrase(ugcOutfit, resolveUgcInteractionPhrase(selectedProduct)) : undefined,
+      outfit_phrase: isSelfieUgc ? resolveOutfitPhraseForProduct(selectedProduct) : undefined,
       // Interior Design fields
       room_type: isInteriorDesign ? interiorRoomType : undefined,
       wall_color: isInteriorDesign ? interiorWallColor : undefined,
@@ -4256,6 +4285,7 @@ export default function Generate() {
             ugcOutfit={ugcOutfit}
             setUgcOutfit={setUgcOutfit}
             ugcInteractionPhrase={resolveUgcInteractionPhrase(selectedProduct)}
+            productSlot={resolveProductSlot(selectedProduct)}
             quality={quality}
             setQuality={setQuality}
             aspectRatio={aspectRatio}
