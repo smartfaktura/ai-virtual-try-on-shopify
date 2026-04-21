@@ -2490,6 +2490,10 @@ export type Database = {
         Args: { p_locked_by?: string }
         Returns: boolean
       }
+      update_ugc_scene_preview: {
+        Args: { p_label: string; p_preview_url: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
