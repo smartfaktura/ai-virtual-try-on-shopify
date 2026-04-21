@@ -958,6 +958,23 @@ export default function Generate() {
     return null;
   };
 
+  // Returns the UGC interaction option list filtered for the selected product's category.
+  const getInteractionOptionsForProduct = useCallback((product: Product | null): UgcInteractionOption[] => {
+    if (!product) return UGC_INTERACTION_OPTIONS.default;
+    const analysisCat = (product as unknown as { analysis_json?: { category?: string } }).analysis_json?.category;
+    const fallbackCat = detectProductCategory(product);
+    const key = getInteractionCategoryKey(analysisCat || fallbackCat || '', product.productType);
+    return UGC_INTERACTION_OPTIONS[key] || UGC_INTERACTION_OPTIONS.default;
+  }, []);
+
+  // Resolve the chosen interaction phrase for the current product (defaults to first option if none picked).
+  const resolveUgcInteractionPhrase = useCallback((product: Product | null): string | undefined => {
+    if (!isSelfieUgc) return undefined;
+    const opts = getInteractionOptionsForProduct(product);
+    const picked = opts.find(o => o.id === ugcInteraction) || opts[0];
+    return picked?.phrase;
+  }, [isSelfieUgc, ugcInteraction, getInteractionOptionsForProduct]);
+
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductPickerOpen(false);
@@ -979,6 +996,13 @@ export default function Generate() {
     // Angle workflow: skip brand profile, go straight to settings
     if (isAngleWorkflow) {
       setCurrentStep('settings');
+      return;
+    }
+    // Selfie / UGC: skip brand entirely → choose Interaction
+    if (isSelfieUgc) {
+      const opts = getInteractionOptionsForProduct(product);
+      setUgcInteraction(opts[0]?.id ?? null);
+      setCurrentStep('interaction');
       return;
     }
     // Go to brand profile step if profiles exist
