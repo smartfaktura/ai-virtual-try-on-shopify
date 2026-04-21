@@ -1145,29 +1145,76 @@ export default function ProductImages() {
 
                 return (
                   <>
-                    <div className="relative grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    <div
+                      className="relative grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2"
+                      onDragOver={(e) => { e.preventDefault(); if (!isDragOver) setIsDragOver(true); }}
+                      onDragEnter={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        // only clear when leaving the grid container, not children
+                        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                        setIsDragOver(false);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(false);
+                        const file = Array.from(e.dataTransfer.files || []).find(f => f.type.startsWith('image/'));
+                        if (file) handleQuickUpload(file);
+                      }}
+                    >
                       {/* Drag-and-drop overlay */}
                       {isDragOver && (
-                        <div className="absolute inset-0 z-20 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
+                        <div className="absolute inset-0 z-20 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex flex-col items-center justify-center gap-2 backdrop-blur-sm pointer-events-none">
                           <Upload className="w-8 h-8 text-primary animate-bounce" />
                           <p className="text-sm font-medium text-primary">Drop image to add product</p>
                         </div>
                       )}
 
-                      {/* Add Product Card — opens full AddProductModal */}
-                      <button
-                        type="button"
-                        onClick={() => { setAddProductCompact(true); setAddProductTab('manual'); setAddProductOpen(true); }}
-                        className="group flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all cursor-pointer overflow-hidden"
-                      >
-                        <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/40">
-                          <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                      {/* Upload Image Card — quick-saves immediately */}
+                      <div className="group relative flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all overflow-hidden">
+                        <div
+                          role="button"
+                          tabIndex={quickUploading ? -1 : 0}
+                          onClick={() => { if (!quickUploading) quickUploadInputRef.current?.click(); }}
+                          onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !quickUploading) { e.preventDefault(); quickUploadInputRef.current?.click(); } }}
+                          aria-disabled={quickUploading}
+                          className={cn(
+                            'flex-1 flex flex-col',
+                            quickUploading ? 'cursor-not-allowed' : 'cursor-pointer'
+                          )}
+                        >
+                          <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/40">
+                            {quickUploading ? (
+                              <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                            ) : (
+                              <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                            )}
+                          </div>
+                          <div className="h-[44px] flex flex-col justify-center px-1.5 py-1">
+                            <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                              {quickUploading ? (quickUploadProgress || 'Uploading…') : 'Upload Image'}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setAddProductCompact(false); setAddProductTab('manual'); setAddProductOpen(true); }}
+                              className="text-[9px] text-muted-foreground/70 hover:text-primary mt-0.5 underline-offset-2 hover:underline text-left self-start"
+                            >
+                              More options
+                            </button>
+                          </div>
                         </div>
-                        <div className="h-[44px] flex flex-col justify-center px-1.5 py-1">
-                          <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">Upload Image</p>
-                          <p className="text-[9px] text-muted-foreground/70 mt-0.5">drop, paste, or import</p>
-                        </div>
-                      </button>
+                        <input
+                          ref={quickUploadInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleQuickUpload(file);
+                            e.target.value = '';
+                          }}
+                        />
+                      </div>
 
                       {/* Upload progress skeleton */}
                       {quickUploading && (
