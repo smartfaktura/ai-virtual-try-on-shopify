@@ -1,92 +1,70 @@
 
 
-## Copy 8 shots into Bags & Accessories
+## Fix Product Images upload so new products are always saved clearly
 
-### What I found
-All 8 requested shots exist in the scene database:
+### Problem
+The `/app/generate/product-images` Product step has inconsistent upload behavior:
 
-1. **Elevated Mirror UGC Pose** — source: `garments`
-2. **Low Angle Leather Walk** — source: `garments`
-3. **Desert Tailored Walk** — source: `garments`
-4. **Elevated Stair Editorial** — source: `garments`
-5. **Urban Bench Flash Editorial** — source: `garments`
-6. **Power Mirror Statement Selfie** — source: `garments`
-7. **Jet Lounge** — source: `hoodies`
-8. **Tarmac Walk** — source: `hoodies`
+- Empty-state upload/paste saves immediately as a product
+- The grid **Upload Image** card opens the manual upload drawer, where selecting an image does not save until **Add Product** is clicked
+- The card subtitle says “drop, paste, or import”, but drag/drop is not fully wired on that grid area
+- This makes it look like an uploaded item worked, even when no product record was created
 
-None of these titles currently exist in **Bags & Accessories**, so this is a clean copy operation.
+### Fix approach
+Make the Product Images page behavior consistent and harder to miss.
 
-### Target placement
-I’ll copy them into:
+### Changes
 
-- Category: **Bags & Accessories**
-- `category_collection`: `bags-accessories`
-- Sub-category: **On-Body Editorial & Location**
+1. **Use immediate quick-save for the grid Upload Image card**
+   - Clicking **Upload Image** in the product grid will open a file picker directly
+   - After choosing an image, it will use the same `handleQuickUpload` path that:
+     - uploads to storage
+     - analyzes the product
+     - inserts into `user_products`
+     - refreshes the product grid
+     - auto-selects the new product
 
-That sub-category already exists in Bags & Accessories, so I’ll preserve its current ordering.
+2. **Keep advanced/manual upload available**
+   - Keep `AddProductModal` for cases where the user wants:
+     - multiple images
+     - extra angles
+     - manual title/type edits before saving
+     - import URL / CSV / Shopify
+   - Add a small secondary action such as **More upload options** or **Import options** instead of making the main Upload Image card open the manual drawer
 
-### Copy behavior
-For each copied shot, I’ll duplicate the full scene definition:
+3. **Add proper drag/drop support to the product grid**
+   - Wire `onDragOver`, `onDragLeave`, and `onDrop` around the Step 1 product grid
+   - Dropping an image will call `handleQuickUpload`
+   - The existing drag overlay will actually work instead of only being visual state
 
-- title
-- description
-- prompt template
-- trigger blocks
-- preview image URL
-- scene type
-- extra reference requirement
-- suggested colors
-- outfit hint
-- scene reference flag
+4. **Improve feedback**
+   - Show clear progress text:
+     - Uploading
+     - Analyzing
+     - Saving product
+   - After save, show a concise success toast like:
+     - `Product saved and selected`
+   - If saving fails, keep the current error toast
 
-The new rows will keep the same visible shot titles, but receive unique scene IDs ending in `-bags-accessories`, for example:
+5. **Optional safety check**
+   - After inserting the product, verify `newProduct.id` exists before selecting it
+   - If the insert succeeds but no row is returned, invalidate products and show a warning instead of silently continuing
 
-```text
-elevated-mirror-ugc-pose-bags-accessories
-low-angle-leather-walk-bags-accessories
-desert-tailored-walk-bags-accessories
-elevated-stair-editorial-bags-accessories
-urban-bench-flash-editorial-bags-accessories
-power-mirror-statement-selfie-bags-accessories
-hoodies-private-jet-lounge-bags-accessories
-hoodies-airport-tarmac-walk-bags-accessories
-```
+### Files to update
+- `src/pages/ProductImages.tsx`
+  - Update grid Upload Image card click behavior
+  - Add hidden file input for quick upload when products already exist
+  - Wire drag/drop handling around the Step 1 grid
+  - Keep modal access as secondary upload/import option
 
-### Ordering
-Bags & Accessories currently has a max `sort_order` of `2331`, so I’ll place the new shots after the existing list:
+No database migration is needed.
 
-```text
-2332 → Elevated Mirror UGC Pose
-2333 → Low Angle Leather Walk
-2334 → Desert Tailored Walk
-2335 → Elevated Stair Editorial
-2336 → Urban Bench Flash Editorial
-2337 → Power Mirror Statement Selfie
-2338 → Jet Lounge
-2339 → Tarmac Walk
-```
+### Expected result
+After this fix:
 
-### Implementation
-This is a database data-copy operation only.
-
-I’ll insert 8 new `product_image_scenes` rows using `INSERT ... SELECT` from the existing source scenes, changing only:
-
-- `scene_id`
-- `category_collection`
-- `sub_category`
-- `category_sort_order`
-- `sub_category_sort_order`
-- `sort_order`
-- timestamps
-
-No app code or schema changes are needed.
-
-### Validation
-After copying, I’ll verify:
-
-1. Exactly 8 new rows exist in `bags-accessories`
-2. All 8 are under **On-Body Editorial & Location**
-3. All copied rows are active
-4. Scene IDs are unique
-5. `/app/admin/product-image-scenes` can show them when filtering Bags & Accessories
+- Uploading from `/app/generate/product-images` always creates a saved product when using the main Upload Image action
+- The product appears in the grid immediately
+- The uploaded product is auto-selected
+- Users will not accidentally upload/analyze a product without saving it
+- Advanced product editing remains available when needed
 
