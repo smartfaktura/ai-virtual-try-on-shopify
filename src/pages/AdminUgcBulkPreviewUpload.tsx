@@ -196,14 +196,14 @@ export default function AdminUgcBulkPreviewUpload() {
     await loadScenes();
   };
 
-  if (!isAdmin) {
-    return <div className="p-8 text-center text-muted-foreground">Admin access required</div>;
-  }
-
   const sortedScenesForSelect = useMemo(
     () => [...scenes].sort((a, b) => a.label.localeCompare(b.label)),
     [scenes]
   );
+
+  if (!isAdmin) {
+    return <div className="p-8 text-center text-muted-foreground">Admin access required</div>;
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-20">
