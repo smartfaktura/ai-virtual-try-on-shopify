@@ -169,6 +169,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
     openBuyModal, handleGenerateClick, handleGenerateScenePreviews, setCurrentStep,
     onFreeLimit,
   } = props;
+  const { isAdmin } = useIsAdmin();
 
   // Force high quality for Selfie / UGC workflows
   useEffect(() => {
