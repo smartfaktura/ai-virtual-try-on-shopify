@@ -1241,6 +1241,7 @@ serve(async (req) => {
             body.interaction_phrase,
             aspectRatio,
             !!(body as Record<string, unknown>).batch_outfit_lock,
+            body.outfit_phrase,
           );
 
           console.log(
