@@ -1057,7 +1057,11 @@ export default function Generate() {
     if (detectedFraming) setFraming(detectedFraming);
 
     // Skip brand profile for modal-initiated flows
-    if (activeWorkflow.uses_tryon || uiConfig?.show_model_picker) {
+    if (isSelfieUgc) {
+      const opts = getInteractionOptionsForProduct(product);
+      setUgcInteraction(opts[0]?.id ?? null);
+      setCurrentStep('interaction');
+    } else if (activeWorkflow.uses_tryon || uiConfig?.show_model_picker) {
       setCurrentStep('model');
     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
       setCurrentStep('settings');
@@ -2878,6 +2882,8 @@ export default function Generate() {
                     }
                     if (isUpscale) {
                       setCurrentStep('settings');
+                    } else if (isSelfieUgc) {
+                      setCurrentStep('interaction');
                     } else if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (isInteriorDesign) {
@@ -3434,12 +3440,22 @@ export default function Generate() {
                       if (isMirrorSelfie) {
                         setMirrorSettingsPhase('scenes');
                         setCurrentStep('settings');
+                      } else if (isSelfieUgc) {
+                        const opts = getInteractionOptionsForProduct(candidates[0]);
+                        setUgcInteraction(opts[0]?.id ?? null);
+                        setCurrentStep('interaction');
                       } else {
                         setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                       }
                     } else {
                       setProductQueue([]);
-                      setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                      if (isSelfieUgc) {
+                        const opts = getInteractionOptionsForProduct(candidates[0]);
+                        setUgcInteraction(opts[0]?.id ?? null);
+                        setCurrentStep('interaction');
+                      } else {
+                        setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                      }
                     }
                   }
                 } else {
