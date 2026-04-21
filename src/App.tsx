@@ -61,6 +61,7 @@ const AdminTrendWatch = lazy(() => import('@/pages/AdminTrendWatch'));
 const AdminSceneLibrary = lazy(() => import('@/pages/AdminSceneLibrary'));
 const AdminPromptTokens = lazy(() => import('@/pages/AdminPromptTokens'));
 const AdminBulkPreviewUpload = lazy(() => import('@/pages/AdminBulkPreviewUpload'));
+const AdminUgcBulkPreviewUpload = lazy(() => import('@/pages/AdminUgcBulkPreviewUpload'));
 const AdminPlanPopups = lazy(() => import('@/pages/AdminPlanPopups'));
 const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
 
@@ -226,6 +227,7 @@ const App = () => {
                         <Route path="/admin/scene-library" element={<AdminSceneLibrary />} />
                         <Route path="/admin/prompt-tokens" element={<AdminPromptTokens />} />
                         <Route path="/admin/bulk-preview-upload" element={<AdminBulkPreviewUpload />} />
+                        <Route path="/admin/ugc-bulk-upload" element={<AdminUgcBulkPreviewUpload />} />
                         <Route path="/admin/plan-popups" element={<AdminPlanPopups />} />
                         <Route path="/admin/ui-audit" element={<AdminUIAudit />} />
                         
