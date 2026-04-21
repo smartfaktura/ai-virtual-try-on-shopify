@@ -3503,6 +3503,10 @@ export default function Generate() {
                        setCurrentStep('settings');
                      } else if (isAngleWorkflow) {
                        setCurrentStep('settings');
+                     } else if (isSelfieUgc) {
+                       const opts = getInteractionOptionsForProduct(product);
+                       setUgcInteraction(opts[0]?.id ?? null);
+                       setCurrentStep('interaction');
                      } else if (brandProfiles.length > 0) {
                        setCurrentStep('brand-profile');
                      } else if (uiConfig?.show_model_picker) {
@@ -3527,6 +3531,10 @@ export default function Generate() {
                       setCurrentStep('settings');
                     } else if (isAngleWorkflow) {
                       setCurrentStep('settings');
+                    } else if (isSelfieUgc) {
+                      const opts = getInteractionOptionsForProduct(product);
+                      setUgcInteraction(opts[0]?.id ?? null);
+                      setCurrentStep('interaction');
                     } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.show_model_picker) {
