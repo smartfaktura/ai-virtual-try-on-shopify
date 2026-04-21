@@ -508,7 +508,7 @@ ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
 \nIMPORTANT: The [PRODUCT IMAGE] is the ROOM PHOTO to transform. Do NOT treat it as a product to place — instead, transform the entire room scene while preserving its architecture.\n`;
   }
 
-  // Replace {PRODUCT_INTERACTION} and {MOOD_DESCRIPTION} placeholders in prompt template
+  // Replace {PRODUCT_INTERACTION}, {MOOD_DESCRIPTION} and {OUTFIT} placeholders in prompt template
   let processedTemplate = config.prompt_template;
   if (ugcMood) {
     const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
@@ -516,6 +516,9 @@ ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
     processedTemplate = processedTemplate
       .replace('{PRODUCT_INTERACTION}', interaction)
       .replace('{MOOD_DESCRIPTION}', moodDesc);
+  }
+  if (processedTemplate.includes('{OUTFIT}')) {
+    processedTemplate = processedTemplate.replace(/\{OUTFIT\}/g, outfitBlock.trim() || '');
   }
 
   // Issue 1: Seasonal/theme direction block
@@ -527,9 +530,13 @@ ${themeNotes ? `Additional direction: ${themeNotes}` : ""}\n`
       ? `\nSEASONAL DIRECTION: ${themeNotes}. You MUST incorporate this seasonal mood, color palette, and atmosphere into the scene, lighting, and overall feel.\n`
       : "";
 
-  // Issue 6: Merge brand do_not_rules into negative prompts
+  // Issue 6: Merge brand do_not_rules + outfit safeguard into negative prompts
+  const outfitNegativeSaugiklis = (outfitBlock && !outfitConflictsWithWearing)
+    ? 'mismatched layering, costume-like outfit, loud patterns competing with product, branded logos on clothing, ill-fitting garments'
+    : '';
   const allNegatives = [
     config.negative_prompt_additions,
+    outfitNegativeSaugiklis,
     ...(brandProfile?.do_not_rules || []),
   ].filter(Boolean).join('. ');
 
@@ -579,7 +586,7 @@ PRODUCT DETAILS:
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
 ${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
-${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}
+${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' ')}
 
