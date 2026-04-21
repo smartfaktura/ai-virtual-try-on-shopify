@@ -48,7 +48,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
 import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
 import { useConversionState } from '@/hooks/useConversionState';
-import { resolveUgcOutfitPhrase } from '@/lib/ugcOutfitPresets';
+import { resolveUgcOutfitPhrase, resolveUgcPairPhrase, isWearingInteraction, detectProductSlot } from '@/lib/ugcOutfitPresets';
 import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
