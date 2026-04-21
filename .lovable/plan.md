@@ -1,80 +1,85 @@
 
 
-## Replace "Brand" step with an "Interaction" step on `/app/generate/selfie-ugc-set`
+## Fix Selfie/UGC results: enforce "Wearing" + clean & luxury scenes
 
-### What's wrong today
-- Step 2 of the Selfie/UGC flow shows the generic **Brand** profile picker — but brand doesn't change anything meaningful for UGC (the look is iPhone selfie + model + scene).
-- The verb in `{PRODUCT_INTERACTION}` is hard-coded server-side from the product type (`PRODUCT_INTERACTIONS` map in `generate-workflow/index.ts`). User has zero control. For a beauty product they always get "applying / holding near face" even if they wanted a "showing on camera" shot. For garments they always get "wearing" even if it's a scarf they want to hold up.
-- For **beauty/skincare/fragrance/food**, "wearing" is never valid — but the current map can still produce odd phrasing if categories are misclassified.
+### Root cause of the bad batch
+Three compounding problems in the Selfie/UGC pipeline:
 
-### The fix (UX)
+1. **Backend ignores the user's Interaction choice.** `src/pages/Generate.tsx` correctly sends `interaction_phrase` (e.g. "wearing the item naturally as part of their outfit"), but `supabase/functions/generate-workflow/index.ts` line 483 still calls `getProductInteraction(product.productType)` and overwrites it. Result: the user picks **Wearing**, the server silently downgrades to whatever the productType map returns ("holding the product naturally near their face or chest" for unknown types).
+2. **Scene instructions encourage holding.** Several scenes literally say "Product integrated into the outfit **or held naturally**", "shown casually", "shown naturally" — giving the model permission to hold instead of wear. Two scenes (`Unboxing Excitement`, `Product Holding in Hand`, `Hands-Only Demo`) are dedicated holding scenes and shouldn't run when interaction = Wearing.
+3. **No hard constraint** in the prompt template that the garment must be worn on the body when wearing was selected. The model takes the easy path (hold up to camera).
 
-Replace the Selfie/UGC "Brand" step (step 2) with a new **"Interaction"** step:
+### The fix
 
-```text
-Step 1 Product   →   Step 2 Interaction   →   Step 3 Model   →   Step 4 Settings   →   Step 5 Results
+**A. Backend — honor `interaction_phrase` (single line change in `generate-workflow/index.ts`)**
+
+```ts
+// before
+const interaction = getProductInteraction(product.productType);
+// after
+const interaction = body.interaction_phrase?.trim()
+  || getProductInteraction(product.productType);
 ```
 
-The Interaction step asks one question:
-> **How should the creator engage with your product?**
+Plus: when `interaction_phrase` indicates wearing (string includes `wearing`), append a short **WEARING ENFORCEMENT** block to the prompt for the Selfie/UGC workflow:
 
-…and shows 2–5 large, image-style option cards. The available options are filtered by product **category** (from `analysis_json.category`, falling back to the keyword map already in `categoryUtils.ts`).
+> WEARING ENFORCEMENT: The product MUST be worn on the body in its correct position (top → torso, dress → full body, jewelry → on finger/wrist/neck, eyewear → on face, shoes → on feet, bag → on shoulder/in hand carried). The product MUST NOT be held up to the camera, draped over the arm, hung on a hanger, or laid on a surface. Visible body fit (shoulders, neckline, sleeves) is required.
 
-#### Category → allowed interactions
+Symmetrically, when phrase contains "applying" or "spraying" or "tasting" — add a one-line enforcement so the action is visibly happening in-frame.
 
-| Category | Options shown (label → server verb phrase) |
-|---|---|
-| beauty / makeup / skincare | Applying it · Holding near face · Showing the texture/shade · Showing the packaging |
-| fragrance | Spraying on wrist/neck · Holding the bottle · Showing the packaging |
-| haircare | Running through hair · Holding near hair · Showing the bottle |
-| garments / apparel / activewear / swimwear / lingerie / dresses / hoodies / jeans / jackets | Wearing it · Holding it up · Styling it |
-| shoes / sneakers / boots / high-heels | Wearing on feet · Holding them up · Showing the sole/detail |
-| jewellery-* / watches / eyewear | Wearing it · Holding it up to camera · Showing the detail |
-| bags-accessories / backpacks / wallets / belts / scarves | Wearing/carrying it · Holding it up · Showing inside / detail |
-| food / beverages | Tasting / sipping · Holding the package · Showing the label |
-| supplements / wellness | Holding the bottle · Pouring into hand · Showing the label |
-| tech-devices | Using / demonstrating · Holding it up · Showing the screen/feature |
-| furniture / home-decor | Showing it in their space · Pointing it out · Holding/placing it |
-| other / unknown | Holding it · Showing it to camera · Pointing it out |
+**B. Backend — filter incompatible scenes when wearing is selected**
 
-Rules:
-- "Wearing" is hidden for beauty / fragrance / food / beverages / supplements / tech / furniture / home decor.
-- Always include a safe **"Holding it"** fallback so every category has ≥2 options.
-- Default selection = first option in the list (sensible for the category).
-- Selection is required to proceed.
+If `interaction_phrase` contains "wearing", the three "holding" scenes are not appropriate. In the workflow enqueue path, drop these scene indexes from `selected_variations` for wearing flows:
+- `Unboxing Excitement`
+- `Product Holding in Hand`
+- `Hands-Only Demo`
 
-UI: same card style as the existing scene picker (4-up grid on desktop, 2-up on mobile). Each card shows an emoji/icon + label + one-line description. Single-select.
+(They remain available for non-wearing categories like skincare/fragrance/food.)
 
-### The fix (server)
+**C. Scene library rewrite — luxury + clean, no "hold" loopholes**
 
-In `supabase/functions/generate-workflow/index.ts`:
-- Accept a new optional `interaction_phrase` (or `interaction_id`) in the workflow request payload.
-- When present **and** the workflow is `selfie-ugc-set`, use it directly for `{PRODUCT_INTERACTION}` instead of `getProductInteraction(productType)`.
-- Keep `getProductInteraction()` as the fallback (back-compat for any legacy clients).
+Update `workflows.generation_config.variation_strategy.variations` for slug `selfie-ugc-set` via a SQL migration. New direction for every scene:
 
-The verb phrases are short, natural, and directly match the labels above (e.g. "applying the product to their skin", "wearing the item naturally as part of their outfit", "holding the bottle near their wrist as if just sprayed").
+- Strip every "or held naturally", "shown casually", "shown naturally", "shown as part of" — replace with explicit body placement matched to product type via the `{PRODUCT_INTERACTION}` token.
+- Elevate the aesthetic: warm neutral palette, clean lived-in (not messy) interiors, soft natural light, considered styling. Keep authentic UGC feel (iPhone selfie, no studio) but lean **quiet luxury** — minimal, neutral tones, premium materials, uncluttered surfaces.
+- Add a `wearable_only: true` flag to scenes that only make sense when the model wears the product, and `holdable_only: true` to the three holding scenes. The backend uses these flags for the filter in step B (cleaner than string-matching labels).
 
-### Frontend wiring (`src/pages/Generate.tsx`)
+Refreshed scene list (12 scenes, same labels so user UI/preview thumbs unchanged):
 
-1. New state: `ugcInteraction: string | null`.
-2. New constant `UGC_INTERACTION_OPTIONS` keyed by normalized category, each option = `{ id, label, description, phrase, icon }`.
-3. Helper `getInteractionOptionsForProduct(product)` → reads `analysis_json.category` first, then falls back to `detectProductCategory()` from `categoryUtils.ts`, returns the option list (always ≥2).
-4. Replace Selfie/UGC's step-2 routing:
-   - `getCurrentStepNumber` map: `'interaction': 2` (drop `'brand-profile': 2`, `'mode': 2`).
-   - `getSteps()` for `isSelfieUgc`: `[Product, Interaction, Model, Settings, Results]`.
-   - Step navigation: after Product → go to `interaction` (not `brand-profile`); after `interaction` → `model`.
-5. New render block: `{currentStep === 'interaction' && isSelfieUgc && ( … cards … )}` with Continue button disabled until one is picked.
-6. Pass `interaction_phrase: UGC_INTERACTION_OPTIONS[…].phrase` in the workflow payload (both single-product and multi-product enqueue paths around lines 1246 and 1379).
-7. Brand-profile step continues to exist for all OTHER workflows — only `isSelfieUgc` skips it.
+| # | Label | New direction (summary) | Flag |
+|---|---|---|---|
+| 1 | Golden Hour Selfie | Clean rooftop or open balcony at magic hour, warm rim light, minimalist concrete + greenery backdrop, no clutter. | wearable_only |
+| 2 | Coffee Shop / Brunch | Quiet specialty café, marble or oak table, ceramic flat-white, soft window light. Tidy, considered. | wearable_only |
+| 3 | Car Selfie | Modern car interior (cream/tan leather), seatbelt visible, soft daylight through windshield. Clean dash, no clutter. | wearable_only |
+| 4 | Walking Street Style | Quiet European-style street, soft daylight, neutral architecture, minimal foot traffic. Confident posture. | wearable_only |
+| 5 | Gym / Workout | Boutique studio gym (light wood, white walls, plants), post-workout glow, no messy lockers. | wearable_only |
+| 6 | Morning Routine / GRWM | Bright minimalist bathroom, marble counter, a few curated essentials only, soft morning light. | (any) |
+| 7 | Bedroom Outfit Check | Tidy neutral bedroom, linen bedding, soft daylight, single curated outfit visible. Clear floor. | wearable_only |
+| 8 | Couch / Netflix Chill | Linen couch, neutral throw, warm lamp light, minimal styling. No TV glare. | (any) |
+| 9 | Kitchen Counter | Stone/oak counter, fresh fruit + ceramic mug, calm morning light. Clean surfaces. | wearable_only |
+| 10 | Unboxing Excitement | Tidy desk, branded box on linen surface, tissue paper folded neatly. | holdable_only |
+| 11 | Product Holding in Hand | Hand at chest level, neutral indoor backdrop, intentional framing. | holdable_only |
+| 12 | Hands-Only Demo | Hands on linen or stone surface, soft top-down light, product is the hero. | holdable_only |
+
+Each scene's new `instruction` text ends with: *"The subject is {PRODUCT_INTERACTION}."* — the placeholder is already substituted by the backend, so the per-scene instruction stops competing with the interaction directive.
+
+**D. Negative prompt additions**
+
+Append to `negative_prompt_additions`:
+> garment held up to camera when wearing was selected, product on hanger, product on mannequin, clutter, messy table, dirty surfaces, neon colors, harsh studio shadows, plastic-looking props, busy patterns, kitsch décor, multiple unrelated brands visible
 
 ### Files touched
-- `src/pages/Generate.tsx` — new step, new state, new option set, payload field, step counter/labels.
-- `supabase/functions/generate-workflow/index.ts` — accept `interaction_phrase` and prefer it over the hard-coded map for the UGC workflow.
-- (Optional polish) `src/data/learnContent.ts` — update the Selfie/UGC guide steps to mention "Interaction" instead of "Brand".
+
+1. `supabase/functions/generate-workflow/index.ts` — honor `interaction_phrase`, add WEARING/APPLYING enforcement block, filter `selected_variations` by scene flags for the Selfie/UGC workflow.
+2. SQL migration — `UPDATE workflows SET generation_config = … WHERE slug='selfie-ugc-set'` with the rewritten 12-scene array (new instructions + `wearable_only` / `holdable_only` flags + expanded negative prompt). Preserves `preview_url` and `label` so UI thumbnails stay the same.
+3. (No frontend change required — the wiring already sends `interaction_phrase`. Optional polish: hide holdable scenes in the picker too when interaction = Wearing, to mirror backend filter.)
+
+### Validation
+- Pick the cream knit top + Model + **Wearing it** → all 9 wearable scenes show the model wearing the top on her torso, none holding.
+- Pick a perfume + **Spraying on wrist** → the spray gesture is visibly happening.
+- Pick beauty cream + **Applying it** → application gesture in frame.
+- Visual feel across all 12 scenes is calmer, neutral, premium — no messy counters, no harsh colors.
 
 ### Out of scope
-- No DB schema change. No changes to other workflows. Brand profile defaults still apply globally elsewhere.
-
-### Result
-Users explicitly choose **how** the model interacts with the product — 100% logical per category, never offers "Wearing" for beauty/food/tech, and finally gives the user real control over the single most important variable in a UGC shot.
+No DB schema changes, no other workflows touched, no model/provider change (still Gemini 3 Pro multi-image).
 
