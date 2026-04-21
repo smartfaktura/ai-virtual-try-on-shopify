@@ -1102,6 +1102,27 @@ serve(async (req) => {
       variationsToGenerate = allVariations;
     }
 
+    // Filter scene flags by interaction (e.g. drop "holdable_only" scenes when user picked Wearing,
+    // and drop "wearable_only" scenes when user picked a non-wearing interaction).
+    const interactionLower = (body.interaction_phrase || '').toLowerCase();
+    if (interactionLower) {
+      const wantsWearing = interactionLower.includes('wearing') || interactionLower.includes('worn ');
+      variationsToGenerate = variationsToGenerate.filter((v) => {
+        const flags = v as unknown as Record<string, unknown>;
+        if (wantsWearing && flags.holdable_only === true) return false;
+        if (!wantsWearing && flags.wearable_only === true) return false;
+        return true;
+      });
+      // Safety: never return zero scenes — fall back to original list
+      if (variationsToGenerate.length === 0) {
+        variationsToGenerate = body.selected_variations?.length
+          ? body.selected_variations
+              .filter((i: number) => i >= 0 && i < combinedVariations.length)
+              .map((i: number) => combinedVariations[i])
+          : allVariations;
+      }
+    }
+
     const maxImages = 4; // max 4 images per job; frontend splits larger requests into batches
     variationsToGenerate = variationsToGenerate.slice(0, maxImages);
 
