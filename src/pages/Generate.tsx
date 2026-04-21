@@ -48,6 +48,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { PostGenerationUpgradeCard } from '@/components/app/PostGenerationUpgradeCard';
 import { UpgradeValueDrawer } from '@/components/app/UpgradeValueDrawer';
 import { useConversionState } from '@/hooks/useConversionState';
+import { resolveUgcOutfitPhrase } from '@/lib/ugcOutfitPresets';
 import { resolveConversionCategory } from '@/lib/conversionCopy';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
@@ -653,6 +654,7 @@ export default function Generate() {
   ];
   const [ugcMood, setUgcMood] = useState<UgcMood>('excited');
   const [ugcInteraction, setUgcInteraction] = useState<string | null>(null);
+  const [ugcOutfit, setUgcOutfit] = useState<string>('auto');
 
   // Mirror Selfie detection
   const isMirrorSelfie = activeWorkflow?.slug === 'mirror-selfie-set';
@@ -1360,6 +1362,7 @@ export default function Generate() {
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
             interaction_phrase: resolveUgcInteractionPhrase(product),
+            outfit_phrase: isSelfieUgc ? resolveUgcOutfitPhrase(ugcOutfit, resolveUgcInteractionPhrase(product)) : undefined,
             batch_id: batchId,
           };
           if (modelProfile && base64ModelImage) {
@@ -1494,6 +1497,7 @@ export default function Generate() {
       additional_products: additionalProducts,
       ugc_mood: isSelfieUgc ? ugcMood : undefined,
       interaction_phrase: resolveUgcInteractionPhrase(selectedProduct),
+      outfit_phrase: isSelfieUgc ? resolveUgcOutfitPhrase(ugcOutfit, resolveUgcInteractionPhrase(selectedProduct)) : undefined,
       // Interior Design fields
       room_type: isInteriorDesign ? interiorRoomType : undefined,
       wall_color: isInteriorDesign ? interiorWallColor : undefined,
@@ -4249,6 +4253,9 @@ export default function Generate() {
             setMirrorSettingsPhase={setMirrorSettingsPhase}
             ugcMood={ugcMood}
             setUgcMood={setUgcMood}
+            ugcOutfit={ugcOutfit}
+            setUgcOutfit={setUgcOutfit}
+            ugcInteractionPhrase={resolveUgcInteractionPhrase(selectedProduct)}
             quality={quality}
             setQuality={setQuality}
             aspectRatio={aspectRatio}
