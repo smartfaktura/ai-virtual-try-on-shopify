@@ -256,6 +256,14 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               <h3 className="text-base font-semibold">
                 {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Style' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
               </h3>
+              {isAdmin && isSelfieUgc && (
+                <Link
+                  to="/app/admin/ugc-bulk-upload"
+                  className="text-[10px] underline text-muted-foreground hover:text-foreground"
+                >
+                  Bulk upload previews
+                </Link>
+              )}
               {isFlatLay && (
                 <>
                   <Badge variant="secondary" className="text-[10px]"><Layers className="w-3 h-3 mr-1" />Flat Lay</Badge>
