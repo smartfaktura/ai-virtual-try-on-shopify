@@ -652,6 +652,7 @@ export default function Generate() {
     { id: 'focused', emoji: '🧐', label: 'Focused', desc: 'Tutorial / demo mode', example: 'Concentrated, friendly' },
   ];
   const [ugcMood, setUgcMood] = useState<UgcMood>('excited');
+  const [ugcInteraction, setUgcInteraction] = useState<string | null>(null);
 
   // Mirror Selfie detection
   const isMirrorSelfie = activeWorkflow?.slug === 'mirror-selfie-set';
