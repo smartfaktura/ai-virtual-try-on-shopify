@@ -357,7 +357,7 @@ export default function Generate() {
           return { name: f.name, url: urlData.publicUrl, created_at: f.created_at };
         });
     },
-    enabled: !!user?.id && activeWorkflow?.name === 'Interior / Exterior Staging',
+    enabled: !!user?.id && activeWorkflow?.slug === 'interior-exterior-staging',
   });
 
   const [currentStep, setCurrentStep] = useState<Step>('source');
@@ -548,8 +548,8 @@ export default function Generate() {
   const [mirrorSettingsPhase, setMirrorSettingsPhase] = useState<'scenes' | 'final'>('scenes');
 
   // Flat Lay Set detection and state
-  const isFlatLay = activeWorkflow?.name === 'Flat Lay Set';
-  const isUpscale = activeWorkflow?.name === 'Image Upscaling';
+  const isFlatLay = activeWorkflow?.slug === 'flat-lay-set';
+  const isUpscale = activeWorkflow?.slug === 'image-upscaling';
   const isAngleWorkflow = false; // Angle workflows redirect to /app/perspectives
   const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
   const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('2k');
@@ -570,13 +570,13 @@ export default function Generate() {
   const [ugcMood, setUgcMood] = useState<UgcMood>('excited');
 
   // Mirror Selfie detection
-  const isMirrorSelfie = activeWorkflow?.name === 'Mirror Selfie Set';
+  const isMirrorSelfie = activeWorkflow?.slug === 'mirror-selfie-set';
 
   // Selfie / UGC Set detection
-  const isSelfieUgc = activeWorkflow?.name === 'Selfie / UGC Set';
+  const isSelfieUgc = activeWorkflow?.slug === 'selfie-ugc-set';
 
   // Interior / Exterior Staging detection and state
-  const isInteriorDesign = activeWorkflow?.name === 'Interior / Exterior Staging';
+  const isInteriorDesign = activeWorkflow?.slug === 'interior-exterior-staging';
   const [interiorType, setInteriorType] = useState<'interior' | 'exterior'>('interior');
   const [interiorRoomType, setInteriorRoomType] = useState('');
   const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
@@ -3633,7 +3633,7 @@ export default function Generate() {
                   <div>
                     <h2 className="text-base font-semibold">Select Model{!isFreeUser ? 's' : ''}</h2>
                     <p className="text-sm text-muted-foreground">
-                      {activeWorkflow?.name === 'Mirror Selfie Set'
+                      {isMirrorSelfie
                         ? 'This model will appear taking a mirror selfie wearing your product'
                         : isFreeUser ? 'Choose the model who will wear your clothing' : 'Select one or more models for your shoot'}
                     </p>
