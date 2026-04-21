@@ -3732,6 +3732,44 @@ export default function Generate() {
           </CardContent></Card>
         )}
 
+        {/* Interaction Selection — Selfie / UGC only */}
+        {currentStep === 'interaction' && isSelfieUgc && (selectedProduct || scratchUpload) && (
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-primary" />
+                How should the creator engage with your product?
+              </h2>
+              <p className="text-sm text-muted-foreground">Pick the action that best fits the shot you want — this drives the model's pose and the product's role in the frame.</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {getInteractionOptionsForProduct(selectedProduct).map(opt => {
+                const active = ugcInteraction === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setUgcInteraction(opt.id)}
+                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                      active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{opt.emoji}</div>
+                    <p className="font-medium text-sm">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+              <Button disabled={!ugcInteraction} onClick={() => setCurrentStep('model')}>Continue to Model</Button>
+            </div>
+          </CardContent></Card>
+        )}
+
         {/* Mode Selection */}
         {currentStep === 'mode' && (selectedProduct || scratchUpload) && (
           <Card><CardContent className="p-5 space-y-5">
