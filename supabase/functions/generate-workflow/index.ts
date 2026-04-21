@@ -185,6 +185,7 @@ interface WorkflowRequest {
     photography_reference?: string;
   };
   selected_variations?: number[];
+  interaction_phrase?: string;
   extra_variations?: Array<{
     label: string;
     instruction: string;
@@ -218,6 +219,7 @@ function buildVariationPrompt(
   ugcMood?: string,
   theme?: string,
   themeNotes?: string,
+  interactionPhrase?: string,
   aspectRatio?: string,
   batchOutfitLock?: boolean,
 ): string {
