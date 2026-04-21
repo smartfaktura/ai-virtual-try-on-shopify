@@ -1172,11 +1172,16 @@ export default function ProductImages() {
 
                       {/* Upload Image Card — quick-saves immediately */}
                       <div className="group relative flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() => quickUploadInputRef.current?.click()}
-                          disabled={quickUploading}
-                          className="flex-1 flex flex-col cursor-pointer disabled:cursor-not-allowed"
+                        <div
+                          role="button"
+                          tabIndex={quickUploading ? -1 : 0}
+                          onClick={() => { if (!quickUploading) quickUploadInputRef.current?.click(); }}
+                          onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !quickUploading) { e.preventDefault(); quickUploadInputRef.current?.click(); } }}
+                          aria-disabled={quickUploading}
+                          className={cn(
+                            'flex-1 flex flex-col',
+                            quickUploading ? 'cursor-not-allowed' : 'cursor-pointer'
+                          )}
                         >
                           <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/40">
                             {quickUploading ? (
@@ -1192,12 +1197,12 @@ export default function ProductImages() {
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setAddProductCompact(false); setAddProductTab('manual'); setAddProductOpen(true); }}
-                              className="text-[9px] text-muted-foreground/70 hover:text-primary mt-0.5 underline-offset-2 hover:underline text-left"
+                              className="text-[9px] text-muted-foreground/70 hover:text-primary mt-0.5 underline-offset-2 hover:underline text-left self-start"
                             >
                               More options
                             </button>
                           </div>
-                        </button>
+                        </div>
                         <input
                           ref={quickUploadInputRef}
                           type="file"
