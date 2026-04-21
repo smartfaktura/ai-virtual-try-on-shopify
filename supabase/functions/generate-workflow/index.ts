@@ -206,6 +206,7 @@ interface WorkflowRequest {
   };
   selected_variations?: number[];
   interaction_phrase?: string;
+  outfit_phrase?: string;
   extra_variations?: Array<{
     label: string;
     instruction: string;
@@ -242,6 +243,7 @@ function buildVariationPrompt(
   interactionPhrase?: string,
   aspectRatio?: string,
   batchOutfitLock?: boolean,
+  outfitPhrase?: string,
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -320,6 +322,14 @@ This overrides everything — the variation description is for the SURFACE STYLE
     const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
     const interaction = interactionPhrase?.trim() || getProductInteraction(product.productType);
     ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n${buildInteractionEnforcement(interaction)}`;
+  }
+
+  // OUTFIT STYLING — explicit wardrobe override (skipped automatically when interaction is "wearing")
+  let outfitBlock = "";
+  const interactionLowerForOutfit = (interactionPhrase || '').toLowerCase();
+  const outfitConflictsWithWearing = interactionLowerForOutfit.includes('wearing') || interactionLowerForOutfit.includes('worn ');
+  if (outfitPhrase && outfitPhrase.trim() && !outfitConflictsWithWearing) {
+    outfitBlock = `\nOUTFIT STYLING:\nThe subject is ${outfitPhrase.trim()}. The outfit must look natural, lived-in, and complement the product without competing with it. Keep accessories minimal and the palette quiet — neutral tones, premium materials, no logos.\n`;
   }
 
   // Interior Design block — room type, wall color, flooring overrides
