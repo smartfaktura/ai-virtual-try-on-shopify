@@ -1,70 +1,51 @@
 
 
-## Fix Product Images upload so new products are always saved clearly
+## Fix "Skip waiting & view results so far" showing with zero results
 
 ### Problem
-The `/app/generate/product-images` Product step has inconsistent upload behavior:
+The button on the Step 5 generating screen appears after 60 seconds whenever generation isn't done — even when **zero** images have actually completed. Clicking it sends the user to results with nothing to show.
 
-- Empty-state upload/paste saves immediately as a product
-- The grid **Upload Image** card opens the manual upload drawer, where selecting an image does not save until **Add Product** is clicked
-- The card subtitle says “drop, paste, or import”, but drag/drop is not fully wired on that grid area
-- This makes it look like an uploaded item worked, even when no product record was created
+Current logic (`ProductImagesStep5Generating.tsx`, line 98):
 
-### Fix approach
-Make the Product Images page behavior consistent and harder to miss.
+```ts
+const showCancelButton =
+  (elapsed >= 30 && halfComplete && completedJobs < effectiveTotal)
+  || (elapsed >= 60 && completedJobs < effectiveTotal);
+```
 
-### Changes
+The second branch ignores `completedOk` entirely, so it shows the button even when nothing usable exists.
 
-1. **Use immediate quick-save for the grid Upload Image card**
-   - Clicking **Upload Image** in the product grid will open a file picker directly
-   - After choosing an image, it will use the same `handleQuickUpload` path that:
-     - uploads to storage
-     - analyzes the product
-     - inserts into `user_products`
-     - refreshes the product grid
-     - auto-selects the new product
+### Fix
+Require **at least one successful (non-failed) completion** before the button can appear, and tighten the copy so the label always matches reality.
 
-2. **Keep advanced/manual upload available**
-   - Keep `AddProductModal` for cases where the user wants:
-     - multiple images
-     - extra angles
-     - manual title/type edits before saving
-     - import URL / CSV / Shopify
-   - Add a small secondary action such as **More upload options** or **Import options** instead of making the main Upload Image card open the manual drawer
+### Changes (single file: `src/components/app/product-images/ProductImagesStep5Generating.tsx`)
 
-3. **Add proper drag/drop support to the product grid**
-   - Wire `onDragOver`, `onDragLeave`, and `onDrop` around the Step 1 product grid
-   - Dropping an image will call `handleQuickUpload`
-   - The existing drag overlay will actually work instead of only being visual state
+1. **Gate visibility on real results**
+   ```ts
+   const hasAnyResults = completedOk >= 1;
+   const showCancelButton =
+     hasAnyResults &&
+     completedJobs < effectiveTotal &&
+     (
+       (elapsed >= 30 && halfComplete) ||  // fast path: 50%+ done
+       elapsed >= 60                        // slow path: at least 1 result + 60s
+     );
+   ```
 
-4. **Improve feedback**
-   - Show clear progress text:
-     - Uploading
-     - Analyzing
-     - Saving product
-   - After save, show a concise success toast like:
-     - `Product saved and selected`
-   - If saving fails, keep the current error toast
+2. **Always show an accurate count in the label**
+   - When `nearComplete` (≥90%): `View {N} completed results` (default variant)
+   - Otherwise: `View {N} result{s} so far` (outline variant)
+   - Drop the misleading generic "Skip waiting & view results so far" wording entirely — the count is always shown.
 
-5. **Optional safety check**
-   - After inserting the product, verify `newProduct.id` exists before selecting it
-   - If the insert succeeds but no row is returned, invalidate products and show a warning instead of silently continuing
+3. **No changes** to:
+   - Slow warning (`elapsed >= 180`) — still useful even with 0 results
+   - Failed-jobs summary
+   - Phase headlines, progress bar, team messages
 
-### Files to update
-- `src/pages/ProductImages.tsx`
-  - Update grid Upload Image card click behavior
-  - Add hidden file input for quick upload when products already exist
-  - Wire drag/drop handling around the Step 1 grid
-  - Keep modal access as secondary upload/import option
+### Result
+- 0 completed → button hidden, user keeps waiting (with slow warning after 3 min if applicable)
+- 1+ completed and slow → button appears with honest count: "View 1 result so far"
+- Near done → "View 7 completed results"
 
-No database migration is needed.
-
-### Expected result
-After this fix:
-
-- Uploading from `/app/generate/product-images` always creates a saved product when using the main Upload Image action
-- The product appears in the grid immediately
-- The uploaded product is auto-selected
-- Users will not accidentally upload/analyze a product without saving it
-- Advanced product editing remains available when needed
+No DB or other component changes.
 
