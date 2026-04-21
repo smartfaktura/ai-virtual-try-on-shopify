@@ -25,7 +25,7 @@ import type { Product, ScratchUpload, GenerationSourceType, AspectRatio, ImageQu
 import type { Workflow, WorkflowVariationStrategy, WorkflowUIConfig, WorkflowGenerationConfig } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 import type { Tables } from '@/integrations/supabase/types';
-import { UGC_OUTFIT_PRESETS, isOutfitLockedByInteraction } from '@/lib/ugcOutfitPresets';
+import { UGC_OUTFIT_PRESETS, UGC_PAIR_PRESETS, isWearingInteraction, type ProductSlot } from '@/lib/ugcOutfitPresets';
 type UserProduct = Tables<'user_products'>;
 
 const MAX_IMAGES_PER_JOB = 4;
