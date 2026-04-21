@@ -174,13 +174,18 @@ export default function ProductImages() {
 
       if (insertError) throw new Error(insertError.message);
 
-      // 4. Invalidate and auto-select
-      await queryClient.invalidateQueries({ queryKey: ['user-products'] });
+      // 4. Optimistically insert into cache, auto-select, then reconcile
+      queryClient.setQueryData<UserProduct[]>(['user-products', user.id], (old) => {
+        const list = old ?? [];
+        if (list.some(p => p.id === newProduct.id)) return list;
+        return [newProduct as UserProduct, ...list];
+      });
       setSelectedProductIds(prev => {
         const next = new Set(prev);
         next.add(newProduct.id);
         return next;
       });
+      queryClient.invalidateQueries({ queryKey: ['user-products'] });
 
       // Product appearing in grid is sufficient feedback — no toast needed
     } catch (err) {
@@ -209,12 +214,17 @@ export default function ProductImages() {
         .select()
         .single();
       if (error) throw new Error(error.message);
-      await queryClient.invalidateQueries({ queryKey: ['user-products'] });
+      queryClient.setQueryData<UserProduct[]>(['user-products', user.id], (old) => {
+        const list = old ?? [];
+        if (list.some(p => p.id === newProduct.id)) return list;
+        return [newProduct as UserProduct, ...list];
+      });
       setSelectedProductIds(prev => {
         const next = new Set(prev);
         next.add(newProduct.id);
         return next;
       });
+      queryClient.invalidateQueries({ queryKey: ['user-products'] });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to add demo';
       toast.error(msg);
@@ -1215,18 +1225,6 @@ export default function ProductImages() {
                           }}
                         />
                       </div>
-
-                      {/* Upload progress skeleton */}
-                      {quickUploading && (
-                        <div className="flex flex-col rounded-lg border-2 border-border overflow-hidden animate-pulse">
-                          <div className="aspect-square bg-muted/50 flex items-center justify-center">
-                            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-                          </div>
-                          <div className="h-[44px] flex flex-col justify-center px-1.5 py-1">
-                            <p className="text-[9px] text-muted-foreground">{quickUploadProgress || 'Uploading…'}</p>
-                          </div>
-                        </div>
-                      )}
 
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
