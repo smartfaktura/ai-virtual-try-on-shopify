@@ -95,7 +95,11 @@ export function ProductImagesStep5Generating({
   const showSlowWarning = elapsed >= 180 && completedJobs < effectiveTotal;
   const nearComplete = effectiveTotal > 0 && completedOk >= Math.ceil(effectiveTotal * 0.9);
   const halfComplete = effectiveTotal > 0 && completedOk >= Math.ceil(effectiveTotal * 0.5);
-  const showCancelButton = (elapsed >= 30 && halfComplete && completedJobs < effectiveTotal) || (elapsed >= 60 && completedJobs < effectiveTotal);
+  const hasAnyResults = completedOk >= 1;
+  const showCancelButton =
+    hasAnyResults &&
+    completedJobs < effectiveTotal &&
+    ((elapsed >= 30 && halfComplete) || elapsed >= 60);
 
   const productStatuses = products.length > 0 && jobMap && jobMap.size > 0
     ? products.map(p => {
