@@ -25,6 +25,7 @@ import type { Product, ScratchUpload, GenerationSourceType, AspectRatio, ImageQu
 import type { Workflow, WorkflowVariationStrategy, WorkflowUIConfig, WorkflowGenerationConfig } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 import type { Tables } from '@/integrations/supabase/types';
+import { UGC_OUTFIT_PRESETS, isOutfitLockedByInteraction } from '@/lib/ugcOutfitPresets';
 type UserProduct = Tables<'user_products'>;
 
 const MAX_IMAGES_PER_JOB = 4;
@@ -96,6 +97,9 @@ interface WorkflowSettingsPanelProps {
   // UGC state
   ugcMood: UgcMood;
   setUgcMood: (m: UgcMood) => void;
+  ugcOutfit: string;
+  setUgcOutfit: (o: string) => void;
+  ugcInteractionPhrase?: string;
 
   // Settings
   quality: ImageQuality;
@@ -156,6 +160,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
     flatLayPropStyle, setFlatLayPropStyle,
     mirrorSettingsPhase,
     ugcMood, setUgcMood,
+    ugcOutfit, setUgcOutfit, ugcInteractionPhrase,
     quality, setQuality, aspectRatio, setAspectRatio,
     selectedAspectRatios, setSelectedAspectRatios,
     framing, setFraming,
