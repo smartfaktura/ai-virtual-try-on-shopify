@@ -1,47 +1,80 @@
 
 
-## Edit Selfie/UGC scenes — remove 2, add 6 new (no previews yet)
+## New admin tool: Bulk UGC Scene Preview Upload
 
-### Scene removals
-Drop these from `workflows.generation_config.variation_strategy.variations` for slug `selfie-ugc-set`:
-- **Product Holding in Hand** (`holdable_only`)
-- **Hands-Only Demo** (`holdable_only`)
+Mirror of the existing `/app/admin/bulk-preview-upload` flow, but targeting the **Selfie/UGC scene previews** stored as a JSONB array on `workflows.generation_config`.
 
-(Keep **Unboxing Excitement** as the remaining `holdable_only` scene for non-wearing categories.)
+### Route
+`/app/admin/ugc-bulk-upload` → new page `AdminUgcBulkPreviewUpload.tsx`. Lazy-loaded in `src/App.tsx`. Admin-only (uses `useIsAdmin`).
 
-### Scene additions (6 new, `wearable_only: true`, `aspect_ratio: 4:5`, no `preview_url` yet)
+### Why a new page (vs reusing the existing one)
+The existing tool writes to `product_image_scenes` rows. UGC scenes live inside `workflows.generation_config.variation_strategy.variations` JSONB array, keyed by `label`. Same UX, different write path.
 
-All written to match the existing quiet-luxury voice and ending with "The subject is {PRODUCT_INTERACTION}." so they obey the interaction directive.
+### UX (identical 3-step flow as the original)
+1. **Header** — title "UGC Scene Bulk Previews" + back link to `/app/generate/selfie-ugc-set`. A short note: "Updates preview thumbnails for the 16 scenes of the Selfie/UGC workflow."
+2. **Drop zone** — drag-drop or click-to-select multiple images (no category step needed; scope is fixed to the Selfie/UGC workflow).
+3. **Review matches** — auto-matches each filename to the closest scene `label` using the same longest-suffix-match scoring helper (`normalize`, `extractCandidates`, `matchFileToScene`). Shows green check for matches, red alert for unmatched, with a manual reassign dropdown listing all 16 labels.
+4. **Upload all** — uploads each image to `product-uploads/{user_id}/ugc-scene-previews/{ts}-{rand}.{ext}`, gets the public URL, then atomically updates the corresponding scene's `preview_url` field inside the JSONB array.
 
-| Label | Category | Instruction summary |
-|---|---|---|
-| **Modern Luxury Business Center** | Everyday Moments | Polished lobby of a contemporary business center — floor-to-ceiling glass, travertine or pale stone floors, low designer seating, soft diffused daylight bouncing off neutral surfaces. Calm, no foot traffic, no signage. Palette: warm grey, brushed bronze, off-white. |
-| **Luxury Garden Walk** | Everyday Moments | Manicured private garden path — trimmed hedges, gravel walkway, soft golden-hour sun filtering through tall trees, a glimpse of a stone villa wall in the background. Palette: deep green, warm cream stone, sun-faded sand. |
-| **Beach Walk** | Everyday Moments | Quiet stretch of pale sand beach in soft late-afternoon light. Calm sea horizon, gentle wind, no crowds, no umbrellas, no signage. Bare feet at the waterline framing optional. Palette: bone sand, soft cyan water, warm sun. |
-| **Sunbed by the Pool** | Everyday Moments | Reclining on a luxury sunbed beside a clean infinity pool. Beige cushion, white folded towel, single ceramic glass on a side table — nothing else. Soft midday or golden-hour sun, palm shadows on travertine. Palette: travertine, cream linen, turquoise water. |
-| **Natural Studio Background** | At Home | Soft, paper-textured natural studio backdrop in warm bone or oat tone. Subject lit by a single large soft window-light source from the side, gentle falloff into shadow. Clean floor, no props, no logos. Palette: bone, warm grey, soft shadow. |
-| **Luxury Hotel Room** | At Home | Quiet five-star hotel suite — linen-dressed bed, oak headboard, sheer-curtained window with diffused daylight, single fresh flower on a side table. Tidy, considered, no luggage, no clutter. Palette: ivory linen, oak, warm taupe. |
+Filename hints surfaced in the drop-zone helper text: *"Use names like `modern-luxury-business-center.jpg`, `beach-walk.png`, `luxury-hotel-room.webp`."*
 
-All six default to `wearable_only: true` (so they show only when the user picks Wearing or a non-wearing category that has no `wearable_only` filter applied — current backend filter only excludes `holdable_only` for wearing flows; `wearable_only` scenes are shown for everything, matching today's other wearable scenes).
+### Backend write path
+Workflow JSONB updates are admin-only and currently performed via direct table updates. The cleanest, race-safe approach is a small **`SECURITY DEFINER` SQL function** added in a migration:
 
-`preview_url` is intentionally omitted on the 6 new scenes — UI falls back to the workflow default thumbnail until you supply images. We can add them later via a one-line UPDATE per scene.
+```sql
+create or replace function public.update_ugc_scene_preview(
+  p_label text,
+  p_preview_url text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_idx int;
+begin
+  if not has_role(auth.uid(), 'admin'::app_role) then
+    raise exception 'Admin only';
+  end if;
 
-### Implementation
+  select i - 1 into v_idx
+  from workflows w,
+       jsonb_array_elements(w.generation_config->'variation_strategy'->'variations')
+         with ordinality as t(elem, i)
+  where w.slug = 'selfie-ugc-set'
+    and elem->>'label' = p_label;
 
-Single SQL migration:
-1. Read current `generation_config` JSONB.
-2. Filter out the two removed scenes from `variation_strategy.variations`.
-3. Append the six new scene objects.
-4. `UPDATE workflows SET generation_config = … WHERE slug = 'selfie-ugc-set'`.
+  if v_idx is null then raise exception 'Scene label not found: %', p_label; end if;
 
-No frontend, no edge-function, no schema change.
+  update workflows
+  set generation_config = jsonb_set(
+    generation_config,
+    array['variation_strategy','variations',v_idx::text,'preview_url'],
+    to_jsonb(p_preview_url),
+    true
+  )
+  where slug = 'selfie-ugc-set';
+end;
+$$;
+```
+
+The page calls `supabase.rpc('update_ugc_scene_preview', { p_label, p_preview_url })` per uploaded image. Using a function (rather than client-side jsonb manipulation) avoids race conditions when uploading many images in parallel.
 
 ### Files touched
-- New migration file under `supabase/migrations/`.
+1. **New** `src/pages/AdminUgcBulkPreviewUpload.tsx` — the page (drop zone, matcher UI, upload loop).
+2. **Edit** `src/App.tsx` — lazy import + new route at `/admin/ugc-bulk-upload`.
+3. **Edit** `src/pages/Generate.tsx` (Selfie/UGC settings step) — add a small admin-only "Bulk upload previews" link next to the scene grid (only visible if `useIsAdmin().isAdmin`), pointing to `/app/admin/ugc-bulk-upload`. Quality-of-life entry point so you don't have to remember the URL.
+4. **New migration** — adds the `update_ugc_scene_preview(text,text)` SECURITY DEFINER function with admin role check.
+
+### Storage
+Reuses the existing public `product-uploads` bucket under prefix `{user_id}/ugc-scene-previews/`. No new bucket, no schema change beyond the helper function.
 
 ### Validation
-- `/app/generate/selfie-ugc-set` Settings step shows 16 total scenes (was 12, −2, +6).
-- "Product Holding in Hand" and "Hands-Only Demo" no longer appear.
-- The 6 new scenes appear with the workflow's fallback thumbnail until preview images are uploaded.
-- Picking a garment + Wearing → all six new scenes show the model wearing the product on body in the new luxury settings.
+- Visit `/app/admin/ugc-bulk-upload` → drop the 6 newly named images (e.g. `beach-walk.jpg`, `luxury-hotel-room.jpg`).
+- Each card shows green check + matched scene label.
+- Click "Upload N previews" → progress bar → success toast.
+- Refresh `/app/generate/selfie-ugc-set` Settings step → the 6 previously thumbnail-less scenes now show your custom images.
+- Re-uploading the same label overwrites the `preview_url` (idempotent).
+
+### Out of scope
+No changes to the matching algorithm, no edits to other workflows, no new buckets.
 
