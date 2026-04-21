@@ -1359,6 +1359,7 @@ export default function Generate() {
             quality, aspectRatio: ratioVal,
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
+            interaction_phrase: resolveUgcInteractionPhrase(productForJob ?? selectedProduct),
             batch_id: batchId,
           };
           if (modelProfile && base64ModelImage) {
@@ -1492,6 +1493,7 @@ export default function Generate() {
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
       additional_products: additionalProducts,
       ugc_mood: isSelfieUgc ? ugcMood : undefined,
+      interaction_phrase: resolveUgcInteractionPhrase(selectedProduct),
       // Interior Design fields
       room_type: isInteriorDesign ? interiorRoomType : undefined,
       wall_color: isInteriorDesign ? interiorWallColor : undefined,
@@ -2163,7 +2165,7 @@ export default function Generate() {
       return map[currentStep] || 1;
     }
     if (isSelfieUgc) {
-      const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, interaction: 2, model: 3, settings: 4, generating: 5, results: 5 };
       return map[currentStep] || 1;
     }
     if (generationMode === 'virtual-try-on') {
@@ -2219,7 +2221,7 @@ export default function Generate() {
     if (isSelfieUgc) {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product' },
-        { name: 'Brand' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' },
+        { name: 'Interaction' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
     if (generationMode === 'virtual-try-on') {
@@ -3797,6 +3799,8 @@ export default function Generate() {
                   if (isMirrorSelfie) {
                     setMirrorSettingsPhase('scenes');
                     setCurrentStep('settings');
+                  } else if (isSelfieUgc) {
+                    setCurrentStep('interaction');
                   } else {
                     setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product');
                   }
