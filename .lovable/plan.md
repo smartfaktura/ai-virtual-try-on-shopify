@@ -1,80 +1,77 @@
 
 
-## New admin tool: Bulk UGC Scene Preview Upload
+## Add "Outfit" picker to the Selfie/UGC Settings step
 
-Mirror of the existing `/app/admin/bulk-preview-upload` flow, but targeting the **Selfie/UGC scene previews** stored as a JSONB array on `workflows.generation_config`.
+Give the user control over what the model is wearing in UGC shots — auto-pick a sensible default, allow override with 8 curated outfit presets, and inject the chosen outfit into the prompt for clean, on-brief generations.
 
-### Route
-`/app/admin/ugc-bulk-upload` → new page `AdminUgcBulkPreviewUpload.tsx`. Lazy-loaded in `src/App.tsx`. Admin-only (uses `useIsAdmin`).
+### Where it lives
+A new section inside `WorkflowSettingsPanel.tsx`, shown only when `isSelfieUgc === true`, placed right after the existing **Creator Mood** card (so the order flows: Scenes → Mood → **Outfit** → Framing → Settings).
 
-### Why a new page (vs reusing the existing one)
-The existing tool writes to `product_image_scenes` rows. UGC scenes live inside `workflows.generation_config.variation_strategy.variations` JSONB array, keyed by `label`. Same UX, different write path.
+The card looks and behaves like the Mood selector for visual consistency: title, subtitle, 8 tile grid (2 cols mobile, 4 cols desktop). Each tile shows the outfit name + a one-line vibe descriptor. The first tile is selected by default and labeled **Auto** (Popular pill, recommended). Picking nothing = Auto = the first preset.
 
-### UX (identical 3-step flow as the original)
-1. **Header** — title "UGC Scene Bulk Previews" + back link to `/app/generate/selfie-ugc-set`. A short note: "Updates preview thumbnails for the 16 scenes of the Selfie/UGC workflow."
-2. **Drop zone** — drag-drop or click-to-select multiple images (no category step needed; scope is fixed to the Selfie/UGC workflow).
-3. **Review matches** — auto-matches each filename to the closest scene `label` using the same longest-suffix-match scoring helper (`normalize`, `extractCandidates`, `matchFileToScene`). Shows green check for matches, red alert for unmatched, with a manual reassign dropdown listing all 16 labels.
-4. **Upload all** — uploads each image to `product-uploads/{user_id}/ugc-scene-previews/{ts}-{rand}.{ext}`, gets the public URL, then atomically updates the corresponding scene's `preview_url` field inside the JSONB array.
+### The 8 outfit presets (curated for quiet luxury UGC)
 
-Filename hints surfaced in the drop-zone helper text: *"Use names like `modern-luxury-business-center.jpg`, `beach-walk.png`, `luxury-hotel-room.webp`."*
+Each preset has an `id`, `label`, `vibe` (short UI line), and `phrase` (the prompt injection string).
 
-### Backend write path
-Workflow JSONB updates are admin-only and currently performed via direct table updates. The cleanest, race-safe approach is a small **`SECURITY DEFINER` SQL function** added in a migration:
+| # | Label | Vibe (UI) | Prompt phrase |
+|---|---|---|---|
+| 1 | **Auto** ⭐ | Smart pick for the scene | *(no outfit phrase — backend uses scene-default styling)* |
+| 2 | **Cream Knit & Denim** | Soft cream knit + light wash jeans | wearing a soft cream knit sweater and light-wash straight-leg jeans, minimal silver jewelry |
+| 3 | **White Tee & Tailored** | Crisp white tee + beige tailored trousers | wearing a crisp white fitted t-shirt tucked into pleated beige tailored trousers, slim leather belt |
+| 4 | **Linen Set** | Relaxed cream linen co-ord | wearing a relaxed cream linen button-up shirt and matching wide-leg linen trousers, softly draped |
+| 5 | **Black Slip & Cardigan** | Black slip dress, oat cardigan | wearing a simple black silk slip dress layered with an oversized oat-coloured fine-knit cardigan |
+| 6 | **Oversized Blazer Look** | Black blazer, white tee, straight jeans | wearing an oversized black wool blazer over a plain white t-shirt and dark straight-leg jeans, sleeves slightly pushed up |
+| 7 | **Athleisure Neutral** | Beige hoodie + matching joggers | wearing a tonal beige cotton hoodie and matching tapered joggers, clean white minimal sneakers |
+| 8 | **Trench Off-Duty** | Camel trench, white tee, jeans | wearing a long camel trench coat over a white t-shirt and mid-wash straight jeans, casual off-duty styling |
 
-```sql
-create or replace function public.update_ugc_scene_preview(
-  p_label text,
-  p_preview_url text
-) returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare v_idx int;
-begin
-  if not has_role(auth.uid(), 'admin'::app_role) then
-    raise exception 'Admin only';
-  end if;
+(8 tiles total including Auto — keeps the grid tidy at 2×4.)
 
-  select i - 1 into v_idx
-  from workflows w,
-       jsonb_array_elements(w.generation_config->'variation_strategy'->'variations')
-         with ordinality as t(elem, i)
-  where w.slug = 'selfie-ugc-set'
-    and elem->>'label' = p_label;
+Selected by default: `auto`. If the user never opens the section, Auto is sent (= no outfit override, current behavior preserved).
 
-  if v_idx is null then raise exception 'Scene label not found: %', p_label; end if;
+### Interaction-aware visibility
+When the user picked **Wearing** as their interaction in the prior step, the product already dictates the worn item — forcing an outfit on top would conflict. In that case the card collapses to a single info line: *"Outfit is locked by the product you're wearing."* and silently sends no outfit phrase. (We detect this via the existing `ugcInteraction` resolver — phrase contains `wearing`.)
 
-  update workflows
-  set generation_config = jsonb_set(
-    generation_config,
-    array['variation_strategy','variations',v_idx::text,'preview_url'],
-    to_jsonb(p_preview_url),
-    true
-  )
-  where slug = 'selfie-ugc-set';
-end;
-$$;
-```
+For all other interactions (applying, holding, spraying, sipping, using, etc.), the outfit picker is fully active.
 
-The page calls `supabase.rpc('update_ugc_scene_preview', { p_label, p_preview_url })` per uploaded image. Using a function (rather than client-side jsonb manipulation) avoids race conditions when uploading many images in parallel.
+### Backend prompt injection (`generate-workflow/index.ts`)
+
+1. Add a new optional field on the request type:
+   ```ts
+   outfit_phrase?: string;
+   ```
+
+2. In the function that builds the UGC block (around the existing `ugcBlock = …` near line 318–322), append an **OUTFIT STYLING** segment when `body.outfit_phrase` is present:
+   ```
+   OUTFIT STYLING:
+   The subject is {outfit_phrase}. The outfit must look natural, lived-in, and complement the product without competing with it. Keep accessories minimal and the palette quiet — neutral tones, premium materials, no logos.
+   ```
+
+3. Same template-replacement pass: support a `{OUTFIT}` placeholder in scene `prompt_template` so future scenes can position the outfit within their own copy. If the placeholder isn't in the template, the block is appended after the mood block — works for every existing scene.
+
+4. **Saugiklis (safeguard)** appended to `negative_prompt_additions` when an outfit phrase is sent: *"mismatched layering, costume-like outfit, loud patterns competing with product, branded logos on clothing, ill-fitting garments."*
+
+### Wiring (`src/pages/Generate.tsx`)
+- Add state: `const [ugcOutfit, setUgcOutfit] = useState<string>('auto');`
+- Pass `ugcOutfit` and `setUgcOutfit` into `WorkflowSettingsPanel`.
+- In both enqueue paths (single-product around line 1361 and multi-product), add:
+  ```ts
+  outfit_phrase: isSelfieUgc ? resolveUgcOutfitPhrase(ugcOutfit, resolveUgcInteractionPhrase(product)) : undefined,
+  ```
+  where `resolveUgcOutfitPhrase` returns the preset's `phrase`, or `undefined` for `auto` or when interaction is "wearing".
 
 ### Files touched
-1. **New** `src/pages/AdminUgcBulkPreviewUpload.tsx` — the page (drop zone, matcher UI, upload loop).
-2. **Edit** `src/App.tsx` — lazy import + new route at `/admin/ugc-bulk-upload`.
-3. **Edit** `src/pages/Generate.tsx` (Selfie/UGC settings step) — add a small admin-only "Bulk upload previews" link next to the scene grid (only visible if `useIsAdmin().isAdmin`), pointing to `/app/admin/ugc-bulk-upload`. Quality-of-life entry point so you don't have to remember the URL.
-4. **New migration** — adds the `update_ugc_scene_preview(text,text)` SECURITY DEFINER function with admin role check.
-
-### Storage
-Reuses the existing public `product-uploads` bucket under prefix `{user_id}/ugc-scene-previews/`. No new bucket, no schema change beyond the helper function.
+1. **New** `src/lib/ugcOutfitPresets.ts` — exports `UGC_OUTFIT_PRESETS` array (id/label/vibe/phrase) and `resolveUgcOutfitPhrase(id, interactionPhrase)` helper.
+2. **Edit** `src/components/app/generate/WorkflowSettingsPanel.tsx` — new "Outfit" card after the Mood card; new props `ugcOutfit`, `setUgcOutfit`.
+3. **Edit** `src/pages/Generate.tsx` — add `ugcOutfit` state, pass into panel, include `outfit_phrase` in both enqueue payloads (single + multi-product loops).
+4. **Edit** `supabase/functions/generate-workflow/index.ts` — accept `outfit_phrase`, build OUTFIT STYLING block, append `{OUTFIT}` token replacement, extend negative prompt when outfit is set.
 
 ### Validation
-- Visit `/app/admin/ugc-bulk-upload` → drop the 6 newly named images (e.g. `beach-walk.jpg`, `luxury-hotel-room.jpg`).
-- Each card shows green check + matched scene label.
-- Click "Upload N previews" → progress bar → success toast.
-- Refresh `/app/generate/selfie-ugc-set` Settings step → the 6 previously thumbnail-less scenes now show your custom images.
-- Re-uploading the same label overwrites the `preview_url` (idempotent).
+- Open `/app/generate/selfie-ugc-set` → reach Settings step → new **Outfit** card appears under Creator Mood. "Auto" tile selected by default with Popular pill.
+- Generate without touching outfit → behaves exactly as today (no regression).
+- Pick **Cream Knit & Denim** + a non-wearing interaction (e.g. "applying") → results show the model in a cream knit + denim across all selected scenes.
+- Pick **Wearing** as interaction → outfit card collapses to the locked-info note; payload contains no `outfit_phrase`.
+- Switching outfit between two batches produces visibly different wardrobes while keeping the same scenes/mood.
 
 ### Out of scope
-No changes to the matching algorithm, no edits to other workflows, no new buckets.
+No changes to the Mood card, scene library, or other workflows. No DB schema changes. No new admin tools.
 
