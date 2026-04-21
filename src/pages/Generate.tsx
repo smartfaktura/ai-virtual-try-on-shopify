@@ -196,7 +196,91 @@ const FLAT_LAY_AESTHETICS = [
   { id: 'seasonal', label: 'Seasonal', hint: 'seasonal elements matching current time of year' },
 ];
 
-type Step = 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'interaction' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
+
+// UGC Interaction options per product category (Selfie / UGC Set workflow)
+type UgcInteractionOption = { id: string; label: string; description: string; phrase: string; emoji: string };
+const UGC_INTERACTION_OPTIONS: Record<string, UgcInteractionOption[]> = {
+  beauty: [
+    { id: 'apply', label: 'Applying it', description: 'Putting it on skin / face', phrase: 'applying the product to their skin and showing the texture or finish', emoji: '💆' },
+    { id: 'near-face', label: 'Holding near face', description: 'Bottle/tube up by the cheek', phrase: 'holding the product up close to their face so the packaging is clearly visible next to their skin', emoji: '🤳' },
+    { id: 'texture', label: 'Showing the texture', description: 'On the back of the hand', phrase: 'showing the product texture or shade on the back of their hand toward the camera', emoji: '🖐️' },
+    { id: 'packaging', label: 'Showing the packaging', description: 'Bottle / box hero shot', phrase: 'holding the product packaging up to the camera to show the label and design', emoji: '📦' },
+  ],
+  fragrance: [
+    { id: 'spray', label: 'Spraying on wrist/neck', description: 'Mid-spritz moment', phrase: 'spraying the fragrance on their wrist or neck as if just applied', emoji: '💨' },
+    { id: 'bottle', label: 'Holding the bottle', description: 'Near collarbone / chest', phrase: 'holding the fragrance bottle elegantly near their neck or collarbone', emoji: '🍾' },
+    { id: 'packaging', label: 'Showing the packaging', description: 'Box + bottle to camera', phrase: 'holding the bottle and packaging up to the camera to show the design', emoji: '📦' },
+  ],
+  haircare: [
+    { id: 'hair', label: 'Running through hair', description: 'Product going through strands', phrase: 'running the product through their hair naturally', emoji: '💇' },
+    { id: 'near-hair', label: 'Holding near hair', description: 'Bottle next to a strand', phrase: 'holding the product next to a strand of their hair so both are clearly visible', emoji: '🧴' },
+    { id: 'bottle', label: 'Showing the bottle', description: 'Label to camera', phrase: 'holding the bottle up to the camera to show the label clearly', emoji: '📦' },
+  ],
+  garments: [
+    { id: 'wear', label: 'Wearing it', description: 'On-body, natural outfit', phrase: 'wearing the item naturally as part of their outfit', emoji: '👕' },
+    { id: 'hold-up', label: 'Holding it up', description: 'Showing it to the camera', phrase: 'holding the garment up to the camera so it is fully visible', emoji: '🙌' },
+    { id: 'styling', label: 'Styling it', description: 'Adjusting / smoothing it', phrase: 'styling the garment on themselves — adjusting the collar, sleeves or fit', emoji: '✨' },
+  ],
+  shoes: [
+    { id: 'wear', label: 'Wearing on feet', description: 'Showing them on', phrase: 'showing the shoes on their feet, casually angled to the camera', emoji: '👟' },
+    { id: 'hold-up', label: 'Holding them up', description: 'Lifted next to face', phrase: 'holding the shoes up next to their face excitedly', emoji: '🙌' },
+    { id: 'detail', label: 'Showing the sole/detail', description: 'Close-up of detail', phrase: 'tilting the shoes to show the sole, side profile or material detail', emoji: '🔍' },
+  ],
+  jewellery: [
+    { id: 'wear', label: 'Wearing it', description: 'On finger / wrist / neck', phrase: 'wearing the jewellery piece and casually showing it off (on finger, wrist, neck or ear)', emoji: '💍' },
+    { id: 'hold-up', label: 'Holding it up to camera', description: 'Pinched between fingers', phrase: 'holding the jewellery piece up to the camera between their fingers so the detail is clearly visible', emoji: '✨' },
+    { id: 'detail', label: 'Showing the detail', description: 'Close-up shot', phrase: 'showing a close-up of the jewellery on themselves, focused on the craftsmanship', emoji: '🔍' },
+  ],
+  bags: [
+    { id: 'carry', label: 'Wearing/carrying it', description: 'On shoulder / in hand', phrase: 'wearing or carrying the bag naturally on their shoulder or in hand', emoji: '👜' },
+    { id: 'hold-up', label: 'Holding it up', description: 'Lifted to camera', phrase: 'holding the bag up to the camera so the full silhouette is visible', emoji: '🙌' },
+    { id: 'inside', label: 'Showing inside / detail', description: 'Open + interior view', phrase: 'opening the bag to show the interior or a hardware detail to the camera', emoji: '🔍' },
+  ],
+  food: [
+    { id: 'taste', label: 'Tasting / sipping', description: 'Mid-bite or sip', phrase: 'tasting or sipping the product naturally toward the camera', emoji: '😋' },
+    { id: 'hold', label: 'Holding the package', description: 'Package to camera', phrase: 'holding the food or drink package up to the camera so the label is clearly visible', emoji: '🥤' },
+    { id: 'label', label: 'Showing the label', description: 'Front of the package', phrase: 'angling the package so the label and branding face the camera directly', emoji: '🏷️' },
+  ],
+  supplements: [
+    { id: 'bottle', label: 'Holding the bottle', description: 'Hero in-hand shot', phrase: 'holding the supplement bottle naturally in front of them', emoji: '💊' },
+    { id: 'pour', label: 'Pouring into hand', description: 'Capsules in palm', phrase: 'pouring the capsules or powder into their hand to show the dose', emoji: '🥄' },
+    { id: 'label', label: 'Showing the label', description: 'Bottle label to camera', phrase: 'tilting the bottle so the label and ingredients face the camera', emoji: '🏷️' },
+  ],
+  tech: [
+    { id: 'use', label: 'Using / demonstrating', description: 'Showing it in action', phrase: 'using or demonstrating the device naturally as if reviewing it', emoji: '📱' },
+    { id: 'hold-up', label: 'Holding it up', description: 'Lifted to camera', phrase: 'holding the device up to the camera so the design is clearly visible', emoji: '🙌' },
+    { id: 'feature', label: 'Showing the screen/feature', description: 'Close-up of feature', phrase: 'pointing out a specific feature, screen or detail of the device to the camera', emoji: '🔍' },
+  ],
+  home: [
+    { id: 'space', label: 'Showing it in their space', description: 'In context at home', phrase: 'casually showing the item in their home next to where they actually use it', emoji: '🏠' },
+    { id: 'point', label: 'Pointing it out', description: 'Look-at-this energy', phrase: 'pointing at the item with a "look at this" expression', emoji: '👉' },
+    { id: 'hold', label: 'Holding/placing it', description: 'Placing it down', phrase: 'holding or gently placing the item, showing its size and finish', emoji: '🤲' },
+  ],
+  default: [
+    { id: 'hold', label: 'Holding it', description: 'Naturally near chest/face', phrase: 'holding the product naturally near their face or chest', emoji: '🤲' },
+    { id: 'show', label: 'Showing it to camera', description: 'Lifted to camera', phrase: 'holding the product up to the camera so it is fully visible', emoji: '🙌' },
+    { id: 'point', label: 'Pointing it out', description: 'Look-at-this energy', phrase: 'pointing at the product with a "look at this" expression', emoji: '👉' },
+  ],
+};
+
+function getInteractionCategoryKey(category: string | null | undefined, productType?: string): keyof typeof UGC_INTERACTION_OPTIONS {
+  const c = (category || '').toLowerCase();
+  const t = (productType || '').toLowerCase();
+  const hay = `${c} ${t}`;
+  if (/fragrance|perfume|cologne|eau de|parfum/.test(hay)) return 'fragrance';
+  if (/haircare|shampoo|conditioner|hair/.test(hay)) return 'haircare';
+  if (/beauty|skincare|makeup|lipstick|serum|cream|cosmetic|mascara|foundation|lotion/.test(hay)) return 'beauty';
+  if (/sneaker|boot|heel|shoe|footwear|loafer|sandal/.test(hay)) return 'shoes';
+  if (/jewell?ery|necklace|earring|bracelet|ring|watch|eyewear|sunglass|glasses/.test(hay)) return 'jewellery';
+  if (/bag|backpack|wallet|cardholder|belt|scarf|tote|clutch|purse/.test(hay)) return 'bags';
+  if (/food|snack|chocolate|cereal|granola|candy|cookie|beverage|drink|coffee|tea|juice|wine|beer|kombucha|water|smoothie/.test(hay)) return 'food';
+  if (/supplement|vitamin|capsule|protein|collagen|wellness|probiotic/.test(hay)) return 'supplements';
+  if (/tech|device|phone|laptop|headphone|earbuds|speaker|gadget|charger|tablet|keyboard/.test(hay)) return 'tech';
+  if (/furniture|home-decor|home decor|candle|vase|lamp|pillow|decor|interior/.test(hay)) return 'home';
+  if (/garment|apparel|clothing|dress|hoodie|shirt|jeans|jacket|activewear|swimwear|lingerie|kidswear|skirt|pants|coat|top|sweater/.test(hay)) return 'garments';
+  return 'default';
+}
 
 export default function Generate() {
   const navigate = useNavigate();
@@ -568,6 +652,7 @@ export default function Generate() {
     { id: 'focused', emoji: '🧐', label: 'Focused', desc: 'Tutorial / demo mode', example: 'Concentrated, friendly' },
   ];
   const [ugcMood, setUgcMood] = useState<UgcMood>('excited');
+  const [ugcInteraction, setUgcInteraction] = useState<string | null>(null);
 
   // Mirror Selfie detection
   const isMirrorSelfie = activeWorkflow?.slug === 'mirror-selfie-set';
@@ -873,6 +958,23 @@ export default function Generate() {
     return null;
   };
 
+  // Returns the UGC interaction option list filtered for the selected product's category.
+  const getInteractionOptionsForProduct = useCallback((product: Product | null): UgcInteractionOption[] => {
+    if (!product) return UGC_INTERACTION_OPTIONS.default;
+    const analysisCat = (product as unknown as { analysis_json?: { category?: string } }).analysis_json?.category;
+    const fallbackCat = detectProductCategory(product);
+    const key = getInteractionCategoryKey(analysisCat || fallbackCat || '', product.productType);
+    return UGC_INTERACTION_OPTIONS[key] || UGC_INTERACTION_OPTIONS.default;
+  }, []);
+
+  // Resolve the chosen interaction phrase for the current product (defaults to first option if none picked).
+  const resolveUgcInteractionPhrase = useCallback((product: Product | null): string | undefined => {
+    if (!isSelfieUgc) return undefined;
+    const opts = getInteractionOptionsForProduct(product);
+    const picked = opts.find(o => o.id === ugcInteraction) || opts[0];
+    return picked?.phrase;
+  }, [isSelfieUgc, ugcInteraction, getInteractionOptionsForProduct]);
+
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductPickerOpen(false);
@@ -894,6 +996,13 @@ export default function Generate() {
     // Angle workflow: skip brand profile, go straight to settings
     if (isAngleWorkflow) {
       setCurrentStep('settings');
+      return;
+    }
+    // Selfie / UGC: skip brand entirely → choose Interaction
+    if (isSelfieUgc) {
+      const opts = getInteractionOptionsForProduct(product);
+      setUgcInteraction(opts[0]?.id ?? null);
+      setCurrentStep('interaction');
       return;
     }
     // Go to brand profile step if profiles exist
@@ -948,7 +1057,11 @@ export default function Generate() {
     if (detectedFraming) setFraming(detectedFraming);
 
     // Skip brand profile for modal-initiated flows
-    if (activeWorkflow.uses_tryon || uiConfig?.show_model_picker) {
+    if (isSelfieUgc) {
+      const opts = getInteractionOptionsForProduct(product);
+      setUgcInteraction(opts[0]?.id ?? null);
+      setCurrentStep('interaction');
+    } else if (activeWorkflow.uses_tryon || uiConfig?.show_model_picker) {
       setCurrentStep('model');
     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
       setCurrentStep('settings');
@@ -1246,6 +1359,7 @@ export default function Generate() {
             quality, aspectRatio: ratioVal,
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
+            interaction_phrase: resolveUgcInteractionPhrase(product),
             batch_id: batchId,
           };
           if (modelProfile && base64ModelImage) {
@@ -1379,6 +1493,7 @@ export default function Generate() {
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
       additional_products: additionalProducts,
       ugc_mood: isSelfieUgc ? ugcMood : undefined,
+      interaction_phrase: resolveUgcInteractionPhrase(selectedProduct),
       // Interior Design fields
       room_type: isInteriorDesign ? interiorRoomType : undefined,
       wall_color: isInteriorDesign ? interiorWallColor : undefined,
@@ -2050,7 +2165,7 @@ export default function Generate() {
       return map[currentStep] || 1;
     }
     if (isSelfieUgc) {
-      const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, interaction: 2, model: 3, settings: 4, generating: 5, results: 5 };
       return map[currentStep] || 1;
     }
     if (generationMode === 'virtual-try-on') {
@@ -2106,7 +2221,7 @@ export default function Generate() {
     if (isSelfieUgc) {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product' },
-        { name: 'Brand' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' },
+        { name: 'Interaction' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
     if (generationMode === 'virtual-try-on') {
@@ -2769,6 +2884,8 @@ export default function Generate() {
                     }
                     if (isUpscale) {
                       setCurrentStep('settings');
+                    } else if (isSelfieUgc) {
+                      setCurrentStep('interaction');
                     } else if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (isInteriorDesign) {
@@ -3325,12 +3442,22 @@ export default function Generate() {
                       if (isMirrorSelfie) {
                         setMirrorSettingsPhase('scenes');
                         setCurrentStep('settings');
+                      } else if (isSelfieUgc) {
+                        const opts = getInteractionOptionsForProduct(candidates[0]);
+                        setUgcInteraction(opts[0]?.id ?? null);
+                        setCurrentStep('interaction');
                       } else {
                         setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                       }
                     } else {
                       setProductQueue([]);
-                      setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                      if (isSelfieUgc) {
+                        const opts = getInteractionOptionsForProduct(candidates[0]);
+                        setUgcInteraction(opts[0]?.id ?? null);
+                        setCurrentStep('interaction');
+                      } else {
+                        setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                      }
                     }
                   }
                 } else {
@@ -3378,6 +3505,10 @@ export default function Generate() {
                        setCurrentStep('settings');
                      } else if (isAngleWorkflow) {
                        setCurrentStep('settings');
+                     } else if (isSelfieUgc) {
+                       const opts = getInteractionOptionsForProduct(product);
+                       setUgcInteraction(opts[0]?.id ?? null);
+                       setCurrentStep('interaction');
                      } else if (brandProfiles.length > 0) {
                        setCurrentStep('brand-profile');
                      } else if (uiConfig?.show_model_picker) {
@@ -3402,6 +3533,10 @@ export default function Generate() {
                       setCurrentStep('settings');
                     } else if (isAngleWorkflow) {
                       setCurrentStep('settings');
+                    } else if (isSelfieUgc) {
+                      const opts = getInteractionOptionsForProduct(product);
+                      setUgcInteraction(opts[0]?.id ?? null);
+                      setCurrentStep('interaction');
                     } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.show_model_picker) {
@@ -3597,6 +3732,44 @@ export default function Generate() {
           </CardContent></Card>
         )}
 
+        {/* Interaction Selection — Selfie / UGC only */}
+        {currentStep === 'interaction' && isSelfieUgc && (selectedProduct || scratchUpload) && (
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-primary" />
+                How should the creator engage with your product?
+              </h2>
+              <p className="text-sm text-muted-foreground">Pick the action that best fits the shot you want — this drives the model's pose and the product's role in the frame.</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {getInteractionOptionsForProduct(selectedProduct).map(opt => {
+                const active = ugcInteraction === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setUgcInteraction(opt.id)}
+                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                      active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{opt.emoji}</div>
+                    <p className="font-medium text-sm">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+              <Button disabled={!ugcInteraction} onClick={() => setCurrentStep('model')}>Continue to Model</Button>
+            </div>
+          </CardContent></Card>
+        )}
+
         {/* Mode Selection */}
         {currentStep === 'mode' && (selectedProduct || scratchUpload) && (
           <Card><CardContent className="p-5 space-y-5">
@@ -3664,6 +3837,8 @@ export default function Generate() {
                   if (isMirrorSelfie) {
                     setMirrorSettingsPhase('scenes');
                     setCurrentStep('settings');
+                  } else if (isSelfieUgc) {
+                    setCurrentStep('interaction');
                   } else {
                     setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product');
                   }
