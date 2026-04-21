@@ -242,7 +242,7 @@ export function ProductImagesStep5Generating({
             >
               {nearComplete
                 ? `View ${completedOk} completed result${completedOk !== 1 ? 's' : ''}`
-                : 'Skip waiting & view results so far'}
+                : `View ${completedOk} result${completedOk !== 1 ? 's' : ''} so far`}
             </Button>
           </div>
         )}
