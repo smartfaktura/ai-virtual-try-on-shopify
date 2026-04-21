@@ -1,85 +1,47 @@
 
 
-## Fix Selfie/UGC results: enforce "Wearing" + clean & luxury scenes
+## Edit Selfie/UGC scenes — remove 2, add 6 new (no previews yet)
 
-### Root cause of the bad batch
-Three compounding problems in the Selfie/UGC pipeline:
+### Scene removals
+Drop these from `workflows.generation_config.variation_strategy.variations` for slug `selfie-ugc-set`:
+- **Product Holding in Hand** (`holdable_only`)
+- **Hands-Only Demo** (`holdable_only`)
 
-1. **Backend ignores the user's Interaction choice.** `src/pages/Generate.tsx` correctly sends `interaction_phrase` (e.g. "wearing the item naturally as part of their outfit"), but `supabase/functions/generate-workflow/index.ts` line 483 still calls `getProductInteraction(product.productType)` and overwrites it. Result: the user picks **Wearing**, the server silently downgrades to whatever the productType map returns ("holding the product naturally near their face or chest" for unknown types).
-2. **Scene instructions encourage holding.** Several scenes literally say "Product integrated into the outfit **or held naturally**", "shown casually", "shown naturally" — giving the model permission to hold instead of wear. Two scenes (`Unboxing Excitement`, `Product Holding in Hand`, `Hands-Only Demo`) are dedicated holding scenes and shouldn't run when interaction = Wearing.
-3. **No hard constraint** in the prompt template that the garment must be worn on the body when wearing was selected. The model takes the easy path (hold up to camera).
+(Keep **Unboxing Excitement** as the remaining `holdable_only` scene for non-wearing categories.)
 
-### The fix
+### Scene additions (6 new, `wearable_only: true`, `aspect_ratio: 4:5`, no `preview_url` yet)
 
-**A. Backend — honor `interaction_phrase` (single line change in `generate-workflow/index.ts`)**
+All written to match the existing quiet-luxury voice and ending with "The subject is {PRODUCT_INTERACTION}." so they obey the interaction directive.
 
-```ts
-// before
-const interaction = getProductInteraction(product.productType);
-// after
-const interaction = body.interaction_phrase?.trim()
-  || getProductInteraction(product.productType);
-```
+| Label | Category | Instruction summary |
+|---|---|---|
+| **Modern Luxury Business Center** | Everyday Moments | Polished lobby of a contemporary business center — floor-to-ceiling glass, travertine or pale stone floors, low designer seating, soft diffused daylight bouncing off neutral surfaces. Calm, no foot traffic, no signage. Palette: warm grey, brushed bronze, off-white. |
+| **Luxury Garden Walk** | Everyday Moments | Manicured private garden path — trimmed hedges, gravel walkway, soft golden-hour sun filtering through tall trees, a glimpse of a stone villa wall in the background. Palette: deep green, warm cream stone, sun-faded sand. |
+| **Beach Walk** | Everyday Moments | Quiet stretch of pale sand beach in soft late-afternoon light. Calm sea horizon, gentle wind, no crowds, no umbrellas, no signage. Bare feet at the waterline framing optional. Palette: bone sand, soft cyan water, warm sun. |
+| **Sunbed by the Pool** | Everyday Moments | Reclining on a luxury sunbed beside a clean infinity pool. Beige cushion, white folded towel, single ceramic glass on a side table — nothing else. Soft midday or golden-hour sun, palm shadows on travertine. Palette: travertine, cream linen, turquoise water. |
+| **Natural Studio Background** | At Home | Soft, paper-textured natural studio backdrop in warm bone or oat tone. Subject lit by a single large soft window-light source from the side, gentle falloff into shadow. Clean floor, no props, no logos. Palette: bone, warm grey, soft shadow. |
+| **Luxury Hotel Room** | At Home | Quiet five-star hotel suite — linen-dressed bed, oak headboard, sheer-curtained window with diffused daylight, single fresh flower on a side table. Tidy, considered, no luggage, no clutter. Palette: ivory linen, oak, warm taupe. |
 
-Plus: when `interaction_phrase` indicates wearing (string includes `wearing`), append a short **WEARING ENFORCEMENT** block to the prompt for the Selfie/UGC workflow:
+All six default to `wearable_only: true` (so they show only when the user picks Wearing or a non-wearing category that has no `wearable_only` filter applied — current backend filter only excludes `holdable_only` for wearing flows; `wearable_only` scenes are shown for everything, matching today's other wearable scenes).
 
-> WEARING ENFORCEMENT: The product MUST be worn on the body in its correct position (top → torso, dress → full body, jewelry → on finger/wrist/neck, eyewear → on face, shoes → on feet, bag → on shoulder/in hand carried). The product MUST NOT be held up to the camera, draped over the arm, hung on a hanger, or laid on a surface. Visible body fit (shoulders, neckline, sleeves) is required.
+`preview_url` is intentionally omitted on the 6 new scenes — UI falls back to the workflow default thumbnail until you supply images. We can add them later via a one-line UPDATE per scene.
 
-Symmetrically, when phrase contains "applying" or "spraying" or "tasting" — add a one-line enforcement so the action is visibly happening in-frame.
+### Implementation
 
-**B. Backend — filter incompatible scenes when wearing is selected**
+Single SQL migration:
+1. Read current `generation_config` JSONB.
+2. Filter out the two removed scenes from `variation_strategy.variations`.
+3. Append the six new scene objects.
+4. `UPDATE workflows SET generation_config = … WHERE slug = 'selfie-ugc-set'`.
 
-If `interaction_phrase` contains "wearing", the three "holding" scenes are not appropriate. In the workflow enqueue path, drop these scene indexes from `selected_variations` for wearing flows:
-- `Unboxing Excitement`
-- `Product Holding in Hand`
-- `Hands-Only Demo`
-
-(They remain available for non-wearing categories like skincare/fragrance/food.)
-
-**C. Scene library rewrite — luxury + clean, no "hold" loopholes**
-
-Update `workflows.generation_config.variation_strategy.variations` for slug `selfie-ugc-set` via a SQL migration. New direction for every scene:
-
-- Strip every "or held naturally", "shown casually", "shown naturally", "shown as part of" — replace with explicit body placement matched to product type via the `{PRODUCT_INTERACTION}` token.
-- Elevate the aesthetic: warm neutral palette, clean lived-in (not messy) interiors, soft natural light, considered styling. Keep authentic UGC feel (iPhone selfie, no studio) but lean **quiet luxury** — minimal, neutral tones, premium materials, uncluttered surfaces.
-- Add a `wearable_only: true` flag to scenes that only make sense when the model wears the product, and `holdable_only: true` to the three holding scenes. The backend uses these flags for the filter in step B (cleaner than string-matching labels).
-
-Refreshed scene list (12 scenes, same labels so user UI/preview thumbs unchanged):
-
-| # | Label | New direction (summary) | Flag |
-|---|---|---|---|
-| 1 | Golden Hour Selfie | Clean rooftop or open balcony at magic hour, warm rim light, minimalist concrete + greenery backdrop, no clutter. | wearable_only |
-| 2 | Coffee Shop / Brunch | Quiet specialty café, marble or oak table, ceramic flat-white, soft window light. Tidy, considered. | wearable_only |
-| 3 | Car Selfie | Modern car interior (cream/tan leather), seatbelt visible, soft daylight through windshield. Clean dash, no clutter. | wearable_only |
-| 4 | Walking Street Style | Quiet European-style street, soft daylight, neutral architecture, minimal foot traffic. Confident posture. | wearable_only |
-| 5 | Gym / Workout | Boutique studio gym (light wood, white walls, plants), post-workout glow, no messy lockers. | wearable_only |
-| 6 | Morning Routine / GRWM | Bright minimalist bathroom, marble counter, a few curated essentials only, soft morning light. | (any) |
-| 7 | Bedroom Outfit Check | Tidy neutral bedroom, linen bedding, soft daylight, single curated outfit visible. Clear floor. | wearable_only |
-| 8 | Couch / Netflix Chill | Linen couch, neutral throw, warm lamp light, minimal styling. No TV glare. | (any) |
-| 9 | Kitchen Counter | Stone/oak counter, fresh fruit + ceramic mug, calm morning light. Clean surfaces. | wearable_only |
-| 10 | Unboxing Excitement | Tidy desk, branded box on linen surface, tissue paper folded neatly. | holdable_only |
-| 11 | Product Holding in Hand | Hand at chest level, neutral indoor backdrop, intentional framing. | holdable_only |
-| 12 | Hands-Only Demo | Hands on linen or stone surface, soft top-down light, product is the hero. | holdable_only |
-
-Each scene's new `instruction` text ends with: *"The subject is {PRODUCT_INTERACTION}."* — the placeholder is already substituted by the backend, so the per-scene instruction stops competing with the interaction directive.
-
-**D. Negative prompt additions**
-
-Append to `negative_prompt_additions`:
-> garment held up to camera when wearing was selected, product on hanger, product on mannequin, clutter, messy table, dirty surfaces, neon colors, harsh studio shadows, plastic-looking props, busy patterns, kitsch décor, multiple unrelated brands visible
+No frontend, no edge-function, no schema change.
 
 ### Files touched
-
-1. `supabase/functions/generate-workflow/index.ts` — honor `interaction_phrase`, add WEARING/APPLYING enforcement block, filter `selected_variations` by scene flags for the Selfie/UGC workflow.
-2. SQL migration — `UPDATE workflows SET generation_config = … WHERE slug='selfie-ugc-set'` with the rewritten 12-scene array (new instructions + `wearable_only` / `holdable_only` flags + expanded negative prompt). Preserves `preview_url` and `label` so UI thumbnails stay the same.
-3. (No frontend change required — the wiring already sends `interaction_phrase`. Optional polish: hide holdable scenes in the picker too when interaction = Wearing, to mirror backend filter.)
+- New migration file under `supabase/migrations/`.
 
 ### Validation
-- Pick the cream knit top + Model + **Wearing it** → all 9 wearable scenes show the model wearing the top on her torso, none holding.
-- Pick a perfume + **Spraying on wrist** → the spray gesture is visibly happening.
-- Pick beauty cream + **Applying it** → application gesture in frame.
-- Visual feel across all 12 scenes is calmer, neutral, premium — no messy counters, no harsh colors.
-
-### Out of scope
-No DB schema changes, no other workflows touched, no model/provider change (still Gemini 3 Pro multi-image).
+- `/app/generate/selfie-ugc-set` Settings step shows 16 total scenes (was 12, −2, +6).
+- "Product Holding in Hand" and "Hands-Only Demo" no longer appear.
+- The 6 new scenes appear with the workflow's fallback thumbnail until preview images are uploaded.
+- Picking a garment + Wearing → all six new scenes show the model wearing the product on body in the new luxury settings.
 
