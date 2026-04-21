@@ -1359,7 +1359,7 @@ export default function Generate() {
             quality, aspectRatio: ratioVal,
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
-            interaction_phrase: resolveUgcInteractionPhrase(productForJob ?? selectedProduct),
+            interaction_phrase: resolveUgcInteractionPhrase(product),
             batch_id: batchId,
           };
           if (modelProfile && base64ModelImage) {
