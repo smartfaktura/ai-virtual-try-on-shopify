@@ -653,6 +653,7 @@ export default function Generate() {
   ];
   const [ugcMood, setUgcMood] = useState<UgcMood>('excited');
   const [ugcInteraction, setUgcInteraction] = useState<string | null>(null);
+  const [ugcOutfit, setUgcOutfit] = useState<string>('auto');
 
   // Mirror Selfie detection
   const isMirrorSelfie = activeWorkflow?.slug === 'mirror-selfie-set';
@@ -4249,6 +4250,9 @@ export default function Generate() {
             setMirrorSettingsPhase={setMirrorSettingsPhase}
             ugcMood={ugcMood}
             setUgcMood={setUgcMood}
+            ugcOutfit={ugcOutfit}
+            setUgcOutfit={setUgcOutfit}
+            ugcInteractionPhrase={resolveUgcInteractionPhrase(selectedProduct)}
             quality={quality}
             setQuality={setQuality}
             aspectRatio={aspectRatio}
