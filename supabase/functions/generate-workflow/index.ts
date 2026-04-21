@@ -324,13 +324,22 @@ This overrides everything — the variation description is for the SURFACE STYLE
     ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n${buildInteractionEnforcement(interaction)}`;
   }
 
-  // OUTFIT STYLING — explicit wardrobe override (skipped automatically when interaction is "wearing")
+  // OUTFIT STYLING — explicit wardrobe override.
+  // - Standard mode: "wearing X" phrase, only when interaction is NOT "wearing the product".
+  // - Pair mode: "paired with X" phrase, used WHEN interaction is "wearing" to dress the
+  //   slots not occupied by the product (e.g. bottoms+shoes for a top).
   let outfitBlock = "";
   const interactionLowerForOutfit = (interactionPhrase || '').toLowerCase();
-  const outfitConflictsWithWearing = interactionLowerForOutfit.includes('wearing') || interactionLowerForOutfit.includes('worn ');
-  if (outfitPhrase && outfitPhrase.trim() && !outfitConflictsWithWearing) {
-    outfitBlock = `\nOUTFIT STYLING:\nThe subject is ${outfitPhrase.trim()}. The outfit must look natural, lived-in, and complement the product without competing with it. Keep accessories minimal and the palette quiet — neutral tones, premium materials, no logos.\n`;
+  const isWearingMode = interactionLowerForOutfit.includes('wearing') || interactionLowerForOutfit.includes('worn ');
+  const outfitTrim = (outfitPhrase || '').trim();
+  const isPairMode = outfitTrim.toLowerCase().startsWith('paired with');
+  if (outfitTrim && isPairMode) {
+    outfitBlock = `\nOUTFIT STYLING (PAIR MODE):\nThe subject is already wearing the EXACT product from [PRODUCT IMAGE]. Complete the look ${outfitTrim}. Do NOT replace, duplicate, or substitute the product itself — only add the paired pieces. Keep the palette quiet, no logos, no competing patterns, premium materials.\n`;
+  } else if (outfitTrim && !isWearingMode) {
+    outfitBlock = `\nOUTFIT STYLING:\nThe subject is ${outfitTrim}. The outfit must look natural, lived-in, and complement the product without competing with it. Keep accessories minimal and the palette quiet — neutral tones, premium materials, no logos.\n`;
   }
+  // For backwards-compatibility with the negative-prompt builder below.
+  const outfitConflictsWithWearing = isWearingMode && !isPairMode;
 
   // Interior Design block — room type, wall color, flooring overrides
   let interiorBlock = "";
@@ -531,12 +540,16 @@ ${themeNotes ? `Additional direction: ${themeNotes}` : ""}\n`
       : "";
 
   // Issue 6: Merge brand do_not_rules + outfit safeguard into negative prompts
-  const outfitNegativeSaugiklis = (outfitBlock && !outfitConflictsWithWearing)
+  const outfitNegativeSaugiklis = (outfitBlock && !outfitConflictsWithWearing && !isPairMode)
     ? 'mismatched layering, costume-like outfit, loud patterns competing with product, branded logos on clothing, ill-fitting garments'
+    : '';
+  const pairModeNegativeSaugiklis = isPairMode
+    ? 'do not replace or duplicate the product the subject is already wearing, no second copy of the product, no competing garments in the same slot as the product'
     : '';
   const allNegatives = [
     config.negative_prompt_additions,
     outfitNegativeSaugiklis,
+    pairModeNegativeSaugiklis,
     ...(brandProfile?.do_not_rules || []),
   ].filter(Boolean).join('. ');
 
