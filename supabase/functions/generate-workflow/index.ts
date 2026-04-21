@@ -118,6 +118,26 @@ function getProductInteraction(productType: string): string {
   return 'holding the product naturally near their face or chest';
 }
 
+function buildInteractionEnforcement(interaction: string): string {
+  const i = interaction.toLowerCase();
+  if (i.includes('wearing') || i.includes('worn ')) {
+    return `\nWEARING ENFORCEMENT (CRITICAL):\nThe product MUST be worn on the body in its correct anatomical position (top/shirt/dress → on torso with visible neckline/shoulders; jewelry → on finger/wrist/neck/ear; eyewear → on the face; shoes → on the feet; bag → on shoulder or carried in hand; hat → on the head). The product MUST NOT be held up to the camera, draped over the arm, hung on a hanger, laid on a surface, or shown on a mannequin. Visible body fit (shoulders, neckline, sleeves, drape on the body) is REQUIRED. If the product is a garment, the model is wearing it as part of the visible outfit — not holding it.\n`;
+  }
+  if (i.includes('applying')) {
+    return `\nAPPLICATION ENFORCEMENT: The application gesture MUST be visibly happening in-frame (fingers/brush touching skin, product mid-application). Do not show the product merely held next to the face.\n`;
+  }
+  if (i.includes('spraying')) {
+    return `\nSPRAY ENFORCEMENT: The spray gesture MUST be visibly happening (finger pressing the nozzle toward wrist/neck, fine mist or droplets implied). Do not show the bottle simply held up.\n`;
+  }
+  if (i.includes('tasting') || i.includes('sipping')) {
+    return `\nCONSUMPTION ENFORCEMENT: The tasting/sipping action MUST be visibly happening (lip contact, mid-sip, fork to mouth). Do not show the item merely held in front of the face.\n`;
+  }
+  if (i.includes('pouring')) {
+    return `\nPOURING ENFORCEMENT: The pour MUST be visibly happening (product tilted, contents falling into the open hand or container).\n`;
+  }
+  return '';
+}
+
 interface WorkflowRequest {
   workflow_id: string;
   product: {
@@ -185,6 +205,7 @@ interface WorkflowRequest {
     photography_reference?: string;
   };
   selected_variations?: number[];
+  interaction_phrase?: string;
   extra_variations?: Array<{
     label: string;
     instruction: string;
@@ -218,6 +239,7 @@ function buildVariationPrompt(
   ugcMood?: string,
   theme?: string,
   themeNotes?: string,
+  interactionPhrase?: string,
   aspectRatio?: string,
   batchOutfitLock?: boolean,
 ): string {
@@ -296,8 +318,8 @@ This overrides everything — the variation description is for the SURFACE STYLE
   let ugcBlock = "";
   if (ugcMood) {
     const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
-    const interaction = getProductInteraction(product.productType);
-    ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n`;
+    const interaction = interactionPhrase?.trim() || getProductInteraction(product.productType);
+    ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n${buildInteractionEnforcement(interaction)}`;
   }
 
   // Interior Design block — room type, wall color, flooring overrides
@@ -480,7 +502,7 @@ ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
   let processedTemplate = config.prompt_template;
   if (ugcMood) {
     const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
-    const interaction = getProductInteraction(product.productType);
+    const interaction = interactionPhrase?.trim() || getProductInteraction(product.productType);
     processedTemplate = processedTemplate
       .replace('{PRODUCT_INTERACTION}', interaction)
       .replace('{MOOD_DESCRIPTION}', moodDesc);
@@ -1080,6 +1102,27 @@ serve(async (req) => {
       variationsToGenerate = allVariations;
     }
 
+    // Filter scene flags by interaction (e.g. drop "holdable_only" scenes when user picked Wearing,
+    // and drop "wearable_only" scenes when user picked a non-wearing interaction).
+    const interactionLower = (body.interaction_phrase || '').toLowerCase();
+    if (interactionLower) {
+      const wantsWearing = interactionLower.includes('wearing') || interactionLower.includes('worn ');
+      variationsToGenerate = variationsToGenerate.filter((v) => {
+        const flags = v as unknown as Record<string, unknown>;
+        if (wantsWearing && flags.holdable_only === true) return false;
+        if (!wantsWearing && flags.wearable_only === true) return false;
+        return true;
+      });
+      // Safety: never return zero scenes — fall back to original list
+      if (variationsToGenerate.length === 0) {
+        variationsToGenerate = body.selected_variations?.length
+          ? body.selected_variations
+              .filter((i: number) => i >= 0 && i < combinedVariations.length)
+              .map((i: number) => combinedVariations[i])
+          : allVariations;
+      }
+    }
+
     const maxImages = 4; // max 4 images per job; frontend splits larger requests into batches
     variationsToGenerate = variationsToGenerate.slice(0, maxImages);
 
@@ -1178,6 +1221,7 @@ serve(async (req) => {
             body.ugc_mood,
             body.theme,
             body.theme_notes,
+            body.interaction_phrase,
             aspectRatio,
             !!(body as Record<string, unknown>).batch_outfit_lock,
           );
