@@ -353,7 +353,7 @@ export default function AdminRecommendedScenes() {
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {recommendedScenes.map(({ rec, scene }, i) => (
+              {previewedRecommended.map(({ rec, scene }, i) => (
                 <div key={rec.id} className="relative group rounded-lg overflow-hidden border border-border bg-card">
                   {scene.preview_image_url ? (
                     <ShimmerImage
