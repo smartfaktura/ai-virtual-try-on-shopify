@@ -29,7 +29,6 @@ interface SceneCatalogFiltersBarProps {
   sort: 'recommended' | 'new';
   onSortChange: (sort: 'recommended' | 'new') => void;
   onOpenMobileFilters?: () => void;
-  showMobileFiltersBtn?: boolean;
 }
 
 export function SceneCatalogFiltersBar({
@@ -42,33 +41,57 @@ export function SceneCatalogFiltersBar({
   sort,
   onSortChange,
   onOpenMobileFilters,
-  showMobileFiltersBtn,
 }: SceneCatalogFiltersBarProps) {
   return (
-    <div className="flex items-center gap-2 px-4 sm:px-6 py-2.5 border-b border-border/40 bg-background/60 backdrop-blur-sm">
-      {/* Compact search */}
-      <div className="relative w-full max-w-[280px] shrink-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={e => onSearchChange(e.target.value)}
-          placeholder="Search scenes..."
-          className="pl-8 pr-7 h-8 text-xs rounded-full"
-        />
-        {search && (
-          <button
-            type="button"
-            onClick={() => onSearchChange('')}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted"
-            aria-label="Clear search"
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-2 px-4 sm:px-6 py-2.5 border-b border-border/40 bg-background/60 backdrop-blur-sm">
+      {/* Row 1 on mobile: search + filters btn + sort */}
+      <div className="flex items-center gap-2 w-full lg:w-auto lg:flex-1">
+        <div className="relative flex-1 lg:flex-none lg:w-[280px] min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
+            placeholder="Search scenes..."
+            className="pl-8 pr-7 h-8 text-xs rounded-full"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => onSearchChange('')}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted"
+              aria-label="Clear search"
+            >
+              <X className="w-3 h-3 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+
+        {onOpenMobileFilters && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-full lg:hidden shrink-0 px-3"
+            onClick={onOpenMobileFilters}
           >
-            <X className="w-3 h-3 text-muted-foreground" />
-          </button>
+            <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" />
+            Filters
+          </Button>
         )}
+
+        {/* Sort — visible on mobile in row 1, on desktop pushed to the right */}
+        <Select value={sort} onValueChange={v => onSortChange(v as 'recommended' | 'new')}>
+          <SelectTrigger className="h-8 w-[110px] sm:w-[140px] rounded-full text-xs shrink-0 lg:hidden">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recommended">Recommended</SelectItem>
+            <SelectItem value="new">Newest</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Subject chips — multi-select within Shot Types axis */}
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin min-w-0">
+      {/* Row 2 on mobile / inline on desktop: subject chips */}
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin min-w-0 lg:flex-1">
         {QUICK_CHIPS.map(chip => {
           const active = activeChipKeys.has(chip.key);
           return (
@@ -99,11 +122,9 @@ export function SceneCatalogFiltersBar({
         )}
       </div>
 
-      <div className="flex-1" />
-
-      {/* Sort */}
+      {/* Desktop-only sort on the right */}
       <Select value={sort} onValueChange={v => onSortChange(v as 'recommended' | 'new')}>
-        <SelectTrigger className="h-8 w-[140px] rounded-full text-xs shrink-0">
+        <SelectTrigger className="hidden lg:flex h-8 w-[140px] rounded-full text-xs shrink-0">
           <SelectValue placeholder="Sort" />
         </SelectTrigger>
         <SelectContent>
@@ -111,13 +132,6 @@ export function SceneCatalogFiltersBar({
           <SelectItem value="new">Newest</SelectItem>
         </SelectContent>
       </Select>
-
-      {showMobileFiltersBtn && (
-        <Button variant="outline" size="sm" className="h-8 rounded-full lg:hidden shrink-0" onClick={onOpenMobileFilters}>
-          <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" />
-          Filters
-        </Button>
-      )}
     </div>
   );
 }
