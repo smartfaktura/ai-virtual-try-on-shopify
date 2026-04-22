@@ -294,6 +294,48 @@
     animation: pulse-slide 1.5s ease-in-out infinite;
   }
 
+  /* Branded loading primitives */
+  @keyframes orbit {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+
+  @keyframes dot-wave {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+
+  .animate-orbit {
+    animation: orbit 1.6s linear infinite;
+  }
+
+  .animate-breathe {
+    animation: breathe 2s ease-in-out infinite;
+    display: inline-block;
+  }
+
+  .animate-dot-wave {
+    animation: dot-wave 0.9s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-orbit {
+      animation: none;
+      opacity: 0.5;
+    }
+    .animate-breathe {
+      animation: pulseSubtle 2s ease-in-out infinite;
+    }
+    .animate-dot-wave {
+      animation: pulseSubtle 1.4s ease-in-out infinite;
+    }
+  }
+
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
