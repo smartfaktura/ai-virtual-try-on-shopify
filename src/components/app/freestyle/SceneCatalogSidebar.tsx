@@ -145,7 +145,14 @@ export function SceneCatalogSidebar({
   );
 
   return (
-    <aside className="hidden lg:block w-60 shrink-0 border-r border-border/40 overflow-y-auto bg-muted/20">
+    <aside
+      className={cn(
+        'shrink-0 overflow-y-auto bg-muted/20',
+        mobileMode
+          ? 'w-full h-full'
+          : 'hidden lg:block w-60 border-r border-border/40',
+      )}
+    >
       <div className="px-3 py-2">
         {sectionLabel('Quick')}
         <div className="space-y-0.5">
@@ -153,21 +160,21 @@ export function SceneCatalogSidebar({
             'All scenes',
             counts?.total,
             quickView === 'all' && selectedFamily === null && selectedCategoryCollection === null,
-            () => onSelectQuickView('all'),
+            () => handleQuickViewClick('all'),
             <LayoutGrid className="w-3.5 h-3.5 opacity-60" />,
           )}
           {renderRow(
             'Recommended',
             recommendedCount,
             quickView === 'recommended',
-            () => onSelectQuickView('recommended'),
+            () => handleQuickViewClick('recommended'),
             <Sparkles className="w-3.5 h-3.5 opacity-60" />,
           )}
           {renderRow(
             'New',
             newCount,
             quickView === 'new',
-            () => onSelectQuickView('new'),
+            () => handleQuickViewClick('new'),
             <Clock className="w-3.5 h-3.5 opacity-60" />,
           )}
         </div>
