@@ -1,58 +1,43 @@
 
 
-## Fix mobile chip alignment + recommend centered layout
+## Spacious desktop/tablet sizing — Scene Look modal
 
-### What's wrong now
+The desktop sidebar nav and top filter bar use very small sizes (text-xs / text-[10px], py-1.5, h-8) that look cramped against the rest of the app. Bring them up to a comfortable, mobile-style scale starting at the `lg:` breakpoint (which is exactly when desktop layout kicks in inside this modal — sidebar is `hidden lg:block`, search/chips are `hidden lg:flex`).
 
-The `[&>button]:justify-between` rule pushes the icon to the far left and the chevron to the far right, leaving the **label stranded on the right side** with a big empty gap (screenshot: "Upload Image", "Product", "1:1" all look misaligned and unbalanced). On full-width mobile cells this looks like a broken form input, not a tappable chip.
+### 1. Sidebar — `SceneCatalogSidebar.tsx`
 
-### UX recommendation — **centered icon + label**, chevron tucked subtly to the right
+Bump desktop (non-mobileMode) sizing closer to the mobile-mode scale:
 
-For mobile chips that span a full grid cell, the cleanest pattern (used by Linear, Arc, Notion mobile) is:
+- Sidebar width: `lg:w-60` → `lg:w-72`
+- Outer padding: `px-3 py-2` → `px-4 py-4`
+- Section labels: `text-[10px] px-2 pt-3 pb-1.5` → `text-[11px] px-3 pt-5 pb-2`
+- Row spacing: `space-y-0.5` → `space-y-1`
+- Quick / family rows: `py-1.5 px-2 text-xs rounded-md` → `py-2.5 px-3 text-sm rounded-lg`
+- Sub-family (indented) rows: `pl-6 pr-2 py-1.5 text-xs` → `pl-9 pr-3 py-2 text-sm rounded-lg`
+- Row icons: `w-3.5 h-3.5` → `w-4 h-4`
+- Family chevrons: `w-3 h-3` → `w-3.5 h-3.5`; matching empty spacer also widens
+- Count numbers: `text-[10px]` → `text-xs tabular-nums`
 
-- **Icon + label centered together** as a single visual unit — this is what the eye expects on a "button" shape.
-- **Chevron** kept small and faded, absolutely positioned at the right edge — it's a hint, not a column.
-- This reads as a **button**, not a misaligned form row, and stays balanced regardless of label length.
+Result: the sidebar reads like the mobile drawer in the screenshot — generous tap targets, comfortable line-height, enough air between Quick and Product Families.
 
-```text
-┌─────────────────────────┐  ┌─────────────────────────┐
-│     + Upload Image    ▾ │  │   📦  Product         ▾ │
-└─────────────────────────┘  └─────────────────────────┘
-┌───────────────────────────────────────────────────────┐
-│              📷  Scene Look                         ▾ │
-└───────────────────────────────────────────────────────┘
-```
+### 2. Top filter bar — `SceneCatalogFilters.tsx`
 
-### Change
+Make the desktop search input, Product Only / With Model chips, and Sort select feel like real, full-sized controls (matching the rest of the app):
 
-In `src/components/app/freestyle/FreestyleSettingsChips.tsx`, mobile branch only (lines 297, 354–461):
-
-- Replace `cellClass = '[&>button]:w-full [&>button]:justify-between'` with:
-  ```
-  cellClass = '[&>button]:w-full [&>button]:justify-center [&>button]:relative [&>button>svg:last-child]:absolute [&>button>svg:last-child]:right-3 [&>button>svg:last-child]:opacity-40'
-  ```
-  - `justify-center` centers the icon + label as a unit.
-  - The trailing chevron (always the last `<svg>` child of the chip button) is absolutely pinned to the right edge at low opacity, so it never disturbs the centered group.
-  - Add `[&>button]:px-4` so the centered content has breathing room from the absolute chevron.
-
-- Apply the same centered treatment to the inline **Advanced** chip (lines 372–380): change its trigger to `justify-center relative` with the chevron `absolute right-3`. Keep the modified-dot indicator as-is.
-
-- The full-width Scene Look row (`col-span-2`) automatically inherits the same centered alignment — no extra change needed.
-
-### Why centered (not left-aligned)
-
-- **Left-aligned** (`justify-start`) works for list rows / dropdowns, but chips are perceived as buttons — buttons should center their label.
-- **Justify-between** only looks right when the label is genuinely long enough to fill the row; on short labels like "1:1" or "Model" it creates the lopsided gap visible in the screenshot.
-- **Centered** is robust to any label length and matches the desktop chip aesthetic (where chips are content-width and centered by nature).
-
-### Validation (390×818)
-
-- All 7 mobile chips show icon + label centered as one group, with a faint chevron pinned right.
-- Scene Look row centers cleanly across the full width.
-- Advanced chip keeps its primary-dot modified indicator.
-- Desktop ≥768px and the Advanced popover internals are untouched.
+- Bar vertical padding: `py-2.5` → `py-3.5`
+- Search wrapper width: `lg:w-[280px]` → `lg:w-[340px]`
+- Search input: `h-8 text-xs pl-8` → `h-10 text-sm pl-10`; icon `w-3.5 h-3.5` → `w-4 h-4` (and shift `left-3.5`); clear button `w-3 h-3` → `w-3.5 h-3.5`
+- Subject chips: `px-3 py-1 text-xs` → `px-4 py-2 text-sm`, gap `gap-1.5` → `gap-2`
+- "Clear all" link: `text-xs px-2 py-1` → `text-sm px-3 py-2`
+- Desktop Sort select: `h-8 w-[140px] text-xs` → `h-10 w-[170px] text-sm`
 
 ### Untouched
 
-Desktop layout, popover internals, all selector components, types, hooks, RLS, `Freestyle.tsx`.
+Mobile layout (the existing `lg:hidden` row stays exactly as-is — it was already correctly sized), grid cards, header, footer, all hooks, RLS, `Freestyle.tsx`, `SceneCatalogModal.tsx` itself.
+
+### Validation
+
+- Desktop ≥1024px: sidebar visibly wider with mobile-style row spacing; search input + Product Only / With Model chips + Sort dropdown read at the same scale as primary controls elsewhere in the app.
+- Tablet 820–1023px: still uses the mobile drawer + mobile filter row (unchanged) — already spacious.
+- Mobile <768px: completely unaffected.
 
