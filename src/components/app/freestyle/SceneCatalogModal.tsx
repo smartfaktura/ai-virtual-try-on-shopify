@@ -275,25 +275,15 @@ export function SceneCatalogModal({
           <ScrollArea className="flex-1 min-h-0">
             <div className="px-4 sm:px-6 py-4 space-y-4">
               {showRails ? (
-                <>
-                  <SceneCatalogRail
-                    title="Recommended for you"
-                    scenes={recommendedScenes}
-                    isLoading={recommended.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                  />
-                  <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
-                  <SceneCatalogGrid
-                    pages={grid.data?.pages ?? []}
-                    isLoading={grid.isLoading}
-                    isFetchingNextPage={grid.isFetchingNextPage}
-                    hasNextPage={!!grid.hasNextPage}
-                    onLoadMore={() => grid.fetchNextPage()}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                  />
-                </>
+                <SceneCatalogGrid
+                  pages={interleavedGrid.data?.pages ?? []}
+                  isLoading={interleavedGrid.isLoading}
+                  isFetchingNextPage={false}
+                  hasNextPage={false}
+                  onLoadMore={() => {}}
+                  selectedSceneId={currentSelectedId}
+                  onSelect={handleSelect}
+                />
               ) : quickView === 'recommended' ? (
                 <SceneCatalogGrid
                   pages={[recommendedScenes]}
