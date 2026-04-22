@@ -44,7 +44,11 @@ export function SceneCatalogSidebar({
     if (!counts) return { familyCounts: fc, subFamiliesByFamily: subs };
 
     for (const [slug, count] of Object.entries(counts.byCollection)) {
-      const family = CATEGORY_FAMILY_MAP[slug] ?? 'Other';
+      const family = CATEGORY_FAMILY_MAP[slug];
+      if (!family) {
+        if (typeof console !== 'undefined') console.warn('[SceneCatalogSidebar] Unmapped category_collection slug:', slug);
+        continue;
+      }
       fc[family] = (fc[family] ?? 0) + count;
       (subs[family] ||= []).push({ slug, count });
     }
