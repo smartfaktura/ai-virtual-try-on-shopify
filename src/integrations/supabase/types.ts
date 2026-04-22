@@ -853,6 +853,7 @@ export type Database = {
           ratio: string
           requested_count: number
           results: Json | null
+          scene_id: string | null
           scene_image_url: string | null
           scene_name: string | null
           status: string
@@ -879,6 +880,7 @@ export type Database = {
           ratio?: string
           requested_count?: number
           results?: Json | null
+          scene_id?: string | null
           scene_image_url?: string | null
           scene_name?: string | null
           status?: string
@@ -905,6 +907,7 @@ export type Database = {
           ratio?: string
           requested_count?: number
           results?: Json | null
+          scene_id?: string | null
           scene_image_url?: string | null
           scene_name?: string | null
           status?: string
@@ -2431,7 +2434,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      scene_usage_unified: {
+        Row: {
+          created_at: string | null
+          scene_id: string | null
+          source: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_purchased_credits: {
@@ -2504,6 +2515,18 @@ export type Database = {
           item_id: string
           item_type: string
           sort_order: number
+        }[]
+      }
+      get_scene_popularity: {
+        Args: { p_days?: number }
+        Returns: {
+          first_used_at: string
+          last_used_at: string
+          scene_id: string
+          total_uses: number
+          unique_users: number
+          uses_freestyle: number
+          uses_product_images: number
         }[]
       }
       get_user_emails_for_admin: {
