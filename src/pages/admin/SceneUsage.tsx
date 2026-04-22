@@ -469,8 +469,10 @@ export default function SceneUsage() {
               <TrendingUp className="w-4 h-4 text-muted-foreground" />
               <div className="text-sm font-medium">Top risers (7d vs prior 7d)</div>
             </div>
-            {loading ? (
+            {risersLoading ? (
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            ) : risersFailed ? (
+              <div className="text-xs text-muted-foreground">Couldn't load risers.</div>
             ) : risers.length === 0 ? (
               <div className="text-xs text-muted-foreground">No movement yet.</div>
             ) : (
