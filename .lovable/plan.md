@@ -1,61 +1,58 @@
 
 
-## Interleaved "All scenes" arrangement + apply same logic to user Recommended rail
+## Fix Scenes modal: remove rail, interleave grid, tighten layout
 
-You want the admin "All scenes" grid to feel curated — not 1,200 fashion scenes followed by 200 beauty scenes. Mix them so the eye sees variety: 2 fashion → 2 beauty → 2 fragrance → repeat. And use the same interleaving for the user-facing **Recommended for you** rail when an admin hasn't curated specific picks.
+Three targeted changes to `SceneCatalogModal.tsx` + a new fetch hook for the interleaved default grid.
 
-### Part A — Admin "All scenes" grid: interleaved arrangement
+### 1. Remove "Recommended for you" rail from the default view
 
-File: `src/pages/AdminRecommendedScenes.tsx`
+In the `showRails` branch, drop the `<SceneCatalogRail title="Recommended for you" …>` block and the "Freestyle Scenes" subheading. The default view becomes just one grid — no rail, no section headers.
 
-Add a **View** toggle above the grid:
-- **Grouped** (today's behaviour) — `category_collection ASC, sort_order ASC`
-- **Interleaved** (new default) — round-robin across families/sub-families, N scenes per chunk
+The "Recommended" sidebar quick-view (left nav) keeps working — it still loads `useRecommendedScenes` and renders the dedicated grid when the user clicks it. Only the auto-rail on the main page is removed.
 
-Implementation:
-- Group `filteredScenes` by `category_collection`. Within each group keep current `sort_order`.
-- Build queues per family (Fashion, Beauty, Fragrance, …) using `CATEGORY_FAMILY_MAP`.
-- Round-robin pull `chunkSize` (default **2**) from each family's queue, in `FAMILY_ORDER`, until all are drained.
-- Add a small numeric stepper for chunk size: 1 / 2 / 3 / 4 (default 2).
-- Persist toggle + chunk size in `localStorage` so admins keep their preference.
-- The interleaving is **purely visual** — does not write anything to the DB.
+### 2. Make the default grid show interleaved variety (Fashion → Beauty → Fragrance → Eyewear → repeat)
 
-The selection/add-remove logic stays exactly the same; only the render order of `filteredScenes` changes.
+Today `useSceneCatalog` paginates `product_image_scenes ORDER BY sort_order ASC` — that clusters all Fashion together, then all Beauty, etc. The "interleaved" arrangement promised in the previous plan only lives in the admin tool and the recommended fallback, **not** in the user-facing main grid.
 
-### Part B — User-facing "Recommended for you" rail: same interleaving fallback
+Add a new hook `useInterleavedSceneCatalog`:
 
-File: `src/hooks/useRecommendedScenes.ts`
+- One-shot fetch (cached 10 min): up to 1,500 active scenes with the slim columns, excluding essentials, ordered by `sort_order ASC`.
+- Run `interleaveByFamily(rows, 2)` from `src/lib/sceneTaxonomy.ts` — same helper used everywhere else. Result: 2 Fashion, 2 Beauty, 2 Fragrance, 2 Eyewear, 2 Bags, 2 Watches, 2 Jewelry, 2 Home, 2 Tech, 2 Food&Drink, 2 Wellness, 2 Footwear, then repeat.
+- Return as a single page: `pages: [interleavedRows]`.
 
-Today's resolution chain:
-1. Per-category curated picks → 2. Global curated picks → 3. Top-12 by `sort_order` (last-resort dump)
+In `SceneCatalogModal.tsx`, when the default view is active (no filters, no search, sort=recommended), render this interleaved set via `SceneCatalogGrid` instead of the current `useSceneCatalog` infinite query. When **any** filter, search, or sort=Newest is active, fall back to the existing `useSceneCatalog` infinite query (current behaviour).
 
-Add a **smarter step 3 / interleaved fallback**:
-- When per-category + Global picks together yield fewer than 12, instead of just sorting by `sort_order` (which clusters by category), pull the **top-N from each family** the user picked at onboarding and interleave 2-by-2.
-- If user has no onboarding categories, do the same across all families using `FAMILY_ORDER`.
-- Cap at 12. Dedupe with already-resolved curated picks.
+This gives the user a curated-looking mixed grid by default, while keeping fast filtered/sorted queries unchanged.
 
-Result: every user sees a visually varied rail even when admins haven't fully curated their category.
+### 3. Tighten the modal layout so cards don't feel oversized
 
-### Part C — Optional: also interleave the admin **Featured** preview
+At 1328px viewport with `w-[92vw]` (≈1221px) minus the 260px sidebar, the content area is ~960px. With `lg:grid-cols-4` cards render at ~225px each — fine. But the screenshot shows only 2 huge cards visible. Two fixes:
 
-In the Featured section header, add a small "Preview as user sees it" toggle that re-renders the featured cards in the same interleaved order the user's rail will use. Pure preview — does not change `sort_order` in the DB. This lets admins see what mixing looks like before deciding to curate manually.
+- Bump the grid breakpoints in `SceneCatalogGrid.tsx` so 4 columns kick in earlier:  
+  `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5`. At the modal's effective content width, this guarantees 4–5 columns visible above the fold instead of relying on the viewport-based `lg` breakpoint that the inner ScrollArea ignores.
+- Forward the ref properly on `SceneCatalogGrid` (wrap export in `React.forwardRef` with a no-op ref pass-through) to silence the "Function components cannot be given refs" warning currently logged.
+
+### 4. Selecting Recommended sidebar item: keep current "grid view" behaviour
+
+No change. That branch still shows the recommended scenes as a grid.
 
 ### Files touched
 
-- `src/pages/AdminRecommendedScenes.tsx` — view toggle, chunk size stepper, interleave helper, optional Featured preview toggle.
-- `src/hooks/useRecommendedScenes.ts` — interleaved fallback when curated picks < 12.
-- `src/lib/sceneTaxonomy.ts` — export a small `interleaveByFamily(scenes, chunkSize)` helper (single source of truth used by both).
+- `src/components/app/freestyle/SceneCatalogModal.tsx` — remove the rail block from `showRails`, swap default-grid source to the new interleaved hook.
+- `src/components/app/freestyle/SceneCatalogGrid.tsx` — bump grid column breakpoints; forwardRef wrapper.
+- `src/hooks/useSceneCatalog.ts` (or new `useInterleavedSceneCatalog.ts`) — add the one-shot interleaved fetcher returning a single page.
 
 ### Untouched
 
-DB schema, RLS, `recommended_scenes` table, generation pipeline, scene catalog modal grid, admin curation actions (add/remove/reorder).
+DB schema, RLS, `useRecommendedScenes`, sidebar, admin page, generation pipeline, scene card, filters bar.
 
 ### Validation
 
-- `/app/admin/recommended-scenes` → toggle **Interleaved (2)** → grid shows 2 Fashion, 2 Beauty, 2 Fragrance, 2 Eyewear, … repeating until all visible scenes render. Switching to **Grouped** restores today's order.
-- Chunk size stepper: setting 1 produces strict round-robin (1 fashion, 1 beauty, 1 fragrance…); setting 4 makes wider chunks.
-- Search and family/sub-family filters compose correctly with both views.
-- Featured "Preview as user sees it" toggle shows the rail the way the user will see it (interleaved across the curated picks' families).
-- A user with `product_categories = ['fashion','beauty']` and only 4 curated picks across both → opens Scenes modal → Recommended rail shows the 4 picks first, then interleaved top scenes from Fashion + Beauty families to fill to 12.
-- A user with no onboarding categories and no curated picks → rail shows interleaved variety across all families instead of 12 of the same category.
+- Open `/app/freestyle` → Scenes modal default view shows **only** the Freestyle Scenes grid (no Recommended for you rail above it).
+- The grid's first 12 cards visibly mix product families (lipstick, sneaker, perfume, eyewear, bag…) instead of all Fashion in a row.
+- 4 cards per row visible above the fold at 1328px viewport.
+- Switching sort to **Newest** still shows pure `created_at DESC` (no interleaving).
+- Applying any subject chip / family / search still works through `useSceneCatalog` and shows accurate filtered results.
+- Clicking sidebar **Recommended** still opens the per-onboarding-category curated grid.
+- React ref warning for `SceneCatalogGrid` no longer appears in console.
 
