@@ -345,6 +345,7 @@ async function completeQueueJob(
     requested_count: requestedCount,
     credits_used: creditsReserved,
     scene_name: (payload.pose as Record<string, unknown>)?.name || (payload.shot_id as string) || null,
+    scene_id: ((payload.pose as Record<string, unknown>)?.id as string) ?? (payload.shot_id as string) ?? null,
     model_name: (payload.model as Record<string, unknown>)?.name || null,
     model_image_url: (payload.model as Record<string, unknown>)?.originalImageUrl || null,
     workflow_slug: "catalog-studio",
