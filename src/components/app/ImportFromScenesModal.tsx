@@ -402,6 +402,33 @@ export default function ImportFromScenesModal({
                   </Button>
                 </div>
               )}
+              {(() => {
+                const entries = Array.from(configs.values());
+                const allHave = entries.length > 0 && entries.every(c => (c.trigger_blocks || []).includes('personDetails'));
+                return (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs px-3 shrink-0"
+                    onClick={() => {
+                      setConfigs(prev => {
+                        const next = new Map(prev);
+                        for (const [id, config] of next) {
+                          const blocks = new Set(config.trigger_blocks || []);
+                          if (allHave) blocks.delete('personDetails');
+                          else blocks.add('personDetails');
+                          next.set(id, { ...config, trigger_blocks: Array.from(blocks) });
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    <UserCheck className="w-3.5 h-3.5" />
+                    {allHave ? 'Remove personDetails from all' : 'Add personDetails to all'}
+                  </Button>
+                );
+              })()}
             </div>
 
             {Array.from(configs.entries()).map(([id, config]) => {
