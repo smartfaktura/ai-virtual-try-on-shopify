@@ -19,6 +19,7 @@ export function SceneCatalogCard({ scene, selected, onSelect }: SceneCatalogCard
     <button
       type="button"
       onClick={() => onSelect(scene)}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '320px' }}
       className={cn(
         'group relative rounded-xl overflow-hidden border-2 bg-card text-left transition-all duration-200',
         selected
