@@ -1,53 +1,44 @@
 
 
-## Fix Scene Performance page — name + thumbnail resolution
+## Recording works ✅ — fix one more name/thumbnail resolver
 
-The data layer is working correctly (177 freestyle generations tracked, scene_id populated). The page just doesn't know how to look up names/thumbnails for the two main scene families it's seeing. Three small frontend bugs to fix in `src/pages/admin/SceneUsage.tsx`.
+### What I checked
 
-### What's actually happening
+- Your freestyle generation at 19:15 UTC is correctly stored: `freestyle_generations.scene_id = "pis-swimwear-editorial-lounger-resort"`.
+- Tracking pipeline is healthy.
 
-Looking at your screenshot:
+### One small bug found
 
-| Row shown | What it really is | Why it shows raw ID |
-|---|---|---|
-| `pose_021`, `pose_002`, `scene_038` | **Freestyle scenes** from `src/data/mockData.ts` (`mockTryOnPoses`) — bundled in the app, not in DB | Page only queries `product_image_scenes` + `custom_scenes` tables — never looks at the static TS file |
-| `custom-973ebb42…`, `custom-eef59b5a…` | Custom scenes from DB. The full string `custom-{uuid}` is the canonical scene_id, but the row ID in `custom_scenes` is just the UUID | Page does `.in('id', ids)` with the prefixed strings → no match → no name, no thumbnail |
-| Empty thumbnails on custom rows | `custom_scenes` has `image_url` populated but `preview_image_url` is null | Once #2 is fixed, the existing `preview_image_url ?? image_url` fallback already in code resolves this |
+When Freestyle uses a **Product Visuals** scene (Scene Catalog modal), it namespaces the ID with a `pis-` prefix (`src/components/app/freestyle/SceneSelectorChip.tsx`, see `PIS_PREFIX` in `src/lib/sceneTaxonomy.ts`). But `/app/admin/scene-performance` only knows about three families:
 
-### The three fixes (one file)
+1. Static `pose_*` / `scene_*` (mockTryOnPoses) ✅
+2. `custom-{uuid}` (custom_scenes) ✅
+3. Raw `product_image_scenes.scene_id` ✅
+4. **`pis-{scene_id}` (Freestyle's namespaced Product Visuals scenes) ❌** — currently shows raw ID + no thumbnail
 
-**`src/pages/admin/SceneUsage.tsx`** — in the `load()` function where metadata is resolved:
+The DB row exists as `swimwear-editorial-lounger-resort` in `product_image_scenes` ("Sun Lounger Resort Pose" with a thumbnail), but the lookup uses the prefixed string and finds nothing.
 
-1. **Strip the `custom-` prefix before the custom_scenes lookup.** Build `customIds = ids.filter(i => i.startsWith('custom-')).map(i => i.slice(7))`, query `.in('id', customIds)`, then re-key the result map with the original prefixed `custom-{uuid}` so the rest of the code finds it.
+### Fix (one file, ~10 lines)
 
-2. **Add a third resolver for freestyle/tryon scenes** from `mockTryOnPoses` (and the freestyle scene catalog if separate). Import the array, build a `Map<poseId, {name, category, previewUrl}>` once at module load, and use it as the **first** lookup before falling back to the DB tables. This covers `pose_*` and `scene_*` IDs.
+**`src/pages/admin/SceneUsage.tsx`** — same prefix-strip pattern we did for `custom-`:
 
-3. **Use `image_url` as thumbnail fallback** — already in the code (`preview_image_url ?? image_url`); just verify after fix #1 that custom rows now resolve.
+In `load()`, where `pisIds` is built:
+- Detect IDs starting with `pis-`, strip the prefix to get the real `scene_id`.
+- Query `product_image_scenes` with the stripped IDs.
+- When writing into `metaMap`, re-key with the original `pis-{id}` so the table rows resolve.
+- Source badge: still classifies as "Freestyle" (correct — these come from `freestyle_generations`).
 
-### Result after fix
+After fix, your row renders as **"Sun Lounger Resort Pose"** (Editorial Swimwear) with the proper thumbnail.
 
-The same screenshot rows would render as:
-- `pose_021` → "Editorial Movement" (Editorial) + bundled preview image
-- `pose_002` → "Studio Profile" (Studio) + bundled preview image
-- `scene_038` → "White Studio" (Clean Studio) + bundled preview image
-- `custom-eef59b5a…` → "Mid-Century Modern Lounge" (fashion) + image_url thumbnail
-- `custom-b84c0c8a…` → "Clean White Studio" (studio) + image_url thumbnail
+### No other changes needed
 
-Top risers rail uses the same `meta` map → fixed automatically.
-
-### Untouched
-
-- No DB changes, no edge function changes, no migration.
-- `freestyle_generations` and `generation_jobs` writes already correct.
-- KPIs (177 generations, 76 scenes, 85 users) are already accurate.
-
-### Files
-
-- `src/pages/admin/SceneUsage.tsx` — only file edited.
+- No DB / edge function / migration changes.
+- KPIs already accurate.
+- Top risers rail picks up the fix automatically (shares the same `meta` map).
 
 ### Validation
 
-- Page reload: `pose_*`, `scene_*`, and `custom-*` rows show real names + thumbnails. Raw IDs only appear for truly unknown scenes (none expected).
-- Search by name (e.g., "Studio") now matches.
-- Top risers rail shows names/thumbs.
+1. Reload `/app/admin/scene-performance` → your `pis-swimwear-editorial-lounger-resort` row shows real name + thumbnail.
+2. All other Freestyle Product-Visuals scenes (any `pis-*` ID) resolve too.
+3. Existing `pose_*`, `scene_*`, `custom-*`, and raw scene rows still work.
 
