@@ -303,7 +303,7 @@ export function FreestyleSettingsChips({
     const framingValueLabel = framing ? (framing as any).label ?? (framing as any).name ?? 'Custom' : 'Auto';
     const brandValueLabel = selectedBrandProfile?.name ?? 'None';
 
-    const cellClass = '[&_button]:w-full [&_button]:justify-center [&_button]:relative [&_button]:px-4 [&_button>svg:last-child]:absolute [&_button>svg:last-child]:right-3 [&_button>svg:last-child]:opacity-40';
+    const cellClass = '[&>*]:w-full [&>button]:w-full [&>button]:justify-center [&>button]:relative [&>button]:px-4 [&>*>button]:w-full [&>*>button]:justify-center [&>*>button]:relative [&>*>button]:px-4';
 
     const SectionRow = ({
       id, icon: Icon, label, value, modified,
