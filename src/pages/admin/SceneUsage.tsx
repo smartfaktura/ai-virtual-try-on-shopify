@@ -143,20 +143,22 @@ export default function SceneUsage() {
 
           const [pisData, customData] = await Promise.all([
             pisQueryIds.length
-              ? fetchInChunks<any>(pisQueryIds, (chunk) =>
-                  supabase
+              ? fetchInChunks<any>(pisQueryIds, async (chunk) => {
+                  const res = await supabase
                     .from('product_image_scenes')
                     .select('scene_id,title,sub_category,category_collection,preview_image_url')
-                    .in('scene_id', chunk),
-                )
+                    .in('scene_id', chunk);
+                  return { data: res.data, error: res.error };
+                })
               : Promise.resolve([] as any[]),
             customIds.length
-              ? fetchInChunks<any>(customIds, (chunk) =>
-                  supabase
+              ? fetchInChunks<any>(customIds, async (chunk) => {
+                  const res = await supabase
                     .from('custom_scenes')
                     .select('id,name,category,preview_image_url,image_url')
-                    .in('id', chunk),
-                )
+                    .in('id', chunk);
+                  return { data: res.data, error: res.error };
+                })
               : Promise.resolve([] as any[]),
           ]);
           const pisRes = { data: pisData };
