@@ -755,6 +755,9 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
           </div>
           {/* Actions — wrap row on mobile, inline on desktop */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 shrink-0 sm:w-auto mt-auto sm:mt-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onMoveToTop(scene)} disabled={idx === 0} title="Move to top">
+              <ChevronsUp className="w-3.5 h-3.5" />
+            </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
               <ArrowUp className="w-3.5 h-3.5" />
             </Button>
