@@ -64,6 +64,7 @@ export function SceneCatalogModal({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
   const [family, setFamily] = useState<string | null>(null);
+  const [categoryCollection, setCategoryCollection] = useState<string | null>(null);
   const [quickView, setQuickView] = useState<QuickView>('all');
   const [sort, setSort] = useState<'recommended' | 'popular' | 'new'>('recommended');
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
@@ -79,6 +80,7 @@ export function SceneCatalogModal({
     !!debouncedSearch ||
     subjects.length > 0 ||
     family !== null ||
+    categoryCollection !== null ||
     quickView !== 'all';
 
   // Build filters for the grid query depending on the active quick view.
@@ -87,11 +89,12 @@ export function SceneCatalogModal({
       search: debouncedSearch,
       subjects,
       family,
+      categoryCollection,
       sort,
     };
     if (quickView === 'new') return { ...base, sort: 'new' as const };
     return base;
-  }, [debouncedSearch, subjects, family, sort, quickView]);
+  }, [debouncedSearch, subjects, family, categoryCollection, sort, quickView]);
 
   // Default rails (only when no filters AND quickView === 'all')
   const showRails = !anyFilterActive;
