@@ -365,9 +365,11 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
                 )}
               </div>
 
-              <div className="pt-2">
-                <MissingRequestBanner category="model" compact />
-              </div>
+              {quickView !== 'brand' && (
+                <div className="pt-2">
+                  <MissingRequestBanner category="model" compact />
+                </div>
+              )}
             </div>
           </ScrollArea>
         </div>
