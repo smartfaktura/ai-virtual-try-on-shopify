@@ -519,42 +519,6 @@ export const CATEGORY_COLLECTIONS: CategoryCollection[] = [
       },
     ],
   },
-  {
-    id: 'other',
-    title: 'Other / Custom',
-    scenes: [
-      {
-        id: 'global_hero_surface', title: 'Hero on Surface',
-        description: 'Product hero shot on a styled surface.',
-        promptTemplate: 'Hero product photograph — {{productName}} {{surfaceDirective}} in a clean editorial composition. {{lightingDirective}} Tack-sharp focus on {{materialTexture}}. {{shadowDirective}} {{moodDirective}} {{stylingDirective}} {{consistencyDirective}} {{cameraDirective}}',
-        sceneType: 'editorial',
-      },
-      {
-        id: 'global_in_hand', title: 'Product in Hand',
-        description: 'Product held for scale and context.',
-        promptTemplate: 'Hand-held product photograph — {{productName}} held in a {{handStyle}} hand for scale and context. {{personDirective}} Hyper-realistic skin texture with visible pores, {{nailDirective}}. Product showing {{materialTexture}} in sharp focus. {{lightingDirective}} {{consistencyDirective}} {{cameraDirective}}',
-        sceneType: 'portrait',
-      },
-      {
-        id: 'global_detail_macro', title: 'Detail Close-Up',
-        description: 'Macro or detail shot of key product features.',
-        promptTemplate: 'Macro detail photograph of {{productName}} — tack-sharp focus on {{focusArea}}: {{materialTexture}} at maximum resolution. Visible micro-details proving quality and craftsmanship. {{lightingDirective}} Shallow depth of field. {{cropDirective}} {{consistencyDirective}} {{cameraDirective}}',
-        sceneType: 'macro',
-      },
-      {
-        id: 'global_shelf_placement', title: 'Shelf Placement',
-        description: 'Product on a shelf or display surface.',
-        promptTemplate: 'Shelf placement photograph — {{productName}} on a styled shelf or display surface. {{environmentDirective}} {{lightingDirective}} Product in sharp focus — {{materialTexture}}. Surrounding context provides natural lifestyle framing. {{moodDirective}} {{stylingDirective}} {{consistencyDirective}} {{cameraDirective}}',
-        sceneType: 'lifestyle',
-      },
-      {
-        id: 'global_editorial_scene', title: 'Editorial Composition',
-        description: 'Campaign-style editorial shot.',
-        promptTemplate: 'Editorial campaign photograph — {{productName}} in a styled premium composition. {{lightingDirective}} {{moodDirective}} Product as hero — {{materialTexture}} rendered with precision. Dramatic composition with intentional framing. {{stylingDirective}} {{accentDirective}} {{productProminenceDirective}} {{consistencyDirective}} {{cameraDirective}}',
-        sceneType: 'editorial',
-      },
-    ],
-  },
 ];
 
 export const ALL_SCENES: ProductImageScene[] = [

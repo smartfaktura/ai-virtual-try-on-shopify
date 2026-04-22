@@ -44,10 +44,11 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford'], 'shoes' as TemplateCategory],
   [['bag', 'handbag', 'purse', 'clutch', 'tote', 'briefcase', 'satchel', 'crossbody'], 'bags-accessories' as TemplateCategory],
   [['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'tech', 'gadget'], 'tech-devices' as TemplateCategory],
-  [['dog', 'cat', 'pet', 'collar', 'leash', 'harness'], 'other' as TemplateCategory],
-  [['ball', 'racket', 'helmet', 'bike', 'camping', 'tent', 'fitness', 'gym', 'sport'], 'other' as TemplateCategory],
-  [['toy', 'puzzle', 'game', 'doll', 'plush', 'figurine', 'baby'], 'other' as TemplateCategory],
-  [['notebook', 'pen', 'pencil', 'planner', 'desk', 'office', 'stationery'], 'other' as TemplateCategory],
+  // Fallback: pets / sports / toys / stationery → Clothing & Apparel (most universal scene set)
+  [['dog', 'cat', 'pet', 'collar', 'leash', 'harness'], 'garments' as TemplateCategory],
+  [['ball', 'racket', 'helmet', 'bike', 'camping', 'tent', 'fitness', 'gym', 'sport'], 'garments' as TemplateCategory],
+  [['toy', 'puzzle', 'game', 'doll', 'plush', 'figurine', 'baby'], 'garments' as TemplateCategory],
+  [['notebook', 'pen', 'pencil', 'planner', 'desk', 'office', 'stationery'], 'garments' as TemplateCategory],
 ];
 
 /**
@@ -81,7 +82,6 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   shoes: 'Shoes',
   'bags-accessories': 'Bags & Accessories',
   'tech-devices': 'Tech / Devices',
-  other: 'Other / Custom',
   backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders',
   belts: 'Belts',

@@ -54,7 +54,6 @@ const TITLE_MAP: Record<string, string> = {
   food: 'Food & Snacks',
   beverages: 'Beverages',
   'supplements-wellness': 'Supplements & Wellness',
-  other: 'Other / Custom',
 };
 
 interface MatchedFile {
