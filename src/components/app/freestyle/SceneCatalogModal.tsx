@@ -101,8 +101,29 @@ export function SceneCatalogModal({
   const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
   const counts = useSceneCounts();
 
-  // Custom scenes still loaded so cs- selections continue to resolve correctly.
+  // Custom scenes ("Freestyle Originals") — admin-curated rows from /app/admin/scenes.
   const customScenesQuery = useCustomScenes();
+
+  // Adapt CustomScene rows into CatalogScene shape so they render in the existing grid/rail.
+  const originalScenes = useMemo<CatalogScene[]>(() => {
+    const rows = customScenesQuery.scenes ?? [];
+    return rows.map(s => ({
+      id: `cs-${s.id}`,
+      scene_id: s.id,
+      title: s.name,
+      sub_category: null,
+      category_collection: null,
+      scene_type: null,
+      subject: s.subject ?? null,
+      shot_style: null,
+      setting: null,
+      preview_image_url: s.preview_image_url || s.optimized_image_url || s.image_url,
+      prompt_template: s.prompt_hint || s.description || '',
+      filter_tags: null,
+      created_at: s.created_at,
+    }));
+  }, [customScenesQuery.scenes]);
+  const originalsAsRail = originalScenes.length > 24;
 
   // Recommended rail — strip any "Essential Shots" rows defensively.
   const recommendedScenes = useMemo<CatalogScene[]>(() => {
@@ -236,7 +257,7 @@ export function SceneCatalogModal({
           <div>
             <h2 className="text-lg font-semibold text-foreground">Select Scene</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Find the right shot for your product — over 1,000 curated scenes.
+              Find the right shot for your product — 1,200+ curated scenes.
             </p>
           </div>
         </header>
@@ -273,6 +294,30 @@ export function SceneCatalogModal({
             <div className="px-4 sm:px-6 py-4 space-y-4">
               {showRails ? (
                 <>
+                  {originalScenes.length > 0 && (
+                    originalsAsRail ? (
+                      <SceneCatalogRail
+                        title="Freestyle Originals"
+                        scenes={originalScenes}
+                        isLoading={customScenesQuery.isLoading}
+                        selectedSceneId={currentSelectedId}
+                        onSelect={handleSelect}
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Originals</h3>
+                        <SceneCatalogGrid
+                          pages={[originalScenes]}
+                          isLoading={customScenesQuery.isLoading}
+                          isFetchingNextPage={false}
+                          hasNextPage={false}
+                          onLoadMore={() => {}}
+                          selectedSceneId={currentSelectedId}
+                          onSelect={handleSelect}
+                        />
+                      </div>
+                    )
+                  )}
                   <SceneCatalogRail
                     title="Recommended for you"
                     scenes={recommendedScenes}
