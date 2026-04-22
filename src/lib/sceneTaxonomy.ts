@@ -52,10 +52,9 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
 
   food: 'Food & Drink',
   beverages: 'Food & Drink',
+  'snacks-food': 'Food & Drink',
 
   'supplements-wellness': 'Wellness',
-
-  other: 'Other',
 };
 
 /** Human labels for category_collection slugs when shown as sub-family rows. */
@@ -84,7 +83,7 @@ export function getSubFamilyLabel(slug: string): string {
 
 export const FAMILY_ORDER = [
   'Fashion', 'Footwear', 'Bags & Accessories', 'Watches', 'Eyewear', 'Jewelry',
-  'Beauty & Fragrance', 'Home', 'Tech', 'Food & Drink', 'Wellness', 'Other',
+  'Beauty & Fragrance', 'Home', 'Tech', 'Food & Drink', 'Wellness',
 ] as const;
 
 /** Map onboarding product_categories slugs → category_collection slugs for personalisation. */

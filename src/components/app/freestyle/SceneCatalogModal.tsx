@@ -15,9 +15,8 @@ import { SceneCatalogGrid } from './SceneCatalogGrid';
 import { useSceneCatalog, useSceneRail, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
-import { mockTryOnPoses } from '@/data/mockData';
-import { useHiddenScenes } from '@/hooks/useHiddenScenes';
-import type { TryOnPose } from '@/types';
+import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
+import type { TryOnPose, PoseCategory } from '@/types';
 
 interface SceneCatalogModalProps {
   open: boolean;
@@ -31,22 +30,37 @@ interface SceneCatalogModalProps {
   onSelectLegacy?: (pose: TryOnPose) => void;
 }
 
-/** Adapt a TryOnPose into a CatalogScene-shaped object so the rail can render it. */
-function poseToCatalogShape(pose: TryOnPose): CatalogScene {
+/** Adapt a CustomScene row into a CatalogScene-shaped object so the rail can render it. */
+function customSceneToCatalogShape(scene: CustomScene): CatalogScene {
   return {
-    id: `legacy-${pose.poseId}`,
-    scene_id: pose.poseId,
-    title: pose.name,
+    id: `cs-${scene.id}`,
+    scene_id: scene.id,
+    title: scene.name,
     sub_category: null,
     category_collection: null,
     scene_type: null,
     subject: null,
     shot_style: null,
     setting: null,
-    preview_image_url: pose.previewUrl,
-    prompt_template: pose.promptHint ?? null,
+    preview_image_url: scene.preview_image_url || scene.optimized_image_url || scene.image_url,
+    prompt_template: scene.prompt_hint || scene.description || null,
     filter_tags: null,
-    created_at: null,
+    created_at: scene.created_at,
+  };
+}
+
+/** Convert a CustomScene back into a TryOnPose for the legacy onSelectLegacy handoff. */
+function customSceneToTryOnPose(scene: CustomScene): TryOnPose {
+  return {
+    poseId: `custom-${scene.id}`,
+    name: scene.name,
+    category: scene.category as PoseCategory,
+    description: scene.description,
+    promptHint: scene.prompt_hint || scene.description,
+    previewUrl: scene.preview_image_url || scene.image_url,
+    optimizedImageUrl: scene.optimized_image_url || undefined,
+    created_at: scene.created_at,
+    promptOnly: scene.prompt_only || false,
   };
 }
 
@@ -59,7 +73,6 @@ export function SceneCatalogModal({
   onSelectLegacy,
 }: SceneCatalogModalProps) {
   const isMobile = useIsMobile();
-  const { filterVisible } = useHiddenScenes();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
@@ -108,21 +121,29 @@ export function SceneCatalogModal({
   );
   const withModelRail = useSceneRail(
     'with-model',
-    { subjects: ['with-model'] },
+    { subjects: ['with-model'], excludeEssentials: true },
     12,
     open && showRails,
   );
 
-  // Filtered grid (only fetched when a real filter is active and we're not showing only Recommended)
+  // Filtered grid (always exclude Essential Shots in Freestyle modal).
   const useGrid = anyFilterActive && quickView !== 'recommended';
-  const grid = useSceneCatalog(filters, open && useGrid);
+  const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
   const counts = useSceneCounts();
 
-  // Freestyle Originals — use mockTryOnPoses, deduped via hidden filter, capped at 12.
-  const freestyleOriginals = useMemo(() => {
+  // Freestyle Scenes — live custom_scenes from /app/admin/scenes, capped at 12.
+  const customScenesQuery = useCustomScenes();
+  const freestyleScenes = useMemo<CatalogScene[]>(() => {
     if (!showRails) return [];
-    return filterVisible(mockTryOnPoses).slice(0, 12).map(poseToCatalogShape);
-  }, [showRails, filterVisible]);
+    const rows = customScenesQuery.scenes ?? [];
+    return rows.slice(0, 12).map(customSceneToCatalogShape);
+  }, [showRails, customScenesQuery.scenes]);
+
+  // Recommended rail — strip any "Essential Shots" rows defensively.
+  const recommendedScenes = useMemo<CatalogScene[]>(() => {
+    const data = (recommended.data ?? []) as CatalogScene[];
+    return data.filter(s => !s.sub_category?.toLowerCase().includes('essential'));
+  }, [recommended.data]);
 
   const newCount = useMemo(() => {
     // Fast approximation — we don't fetch a separate count; just show no badge.
@@ -189,11 +210,11 @@ export function SceneCatalogModal({
   };
 
   const handleSelect = (scene: CatalogScene) => {
-    if (scene.id.startsWith('legacy-')) {
-      // Find the original mock pose to preserve full TryOnPose shape (incl. previewUrlMale, etc.)
-      const pose = mockTryOnPoses.find(p => p.poseId === scene.scene_id);
-      if (pose) {
-        setPendingLegacy(pose);
+    if (scene.id.startsWith('cs-')) {
+      // Resolve back to the original custom_scenes row to emit a TryOnPose-shaped object.
+      const row = (customScenesQuery.scenes ?? []).find(s => s.id === scene.scene_id);
+      if (row) {
+        setPendingLegacy(customSceneToTryOnPose(row));
         setPendingScene(null);
         return;
       }
@@ -296,16 +317,16 @@ export function SceneCatalogModal({
               {showRails ? (
                 <>
                   <SceneCatalogRail
-                    title="Recommended for you"
-                    scenes={recommended.data}
-                    isLoading={recommended.isLoading}
+                    title="Freestyle Scenes"
+                    scenes={freestyleScenes}
+                    isLoading={customScenesQuery.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
                   />
                   <SceneCatalogRail
-                    title="Freestyle Originals"
-                    scenes={freestyleOriginals}
-                    isLoading={false}
+                    title="Recommended for you"
+                    scenes={recommendedScenes}
+                    isLoading={recommended.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
                   />
@@ -328,7 +349,7 @@ export function SceneCatalogModal({
                 </>
               ) : quickView === 'recommended' ? (
                 <SceneCatalogGrid
-                  pages={[recommended.data ?? []]}
+                  pages={[recommendedScenes]}
                   isLoading={recommended.isLoading}
                   isFetchingNextPage={false}
                   hasNextPage={false}

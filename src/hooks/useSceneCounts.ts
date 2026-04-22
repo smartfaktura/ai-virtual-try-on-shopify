@@ -20,8 +20,10 @@ export function useSceneCounts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('product_image_scenes')
-        .select('subject, shot_style, setting, category_collection')
-        .eq('is_active', true);
+        .select('subject, shot_style, setting, category_collection, sub_category')
+        .eq('is_active', true)
+        .not('sub_category', 'ilike', '%essential%')
+        .range(0, 4999);
       if (error) throw error;
 
       const bySubject: Record<string, number> = {};
