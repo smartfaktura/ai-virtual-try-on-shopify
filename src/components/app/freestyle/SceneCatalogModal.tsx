@@ -123,7 +123,6 @@ export function SceneCatalogModal({
       created_at: s.created_at,
     }));
   }, [customScenesQuery.scenes]);
-  const originalsAsRail = originalScenes.length > 24;
 
   // Recommended rail — strip any "Essential Shots" rows defensively.
   const recommendedScenes = useMemo<CatalogScene[]>(() => {
@@ -290,34 +289,10 @@ export function SceneCatalogModal({
             onSelectQuickView={handleSelectQuickView}
           />
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="px-4 sm:px-6 py-4 space-y-4">
               {showRails ? (
                 <>
-                  {originalScenes.length > 0 && (
-                    originalsAsRail ? (
-                      <SceneCatalogRail
-                        title="Freestyle Originals"
-                        scenes={originalScenes}
-                        isLoading={customScenesQuery.isLoading}
-                        selectedSceneId={currentSelectedId}
-                        onSelect={handleSelect}
-                      />
-                    ) : (
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Originals</h3>
-                        <SceneCatalogGrid
-                          pages={[originalScenes]}
-                          isLoading={customScenesQuery.isLoading}
-                          isFetchingNextPage={false}
-                          hasNextPage={false}
-                          onLoadMore={() => {}}
-                          selectedSceneId={currentSelectedId}
-                          onSelect={handleSelect}
-                        />
-                      </div>
-                    )
-                  )}
                   <SceneCatalogRail
                     title="Recommended for you"
                     scenes={recommendedScenes}
@@ -325,18 +300,21 @@ export function SceneCatalogModal({
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
                   />
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
-                    <SceneCatalogGrid
-                      pages={grid.data?.pages ?? []}
-                      isLoading={grid.isLoading}
-                      isFetchingNextPage={grid.isFetchingNextPage}
-                      hasNextPage={!!grid.hasNextPage}
-                      onLoadMore={() => grid.fetchNextPage()}
-                      selectedSceneId={currentSelectedId}
-                      onSelect={handleSelect}
-                    />
-                  </div>
+                  <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
+                  <SceneCatalogGrid
+                    pages={(() => {
+                      const pages = grid.data?.pages ?? [];
+                      if (originalScenes.length === 0) return pages;
+                      const [first = [], ...rest] = pages;
+                      return [[...originalScenes, ...first], ...rest];
+                    })()}
+                    isLoading={grid.isLoading || customScenesQuery.isLoading}
+                    isFetchingNextPage={grid.isFetchingNextPage}
+                    hasNextPage={!!grid.hasNextPage}
+                    onLoadMore={() => grid.fetchNextPage()}
+                    selectedSceneId={currentSelectedId}
+                    onSelect={handleSelect}
+                  />
                 </>
               ) : quickView === 'recommended' ? (
                 <SceneCatalogGrid
