@@ -1,8 +1,9 @@
 import React from 'react';
 
 import {
-  Square, RectangleHorizontal, ChevronDown,
+  Square, RectangleHorizontal, ChevronDown, ChevronRight,
   Smartphone, Camera, Lock, Gauge, Sparkles, Palette, Sliders,
+  Crop, RotateCcw,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
