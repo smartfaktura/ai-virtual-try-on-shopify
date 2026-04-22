@@ -1,42 +1,58 @@
 
 
-## Fix: Tablet prompt panel not centered (off to the left)
+## Fix mobile chip alignment + recommend centered layout
 
-### Cause
+### What's wrong now
 
-In `src/pages/Freestyle.tsx` line 1102, the floating prompt wrapper has **asymmetric horizontal padding** at `md:` and up:
+The `[&>button]:justify-between` rule pushes the icon to the far left and the chevron to the far right, leaving the **label stranded on the right side** with a big empty gap (screenshot: "Upload Image", "Product", "1:1" all look misaligned and unbalanced). On full-width mobile cells this looks like a broken form input, not a tappable chip.
 
-```
-md:px-8 md:pr-20
-```
+### UX recommendation — **centered icon + label**, chevron tucked subtly to the right
 
-`md:pr-20` (right: 5rem) overrides the `md:px-8` right side, so the inner `md:max-w-2xl md:mx-auto` container centers itself inside an off-center available area — visually pushing the panel ~3rem to the left of the true viewport center on tablet. Desktop ≥1024px also has this offset but the wider viewport masks it.
+For mobile chips that span a full grid cell, the cleanest pattern (used by Linear, Arc, Notion mobile) is:
 
-This `pr-20` was originally meant to clear something on desktop, but the AppShell already handles sidebar offset at the layout level — the prompt does not need extra right padding, and certainly not asymmetric padding inside a centered max-w container.
+- **Icon + label centered together** as a single visual unit — this is what the eye expects on a "button" shape.
+- **Chevron** kept small and faded, absolutely positioned at the right edge — it's a hint, not a column.
+- This reads as a **button**, not a misaligned form row, and stays balanced regardless of label length.
 
-### Fix — single line edit
-
-`src/pages/Freestyle.tsx` line 1102 — make horizontal padding symmetric:
-
-**Before**
-```
-"px-0 sm:px-8 md:px-8 md:pt-2 md:pointer-events-none md:pr-20"
-```
-
-**After**
-```
-"px-0 sm:px-8 md:px-8 md:pt-2 md:pointer-events-none"
+```text
+┌─────────────────────────┐  ┌─────────────────────────┐
+│     + Upload Image    ▾ │  │   📦  Product         ▾ │
+└─────────────────────────┘  └─────────────────────────┘
+┌───────────────────────────────────────────────────────┐
+│              📷  Scene Look                         ▾ │
+└───────────────────────────────────────────────────────┘
 ```
 
-(Drop `md:pr-20`. `md:px-8` already provides equal left/right padding, and `md:max-w-2xl md:mx-auto` on the inner wrapper now centers correctly relative to the true viewport.)
+### Change
 
-### Validation
+In `src/components/app/freestyle/FreestyleSettingsChips.tsx`, mobile branch only (lines 297, 354–461):
 
-- **Tablet 820×1180 / 768×1024**: prompt panel sits perfectly centered, equal gap from left and right viewport edges.
-- **Mobile <768px**: unaffected — none of the `md:` rules apply.
-- **Desktop ≥1024px**: panel re-centers to true viewport center; gradient fade and floating behavior unchanged. Gallery behind it remains untouched.
+- Replace `cellClass = '[&>button]:w-full [&>button]:justify-between'` with:
+  ```
+  cellClass = '[&>button]:w-full [&>button]:justify-center [&>button]:relative [&>button>svg:last-child]:absolute [&>button>svg:last-child]:right-3 [&>button>svg:last-child]:opacity-40'
+  ```
+  - `justify-center` centers the icon + label as a unit.
+  - The trailing chevron (always the last `<svg>` child of the chip button) is absolutely pinned to the right edge at low opacity, so it never disturbs the centered group.
+  - Add `[&>button]:px-4` so the centered content has breathing room from the absolute chevron.
+
+- Apply the same centered treatment to the inline **Advanced** chip (lines 372–380): change its trigger to `justify-center relative` with the chevron `absolute right-3`. Keep the modified-dot indicator as-is.
+
+- The full-width Scene Look row (`col-span-2`) automatically inherits the same centered alignment — no extra change needed.
+
+### Why centered (not left-aligned)
+
+- **Left-aligned** (`justify-start`) works for list rows / dropdowns, but chips are perceived as buttons — buttons should center their label.
+- **Justify-between** only looks right when the label is genuinely long enough to fill the row; on short labels like "1:1" or "Model" it creates the lopsided gap visible in the screenshot.
+- **Centered** is robust to any label length and matches the desktop chip aesthetic (where chips are content-width and centered by nature).
+
+### Validation (390×818)
+
+- All 7 mobile chips show icon + label centered as one group, with a faint chevron pinned right.
+- Scene Look row centers cleanly across the full width.
+- Advanced chip keeps its primary-dot modified indicator.
+- Desktop ≥768px and the Advanced popover internals are untouched.
 
 ### Untouched
 
-Mobile chip grid, Advanced popover, Scene Look label, gallery, sidebar, all selectors, hooks, RLS.
+Desktop layout, popover internals, all selector components, types, hooks, RLS, `Freestyle.tsx`.
 
