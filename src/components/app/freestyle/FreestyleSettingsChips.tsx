@@ -111,10 +111,13 @@ export function FreestyleSettingsChips({
   const aspectRatioChip = (
     <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+        <button className={cn(
+          "items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors",
+          isMobile ? "flex w-full justify-center relative" : "inline-flex"
+        )}>
           <ArIcon className="w-3.5 h-3.5" />
           {aspectRatio}
-          <ChevronDown className="w-3 h-3 opacity-40" />
+          <ChevronDown className={cn("w-3 h-3 opacity-40", isMobile && "absolute right-3")} />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-40 p-2" align="start">
