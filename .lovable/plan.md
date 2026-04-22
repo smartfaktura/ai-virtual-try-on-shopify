@@ -1,77 +1,69 @@
 
 
-## Make "All scenes" actually feel recommended
+## Simplify "All scenes" ordering: just use `sort_order` + admin star button
 
-Two fixes layered into the default grid order. Pure ordering — no schema changes, no new queries on the hot path beyond one extra small fetch.
+You're right — the current logic is too clever. It mixes admin picks + sub-family round-robin + family round-robin and ends up looking random. Let's strip it back to something predictable.
 
-### New order for the default "All scenes" grid
+### The new mental model
+
+**One signal controls order: `sort_order` on `product_image_scenes`.**
+- Lower number = shown earlier.
+- Admins control it from one place: **a star button on each scene card** in `/app/admin/recommended-scenes`.
+- Star a scene → its `sort_order` becomes a small negative number (e.g. `-1000 + position`) so it floats to the top of its family/sub-family.
+- Unstar → `sort_order` returns to its previous value (saved in a side column or recomputed).
+
+No more `recommended_scenes` join, no more sub-family round-robin, no more 2-by-2 family rotation.
+
+### What the user sees in the Scenes modal (default "All scenes")
+
+Top-down, simple:
 
 ```text
-[1] Admin curated picks   (from recommended_scenes, Global + per-category, deduped)
-[2] Sub-family interleaved catalog
-        For each family in FAMILY_ORDER:
-          round-robin 1 scene from each sub-family (category_collection)
-        Then round-robin across families 2-by-2
-[3] Anything left, in original sort_order
+For each family in FAMILY_ORDER:
+  show that family's scenes ordered by sort_order ASC
+  (starred ones come first because they have the smallest sort_order)
 ```
 
-So the user always opens to: admin's hand-picked scenes first, then a varied mix that touches every sub-family before repeating, then the long tail.
+So opening the modal shows: all Fashion (starred first, then the rest), then all Footwear (starred first), then Bags, then Watches… exactly the order an admin would expect when they look at `/app/admin/recommended-scenes`.
 
-### Implementation
+When a user filters by family **Fashion** → same logic inside Fashion: starred sub-families first within each sub-family group. No interleave.
 
-**File: `src/hooks/useSceneCatalog.ts` — extend `useInterleavedSceneCatalog`**
+When a user filters by sub-family **Tops & Shirts** → straight `sort_order ASC` (which already puts starred first).
 
-Replace the body so it does:
+### Admin UX — the new star button
 
-1. **Fetch admin picks** (parallel with the catalog fetch):
-   - `recommended_scenes` rows where `category IS NULL` OR `category = ANY(user.product_categories)`, ordered by `(category NULLS LAST, sort_order ASC)`. Cap at 60.
-   - Resolve to full scene rows via `product_image_scenes WHERE scene_id IN (...) AND is_active`.
-   - Preserve admin's order; dedupe by `scene_id`.
+File: `src/pages/AdminRecommendedScenes.tsx`
 
-2. **Fetch catalog** (existing): up to 1,500 active non-essential scenes by `sort_order ASC`.
+- Each scene card in the "All scenes" grid gets a small star icon in the top-right corner (filled = featured, outline = not).
+- Click star → optimistically update; call a small RPC `toggle_scene_featured(scene_id)` which:
+  - If currently `sort_order < 0` → restore previous `sort_order` (stored as `previous_sort_order` int column we add), set `sort_order` back.
+  - Else → save current `sort_order` into `previous_sort_order`, set `sort_order = -1000 - row_count_of_already_featured_in_same_collection` so newest featured sits above older featured within the same sub-family.
+- The "Featured" sidebar section in the admin page becomes a simple read-only list of scenes where `sort_order < 0`, grouped by `category_collection`, ordered by `sort_order ASC`. Drag-to-reorder still works (updates `sort_order` numerically within the negative range).
+- The existing `recommended_scenes` table is no longer needed for ordering. Keep it for now to avoid a destructive migration; just stop reading from it on the user-facing path.
 
-3. **Build sub-family-aware interleave** — new helper in `src/lib/sceneTaxonomy.ts`:
-   ```ts
-   interleaveByFamilyAndSubFamily(items, { familyChunk: 2, subFamilyChunk: 1 })
-   ```
-   - Group items by `category_collection` (sub-family) → keep sort_order within each.
-   - Group sub-families by family via `CATEGORY_FAMILY_MAP`.
-   - For each family, round-robin `subFamilyChunk` (=1) item from each sub-family queue until family is drained → produces that family's "interleaved-by-sub-family" list.
-   - Then round-robin `familyChunk` (=2) items from each family's interleaved list, in `FAMILY_ORDER`.
-   - Unknown collections appended at the end (stable).
+### What gets removed
 
-4. **Compose final list**: `[adminPicks, ...interleavedCatalog excluding adminPick scene_ids]`. Cap nothing — feed full list as a single page.
+- `useInterleavedSceneCatalog` two-level interleave + admin-pick join. Replaced with a one-shot fetch ordered by `(category_collection, sort_order)` — which inherently puts starred scenes first per sub-family, then walks through families in `FAMILY_ORDER` client-side.
+- `interleaveByFamilyAndSubFamily` helper — no longer used. Keep `interleaveByFamily` (still used by the 12-scene "Recommended for you" rail fallback in `useRecommendedScenes`).
+- The client-side sub-family round-robin in `useSceneCatalog` when family filter is active. Just sort by `sort_order ASC` — admin's stars + manual sort_order numbers control everything.
 
-5. **Cache key** includes `userId` so admin-pick personalisation per user is honored. Stale time 10 min unchanged.
+### Files touched
 
-**File: `src/lib/sceneTaxonomy.ts` — add the new helper**
+- `src/hooks/useSceneCatalog.ts` — replace `useInterleavedSceneCatalog` body with: one-shot fetch, group by family in `FAMILY_ORDER`, concat. Remove sub-family interleave from `useSceneCatalog`.
+- `src/pages/AdminRecommendedScenes.tsx` — add star button on each scene card; wire to new RPC; remove (or hide behind a "Legacy" toggle) the manual recommended_scenes Add/Remove flow.
+- `src/lib/sceneTaxonomy.ts` — leave `interleaveByFamily` as-is (still used by recommended rail fallback). `interleaveByFamilyAndSubFamily` can stay unused or be removed in a later cleanup.
 
-Keep existing `interleaveByFamily` untouched (still used by admin tool & recommended fallback). Add `interleaveByFamilyAndSubFamily` with the two-level round-robin described above. Pure & deterministic.
+### Database
 
-**File: `src/components/app/freestyle/SceneCatalogModal.tsx`**
-
-No render changes — `useInterleavedSceneCatalog` already feeds the grid. Just pass `userId` through (read from `useAuth` like `useRecommendedScenes` does) so the hook can fetch personalised admin picks.
-
-### Within a single family filter (e.g., user clicks "Fashion")
-
-When a family filter is active, the grid uses `useSceneCatalog` (paged). Add the same sub-family round-robin **client-side per page**: after fetching a page, group its rows by `category_collection` and re-emit them round-robin (1 from garments, 1 from dresses, 1 from jeans…). This makes the filtered family view also show variety across sub-families instead of clustering.
-
-Implementation: small `interleaveBySubFamily(rows)` helper applied inside the `useSceneCatalog` `queryFn` only when `filters.family` is set and `filters.categoryCollection` is null.
-
-### Untouched
-
-- DB schema, RLS, `recommended_scenes` table & admin page, generation pipeline.
-- `useRecommendedScenes` (sidebar "Recommended" tab keeps its richer per-onboarding-category logic).
-- Sort = "Newest" still pure `created_at DESC`.
-- Search / subject chip / sub-family filter → unchanged single-source query.
+- Add column `previous_sort_order INT NULL` on `product_image_scenes`.
+- Add SECURITY DEFINER RPC `toggle_scene_featured(p_scene_id text)` — admin-only via `has_role(auth.uid(), 'admin')`. Returns the new `sort_order`. Atomic.
 
 ### Validation
 
-- Open `/app/freestyle` → Scenes modal default view: first 8–12 cards are admin's curated picks from `/app/admin/recommended-scenes` (Global + matching user categories), in admin's saved order.
-- Below that: variety mix where consecutive Fashion cards come from different sub-families (e.g. one shirt, one dress, one jacket — not three shirts in a row), then 2 from another family, then 2 from another.
-- Click family **Fashion** → first row mixes garments / dresses / jeans / jackets instead of all garments.
-- Click sub-family **Tops & Shirts** under Fashion → pure sort_order within that slug (no change — already tight).
-- Sort = **Newest** → pure `created_at DESC` (no admin picks pinned, no interleaving).
-- A user with `product_categories = ['fashion','beauty']` sees admin's `category='fashion'` + `category='beauty'` + `category IS NULL` picks at the top. A user with no categories sees only Global (`category IS NULL`) admin picks at top.
-- Admin reordering a scene at `/app/admin/recommended-scenes` is reflected on the user's grid within 10 min (cache TTL).
+- Open `/app/admin/recommended-scenes` → click star on "Volcanic Sunset" → it jumps to the top of the Beauty section instantly.
+- Open Scenes modal in `/app/freestyle` (recommended sort) → "Volcanic Sunset" is one of the first Beauty cards.
+- Click family **Beauty** in the sidebar → "Volcanic Sunset" is the first card.
+- Click star again on "Volcanic Sunset" → it returns to its original spot in both views.
+- Order across the full grid: all Fashion first (starred Fashion at the top of Fashion), then all Footwear, then Bags… in `FAMILY_ORDER`. Predictable, no surprises.
+- Sort = **Newest** still pure `created_at DESC` — stars do not pin in this view.
 
