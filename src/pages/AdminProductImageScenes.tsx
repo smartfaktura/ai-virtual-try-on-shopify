@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScenes';
 import ImportFromScenesModal from '@/components/app/ImportFromScenesModal';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
