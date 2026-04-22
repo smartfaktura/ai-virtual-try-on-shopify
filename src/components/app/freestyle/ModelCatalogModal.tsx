@@ -70,17 +70,15 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
     let list = allModels;
     if (quickView === 'brand') list = list.filter(m => userModelIds.has(m.modelId));
     if (gender !== 'all') list = list.filter(m => m.gender === gender);
-    if (bodyType) list = list.filter(m => m.bodyType === bodyType);
     if (ageRange) list = list.filter(m => m.ageRange === ageRange);
     if (sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [allModels, quickView, gender, bodyType, ageRange, sort, userModelIds]);
+  }, [allModels, quickView, gender, ageRange, sort, userModelIds]);
 
-  const anyFilterActive = gender !== 'all' || bodyType !== null || ageRange !== null || quickView !== 'all';
+  const anyFilterActive = gender !== 'all' || ageRange !== null || quickView !== 'all';
 
   const clearAll = () => {
     setGender('all');
-    setBodyType(null);
     setAgeRange(null);
     setQuickView('all');
     setSort('featured');
