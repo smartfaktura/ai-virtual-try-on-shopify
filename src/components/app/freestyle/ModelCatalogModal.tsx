@@ -14,7 +14,7 @@ import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
-import type { ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
+import type { ModelProfile, ModelGender, ModelAgeRange } from '@/types';
 
 interface ModelCatalogModalProps {
   open: boolean;
