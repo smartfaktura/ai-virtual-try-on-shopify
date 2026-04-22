@@ -272,6 +272,27 @@ export default function AdminRecommendedScenes() {
     ]);
   };
 
+  // Star toggle: pins a scene to the top of its sub-family by setting
+  // sort_order to a small negative number via the toggle_scene_featured RPC.
+  // This is the new "what users see first" signal — separate from the legacy
+  // recommended_scenes table.
+  const toggleFeaturedMutation = useMutation({
+    mutationFn: async (scene_id: string) => {
+      const { data, error } = await supabase.rpc('toggle_scene_featured' as any, {
+        p_scene_id: scene_id,
+      });
+      if (error) throw error;
+      return data as number;
+    },
+    onSuccess: (newSort) => {
+      qc.invalidateQueries({ queryKey: ['admin-all-scenes-light-paged'] });
+      qc.invalidateQueries({ queryKey: ['scene-catalog-interleaved-v2'] });
+      qc.invalidateQueries({ queryKey: ['scene-catalog'] });
+      toast.success(newSort < 0 ? 'Featured — pinned to top' : 'Unfeatured — back to original spot');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   if (adminLoading) return null;
   if (!isAdmin) return <Navigate to="/app" replace />;
 
