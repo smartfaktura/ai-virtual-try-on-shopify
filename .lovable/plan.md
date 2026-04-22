@@ -1,54 +1,64 @@
 
 
-## Safe fix — show scene names + thumbnails on `/app/admin/scene-performance`
+## Real fix — batch the metadata lookup on `/app/admin/scene-performance`
 
-### Is it safe?
+### What's actually broken (corrected diagnosis)
 
-Yes. This is a one-line read policy on a non-sensitive catalog table.
+The previous theory (RLS policy missing) was wrong. Confirmed:
+- `product_image_scenes` already has policy `Authenticated can read active scenes USING (true)` — admin already has read access.
+- The data exists: `closeup-detail-hats-watches` → `Close-Up Detail`, has preview ✓
+- `generation_jobs.scene_id` values match `product_image_scenes.scene_id` exactly ✓
 
-- `product_image_scenes` is a **public catalog of available scenes** — every authenticated user already sees this exact data inside `/app/generate/product-images`.
-- We only add a **SELECT** policy. No INSERT/UPDATE/DELETE exposure.
-- Admin-only write policies (insert/update/delete) stay exactly as they are.
-- Zero impact on generation, credits, queues, or any user data.
-- Trivial rollback: `DROP POLICY` reverts instantly.
-
-### Why it's needed
-
-The admin dashboard fetches scene metadata client-side:
+**Real root cause:** The 90-day window has **1,062 distinct scene IDs**. The frontend does:
 ```ts
-supabase.from('product_image_scenes').select('scene_id,title,…')
+supabase.from('product_image_scenes').select(...).in('scene_id', pisQueryIds)
 ```
-The table currently has an `authenticated`-only SELECT policy, but the lookup is silently returning empty for the admin page's metadata join — so rows show raw IDs (`closeup-detail-hats-watches`) instead of names + thumbnails.
+With ~1,000+ IDs, this builds a URL with `?scene_id=in.(id1,id2,...id1062)` that:
+1. Hits Supabase's default 1,000-row return cap → silently truncates
+2. May exceed PostgREST URL length → request fails or returns nothing
 
-### The change (one SQL statement)
+Result: metadata map is mostly empty → rows fall back to raw IDs and no thumbnail.
 
-```sql
-CREATE POLICY "Public can read scene catalog"
-ON public.product_image_scenes
-FOR SELECT
-TO anon, authenticated
-USING (true);
+### Safe fix (frontend only, no DB changes)
+
+In `src/pages/admin/SceneUsage.tsx`, replace the single `.in()` call with **chunked batches of 200 IDs** and merge results. Same for `custom_scenes` (smaller but same pattern for safety).
+
+```ts
+async function fetchScenesInChunks(ids: string[], chunkSize = 200) {
+  const out: any[] = [];
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const { data, error } = await supabase
+      .from('product_image_scenes')
+      .select('scene_id,title,sub_category,category_collection,preview_image_url')
+      .in('scene_id', chunk);
+    if (error) throw error;
+    if (data) out.push(...data);
+  }
+  return out;
+}
 ```
 
-That's it. No code changes. No edge function changes. No schema changes.
+### Why it's safe
+
+- **Frontend-only change** in one admin page
+- No DB migration, no RLS change, no edge function change
+- No impact on generation, credits, queues, or any other page
+- Pure read operation
+- Easy rollback: revert the file
 
 ### What stays untouched
 
-- Generation pipeline, credits, RLS on user data — untouched
-- Admin write policies on `product_image_scenes` — untouched
-- All other tables — untouched
-- Frontend code — untouched
+- Database schema and RLS — untouched
+- `get_scene_popularity` RPC — untouched
+- Generation pipeline — untouched
+- All other admin pages — untouched
 
 ### Validation
 
 1. Reload `/app/admin/scene-performance`
 2. Rows show real names (`Frozen Aura`, `Close-Up Detail`, …) + thumbnails
-3. Category column shows real values instead of `—`
+3. Category column shows real values
 4. Top risers rail also gets names + thumbnails
-
-### Rollback (if ever needed)
-
-```sql
-DROP POLICY "Public can read scene catalog" ON public.product_image_scenes;
-```
+5. No console errors
 
