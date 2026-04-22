@@ -110,12 +110,12 @@ export function ProductCatalogModal({
     if (pending) {
       onSelect(pending);
       setPending(null);
-      onOpenChange(false);
+      handleSheetOpenChange(false);
     }
   };
 
   const handleAddNew = () => {
-    onOpenChange(false);
+    handleSheetOpenChange(false);
     navigate('/app/products');
   };
 
@@ -127,19 +127,29 @@ export function ProductCatalogModal({
   const sampleCount = SAMPLE_PRODUCTS.length;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent
         side="right"
         onOpenAutoFocus={(e) => e.preventDefault()}
         className="p-0 gap-0 flex flex-col w-[92vw] max-w-[1500px] sm:max-w-[1500px]"
       >
         {/* Header */}
-        <header className="flex items-start justify-between px-4 sm:px-6 py-4 pr-12 sm:pr-6 border-b border-border/40">
+        <header className="flex flex-col gap-3 px-4 sm:px-6 py-4 pr-12 sm:pr-6 border-b border-border/40">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-foreground">Select a Product</h2>
             <p className="text-sm text-muted-foreground mt-0.5 tracking-tight">
               Pick what to feature in your scene
             </p>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search your products…"
+              className="pl-9 h-9 text-sm"
+            />
           </div>
         </header>
 
