@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
-  Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
+  Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown, ChevronsUp,
   Eye, EyeOff, Pencil, Save, X, Check, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2, Copy, Import, Palette, Shirt,
 } from 'lucide-react';
 import {
@@ -162,7 +162,8 @@ function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene
   return Array.from(map.entries())
     .map(([label, sc]) => {
       const groupOrder = Math.min(...sc.map(s => s.sub_category_sort_order ?? 0));
-      return { label: label || 'Uncategorized', scenes: sc, sortOrder: groupOrder, _isEmpty: !label };
+      const sortedScenes = [...sc].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      return { label: label || 'Uncategorized', scenes: sortedScenes, sortOrder: groupOrder, _isEmpty: !label };
     })
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(({ label, scenes: sc, sortOrder }) => ({ label, scenes: sc, sortOrder }));
@@ -259,10 +260,7 @@ export default function AdminProductImageScenes() {
           ),
         };
       })
-      .sort((a, b) =>
-        b.latestUpdatedAt - a.latestUpdatedAt ||
-        a.categorySortOrder - b.categorySortOrder
-      );
+      .sort((a, b) => a.categorySortOrder - b.categorySortOrder);
   }, [filtered]);
 
   // Keep a Map reference for move/reorder helpers
@@ -423,6 +421,33 @@ export default function AdminProductImageScenes() {
         updateScene.mutateAsync({ id: a.id, updates: { sort_order: orderA } }),
         updateScene.mutateAsync({ id: b.id, updates: { sort_order: orderB } }),
       ]);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const handleMoveToTop = async (scene: DbScene) => {
+    const key = normalizeCat(scene.category_collection);
+    const allInCategory = grouped.get(key) || [];
+    const subKey = scene.sub_category || '';
+    const subGroup = allInCategory
+      .filter(s => (s.sub_category || '') === subKey)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+    if (subGroup.length === 0 || subGroup[0].id === scene.id) return;
+
+    const baseOrder = Math.min(...subGroup.map(s => s.sort_order ?? 0));
+    // Reorder: target first, others after in their existing relative order
+    const reordered = [scene, ...subGroup.filter(s => s.id !== scene.id)];
+    const updates: Promise<any>[] = [];
+    reordered.forEach((s, i) => {
+      const newOrder = baseOrder + i;
+      if (s.sort_order !== newOrder) {
+        updates.push(updateScene.mutateAsync({ id: s.id, updates: { sort_order: newOrder } }));
+      }
+    });
+    try {
+      if (updates.length > 0) await Promise.all(updates);
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -618,6 +643,7 @@ export default function AdminProductImageScenes() {
                                 onSaveEdit={saveEdit}
                                 onToggleActive={handleToggleActive}
                                 onMove={handleMove}
+                                onMoveToTop={handleMoveToTop}
                                 onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
                                 onDuplicate={handleDuplicate}
                                 setEditDraft={setEditDraft}
@@ -643,6 +669,7 @@ export default function AdminProductImageScenes() {
                             onSaveEdit={saveEdit}
                             onToggleActive={handleToggleActive}
                             onMove={handleMove}
+                            onMoveToTop={handleMoveToTop}
                             onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
                             onDuplicate={handleDuplicate}
                             setEditDraft={setEditDraft}
@@ -676,7 +703,7 @@ export default function AdminProductImageScenes() {
 }
 
 /* ── Scene row component ── */
-function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onDelete, onDuplicate, setEditDraft, updatePending, allSubCategories }: {
+function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onMoveToTop, onDelete, onDuplicate, setEditDraft, updatePending, allSubCategories }: {
   scene: DbScene;
   idx: number;
   total: number;
@@ -687,6 +714,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
   onSaveEdit: () => void;
   onToggleActive: (s: DbScene) => void;
   onMove: (s: DbScene, dir: 'up' | 'down') => void;
+  onMoveToTop: (s: DbScene) => void;
   onDelete: (id: string) => void;
   onDuplicate: (s: DbScene) => void;
   setEditDraft: (d: Partial<DbScene>) => void;
@@ -727,6 +755,9 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
           </div>
           {/* Actions — wrap row on mobile, inline on desktop */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 shrink-0 sm:w-auto mt-auto sm:mt-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onMoveToTop(scene)} disabled={idx === 0} title="Move to top">
+              <ChevronsUp className="w-3.5 h-3.5" />
+            </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
               <ArrowUp className="w-3.5 h-3.5" />
             </Button>
