@@ -1,8 +1,9 @@
 import React from 'react';
 
 import {
-  Square, RectangleHorizontal, ChevronDown,
+  Square, RectangleHorizontal, ChevronDown, ChevronRight,
   Smartphone, Camera, Lock, Gauge, Sparkles, Palette, Sliders,
+  Crop, RotateCcw,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -99,6 +100,9 @@ export function FreestyleSettingsChips({
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
   const [advancedOpenState, setAdvancedOpenState] = React.useState(false);
+  const [expandedSection, setExpandedSection] = React.useState<
+    'camera' | 'quality' | 'framing' | 'brand' | null
+  >(null);
 
   // --- Shared chip renderers ---
 
@@ -273,85 +277,187 @@ export function FreestyleSettingsChips({
     const isFramingModified = !!framing;
     const isBrandModified = !!selectedBrandProfile;
     const advancedModified =
-      isAspectModified || isCameraModified || isQualityModified || isFramingModified || isBrandModified;
+      isCameraModified || isQualityModified || isFramingModified || isBrandModified;
 
     const [advancedOpen, setAdvancedOpenLocal] = [advancedOpenState, setAdvancedOpenState] as const;
 
+    const resetAdvanced = () => {
+      onCameraStyleChange('pro');
+      onQualityChange('standard');
+      onFramingChange(null);
+      onBrandProfileSelect(null);
+      setExpandedSection(null);
+    };
+
+    const cameraValueLabel = cameraStyle === 'natural' ? 'Natural' : 'Pro';
+    const qualityValueLabel = quality === 'high' ? 'Pro' : 'Standard';
+    const framingValueLabel = framing ? (framing as any).label ?? (framing as any).name ?? 'Custom' : 'Auto';
+    const brandValueLabel = selectedBrandProfile?.name ?? 'None';
+
+    const cellClass = '[&>button]:w-full [&>button]:justify-between';
+
+    const SectionRow = ({
+      id, icon: Icon, label, value, modified,
+    }: {
+      id: 'camera' | 'quality' | 'framing' | 'brand';
+      icon: React.ComponentType<{ className?: string }>;
+      label: string;
+      value: string;
+      modified: boolean;
+    }) => {
+      const open = expandedSection === id;
+      return (
+        <button
+          type="button"
+          onClick={() => setExpandedSection(open ? null : id)}
+          className={cn(
+            'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
+            open ? 'bg-muted/60' : 'hover:bg-muted/40'
+          )}
+        >
+          <Icon className="w-4 h-4 text-foreground/70 shrink-0" />
+          <div className="flex-1 min-w-0 flex items-center gap-1.5">
+            <span className="text-[13px] font-medium text-foreground">{label}</span>
+            {modified && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+          </div>
+          <span className="text-[12px] text-muted-foreground truncate max-w-[100px]">{value}</span>
+          <ChevronRight className={cn('w-4 h-4 text-muted-foreground/60 transition-transform', open && 'rotate-90')} />
+        </button>
+      );
+    };
+
+    const OptionItem = ({
+      icon: Icon, label, desc, active, onClick,
+    }: {
+      icon: React.ComponentType<{ className?: string }>;
+      label: string;
+      desc: string;
+      active: boolean;
+      onClick: () => void;
+    }) => (
+      <button
+        onClick={onClick}
+        className={cn(
+          'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
+          active ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+        )}
+      >
+        <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-[13px]">{label}</div>
+          <div className={cn('text-[11px] mt-0.5 leading-snug', active ? 'text-primary/80' : 'text-muted-foreground')}>{desc}</div>
+        </div>
+        {active && <span className="mt-0.5">✓</span>}
+      </button>
+    );
+
     return (
       <TooltipProvider delayDuration={300}>
-        <div className="flex items-center gap-1 flex-wrap">
-          {uploadButton}
-          {productChip}
-          {modelChip}
-          {sceneChip}
+        <div className="grid grid-cols-2 gap-2 w-full">
+          {/* Row 1 */}
+          <div className={cellClass}>{uploadButton}</div>
+          <div className={cellClass}>{productChip}</div>
 
-          <Popover open={advancedOpen} onOpenChange={setAdvancedOpenLocal}>
-            <PopoverTrigger asChild>
-              <button className="relative inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
-                <Sliders className="w-3.5 h-3.5" />
-                Advanced
-                <ChevronDown className="w-3 h-3 opacity-40" />
+          {/* Row 2 — Scene Look full width */}
+          <div className={cn('col-span-2', cellClass)}>{sceneChip}</div>
+
+          {/* Row 3 — Model + Ratio */}
+          <div className={cellClass}>{modelChip}</div>
+          <div className={cellClass}>{aspectRatioChip}</div>
+
+          {/* Row 4 — Prompt Helper + Advanced */}
+          <div className={cellClass}>{promptHelperButton}</div>
+          <div className={cellClass}>
+            <Popover open={advancedOpen} onOpenChange={(o) => { setAdvancedOpenLocal(o); if (!o) setExpandedSection(null); }}>
+              <PopoverTrigger asChild>
+                <button className="relative inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>Advanced</span>
+                  <ChevronDown className="w-3 h-3 opacity-40 ml-auto" />
+                  {advancedModified && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary ring-2 ring-background" />
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[min(360px,calc(100vw-1.5rem))] p-0 overflow-hidden" align="end">
+                <div className="px-3 py-2.5 border-b border-border/60">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Advanced settings</p>
+                </div>
+                <div className="divide-y divide-border/50">
+                  {/* Framing */}
+                  <div>
+                    <SectionRow id="framing" icon={Crop} label="Framing" value={framingValueLabel} modified={isFramingModified} />
+                    {expandedSection === 'framing' && (
+                      <div className="px-3 pb-3 pt-1">
+                        <FramingSelectorChip
+                          framing={framing}
+                          onFramingChange={onFramingChange}
+                          open={framingPopoverOpen}
+                          onOpenChange={onFramingPopoverChange}
+                          modal={true}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Camera Style */}
+                  <div>
+                    <SectionRow id="camera" icon={cameraStyle === 'natural' ? Smartphone : Camera} label="Camera style" value={cameraValueLabel} modified={isCameraModified} />
+                    {expandedSection === 'camera' && (
+                      <div className="px-1.5 pb-2 pt-1 space-y-0.5">
+                        <OptionItem icon={Camera} label="Pro" desc="Studio-grade commercial look with polished lighting and color grading." active={cameraStyle === 'pro'} onClick={() => onCameraStyleChange('pro')} />
+                        <OptionItem icon={Smartphone} label="Natural" desc="Raw iPhone-style photo. Sharp details, true-to-life colors, no heavy editing." active={cameraStyle === 'natural'} onClick={() => onCameraStyleChange('natural')} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quality */}
+                  <div>
+                    <SectionRow id="quality" icon={quality === 'high' ? Sparkles : Gauge} label="Quality" value={qualityValueLabel} modified={isQualityModified} />
+                    {expandedSection === 'quality' && (
+                      <div className="px-1.5 pb-2 pt-1 space-y-0.5">
+                        <OptionItem icon={Gauge} label="Standard" desc="4 credits/image. Fast generation, great for drafts and iteration." active={quality === 'standard'} onClick={() => onQualityChange('standard')} />
+                        <OptionItem icon={Sparkles} label="Pro" desc="6 credits/image. Higher detail and polish for final assets." active={quality === 'high'} onClick={() => onQualityChange('high')} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Brand */}
+                  <div>
+                    <SectionRow id="brand" icon={Palette} label="Brand" value={brandValueLabel} modified={isBrandModified} />
+                    {expandedSection === 'brand' && (
+                      <div className="px-3 pb-3 pt-1">
+                        {disabledChips?.brand ? (
+                          <p className="text-[11px] text-muted-foreground px-1">Register to create your brand profile.</p>
+                        ) : (
+                          <BrandProfileChip
+                            selectedProfile={selectedBrandProfile}
+                            open={brandProfilePopoverOpen}
+                            onOpenChange={onBrandProfilePopoverChange}
+                            onSelect={onBrandProfileSelect}
+                            profiles={brandProfiles}
+                            isLoading={isLoadingBrandProfiles}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {advancedModified && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary ring-2 ring-background" />
+                  <div className="px-3 py-2 border-t border-border/60 flex justify-end">
+                    <button
+                      onClick={resetAdvanced}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Reset defaults
+                    </button>
+                  </div>
                 )}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[min(320px,calc(100vw-2rem))] p-3 space-y-3" align="start">
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Framing</p>
-                <FramingSelectorChip
-                  framing={framing}
-                  onFramingChange={onFramingChange}
-                  open={framingPopoverOpen}
-                  onOpenChange={onFramingPopoverChange}
-                  modal={isMobile}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Brand</p>
-                {disabledChips?.brand ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 opacity-40 cursor-default"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        <Palette className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">Brand</span>
-                        <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      Register to create your brand profile
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <BrandProfileChip
-                    selectedProfile={selectedBrandProfile}
-                    open={brandProfilePopoverOpen}
-                    onOpenChange={onBrandProfilePopoverChange}
-                    onSelect={onBrandProfileSelect}
-                    profiles={brandProfiles}
-                    isLoading={isLoadingBrandProfiles}
-                  />
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Aspect ratio</p>
-                {aspectRatioChip}
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Camera style</p>
-                {cameraStyleChip}
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Quality</p>
-                {qualityChip}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {promptHelperButton}
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </TooltipProvider>
     );
