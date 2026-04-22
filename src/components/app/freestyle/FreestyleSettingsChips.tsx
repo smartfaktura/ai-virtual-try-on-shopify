@@ -244,6 +244,7 @@ export function FreestyleSettingsChips({
 
   const modelChip = (
     <div className={cn(
+      'w-full',
       disabledChips?.model && 'opacity-40 pointer-events-none'
     )}>
       <ModelSelectorChip
