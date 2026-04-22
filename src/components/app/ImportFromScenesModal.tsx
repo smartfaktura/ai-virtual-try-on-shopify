@@ -381,7 +381,13 @@ export default function ImportFromScenesModal({
                 <div key={id} className="border rounded-lg p-3 space-y-3">
                   <div className="flex items-center gap-2">
                     {config.preview_image_url && (
-                      <img src={config.preview_image_url} alt="" className="w-10 h-10 rounded object-cover" />
+                      <img
+                        src={getOptimizedUrl(config.preview_image_url, { width: 120, quality: 60 })}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="w-10 h-10 rounded object-cover"
+                      />
                     )}
                     <div className="flex-1">
                       <p className="text-sm font-semibold">{scene?.name}</p>
