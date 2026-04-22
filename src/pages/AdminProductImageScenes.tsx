@@ -260,10 +260,7 @@ export default function AdminProductImageScenes() {
           ),
         };
       })
-      .sort((a, b) =>
-        b.latestUpdatedAt - a.latestUpdatedAt ||
-        a.categorySortOrder - b.categorySortOrder
-      );
+      .sort((a, b) => a.categorySortOrder - b.categorySortOrder);
   }, [filtered]);
 
   // Keep a Map reference for move/reorder helpers
