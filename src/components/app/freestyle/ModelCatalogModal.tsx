@@ -200,7 +200,7 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
             <div className="p-4 space-y-5">
               <SidebarSection title="Quick">
                 <SidebarRow
-                  active={quickView === 'all'}
+                  active={false}
                   onClick={() => setQuickView('all')}
                   label="All models"
                   count={allModels.length}
@@ -214,25 +214,9 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
                 />
               </SidebarSection>
 
-              <SidebarSection title="Body type">
-                <SidebarRow
-                  active={bodyType === null}
-                  onClick={() => setBodyType(null)}
-                  label="Any"
-                />
-                {BODY_TYPES.map(b => (
-                  <SidebarRow
-                    key={b.value}
-                    active={bodyType === b.value}
-                    onClick={() => setBodyType(b.value)}
-                    label={b.label}
-                  />
-                ))}
-              </SidebarSection>
-
               <SidebarSection title="Age">
                 <SidebarRow
-                  active={ageRange === null}
+                  active={false}
                   onClick={() => setAgeRange(null)}
                   label="Any"
                 />
