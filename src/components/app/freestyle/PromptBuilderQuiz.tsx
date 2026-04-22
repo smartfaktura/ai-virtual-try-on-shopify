@@ -367,7 +367,7 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
         <h3 className="text-lg font-semibold text-foreground">Your prompt is ready</h3>
         <p className="text-sm text-muted-foreground/60 mt-1">Review and tweak, then use it in Freestyle.</p>
       </div>
-      <div className="rounded-xl border-2 border-border/50 bg-muted/20 p-5 sm:p-6">
+      <div className="rounded-xl border-2 border-border/50 bg-muted/20 p-4 sm:p-6">
         {isEditing ? (
           <textarea
             value={editablePrompt}
