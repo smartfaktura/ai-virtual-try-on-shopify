@@ -1,26 +1,28 @@
 
 
-## Optimize thumbnails in Import Scenes modal
+## Fix zoomed thumbnails in Import Scenes modal
 
-The `Import Scenes → {category}` modal at `/app/admin/product-image-scenes` currently loads each scene's full-resolution `preview_image_url` into a tiny 32×32 (Step 1 list) and 40×40 (Step 2 review) `<img>`. With ~860+ scenes, that's hundreds of MB pulled into a dialog where each image is rendered at thumbnail size.
+### The bug
+The previous optimization pass added `width=96` / `width=120` to `getOptimizedUrl()` for the Import Scenes modal thumbnails. Supabase's `/render/image/` endpoint crops server-side when width is set without a matching height, producing the zoomed-in placeholder-looking thumbnails visible in the screenshot (Tennis Court, Urban Subway Ride, etc.).
+
+This is exactly the case the `image-optimization-no-crop` core rule warns about.
 
 ### Fix
-Route both thumbnails through the existing Supabase image transformation helper `getOptimizedUrl()` from `src/lib/imageOptimization.ts`, which converts the public storage URL to the `/render/image/` endpoint with a `width` + `quality` parameter. This is the same pattern used everywhere else (e.g. `ProductThumbnail`).
+In `src/components/app/ImportFromScenesModal.tsx`, switch both thumbnail `getOptimizedUrl()` calls to **quality-only** optimization:
+
+- Step 1 grid thumbnail: `getOptimizedUrl(url, { quality: 60 })` (drop `width: 96`)
+- Step 2 review thumbnail: `getOptimizedUrl(url, { quality: 60 })` (drop `width: 120`)
+
+Quality-only still routes through Supabase's render endpoint and re-encodes at 60% quality, which gives ~70–85% size savings vs the original PNG/JPEG without any cropping. Thumbnails will display the full scene composition again, just like before the optimization pass — but at a fraction of the bytes. `loading="lazy"` and `decoding="async"` stay in place.
 
 ### Files touched
-**Edit only** `src/components/app/ImportFromScenesModal.tsx`:
-- Import `getOptimizedUrl` from `@/lib/imageOptimization`.
-- Line ~270 (Step 1 grid, 32×32 thumb): wrap src with `getOptimizedUrl(scene.preview_image_url || scene.image_url, { width: 96, quality: 60 })` (3× DPR for retina) and add `loading="lazy"` + `decoding="async"`.
-- Line ~381 (Step 2 review, 40×40 thumb): wrap with `getOptimizedUrl(config.preview_image_url, { width: 120, quality: 60 })` and add `loading="lazy"` + `decoding="async"`.
-
-That's the entire change — non-Supabase URLs pass through unchanged thanks to the existing guard inside `getOptimizedUrl`.
+- **Edit only** `src/components/app/ImportFromScenesModal.tsx` — remove `width` from the two `getOptimizedUrl` calls.
 
 ### Validation
-- Open `/app/admin/product-image-scenes` → click **Import scenes**.
-- Network tab: each thumbnail request now hits `/storage/v1/render/image/...?width=96&quality=60` and weighs a few KB instead of MB.
-- Modal opens noticeably faster, especially when scrolling through the long scene list.
-- Visual: thumbnails look identical at the rendered 32/40px size.
+- Open `/app/admin/product-image-scenes` → click **Import scenes** for any category.
+- Thumbnails now show the full scene composition (Tennis Court shows the full court, Urban Subway shows the full carriage, etc.), not a zoomed crop.
+- Network tab: requests still hit `/storage/v1/render/image/...?quality=60` and remain dramatically smaller than the original full-res files.
 
 ### Out of scope
-No layout, sorting, or data-fetching changes. No other modals touched.
+No layout, lazy-loading, or data-fetching changes. No other modals touched. The `image-optimization-no-crop` rule remains the standard.
 
