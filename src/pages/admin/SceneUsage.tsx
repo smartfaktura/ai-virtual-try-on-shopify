@@ -405,7 +405,7 @@ export default function SceneUsage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* Main table */}
           <Card className="border overflow-hidden">
-            {loading ? (
+            {mainLoading ? (
               <div className="p-12 flex items-center justify-center">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
