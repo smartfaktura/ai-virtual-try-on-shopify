@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORY_FAMILY_MAP } from '@/lib/sceneTaxonomy';
+import { CATEGORY_FAMILY_MAP, interleaveByFamily } from '@/lib/sceneTaxonomy';
 
 export interface CatalogScene {
   id: string;
