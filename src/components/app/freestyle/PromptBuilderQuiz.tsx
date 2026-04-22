@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Sparkles, Check, ArrowLeft, ArrowRight, Wand2, Pencil, Shirt, Wind, Gem, Watch, Lamp, Smartphone, Heart, Package, UtensilsCrossed, Dumbbell,
+import { Sparkles, Check, ArrowLeft, ArrowRight, Wand2, Pencil, Shirt, Wind, Gem, Watch, Lamp, Smartphone, Heart, Package, UtensilsCrossed, Dumbbell, X,
   User, Users, Hand, Eye, Frame, Camera, Sun, Home, TreePine, Palette, Zap, Flame, Leaf, Crown, LayoutGrid, GripHorizontal, Move3D, Focus, ScanFace } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -137,6 +136,17 @@ function SectionPill({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ——— Step labels ———
+const STEP_LABELS: Record<string, string> = {
+  category: 'Category',
+  subject: 'Subject',
+  interaction: 'Interaction',
+  setting: 'Setting',
+  mood: 'Mood',
+  framing: 'Framing',
+  review: 'Review',
+};
+
 // ——— Main Quiz Component ———
 interface PromptBuilderQuizProps {
   open: boolean;
@@ -230,6 +240,10 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
     }
     onOpenChange(v);
   }, [onOpenChange]);
+
+  const goToStep = useCallback((i: number) => {
+    if (i < stepIndex) setStepIndex(i);
+  }, [stepIndex]);
 
   // ——— Step renderers ———
   const renderCategoryStep = () => (
@@ -479,12 +493,117 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
     );
   }
 
+  // ——— Desktop: right-side slide-in Sheet (matches Model/Product/Scene catalog modals) ———
+  const currentStepLabel = STEP_LABELS[currentStep] ?? '';
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="p-0 gap-0 overflow-hidden flex flex-col max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl">
-        <DialogTitle className="sr-only">Prompt Builder</DialogTitle>
-        {innerContent}
-      </DialogContent>
-    </Dialog>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent
+        side="right"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="p-0 gap-0 flex flex-col w-[92vw] max-w-[1100px] sm:max-w-[1100px] lg:rounded-l-2xl [&>button]:hidden"
+      >
+        <SheetTitle className="sr-only">Prompt Builder</SheetTitle>
+
+        {/* Header */}
+        <header className="flex items-start justify-between gap-3 px-6 py-4 border-b border-border/40 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Wand2 className="w-4 h-4 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold text-foreground">Prompt Builder</h2>
+              <p className="text-sm text-muted-foreground mt-0.5 tracking-tight">
+                Answer a few questions and we'll write the prompt
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleOpenChange(false)}
+            className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </header>
+
+        {/* Body: sidebar + content */}
+        <div className="flex-1 flex min-h-0">
+          {/* Sidebar */}
+          <aside className="hidden lg:block w-[240px] shrink-0 border-r border-border/40 overflow-y-auto">
+            <div className="p-4 space-y-3">
+              <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Steps</p>
+              <div className="space-y-1">
+                {steps.map((s, i) => {
+                  const isActive = i === stepIndex;
+                  const isDone = i < stepIndex;
+                  const canClick = isDone;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => canClick && goToStep(i)}
+                      disabled={!canClick && !isActive}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-left transition-colors',
+                        isActive && 'bg-muted text-foreground font-medium',
+                        !isActive && isDone && 'text-foreground hover:bg-muted/60 cursor-pointer',
+                        !isActive && !isDone && 'text-muted-foreground/50 cursor-default',
+                      )}
+                    >
+                      <div className={cn(
+                        'w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0',
+                        isActive && 'bg-primary text-primary-foreground',
+                        !isActive && isDone && 'bg-primary/15 text-primary',
+                        !isActive && !isDone && 'bg-muted text-muted-foreground/60',
+                      )}>
+                        {isDone ? <Check className="w-3 h-3" /> : i + 1}
+                      </div>
+                      <span className="truncate">{STEP_LABELS[s]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-7 py-6">
+            {stepContent}
+          </div>
+        </div>
+
+        {/* Sticky footer */}
+        <div className="flex items-center justify-between gap-3 border-t border-border/40 px-6 py-3.5 shrink-0">
+          <p className="text-xs text-muted-foreground truncate">
+            {currentStep === 'review'
+              ? 'Prompt ready to use'
+              : `Step ${stepIndex + 1} of ${totalSteps} · ${currentStepLabel}`}
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="ghost"
+              size="pill"
+              onClick={handleBack}
+              disabled={stepIndex === 0}
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+            {currentStep === 'review' ? (
+              <Button size="pill" onClick={handleUse} className="gap-1.5 shadow-md">
+                <Sparkles className="w-4 h-4" />
+                Use This Prompt
+              </Button>
+            ) : (
+              <Button size="pill" onClick={handleNext} disabled={!canAdvance} className="gap-1.5 disabled:opacity-40">
+                Next
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
