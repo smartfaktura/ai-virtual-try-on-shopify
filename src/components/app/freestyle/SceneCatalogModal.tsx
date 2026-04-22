@@ -264,7 +264,7 @@ export function SceneCatalogModal({
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-foreground">Select Scene</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Find the right shot for your product — 1,200+ curated scenes.
+              1,200+ curated scenes
             </p>
           </div>
         </header>
@@ -362,7 +362,7 @@ export function SceneCatalogModal({
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-border/40 bg-background px-4 sm:px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-2 sm:gap-3">
+        <footer className="border-t border-border/40 bg-background px-4 sm:px-6 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {footerTitle ? (
               <>
@@ -382,11 +382,10 @@ export function SceneCatalogModal({
             )}
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!pendingScene && !pendingLegacy}
               onClick={handleConfirm}
             >
