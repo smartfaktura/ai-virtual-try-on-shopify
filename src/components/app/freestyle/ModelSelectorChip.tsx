@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ChevronDown, X, Sparkles, Trash2, Crown, Check } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
+import { ModelCatalogModal } from './ModelCatalogModal';
 import type { ModelProfile } from '@/types';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels, useDeleteUserModel } from '@/hooks/useUserModels';
@@ -273,13 +273,14 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
   }
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
-      <PopoverTrigger asChild>
-        {triggerButton}
-      </PopoverTrigger>
-      <PopoverContent className="w-[340px] p-4 rounded-xl border-border/50 shadow-xl shadow-black/8" align="start">
-        {filtersAndGrid}
-      </PopoverContent>
-    </Popover>
+    <>
+      {triggerButton}
+      <ModelCatalogModal
+        open={open}
+        onOpenChange={onOpenChange}
+        selectedModel={selectedModel}
+        onSelect={onSelect}
+      />
+    </>
   );
 }
