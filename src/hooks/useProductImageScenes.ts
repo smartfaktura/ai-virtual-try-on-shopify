@@ -203,7 +203,6 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
     food: 'Food & Snacks',
     beverages: 'Beverages',
     'supplements-wellness': 'Supplements & Wellness',
-    other: 'Other / Custom',
   };
 
   return Array.from(catMap.entries())
