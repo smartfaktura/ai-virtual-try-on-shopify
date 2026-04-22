@@ -304,7 +304,7 @@ export function SceneCatalogModal({
           />
 
           <ScrollArea className="flex-1">
-            <div className="px-4 sm:px-6 py-5 space-y-6">
+            <div className="px-4 sm:px-6 py-4 space-y-4">
               {showRails ? (
                 <>
                   <SceneCatalogRail
