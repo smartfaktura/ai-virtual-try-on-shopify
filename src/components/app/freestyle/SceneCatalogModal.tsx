@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -79,7 +78,7 @@ export function SceneCatalogModal({
   const [family, setFamily] = useState<string | null>(null);
   const [categoryCollection, setCategoryCollection] = useState<string | null>(null);
   const [quickView, setQuickView] = useState<QuickView>('all');
-  const [sort, setSort] = useState<'recommended' | 'popular' | 'new'>('recommended');
+  const [sort, setSort] = useState<'recommended' | 'new'>('recommended');
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
   const [pendingLegacy, setPendingLegacy] = useState<TryOnPose | null>(null);
 
@@ -274,14 +273,6 @@ export function SceneCatalogModal({
               Find the right shot for your product — over 1,000 curated scenes.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="p-1.5 rounded-full hover:bg-muted transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
         </header>
 
         {/* Filter bar */}
@@ -313,7 +304,7 @@ export function SceneCatalogModal({
           />
 
           <ScrollArea className="flex-1">
-            <div className="px-4 sm:px-6 py-5 space-y-6">
+            <div className="px-4 sm:px-6 py-4 space-y-4">
               {showRails ? (
                 <>
                   <SceneCatalogRail

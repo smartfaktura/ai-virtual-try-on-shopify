@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { SceneCatalogCard } from './SceneCatalogCard';
 import type { CatalogScene } from '@/hooks/useSceneCatalog';
 
@@ -13,10 +15,14 @@ interface SceneCatalogGridProps {
   onSelect: (scene: CatalogScene) => void;
 }
 
+const LOAD_ALL_PAGE_CAP = 10;
+
 export function SceneCatalogGrid({
   pages, isLoading, isFetchingNextPage, hasNextPage, onLoadMore, selectedSceneId, onSelect,
 }: SceneCatalogGridProps) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [loadingAll, setLoadingAll] = useState(false);
+  const loadAllPagesRef = useRef(0);
 
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -31,6 +37,29 @@ export function SceneCatalogGrid({
     observer.observe(node);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, onLoadMore]);
+
+  // Drive the load-all loop: each time fetching settles, request another page until cap or done.
+  useEffect(() => {
+    if (!loadingAll) return;
+    if (isFetchingNextPage) return;
+    if (!hasNextPage) {
+      setLoadingAll(false);
+      loadAllPagesRef.current = 0;
+      return;
+    }
+    if (loadAllPagesRef.current >= LOAD_ALL_PAGE_CAP) {
+      setLoadingAll(false);
+      loadAllPagesRef.current = 0;
+      return;
+    }
+    loadAllPagesRef.current += 1;
+    onLoadMore();
+  }, [loadingAll, isFetchingNextPage, hasNextPage, onLoadMore]);
+
+  const handleLoadAll = () => {
+    loadAllPagesRef.current = 0;
+    setLoadingAll(true);
+  };
 
   const flat = pages.flat();
 
@@ -67,17 +96,27 @@ export function SceneCatalogGrid({
       </div>
 
       {hasNextPage && (
-        <div ref={sentinelRef} className="py-6 text-center">
-          {isFetchingNextPage ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-[4/5] w-full rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <span className="text-xs text-muted-foreground">Loading more...</span>
-          )}
-        </div>
+        <>
+          <div ref={sentinelRef} className="h-px" />
+          <div className="flex flex-col items-center gap-2 py-4">
+            {isFetchingNextPage ? (
+              <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                {loadingAll ? `Loading more… (${flat.length} loaded)` : 'Loading more…'}
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleLoadAll}
+                disabled={loadingAll}
+                className="rounded-full text-xs"
+              >
+                Load all
+              </Button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

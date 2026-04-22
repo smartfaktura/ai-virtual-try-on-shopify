@@ -26,8 +26,8 @@ interface SceneCatalogFiltersBarProps {
   onChipToggle: (chip: FilterChipDef) => void;
   onClearAll: () => void;
   anyActive: boolean;
-  sort: 'recommended' | 'popular' | 'new';
-  onSortChange: (sort: 'recommended' | 'popular' | 'new') => void;
+  sort: 'recommended' | 'new';
+  onSortChange: (sort: 'recommended' | 'new') => void;
   onOpenMobileFilters?: () => void;
   showMobileFiltersBtn?: boolean;
 }
@@ -102,13 +102,12 @@ export function SceneCatalogFiltersBar({
       <div className="flex-1" />
 
       {/* Sort */}
-      <Select value={sort} onValueChange={v => onSortChange(v as 'recommended' | 'popular' | 'new')}>
+      <Select value={sort} onValueChange={v => onSortChange(v as 'recommended' | 'new')}>
         <SelectTrigger className="h-8 w-[140px] rounded-full text-xs shrink-0">
           <SelectValue placeholder="Sort" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="recommended">Recommended</SelectItem>
-          <SelectItem value="popular">Popular</SelectItem>
           <SelectItem value="new">Newest</SelectItem>
         </SelectContent>
       </Select>

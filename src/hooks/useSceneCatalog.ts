@@ -32,7 +32,7 @@ export interface SceneCatalogFilters {
   /** Single-select sub-family slug (overrides family expansion when set). */
   categoryCollection?: string | null;
   filterTags?: string[];
-  sort?: 'recommended' | 'popular' | 'new';
+  sort?: 'recommended' | 'new';
   /** When true, exclude rows whose sub_category contains "essential". */
   excludeEssentials?: boolean;
 }
