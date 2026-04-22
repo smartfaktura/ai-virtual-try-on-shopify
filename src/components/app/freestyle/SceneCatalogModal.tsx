@@ -62,6 +62,7 @@ export function SceneCatalogModal({
   const [sort, setSort] = useState<'recommended' | 'new'>('recommended');
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
   const [pendingLegacy, setPendingLegacy] = useState<TryOnPose | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Client-side pagination for the default interleaved view.
   const PAGE_SIZE = 24;
