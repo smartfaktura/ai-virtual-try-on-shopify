@@ -97,7 +97,8 @@ export function SceneCatalogModal({
   // Default grid: full Freestyle catalog (no filters, excluding Essential Shots).
   // When filters are active we use the same hook with the user-selected filters.
   const useGrid = quickView !== 'recommended';
-  const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
+  const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid && anyFilterActive);
+  const interleavedGrid = useInterleavedSceneCatalog(open && useGrid && !anyFilterActive, 2);
   const counts = useSceneCounts();
 
   // Custom scenes kept only to resolve `cs-` selection IDs from prior sessions.
