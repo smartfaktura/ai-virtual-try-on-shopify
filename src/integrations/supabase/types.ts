@@ -1210,6 +1210,7 @@ export type Database = {
           mood: string | null
           outfit_hint: string | null
           preview_image_url: string | null
+          previous_sort_order: number | null
           prompt_template: string
           requires_extra_reference: boolean
           scene_id: string
@@ -1237,6 +1238,7 @@ export type Database = {
           mood?: string | null
           outfit_hint?: string | null
           preview_image_url?: string | null
+          previous_sort_order?: number | null
           prompt_template?: string
           requires_extra_reference?: boolean
           scene_id: string
@@ -1264,6 +1266,7 @@ export type Database = {
           mood?: string | null
           outfit_hint?: string | null
           preview_image_url?: string | null
+          previous_sort_order?: number | null
           prompt_template?: string
           requires_extra_reference?: boolean
           scene_id?: string
@@ -2543,6 +2546,7 @@ export type Database = {
         Args: { p_plan_credits: number; p_user_id: string }
         Returns: Json
       }
+      toggle_scene_featured: { Args: { p_scene_id: string }; Returns: number }
       try_acquire_dispatch_lock: {
         Args: { p_locked_by?: string }
         Returns: boolean
