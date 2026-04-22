@@ -1,64 +1,67 @@
 
 
-## Real fix — batch the metadata lookup on `/app/admin/scene-performance`
+## Fix inflated "Unique users" KPI on `/app/admin/scene-performance`
 
-### What's actually broken (corrected diagnosis)
+### What's wrong
 
-The previous theory (RLS policy missing) was wrong. Confirmed:
-- `product_image_scenes` already has policy `Authenticated can read active scenes USING (true)` — admin already has read access.
-- The data exists: `closeup-detail-hats-watches` → `Close-Up Detail`, has preview ✓
-- `generation_jobs.scene_id` values match `product_image_scenes.scene_id` exactly ✓
+The "Unique users" stat card shows **1,007**, which is not the real unique user count.
 
-**Real root cause:** The 90-day window has **1,062 distinct scene IDs**. The frontend does:
+Root cause is in `src/pages/admin/SceneUsage.tsx` (line 238):
 ```ts
-supabase.from('product_image_scenes').select(...).in('scene_id', pisQueryIds)
+const userIdsApprox = enriched.reduce((s, r) => s + Number(r.unique_users), 0);
 ```
-With ~1,000+ IDs, this builds a URL with `?scene_id=in.(id1,id2,...id1062)` that:
-1. Hits Supabase's default 1,000-row return cap → silently truncates
-2. May exceed PostgREST URL length → request fails or returns nothing
 
-Result: metadata map is mostly empty → rows fall back to raw IDs and no thumbnail.
+This **sums `unique_users` across every scene row**. A user who used 50 different scenes is counted 50 times. The label even admits it: "Unique users (sum)" / `userIdsApprox`. With ~1,000 scenes in the window, totals naturally balloon to ~1,000+, regardless of real user count.
 
-### Safe fix (frontend only, no DB changes)
+The RPC `get_scene_popularity` correctly returns `unique_users` **per scene** — that part is fine and useful in the table. The bug is purely in how the KPI aggregates it.
 
-In `src/pages/admin/SceneUsage.tsx`, replace the single `.in()` call with **chunked batches of 200 IDs** and merge results. Same for `custom_scenes` (smaller but same pattern for safety).
+### Safe fix (frontend only — one tiny change)
 
-```ts
-async function fetchScenesInChunks(ids: string[], chunkSize = 200) {
-  const out: any[] = [];
-  for (let i = 0; i < ids.length; i += chunkSize) {
-    const chunk = ids.slice(i, i + chunkSize);
-    const { data, error } = await supabase
-      .from('product_image_scenes')
-      .select('scene_id,title,sub_category,category_collection,preview_image_url')
-      .in('scene_id', chunk);
-    if (error) throw error;
-    if (data) out.push(...data);
-  }
-  return out;
-}
-```
+Get the true distinct-user count from the database instead of summing per-scene values.
+
+#### 1) Add a small admin RPC: `get_scene_unique_user_count(p_days int)`
+
+- `SECURITY DEFINER`, same admin guard as `get_scene_popularity`
+- Returns a single integer:
+  ```sql
+  SELECT count(DISTINCT user_id) FROM (
+    SELECT user_id FROM freestyle_generations
+      WHERE scene_id IS NOT NULL AND created_at >= now() - (p_days||' days')::interval
+    UNION
+    SELECT user_id FROM generation_jobs
+      WHERE scene_id IS NOT NULL AND created_at >= now() - (p_days||' days')::interval
+  ) u;
+  ```
+- Granted to `authenticated`
+
+#### 2) Use it in `SceneUsage.tsx`
+
+- Call the new RPC alongside `get_scene_popularity` when window changes
+- Store result in `uniqueUsers` state
+- Replace the KPI value:
+  - Card label: "Unique users" (drop "(sum)")
+  - Value: `uniqueUsers` (true distinct count)
+- Per-scene `unique_users` column in the table stays unchanged
 
 ### Why it's safe
 
-- **Frontend-only change** in one admin page
-- No DB migration, no RLS change, no edge function change
-- No impact on generation, credits, queues, or any other page
-- Pure read operation
-- Easy rollback: revert the file
-
-### What stays untouched
-
-- Database schema and RLS — untouched
-- `get_scene_popularity` RPC — untouched
-- Generation pipeline — untouched
-- All other admin pages — untouched
+- **No change** to generation, credits, queues, or any user data
+- **No change** to `get_scene_popularity` (already working)
+- **No change** to per-row table data
+- One read-only RPC + one KPI value swap
+- Trivial rollback (drop RPC, revert one file)
 
 ### Validation
 
-1. Reload `/app/admin/scene-performance`
-2. Rows show real names (`Frozen Aura`, `Close-Up Detail`, …) + thumbnails
-3. Category column shows real values
-4. Top risers rail also gets names + thumbnails
-5. No console errors
+1. `/app/admin/scene-performance` reloads cleanly
+2. "Unique users" card now shows a realistic small number (matches actual platform user count, not 1,000+)
+3. Switching 30d / 60d / 90d updates the value
+4. Per-scene "Users" column unchanged
+5. Non-admins still blocked
+
+### Untouched
+
+- Generation pipeline, credits, RLS on user data
+- `get_scene_popularity` RPC and table rendering
+- All other admin pages
 
