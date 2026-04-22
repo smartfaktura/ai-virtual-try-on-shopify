@@ -114,7 +114,7 @@ export function SceneCatalogModal({
       sub_category: null,
       category_collection: null,
       scene_type: null,
-      subject: s.subject ?? null,
+      subject: null,
       shot_style: null,
       setting: null,
       preview_image_url: s.preview_image_url || s.optimized_image_url || s.image_url,
