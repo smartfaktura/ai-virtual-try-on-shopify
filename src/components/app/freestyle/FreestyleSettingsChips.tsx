@@ -111,10 +111,13 @@ export function FreestyleSettingsChips({
   const aspectRatioChip = (
     <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+        <button className={cn(
+          "items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors",
+          isMobile ? "flex w-full justify-center relative" : "inline-flex"
+        )}>
           <ArIcon className="w-3.5 h-3.5" />
           {aspectRatio}
-          <ChevronDown className="w-3 h-3 opacity-40" />
+          <ChevronDown className={cn("w-3 h-3 opacity-40", isMobile && "absolute right-3")} />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-40 p-2" align="start">
@@ -227,6 +230,7 @@ export function FreestyleSettingsChips({
         products={products}
         isLoading={isLoadingProducts}
         modal={isMobile}
+        fullWidth={isMobile}
       />
     </div>
   );
@@ -253,6 +257,7 @@ export function FreestyleSettingsChips({
         onOpenChange={disabledChips?.model ? () => {} : onModelPopoverChange}
         onSelect={onModelSelect}
         modal={isMobile}
+        fullWidth={isMobile}
       />
     </div>
   );
@@ -268,6 +273,7 @@ export function FreestyleSettingsChips({
         onOpenChange={disabledChips?.scene ? () => {} : onScenePopoverChange}
         onSelect={onSceneSelect}
         modal={isMobile}
+        fullWidth={isMobile}
       />
     </div>
   );
@@ -297,7 +303,7 @@ export function FreestyleSettingsChips({
     const framingValueLabel = framing ? (framing as any).label ?? (framing as any).name ?? 'Custom' : 'Auto';
     const brandValueLabel = selectedBrandProfile?.name ?? 'None';
 
-    const cellClass = '[&_button]:w-full [&_button]:justify-center [&_button]:relative [&_button]:px-4 [&_button>svg:last-child]:absolute [&_button>svg:last-child]:right-3 [&_button>svg:last-child]:opacity-40';
+    const cellClass = '[&>*]:w-full [&>button]:w-full [&>button]:justify-center [&>button]:relative [&>button]:px-4 [&>*>button]:w-full [&>*>button]:justify-center [&>*>button]:relative [&>*>button]:px-4';
 
     const SectionRow = ({
       id, icon: Icon, label, value, modified,
@@ -373,7 +379,7 @@ export function FreestyleSettingsChips({
           <div className={cellClass}>
             <Popover open={advancedOpen} onOpenChange={(o) => { setAdvancedOpenLocal(o); if (!o) setExpandedSection(null); }}>
               <PopoverTrigger asChild>
-                <button className="relative inline-flex items-center justify-center gap-1.5 h-8 px-4 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+                <button className="relative flex w-full items-center justify-center gap-1.5 h-8 px-4 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
                   <Sliders className="w-3.5 h-3.5" />
                   <span>Advanced</span>
                   <ChevronDown className="w-3 h-3 opacity-40 absolute right-3" />
