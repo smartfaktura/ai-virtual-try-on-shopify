@@ -1,48 +1,168 @@
 
+## Fix `/app/admin/scene-performance` so it stops hanging and loads fast
 
-## Optimize `/app/admin/scene-performance` — paginated loading
+### What’s actually still wrong
 
-### Problem
+The page is no longer trying to render all metadata at once, but it still blocks the whole screen on several heavy analytics queries before showing anything.
 
-The dashboard currently loads **all** scene rows (1,000+) at once, plus metadata for every single ID. This causes slow load and renders a massive table the admin scrolls through anyway.
+Current behavior in `src/pages/admin/SceneUsage.tsx`:
+- it waits for 4 backend calls together before clearing `loading`
+- 3 of those are large aggregate reads:
+  - main window popularity
+  - last 7 days popularity
+  - prior 14 days popularity
+- plus a distinct-user count query
+- the page keeps the KPI cards and both panels in loading state until all of that finishes
 
-### Fix (frontend-only, safe)
+So even with the “show 50 rows first” change, the page can still feel stuck or hang on mobile.
 
-Render only the first **50 rows** by default, with a **"Load more"** button that reveals 50 more at a time. Metadata is fetched only for the rows that are actually visible — keeping the network footprint small.
+### Safe fix
 
-### Changes to `src/pages/admin/SceneUsage.tsx`
+Use a two-layer fix:
 
-1. **New state**: `visibleCount` (default `50`), `loadingMore` flag.
-2. **KPIs and totals** stay computed from the full `rows` set (so "Scenes used", "Total generations", etc. remain accurate platform-wide numbers).
-3. **Sorting + search** apply to the full dataset (so search finds anything, not just the loaded slice).
-4. **Display slice**: `const visible = filtered.slice(0, visibleCount);` — only this slice is rendered in the table.
-5. **Metadata fetching becomes lazy**:
-   - Initial load: fetch popularity rows + unique-user count + risers (cheap RPCs, no per-scene metadata).
-   - Whenever `visible` changes, look up metadata only for IDs in the visible slice that aren't already in the `meta` map. Same for risers (always 10, fetched once).
-   - Reuse the existing chunked `fetchInChunks` helper at chunk size 200 (single batch for 50 IDs).
-6. **"Load more" button** below the table:
-   - Visible only when `visibleCount < filtered.length`.
-   - Shows "Load more (X remaining)".
-   - Increments `visibleCount` by 50.
-7. **Reset `visibleCount` to 50** whenever `windowDays`, `search`, `sortKey`, or `sortDir` changes.
-8. **CSV export** keeps exporting the full filtered set (not just visible) — admins expect complete data in CSV.
+1. Make the page render progressively instead of waiting for everything
+2. Speed up the backend queries with proper read indexes and tighter filters
 
-### Why it's safe
+### Changes to make
 
-- Frontend-only change in one admin page
-- No DB schema, RPC, RLS, or edge function changes
-- Generation pipeline, credits, queues — untouched
-- KPI numbers stay correct (computed from full dataset)
-- CSV export stays complete
-- Easy rollback: revert one file
+#### 1) Split the loading state in `src/pages/admin/SceneUsage.tsx`
+
+Replace the single `loading` gate with section-level loading:
+
+- `mainLoading` for:
+  - scene list
+  - primary KPIs derived from main rows
+- `uniqueUsersLoading` for the unique-users KPI only
+- `risersLoading` for the risers card only
+
+Result:
+- the table and main KPIs render as soon as the main popularity query returns
+- unique users can populate a moment later
+- top risers can populate separately
+- one slow side query no longer freezes the whole page
+
+#### 2) Stop using one `Promise.all` for all analytics
+
+Refactor the load effect so it does this order:
+
+- first:
+  - `get_scene_popularity(windowDays)` for the main dataset
+- then in parallel, without blocking the page:
+  - `get_scene_unique_user_count(windowDays)`
+  - risers computation queries
+
+This keeps the page usable even if the risers query is slow.
+
+#### 3) Keep the existing 50-row lazy rendering
+
+Preserve the current safe optimization:
+- render only first 50 rows
+- “Load more” adds 50 more
+- metadata resolves only for visible rows
+- CSV still exports the full filtered set
+
+That part is good and should stay.
+
+#### 4) Add proper analytics indexes in a migration
+
+The current indexes lead with `scene_id`, but these analytics functions filter by time window first. That makes them a poor fit for the actual query shape.
+
+Add partial indexes better aligned to the RPCs:
+
+- `freestyle_generations(created_at desc, scene_id, user_id) where scene_id is not null`
+- `generation_jobs(created_at desc, scene_id, user_id) where scene_id is not null and status = 'completed'`
+
+This improves:
+- main popularity query
+- unique user count query
+- risers queries
+
+#### 5) Tighten the Product Images analytics filter
+
+Update the analytics functions so `generation_jobs` only counts completed generations for scene usage reporting.
+
+That restores safer semantics and avoids counting queued/failed rows in performance metrics.
+
+#### 6) Add non-blocking fallbacks in the UI
+
+If a secondary query fails:
+- main table should still render if main popularity succeeded
+- unique users card should show a small fallback like `—`
+- risers card should show a compact error/empty state instead of spinner forever
+
+#### 7) Prevent repeated metadata churn
+
+Keep the current lazy metadata behavior, but make it slightly more defensive:
+- dedupe missing IDs before fetch
+- avoid re-requesting the same missing set while one request is in flight
+- keep riser metadata separate from main-table loading so it never blocks the page
+
+### Why this is safe
+
+- keeps the existing admin page structure
+- preserves the current 50-row incremental rendering
+- does not change generation flow, credits, queues, or user-facing creation flows
+- backend change is read-performance only: indexes plus safer analytics filters
+- no write permissions or RLS widening needed
+- easy rollback:
+  - revert one page file
+  - drop the new indexes if necessary
+
+### Files likely involved
+
+- `src/pages/admin/SceneUsage.tsx`
+- new migration in `supabase/migrations/*` for:
+  - analytics indexes
+  - updated analytics function filters if needed
 
 ### Validation
 
-1. Reload `/app/admin/scene-performance` → loads visibly faster
-2. Table shows 50 rows initially with thumbnails + names
-3. "Load more" button appears below table; clicking adds 50 more rows with thumbnails
-4. Sorting/search resets to first 50; works across full dataset
-5. KPI cards still show full totals (1,000 scenes, 4,966 generations, 4 unique users)
-6. CSV export still contains all rows
-7. Top risers rail unchanged
+1. Open `/app/admin/scene-performance`
+2. Main KPI cards and first 50 rows appear quickly instead of all cards staying on `—`
+3. Unique users can fill in slightly later without blocking the page
+4. Top risers can load independently
+5. “Load more” still works in 50-row increments
+6. Scene names and thumbnails still resolve correctly for visible rows
+7. CSV still exports the full filtered dataset
+8. Non-admin users remain blocked
+9. No endless spinner if a secondary analytics call fails
 
+### Technical details
+
+```text
+Before
+------
+single loading state
+  -> waits for:
+     main popularity
+     unique users
+     last 7d popularity
+     prior 14d popularity
+  -> then render
+
+After
+-----
+mainLoading
+  -> fetch main popularity
+  -> render table + main KPIs immediately
+
+secondary async loads
+  -> unique users KPI
+  -> top risers card
+  -> visible-row metadata
+```
+
+```text
+DB optimization
+---------------
+Current index shape:
+(scene_id, created_at)
+
+Needed query shape:
+WHERE created_at >= window
+GROUP BY scene_id
+COUNT DISTINCT user_id
+
+Better partial index:
+(created_at, scene_id, user_id)
+```
