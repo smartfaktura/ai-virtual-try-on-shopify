@@ -2529,6 +2529,10 @@ export type Database = {
           uses_product_images: number
         }[]
       }
+      get_scene_unique_user_count: {
+        Args: { p_days?: number }
+        Returns: number
+      }
       get_user_emails_for_admin: {
         Args: { p_user_ids: string[] }
         Returns: {
