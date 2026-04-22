@@ -426,6 +426,33 @@ export default function AdminProductImageScenes() {
     }
   };
 
+  const handleMoveToTop = async (scene: DbScene) => {
+    const key = normalizeCat(scene.category_collection);
+    const allInCategory = grouped.get(key) || [];
+    const subKey = scene.sub_category || '';
+    const subGroup = allInCategory
+      .filter(s => (s.sub_category || '') === subKey)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+    if (subGroup.length === 0 || subGroup[0].id === scene.id) return;
+
+    const baseOrder = Math.min(...subGroup.map(s => s.sort_order ?? 0));
+    // Reorder: target first, others after in their existing relative order
+    const reordered = [scene, ...subGroup.filter(s => s.id !== scene.id)];
+    const updates: Promise<any>[] = [];
+    reordered.forEach((s, i) => {
+      const newOrder = baseOrder + i;
+      if (s.sort_order !== newOrder) {
+        updates.push(updateScene.mutateAsync({ id: s.id, updates: { sort_order: newOrder } }));
+      }
+    });
+    try {
+      if (updates.length > 0) await Promise.all(updates);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   const handleMoveSubCategory = async (categoryKey: string, subLabel: string, direction: 'up' | 'down') => {
     const catScenes = grouped.get(categoryKey) || [];
     const subGroups = groupBySubCategory(catScenes);
