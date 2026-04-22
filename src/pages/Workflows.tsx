@@ -581,7 +581,6 @@ export default function Workflows() {
             />
           </div>
         )}
-        <WorkflowRequestBanner />
       </section>
 
       {/* ── Recent Creations (heading + row grouped tight) ── */}
@@ -600,6 +599,8 @@ export default function Workflows() {
           <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
         </section>
       )}
+
+      <WorkflowRequestBanner />
     </PageHeader>
   );
 }
