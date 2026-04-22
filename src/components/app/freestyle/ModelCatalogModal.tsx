@@ -50,7 +50,6 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
   const isPaidPlan = ['growth', 'pro', 'enterprise'].includes(plan);
 
   const [gender, setGender] = useState<GenderFilter>('all');
-  const [bodyType, setBodyType] = useState<ModelBodyType | null>(null);
   const [ageRange, setAgeRange] = useState<ModelAgeRange | null>(null);
   const [quickView, setQuickView] = useState<QuickView>('all');
   const [sort, setSort] = useState<SortKey>('featured');
