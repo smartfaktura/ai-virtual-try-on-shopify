@@ -1,17 +1,16 @@
 
-## Round the ErrorBoundary "Reload page" button
+## Hide "Missing a model?" banner on My Brand Models view
 
-Tiny one-line polish to match the rest of the app's pill-button standard.
+### Change — `src/components/app/freestyle/ModelCatalogModal.tsx`
 
-### Change — `src/components/ErrorBoundary.tsx` (line 52)
+Conditionally render the footer `MissingRequestBanner` so it appears only when the user is browsing the general catalog, not when they've switched the sidebar to **My Brand Models**.
 
-Swap `rounded-md` → `rounded-full` and bump padding slightly so the pill reads balanced (`px-6 py-2.5` → `h-11 px-6`):
+Wrap the existing banner render with `{quickView !== 'brand' && ( ... )}`. When hidden, also drop the surrounding border/padding wrapper so there's no empty strip above the sticky footer.
 
-```tsx
-className="inline-flex items-center justify-center h-11 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
-```
-
-That's it — matches the global Button `lg`/`pill-lg` size used everywhere else (Auth, ResetPassword, etc.).
+### Validation
+- Sidebar → "All models": banner visible (unchanged).
+- Sidebar → "My Brand Models": banner hidden; empty-state card and "Create Brand Model" tile sit cleanly above the sticky footer.
+- Mobile sheet untouched.
 
 ### Untouched
-Heading, body copy, layout, localStorage cleanup logic.
+`ModelSelectorChip.tsx`, mobile sheet, gender chips, sort, grid cards, footer Use-model bar.
