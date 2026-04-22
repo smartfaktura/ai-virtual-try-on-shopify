@@ -92,7 +92,7 @@ function OptionCard({ value, label, description, icon, selected, onClick, isMobi
       className={cn(
         'relative rounded-xl border-2 transition-all duration-200 cursor-pointer',
         isMobile
-          ? 'flex flex-row items-center gap-3 p-3 text-left'
+          ? 'flex flex-row items-start gap-3 p-3 text-left'
           : 'flex flex-col items-center gap-2 p-4 sm:p-5 text-center',
         selected
           ? 'border-primary bg-primary/5 ring-2 ring-primary/15 shadow-sm'
@@ -112,9 +112,9 @@ function OptionCard({ value, label, description, icon, selected, onClick, isMobi
           )}>
             {icon}
           </div>
-          <div className="min-w-0 flex-1 pr-5">
-            <span className="block text-sm font-medium leading-tight truncate">{label}</span>
-            {description && <span className="block text-[11px] text-muted-foreground/60 leading-tight mt-0.5 truncate">{description}</span>}
+          <div className={cn('min-w-0 flex-1', selected ? 'pr-6' : 'pr-1')}>
+            <span className="block text-sm font-medium leading-snug break-words line-clamp-2">{label}</span>
+            {description && <span className="block text-[11px] text-muted-foreground/60 leading-snug mt-0.5 break-words line-clamp-2">{description}</span>}
           </div>
         </>
       ) : (
