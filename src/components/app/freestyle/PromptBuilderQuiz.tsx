@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Sparkles, Check, ArrowLeft, ArrowRight, Wand2, Pencil, Shirt, Wind, Gem, Watch, Lamp, Smartphone, Heart, Package, UtensilsCrossed, Dumbbell,
+import { Sparkles, Check, ArrowLeft, ArrowRight, Wand2, Pencil, Shirt, Wind, Gem, Watch, Lamp, Smartphone, Heart, Package, UtensilsCrossed, Dumbbell, X,
   User, Users, Hand, Eye, Frame, Camera, Sun, Home, TreePine, Palette, Zap, Flame, Leaf, Crown, LayoutGrid, GripHorizontal, Move3D, Focus, ScanFace } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
