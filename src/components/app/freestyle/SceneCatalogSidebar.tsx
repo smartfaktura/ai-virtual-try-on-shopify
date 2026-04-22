@@ -1,9 +1,7 @@
 import { useMemo } from 'react';
-import { Sparkles, LayoutGrid, Clock } from 'lucide-react';
+import { Sparkles, LayoutGrid, Clock, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  CATEGORY_FAMILY_MAP, FAMILY_ORDER, SUBJECT_LABEL,
-} from '@/lib/sceneTaxonomy';
+import { CATEGORY_FAMILY_MAP, FAMILY_ORDER, getSubFamilyLabel } from '@/lib/sceneTaxonomy';
 import type { SceneCounts } from '@/hooks/useSceneCounts';
 
 export type QuickView = 'all' | 'recommended' | 'new';
@@ -12,40 +10,88 @@ interface SceneCatalogSidebarProps {
   counts: SceneCounts | undefined;
   /** Single-select Product Family (one of the family display names, e.g. "Fashion"). null = none. */
   selectedFamily: string | null;
+  /** Single-select sub-family slug (a `category_collection` value). */
+  selectedCategoryCollection: string | null;
   selectedSubjects: string[];
   quickView: QuickView;
   recommendedCount?: number;
   newCount?: number;
   onSelectFamily: (family: string | null) => void;
-  onToggleSubject: (value: string) => void;
+  onSelectCategoryCollection: (slug: string | null) => void;
   onSelectQuickView: (view: QuickView) => void;
 }
 
-const SUBJECTS_IN_RAIL: Array<'product-only' | 'with-model'> = ['product-only', 'with-model'];
+/** Push any "essential"-flavoured slug to the bottom of a sub-family list. */
+function isEssentialSlug(slug: string): boolean {
+  return slug.includes('essential');
+}
 
 export function SceneCatalogSidebar({
   counts,
   selectedFamily,
-  selectedSubjects,
+  selectedCategoryCollection,
   quickView,
   recommendedCount,
   newCount,
   onSelectFamily,
-  onToggleSubject,
+  onSelectCategoryCollection,
   onSelectQuickView,
 }: SceneCatalogSidebarProps) {
-  // Aggregate per-family counts by summing the per-collection counts.
-  const familyCounts = useMemo(() => {
-    const result: Record<string, number> = {};
-    if (!counts) return result;
+  // Group collection slugs by their family + aggregate per-family totals in one pass.
+  const { familyCounts, subFamiliesByFamily } = useMemo(() => {
+    const fc: Record<string, number> = {};
+    const subs: Record<string, Array<{ slug: string; count: number }>> = {};
+    if (!counts) return { familyCounts: fc, subFamiliesByFamily: subs };
+
     for (const [slug, count] of Object.entries(counts.byCollection)) {
       const family = CATEGORY_FAMILY_MAP[slug] ?? 'Other';
-      result[family] = (result[family] ?? 0) + count;
+      fc[family] = (fc[family] ?? 0) + count;
+      (subs[family] ||= []).push({ slug, count });
     }
-    return result;
+
+    // Sort sub-families: non-essentials by count desc, essentials at the bottom.
+    for (const family of Object.keys(subs)) {
+      subs[family].sort((a, b) => {
+        const aE = isEssentialSlug(a.slug) ? 1 : 0;
+        const bE = isEssentialSlug(b.slug) ? 1 : 0;
+        if (aE !== bE) return aE - bE;
+        return b.count - a.count;
+      });
+    }
+    return { familyCounts: fc, subFamiliesByFamily: subs };
   }, [counts]);
 
   const orderedFamilies = FAMILY_ORDER.filter(f => (familyCounts[f] ?? 0) > 0);
+
+  const handleFamilyClick = (family: string) => {
+    const subs = subFamiliesByFamily[family] ?? [];
+    if (subs.length === 1) {
+      // Single-collection family — toggle it directly as the active collection.
+      const onlySlug = subs[0].slug;
+      if (selectedCategoryCollection === onlySlug && selectedFamily === family) {
+        onSelectFamily(null);
+      } else {
+        onSelectFamily(family);
+        onSelectCategoryCollection(onlySlug);
+      }
+      return;
+    }
+    // Multi-collection family — toggle family expansion; clear sub-selection.
+    if (selectedFamily === family) {
+      onSelectFamily(null);
+    } else {
+      onSelectFamily(family);
+      onSelectCategoryCollection(null);
+    }
+  };
+
+  const handleSubClick = (slug: string) => {
+    if (selectedCategoryCollection === slug) {
+      onSelectCategoryCollection(null);
+    } else {
+      onSelectCategoryCollection(slug);
+    }
+  };
 
   const renderRow = (
     label: string,
@@ -53,13 +99,15 @@ export function SceneCatalogSidebar({
     active: boolean,
     onClick: () => void,
     icon?: React.ReactNode,
+    indent = false,
   ) => (
     <button
-      key={label}
+      key={label + (indent ? '-sub' : '')}
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-xs transition-colors',
+        'w-full flex items-center gap-2 py-1.5 rounded-md text-left text-xs transition-colors',
+        indent ? 'pl-6 pr-2' : 'px-2',
         active
           ? 'bg-primary/10 text-primary font-semibold'
           : 'text-foreground/80 hover:bg-muted/60',
@@ -89,7 +137,7 @@ export function SceneCatalogSidebar({
           {renderRow(
             'All scenes',
             counts?.total,
-            quickView === 'all' && selectedFamily === null && selectedSubjects.length === 0,
+            quickView === 'all' && selectedFamily === null && selectedCategoryCollection === null,
             () => onSelectQuickView('all'),
             <LayoutGrid className="w-3.5 h-3.5 opacity-60" />,
           )}
@@ -111,26 +159,61 @@ export function SceneCatalogSidebar({
 
         {sectionLabel('Product Families')}
         <div className="space-y-0.5">
-          {orderedFamilies.map(family =>
-            renderRow(
-              family,
-              familyCounts[family],
-              selectedFamily === family,
-              () => onSelectFamily(selectedFamily === family ? null : family),
-            ),
-          )}
-        </div>
+          {orderedFamilies.map(family => {
+            const subs = subFamiliesByFamily[family] ?? [];
+            const isActive = selectedFamily === family;
+            const hasMultiple = subs.length > 1;
+            const ChevronIcon = hasMultiple
+              ? (isActive ? ChevronDown : ChevronRight)
+              : null;
 
-        {sectionLabel('Shot Types')}
-        <div className="space-y-0.5">
-          {SUBJECTS_IN_RAIL.map(s =>
-            renderRow(
-              SUBJECT_LABEL[s],
-              counts?.bySubject[s],
-              selectedSubjects.includes(s),
-              () => onToggleSubject(s),
-            ),
-          )}
+            return (
+              <div key={family}>
+                <button
+                  type="button"
+                  onClick={() => handleFamilyClick(family)}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-xs transition-colors',
+                    isActive && !selectedCategoryCollection
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-foreground/80 hover:bg-muted/60',
+                  )}
+                >
+                  {ChevronIcon ? (
+                    <ChevronIcon className="w-3 h-3 opacity-60 shrink-0" />
+                  ) : (
+                    <span className="w-3 shrink-0" />
+                  )}
+                  <span className="truncate flex-1">{family}</span>
+                  <span
+                    className={cn(
+                      'text-[10px] tabular-nums',
+                      isActive && !selectedCategoryCollection
+                        ? 'text-primary'
+                        : 'text-muted-foreground',
+                    )}
+                  >
+                    {familyCounts[family]}
+                  </span>
+                </button>
+
+                {isActive && hasMultiple && (
+                  <div className="mt-0.5 mb-1 space-y-0.5">
+                    {subs.map(({ slug, count }) =>
+                      renderRow(
+                        getSubFamilyLabel(slug),
+                        count,
+                        selectedCategoryCollection === slug,
+                        () => handleSubClick(slug),
+                        undefined,
+                        true,
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </aside>

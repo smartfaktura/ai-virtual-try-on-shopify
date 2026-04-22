@@ -58,6 +58,30 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
   other: 'Other',
 };
 
+/** Human labels for category_collection slugs when shown as sub-family rows. */
+export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
+  'garments': 'Tops & Shirts',
+  'hats-small': 'Hats',
+  'wallets-cardholders': 'Cardholders',
+  'bags-accessories': 'Bags',
+  'beauty-skincare': 'Skincare',
+  'makeup-lipsticks': 'Makeup',
+  'jewellery-rings': 'Rings',
+  'jewellery-bracelets': 'Bracelets',
+  'jewellery-necklaces': 'Necklaces',
+  'jewellery-earrings': 'Earrings',
+  'high-heels': 'Heels',
+  'home-decor': 'Decor',
+  'tech-devices': 'Devices',
+  'snacks-food': 'Snacks',
+  'supplements-wellness': 'Wellness',
+};
+
+export function getSubFamilyLabel(slug: string): string {
+  if (SUB_FAMILY_LABEL_OVERRIDES[slug]) return SUB_FAMILY_LABEL_OVERRIDES[slug];
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 export const FAMILY_ORDER = [
   'Fashion', 'Footwear', 'Bags & Accessories', 'Watches', 'Eyewear', 'Jewelry',
   'Beauty & Fragrance', 'Home', 'Tech', 'Food & Drink', 'Wellness', 'Other',

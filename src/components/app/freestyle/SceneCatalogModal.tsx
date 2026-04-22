@@ -64,6 +64,7 @@ export function SceneCatalogModal({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
   const [family, setFamily] = useState<string | null>(null);
+  const [categoryCollection, setCategoryCollection] = useState<string | null>(null);
   const [quickView, setQuickView] = useState<QuickView>('all');
   const [sort, setSort] = useState<'recommended' | 'popular' | 'new'>('recommended');
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
@@ -79,6 +80,7 @@ export function SceneCatalogModal({
     !!debouncedSearch ||
     subjects.length > 0 ||
     family !== null ||
+    categoryCollection !== null ||
     quickView !== 'all';
 
   // Build filters for the grid query depending on the active quick view.
@@ -87,11 +89,12 @@ export function SceneCatalogModal({
       search: debouncedSearch,
       subjects,
       family,
+      categoryCollection,
       sort,
     };
     if (quickView === 'new') return { ...base, sort: 'new' as const };
     return base;
-  }, [debouncedSearch, subjects, family, sort, quickView]);
+  }, [debouncedSearch, subjects, family, categoryCollection, sort, quickView]);
 
   // Default rails (only when no filters AND quickView === 'all')
   const showRails = !anyFilterActive;
@@ -149,19 +152,26 @@ export function SceneCatalogModal({
 
   const handleSelectFamily = (next: string | null) => {
     setFamily(next);
+    if (next === null) setCategoryCollection(null);
+    else if (next !== family) setCategoryCollection(null);
+    setQuickView('all');
+  };
+
+  const handleSelectCategoryCollection = (slug: string | null) => {
+    setCategoryCollection(slug);
     setQuickView('all');
   };
 
   const handleSelectQuickView = (view: QuickView) => {
     setQuickView(view);
     if (view !== 'all') {
-      // entering a focused view: clear other filters except subjects (still useful)
       setFamily(null);
+      setCategoryCollection(null);
     }
     if (view === 'all') {
-      // "All scenes" clears everything
       setSubjects([]);
       setFamily(null);
+      setCategoryCollection(null);
       setSearch('');
       setDebouncedSearch('');
       setSort('recommended');
@@ -171,6 +181,7 @@ export function SceneCatalogModal({
   const clearAll = () => {
     setSubjects([]);
     setFamily(null);
+    setCategoryCollection(null);
     setSearch('');
     setDebouncedSearch('');
     setSort('recommended');
@@ -270,12 +281,13 @@ export function SceneCatalogModal({
           <SceneCatalogSidebar
             counts={counts.data}
             selectedFamily={family}
+            selectedCategoryCollection={categoryCollection}
             selectedSubjects={subjects}
             quickView={quickView}
             recommendedCount={recommended.data?.length}
             newCount={newCount}
             onSelectFamily={handleSelectFamily}
-            onToggleSubject={handleToggleSubject}
+            onSelectCategoryCollection={handleSelectCategoryCollection}
             onSelectQuickView={handleSelectQuickView}
           />
 
