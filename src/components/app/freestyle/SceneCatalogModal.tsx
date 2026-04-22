@@ -255,13 +255,13 @@ export function SceneCatalogModal({
         className={cn(
           'p-0 gap-0 flex flex-col',
           isMobile
-            ? 'h-[100vh] w-full max-w-none rounded-none'
+            ? 'h-[100dvh] w-full max-w-none rounded-none'
             : 'w-[92vw] max-w-[1500px] sm:max-w-[1500px]',
         )}
       >
         {/* Header */}
-        <header className="flex items-start justify-between px-4 sm:px-6 py-4 border-b border-border/40">
-          <div>
+        <header className="flex items-start justify-between px-4 sm:px-6 py-4 pr-12 sm:pr-6 border-b border-border/40">
+          <div className="min-w-0">
             <h2 className="text-lg font-semibold text-foreground">Select Scene</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               Find the right shot for your product — 1,200+ curated scenes.
@@ -279,7 +279,7 @@ export function SceneCatalogModal({
           anyActive={anyFilterActive}
           sort={sort}
           onSortChange={setSort}
-          showMobileFiltersBtn={false}
+          onOpenMobileFilters={() => setMobileFiltersOpen(true)}
         />
 
         {/* Body: sidebar + content */}
@@ -296,6 +296,28 @@ export function SceneCatalogModal({
             onSelectCategoryCollection={handleSelectCategoryCollection}
             onSelectQuickView={handleSelectQuickView}
           />
+
+          {/* Mobile filter drawer */}
+          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+            <SheetContent side="left" className="p-0 w-[85vw] max-w-[320px] lg:hidden">
+              <div className="h-full overflow-y-auto pt-12">
+                <SceneCatalogSidebar
+                  mobileMode
+                  onAfterSelect={() => setMobileFiltersOpen(false)}
+                  counts={counts.data}
+                  selectedFamily={family}
+                  selectedCategoryCollection={categoryCollection}
+                  selectedSubjects={subjects}
+                  quickView={quickView}
+                  recommendedCount={recommended.data?.length}
+                  newCount={newCount}
+                  onSelectFamily={handleSelectFamily}
+                  onSelectCategoryCollection={handleSelectCategoryCollection}
+                  onSelectQuickView={handleSelectQuickView}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
 
           <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
             <div className="px-4 sm:px-6 py-4 space-y-4">
