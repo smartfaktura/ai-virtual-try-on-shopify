@@ -12,6 +12,7 @@ import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle } from 'lucide
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toast } from 'sonner';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
@@ -268,8 +269,10 @@ export default function ImportFromScenesModal({
                       <div className="flex items-center gap-1.5">
                         {(scene.preview_image_url || scene.image_url) && (
                           <img
-                            src={scene.preview_image_url || scene.image_url}
+                            src={getOptimizedUrl(scene.preview_image_url || scene.image_url, { width: 96, quality: 60 })}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="w-8 h-8 rounded object-cover shrink-0"
                           />
                         )}
@@ -378,7 +381,13 @@ export default function ImportFromScenesModal({
                 <div key={id} className="border rounded-lg p-3 space-y-3">
                   <div className="flex items-center gap-2">
                     {config.preview_image_url && (
-                      <img src={config.preview_image_url} alt="" className="w-10 h-10 rounded object-cover" />
+                      <img
+                        src={getOptimizedUrl(config.preview_image_url, { width: 120, quality: 60 })}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="w-10 h-10 rounded object-cover"
+                      />
                     )}
                     <div className="flex-1">
                       <p className="text-sm font-semibold">{scene?.name}</p>
