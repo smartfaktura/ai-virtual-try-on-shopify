@@ -1474,6 +1474,7 @@ export type Database = {
       }
       recommended_scenes: {
         Row: {
+          category: string | null
           created_at: string
           created_by: string
           id: string
@@ -1481,6 +1482,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          category?: string | null
           created_at?: string
           created_by: string
           id?: string
@@ -1488,6 +1490,7 @@ export type Database = {
           sort_order?: number
         }
         Update: {
+          category?: string | null
           created_at?: string
           created_by?: string
           id?: string
