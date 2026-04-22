@@ -929,7 +929,7 @@ export default function Freestyle() {
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {/* Scrollable content area */}
-      <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
+      <div className="flex-1 md:h-full overflow-y-auto pt-[5rem] md:pt-3 pb-4 md:pb-72">
         <div className="px-3 lg:px-1 space-y-2 mb-2">
           {balance < 4 && (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3">
@@ -1080,9 +1080,9 @@ export default function Freestyle() {
             />
           </>
         ) : (
-          <div className="flex flex-col justify-end h-full pb-16 lg:pb-20">
-            <div className="px-0 sm:px-8 sm:pr-16 lg:pr-20">
-              <div className="lg:max-w-2xl lg:mx-auto">
+          <div className="flex flex-col justify-end h-full pb-16 md:pb-20">
+            <div className="px-0 sm:px-8 md:px-8 md:pr-20">
+              <div className="md:max-w-2xl md:mx-auto">
                 <FreestyleQuickPresets
                   onSelect={handlePresetSelect}
                   activeSceneId={activeScenePresetId}
@@ -1096,11 +1096,11 @@ export default function Freestyle() {
       </div>
 
       {/* Prompt panel - single instance for all screen sizes */}
-      <div className="flex-shrink-0 relative z-20 -mt-4 lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
+      <div className="flex-shrink-0 relative z-20 -mt-4 md:mt-0 md:absolute md:bottom-0 md:left-0 md:right-0">
         {/* Desktop gradient fade */}
-        <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
-        <div className={cn("px-0 sm:px-8 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20", isPromptCollapsed ? "pb-2" : "pb-4 sm:pb-6")}>
-          <div className="lg:max-w-2xl lg:mx-auto lg:pointer-events-auto relative z-20">
+        <div className="hidden md:block absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
+        <div className={cn("px-0 sm:px-8 md:px-8 md:pt-2 md:pointer-events-none md:pr-20", isPromptCollapsed ? "pb-2" : "pb-4 sm:pb-6")}>
+          <div className="md:max-w-2xl md:mx-auto md:pointer-events-auto relative z-20">
             {showSceneHint && selectedScene && (
               <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
