@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScenes';
 import ImportFromScenesModal from '@/components/app/ImportFromScenesModal';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -182,6 +183,7 @@ function subCategorySummary(scenes: DbScene[]): string {
 export default function AdminProductImageScenes() {
   const { isAdmin } = useIsAdmin();
   const { rawScenes, isLoading, updateScene, upsertScene, deleteScene } = useProductImageScenes({ includePromptTemplate: true, includeInactive: true });
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showHidden, setShowHidden] = useState(false);
   const [previewCategory, setPreviewCategory] = useState<string>('__all__');
@@ -381,10 +383,68 @@ export default function AdminProductImageScenes() {
     }
   };
 
+  // Helpers for instant reordering: optimistic cache update + batched DB writes + single invalidation.
+  const SCENE_QUERY_PREFIXES = [
+    ['product-image-scenes'],
+    ['product-image-scenes-priority'],
+    ['product-image-scenes-rest'],
+  ];
+
+  const applyOptimisticSortUpdate = (
+    updates: { id: string; sort_order?: number; sub_category_sort_order?: number }[],
+  ) => {
+    const byId = new Map(updates.map(u => [u.id, u]));
+    SCENE_QUERY_PREFIXES.forEach(prefix => {
+      queryClient.setQueriesData<DbScene[] | undefined>({ queryKey: prefix }, (old) => {
+        if (!Array.isArray(old)) return old;
+        let changed = false;
+        const next = old.map(s => {
+          const u = byId.get(s.id);
+          if (!u) return s;
+          changed = true;
+          return {
+            ...s,
+            ...(u.sort_order !== undefined ? { sort_order: u.sort_order } : {}),
+            ...(u.sub_category_sort_order !== undefined ? { sub_category_sort_order: u.sub_category_sort_order } : {}),
+          };
+        });
+        return changed ? next : old;
+      });
+    });
+  };
+
+  const invalidateAllSceneQueries = () => {
+    SCENE_QUERY_PREFIXES.forEach(prefix => {
+      queryClient.invalidateQueries({ queryKey: prefix });
+    });
+  };
+
+  const writeSortUpdates = async (
+    updates: { id: string; sort_order?: number; sub_category_sort_order?: number }[],
+  ) => {
+    if (updates.length === 0) return;
+    // Optimistic UI first
+    applyOptimisticSortUpdate(updates);
+    // Direct DB writes — bypass useMutation so we control invalidation timing
+    const writes = updates.map(u => {
+      const patch: Record<string, number> = {};
+      if (u.sort_order !== undefined) patch.sort_order = u.sort_order;
+      if (u.sub_category_sort_order !== undefined) patch.sub_category_sort_order = u.sub_category_sort_order;
+      return supabase
+        .from('product_image_scenes' as any)
+        .update(patch as any)
+        .eq('id', u.id);
+    });
+    const results = await Promise.all(writes);
+    const firstErr = results.find(r => r.error)?.error;
+    if (firstErr) throw firstErr;
+    // Single invalidation AFTER all writes commit — eliminates the read-before-write race
+    invalidateAllSceneQueries();
+  };
+
   const handleMove = async (scene: DbScene, direction: 'up' | 'down') => {
     const key = normalizeCat(scene.category_collection);
     const allInCategory = grouped.get(key) || [];
-    // Filter to same sub_category only
     const subKey = scene.sub_category || '';
     const subGroup = allInCategory
       .filter(s => (s.sub_category || '') === subKey)
@@ -397,32 +457,28 @@ export default function AdminProductImageScenes() {
     const a = subGroup[idx];
     const b = subGroup[swapIdx];
 
-    // If sort_order values are equal, normalize the entire sub-group first
-    let orderA = b.sort_order;
-    let orderB = a.sort_order;
+    const updates: { id: string; sort_order: number }[] = [];
+
     if (a.sort_order === b.sort_order) {
-      // Re-index sequentially then swap
+      // Re-index sequentially, then swap a and b
       const baseOrder = Math.min(...subGroup.map(s => s.sort_order ?? 0));
-      const updates: Promise<any>[] = [];
       subGroup.forEach((s, i) => {
         const newOrder = baseOrder + i;
-        if (s.sort_order !== newOrder) {
-          updates.push(updateScene.mutateAsync({ id: s.id, updates: { sort_order: newOrder } }));
-        }
+        if (s.sort_order !== newOrder) updates.push({ id: s.id, sort_order: newOrder });
       });
-      if (updates.length > 0) await Promise.all(updates);
-      // After normalization, recalculate swap values
-      orderA = baseOrder + swapIdx;
-      orderB = baseOrder + idx;
+      // Now swap
+      updates.push({ id: a.id, sort_order: baseOrder + swapIdx });
+      updates.push({ id: b.id, sort_order: baseOrder + idx });
+    } else {
+      updates.push({ id: a.id, sort_order: b.sort_order });
+      updates.push({ id: b.id, sort_order: a.sort_order });
     }
 
     try {
-      await Promise.all([
-        updateScene.mutateAsync({ id: a.id, updates: { sort_order: orderA } }),
-        updateScene.mutateAsync({ id: b.id, updates: { sort_order: orderB } }),
-      ]);
+      await writeSortUpdates(updates);
     } catch (e: any) {
       toast.error(e.message);
+      invalidateAllSceneQueries(); // rollback optimistic
     }
   };
 
@@ -437,19 +493,18 @@ export default function AdminProductImageScenes() {
     if (subGroup.length === 0 || subGroup[0].id === scene.id) return;
 
     const baseOrder = Math.min(...subGroup.map(s => s.sort_order ?? 0));
-    // Reorder: target first, others after in their existing relative order
     const reordered = [scene, ...subGroup.filter(s => s.id !== scene.id)];
-    const updates: Promise<any>[] = [];
+    const updates: { id: string; sort_order: number }[] = [];
     reordered.forEach((s, i) => {
       const newOrder = baseOrder + i;
-      if (s.sort_order !== newOrder) {
-        updates.push(updateScene.mutateAsync({ id: s.id, updates: { sort_order: newOrder } }));
-      }
+      if (s.sort_order !== newOrder) updates.push({ id: s.id, sort_order: newOrder });
     });
+
     try {
-      if (updates.length > 0) await Promise.all(updates);
+      await writeSortUpdates(updates);
     } catch (e: any) {
       toast.error(e.message);
+      invalidateAllSceneQueries();
     }
   };
 
@@ -464,23 +519,20 @@ export default function AdminProductImageScenes() {
     const b = subGroups[swapIdx];
     const newOrderA = b.sortOrder;
     const newOrderB = a.sortOrder;
-    // If both have the same sortOrder, force different values
     const finalA = newOrderA === newOrderB ? (direction === 'up' ? newOrderB - 1 : newOrderB + 1) : newOrderA;
-    const finalB = newOrderA === newOrderB ? newOrderB : newOrderB;
+    const finalB = newOrderB;
 
-    // Bulk update all scenes in both sub-categories
-    const scenesA = a.scenes.map(s => s.id);
-    const scenesB = b.scenes.map(s => s.id);
+    const updates: { id: string; sub_category_sort_order: number }[] = [
+      ...a.scenes.map(s => ({ id: s.id, sub_category_sort_order: finalA })),
+      ...b.scenes.map(s => ({ id: s.id, sub_category_sort_order: finalB })),
+    ];
+
     try {
-      await Promise.all([
-        supabase.from('product_image_scenes' as any).update({ sub_category_sort_order: finalA } as any).in('id', scenesA),
-        supabase.from('product_image_scenes' as any).update({ sub_category_sort_order: finalB } as any).in('id', scenesB),
-      ]);
-      // Invalidate queries
-      await updateScene.mutateAsync({ id: scenesA[0], updates: { sub_category_sort_order: finalA } });
+      await writeSortUpdates(updates);
       toast.success('Sub-category order updated');
     } catch (e: any) {
       toast.error(e.message);
+      invalidateAllSceneQueries();
     }
   };
 
