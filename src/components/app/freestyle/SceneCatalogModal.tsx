@@ -63,6 +63,30 @@ export function SceneCatalogModal({
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
   const [pendingLegacy, setPendingLegacy] = useState<TryOnPose | null>(null);
 
+  // Client-side pagination for the default interleaved view.
+  const PAGE_SIZE = 24;
+  const [visiblePageCount, setVisiblePageCount] = useState(1);
+
+  // Ref to the Radix ScrollArea viewport so we can reset scroll on section changes.
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const scrollAreaRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) {
+      viewportRef.current = null;
+      return;
+    }
+    viewportRef.current = node.querySelector(
+      '[data-radix-scroll-area-viewport]',
+    ) as HTMLDivElement | null;
+  }, []);
+
+  // Reset scroll + visible page count whenever the user changes section/filter/sort.
+  useEffect(() => {
+    setVisiblePageCount(1);
+    if (viewportRef.current) {
+      viewportRef.current.scrollTo({ top: 0 });
+    }
+  }, [quickView, family, categoryCollection, subjects, debouncedSearch, sort]);
+
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
