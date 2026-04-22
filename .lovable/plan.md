@@ -1,44 +1,62 @@
 
 
-## Why your Product Images generation didn't show up
+## Safe fix — Product Images scene tracking (no risk to generation)
 
-### Root cause
+### Goal
 
-The `/app/generate/product-images` flow correctly sends `scene_name: "Frozen Aura"` to the queue, but **never sends `scene_id`**. The edge function (`generate-workflow`) writes:
+Make `/app/admin/scene-performance` show Product Images generations, without touching the generation pipeline itself.
 
-```ts
-scene_id: payload.pose?.id ?? payload.scene_id ?? null
-```
+### Why it's safe
 
-Both are undefined → row is saved with `scene_id = NULL`. The `scene_usage_unified` view filters out NULL scene_ids, so the dashboard doesn't see it.
+- **No change to how images are generated.** We only fix how `scene_id` is *recorded* into `generation_jobs`.
+- **No change to `process-queue`, no change to AI calls, no change to credits/refunds.**
+- **No schema changes.** Just a small, defensive read of `payload.scene_id` in one edge function.
+- **No frontend changes** (the previous fix already sends `scene_id` in the payload — confirmed in `generation_queue` rows).
+- **Backfill is a pure UPDATE** that only writes `scene_id` where it is currently `NULL` — it cannot break existing rows or affect images.
 
-Verified in DB: your 19:20 UTC job has `scene_name = "Frozen Aura"` but `scene_id = NULL`. Same for all the 11:37 UTC jobs from earlier today.
+### What changes (minimal)
 
-### Fix (one file, ~1 line)
+1. **`supabase/functions/generate-workflow/index.ts`** — one defensive line right before the `generation_jobs` insert:
 
-**`src/pages/ProductImages.tsx`** — in the payload built around line 729, add the missing `scene_id`:
+   ```ts
+   const sceneIdForJob =
+     (payload as any)?.scene_id ??
+     (payload as any)?.pose?.id ??
+     (payload as any)?.scene?.id ??
+     null;
+   ```
 
-```ts
-scene_name: scene.title,
-scene_id: scene.id,   // ← ADD THIS
-```
+   Then use `scene_id: sceneIdForJob` in the insert. This guarantees the value from `generation_queue.payload.scene_id` is persisted.
 
-That's it. The edge function already reads `payload.scene_id` as a fallback — no edge function changes needed.
+2. **One-time backfill (data only)** — match `generation_jobs.scene_name` → `product_image_scenes.title` to recover today's missed Product Images rows:
 
-### Bonus: backfill today's untracked rows (optional)
+   ```sql
+   UPDATE public.generation_jobs gj
+   SET scene_id = pis.scene_id
+   FROM public.product_image_scenes pis
+   WHERE gj.scene_id IS NULL
+     AND gj.scene_name IS NOT NULL
+     AND lower(gj.scene_name) = lower(pis.title);
+   ```
 
-Since we already know `scene_name → scene_id` mapping exists for today's rows (they were generated against `product_image_scenes`), I can run a small data migration to backfill `scene_id` for the 5 jobs from today by matching on `scene_name`. This rescues the rows you've already generated so they appear on the dashboard.
+   Only fills NULLs. Cannot overwrite existing data. Cannot affect images, credits, or generation.
 
-If you'd rather keep the truly fresh start (only the Sun Lounger row from earlier), I'll skip the backfill.
+### What is NOT touched
+
+- `process-queue`, `enqueue-generation`, `generate-tryon`, `generate-freestyle`, `generate-catalog` — untouched.
+- `generation_queue` rows — untouched.
+- `freestyle_generations` — untouched (already works).
+- Credits, RLS, triggers, cron, frontend — untouched.
+
+### Rollback plan (if anything looks off)
+
+- Edge function: revert the single `sceneIdForJob` line — generation continues working exactly as before.
+- Backfill: re-run `UPDATE generation_jobs SET scene_id = NULL WHERE …` for the same window if you want a clean slate again.
 
 ### Validation
 
-1. Generate any new image via Product Images → row appears on `/app/admin/scene-performance` within seconds with proper name + thumbnail.
-2. (If backfill chosen) Today's 5 untracked Product Images rows also appear.
-
-### Untouched
-
-- No edge function changes, no DB schema changes.
-- `freestyle_generations` was always correct (Freestyle does pass `scene_id`).
-- All other workflows (`generate-tryon`, `generate-catalog`) were already correct — they pass `pose.id`.
+1. Generate 1 image via `/app/generate/product-images`.
+2. Confirm new `generation_jobs` row has non-null `scene_id`.
+3. Reload `/app/admin/scene-performance` → scene appears with name + thumbnail.
+4. Today's previously-missed Product Images rows also appear (from backfill).
 
