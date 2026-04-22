@@ -285,19 +285,8 @@ export function SceneCatalogModal({
                   />
                   <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
                   <SceneCatalogGrid
-                    pages={(() => {
-                      const pages = grid.data?.pages ?? [];
-                      // Only pin admin Originals at the top under Recommended sort,
-                      // when no subject chip is active. Newest sort = pure created_at DESC.
-                      const canMergeOriginals =
-                        sort === 'recommended' &&
-                        subjects.length === 0 &&
-                        originalScenes.length > 0;
-                      if (!canMergeOriginals) return pages;
-                      const [first = [], ...rest] = pages;
-                      return [[...originalScenes, ...first], ...rest];
-                    })()}
-                    isLoading={grid.isLoading || customScenesQuery.isLoading}
+                    pages={grid.data?.pages ?? []}
+                    isLoading={grid.isLoading}
                     isFetchingNextPage={grid.isFetchingNextPage}
                     hasNextPage={!!grid.hasNextPage}
                     onLoadMore={() => grid.fetchNextPage()}
