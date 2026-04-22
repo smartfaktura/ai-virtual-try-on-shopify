@@ -98,6 +98,7 @@ export function FreestyleSettingsChips({
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
+  const [advancedOpenState, setAdvancedOpenState] = React.useState(false);
 
   // --- Shared chip renderers ---
 
