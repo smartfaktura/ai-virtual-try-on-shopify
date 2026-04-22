@@ -1,70 +1,46 @@
 
 
-## Two surgical fixes for the Scenes modal
+## Merge Freestyle Originals into the main grid
 
-### 1. Show admin Custom Scenes first (above Recommended)
+Two issues to fix:
 
-Today the modal opens to: **Recommended for you** carousel → full Freestyle catalog grid. The 134 active rows admins curate at `/app/admin/scenes` (`custom_scenes` table) are loaded only to resolve `cs-` selections — they never render.
+### 1. Merge Freestyle Originals into the main Freestyle Scenes grid
+
+Today admin-curated `custom_scenes` render as a **separate section** above Recommended (carousel or sub-grid). You want them mixed into the **same pool** as the rest of the catalog so users see one unified grid.
 
 Fix in `SceneCatalogModal.tsx`:
 
-- Add a new top section **"Freestyle Originals"** above the Recommended rail.
-- Source: `useCustomScenes()` (already wired). Adapt each `CustomScene` row into the `CatalogScene` shape the rail/grid expect, with `id = cs-<uuid>`, `scene_id = <uuid>`, `preview_image_url = preview_image_url || optimized_image_url || image_url`, `prompt_template = prompt_hint`.
-- Render as a **grid** (`SceneCatalogGrid`) when ≤24 items so the user sees them all immediately — no carousel hiding. Above ~24 items, switch to the `SceneCatalogRail` carousel pattern. (134 today → grid view with the existing 2/3/4 col responsive layout, height capped via the existing scrollable parent.)
-- Selection already routes correctly via the existing `cs-` branch in `handleSelect` → `onSelectLegacy` (no generation-pipeline change).
-- Hidden when any filter or search is active (same rule as Recommended), so the filtered grid stays clean.
+- Remove the dedicated "Freestyle Originals" section entirely (both the rail variant and the grid variant).
+- Prepend `originalScenes` to the **first page** of the Freestyle Scenes grid, so they appear at the top of the same grid.
+- Selection logic already handles `cs-` IDs correctly via `handleSelect` → no change.
+- Order on default view becomes:
+  ```
+  Recommended for you      ← carousel
+  Freestyle Scenes         ← Freestyle Originals + full catalog (one grid)
+  ```
+- When filters/search are active: only the filtered catalog grid shows (originals hidden, same as today's behaviour for filters).
 
-New default order:
-```
-Freestyle Originals        ← admin /app/admin/scenes (134)
-Recommended for you        ← per-category carousel (≤12)
-Freestyle Scenes           ← full paged catalog grid
-```
+### 2. Fix the "doesn't fit screen" styling bug
 
-### 2. Show real total — fix the 1,000-row cap on counts
+The user reports the modal layout overflows / clips at 1328×818. Likely cause: the merged grid section now sits inside a flex column with `space-y-4` but the inner `<div className="space-y-2">` wrapper around the heading + grid creates an extra nested block that, combined with the rail above, pushes the grid below the fold without proper scroll inheritance.
 
-Symptom: sidebar "All scenes" shows **1000**; DB has **1,613** active (1,236 after excluding essentials). Even though `useSceneCounts` already requests `.range(0, 4999)`, PostgREST enforces a project-level `max_rows: 1000` ceiling that overrides the requested range — that's why it still caps.
-
-Fix: page the count query in `src/hooks/useSceneCounts.ts`. Loop in 1,000-row windows until a page returns <1,000:
-
-```ts
-const all: Row[] = [];
-let page = 0;
-while (true) {
-  const { data, error } = await supabase
-    .from('product_image_scenes')
-    .select('subject, shot_style, setting, category_collection, sub_category')
-    .eq('is_active', true)
-    .not('sub_category', 'ilike', '%essential%')
-    .range(page * 1000, page * 1000 + 999);
-  if (error) throw error;
-  all.push(...(data ?? []));
-  if (!data || data.length < 1000) break;
-  page++;
-  if (page > 9) break; // hard safety cap (10k rows max)
-}
-```
-
-Net: sidebar "All scenes" reflects the true count (~1,236 after essentials excluded), per-family counts roll up correctly. Single load, ~80 KB total over the wire, cached 10 min — cheap.
-
-Also update the modal subtitle copy in `SceneCatalogModal.tsx`:
-> "Find the right shot for your product — over 1,000 curated scenes."
-→ "Find the right shot for your product — 1,200+ curated scenes."
+Fix:
+- Remove the redundant `<div className="space-y-2">` wrapper around the Freestyle Scenes heading + grid; render heading + grid as direct siblings of the body's `space-y-4` flex.
+- Confirm the parent `ScrollArea` has `flex-1 min-h-0` so the inner content actually scrolls inside the modal rather than expanding it.
+- Recommended rail container should not enforce a min-height that pushes the grid off-screen — leave rail height to its cards.
 
 ### Files touched
 
-- `src/components/app/freestyle/SceneCatalogModal.tsx` — render new "Freestyle Originals" section above Recommended (grid when ≤24, rail otherwise); update subtitle copy.
-- `src/hooks/useSceneCounts.ts` — paginated count fetch to bypass the PostgREST 1k cap.
+- `src/components/app/freestyle/SceneCatalogModal.tsx` — drop the Freestyle Originals section; prepend `originalScenes` to grid pages; tighten the body wrapper.
 
 ### Untouched
 
-DB schema, RLS, generation pipeline, `useCustomScenes`, `useRecommendedScenes`, sidebar, filters, admin pages.
+`useCustomScenes`, `useRecommendedScenes`, `useSceneCatalog`, sidebar, filters, card design, generation pipeline, DB.
 
 ### Validation
 
-- Open `/app/freestyle` Scenes modal → top section is **Freestyle Originals** showing every active row from `/app/admin/scenes` (currently 134), as a grid.
-- Below it: **Recommended for you** carousel → **Freestyle Scenes** full paged grid.
-- Sidebar "All scenes" shows the real total (≈1,236 with essentials excluded), not 1000. Family counts add up.
-- Picking a Freestyle Original generates with the existing legacy `TryOnPose` payload (no regression).
-- Applying any filter/search collapses both top sections and shows only the filtered grid (today's behaviour preserved).
+- Open Scenes modal → only two sections: **Recommended for you** rail, then **Freestyle Scenes** grid. The first cards in the grid are admin-curated `custom_scenes` (the originals), followed seamlessly by the full catalog.
+- Modal fits the 1328×818 viewport: header + filter bar + recommended rail + first row of grid all visible above the fold; remaining cards scroll inside the modal, not the page.
+- Picking an original still routes through the legacy `TryOnPose` handoff (no regression).
+- Filters/search hide the recommended rail and show only the filtered catalog grid (originals not injected when filters are active).
 
