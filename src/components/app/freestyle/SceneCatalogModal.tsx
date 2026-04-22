@@ -296,19 +296,24 @@ export function SceneCatalogModal({
             onSelectQuickView={handleSelectQuickView}
           />
 
-          <ScrollArea className="flex-1 min-h-0">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
             <div className="px-4 sm:px-6 py-4 space-y-4">
-              {showRails ? (
-                <SceneCatalogGrid
-                  pages={interleavedGrid.data?.pages ?? []}
-                  isLoading={interleavedGrid.isLoading}
-                  isFetchingNextPage={false}
-                  hasNextPage={false}
-                  onLoadMore={() => {}}
-                  selectedSceneId={currentSelectedId}
-                  onSelect={handleSelect}
-                />
-              ) : quickView === 'recommended' ? (
+              {showRails ? (() => {
+                const fullList = interleavedGrid.data?.pages?.[0] ?? [];
+                const visible = fullList.slice(0, visiblePageCount * PAGE_SIZE);
+                const hasMore = fullList.length > visible.length;
+                return (
+                  <SceneCatalogGrid
+                    pages={[visible]}
+                    isLoading={interleavedGrid.isLoading}
+                    isFetchingNextPage={false}
+                    hasNextPage={hasMore}
+                    onLoadMore={() => setVisiblePageCount(c => c + 1)}
+                    selectedSceneId={currentSelectedId}
+                    onSelect={handleSelect}
+                  />
+                );
+              })() : quickView === 'recommended' ? (
                 <SceneCatalogGrid
                   pages={[recommendedScenes]}
                   isLoading={recommended.isLoading}
