@@ -1,40 +1,43 @@
 
 
-## Copy High Heels scenes into Shoes (excluding Essential Shots)
+## Remove "Other / Custom" category — fall back to Clothing & Apparel
 
-Duplicate the 27 non-Essential-Shots scenes from `high-heels` into the `shoes` category, with renamed titles, scene_ids and sub-categories so "heel/heels" becomes "shoe/shoes".
+### Problem
+The "Other / Custom" category exists in the admin scene library but has no real product-category fit on the user side. When a product doesn't match any specific category, the wizard should default to **Clothing & Apparel** (the most universal scene set) instead of routing through "Other / Custom".
 
-### Scope (27 scenes across 4 sub-categories)
+### Changes
 
-- **Editorial Heel Studio → Editorial Shoe Studio** (11 scenes)
-- **Leg-Line Poses → Leg-Line Poses** (4 scenes — kept as-is, no "heel" wording)
-- **Social Lifestyle Heel Moments → Social Lifestyle Shoe Moments** (4 scenes)
-- **Luxury Still Life → Luxury Still Life** (5+ scenes — kept as-is)
+**1. Data migration (single SQL UPDATE)**
+Reassign every scene currently in the `other` collection to `garments` (Clothing & Apparel), preserving sub-categories, sort order, prompts, and previews:
 
-Essential Shots (9 rows) are skipped — Shoes already has its own.
+```sql
+UPDATE product_image_scenes
+SET category_collection = 'garments',
+    updated_at = now()
+WHERE category_collection = 'other';
+```
 
-### How it works (single SQL INSERT … SELECT)
+After this runs, the "Other / Custom" tab disappears from `/app/admin/product-image-scenes` automatically (the admin builds its category list from the data).
 
-For each row in `high-heels` where `sub_category != 'Essential Shots'`:
+**2. Code fallback — category resolver**
+Find the wizard logic that maps a product's analyzed category to a scene `category_collection` (likely in the product analysis / category normalization layer or `useProductImageScenes` consumers). Wherever the code currently resolves to `'other'` as a last-resort bucket, change it to `'garments'`.
 
-1. Copy every column except `id`, `created_at`, `updated_at` (regenerated).
-2. Rewrite text fields with case-preserving replacements applied in order:
-   - `High Heels` → `Shoes`, `high heels` → `shoes`
-   - `High Heel` → `Shoe`, `high heel` → `shoe`
-   - `Heels` → `Shoes`, `heels` → `shoes`
-   - `Heel` → `Shoe`, `heel` → `shoe`
-   - Apply to: `title`, `description`, `prompt_template`, `sub_category`, `outfit_hint`.
-3. Rewrite `scene_id`: replace `highheels` / `high-heels` / `-heel-` / `heel-` / `-heel` tokens with `shoes` / `shoe` equivalents, then prefix with `shoes-` if the resulting id collides with an existing scene_id (guaranteed unique via a `WHERE NOT EXISTS` guard + `-v2` suffix fallback).
-4. Set `category_collection = 'shoes'`. Keep `sort_order`, `category_sort_order`, `sub_category_sort_order`, `trigger_blocks`, `suggested_colors`, `preview_image_url`, `is_active`, `scene_type`, `requires_extra_reference`, `use_scene_reference` identical to source.
+Touchpoints to inspect & patch:
+- `src/lib/categoryConstants.ts` — remove any `'other'` references / mappings
+- `src/components/app/product-images/sceneData.ts` — fallback category default
+- `supabase/functions/analyze-product-category/*` — if it ever returns `other`, normalize to `garments`
+- Any `COLLECTION_MERGE` or category-resolver helper that funnels unknown categories into `other`
+
+**3. Admin UI label map**
+Remove `other: 'Other / Custom'` from the `TITLE_MAP` in `src/hooks/useProductImageScenes.ts` (cosmetic — no rows will reference it after step 1, but cleaner).
 
 ### Validation
-- `/app/admin/product-image-scenes` → Shoes: 27 new scenes appear under sub-categories "Editorial Shoe Studio", "Leg-Line Poses", "Social Lifestyle Shoe Moments", "Luxury Still Life".
-- Shoes' existing "Essential Shots" and "Fashion Editorial" sub-categories are untouched.
-- High Heels category is untouched (originals preserved).
-- Open one new scene → title and prompt mention "shoe/shoes", not "heel/heels".
+- `/app/admin/product-image-scenes` → "Other / Custom" tab is gone; its scenes now appear under "Clothing & Apparel" (in their original sub-categories).
+- Upload a product that doesn't match any specific category → wizard opens Clothing & Apparel scenes by default.
+- Existing products / generations are unaffected (scene IDs don't change, only their parent collection).
 
 ### Out of scope
-- No code, schema, RLS, or UI changes.
-- No deletion of source High Heels scenes.
-- No edits to preview thumbnails — they're reused as-is from High Heels (you can override later in admin if desired).
+- Not deleting any scenes — just rehoming them.
+- No prompt template, RLS, or schema changes.
+- Per-scene `sub_category` values stay as-is (e.g. an "Other / Custom" scene called "Generic Tabletop" will appear under Clothing & Apparel with its current sub-category label — say the word if you want me to rename or merge those sub-categories too).
 
