@@ -259,6 +259,7 @@ export function FreestyleSettingsChips({
 
   const sceneChip = (
     <div className={cn(
+      'w-full',
       disabledChips?.scene && 'opacity-40 pointer-events-none'
     )}>
       <SceneSelectorChip
