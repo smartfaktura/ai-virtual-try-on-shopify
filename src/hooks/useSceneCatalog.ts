@@ -1,13 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import {
-  CATEGORY_FAMILY_MAP,
-  interleaveByFamily,
-  interleaveByFamilyAndSubFamily,
-  interleaveBySubFamily,
-  resolveUserCollections,
-} from '@/lib/sceneTaxonomy';
+import { CATEGORY_FAMILY_MAP, FAMILY_ORDER } from '@/lib/sceneTaxonomy';
 
 export interface CatalogScene {
   id: string;
@@ -104,9 +97,9 @@ function applyFilters(query: any, filters: SceneCatalogFilters) {
 /**
  * Infinite paged scene query. Used in filtered / search mode.
  *
- * When a family filter is active, we fetch the page then locally re-rank rows so
- * any sub_category containing "essential" sinks to the bottom — this matches the
- * UX requirement without needing a custom RPC.
+ * Order is pure `sort_order ASC` — admins control everything from one place
+ * via the star button on `/app/admin/recommended-scenes` (featured scenes get
+ * negative `sort_order` so they float to the top of their sub-family).
  */
 export function useSceneCatalog(filters: SceneCatalogFilters, enabled = true) {
   return useInfiniteQuery({
@@ -121,26 +114,7 @@ export function useSceneCatalog(filters: SceneCatalogFilters, enabled = true) {
       q = applyFilters(q, filters).range(start, end);
       const { data, error } = await q;
       if (error) throw error;
-      const rows = (data ?? []) as CatalogScene[];
-
-      // Sub-family round-robin: when a family filter is active (no specific
-      // sub-family selected), rotate scenes across sub-families on each page so
-      // the user sees variety (one shirt, one dress, one jeans…) instead of
-      // a long cluster from a single sub-family.
-      const familyFilteredRows =
-        filters.family && !filters.categoryCollection
-          ? interleaveBySubFamily(rows)
-          : rows;
-
-      if (filters.family) {
-        // Stable sort: non-essentials first, essentials last.
-        return [...familyFilteredRows].sort((a, b) => {
-          const aE = a.sub_category?.toLowerCase().includes('essential') ? 1 : 0;
-          const bE = b.sub_category?.toLowerCase().includes('essential') ? 1 : 0;
-          return aE - bE;
-        });
-      }
-      return familyFilteredRows;
+      return (data ?? []) as CatalogScene[];
     },
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < PAGE_SIZE ? undefined : allPages.length,
@@ -171,63 +145,24 @@ export function useSceneRail(
 }
 
 /**
- * One-shot fetch of the active scene catalog, ordered for the default "All scenes" view.
+ * One-shot fetch of the active scene catalog for the default "All scenes" view.
  *
- * Order:
- *   1. Admin curated picks from `recommended_scenes` (Global + matching user
- *      product_categories), in admin's saved order.
- *   2. Sub-family-aware interleave across the catalog: round-robin one item per
- *      sub-family within each family, then 2-by-2 across families in FAMILY_ORDER.
- *   3. Long tail (anything left) keeps original sort_order.
+ * Order is dead simple and 100% admin-controlled via `sort_order`:
+ *   For each family in FAMILY_ORDER:
+ *     show that family's scenes ordered by sort_order ASC
+ *     (admins "star" scenes from /app/admin/recommended-scenes which sets
+ *      sort_order to a small negative number → starred ones come first)
+ *   Unknown families are appended at the end.
  *
- * Cached 10 min per user. Returns pages-shaped data for <SceneCatalogGrid>.
+ * No interleaving, no joins, no per-user personalisation. Predictable.
  */
 export function useInterleavedSceneCatalog(enabled = true, _chunkSize = 2) {
-  const { user } = useAuth();
-  const userId = user?.id ?? null;
-
   return useQuery({
-    queryKey: ['scene-catalog-interleaved', userId],
+    queryKey: ['scene-catalog-interleaved-v2'],
     enabled,
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
-      // 1. Resolve user's onboarding categories for personalised admin picks.
-      let userCategories: string[] = [];
-      if (userId) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('product_categories')
-          .eq('user_id', userId)
-          .maybeSingle();
-        userCategories = (profile?.product_categories ?? []).filter(
-          (c): c is string => !!c && c !== 'any',
-        );
-      }
-
-      // 2. Parallel fetch: admin picks + full catalog.
-      const adminPicksPromise = (async () => {
-        let q: any = supabase
-          .from('recommended_scenes' as any)
-          .select('scene_id, sort_order, category');
-        if (userCategories.length) {
-          // category IS NULL OR category IN (userCategories)
-          const list = userCategories.map(c => `"${c.replace(/"/g, '\\"')}"`).join(',');
-          q = q.or(`category.is.null,category.in.(${list})`);
-        } else {
-          q = q.is('category', null);
-        }
-        const { data } = await q
-          .order('category', { ascending: true, nullsFirst: false })
-          .order('sort_order', { ascending: true })
-          .limit(60);
-        return ((data ?? []) as unknown) as {
-          scene_id: string;
-          sort_order: number;
-          category: string | null;
-        }[];
-      })();
-
-      const catalogPromise = supabase
+      const { data, error } = await supabase
         .from('product_image_scenes')
         .select(SLIM_COLUMNS)
         .eq('is_active', true)
@@ -235,40 +170,37 @@ export function useInterleavedSceneCatalog(enabled = true, _chunkSize = 2) {
         .order('sort_order', { ascending: true })
         .limit(1500);
 
-      const [adminPicksRows, catalogResult] = await Promise.all([
-        adminPicksPromise,
-        catalogPromise,
-      ]);
+      if (error) throw error;
+      const catalog = (data ?? []) as CatalogScene[];
 
-      if (catalogResult.error) throw catalogResult.error;
-      const catalog = (catalogResult.data ?? []) as CatalogScene[];
-
-      // 3. Resolve admin pick scene_ids → full scene rows from catalog (in catalog order),
-      // then re-sort by admin's order. Dedupe by scene_id.
-      const catalogByScene = new Map<string, CatalogScene>();
-      for (const s of catalog) catalogByScene.set(s.scene_id, s);
-
-      const seenSceneIds = new Set<string>();
-      const adminPicks: CatalogScene[] = [];
-      for (const row of adminPicksRows) {
-        if (seenSceneIds.has(row.scene_id)) continue;
-        const scene = catalogByScene.get(row.scene_id);
-        if (!scene) continue;
-        seenSceneIds.add(row.scene_id);
-        adminPicks.push(scene);
+      // Group by family — preserve sort_order within each (already sorted ASC).
+      const byFamily = new Map<string, CatalogScene[]>();
+      const tail: CatalogScene[] = [];
+      for (const s of catalog) {
+        const slug = s.category_collection ?? null;
+        const fam = slug ? CATEGORY_FAMILY_MAP[slug] : undefined;
+        if (!fam) {
+          tail.push(s);
+          continue;
+        }
+        if (!byFamily.has(fam)) byFamily.set(fam, []);
+        byFamily.get(fam)!.push(s);
       }
 
-      // 4. Interleave the remaining catalog by family + sub-family.
-      const remaining = catalog.filter(s => !seenSceneIds.has(s.scene_id));
-      const interleaved = interleaveByFamilyAndSubFamily(remaining, {
-        familyChunk: 2,
-        subFamilyChunk: 1,
-      });
+      // Walk FAMILY_ORDER, then any unknown families alphabetically, then tail.
+      const orderedFamilies = [
+        ...FAMILY_ORDER.filter(f => byFamily.has(f)),
+        ...Array.from(byFamily.keys())
+          .filter(f => !FAMILY_ORDER.includes(f as any))
+          .sort(),
+      ];
 
-      const finalList = [...adminPicks, ...interleaved];
-      // Touch helper to keep export used (defensive — also useful for downstream callers).
-      void interleaveByFamily;
-      void resolveUserCollections;
+      const finalList: CatalogScene[] = [];
+      for (const fam of orderedFamilies) {
+        finalList.push(...(byFamily.get(fam) ?? []));
+      }
+      finalList.push(...tail);
+
       return { pages: [finalList] as CatalogScene[][] };
     },
   });
