@@ -13,6 +13,11 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { cn } from '@/lib/utils';
 import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
+import {
+  CATEGORY_FAMILY_MAP,
+  FAMILY_ORDER,
+  getSubFamilyLabel,
+} from '@/lib/sceneTaxonomy';
 
 interface SceneRow {
   id: string;
@@ -32,7 +37,6 @@ interface RecommendedRow {
   category: string | null;
 }
 
-// 'global' is the UI key for the null category bucket.
 const GLOBAL = 'global';
 const CATEGORY_TABS: { key: string; label: string }[] = [
   { key: GLOBAL, label: 'Global' },
@@ -40,28 +44,42 @@ const CATEGORY_TABS: { key: string; label: string }[] = [
 ];
 
 const RECOMMENDED_CAP = 12;
+const PAGE_SIZE = 1000;
+const HARD_CAP = 5000;
 
 export default function AdminRecommendedScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>(GLOBAL);
+  const [familyFilter, setFamilyFilter] = useState<string | null>(null);
+  const [collectionFilter, setCollectionFilter] = useState<string | null>(null);
 
-  // DB value: null for Global, the category id otherwise.
   const dbCategory = activeCategory === GLOBAL ? null : activeCategory;
 
+  // Paged fetch — bypass PostgREST 1k cap.
   const { data: scenes = [], isLoading: scenesLoading } = useQuery({
-    queryKey: ['admin-all-scenes-light'],
+    queryKey: ['admin-all-scenes-light-paged'],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('product_image_scenes' as any)
-        .select('id, scene_id, title, sub_category, category_collection, preview_image_url, subject, shot_style')
-        .eq('is_active', true)
-        .order('category_collection', { ascending: true })
-        .order('sort_order', { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as unknown as SceneRow[];
+      const all: SceneRow[] = [];
+      let from = 0;
+      while (from < HARD_CAP) {
+        const to = from + PAGE_SIZE - 1;
+        const { data, error } = await supabase
+          .from('product_image_scenes' as any)
+          .select('id, scene_id, title, sub_category, category_collection, preview_image_url, subject, shot_style')
+          .eq('is_active', true)
+          .order('category_collection', { ascending: true })
+          .order('sort_order', { ascending: true })
+          .range(from, to);
+        if (error) throw error;
+        const rows = (data ?? []) as unknown as SceneRow[];
+        all.push(...rows);
+        if (rows.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      return all;
     },
   });
 
@@ -97,15 +115,50 @@ export default function AdminRecommendedScenes() {
       .filter(x => !!x.scene) as { rec: RecommendedRow; scene: SceneRow }[];
   }, [recommended, sceneById]);
 
+  // ---- Family + sub-family filter derivation ----
+  const familyCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of scenes) {
+      const fam = s.category_collection ? CATEGORY_FAMILY_MAP[s.category_collection] : null;
+      if (!fam) continue;
+      counts[fam] = (counts[fam] ?? 0) + 1;
+    }
+    return counts;
+  }, [scenes]);
+
+  const families = useMemo(() => {
+    return FAMILY_ORDER.filter(f => (familyCounts[f] ?? 0) > 0);
+  }, [familyCounts]);
+
+  const subCollections = useMemo(() => {
+    if (!familyFilter) return [];
+    const map = new Map<string, number>();
+    for (const s of scenes) {
+      if (!s.category_collection) continue;
+      if (CATEGORY_FAMILY_MAP[s.category_collection] !== familyFilter) continue;
+      map.set(s.category_collection, (map.get(s.category_collection) ?? 0) + 1);
+    }
+    return Array.from(map.entries()).map(([slug, count]) => ({ slug, count }));
+  }, [scenes, familyFilter]);
+
   const filteredScenes = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return scenes;
-    return scenes.filter(s =>
-      s.title.toLowerCase().includes(q) ||
-      (s.sub_category ?? '').toLowerCase().includes(q) ||
-      (s.category_collection ?? '').toLowerCase().includes(q)
-    );
-  }, [scenes, search]);
+    return scenes.filter(s => {
+      if (familyFilter) {
+        const fam = s.category_collection ? CATEGORY_FAMILY_MAP[s.category_collection] : null;
+        if (fam !== familyFilter) return false;
+      }
+      if (collectionFilter && s.category_collection !== collectionFilter) return false;
+      if (q) {
+        const hay =
+          s.title.toLowerCase() +
+          ' ' + (s.sub_category ?? '').toLowerCase() +
+          ' ' + (s.category_collection ?? '').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [scenes, search, familyFilter, collectionFilter]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin-recommended-scenes'] });
@@ -225,7 +278,9 @@ export default function AdminRecommendedScenes() {
               <Badge variant="destructive" className="text-[10px]">Over cap</Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">Top of the rail. Reorder with arrows.</p>
+          <p className="text-xs text-muted-foreground">
+            Use ↑ / ↓ on a card to reorder. Position 1 appears first in the user's rail.
+          </p>
         </header>
         <div className="p-4">
           {recLoading ? (
@@ -253,9 +308,15 @@ export default function AdminRecommendedScenes() {
                   ) : (
                     <div className="w-full aspect-[4/5] bg-muted" />
                   )}
+                  {/* Position badge */}
+                  <div className="absolute top-1.5 left-1.5 min-w-6 h-6 px-1.5 rounded-full bg-foreground text-background text-[11px] font-semibold flex items-center justify-center shadow">
+                    {i + 1}
+                  </div>
                   <div className="p-2">
                     <p className="text-[11px] font-medium text-foreground truncate">{scene.title}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{scene.category_collection}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {scene.sub_category || scene.category_collection || '—'}
+                    </p>
                   </div>
                   <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
@@ -294,18 +355,67 @@ export default function AdminRecommendedScenes() {
 
       {/* All scenes */}
       <section className="border border-border/40 rounded-xl bg-card">
-        <header className="px-4 py-3 border-b border-border/40 flex items-center gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold">All scenes</h2>
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-            <Input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by title or category…"
-              className="pl-9 h-9"
-            />
+        <header className="px-4 py-3 border-b border-border/40 space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-sm font-semibold">All scenes</h2>
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search by title or category…"
+                className="pl-9 h-9"
+              />
+            </div>
+            <Badge variant="secondary" className="text-[11px]">
+              {filteredScenes.length.toLocaleString()} / {scenes.length.toLocaleString()} scenes
+            </Badge>
           </div>
-          <Badge variant="secondary" className="text-[11px]">{filteredScenes.length} scenes</Badge>
+
+          {/* Family pills */}
+          <div className="flex flex-wrap gap-1.5">
+            <FilterPill
+              label={`All (${scenes.length})`}
+              active={familyFilter === null}
+              onClick={() => { setFamilyFilter(null); setCollectionFilter(null); }}
+            />
+            {families.map(fam => (
+              <FilterPill
+                key={fam}
+                label={`${fam} (${familyCounts[fam] ?? 0})`}
+                active={familyFilter === fam}
+                onClick={() => {
+                  setFamilyFilter(fam);
+                  setCollectionFilter(null);
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Sub-family pills */}
+          {familyFilter && subCollections.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pl-1 border-l-2 border-primary/30">
+              <FilterPill
+                label="All sub-families"
+                active={collectionFilter === null}
+                onClick={() => setCollectionFilter(null)}
+                size="sm"
+              />
+              {subCollections.map(({ slug, count }) => (
+                <FilterPill
+                  key={slug}
+                  label={`${getSubFamilyLabel(slug)} (${count})`}
+                  active={collectionFilter === slug}
+                  onClick={() => setCollectionFilter(slug)}
+                  size="sm"
+                />
+              ))}
+            </div>
+          )}
+
+          <p className="text-[11px] text-muted-foreground">
+            Browsing order: grouped by Product Family (does not affect what users see). Click a card to add or remove from Featured.
+          </p>
         </header>
         <div className="p-4">
           {scenesLoading ? (
@@ -352,7 +462,9 @@ export default function AdminRecommendedScenes() {
                     )}
                     <div className="p-2">
                       <p className="text-[11px] font-medium text-foreground line-clamp-1">{scene.title}</p>
-                      <p className="text-[10px] text-muted-foreground line-clamp-1">{scene.category_collection}</p>
+                      <p className="text-[10px] text-muted-foreground line-clamp-1">
+                        {scene.sub_category || scene.category_collection || '—'}
+                      </p>
                     </div>
                   </button>
                 );
@@ -362,5 +474,30 @@ export default function AdminRecommendedScenes() {
         </div>
       </section>
     </div>
+  );
+}
+
+function FilterPill({
+  label, active, onClick, size = 'md',
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  size?: 'sm' | 'md';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'rounded-full font-medium border transition-colors',
+        size === 'sm' ? 'px-2.5 py-0.5 text-[11px]' : 'px-3 py-1 text-xs',
+        active
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-background text-muted-foreground border-border/60 hover:bg-muted'
+      )}
+    >
+      {label}
+    </button>
   );
 }
