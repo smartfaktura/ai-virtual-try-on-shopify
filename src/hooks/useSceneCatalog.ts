@@ -29,6 +29,8 @@ export interface SceneCatalogFilters {
   collections?: string[];
   /** Single-select family name (e.g. "Fashion"). Resolved to the matching collection slugs. */
   family?: string | null;
+  /** Single-select sub-family slug (overrides family expansion when set). */
+  categoryCollection?: string | null;
   filterTags?: string[];
   sort?: 'recommended' | 'popular' | 'new';
   /** When true, exclude rows whose sub_category contains "essential". */
@@ -51,12 +53,16 @@ function applyFilters(query: any, filters: SceneCatalogFilters) {
   if (filters.shotStyles?.length) q = q.in('shot_style', filters.shotStyles);
   if (filters.settings?.length) q = q.in('setting', filters.settings);
 
-  // Family takes precedence over explicit collections array.
-  const familyCollections = familyToCollections(filters.family);
-  if (familyCollections.length) {
-    q = q.in('category_collection', familyCollections);
-  } else if (filters.collections?.length) {
-    q = q.in('category_collection', filters.collections);
+  // Sub-family (single collection) takes top precedence, then family, then explicit collections.
+  if (filters.categoryCollection) {
+    q = q.eq('category_collection', filters.categoryCollection);
+  } else {
+    const familyCollections = familyToCollections(filters.family);
+    if (familyCollections.length) {
+      q = q.in('category_collection', familyCollections);
+    } else if (filters.collections?.length) {
+      q = q.in('category_collection', filters.collections);
+    }
   }
 
   if (filters.filterTags?.length) q = q.contains('filter_tags', filters.filterTags);
