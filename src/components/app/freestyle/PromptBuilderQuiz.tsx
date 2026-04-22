@@ -83,14 +83,17 @@ const INTERACTION_ICON_MAP: Record<InteractionType, React.ReactNode> = {
 };
 
 // ——— Option Card ———
-function OptionCard({ value, label, description, icon, selected, onClick }: {
-  value: string; label: string; description: string; icon: React.ReactNode; selected: boolean; onClick: (v: any) => void;
+function OptionCard({ value, label, description, icon, selected, onClick, isMobile }: {
+  value: string; label: string; description: string; icon: React.ReactNode; selected: boolean; onClick: (v: any) => void; isMobile?: boolean;
 }) {
   return (
     <button
       onClick={() => onClick(value)}
       className={cn(
-        'relative flex flex-col items-center gap-2 p-4 sm:p-5 rounded-xl border-2 transition-all duration-200 text-center cursor-pointer',
+        'relative rounded-xl border-2 transition-all duration-200 cursor-pointer',
+        isMobile
+          ? 'flex flex-row items-center gap-3 p-3 text-left'
+          : 'flex flex-col items-center gap-2 p-4 sm:p-5 text-center',
         selected
           ? 'border-primary bg-primary/5 ring-2 ring-primary/15 shadow-sm'
           : 'border-border/50 bg-card hover:border-border hover:shadow-sm hover:-translate-y-0.5'
@@ -101,9 +104,26 @@ function OptionCard({ value, label, description, icon, selected, onClick }: {
           <Check className="w-3 h-3" />
         </div>
       )}
-      <div className={cn('text-muted-foreground transition-colors', selected && 'text-primary')}>{icon}</div>
-      <span className="text-sm font-medium leading-tight">{label}</span>
-      {description && <span className="text-[11px] text-muted-foreground/60 leading-tight">{description}</span>}
+      {isMobile ? (
+        <>
+          <div className={cn(
+            'shrink-0 w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground transition-colors',
+            selected && 'bg-primary/10 text-primary'
+          )}>
+            {icon}
+          </div>
+          <div className="min-w-0 flex-1 pr-5">
+            <span className="block text-sm font-medium leading-tight truncate">{label}</span>
+            {description && <span className="block text-[11px] text-muted-foreground/60 leading-tight mt-0.5 truncate">{description}</span>}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={cn('text-muted-foreground transition-colors', selected && 'text-primary')}>{icon}</div>
+          <span className="text-sm font-medium leading-tight">{label}</span>
+          {description && <span className="text-[11px] text-muted-foreground/60 leading-tight">{description}</span>}
+        </>
+      )}
     </button>
   );
 }
