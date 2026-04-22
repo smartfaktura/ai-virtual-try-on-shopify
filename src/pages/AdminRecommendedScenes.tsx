@@ -193,6 +193,20 @@ export default function AdminRecommendedScenes() {
     });
   }, [scenes, search, familyFilter, collectionFilter]);
 
+  const displayedScenes = useMemo(() => {
+    if (viewMode === 'grouped') return filteredScenes;
+    return interleaveByFamily(filteredScenes, chunkSize);
+  }, [filteredScenes, viewMode, chunkSize]);
+
+  const previewedRecommended = useMemo(() => {
+    if (!featuredPreview) return recommendedScenes;
+    const interleaved = interleaveByFamily(
+      recommendedScenes.map(x => ({ ...x.scene, __pair: x })),
+      2,
+    );
+    return interleaved.map(x => (x as any).__pair as { rec: RecommendedRow; scene: SceneRow });
+  }, [recommendedScenes, featuredPreview]);
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin-recommended-scenes'] });
     qc.invalidateQueries({ queryKey: ['scene-recommended'] });
