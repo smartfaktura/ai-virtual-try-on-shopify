@@ -262,7 +262,7 @@ export function SceneCatalogModal({
         {/* Header */}
         <header className="flex items-start justify-between px-4 sm:px-6 py-4 pr-12 sm:pr-6 border-b border-border/40">
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-foreground">Select Scene</h2>
+            <h2 className="text-lg font-semibold text-foreground">Select a Scene Look</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               1,200+ curated scenes
             </p>

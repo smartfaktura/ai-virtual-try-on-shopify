@@ -281,7 +281,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
       ) : (
         <>
           <Camera className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate">Scene</span>
+          <span className="truncate">Scene Look</span>
         </>
       )}
       <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
