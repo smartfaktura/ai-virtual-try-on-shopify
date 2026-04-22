@@ -238,7 +238,7 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
         <h3 className="text-lg font-semibold text-foreground">What are you creating content for?</h3>
         <p className="text-sm text-muted-foreground/60 mt-1">Choose the category that best matches your product.</p>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
         {(Object.keys(CATEGORY_LABELS) as QuizCategory[]).map(cat => (
           <OptionCard
             key={cat}
@@ -248,6 +248,7 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
             icon={CATEGORY_ICON_MAP[cat]}
             selected={category === cat}
             onClick={(v) => { setCategory(v); setSubject(null); setInteraction(null); }}
+            isMobile={isMobile}
           />
         ))}
       </div>
