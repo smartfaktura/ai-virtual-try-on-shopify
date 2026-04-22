@@ -569,15 +569,10 @@ export default function AdminRecommendedScenes() {
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {displayedScenes.map(scene => {
                 const isFeatured = recommendedMap.has(scene.scene_id);
+                const isStarPinned = scene.sort_order < 0;
                 return (
-                  <button
-                    type="button"
+                  <div
                     key={scene.id}
-                    onClick={() =>
-                      isFeatured
-                        ? removeMutation.mutate(scene.scene_id)
-                        : addMutation.mutate(scene.scene_id)
-                    }
                     className={cn(
                       'relative rounded-lg overflow-hidden border-2 bg-card text-left transition-all duration-200',
                       isFeatured
@@ -585,29 +580,63 @@ export default function AdminRecommendedScenes() {
                         : 'border-transparent hover:border-border/60'
                     )}
                   >
-                    {scene.preview_image_url ? (
-                      <ShimmerImage
-                        src={getOptimizedUrl(scene.preview_image_url, { quality: 60 })}
-                        alt={scene.title}
-                        className="w-full aspect-[4/5] object-cover"
-                        wrapperClassName="h-auto"
-                        aspectRatio="4/5"
-                      />
-                    ) : (
-                      <div className="w-full aspect-[4/5] bg-muted" />
-                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isFeatured
+                          ? removeMutation.mutate(scene.scene_id)
+                          : addMutation.mutate(scene.scene_id)
+                      }
+                      className="block w-full text-left"
+                      aria-label={isFeatured ? 'Remove from recommended' : 'Add to recommended'}
+                    >
+                      {scene.preview_image_url ? (
+                        <ShimmerImage
+                          src={getOptimizedUrl(scene.preview_image_url, { quality: 60 })}
+                          alt={scene.title}
+                          className="w-full aspect-[4/5] object-cover"
+                          wrapperClassName="h-auto"
+                          aspectRatio="4/5"
+                        />
+                      ) : (
+                        <div className="w-full aspect-[4/5] bg-muted" />
+                      )}
+                      <div className="p-2">
+                        <p className="text-[11px] font-medium text-foreground line-clamp-1">{scene.title}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-1">
+                          {scene.sub_category || scene.category_collection || '—'}
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Pin star — top-left. Controls the new sort_order-based featured signal. */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFeaturedMutation.mutate(scene.scene_id);
+                      }}
+                      disabled={toggleFeaturedMutation.isPending}
+                      className={cn(
+                        'absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center shadow-md border transition-all',
+                        isStarPinned
+                          ? 'bg-amber-400 border-amber-500 text-white hover:bg-amber-500'
+                          : 'bg-background/95 border-border text-muted-foreground hover:text-amber-500 hover:border-amber-400 opacity-0 group-hover:opacity-100',
+                        'group-hover:opacity-100'
+                      )}
+                      title={isStarPinned ? 'Pinned to top of sub-family. Click to unpin.' : 'Pin to top of sub-family for users'}
+                      aria-label={isStarPinned ? 'Unpin from top' : 'Pin to top'}
+                    >
+                      <Star className={cn('w-3.5 h-3.5', isStarPinned && 'fill-current')} />
+                    </button>
+
+                    {/* Legacy "in recommended_scenes" star — top-right */}
                     {isFeatured && (
                       <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow">
                         <Star className="w-3 h-3 text-primary-foreground fill-current" />
                       </div>
                     )}
-                    <div className="p-2">
-                      <p className="text-[11px] font-medium text-foreground line-clamp-1">{scene.title}</p>
-                      <p className="text-[10px] text-muted-foreground line-clamp-1">
-                        {scene.sub_category || scene.category_collection || '—'}
-                      </p>
-                    </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
