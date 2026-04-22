@@ -1,48 +1,25 @@
 
 
-## Make mobile Filters drawer feel spacious
+## Hide redundant header + body filter on mobile model picker
 
-The mobile Filters drawer currently reuses the same tiny desktop rows (text-xs, py-1.5). On a 390px viewport that feels cramped. Bump every row in mobile mode to a tap-friendly, pill-style item — same spirit as iOS Settings.
+In `src/components/app/freestyle/ModelSelectorChip.tsx`, the mobile sheet already renders "Character Reference" in its header, but the picker body repeats the title + subtitle and shows a second filter row (Slim/Athletic/Average/Plus) that crowds the small viewport.
 
-### Changes in `src/components/app/freestyle/SceneCatalogSidebar.tsx`
+### Change (single file: `ModelSelectorChip.tsx`)
 
-When `mobileMode` is on:
+1. **Remove the duplicate header on mobile.** Wrap the inner header block (the `<h3>Character Reference</h3>` + subtitle `<p>`) in `hidden lg:block` so it only shows in the desktop popover (which has no built-in title). Mobile sheet already shows the title.
 
-1. **Row sizing** — apply a "mobile" variant inside `renderRow` and the family button:
-   - Height ≈ `h-12` (currently ~28px) via `py-3`.
-   - Font: `text-sm` (was `text-xs`).
-   - Padding: `px-4` (sub-rows `pl-10 pr-4`).
-   - Shape: `rounded-xl` for a softer, more modern pill block.
-   - Icons: `w-4 h-4` (was `w-3.5`).
-   - Count badge: `text-xs` (was `text-[10px]`), still tabular.
-   - Row gap: `space-y-1` instead of `space-y-0.5`.
+2. **Hide the body-type filter row on mobile.** Wrap the BODY_FILTERS row in `hidden lg:flex` (instead of `flex`). Mobile keeps only the gender pills (All / Female / Male). Desktop is unchanged.
 
-2. **Section labels** ("Quick", "Product Families")
-   - `pt-5 pb-2 px-4 text-[11px]` on mobile so they breathe under the drawer header.
-
-3. **Drawer container padding**
-   - Mobile: `px-3 py-3` → `px-3 py-4` (one extra row of breathing room).
-   - Add `pb-[max(1rem,env(safe-area-inset-bottom))]` on the inner `<div>` so the bottom of a long families list isn't hidden behind the iOS home indicator.
-
-4. **Active state**
-   - Keep `bg-primary/10 text-primary font-semibold` — already correct, just larger now.
-
-Desktop layout (`mobileMode` undefined) is **unchanged** — same compact rows as today.
-
-### Files touched
-
-- `src/components/app/freestyle/SceneCatalogSidebar.tsx` — add a `mobileMode`-aware class set in `renderRow`, the family button, and the section label helper. No prop changes, no behavior changes.
+3. No state changes — `bodyFilter` defaults to `'all'`, so hiding the row simply means mobile users always see all body types (no filtering applied), which matches the request.
 
 ### Untouched
 
-`SceneCatalogModal.tsx`, `SceneCatalogFilters.tsx`, grid, hooks, RLS, sort_order logic, desktop sidebar.
+Desktop popover layout, gender filter, model grid, brand model card, footer, scenes modal, sidebar, hooks, RLS.
 
 ### Validation (390 × 818)
 
-- Open Scenes modal → tap **Filters** → drawer opens with noticeably larger, pill-shaped rows.
-- Each row is easy to tap with a thumb — no more pinpoint targets.
-- Section headers ("QUICK", "PRODUCT FAMILIES") have visible breathing room.
-- Last family ("Wellness") sits above the iOS home indicator, not under it.
-- Sub-family expansion (e.g. Fashion → Womenswear / Menswear) uses the same larger spacing.
-- Desktop ≥ 1024px: unchanged.
+- Tap **Model** chip on `/app/freestyle` → sheet opens with single "Character Reference" header (from sheet only).
+- Below header: only one filter row — All / Female / Male. No second body-type row.
+- Model grid takes more vertical space, less crowded.
+- Desktop ≥ 1024px: popover unchanged — both filter rows + inline header still visible.
 
