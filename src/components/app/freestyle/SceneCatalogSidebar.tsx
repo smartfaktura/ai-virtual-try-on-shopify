@@ -124,7 +124,7 @@ export function SceneCatalogSidebar({
         'w-full flex items-center gap-2 text-left transition-colors',
         mobileMode
           ? cn('py-3 rounded-xl text-sm', indent ? 'pl-10 pr-4' : 'px-4')
-          : cn('py-1.5 rounded-md text-xs', indent ? 'pl-6 pr-2' : 'px-2'),
+          : cn('rounded-lg text-sm py-2.5', indent ? 'pl-9 pr-3' : 'px-3'),
         active
           ? 'bg-primary/10 text-primary font-semibold'
           : 'text-foreground/80 hover:bg-muted/60',
@@ -135,8 +135,7 @@ export function SceneCatalogSidebar({
       {typeof count === 'number' && count > 0 && (
         <span
           className={cn(
-            'tabular-nums',
-            mobileMode ? 'text-xs' : 'text-[10px]',
+            'tabular-nums text-xs',
             active ? 'text-primary' : 'text-muted-foreground',
           )}
         >
