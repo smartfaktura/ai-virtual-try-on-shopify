@@ -1,31 +1,34 @@
 
 
-## Fix: scene reordering not reflecting until hard refresh
+## Set accent color `#E6DDD1` on Fragrance → Conceptual Editorial + Dream Editorial scenes
 
-### Root cause
-`handleMove` and `handleMoveToTop` issue 2-N parallel `updateScene.mutateAsync` calls via `Promise.all`. Each mutation's `onSuccess` (in `useProductImageScenes`) calls `invalidateAll()`. React Query coalesces invalidations and triggers a refetch the moment the **first** mutation resolves — that refetch reads the DB before the remaining parallel writes have committed, so the cache is repopulated with stale `sort_order` values. The page then shows the old order until you hard-refresh (which forces a fresh fetch after all writes have settled).
+Replace the `suggested_colors` value on every scene in these two sub-categories with the single accent **`#E6DDD1`** (label "Sand Linen"). This is the color shown in the picker as the curated accent next to each scene.
 
-### Fix (single file: `src/pages/AdminProductImageScenes.tsx`)
+### Scope (21 scenes total)
 
-**1. Bypass the per-mutation invalidation for bulk reorder operations.**  
-Inside `handleMove` and `handleMoveToTop`, replace the `updateScene.mutateAsync(...)` calls with direct `supabase.from('product_image_scenes').update({ sort_order }).eq('id', s.id)` calls collected in a single `Promise.all`. After all writes resolve, call `queryClient.invalidateQueries` for the three scene query keys exactly once. This guarantees the refetch happens *after* every write is committed.
+**Conceptual Editorial (15)** — Eclipse Shadow, Smoked Table, Desert Portal, Monolith Bloom, Halo Caustic, Mirror Vanity, Canyon Orb, Doorway Walk, Resin Monolith, Smoked Panels, Satin Echo, Velvet Stair, Chrome Trough, Wet Stone, Orchard Mirror.
 
-**2. Optimistic cache update for instant UI feedback.**  
-Before awaiting the writes, call `queryClient.setQueryData` on the active query key (`['product-image-scenes', cacheVariant]`) to mutate the in-cache `sort_order` values for the affected scenes. The list re-renders immediately; the subsequent invalidation reconciles with the server.
+**Dream Editorial (6)** — Sheer Motion, Mirror Blur, Flash Exit, Satin Ghost, Soft Monolith, Haze Caustic.
 
-**3. Same fix applied to `handleMoveSubCategory`** (it uses the same parallel-mutate pattern).
+### Change (data only — single SQL UPDATE)
 
-### Why this works
-- Single post-write invalidation eliminates the read-before-all-writes race.
-- Optimistic update makes the arrow click feel instant (no waiting on the round-trip + refetch).
-- `groupBySubCategory` already sorts by `sort_order` ascending, so the reordered cache renders correctly.
+```sql
+UPDATE product_image_scenes
+SET suggested_colors = '[{"hex":"#E6DDD1","label":"Sand Linen"}]'::jsonb,
+    updated_at = now()
+WHERE category_collection = 'fragrance'
+  AND sub_category IN ('Conceptual Editorial','Dream Editorial');
+```
+
+This wipes the existing per-scene amber/teal/mulberry/mauve curations and replaces them with the single sand-linen accent across all 21 rows.
 
 ### Validation
-- `/app/admin/product-image-scenes` → Apparel → Creative Shots → click ↑ on `Urban NYC Street`: order changes immediately, no hard refresh needed.
-- Click ⏫ (move-to-top) on `Skatepark Golden Hour`: jumps to position #1 instantly.
-- Move sub-category `Creative Shots` up: reorders instantly.
-- Refresh the page → server-side order matches what was shown.
+- `/app/admin/product-image-scenes` → Fragrance → Conceptual Editorial: every scene's "Suggested Colors" shows one swatch `#E6DDD1` (Sand Linen).
+- Same for Dream Editorial (all 6 scenes).
+- Open one scene in the wizard (`/app/generate/product-images`) → the curated accent next to it is `#E6DDD1`.
 
 ### Out of scope
-No schema changes, no other handlers, no realtime subscription (overkill for an admin-only page).
+- Other Fragrance sub-categories (Editorial Studio, etc.) untouched.
+- No prompt template, schema, code, or UI changes.
+- If you also want the existing accents kept *alongside* `#E6DDD1` (instead of replaced), say so and I'll switch the SQL to append.
 
