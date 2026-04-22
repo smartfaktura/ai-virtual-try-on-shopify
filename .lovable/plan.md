@@ -1,57 +1,47 @@
 
 
-## Fix Scenes modal mobile UX
+## Tighten Scenes modal mobile UI
 
-The modal was built desktop-first. On mobile the sidebar is hidden entirely (so families/Recommended/New are unreachable), the filter bar overflows so the sort dropdown disappears off-screen, and the sheet uses `100vh` which gets cut by browser chrome.
+Trim the mobile filter bar down to just what's needed and make the footer actions easier to tap.
 
-### 1. Mobile filter bar — wrap + show all controls
+### 1. Filter bar (`SceneCatalogFilters.tsx`)
 
-`SceneCatalogFiltersBar.tsx`:
-- Change root from single-row `flex items-center gap-2` to a two-row layout on mobile: row 1 = search (full width) + a new **Filters** button (opens the family/quick-view drawer, see step 2) + sort, row 2 = chip strip (horizontal scroll). On `sm:` and up, revert to today's single-row layout.
-- Drop `max-w-[280px]` on search; on mobile use `flex-1`. On desktop cap at 280.
-- Always render the **Filters** button on mobile (`lg:hidden`) so families are reachable; remove the `showMobileFiltersBtn` prop gating from `SceneCatalogModal` (always pass true effectively, but the button itself is `lg:hidden`).
-- Sort `<Select>` keeps `w-[110px]` on mobile to fit; `w-[140px]` from `sm` up.
+On mobile (`<lg`):
+- **Remove** the search input entirely (kept on desktop). `Search` icon import goes if unused.
+- **Remove** the Product Only / With Model chips on mobile (`hidden lg:flex` on the chip strip). They're still reachable via the Filters drawer if needed; on desktop they remain.
+- The mobile row becomes a single, balanced row: `[Filters]  [Sort dropdown]`, both pill-shaped, same height (`h-9`), same rounded-full style, equal flex sizing so they share width 50/50 and the "Recommended" label fits without truncation.
+  - `Filters` button: `flex-1 h-9 rounded-full`
+  - Sort `SelectTrigger`: `flex-1 h-9 rounded-full` (remove fixed `w-[110px]`); add `truncate` on the value so longer labels behave.
+- Desktop layout (≥`lg`) is untouched.
 
-### 2. Mobile families drawer — make sidebar reachable
+### 2. Header copy (`SceneCatalogModal.tsx`)
 
-`SceneCatalogModal.tsx`:
-- Add `mobileFiltersOpen` state.
-- When the user taps the new **Filters** button in the bar, open a left-side `Sheet` (nested) that renders the existing `<SceneCatalogSidebar>` content. Reuse the same component — wrap it in a small adapter that drops the `hidden lg:block` class on mobile and gives it `w-full h-full`.
-- Selecting a family / sub-family / quick view auto-closes the drawer (call existing handlers + `setMobileFiltersOpen(false)`).
-- The original aside in the body keeps `hidden lg:block`; on mobile the body is grid-only.
+Replace the subtitle:
+- From: `Find the right shot for your product — 1,200+ curated scenes.`
+- To: `1,200+ curated scenes`
 
-### 3. Sheet sizing + safe areas
+(No trailing period — matches the project's minimalist header rule.)
 
-`SceneCatalogModal.tsx`:
-- Replace `h-[100vh]` with `h-[100dvh]` so dynamic viewport (excluding browser chrome) is respected.
-- Header: add a small close `X` button on the right on mobile (Radix `SheetContent` renders one by default — verify it's positioned and not clipped; if hidden by our padding, give the header `pr-12` on mobile so the title doesn't run under the X).
-- Footer: on mobile add `pb-[max(0.75rem,env(safe-area-inset-bottom))]` so iOS home-indicator doesn't cover Use scene.
-- Footer buttons stay side-by-side but if `footerTitle` truncates fine; reduce gap on mobile and shorten Cancel to an icon-less compact button (size unchanged, just ensure `truncate` on title works because the right cluster is `shrink-0`).
+### 3. Footer buttons (`SceneCatalogModal.tsx`)
 
-### 4. Grid density on mobile
-
-`SceneCatalogGrid.tsx` (verify): cards should be 2 columns at `< 640px`, 3 at `sm`, 4 at `lg`. If today it forces 3+ on mobile, override with `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Adjust `containIntrinsicSize` accordingly so off-screen reservation matches new card height.
+Make Cancel / Use scene larger and more thumb-friendly on mobile:
+- Both buttons go from `size="sm"` → `size="default"` (h-10, full pill style from the design system).
+- Slightly increase footer vertical padding from `py-3` to `py-3.5` so the taller buttons breathe.
+- Selected-scene title block stays truncated; thumb stays 10×10.
 
 ### Files touched
 
-- `src/components/app/freestyle/SceneCatalogFilters.tsx` — two-row mobile layout, always-rendered Filters button on `lg:hidden`, narrower sort on mobile.
-- `src/components/app/freestyle/SceneCatalogModal.tsx` — add mobile drawer with the sidebar; `h-[100dvh]`; safe-area footer padding; pass `onOpenMobileFilters` + `showMobileFiltersBtn`.
-- `src/components/app/freestyle/SceneCatalogGrid.tsx` — confirm/fix `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` on mobile.
-- `src/components/app/freestyle/SceneCatalogSidebar.tsx` — accept an optional `mobileMode` prop that strips `hidden lg:block` and the fixed `w-60` so it can fill the mobile drawer; auto-close on selection via callback prop `onAfterSelect?`.
+- `src/components/app/freestyle/SceneCatalogFilters.tsx` — hide search + chips on mobile, equal-width Filters/Sort row, taller pills, drop unused `Search` import if no longer needed (keep it for desktop search).
+- `src/components/app/freestyle/SceneCatalogModal.tsx` — shorter subtitle, larger footer buttons.
 
 ### Untouched
 
-DB, RLS, sort_order star logic, `useSceneCatalog`/`useInterleavedSceneCatalog`, recommended rail, generation pipeline, desktop layout (visually identical at `lg` and up).
+Desktop layout, sidebar drawer, grid, sort_order/star logic, hooks, RLS, generation pipeline.
 
-### Validation (375 × 812)
+### Validation (390 × 818)
 
-- Open `/app/freestyle` → tap Scene chip → modal opens at full dynamic-viewport height; nothing under the iOS home indicator.
-- Header shows title + close X, both visible.
-- Filter bar row 1: search fills width, **Filters** button + sort dropdown both visible (no horizontal overflow).
-- Filter bar row 2: Product Only / With Model chips scroll horizontally; sort isn't pushed off-screen.
-- Tap **Filters** → left drawer slides in showing All scenes / Recommended / New + every Product Family. Tap **Beauty** → drawer closes, grid shows Beauty scenes.
-- Grid renders 2 columns; thumbs aren't squished.
-- Footer: Cancel + Use scene fit on one row; selected thumb + title truncates.
-- Switching family resets scroll to top (existing effect).
-- Desktop ≥ 1024px: layout unchanged from today.
+- Modal opens; header reads "Select Scene" + small "1,200+ curated scenes" subtitle.
+- Filter bar: only two pills visible — `Filters` and `Recommended` — same height, equal width, no truncation, no search field, no Product Only / With Model chips.
+- Footer buttons (Cancel, Use scene) are noticeably larger and easier to tap; both fit on one line.
+- Desktop ≥ 1024px: search input, chips, and sort all visible exactly as today.
 
