@@ -620,9 +620,8 @@ export default function AdminRecommendedScenes() {
                       className={cn(
                         'absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center shadow-md border transition-all',
                         isStarPinned
-                          ? 'bg-amber-400 border-amber-500 text-white hover:bg-amber-500'
-                          : 'bg-background/95 border-border text-muted-foreground hover:text-amber-500 hover:border-amber-400 opacity-0 group-hover:opacity-100',
-                        'group-hover:opacity-100'
+                          ? 'bg-primary border-primary text-primary-foreground hover:opacity-90'
+                          : 'bg-background/95 border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
                       )}
                       title={isStarPinned ? 'Pinned to top of sub-family. Click to unpin.' : 'Pin to top of sub-family for users'}
                       aria-label={isStarPinned ? 'Unpin from top' : 'Pin to top'}
