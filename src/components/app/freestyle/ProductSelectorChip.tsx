@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Package, ChevronDown, X, Loader2, Plus } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ProductCatalogModal } from './ProductCatalogModal';
 import type { Tables } from '@/integrations/supabase/types';
 
 const SAMPLE_PRODUCTS = [
