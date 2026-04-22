@@ -19,6 +19,10 @@ interface SceneCatalogSidebarProps {
   onSelectFamily: (family: string | null) => void;
   onSelectCategoryCollection: (slug: string | null) => void;
   onSelectQuickView: (view: QuickView) => void;
+  /** When true, render full-width without the desktop-only `hidden lg:block` and fixed width. */
+  mobileMode?: boolean;
+  /** Optional callback fired after a selection is made (e.g., to close the mobile drawer). */
+  onAfterSelect?: () => void;
 }
 
 /** Push any "essential"-flavoured slug to the bottom of a sub-family list. */
@@ -36,6 +40,8 @@ export function SceneCatalogSidebar({
   onSelectFamily,
   onSelectCategoryCollection,
   onSelectQuickView,
+  mobileMode,
+  onAfterSelect,
 }: SceneCatalogSidebarProps) {
   // Group collection slugs by their family + aggregate per-family totals in one pass.
   const { familyCounts, subFamiliesByFamily } = useMemo(() => {
@@ -70,17 +76,16 @@ export function SceneCatalogSidebar({
   const handleFamilyClick = (family: string) => {
     const subs = subFamiliesByFamily[family] ?? [];
     if (subs.length === 1) {
-      // Single-collection family — toggle it directly as the active collection.
       const onlySlug = subs[0].slug;
       if (selectedCategoryCollection === onlySlug && selectedFamily === family) {
         onSelectFamily(null);
       } else {
         onSelectFamily(family);
         onSelectCategoryCollection(onlySlug);
+        onAfterSelect?.();
       }
       return;
     }
-    // Multi-collection family — toggle family expansion; clear sub-selection.
     if (selectedFamily === family) {
       onSelectFamily(null);
     } else {
@@ -94,7 +99,13 @@ export function SceneCatalogSidebar({
       onSelectCategoryCollection(null);
     } else {
       onSelectCategoryCollection(slug);
+      onAfterSelect?.();
     }
+  };
+
+  const handleQuickViewClick = (view: QuickView) => {
+    onSelectQuickView(view);
+    onAfterSelect?.();
   };
 
   const renderRow = (
@@ -134,7 +145,14 @@ export function SceneCatalogSidebar({
   );
 
   return (
-    <aside className="hidden lg:block w-60 shrink-0 border-r border-border/40 overflow-y-auto bg-muted/20">
+    <aside
+      className={cn(
+        'shrink-0 overflow-y-auto bg-muted/20',
+        mobileMode
+          ? 'w-full h-full'
+          : 'hidden lg:block w-60 border-r border-border/40',
+      )}
+    >
       <div className="px-3 py-2">
         {sectionLabel('Quick')}
         <div className="space-y-0.5">
@@ -142,21 +160,21 @@ export function SceneCatalogSidebar({
             'All scenes',
             counts?.total,
             quickView === 'all' && selectedFamily === null && selectedCategoryCollection === null,
-            () => onSelectQuickView('all'),
+            () => handleQuickViewClick('all'),
             <LayoutGrid className="w-3.5 h-3.5 opacity-60" />,
           )}
           {renderRow(
             'Recommended',
             recommendedCount,
             quickView === 'recommended',
-            () => onSelectQuickView('recommended'),
+            () => handleQuickViewClick('recommended'),
             <Sparkles className="w-3.5 h-3.5 opacity-60" />,
           )}
           {renderRow(
             'New',
             newCount,
             quickView === 'new',
-            () => onSelectQuickView('new'),
+            () => handleQuickViewClick('new'),
             <Clock className="w-3.5 h-3.5 opacity-60" />,
           )}
         </div>
