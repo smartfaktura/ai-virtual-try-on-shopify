@@ -9,9 +9,8 @@ import {
   SceneCatalogFiltersBar, QUICK_CHIPS, type FilterChipDef,
 } from './SceneCatalogFilters';
 import { SceneCatalogSidebar, type QuickView } from './SceneCatalogSidebar';
-import { SceneCatalogRail } from './SceneCatalogRail';
 import { SceneCatalogGrid } from './SceneCatalogGrid';
-import { useSceneCatalog, type CatalogScene } from '@/hooks/useSceneCatalog';
+import { useSceneCatalog, useInterleavedSceneCatalog, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
