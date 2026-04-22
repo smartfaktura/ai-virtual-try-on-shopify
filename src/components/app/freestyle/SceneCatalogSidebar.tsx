@@ -76,17 +76,16 @@ export function SceneCatalogSidebar({
   const handleFamilyClick = (family: string) => {
     const subs = subFamiliesByFamily[family] ?? [];
     if (subs.length === 1) {
-      // Single-collection family — toggle it directly as the active collection.
       const onlySlug = subs[0].slug;
       if (selectedCategoryCollection === onlySlug && selectedFamily === family) {
         onSelectFamily(null);
       } else {
         onSelectFamily(family);
         onSelectCategoryCollection(onlySlug);
+        onAfterSelect?.();
       }
       return;
     }
-    // Multi-collection family — toggle family expansion; clear sub-selection.
     if (selectedFamily === family) {
       onSelectFamily(null);
     } else {
@@ -100,7 +99,13 @@ export function SceneCatalogSidebar({
       onSelectCategoryCollection(null);
     } else {
       onSelectCategoryCollection(slug);
+      onAfterSelect?.();
     }
+  };
+
+  const handleQuickViewClick = (view: QuickView) => {
+    onSelectQuickView(view);
+    onAfterSelect?.();
   };
 
   const renderRow = (
