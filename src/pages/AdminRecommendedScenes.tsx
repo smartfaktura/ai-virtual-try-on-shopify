@@ -17,7 +17,13 @@ import {
   CATEGORY_FAMILY_MAP,
   FAMILY_ORDER,
   getSubFamilyLabel,
+  interleaveByFamily,
 } from '@/lib/sceneTaxonomy';
+
+type ViewMode = 'interleaved' | 'grouped';
+const VIEW_MODE_KEY = 'admin-rec-scenes:view-mode';
+const CHUNK_SIZE_KEY = 'admin-rec-scenes:chunk-size';
+const FEATURED_PREVIEW_KEY = 'admin-rec-scenes:featured-preview';
 
 interface SceneRow {
   id: string;
@@ -54,6 +60,33 @@ export default function AdminRecommendedScenes() {
   const [activeCategory, setActiveCategory] = useState<string>(GLOBAL);
   const [familyFilter, setFamilyFilter] = useState<string | null>(null);
   const [collectionFilter, setCollectionFilter] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === 'undefined') return 'interleaved';
+    return (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'interleaved';
+  });
+  const [chunkSize, setChunkSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return 2;
+    const v = parseInt(localStorage.getItem(CHUNK_SIZE_KEY) || '2', 10);
+    return Number.isFinite(v) && v >= 1 && v <= 4 ? v : 2;
+  });
+  const [featuredPreview, setFeaturedPreview] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(FEATURED_PREVIEW_KEY) === '1';
+  });
+
+  const updateViewMode = (m: ViewMode) => {
+    setViewMode(m);
+    try { localStorage.setItem(VIEW_MODE_KEY, m); } catch {}
+  };
+  const updateChunkSize = (n: number) => {
+    const clamped = Math.min(4, Math.max(1, n));
+    setChunkSize(clamped);
+    try { localStorage.setItem(CHUNK_SIZE_KEY, String(clamped)); } catch {}
+  };
+  const updateFeaturedPreview = (v: boolean) => {
+    setFeaturedPreview(v);
+    try { localStorage.setItem(FEATURED_PREVIEW_KEY, v ? '1' : '0'); } catch {}
+  };
 
   const dbCategory = activeCategory === GLOBAL ? null : activeCategory;
 
@@ -159,6 +192,20 @@ export default function AdminRecommendedScenes() {
       return true;
     });
   }, [scenes, search, familyFilter, collectionFilter]);
+
+  const displayedScenes = useMemo(() => {
+    if (viewMode === 'grouped') return filteredScenes;
+    return interleaveByFamily(filteredScenes, chunkSize);
+  }, [filteredScenes, viewMode, chunkSize]);
+
+  const previewedRecommended = useMemo(() => {
+    if (!featuredPreview) return recommendedScenes;
+    const interleaved = interleaveByFamily(
+      recommendedScenes.map(x => ({ ...x.scene, __pair: x })),
+      2,
+    );
+    return interleaved.map(x => (x as any).__pair as { rec: RecommendedRow; scene: SceneRow });
+  }, [recommendedScenes, featuredPreview]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin-recommended-scenes'] });
@@ -278,9 +325,20 @@ export default function AdminRecommendedScenes() {
               <Badge variant="destructive" className="text-[10px]">Over cap</Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Use ↑ / ↓ on a card to reorder. Position 1 appears first in the user's rail.
-          </p>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={featuredPreview}
+                onChange={e => updateFeaturedPreview(e.target.checked)}
+                className="accent-primary"
+              />
+              Preview as user sees it
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Use ↑ / ↓ to reorder.
+            </p>
+          </div>
         </header>
         <div className="p-4">
           {recLoading ? (
@@ -295,7 +353,7 @@ export default function AdminRecommendedScenes() {
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {recommendedScenes.map(({ rec, scene }, i) => (
+              {previewedRecommended.map(({ rec, scene }, i) => (
                 <div key={rec.id} className="relative group rounded-lg overflow-hidden border border-border bg-card">
                   {scene.preview_image_url ? (
                     <ShimmerImage
@@ -321,8 +379,11 @@ export default function AdminRecommendedScenes() {
                   <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       type="button"
-                      onClick={() => move(i, -1)}
-                      disabled={i === 0}
+                      onClick={() => {
+                        const realIdx = recommendedScenes.findIndex(x => x.rec.id === rec.id);
+                        if (realIdx >= 0) move(realIdx, -1);
+                      }}
+                      disabled={featuredPreview || recommendedScenes[0]?.rec.id === rec.id}
                       className="w-6 h-6 rounded-full bg-background/95 border border-border flex items-center justify-center disabled:opacity-30"
                       aria-label="Move up"
                     >
@@ -330,8 +391,11 @@ export default function AdminRecommendedScenes() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => move(i, 1)}
-                      disabled={i === recommendedScenes.length - 1}
+                      onClick={() => {
+                        const realIdx = recommendedScenes.findIndex(x => x.rec.id === rec.id);
+                        if (realIdx >= 0) move(realIdx, 1);
+                      }}
+                      disabled={featuredPreview || recommendedScenes[recommendedScenes.length - 1]?.rec.id === rec.id}
                       className="w-6 h-6 rounded-full bg-background/95 border border-border flex items-center justify-center disabled:opacity-30"
                       aria-label="Move down"
                     >
@@ -413,9 +477,64 @@ export default function AdminRecommendedScenes() {
             </div>
           )}
 
-          <p className="text-[11px] text-muted-foreground">
-            Browsing order: grouped by Product Family (does not affect what users see). Click a card to add or remove from Featured.
-          </p>
+          {/* View mode + chunk size */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">View</span>
+            <div className="inline-flex rounded-full border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => updateViewMode('interleaved')}
+                className={cn(
+                  'px-3 py-1 text-[11px] font-medium transition-colors',
+                  viewMode === 'interleaved'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                )}
+              >
+                Interleaved
+              </button>
+              <button
+                type="button"
+                onClick={() => updateViewMode('grouped')}
+                className={cn(
+                  'px-3 py-1 text-[11px] font-medium transition-colors border-l border-border',
+                  viewMode === 'grouped'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                )}
+              >
+                Grouped
+              </button>
+            </div>
+            {viewMode === 'interleaved' && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-muted-foreground">Chunk</span>
+                <div className="inline-flex rounded-full border border-border overflow-hidden">
+                  {[1, 2, 3, 4].map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => updateChunkSize(n)}
+                      className={cn(
+                        'w-7 py-1 text-[11px] font-medium transition-colors',
+                        n !== 1 && 'border-l border-border',
+                        chunkSize === n
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-background text-muted-foreground hover:bg-muted'
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground ml-auto">
+              {viewMode === 'interleaved'
+                ? `Round-robin ${chunkSize}/family — visual only.`
+                : 'Grouped by family.'} Click a card to add/remove.
+            </p>
+          </div>
         </header>
         <div className="p-4">
           {scenesLoading ? (
@@ -426,7 +545,7 @@ export default function AdminRecommendedScenes() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {filteredScenes.map(scene => {
+              {displayedScenes.map(scene => {
                 const isFeatured = recommendedMap.has(scene.scene_id);
                 return (
                   <button
