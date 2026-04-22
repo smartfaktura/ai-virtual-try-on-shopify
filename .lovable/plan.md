@@ -1,109 +1,70 @@
 
 
-## Default view: Recommended carousel + full Freestyle grid
+## Two surgical fixes for the Scenes modal
 
-Reshape what the user sees the moment the Scene modal opens — and let admins curate per-onboarding-category recommendations.
+### 1. Show admin Custom Scenes first (above Recommended)
 
-### 1. New default layout (when no filters / search are active)
+Today the modal opens to: **Recommended for you** carousel → full Freestyle catalog grid. The 134 active rows admins curate at `/app/admin/scenes` (`custom_scenes` table) are loaded only to resolve `cs-` selections — they never render.
 
+Fix in `SceneCatalogModal.tsx`:
+
+- Add a new top section **"Freestyle Originals"** above the Recommended rail.
+- Source: `useCustomScenes()` (already wired). Adapt each `CustomScene` row into the `CatalogScene` shape the rail/grid expect, with `id = cs-<uuid>`, `scene_id = <uuid>`, `preview_image_url = preview_image_url || optimized_image_url || image_url`, `prompt_template = prompt_hint`.
+- Render as a **grid** (`SceneCatalogGrid`) when ≤24 items so the user sees them all immediately — no carousel hiding. Above ~24 items, switch to the `SceneCatalogRail` carousel pattern. (134 today → grid view with the existing 2/3/4 col responsive layout, height capped via the existing scrollable parent.)
+- Selection already routes correctly via the existing `cs-` branch in `handleSelect` → `onSelectLegacy` (no generation-pipeline change).
+- Hidden when any filter or search is active (same rule as Recommended), so the filtered grid stays clean.
+
+New default order:
 ```
-┌──────────────────────────────────────────────────────────┐
-│ Recommended for you            ‹ ›                       │  ← carousel (12)
-│ [card][card][card][card][card][card] →                   │     desktop arrows
-├──────────────────────────────────────────────────────────┤
-│ Freestyle Scenes                                         │  ← full grid (all)
-│ [card][card][card][card]                                 │     2/3/4 cols
-│ [card][card][card][card]                                 │     paginated
-│ [card][card][card][card]                                 │     "Load all"
-│ ...                                                      │
-└──────────────────────────────────────────────────────────┘
-```
-
-- Drop the four-rail layout (Freestyle Scenes / Recommended / Product Only / With Model carousels).
-- **Top:** keep `SceneCatalogRail` for **Recommended for you** only — same desktop chevron arrows already implemented, mobile keeps native swipe.
-- **Below:** render the **full Freestyle grid** using the existing `SceneCatalogGrid` (paged + "Load all" + infinite scroll already work). Source: `useSceneCatalog` with `excludeEssentials: true` and no other filters → returns the entire catalog ordered by `sort_order ASC`.
-- Filtering or searching collapses the recommended rail and shows just the filtered grid (today's behaviour).
-- "Product Only" and "With Model" stop being default rails — they remain reachable via the top-bar chips, sidebar, and quick views.
-
-### 2. Personalised recommendations driven by onboarding category
-
-Today `useRecommendedScenes` blends *one* admin-curated list with the user's onboarding categories. We split that into per-category curated lists.
-
-**DB change** — extend `recommended_scenes`:
-
-```sql
-alter table public.recommended_scenes
-  add column category text;          -- nullable; matches PRODUCT_CATEGORIES.id
-                                     -- ('fashion','beauty','fragrances','jewelry',
-                                     --  'accessories','home','food','electronics',
-                                     --  'sports','supplements', or null = global)
-create index recommended_scenes_category_idx
-  on public.recommended_scenes(category, sort_order);
-
--- Drop the old global-unique constraint, replace with per-category uniqueness
-alter table public.recommended_scenes
-  drop constraint recommended_scenes_scene_id_key;
-alter table public.recommended_scenes
-  add constraint recommended_scenes_cat_scene_uniq unique (category, scene_id);
+Freestyle Originals        ← admin /app/admin/scenes (134)
+Recommended for you        ← per-category carousel (≤12)
+Freestyle Scenes           ← full paged catalog grid
 ```
 
-`category = null` → "Global" pool (used as fallback when a user has no matching category list).
+### 2. Show real total — fix the 1,000-row cap on counts
 
-**Resolution logic in `useRecommendedScenes`:**
+Symptom: sidebar "All scenes" shows **1000**; DB has **1,613** active (1,236 after excluding essentials). Even though `useSceneCounts` already requests `.range(0, 4999)`, PostgREST enforces a project-level `max_rows: 1000` ceiling that overrides the requested range — that's why it still caps.
 
-1. Read `profiles.product_categories` (already fetched today).
-2. For each category the user picked, fetch up to 12 from `recommended_scenes` where `category = <cat>`, ordered by `sort_order`.
-3. Merge in the order categories were selected, dedupe by `scene_id`, cap at 12 total.
-4. If still <12 (or user has no categories / picked "any"), top up from `category IS NULL` (global list).
-5. Final fallback unchanged: top-12 by `sort_order` from `product_image_scenes`.
+Fix: page the count query in `src/hooks/useSceneCounts.ts`. Loop in 1,000-row windows until a page returns <1,000:
 
-Net effect: a Beauty user sees the 12 scenes admin curated for **Beauty**; a Fashion+Footwear user sees a merged top-12 from both lists.
-
-### 3. Admin page: per-category curation (`/app/admin/recommended-scenes`)
-
-Rebuild the existing page to manage **one list per onboarding category + a Global list**.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Recommended Scenes                                          │
-│ Curate per onboarding category (12 scenes recommended)      │
-│                                                             │
-│ Category: [ Global ▾ ]   ← tabs/select                      │
-│                                                             │
-│ Featured (8/12)              [Reorder ↑↓] [×]              │
-│ [card][card][card][card][card][card][card][card]            │
-│                                                             │
-│ All scenes  [search...]            (1,613 scenes)           │
-│ [card][card][card][card][card][card]                        │
-│ ...                                                          │
-└─────────────────────────────────────────────────────────────┘
+```ts
+const all: Row[] = [];
+let page = 0;
+while (true) {
+  const { data, error } = await supabase
+    .from('product_image_scenes')
+    .select('subject, shot_style, setting, category_collection, sub_category')
+    .eq('is_active', true)
+    .not('sub_category', 'ilike', '%essential%')
+    .range(page * 1000, page * 1000 + 999);
+  if (error) throw error;
+  all.push(...(data ?? []));
+  if (!data || data.length < 1000) break;
+  page++;
+  if (page > 9) break; // hard safety cap (10k rows max)
+}
 ```
 
-- Top selector: pills/segmented control listing **Global, Fashion, Beauty, Fragrances, Jewelry, Accessories, Home, Food, Electronics, Sports, Supplements** (driven by `PRODUCT_CATEGORIES` from `categoryConstants.ts`, minus `any`).
-- Selecting a category scopes everything: featured grid, add/remove, reorder, all queries filter by that category.
-- Featured grid shows a `n/12` counter; warns (visual chip "Recommended cap: 12") when exceeded but does not hard-block — admins may store more if useful.
-- Same arrow reorder + click-to-toggle-feature interaction as today, scoped per category.
-- Independent state per category — switching tabs preserves each list.
-- Works against the new `recommended_scenes.category` column (queries always pass `.eq('category', selected)` or `.is('category', null)` for Global).
+Net: sidebar "All scenes" reflects the true count (~1,236 after essentials excluded), per-family counts roll up correctly. Single load, ~80 KB total over the wire, cached 10 min — cheap.
+
+Also update the modal subtitle copy in `SceneCatalogModal.tsx`:
+> "Find the right shot for your product — over 1,000 curated scenes."
+→ "Find the right shot for your product — 1,200+ curated scenes."
 
 ### Files touched
 
-- **DB migration** — `recommended_scenes`: add `category text`, swap unique constraint, add index.
-- `src/hooks/useRecommendedScenes.ts` — per-category fetch + merge + global fallback.
-- `src/components/app/freestyle/SceneCatalogModal.tsx` — replace 4-rail default layout with `Recommended` carousel + full `SceneCatalogGrid` underneath; keep filter/search behaviour.
-- `src/pages/AdminRecommendedScenes.tsx` — add category selector, scope all queries/mutations by category, show `n/12` counter.
+- `src/components/app/freestyle/SceneCatalogModal.tsx` — render new "Freestyle Originals" section above Recommended (grid when ≤24, rail otherwise); update subtitle copy.
+- `src/hooks/useSceneCounts.ts` — paginated count fetch to bypass the PostgREST 1k cap.
 
 ### Untouched
 
-- `recommended_scenes` RLS (admin-only writes / authenticated reads — unchanged; new column inherits).
-- Generation pipeline, sidebar, custom_scenes flow, top-bar chips, `useSceneCatalog`, `useSceneCounts`, SceneCatalogRail/Card/Grid components.
-- Onboarding flow.
+DB schema, RLS, generation pipeline, `useCustomScenes`, `useRecommendedScenes`, sidebar, filters, admin pages.
 
 ### Validation
 
-- Open `/app/freestyle` Scenes modal as a Beauty user → top "Recommended for you" carousel shows the 12 scenes admin selected for Beauty; below it the full Freestyle catalog grid with "Load all".
-- Same modal as a multi-category user (Fashion + Beauty) → recommended is a merged dedup of both lists, capped at 12.
-- User with no `product_categories` → recommended falls back to Global list, then to top-12 by `sort_order`.
-- `/app/admin/recommended-scenes` → switching the Category selector changes the featured grid and preserves each list independently. Adding a scene under "Beauty" does not affect "Fashion".
-- Searching or applying any filter in the modal hides the recommended carousel and shows the filtered grid (today's behaviour preserved).
+- Open `/app/freestyle` Scenes modal → top section is **Freestyle Originals** showing every active row from `/app/admin/scenes` (currently 134), as a grid.
+- Below it: **Recommended for you** carousel → **Freestyle Scenes** full paged grid.
+- Sidebar "All scenes" shows the real total (≈1,236 with essentials excluded), not 1000. Family counts add up.
+- Picking a Freestyle Original generates with the existing legacy `TryOnPose` payload (no regression).
+- Applying any filter/search collapses both top sections and shows only the filtered grid (today's behaviour preserved).
 
