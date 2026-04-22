@@ -65,6 +65,7 @@ const AdminBulkPreviewUpload = lazy(() => import('@/pages/AdminBulkPreviewUpload
 const AdminUgcBulkPreviewUpload = lazy(() => import('@/pages/AdminUgcBulkPreviewUpload'));
 const AdminPlanPopups = lazy(() => import('@/pages/AdminPlanPopups'));
 const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
+const LoadingLab = lazy(() => import('@/pages/admin/LoadingLab'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
@@ -232,6 +233,7 @@ const App = () => {
                         <Route path="/admin/ugc-bulk-upload" element={<AdminUgcBulkPreviewUpload />} />
                         <Route path="/admin/plan-popups" element={<AdminPlanPopups />} />
                         <Route path="/admin/ui-audit" element={<AdminUIAudit />} />
+                        <Route path="/admin/loading-lab" element={<LoadingLab />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
