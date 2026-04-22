@@ -1,61 +1,61 @@
 
 
-## Rename "Scene" → "Scene Look" + reorganize mobile chips
+## Fix tablet (768–1023px) layout on `/app/freestyle`
 
-### Naming decision
+### Problem
 
-**Scene Look** as the user-facing label. "Scene" anchors the familiar photography term, "Look" clarifies it controls the *visual style/result*, not just a background. Reads naturally in a chip and in copy ("pick a scene look for your product").
+The prompt panel and its surrounding layout in `src/pages/Freestyle.tsx` use `lg:` breakpoint (≥1024px) for:
+- Floating overlay (`lg:absolute lg:bottom-0 lg:left-0 lg:right-0`)
+- Centering with max-width (`lg:max-w-2xl lg:mx-auto`)
+- Gradient fade above the panel (`hidden lg:block`)
+- Right padding to clear the fixed sidebar (`lg:pr-20`, `sm:pr-16`)
 
-- Chip label: **Scene Look**
-- Modal title: **Select a Scene Look**
-- Modal subtitle: keep "1,200+ curated scenes" (already short)
+On tablets (iPad portrait ≈768–1023px), none of the `lg:` rules apply, so:
+1. The prompt sits in normal flow → grey/muted area shows above it and gallery scrolls under nothing.
+2. It spans full width with no centering → looks misaligned vs. the gallery grid.
+3. No gradient fade → hard cut.
+4. Inconsistent right-padding produces an asymmetric off-center feel.
 
-### Mobile chip layout
+### Fix — change breakpoint from `lg:` → `md:` for the floating prompt treatment
 
-Primary row (always visible, in order):
-1. **Upload**
-2. **Product**
-3. **Model**
-4. **Scene Look**
+Apply the same floating, centered, faded prompt panel starting at `md:` (≥768px) so tablets get the desktop-style behavior. Mobile (<768px) keeps the current in-flow stacked layout.
 
-Collapsed behind a single chip:
-- **Advanced ▾** — opens a popover containing, stacked vertically with labels:
-  - Framing
-  - Brand
-  - Aspect ratio
-  - Camera style
-  - Quality
+**File: `src/pages/Freestyle.tsx`**
 
-Quiz button stays inline next to Advanced (it's a primary action, not a setting).
+1. **Root container** (line 925): `flex flex-col lg:block` → `flex flex-col md:block`. Root height stylesheet: keep `100dvh` for both, fine as-is.
 
-A small primary-tinted dot appears on the **Advanced** chip when any tucked setting differs from its default, so users know something's customized without opening it.
+2. **Scrollable content area** (line 932):
+   - `lg:h-full` → `md:h-full`
+   - `lg:pt-3` → `md:pt-3`
+   - `lg:pb-72` → `md:pb-72` (so gallery has space behind the floating prompt on tablet too)
 
-Final mobile bar:
-```text
-[ Upload ] [ Product ] [ Model ] [ Scene Look ]   [ Advanced ▾ ] [ Quiz ]
-```
+3. **Empty-state quick-presets wrapper** (lines 1083–1093):
+   - `pb-16 lg:pb-20` → `pb-16 md:pb-20`
+   - `sm:px-8 sm:pr-16 lg:pr-20` → `sm:px-8 md:px-8 md:pr-20` (symmetric horizontal padding on tablet)
+   - `lg:max-w-2xl lg:mx-auto` → `md:max-w-2xl md:mx-auto`
 
-If "Scene Look" + a long selected value (e.g. "Sunlit Mediterranean Terrace") wraps to a second line, that's acceptable — primary chips stay above the Advanced row.
+4. **Prompt panel wrapper** (line 1099):
+   - `lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0` → `md:mt-0 md:absolute md:bottom-0 md:left-0 md:right-0`
+   - `-mt-4` stays for true mobile only.
 
-### Desktop (`lg+`)
+5. **Gradient fade** (line 1101): `hidden lg:block` → `hidden md:block`.
 
-Unchanged layout — all chips visible inline. Only the label change ("Scene" → "Scene Look") applies, for consistency.
+6. **Inner padding row** (line 1102):
+   - `sm:px-8 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20` → `sm:px-8 md:px-8 md:pt-2 md:pointer-events-none md:pr-20` (drop the asymmetric `sm:pr-16` so the panel is symmetrically padded and the centered max-w-2xl truly centers).
 
-### Files touched
-
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — restructure mobile branch: 4 primary chips inline + new `AdvancedChipsPopover` wrapping Framing / Brand / Aspect / Camera / Quality. Add "modified" dot indicator. Desktop branch unchanged.
-- `src/components/app/freestyle/SceneSelectorChip.tsx` — change visible chip label "Scene" → "Scene Look" (placeholder text only).
-- `src/components/app/freestyle/SceneCatalogModal.tsx` — change modal title "Select Scene" → "Select a Scene Look".
+7. **Centered max-width wrapper** (line 1103): `lg:max-w-2xl lg:mx-auto lg:pointer-events-auto` → `md:max-w-2xl md:mx-auto md:pointer-events-auto`.
 
 ### Untouched
 
-Internal types (`TryOnPose`, `selectedScene`, `SceneSelectorChip` component name), hook names, table names, generation pipeline, scene catalog data, sidebar, filter bar, desktop layout.
+- Mobile layout (<768px) — keeps the current bottom-stacked, full-width prompt with `-mt-4` overlap.
+- Desktop ≥1024px — visually identical (the `md:` rules already cover it).
+- Inside `FreestylePromptPanel` / `FreestyleSettingsChips` — no changes; they already adapt internally based on `useIsMobile()` (`<768`), which still maps tablet to the desktop chip layout that fits at 768+.
+- Gallery, sidebar, scene catalog, types, hooks, RLS.
 
-### Validation (390 × 818)
+### Validation
 
-- `/app/freestyle` mobile shows: Upload, Product, Model, **Scene Look** in the primary row, then Advanced ▾ and Quiz.
-- Tap **Advanced** → popover lists Framing, Brand, Aspect, Camera, Quality — each control works exactly as before.
-- Change Aspect to 9:16 → close popover → Advanced chip shows a small primary dot.
-- Tap **Scene Look** → catalog opens with title "Select a Scene Look".
-- Desktop ≥ 1024px: full chip row visible exactly as today; only label change is "Scene" → "Scene Look".
+- **Tablet 820×1180 (iPad)**: Prompt panel floats at the bottom, centered, max-width ~672px, with gradient fade above it. Gallery scrolls behind it. No grey block, no off-center.
+- **Tablet 768×1024**: Same as above, panel symmetrically padded.
+- **Mobile 390×844**: Unchanged — prompt sits below gallery with the slight `-mt-4` overlap, no floating.
+- **Desktop ≥1024**: Visually identical to today.
 
