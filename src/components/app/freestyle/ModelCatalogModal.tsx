@@ -14,7 +14,7 @@ import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
-import type { ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
+import type { ModelProfile, ModelGender, ModelAgeRange } from '@/types';
 
 interface ModelCatalogModalProps {
   open: boolean;
@@ -31,13 +31,6 @@ const GENDER_CHIPS: { value: GenderFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'female', label: 'Female' },
   { value: 'male', label: 'Male' },
-];
-
-const BODY_TYPES: { value: ModelBodyType; label: string }[] = [
-  { value: 'slim', label: 'Slim' },
-  { value: 'athletic', label: 'Athletic' },
-  { value: 'average', label: 'Average' },
-  { value: 'plus-size', label: 'Plus' },
 ];
 
 const AGE_RANGES: { value: ModelAgeRange; label: string }[] = [
@@ -57,7 +50,6 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
   const isPaidPlan = ['growth', 'pro', 'enterprise'].includes(plan);
 
   const [gender, setGender] = useState<GenderFilter>('all');
-  const [bodyType, setBodyType] = useState<ModelBodyType | null>(null);
   const [ageRange, setAgeRange] = useState<ModelAgeRange | null>(null);
   const [quickView, setQuickView] = useState<QuickView>('all');
   const [sort, setSort] = useState<SortKey>('featured');
@@ -78,17 +70,15 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
     let list = allModels;
     if (quickView === 'brand') list = list.filter(m => userModelIds.has(m.modelId));
     if (gender !== 'all') list = list.filter(m => m.gender === gender);
-    if (bodyType) list = list.filter(m => m.bodyType === bodyType);
     if (ageRange) list = list.filter(m => m.ageRange === ageRange);
     if (sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [allModels, quickView, gender, bodyType, ageRange, sort, userModelIds]);
+  }, [allModels, quickView, gender, ageRange, sort, userModelIds]);
 
-  const anyFilterActive = gender !== 'all' || bodyType !== null || ageRange !== null || quickView !== 'all';
+  const anyFilterActive = gender !== 'all' || ageRange !== null || quickView !== 'all';
 
   const clearAll = () => {
     setGender('all');
-    setBodyType(null);
     setAgeRange(null);
     setQuickView('all');
     setSort('featured');
@@ -210,7 +200,7 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
             <div className="p-4 space-y-5">
               <SidebarSection title="Quick">
                 <SidebarRow
-                  active={quickView === 'all'}
+                  active={false}
                   onClick={() => setQuickView('all')}
                   label="All models"
                   count={allModels.length}
@@ -224,25 +214,9 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
                 />
               </SidebarSection>
 
-              <SidebarSection title="Body type">
-                <SidebarRow
-                  active={bodyType === null}
-                  onClick={() => setBodyType(null)}
-                  label="Any"
-                />
-                {BODY_TYPES.map(b => (
-                  <SidebarRow
-                    key={b.value}
-                    active={bodyType === b.value}
-                    onClick={() => setBodyType(b.value)}
-                    label={b.label}
-                  />
-                ))}
-              </SidebarSection>
-
               <SidebarSection title="Age">
                 <SidebarRow
-                  active={ageRange === null}
+                  active={false}
                   onClick={() => setAgeRange(null)}
                   label="Any"
                 />
