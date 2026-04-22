@@ -5,13 +5,52 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { BrandLoader } from '@/components/ui/brand-loader';
+import { BrandLoaderAperture } from '@/components/ui/brand-loader-aperture';
+import { BrandLoaderFrames } from '@/components/ui/brand-loader-frames';
+import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
 import { DotPulse } from '@/components/ui/dot-pulse';
 import { ShimmerBar } from '@/components/ui/shimmer-bar';
 
+type ConceptKey = 'current' | 'aperture' | 'frames' | 'glyph';
+
+const HINTS = ['Preparing your studio', 'Loading your library', 'Almost ready'];
+
+const CONCEPTS: Array<{
+  key: ConceptKey;
+  title: string;
+  description: string;
+  Component: React.ComponentType<{ hints?: string[]; fullScreen?: boolean }>;
+}> = [
+  {
+    key: 'current',
+    title: 'Current — Monogram + arc',
+    description: 'Today’s loader: V monogram with an orbiting primary arc.',
+    Component: BrandLoader,
+  },
+  {
+    key: 'aperture',
+    title: 'Aperture — Camera shutter',
+    description: '6-blade aperture opening and closing. Reads as “making an image”.',
+    Component: BrandLoaderAperture,
+  },
+  {
+    key: 'frames',
+    title: 'Frames — Editorial stack',
+    description: 'Three contact-sheet frames fanning. Reads as “assembling a shot”.',
+    Component: BrandLoaderFrames,
+  },
+  {
+    key: 'glyph',
+    title: 'Wordmark sweep — Linear-style',
+    description: 'VOVV wordmark with a thin primary line sweeping underneath.',
+    Component: BrandLoaderProgressGlyph,
+  },
+];
+
 export default function LoadingLab() {
   const { isRealAdmin, isLoading } = useIsAdmin();
-  const [showFullScreen, setShowFullScreen] = useState(false);
   const [showBar, setShowBar] = useState(false);
+  const [activeFullScreen, setActiveFullScreen] = useState<ConceptKey | null>(null);
 
   if (isLoading) {
     return (
@@ -22,9 +61,9 @@ export default function LoadingLab() {
   }
   if (!isRealAdmin) return <Navigate to="/app" replace />;
 
-  const triggerFullScreen = () => {
-    setShowFullScreen(true);
-    setTimeout(() => setShowFullScreen(false), 4000);
+  const triggerFullScreen = (key: ConceptKey) => {
+    setActiveFullScreen(key);
+    setTimeout(() => setActiveFullScreen(null), 4000);
   };
 
   const triggerBar = () => {
@@ -32,20 +71,17 @@ export default function LoadingLab() {
     setTimeout(() => setShowBar(false), 3000);
   };
 
+  const ActiveFullScreenConcept = activeFullScreen
+    ? CONCEPTS.find((c) => c.key === activeFullScreen)?.Component
+    : null;
+
   return (
     <>
       <ShimmerBar visible={showBar} />
 
-      {showFullScreen && (
+      {ActiveFullScreenConcept && (
         <div className="fixed inset-0 z-[200] bg-background animate-fade-in">
-          <BrandLoader
-            fullScreen
-            hints={[
-              'Preparing your studio',
-              'Loading your library',
-              'Almost ready',
-            ]}
-          />
+          <ActiveFullScreenConcept fullScreen hints={HINTS} />
         </div>
       )}
 
@@ -54,28 +90,42 @@ export default function LoadingLab() {
           <p className="section-label">Admin · Sandbox</p>
           <h1 className="text-3xl font-semibold tracking-tight">Loading Lab</h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
-            Preview the proposed branded loading primitives before rolling them across the app.
-            Existing <code className="blog-inline-code">Loader2</code> usages stay untouched
-            until you sign off.
+            Compare loader concepts before rolling one across the app. Pick a winner and we'll wire
+            it as the canonical <code className="blog-inline-code">BrandLoader</code>.
           </p>
         </header>
 
-        {/* Brand Loader */}
+        {/* Concepts grid */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">BrandLoader</h2>
-              <p className="text-sm text-muted-foreground">
-                Full-screen / route-level. Monogram with orbiting arc and breathing.
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={triggerFullScreen}>
-              Show full-screen (4s)
-            </Button>
+          <div>
+            <h2 className="text-lg font-semibold">BrandLoader concepts</h2>
+            <p className="text-sm text-muted-foreground">
+              Four options. Tap “Full-screen” on any card to preview a route-level moment.
+            </p>
           </div>
-          <Card className="h-[280px] flex items-center justify-center">
-            <BrandLoader hints={['Preparing your studio', 'Loading your library', 'Almost ready']} />
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {CONCEPTS.map(({ key, title, description, Component }) => (
+              <Card key={key} className="overflow-hidden">
+                <div className="h-[280px] flex items-center justify-center border-b">
+                  <Component hints={HINTS} />
+                </div>
+                <div className="p-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => triggerFullScreen(key)}
+                    className="shrink-0"
+                  >
+                    Full-screen
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
         </section>
 
         {/* Dot Pulse */}
