@@ -252,6 +252,7 @@ export function SceneCatalogModal({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side={isMobile ? 'bottom' : 'right'}
+        onOpenAutoFocus={(e) => e.preventDefault()}
         className={cn(
           'p-0 gap-0 flex flex-col',
           isMobile
@@ -263,7 +264,7 @@ export function SceneCatalogModal({
         <header className="flex items-start justify-between px-4 sm:px-6 py-4 pr-12 sm:pr-6 border-b border-border/40">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-foreground">Select a Scene Look</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5 tracking-tight">
               1,200+ curated scenes
             </p>
           </div>
@@ -378,7 +379,7 @@ export function SceneCatalogModal({
                 </div>
               </>
             ) : (
-              <p className="text-xs text-muted-foreground">Pick a scene to continue.</p>
+              <p className="text-sm text-muted-foreground">Pick a scene to continue.</p>
             )}
           </div>
           <div className="flex gap-2 shrink-0">
