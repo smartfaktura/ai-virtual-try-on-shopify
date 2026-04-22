@@ -31,22 +31,37 @@ interface SceneCatalogModalProps {
   onSelectLegacy?: (pose: TryOnPose) => void;
 }
 
-/** Adapt a TryOnPose into a CatalogScene-shaped object so the rail can render it. */
-function poseToCatalogShape(pose: TryOnPose): CatalogScene {
+/** Adapt a CustomScene row into a CatalogScene-shaped object so the rail can render it. */
+function customSceneToCatalogShape(scene: CustomScene): CatalogScene {
   return {
-    id: `legacy-${pose.poseId}`,
-    scene_id: pose.poseId,
-    title: pose.name,
+    id: `cs-${scene.id}`,
+    scene_id: scene.id,
+    title: scene.name,
     sub_category: null,
     category_collection: null,
     scene_type: null,
     subject: null,
     shot_style: null,
     setting: null,
-    preview_image_url: pose.previewUrl,
-    prompt_template: pose.promptHint ?? null,
+    preview_image_url: scene.preview_image_url || scene.optimized_image_url || scene.image_url,
+    prompt_template: scene.prompt_hint || scene.description || null,
     filter_tags: null,
-    created_at: null,
+    created_at: scene.created_at,
+  };
+}
+
+/** Convert a CustomScene back into a TryOnPose for the legacy onSelectLegacy handoff. */
+function customSceneToTryOnPose(scene: CustomScene): TryOnPose {
+  return {
+    poseId: `custom-${scene.id}`,
+    name: scene.name,
+    category: scene.category as PoseCategory,
+    description: scene.description,
+    promptHint: scene.prompt_hint || scene.description,
+    previewUrl: scene.preview_image_url || scene.image_url,
+    optimizedImageUrl: scene.optimized_image_url || undefined,
+    created_at: scene.created_at,
+    promptOnly: scene.prompt_only || false,
   };
 }
 
