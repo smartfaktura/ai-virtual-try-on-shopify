@@ -11,7 +11,7 @@ import {
 import { SceneCatalogSidebar, type QuickView } from './SceneCatalogSidebar';
 import { SceneCatalogRail } from './SceneCatalogRail';
 import { SceneCatalogGrid } from './SceneCatalogGrid';
-import { useSceneCatalog, useSceneRail, type CatalogScene } from '@/hooks/useSceneCatalog';
+import { useSceneCatalog, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
@@ -29,24 +29,6 @@ interface SceneCatalogModalProps {
   onSelectLegacy?: (pose: TryOnPose) => void;
 }
 
-/** Adapt a CustomScene row into a CatalogScene-shaped object so the rail can render it. */
-function customSceneToCatalogShape(scene: CustomScene): CatalogScene {
-  return {
-    id: `cs-${scene.id}`,
-    scene_id: scene.id,
-    title: scene.name,
-    sub_category: null,
-    category_collection: null,
-    scene_type: null,
-    subject: null,
-    shot_style: null,
-    setting: null,
-    preview_image_url: scene.preview_image_url || scene.optimized_image_url || scene.image_url,
-    prompt_template: scene.prompt_hint || scene.description || null,
-    filter_tags: null,
-    created_at: scene.created_at,
-  };
-}
 
 /** Convert a CustomScene back into a TryOnPose for the legacy onSelectLegacy handoff. */
 function customSceneToTryOnPose(scene: CustomScene): TryOnPose {
@@ -112,31 +94,15 @@ export function SceneCatalogModal({
   const showRails = !anyFilterActive;
 
   const recommended = useRecommendedScenes(open && (showRails || quickView === 'recommended'));
-  const productOnlyRail = useSceneRail(
-    'product-only',
-    { subjects: ['product-only'], excludeEssentials: true },
-    12,
-    open && showRails,
-  );
-  const withModelRail = useSceneRail(
-    'with-model',
-    { subjects: ['with-model'], excludeEssentials: true },
-    12,
-    open && showRails,
-  );
 
-  // Filtered grid (always exclude Essential Shots in Freestyle modal).
-  const useGrid = anyFilterActive && quickView !== 'recommended';
+  // Default grid: full Freestyle catalog (no filters, excluding Essential Shots).
+  // When filters are active we use the same hook with the user-selected filters.
+  const useGrid = quickView !== 'recommended';
   const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
   const counts = useSceneCounts();
 
-  // Freestyle Scenes — live custom_scenes from /app/admin/scenes, capped at 12.
+  // Custom scenes still loaded so cs- selections continue to resolve correctly.
   const customScenesQuery = useCustomScenes();
-  const freestyleScenes = useMemo<CatalogScene[]>(() => {
-    if (!showRails) return [];
-    const rows = customScenesQuery.scenes ?? [];
-    return rows.slice(0, 12).map(customSceneToCatalogShape);
-  }, [showRails, customScenesQuery.scenes]);
 
   // Recommended rail — strip any "Essential Shots" rows defensively.
   const recommendedScenes = useMemo<CatalogScene[]>(() => {
@@ -308,35 +274,24 @@ export function SceneCatalogModal({
               {showRails ? (
                 <>
                   <SceneCatalogRail
-                    title="Freestyle Scenes"
-                    scenes={freestyleScenes}
-                    isLoading={customScenesQuery.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                  />
-                  <SceneCatalogRail
                     title="Recommended for you"
                     scenes={recommendedScenes}
                     isLoading={recommended.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
                   />
-                  <SceneCatalogRail
-                    title="Product Only"
-                    scenes={productOnlyRail.data}
-                    isLoading={productOnlyRail.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                    onViewAll={() => handleViewAllSubject('product-only')}
-                  />
-                  <SceneCatalogRail
-                    title="With Model"
-                    scenes={withModelRail.data}
-                    isLoading={withModelRail.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                    onViewAll={() => handleViewAllSubject('with-model')}
-                  />
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
+                    <SceneCatalogGrid
+                      pages={grid.data?.pages ?? []}
+                      isLoading={grid.isLoading}
+                      isFetchingNextPage={grid.isFetchingNextPage}
+                      hasNextPage={!!grid.hasNextPage}
+                      onLoadMore={() => grid.fetchNextPage()}
+                      selectedSceneId={currentSelectedId}
+                      onSelect={handleSelect}
+                    />
+                  </div>
                 </>
               ) : quickView === 'recommended' ? (
                 <SceneCatalogGrid

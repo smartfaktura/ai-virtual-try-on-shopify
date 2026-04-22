@@ -12,6 +12,7 @@ import { toast } from '@/lib/brandedToast';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { cn } from '@/lib/utils';
+import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
 
 interface SceneRow {
   id: string;
@@ -28,12 +29,26 @@ interface RecommendedRow {
   id: string;
   scene_id: string;
   sort_order: number;
+  category: string | null;
 }
+
+// 'global' is the UI key for the null category bucket.
+const GLOBAL = 'global';
+const CATEGORY_TABS: { key: string; label: string }[] = [
+  { key: GLOBAL, label: 'Global' },
+  ...PRODUCT_CATEGORIES.filter(c => c.id !== 'any').map(c => ({ key: c.id, label: c.label })),
+];
+
+const RECOMMENDED_CAP = 12;
 
 export default function AdminRecommendedScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>(GLOBAL);
+
+  // DB value: null for Global, the category id otherwise.
+  const dbCategory = activeCategory === GLOBAL ? null : activeCategory;
 
   const { data: scenes = [], isLoading: scenesLoading } = useQuery({
     queryKey: ['admin-all-scenes-light'],
@@ -51,13 +66,14 @@ export default function AdminRecommendedScenes() {
   });
 
   const { data: recommended = [], isLoading: recLoading } = useQuery({
-    queryKey: ['admin-recommended-scenes'],
+    queryKey: ['admin-recommended-scenes', dbCategory],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q: any = supabase
         .from('recommended_scenes' as any)
-        .select('id, scene_id, sort_order')
-        .order('sort_order', { ascending: true });
+        .select('id, scene_id, sort_order, category');
+      q = dbCategory === null ? q.is('category', null) : q.eq('category', dbCategory);
+      const { data, error } = await q.order('sort_order', { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as RecommendedRow[];
     },
@@ -91,6 +107,11 @@ export default function AdminRecommendedScenes() {
     );
   }, [scenes, search]);
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ['admin-recommended-scenes'] });
+    qc.invalidateQueries({ queryKey: ['scene-recommended'] });
+  };
+
   const addMutation = useMutation({
     mutationFn: async (scene_id: string) => {
       const { data: u } = await supabase.auth.getUser();
@@ -100,12 +121,12 @@ export default function AdminRecommendedScenes() {
         scene_id,
         sort_order: nextSort,
         created_by: u.user.id,
+        category: dbCategory,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-recommended-scenes'] });
-      qc.invalidateQueries({ queryKey: ['recommended-scenes'] });
+      invalidate();
       toast.success('Added to recommended');
     },
     onError: (e: any) => toast.error(e.message),
@@ -113,12 +134,13 @@ export default function AdminRecommendedScenes() {
 
   const removeMutation = useMutation({
     mutationFn: async (scene_id: string) => {
-      const { error } = await supabase.from('recommended_scenes' as any).delete().eq('scene_id', scene_id);
+      let q: any = supabase.from('recommended_scenes' as any).delete().eq('scene_id', scene_id);
+      q = dbCategory === null ? q.is('category', null) : q.eq('category', dbCategory);
+      const { error } = await q;
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-recommended-scenes'] });
-      qc.invalidateQueries({ queryKey: ['recommended-scenes'] });
+      invalidate();
       toast.success('Removed');
     },
     onError: (e: any) => toast.error(e.message),
@@ -134,10 +156,7 @@ export default function AdminRecommendedScenes() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-recommended-scenes'] });
-      qc.invalidateQueries({ queryKey: ['recommended-scenes'] });
-    },
+    onSuccess: invalidate,
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -155,6 +174,9 @@ export default function AdminRecommendedScenes() {
   if (adminLoading) return null;
   if (!isAdmin) return <Navigate to="/app" replace />;
 
+  const overCap = recommendedScenes.length > RECOMMENDED_CAP;
+  const activeLabel = CATEGORY_TABS.find(t => t.key === activeCategory)?.label ?? 'Global';
+
   return (
     <div className="container max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -164,17 +186,44 @@ export default function AdminRecommendedScenes() {
         <div>
           <h1 className="text-2xl font-semibold">Recommended Scenes</h1>
           <p className="text-sm text-muted-foreground">
-            Curate the "Recommended for you" rail in the Freestyle scene catalog. Personalisation also auto-fills from each user's onboarding categories.
+            Curate the "Recommended for you" rail per onboarding category. Aim for {RECOMMENDED_CAP} scenes per list. Users get a merged list from all categories they picked at signup, with Global as the fallback.
           </p>
         </div>
       </div>
 
+      {/* Category selector */}
+      <div className="flex flex-wrap gap-2">
+        {CATEGORY_TABS.map(tab => {
+          const isActive = tab.key === activeCategory;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveCategory(tab.key)}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                isActive
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-foreground border-border hover:border-border/80'
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Featured set */}
       <section className="border border-border/40 rounded-xl bg-card">
-        <header className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
+        <header className="px-4 py-3 border-b border-border/40 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold">Featured ({recommendedScenes.length})</h2>
+            <h2 className="text-sm font-semibold">
+              {activeLabel} · Featured ({recommendedScenes.length}/{RECOMMENDED_CAP})
+            </h2>
+            {overCap && (
+              <Badge variant="destructive" className="text-[10px]">Over cap</Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">Top of the rail. Reorder with arrows.</p>
         </header>
@@ -187,7 +236,7 @@ export default function AdminRecommendedScenes() {
             </div>
           ) : recommendedScenes.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No featured scenes yet. Add some from the list below.
+              No featured scenes for {activeLabel} yet. Add some from the list below.
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
