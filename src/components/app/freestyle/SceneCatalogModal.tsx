@@ -11,7 +11,7 @@ import {
 import { SceneCatalogSidebar, type QuickView } from './SceneCatalogSidebar';
 import { SceneCatalogRail } from './SceneCatalogRail';
 import { SceneCatalogGrid } from './SceneCatalogGrid';
-import { useSceneCatalog, useSceneRail, type CatalogScene } from '@/hooks/useSceneCatalog';
+import { useSceneCatalog, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
@@ -29,24 +29,6 @@ interface SceneCatalogModalProps {
   onSelectLegacy?: (pose: TryOnPose) => void;
 }
 
-/** Adapt a CustomScene row into a CatalogScene-shaped object so the rail can render it. */
-function customSceneToCatalogShape(scene: CustomScene): CatalogScene {
-  return {
-    id: `cs-${scene.id}`,
-    scene_id: scene.id,
-    title: scene.name,
-    sub_category: null,
-    category_collection: null,
-    scene_type: null,
-    subject: null,
-    shot_style: null,
-    setting: null,
-    preview_image_url: scene.preview_image_url || scene.optimized_image_url || scene.image_url,
-    prompt_template: scene.prompt_hint || scene.description || null,
-    filter_tags: null,
-    created_at: scene.created_at,
-  };
-}
 
 /** Convert a CustomScene back into a TryOnPose for the legacy onSelectLegacy handoff. */
 function customSceneToTryOnPose(scene: CustomScene): TryOnPose {
