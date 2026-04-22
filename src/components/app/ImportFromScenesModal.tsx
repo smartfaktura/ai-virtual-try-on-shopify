@@ -12,6 +12,7 @@ import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle } from 'lucide
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toast } from 'sonner';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
