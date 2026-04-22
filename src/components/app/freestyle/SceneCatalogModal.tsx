@@ -212,11 +212,11 @@ export function SceneCatalogModal({
   };
 
   const handleSelect = (scene: CatalogScene) => {
-    if (scene.id.startsWith('legacy-')) {
-      // Find the original mock pose to preserve full TryOnPose shape (incl. previewUrlMale, etc.)
-      const pose = mockTryOnPoses.find(p => p.poseId === scene.scene_id);
-      if (pose) {
-        setPendingLegacy(pose);
+    if (scene.id.startsWith('cs-')) {
+      // Resolve back to the original custom_scenes row to emit a TryOnPose-shaped object.
+      const row = (customScenesQuery.scenes ?? []).find(s => s.id === scene.scene_id);
+      if (row) {
+        setPendingLegacy(customSceneToTryOnPose(row));
         setPendingScene(null);
         return;
       }
@@ -319,16 +319,16 @@ export function SceneCatalogModal({
               {showRails ? (
                 <>
                   <SceneCatalogRail
-                    title="Recommended for you"
-                    scenes={recommended.data}
-                    isLoading={recommended.isLoading}
+                    title="Freestyle Scenes"
+                    scenes={freestyleScenes}
+                    isLoading={customScenesQuery.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
                   />
                   <SceneCatalogRail
-                    title="Freestyle Originals"
-                    scenes={freestyleOriginals}
-                    isLoading={false}
+                    title="Recommended for you"
+                    scenes={recommendedScenes}
+                    isLoading={recommended.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
                   />
