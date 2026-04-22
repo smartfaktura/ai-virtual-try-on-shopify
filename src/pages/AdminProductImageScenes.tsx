@@ -1238,6 +1238,9 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
           />
         </div>
       </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Prompt Template</Label>
         <Textarea
           value={draft.prompt_template || ''}
           onChange={e => set('prompt_template', e.target.value)}
