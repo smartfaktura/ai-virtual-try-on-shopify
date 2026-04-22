@@ -10,6 +10,20 @@ import { Card } from '@/components/ui/card';
 import { Loader2, Download, Search, ArrowUpDown, TrendingUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { mockTryOnPoses } from '@/data/mockData';
+
+// Static lookup for built-in freestyle/try-on scenes (pose_* and scene_* IDs)
+const STATIC_SCENE_META = new Map<string, SceneMeta>(
+  mockTryOnPoses.map((p) => [
+    p.poseId,
+    {
+      id: p.poseId,
+      name: p.name,
+      category: p.category ?? 'Freestyle',
+      thumbnail: (p.previewUrl as unknown as string) ?? null,
+    },
+  ])
+);
 
 type Window = 30 | 60 | 90;
 type SortKey = 'total_uses' | 'unique_users' | 'last_used_at' | 'name';
@@ -82,10 +96,27 @@ export default function SceneUsage() {
         ])).filter(Boolean);
 
         const metaMap = new Map<string, SceneMeta>();
+
+        // 1) Seed with static built-ins (pose_*, scene_*)
+        for (const id of ids) {
+          const s = STATIC_SCENE_META.get(id);
+          if (s) metaMap.set(id, s);
+        }
+
         if (ids.length > 0) {
+          // 2) DB-backed product image scenes (scene_id is text, matches as-is)
+          const pisIds = ids.filter((i) => !metaMap.has(i) && !i.startsWith('custom-'));
+          // 3) Custom scenes — strip "custom-" prefix to match UUID in custom_scenes.id
+          const customPrefixed = ids.filter((i) => i.startsWith('custom-'));
+          const customIds = customPrefixed.map((i) => i.slice('custom-'.length));
+
           const [pisRes, customRes] = await Promise.all([
-            supabase.from('product_image_scenes').select('scene_id,title,sub_category,category_collection,preview_image_url').in('scene_id', ids),
-            supabase.from('custom_scenes').select('id,name,category,preview_image_url,image_url').in('id', ids),
+            pisIds.length
+              ? supabase.from('product_image_scenes').select('scene_id,title,sub_category,category_collection,preview_image_url').in('scene_id', pisIds)
+              : Promise.resolve({ data: [] as any[] }),
+            customIds.length
+              ? supabase.from('custom_scenes').select('id,name,category,preview_image_url,image_url').in('id', customIds)
+              : Promise.resolve({ data: [] as any[] }),
           ]);
           (pisRes.data ?? []).forEach((s: any) => {
             metaMap.set(s.scene_id, {
@@ -96,10 +127,11 @@ export default function SceneUsage() {
             });
           });
           (customRes.data ?? []).forEach((s: any) => {
-            if (metaMap.has(s.id)) return;
-            metaMap.set(s.id, {
-              id: s.id,
-              name: s.name ?? s.id,
+            const prefixedId = `custom-${s.id}`;
+            if (metaMap.has(prefixedId)) return;
+            metaMap.set(prefixedId, {
+              id: prefixedId,
+              name: s.name ?? prefixedId,
               category: s.category ?? 'Custom',
               thumbnail: s.preview_image_url ?? s.image_url ?? null,
             });
