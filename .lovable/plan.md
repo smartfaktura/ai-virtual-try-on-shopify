@@ -1,139 +1,84 @@
 
 
-## Freestyle Scene Catalog — refinement pass
+## Sidebar — Family → Sub-families (grounded in real data)
 
-Tightens the modal based on your feedback. All changes are UI/state/query — **zero DB schema changes, zero generation pipeline changes**. Fully reversible behind the existing `VITE_SCENE_CATALOG_V2` flag.
+Sidebar shows **Product Family + its direct collection slugs** (one level deep). Slugs are taken verbatim from `category_collection` in the DB — no invented names.
 
----
+### Real sub-families per family (from live DB)
 
-### 1. Sidebar — simplified to 3 sections
+| Family | Sub-families (slug → label) | Scenes |
+|---|---|---|
+| Fashion | garments, dresses, hoodies, jeans, jackets, lingerie, swimwear | 7 items |
+| Footwear | sneakers, shoes, boots, high-heels | 4 items |
+| Activewear | activewear | 1 (no expand) |
+| Bags & Accessories | bags-accessories, backpacks, belts, scarves, hats-small, wallets, wallets-cardholders | 7 items |
+| Jewelry | jewellery-rings, jewellery-bracelets, jewellery-necklaces, jewellery-earrings | 4 items |
+| Eyewear | eyewear | 1 (no expand) |
+| Watches | watches | 1 (no expand) |
+| Beauty | beauty-skincare, makeup-lipsticks | 2 items |
+| Fragrance | fragrance | 1 (no expand) |
+| Home | home-decor, furniture | 2 items |
+| Tech | tech-devices | 1 (no expand) |
+| Food & Drink | beverages, food, snacks-food | 3 items |
+| Wellness | supplements-wellness | 1 (no expand) |
 
-```
-QUICK
-  All scenes        (count)
-  Recommended       (count)
-  New               (count, last 14 days)
+If a family has only **one** collection, the sidebar shows just the family row (no expand arrow, no nested item) — clicking it filters that one collection directly.
 
-PRODUCT FAMILIES        ← single-select (radio, not multi)
-  Fashion           (count)
-  Footwear          (count)
-  Bags              (count)
-  Beauty            (count)
-  Fragrance         (count)
-  Eyewear           (count)
-  Activewear        (count)
-  Home & Living     (count)
-  Tech              (count)
-  Food & Beverage   (count)
-  Other             (count)
+### Label rendering
 
-SHOT TYPES              ← Product Only + With Model only
-  Product Only      (count)
-  With Model        (count)
-```
+Slugs are humanised at render time with a small `SUB_FAMILY_LABEL_OVERRIDES` map for non-obvious cases. Everything else falls back to `slug.replace(/-/g,' ')` title-cased.
 
-- **Product Families** becomes single-select. Clicking Lingerie when Jackets is active **replaces** the selection (not adds). Click the active family again to clear.
-- **Shot Types** keeps only `Product Only` and `With Model`. Removes Hands Only, Packshot, Editorial, Lifestyle, Flat Lay, Close-up, Portrait, Still Life, Campaign from the sidebar. (Underlying DB columns remain — just hidden from the UI.)
-- **All scenes** = clears every filter.
-- **Recommended** = same hybrid logic as today (admin-featured + onboarding personalisation).
-- **New** = `ORDER BY created_at DESC LIMIT 24`, scenes <14 days show a small "New" pill on card.
-
-### 2. Top bar — compact
-
-Replace the wide search + chip strip with a single compact row:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ [🔍 small input 280px]   [Product Only ✓] [With Model]      │  Sort ▾
-└─────────────────────────────────────────────────────────────┘
-```
-
-- Search input shrinks to ~280px max, left-aligned, icon inside.
-- Two horizontal pill chips on the right of search: **Product Only**, **With Model** — multi-select (both on = OR within axis). These mirror sidebar Shot Types so either control updates the same state.
-- Removes: Editorial / Lifestyle / Outdoor / Seasonal / Popular / New chips from the top bar (Recommended/New live in sidebar; the rest aren't needed now).
-- Sort dropdown stays (Recommended / Popular / New).
-
-### 3. Default view (no filter active) — Freestyle scenes first
-
-Rails order on open:
-
-1. **Recommended for you** (existing logic)
-2. **Freestyle Originals** — `mockTryOnPoses` from `src/data/mockData.ts` (the original Freestyle scenes), shown as a horizontal rail, max 12. These are the scenes Freestyle users already know. Selecting one preserves today's behaviour (no `pis-` prefix).
-3. **Product Only** — `subject = 'product-only' AND sub_category NOT ILIKE '%essential%' ORDER BY sort_order LIMIT 12`
-4. **With Model** — `subject = 'with-model' ORDER BY sort_order LIMIT 12`
-
-(Drops the "Editorial" rail since Editorial is no longer a top-level UI concept.)
-
-### 4. Essential shots pushed to the bottom within each family
-
-When a Product Family is selected, the grid order changes from raw `sort_order` to:
-
-```sql
-ORDER BY
-  CASE WHEN sub_category ILIKE '%essential%' THEN 1 ELSE 0 END,
-  sort_order ASC
+```ts
+// src/lib/sceneTaxonomy.ts
+export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
+  'garments': 'Tops & Shirts',
+  'hats-small': 'Hats',
+  'wallets-cardholders': 'Cardholders',
+  'bags-accessories': 'Bags',
+  'beauty-skincare': 'Skincare',
+  'makeup-lipsticks': 'Makeup',
+  'jewellery-rings': 'Rings',
+  'jewellery-bracelets': 'Bracelets',
+  'jewellery-necklaces': 'Necklaces',
+  'jewellery-earrings': 'Earrings',
+  'high-heels': 'Heels',
+  'home-decor': 'Decor',
+  'tech-devices': 'Devices',
+  'snacks-food': 'Snacks',
+  'supplements-wellness': 'Wellness',
+};
 ```
 
-Result: editorial/lifestyle/with-model scenes appear first; the white-background "Essential / Studio Pack" shots move to the end of the list. Same rule applied in the infinite grid query and inside any rail that scopes to a family.
+Output examples:
+- Bags & Accessories → Bags / Backpacks / Belts / Scarves / Hats / Wallets / Cardholders
+- Footwear → Sneakers / Shoes / Boots / Heels
+- Fashion → Tops & Shirts / Dresses / Hoodies / Jeans / Jackets / Lingerie / Swimwear
 
-### 5. Card — minimal
+### Click behaviour
 
-Remove the two tag chips (subject + shot_style). Card becomes:
+- Family with 1 collection → click filters grid to that collection. No expand.
+- Family with 2+ collections → click expands the list inline + filters grid to whole family. Click a sub-family row → filters grid to just that collection.
+- Click active sub-family again → clears it, returns to whole-family view.
+- Switching families clears any active sub-family.
+- "Essential" `sub_category` rows still pushed to bottom of grid (existing behaviour, unchanged).
 
-```
-┌──────────────┐
-│              │
-│   [image]    │   ← preview, lazy
-│              │
-├──────────────┤
-│ Title        │   ← single line, truncate
-└──────────────┘
-```
+### Files touched
 
-- No subject/shot_style chips.
-- "New" pill (top-left, 10px) only when scene was created in the last 14 days.
-- Selected = thin primary border + checkmark in top-right corner.
-- Hover = subtle elevation, no overlay text.
+- `src/lib/sceneTaxonomy.ts` — add `SUB_FAMILY_LABEL_OVERRIDES` + `getSubFamilyLabel(slug)` helper.
+- `src/hooks/useSceneCounts.ts` — already returns `byCollection`; expose derived `bySubFamilyByFamily` (one extra grouping pass over the existing payload, no new query).
+- `src/components/app/freestyle/SceneCatalogSidebar.tsx` — render sub-families under the active family; skip expand UI when only 1 sub-family exists.
+- `src/components/app/freestyle/SceneCatalogModal.tsx` — wire `categoryCollection` filter; clear it when family changes.
+- `src/hooks/useSceneCatalog.ts` — accept `categoryCollection?: string` (`.eq('category_collection', value)`).
 
-### 6. State logic
+### Untouched
 
-| Action | Effect |
-|---|---|
-| Click family in sidebar | Replaces previous family (single-select). Grid shows that family with essentials pushed last. |
-| Click same family again | Clears family filter → returns to default rails. |
-| Click Product Only / With Model (sidebar OR top chip) | Toggles in `subjects[]` array (still multi-select within Shot Types axis). |
-| Click All scenes | Clears every filter, returns to default rails. |
-| Click Recommended | Sets sort to `recommended` and shows only the recommended set as a single grid. |
-| Click New | Sets sort to `new`, no other filters. |
+DB schema, RLS, generation pipeline, edge functions, admin pages, top-bar filters, card design, "All scenes / Recommended / New" sidebar section.
 
-URL hash mirrors `family`, `subjects`, `q`, `sort` so back-button works inside the modal.
+### Validation
 
-### 7. Files touched
-
-**Edited only — no new files, no migration:**
-- `src/components/app/freestyle/SceneCatalogSidebar.tsx` — reduce to 3 sections; family becomes single-select; Shot Types limited to two values.
-- `src/components/app/freestyle/SceneCatalogFilters.tsx` — compact search; only Product Only / With Model chips; remove others.
-- `src/components/app/freestyle/SceneCatalogModal.tsx` — wire single-select family handler; reorder default rails (Recommended → Freestyle Originals → Product Only → With Model); merge `mockTryOnPoses` into the Originals rail.
-- `src/components/app/freestyle/SceneCatalogCard.tsx` — strip tag chips; keep only title + optional New pill.
-- `src/hooks/useSceneCatalog.ts` — append the "essentials last" CASE ordering when a family is active; exclude `%essential%` from the Product Only default rail.
-- `src/hooks/useSceneCounts.ts` — add count for `mockTryOnPoses.length` ("All scenes" total includes Freestyle originals).
-
-**Untouched:**
-- DB schema, RLS, indexes, edge functions, generation pipeline, Product Visuals wizard, admin pages.
-
-### 8. Validation
-
-- Open `/app/freestyle` Scene chip → modal shows Recommended → Freestyle Originals → Product Only → With Model rails.
-- Sidebar shows 3 sections; Shot Types contains only Product Only + With Model.
-- Click Jackets → grid loads jackets; click Lingerie → grid switches to lingerie (not multi-select).
-- Within Jackets, "Essential" / "Studio Pack" sub-categories appear at the bottom, not the top.
-- Top bar shows compact search + 2 chips; chips multi-select with sidebar Shot Types in sync.
-- Card shows only title (no subject/shot_style chips); selected state has checkmark.
-- Picking a Freestyle Originals scene generates exactly as today (no regression).
-- Picking a Product Visuals scene still uses `pis-` prefix + sanitised template.
-
-### Out of scope (explicit)
-- DB column drops (Hands Only / Packshot / Editorial / etc. stay in DB; just hidden in UI — leaves room to re-enable later).
-- Touching admin scene editor (Subject/Shot Style fields stay editable in admin).
-- Workflow scene pickers reusing the modal.
+- Click Eyewear → grid filters to 56 eyewear scenes; **no** "Sunglasses" sub-row appears (because it doesn't exist).
+- Click Bags & Accessories → expands to 7 real sub-families with correct counts.
+- Click Footwear → Sneakers / Shoes / Boots / Heels with correct counts (84 / 60 / 47 / 36).
+- Counts add up: family count = sum of its sub-family counts.
+- Generation behaviour unchanged.
 
