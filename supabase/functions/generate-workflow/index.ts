@@ -983,6 +983,7 @@ async function completeQueueJob(
     creative_drop_id: payload.creative_drop_id || null,
     prompt_final: payload.prompt || null,
     scene_name: payload.pose?.name || payload.scene_name || null,
+    scene_id: (payload.pose as any)?.id ?? (payload as any).scene_id ?? null,
     model_name: payload.model?.name || payload.model_name || null,
     scene_image_url: payload.pose?.originalImageUrl || null,
     model_image_url: payload.model?.originalImageUrl || null,
