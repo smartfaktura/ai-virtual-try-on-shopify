@@ -83,7 +83,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
 
   const triggerButton = (
     <button
-      onClick={isMobile ? () => onOpenChange(!open) : undefined}
+      onClick={() => onOpenChange(!open)}
       className={cn(
         "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors min-w-0",
         fullWidth ? "w-full max-w-none" : "max-w-[140px]"
