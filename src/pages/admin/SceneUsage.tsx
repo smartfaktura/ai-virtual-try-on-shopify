@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -28,6 +28,7 @@ const STATIC_SCENE_META = new Map<string, SceneMeta>(
 type Window = 30 | 60 | 90;
 type SortKey = 'total_uses' | 'unique_users' | 'last_used_at' | 'name';
 type Dir = 'asc' | 'desc';
+const PAGE_SIZE = 50;
 
 interface PopularityRow {
   scene_id: string;
@@ -48,6 +49,100 @@ interface SceneMeta {
 
 const TRACKING_START = '2026-04-22';
 
+async function fetchInChunks<T>(
+  ids: string[],
+  fetcher: (chunk: string[]) => Promise<{ data: T[] | null; error: any }>,
+  chunkSize = 200,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const { data, error } = await fetcher(chunk);
+    if (error) throw error;
+    if (data) out.push(...data);
+  }
+  return out;
+}
+
+// Resolve metadata for a list of scene IDs. Seeds static meta first, then queries DB
+// only for IDs that aren't already in the existing map.
+async function resolveMetaForIds(ids: string[], existing: Map<string, SceneMeta>): Promise<Map<string, SceneMeta>> {
+  const next = new Map(existing);
+  const todo = ids.filter((id) => id && !next.has(id));
+  if (todo.length === 0) return next;
+
+  // 1) Static built-ins
+  const remaining: string[] = [];
+  for (const id of todo) {
+    const s = STATIC_SCENE_META.get(id);
+    if (s) next.set(id, s);
+    else remaining.push(id);
+  }
+  if (remaining.length === 0) return next;
+
+  // 2) Product image scenes (handle pis- prefix)
+  const pisPrefixed = remaining.filter((i) => i.startsWith('pis-'));
+  const customPrefixed = remaining.filter((i) => i.startsWith('custom-'));
+  const rawPisIds = remaining.filter((i) => !i.startsWith('pis-') && !i.startsWith('custom-'));
+  const strippedFromPrefix = pisPrefixed.map((i) => i.slice('pis-'.length));
+  const pisQueryIds = Array.from(new Set([...rawPisIds, ...strippedFromPrefix]));
+  const reverseKeys = new Map<string, string[]>();
+  for (const id of rawPisIds) {
+    const arr = reverseKeys.get(id) ?? []; arr.push(id); reverseKeys.set(id, arr);
+  }
+  for (const id of pisPrefixed) {
+    const real = id.slice('pis-'.length);
+    const arr = reverseKeys.get(real) ?? []; arr.push(id); reverseKeys.set(real, arr);
+  }
+  const customIds = customPrefixed.map((i) => i.slice('custom-'.length));
+
+  const [pisData, customData] = await Promise.all([
+    pisQueryIds.length
+      ? fetchInChunks<any>(pisQueryIds, async (chunk) => {
+          const res = await supabase
+            .from('product_image_scenes')
+            .select('scene_id,title,sub_category,category_collection,preview_image_url')
+            .in('scene_id', chunk);
+          return { data: res.data, error: res.error };
+        })
+      : Promise.resolve([] as any[]),
+    customIds.length
+      ? fetchInChunks<any>(customIds, async (chunk) => {
+          const res = await supabase
+            .from('custom_scenes')
+            .select('id,name,category,preview_image_url,image_url')
+            .in('id', chunk);
+          return { data: res.data, error: res.error };
+        })
+      : Promise.resolve([] as any[]),
+  ]);
+
+  (pisData ?? []).forEach((s: any) => {
+    const meta: SceneMeta = {
+      id: s.scene_id,
+      name: s.title ?? s.scene_id,
+      category: s.category_collection ?? s.sub_category ?? 'Product Images',
+      thumbnail: s.preview_image_url ?? null,
+    };
+    const keys = reverseKeys.get(s.scene_id) ?? [s.scene_id];
+    for (const k of keys) {
+      next.set(k, { ...meta, id: k });
+    }
+  });
+  (customData ?? []).forEach((s: any) => {
+    const prefixedId = `custom-${s.id}`;
+    if (next.has(prefixedId)) return;
+    next.set(prefixedId, {
+      id: prefixedId,
+      name: s.name ?? prefixedId,
+      category: s.category ?? 'Custom',
+      thumbnail: s.preview_image_url ?? s.image_url ?? null,
+    });
+  });
+
+  return next;
+}
+
 export default function SceneUsage() {
   const { isRealAdmin, isLoading: adminLoading } = useIsAdmin();
 
@@ -57,10 +152,20 @@ export default function SceneUsage() {
   const [meta, setMeta] = useState<Map<string, SceneMeta>>(new Map());
   const [uniqueUsers, setUniqueUsers] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('total_uses');
   const [sortDir, setSortDir] = useState<Dir>('desc');
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const metaRef = useRef(meta);
+  metaRef.current = meta;
 
+  // Reset pagination when filters/sort/window change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [windowDays, search, sortKey, sortDir]);
+
+  // Load popularity + unique users + risers (no per-scene metadata here)
   useEffect(() => {
     if (!isRealAdmin) return;
     let cancelled = false;
@@ -68,20 +173,16 @@ export default function SceneUsage() {
     async function load() {
       setLoading(true);
       try {
-        // Main rollup + true distinct user count (in parallel)
-        const [popRes, uniqRes] = await Promise.all([
+        const [popRes, uniqRes, last7Res, prior14Res] = await Promise.all([
           supabase.rpc('get_scene_popularity' as any, { p_days: windowDays }),
           supabase.rpc('get_scene_unique_user_count' as any, { p_days: windowDays }),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }),
         ]);
         if (popRes.error) throw popRes.error;
         const mainRows = (popRes.data ?? []) as PopularityRow[];
         const trueUniqueUsers = Number(uniqRes.data ?? 0);
 
-        // Risers: 7d vs prior 7d
-        const [last7Res, prior14Res] = await Promise.all([
-          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }),
-          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }),
-        ]);
         const last7 = (last7Res.data ?? []) as PopularityRow[];
         const prior14 = (prior14Res.data ?? []) as PopularityRow[];
         const last7Map = new Map(last7.map((r) => [r.scene_id, Number(r.total_uses)]));
@@ -90,113 +191,21 @@ export default function SceneUsage() {
         const computedRisers = Array.from(allIds).map((id) => {
           const cur = last7Map.get(id) ?? 0;
           const prev14 = prior14Map.get(id) ?? 0;
-          const prev7 = Math.max(0, prev14 - cur); // prior 7-day window
+          const prev7 = Math.max(0, prev14 - cur);
           return { scene_id: id, delta: cur - prev7, current: cur };
         }).filter((r) => r.current > 0).sort((a, b) => b.delta - a.delta).slice(0, 10);
-
-        // Resolve metadata for the union of scene IDs
-        const ids = Array.from(new Set([
-          ...mainRows.map((r) => r.scene_id),
-          ...computedRisers.map((r) => r.scene_id),
-        ])).filter(Boolean);
-
-        const metaMap = new Map<string, SceneMeta>();
-
-        // 1) Seed with static built-ins (pose_*, scene_*)
-        for (const id of ids) {
-          const s = STATIC_SCENE_META.get(id);
-          if (s) metaMap.set(id, s);
-        }
-
-        if (ids.length > 0) {
-          // 2) DB-backed product image scenes — collect raw IDs and "pis-" prefixed IDs
-          //    from Freestyle (which namespaces Product Visuals scenes with PIS_PREFIX).
-          const remaining = ids.filter((i) => !metaMap.has(i) && !i.startsWith('custom-'));
-          const pisPrefixed = remaining.filter((i) => i.startsWith('pis-'));
-          const rawPisIds = remaining.filter((i) => !i.startsWith('pis-'));
-          const strippedFromPrefix = pisPrefixed.map((i) => i.slice('pis-'.length));
-          // Union of real scene_id values to query
-          const pisQueryIds = Array.from(new Set([...rawPisIds, ...strippedFromPrefix]));
-          // Reverse map: real scene_id -> all original keys to write back into metaMap
-          const reverseKeys = new Map<string, string[]>();
-          for (const id of rawPisIds) {
-            const arr = reverseKeys.get(id) ?? []; arr.push(id); reverseKeys.set(id, arr);
-          }
-          for (const id of pisPrefixed) {
-            const real = id.slice('pis-'.length);
-            const arr = reverseKeys.get(real) ?? []; arr.push(id); reverseKeys.set(real, arr);
-          }
-
-          // 3) Custom scenes — strip "custom-" prefix to match UUID in custom_scenes.id
-          const customPrefixed = ids.filter((i) => i.startsWith('custom-'));
-          const customIds = customPrefixed.map((i) => i.slice('custom-'.length));
-
-          async function fetchInChunks<T>(
-            ids: string[],
-            fetcher: (chunk: string[]) => Promise<{ data: T[] | null; error: any }>,
-            chunkSize = 200,
-          ): Promise<T[]> {
-            const out: T[] = [];
-            for (let i = 0; i < ids.length; i += chunkSize) {
-              const chunk = ids.slice(i, i + chunkSize);
-              const { data, error } = await fetcher(chunk);
-              if (error) throw error;
-              if (data) out.push(...data);
-            }
-            return out;
-          }
-
-          const [pisData, customData] = await Promise.all([
-            pisQueryIds.length
-              ? fetchInChunks<any>(pisQueryIds, async (chunk) => {
-                  const res = await supabase
-                    .from('product_image_scenes')
-                    .select('scene_id,title,sub_category,category_collection,preview_image_url')
-                    .in('scene_id', chunk);
-                  return { data: res.data, error: res.error };
-                })
-              : Promise.resolve([] as any[]),
-            customIds.length
-              ? fetchInChunks<any>(customIds, async (chunk) => {
-                  const res = await supabase
-                    .from('custom_scenes')
-                    .select('id,name,category,preview_image_url,image_url')
-                    .in('id', chunk);
-                  return { data: res.data, error: res.error };
-                })
-              : Promise.resolve([] as any[]),
-          ]);
-          const pisRes = { data: pisData };
-          const customRes = { data: customData };
-          (pisRes.data ?? []).forEach((s: any) => {
-            const meta: SceneMeta = {
-              id: s.scene_id,
-              name: s.title ?? s.scene_id,
-              category: s.category_collection ?? s.sub_category ?? 'Product Images',
-              thumbnail: s.preview_image_url ?? null,
-            };
-            const keys = reverseKeys.get(s.scene_id) ?? [s.scene_id];
-            for (const k of keys) {
-              metaMap.set(k, { ...meta, id: k });
-            }
-          });
-          (customRes.data ?? []).forEach((s: any) => {
-            const prefixedId = `custom-${s.id}`;
-            if (metaMap.has(prefixedId)) return;
-            metaMap.set(prefixedId, {
-              id: prefixedId,
-              name: s.name ?? prefixedId,
-              category: s.category ?? 'Custom',
-              thumbnail: s.preview_image_url ?? s.image_url ?? null,
-            });
-          });
-        }
 
         if (cancelled) return;
         setRows(mainRows);
         setRisers(computedRisers);
-        setMeta(metaMap);
         setUniqueUsers(trueUniqueUsers);
+
+        // Resolve risers metadata immediately (only ~10 ids)
+        const riserIds = computedRisers.map((r) => r.scene_id);
+        if (riserIds.length) {
+          const nextMeta = await resolveMetaForIds(riserIds, metaRef.current);
+          if (!cancelled) setMeta(nextMeta);
+        }
       } catch (err: any) {
         console.error('[SceneUsage] load failed', err);
         toast.error(err?.message ?? 'Failed to load scene usage');
@@ -209,6 +218,7 @@ export default function SceneUsage() {
     return () => { cancelled = true; };
   }, [isRealAdmin, windowDays]);
 
+  // Build enriched/filtered using whatever meta is available; missing entries fall back to id.
   const enriched = useMemo(() => {
     return rows.map((r) => {
       const m = meta.get(r.scene_id);
@@ -237,6 +247,25 @@ export default function SceneUsage() {
     });
   }, [enriched, search, sortKey, sortDir]);
 
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
+  // Lazy-load metadata for visible slice
+  useEffect(() => {
+    if (visible.length === 0) return;
+    const missing = visible.map((v) => v.scene_id).filter((id) => !metaRef.current.has(id));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const nextMeta = await resolveMetaForIds(missing, metaRef.current);
+        if (!cancelled) setMeta(nextMeta);
+      } catch (err: any) {
+        console.error('[SceneUsage] meta resolve failed', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [visible]);
+
   const totals = useMemo(() => {
     const totalGens = enriched.reduce((s, r) => s + Number(r.total_uses), 0);
     const totalFs = enriched.reduce((s, r) => s + Number(r.uses_freestyle), 0);
@@ -247,6 +276,16 @@ export default function SceneUsage() {
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir(key === 'name' ? 'asc' : 'desc'); }
+  }
+
+  async function handleLoadMore() {
+    setLoadingMore(true);
+    try {
+      setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+    } finally {
+      // Brief flag for UX; meta resolves via the visible-effect above
+      setTimeout(() => setLoadingMore(false), 200);
+    }
   }
 
   function exportCsv() {
@@ -268,6 +307,8 @@ export default function SceneUsage() {
     return <div className="flex items-center justify-center min-h-[40vh]"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   }
   if (!isRealAdmin) return <Navigate to="/app" replace />;
+
+  const remaining = Math.max(0, filtered.length - visibleCount);
 
   return (
     <div className="space-y-6">
@@ -316,43 +357,54 @@ export default function SceneUsage() {
             ) : filtered.length === 0 ? (
               <div className="p-12 text-center text-sm text-muted-foreground">No scene usage in the selected window yet.</div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                    <tr>
-                      <th className="text-left px-3 py-2 w-14">Thumb</th>
-                      <th className="text-left px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('name')}>Scene <ArrowUpDown className="w-3 h-3" /></button></th>
-                      <th className="text-left px-3 py-2">Source</th>
-                      <th className="text-right px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('total_uses')}>Uses <ArrowUpDown className="w-3 h-3" /></button></th>
-                      <th className="text-right px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('unique_users')}>Users <ArrowUpDown className="w-3 h-3" /></button></th>
-                      <th className="text-right px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('last_used_at')}>Last used <ArrowUpDown className="w-3 h-3" /></button></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((r) => (
-                      <tr key={r.scene_id} className="border-t hover:bg-muted/20">
-                        <td className="px-3 py-2">
-                          {r.thumbnail ? (
-                            <img src={r.thumbnail} alt="" className="w-10 h-10 rounded object-cover bg-muted" loading="lazy" />
-                          ) : (
-                            <div className="w-10 h-10 rounded bg-muted" />
-                          )}
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="font-medium">{r.name}</div>
-                          <div className="text-xs text-muted-foreground">{r.category} · <span className="font-mono">{r.scene_id}</span></div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <Badge variant="secondary" className="capitalize">{r.source.replace('_', ' ')}</Badge>
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums">{Number(r.total_uses).toLocaleString()}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{Number(r.unique_users).toLocaleString()}</td>
-                        <td className="px-3 py-2 text-right text-muted-foreground">{r.last_used_at ? formatDistanceToNow(new Date(r.last_used_at), { addSuffix: true }) : '—'}</td>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                      <tr>
+                        <th className="text-left px-3 py-2 w-14">Thumb</th>
+                        <th className="text-left px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('name')}>Scene <ArrowUpDown className="w-3 h-3" /></button></th>
+                        <th className="text-left px-3 py-2">Source</th>
+                        <th className="text-right px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('total_uses')}>Uses <ArrowUpDown className="w-3 h-3" /></button></th>
+                        <th className="text-right px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('unique_users')}>Users <ArrowUpDown className="w-3 h-3" /></button></th>
+                        <th className="text-right px-3 py-2"><button className="inline-flex items-center gap-1" onClick={() => toggleSort('last_used_at')}>Last used <ArrowUpDown className="w-3 h-3" /></button></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {visible.map((r) => (
+                        <tr key={r.scene_id} className="border-t hover:bg-muted/20">
+                          <td className="px-3 py-2">
+                            {r.thumbnail ? (
+                              <img src={r.thumbnail} alt="" className="w-10 h-10 rounded object-cover bg-muted" loading="lazy" />
+                            ) : (
+                              <div className="w-10 h-10 rounded bg-muted" />
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="font-medium">{r.name}</div>
+                            <div className="text-xs text-muted-foreground">{r.category} · <span className="font-mono">{r.scene_id}</span></div>
+                          </td>
+                          <td className="px-3 py-2">
+                            <Badge variant="secondary" className="capitalize">{r.source.replace('_', ' ')}</Badge>
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums">{Number(r.total_uses).toLocaleString()}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{Number(r.unique_users).toLocaleString()}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{r.last_used_at ? formatDistanceToNow(new Date(r.last_used_at), { addSuffix: true }) : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex items-center justify-between gap-3 px-3 py-3 border-t bg-muted/20 text-xs text-muted-foreground">
+                  <div>Showing {visible.length.toLocaleString()} of {filtered.length.toLocaleString()}</div>
+                  {remaining > 0 && (
+                    <Button size="sm" variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
+                      {loadingMore ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                      Load more ({remaining.toLocaleString()} remaining)
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
           </Card>
 
