@@ -1,6 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  CATEGORY_FAMILY_MAP,
+  FAMILY_ORDER,
+  interleaveByFamily,
+  resolveUserCollections,
+} from '@/lib/sceneTaxonomy';
 import type { CatalogScene } from './useSceneCatalog';
 
 const SLIM_COLUMNS =
