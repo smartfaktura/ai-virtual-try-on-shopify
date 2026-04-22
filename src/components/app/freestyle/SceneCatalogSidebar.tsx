@@ -19,6 +19,10 @@ interface SceneCatalogSidebarProps {
   onSelectFamily: (family: string | null) => void;
   onSelectCategoryCollection: (slug: string | null) => void;
   onSelectQuickView: (view: QuickView) => void;
+  /** When true, render full-width without the desktop-only `hidden lg:block` and fixed width. */
+  mobileMode?: boolean;
+  /** Optional callback fired after a selection is made (e.g., to close the mobile drawer). */
+  onAfterSelect?: () => void;
 }
 
 /** Push any "essential"-flavoured slug to the bottom of a sub-family list. */
