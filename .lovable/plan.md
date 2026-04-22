@@ -1,43 +1,68 @@
 
 
-## Spacious desktop/tablet sizing — Scene Look modal
+## Fix mobile chips not filling their grid columns
 
-The desktop sidebar nav and top filter bar use very small sizes (text-xs / text-[10px], py-1.5, h-8) that look cramped against the rest of the app. Bring them up to a comfortable, mobile-style scale starting at the `lg:` breakpoint (which is exactly when desktop layout kicks in inside this modal — sidebar is `hidden lg:block`, search/chips are `hidden lg:flex`).
+### Cause
 
-### 1. Sidebar — `SceneCatalogSidebar.tsx`
+In `src/components/app/freestyle/FreestyleSettingsChips.tsx` line 297, `cellClass` uses the **direct-child** combinator `[&>button]:w-full`:
 
-Bump desktop (non-mobileMode) sizing closer to the mobile-mode scale:
+```
+[&>button]:w-full [&>button]:justify-center [&>button]:relative [&>button]:px-4
+[&>button>svg:last-child]:absolute [&>button>svg:last-child]:right-3 …
+```
 
-- Sidebar width: `lg:w-60` → `lg:w-72`
-- Outer padding: `px-3 py-2` → `px-4 py-4`
-- Section labels: `text-[10px] px-2 pt-3 pb-1.5` → `text-[11px] px-3 pt-5 pb-2`
-- Row spacing: `space-y-0.5` → `space-y-1`
-- Quick / family rows: `py-1.5 px-2 text-xs rounded-md` → `py-2.5 px-3 text-sm rounded-lg`
-- Sub-family (indented) rows: `pl-6 pr-2 py-1.5 text-xs` → `pl-9 pr-3 py-2 text-sm rounded-lg`
-- Row icons: `w-3.5 h-3.5` → `w-4 h-4`
-- Family chevrons: `w-3 h-3` → `w-3.5 h-3.5`; matching empty spacer also widens
-- Count numbers: `text-[10px]` → `text-xs tabular-nums`
+This works for chips that render a button as the direct child of the cell:
+- Upload Image, Aspect Ratio (1:1), Prompt Helper, Advanced ✅
 
-Result: the sidebar reads like the mobile drawer in the screenshot — generous tap targets, comfortable line-height, enough air between Quick and Product Families.
+But **Product**, **Model**, and **Scene Look** chips are wrapped in an extra `<div>` for the disabled-state opacity (lines 217–231, 244–256, 258–270):
 
-### 2. Top filter bar — `SceneCatalogFilters.tsx`
+```text
+<div class="cellClass">       ← cell
+  <div class="opacity-…">     ← disabled wrapper
+    <button>…</button>        ← actual chip — NOT a direct child
+  </div>
+</div>
+```
 
-Make the desktop search input, Product Only / With Model chips, and Sort select feel like real, full-sized controls (matching the rest of the app):
+So `[&>button]` never matches → those three chips keep their intrinsic content-width and appear undersized inside their full-width grid cells (visible in screenshot: Product, Model don't fill, Scene Look stays small instead of spanning the full row).
 
-- Bar vertical padding: `py-2.5` → `py-3.5`
-- Search wrapper width: `lg:w-[280px]` → `lg:w-[340px]`
-- Search input: `h-8 text-xs pl-8` → `h-10 text-sm pl-10`; icon `w-3.5 h-3.5` → `w-4 h-4` (and shift `left-3.5`); clear button `w-3 h-3` → `w-3.5 h-3.5`
-- Subject chips: `px-3 py-1 text-xs` → `px-4 py-2 text-sm`, gap `gap-1.5` → `gap-2`
-- "Clear all" link: `text-xs px-2 py-1` → `text-sm px-3 py-2`
-- Desktop Sort select: `h-8 w-[140px] text-xs` → `h-10 w-[170px] text-sm`
+### Fix — one-line change
+
+Replace the direct-child combinator `[&>button]` with the descendant combinator `[&_button]` so it reaches chip buttons regardless of wrapper depth. Same fix for the trailing chevron selector.
+
+`src/components/app/freestyle/FreestyleSettingsChips.tsx` line 297:
+
+**Before**
+```
+const cellClass = '[&>button]:w-full [&>button]:justify-center [&>button]:relative [&>button]:px-4 [&>button>svg:last-child]:absolute [&>button>svg:last-child]:right-3 [&>button>svg:last-child]:opacity-40';
+```
+
+**After**
+```
+const cellClass = '[&_button]:w-full [&_button]:justify-center [&_button]:relative [&_button]:px-4 [&_button>svg:last-child]:absolute [&_button>svg:last-child]:right-3 [&_button>svg:last-child]:opacity-40';
+```
+
+Also add `w-full` to the disabled-state wrapper `<div>`s on Product/Model/Scene (lines 218, 245, 259) so the wrapper itself stretches and lets the inner button fill it:
+
+- Line 218: `cn(disabledChips?.product && 'opacity-40')` → `cn('w-full', disabledChips?.product && 'opacity-40')`
+- Line 245: `cn(disabledChips?.model && 'opacity-40 pointer-events-none')` → `cn('w-full', disabledChips?.model && 'opacity-40 pointer-events-none')`
+- Line 259: same pattern with `'w-full'` prepended
+
+### Result
+
+- **Row 1**: Upload Image | Product → both stretch equally ✅
+- **Row 2**: Scene Look truly spans full width as a single wide pill ✅
+- **Row 3**: Model | 1:1 → both stretch equally ✅
+- **Row 4**: Prompt Helper | Advanced → unchanged (already correct) ✅
+- All chips keep centered icon + label, faint chevron pinned right, primary modified-dot on Advanced.
 
 ### Untouched
 
-Mobile layout (the existing `lg:hidden` row stays exactly as-is — it was already correctly sized), grid cards, header, footer, all hooks, RLS, `Freestyle.tsx`, `SceneCatalogModal.tsx` itself.
+Desktop layout (the `if (isMobile)` branch is the only place using `cellClass`), Advanced popover internals, all selector components, types, hooks, RLS, `Freestyle.tsx`.
 
-### Validation
+### Validation (390×818)
 
-- Desktop ≥1024px: sidebar visibly wider with mobile-style row spacing; search input + Product Only / With Model chips + Sort dropdown read at the same scale as primary controls elsewhere in the app.
-- Tablet 820–1023px: still uses the mobile drawer + mobile filter row (unchanged) — already spacious.
-- Mobile <768px: completely unaffected.
+- Product, Model, Scene Look chips visibly fill their grid cells edge-to-edge.
+- Scene Look reads as one full-row button on row 2.
+- No layout shift on desktop ≥768px.
 
