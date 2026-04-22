@@ -149,7 +149,7 @@ export function SceneCatalogSidebar({
     <p
       className={cn(
         'font-semibold uppercase tracking-[0.12em] text-muted-foreground/70',
-        mobileMode ? 'px-4 pt-5 pb-2 text-[11px]' : 'px-2 pt-3 pb-1.5 text-[10px]',
+        mobileMode ? 'px-4 pt-5 pb-2 text-[11px]' : 'px-3 pt-5 pb-2 text-[11px]',
       )}
     >
       {text}
@@ -162,32 +162,32 @@ export function SceneCatalogSidebar({
         'shrink-0 overflow-y-auto bg-muted/20',
         mobileMode
           ? 'w-full h-full'
-          : 'hidden lg:block w-60 border-r border-border/40',
+          : 'hidden lg:block lg:w-72 border-r border-border/40',
       )}
     >
-      <div className={cn(mobileMode ? 'px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]' : 'px-3 py-2')}>
+      <div className={cn(mobileMode ? 'px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]' : 'px-4 py-4')}>
         {sectionLabel('Quick')}
-        <div className={mobileMode ? 'space-y-1' : 'space-y-0.5'}>
+        <div className="space-y-1">
           {renderRow(
             'All scenes',
             counts?.total,
             quickView === 'all' && selectedFamily === null && selectedCategoryCollection === null,
             () => handleQuickViewClick('all'),
-            <LayoutGrid className={cn(mobileMode ? 'w-4 h-4' : 'w-3.5 h-3.5', 'opacity-60')} />,
+            <LayoutGrid className="w-4 h-4 opacity-60" />,
           )}
           {renderRow(
             'Recommended',
             recommendedCount,
             quickView === 'recommended',
             () => handleQuickViewClick('recommended'),
-            <Sparkles className={cn(mobileMode ? 'w-4 h-4' : 'w-3.5 h-3.5', 'opacity-60')} />,
+            <Sparkles className="w-4 h-4 opacity-60" />,
           )}
           {renderRow(
             'New',
             newCount,
             quickView === 'new',
             () => handleQuickViewClick('new'),
-            <Clock className={cn(mobileMode ? 'w-4 h-4' : 'w-3.5 h-3.5', 'opacity-60')} />,
+            <Clock className="w-4 h-4 opacity-60" />,
           )}
         </div>
 
