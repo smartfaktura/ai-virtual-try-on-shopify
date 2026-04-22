@@ -33,13 +33,6 @@ const GENDER_CHIPS: { value: GenderFilter; label: string }[] = [
   { value: 'male', label: 'Male' },
 ];
 
-const BODY_TYPES: { value: ModelBodyType; label: string }[] = [
-  { value: 'slim', label: 'Slim' },
-  { value: 'athletic', label: 'Athletic' },
-  { value: 'average', label: 'Average' },
-  { value: 'plus-size', label: 'Plus' },
-];
-
 const AGE_RANGES: { value: ModelAgeRange; label: string }[] = [
   { value: 'young-adult', label: 'Young adult' },
   { value: 'adult', label: 'Adult' },
