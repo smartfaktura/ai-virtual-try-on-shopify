@@ -379,8 +379,11 @@ export default function AdminRecommendedScenes() {
                   <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       type="button"
-                      onClick={() => move(i, -1)}
-                      disabled={i === 0}
+                      onClick={() => {
+                        const realIdx = recommendedScenes.findIndex(x => x.rec.id === rec.id);
+                        if (realIdx >= 0) move(realIdx, -1);
+                      }}
+                      disabled={featuredPreview || recommendedScenes[0]?.rec.id === rec.id}
                       className="w-6 h-6 rounded-full bg-background/95 border border-border flex items-center justify-center disabled:opacity-30"
                       aria-label="Move up"
                     >
@@ -388,8 +391,11 @@ export default function AdminRecommendedScenes() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => move(i, 1)}
-                      disabled={i === recommendedScenes.length - 1}
+                      onClick={() => {
+                        const realIdx = recommendedScenes.findIndex(x => x.rec.id === rec.id);
+                        if (realIdx >= 0) move(realIdx, 1);
+                      }}
+                      disabled={featuredPreview || recommendedScenes[recommendedScenes.length - 1]?.rec.id === rec.id}
                       className="w-6 h-6 rounded-full bg-background/95 border border-border flex items-center justify-center disabled:opacity-30"
                       aria-label="Move down"
                     >
