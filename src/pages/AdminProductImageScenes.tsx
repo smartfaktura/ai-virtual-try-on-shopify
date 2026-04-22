@@ -643,6 +643,7 @@ export default function AdminProductImageScenes() {
                                 onSaveEdit={saveEdit}
                                 onToggleActive={handleToggleActive}
                                 onMove={handleMove}
+                                onMoveToTop={handleMoveToTop}
                                 onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
                                 onDuplicate={handleDuplicate}
                                 setEditDraft={setEditDraft}
@@ -668,6 +669,7 @@ export default function AdminProductImageScenes() {
                             onSaveEdit={saveEdit}
                             onToggleActive={handleToggleActive}
                             onMove={handleMove}
+                            onMoveToTop={handleMoveToTop}
                             onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
                             onDuplicate={handleDuplicate}
                             setEditDraft={setEditDraft}
@@ -701,7 +703,7 @@ export default function AdminProductImageScenes() {
 }
 
 /* ── Scene row component ── */
-function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onDelete, onDuplicate, setEditDraft, updatePending, allSubCategories }: {
+function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onMoveToTop, onDelete, onDuplicate, setEditDraft, updatePending, allSubCategories }: {
   scene: DbScene;
   idx: number;
   total: number;
@@ -712,6 +714,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
   onSaveEdit: () => void;
   onToggleActive: (s: DbScene) => void;
   onMove: (s: DbScene, dir: 'up' | 'down') => void;
+  onMoveToTop: (s: DbScene) => void;
   onDelete: (id: string) => void;
   onDuplicate: (s: DbScene) => void;
   setEditDraft: (d: Partial<DbScene>) => void;
