@@ -280,9 +280,6 @@ export function FreestyleSettingsChips({
       isCameraModified || isQualityModified || isFramingModified || isBrandModified;
 
     const [advancedOpen, setAdvancedOpenLocal] = [advancedOpenState, setAdvancedOpenState] as const;
-    const [expandedSection, setExpandedSection] = React.useState<
-      'camera' | 'quality' | 'framing' | 'brand' | null
-    >(null);
 
     const resetAdvanced = () => {
       onCameraStyleChange('pro');
