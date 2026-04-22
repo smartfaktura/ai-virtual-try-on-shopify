@@ -55,6 +55,7 @@ export default function SceneUsage() {
   const [rows, setRows] = useState<PopularityRow[]>([]);
   const [risers, setRisers] = useState<Array<{ scene_id: string; delta: number; current: number }>>([]);
   const [meta, setMeta] = useState<Map<string, SceneMeta>>(new Map());
+  const [uniqueUsers, setUniqueUsers] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('total_uses');
@@ -67,10 +68,14 @@ export default function SceneUsage() {
     async function load() {
       setLoading(true);
       try {
-        // Main rollup
-        const { data, error } = await supabase.rpc('get_scene_popularity' as any, { p_days: windowDays });
-        if (error) throw error;
-        const mainRows = (data ?? []) as PopularityRow[];
+        // Main rollup + true distinct user count (in parallel)
+        const [popRes, uniqRes] = await Promise.all([
+          supabase.rpc('get_scene_popularity' as any, { p_days: windowDays }),
+          supabase.rpc('get_scene_unique_user_count' as any, { p_days: windowDays }),
+        ]);
+        if (popRes.error) throw popRes.error;
+        const mainRows = (popRes.data ?? []) as PopularityRow[];
+        const trueUniqueUsers = Number(uniqRes.data ?? 0);
 
         // Risers: 7d vs prior 7d
         const [last7Res, prior14Res] = await Promise.all([
@@ -191,6 +196,7 @@ export default function SceneUsage() {
         setRows(mainRows);
         setRisers(computedRisers);
         setMeta(metaMap);
+        setUniqueUsers(trueUniqueUsers);
       } catch (err: any) {
         console.error('[SceneUsage] load failed', err);
         toast.error(err?.message ?? 'Failed to load scene usage');
@@ -235,8 +241,7 @@ export default function SceneUsage() {
     const totalGens = enriched.reduce((s, r) => s + Number(r.total_uses), 0);
     const totalFs = enriched.reduce((s, r) => s + Number(r.uses_freestyle), 0);
     const totalPi = enriched.reduce((s, r) => s + Number(r.uses_product_images), 0);
-    const userIdsApprox = enriched.reduce((s, r) => s + Number(r.unique_users), 0); // upper-bound approx
-    return { scenes: enriched.length, totalGens, totalFs, totalPi, userIdsApprox };
+    return { scenes: enriched.length, totalGens, totalFs, totalPi };
   }, [enriched]);
 
   function toggleSort(key: SortKey) {
@@ -296,8 +301,8 @@ export default function SceneUsage() {
             <div className="text-2xl font-semibold mt-1">{loading ? '—' : `${totals.totalFs.toLocaleString()} / ${totals.totalPi.toLocaleString()}`}</div>
           </Card>
           <Card className="p-4 border">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Unique users (sum)</div>
-            <div className="text-2xl font-semibold mt-1">{loading ? '—' : totals.userIdsApprox.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Unique users</div>
+            <div className="text-2xl font-semibold mt-1">{loading ? '—' : uniqueUsers.toLocaleString()}</div>
           </Card>
         </div>
 
