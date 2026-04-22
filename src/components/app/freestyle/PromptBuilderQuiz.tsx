@@ -241,6 +241,10 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
     onOpenChange(v);
   }, [onOpenChange]);
 
+  const goToStep = useCallback((i: number) => {
+    if (i < stepIndex) setStepIndex(i);
+  }, [stepIndex]);
+
   // ——— Step renderers ———
   const renderCategoryStep = () => (
     <div className="space-y-5">
