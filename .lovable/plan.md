@@ -1,39 +1,61 @@
 
-## Make Prompt Helper match the Model/Product/Scene slide-in modal
+## Admin preview page for new loading animations
 
-Bring `PromptBuilderQuiz` up to the same desktop pattern as `ModelCatalogModal`, `ProductCatalogModal`, and `SceneCatalogModal`: a right-side slide-in `Sheet` with a left sidebar, scrollable body, and sticky footer. Mobile keeps its current bottom sheet untouched.
+Build a sandbox page at `/app/admin/loading-lab` so you can see and compare the proposed `BrandLoader`, `DotPulse`, and `ShimmerBar` primitives **before** rolling them across the app. Nothing else changes — existing `Loader2` usages stay untouched until you approve the rollout.
 
-### Edit — `src/components/app/freestyle/PromptBuilderQuiz.tsx`
+### New files
 
-**Desktop (≥lg) — replace centered Dialog with right-side Sheet**
+**1. `src/components/ui/brand-loader.tsx`**
+- `<BrandLoader fullScreen?, label?, hints? />`
+- Centered monogram "V" (Inter 600, primary color) inside a 64px ring.
+- Soft orbiting arc using `conic-gradient(from 0deg, transparent, hsl(var(--primary)/0.55), transparent 35%)` masked to a 1px ring, rotated by new `orbit` keyframe (1.6s linear infinite).
+- "V" gently breathes (1 → 1.04, 2s ease-in-out).
+- Optional rotating hint phrases under the mark (fade through every 2s).
+- `fullScreen` prop centers it on `min-h-screen bg-background`.
 
-- Swap `<Dialog>` / `<DialogContent max-w-2xl>` for `<Sheet><SheetContent side="right">` styled exactly like the other catalog modals: `w-full sm:max-w-[1100px] p-0 gap-0 flex flex-col` with hidden default close button, rounded-l-2xl on lg+.
-- Layout split:
-  - **Header** (sticky top): `Wand2` icon + "Prompt Builder" title, subtitle "Answer a few questions and we'll write the prompt", custom close `X` button top-right (mirrors Model modal).
-  - **Body**: `flex flex-1 min-h-0` with two columns —
-    - **Left sidebar** (240px, hidden on <lg, `border-r`): vertical step list replacing the thin progress bar. Each step row shows step number in a circle, label ("Category", "Subject", "Interaction" only when person, "Setting", "Mood", "Framing" only when person, "Review"), and a `Check` when complete. Active row uses the same muted-pill active style as Model sidebar (`bg-muted text-foreground`); upcoming rows are dimmed and **non-clickable**; completed rows are clickable to jump back. Subtle "STEPS" uppercase label at top, matching the Model "QUICK" / "GENDER" rail typography.
-    - **Right content area** (`flex-1 overflow-y-auto`, `px-7 py-6`): renders the existing `stepContent` unchanged — all `OptionCard` grids, headings, and review textarea stay exactly as they are. Drop the top progress bar on desktop (sidebar replaces it).
-  - **Sticky footer** (`border-t px-6 py-3.5 flex items-center justify-between`): identical pattern to the Use-product/Use-model bar.
-    - Left: small muted summary text — `Step {n} of {total} · {currentStepLabel}`. On the review step, show "Prompt ready to use".
-    - Right: `Back` (ghost pill, disabled on first step) + primary action (`Next` with `ArrowRight`, or `Use This Prompt` with `Sparkles` on review). Same `size="pill"` buttons used elsewhere.
+**2. `src/components/ui/dot-pulse.tsx`**
+- `<DotPulse size?: 'sm' | 'md', className? />`
+- Three dots (4px sm / 6px md) using `currentColor` so it adapts to dark sidebar contexts.
+- Staggered `dot-wave` keyframe (opacity 0.3↔1, scale 0.8↔1, 0.9s) with 0/160/320ms delays.
 
-**Mobile (<md)** — leave the existing bottom `Sheet` + thin progress bar + footer **completely untouched**. Only desktop branch changes.
+**3. `src/components/ui/shimmer-bar.tsx`**
+- `<ShimmerBar visible />`
+- Fixed 2px bar at top using existing `pulse-slide` keyframe in `index.css`.
 
-**Logic — fully preserved**
+**4. `src/pages/admin/LoadingLab.tsx`**
+- Admin-only page rendering each primitive inside labeled cards:
+  - **BrandLoader** — boxed 360×280 preview + a "Show full-screen" button that toggles a 4s overlay.
+  - **DotPulse** — sm + md side by side, plus dark-bg sample (sidebar context), plus inside a button and chip.
+  - **ShimmerBar** — toggle button that triggers a 3s top bar.
+  - **Side-by-side comparison**: today's `Loader2 animate-spin` next to `<DotPulse />` so the upgrade is obvious.
+  - **Reduced-motion note**: short paragraph explaining the `prefers-reduced-motion` fallback (static ring, opacity-only pulse).
 
-- `steps`, `stepIndex`, `canAdvance`, `handleNext`, `handleBack`, `handleUse`, `handleOpenChange`, all state setters, dynamic person-aware step insertion, `assemblePrompt` call on entering review — all unchanged.
-- Add a tiny helper `goToStep(i)` used only by the sidebar to jump to already-completed steps (`i < stepIndex`). Forward navigation still requires `canAdvance` via the footer Next button.
+### Edits
+
+**`src/index.css`** — add 3 keyframes inside `@layer utilities`:
+- `@keyframes orbit` — `0%→360deg rotate`
+- `@keyframes breathe` — `1 → 1.04 scale`
+- `@keyframes dot-wave` — opacity + scale wave
+- `@media (prefers-reduced-motion: reduce)` block disabling orbit + dot-wave (keeps a soft opacity pulse).
+
+**`src/App.tsx`** (or wherever admin routes live) — add a single route:
+```tsx
+<Route path="/app/admin/loading-lab" element={<LoadingLab />} />
+```
+Wrapped in the existing admin guard pattern used by other `/app/admin/*` pages (`useIsAdmin` check, redirect on non-admin).
 
 ### Validation
 
-- Desktop: clicking the Prompt Helper trigger opens a right-side sheet matching the Model/Product/Scene modals in width, edges, header, and footer rhythm.
-- Sidebar shows all steps; person-only steps appear/disappear when subject changes (Interaction + Framing).
-- Footer Next/Back/Use behave identically to the old dialog version; review textarea + Edit toggle still works.
-- Mobile bottom sheet unchanged.
-- Closing resets all state (existing `handleOpenChange` logic).
+- Visit `/app/admin/loading-lab` as admin → see all three primitives live, side-by-side with current `Loader2` for comparison.
+- Toggle full-screen `BrandLoader` and `ShimmerBar` to feel the motion in real layout.
+- macOS "Reduce motion" enabled → orbit/dots stop spinning, only opacity pulses (verify in System Settings).
+- Non-admin users hitting the route → redirected like other admin pages.
 
-### Untouched
+### Untouched until you approve rollout
 
-- `promptBuilderTemplates` lib, `assemblePrompt`, `OptionCard`, all icon maps and option grids
-- `FreestylePromptPanel.tsx` props (`open`, `onOpenChange`, `onUsePrompt` API stays identical)
-- Mobile sheet, all selection logic, copy on each step
+- All existing `Loader2` usages, `Auth.tsx` pulsing "V", `ProtectedRoute.tsx`, skeletons, and submit-button spinners.
+- No call-site swaps in this step — the lab is purely a preview surface so you can sign off on the look first.
+
+### Next step (after approval, separate task)
+
+Once you confirm the lab feels right, swap `Auth.tsx` + `ProtectedRoute.tsx` to `<BrandLoader fullScreen />` and replace inline `Loader2` in non-button contexts with `<DotPulse />`. Save a `mem://style/loading-system` rule so future loaders default to these.
