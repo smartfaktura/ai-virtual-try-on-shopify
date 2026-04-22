@@ -337,7 +337,7 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
           {moodOptions.map(o => (
-            <OptionCard key={o.value} {...o} icon={MOOD_ICON_MAP[o.value]} selected={mood === o.value} onClick={setMood} />
+            <OptionCard key={o.value} {...o} icon={MOOD_ICON_MAP[o.value]} selected={mood === o.value} onClick={setMood} isMobile={isMobile} />
           ))}
         </div>
       </div>
