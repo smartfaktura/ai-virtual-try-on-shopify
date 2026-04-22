@@ -273,13 +273,14 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
   }
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
-      <PopoverTrigger asChild>
-        {triggerButton}
-      </PopoverTrigger>
-      <PopoverContent className="w-[340px] p-4 rounded-xl border-border/50 shadow-xl shadow-black/8" align="start">
-        {filtersAndGrid}
-      </PopoverContent>
-    </Popover>
+    <>
+      {triggerButton}
+      <ModelCatalogModal
+        open={open}
+        onOpenChange={onOpenChange}
+        selectedModel={selectedModel}
+        onSelect={onSelect}
+      />
+    </>
   );
 }
