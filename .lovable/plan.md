@@ -1,39 +1,33 @@
 
-## Fix Prompt Builder mobile card text truncation
+## Fix: Desktop Model modal not opening
 
-### Problem (from screenshot)
+### Root cause
 
-In every step of the mobile Prompt Builder, card text is being **cut off with ellipsis** — "Fashion & Apparel" shows as "Fashion …", "Beauty & Wellness" as "Beauty &…", "Accessories" as "Accesso…", and descriptions like "Skincare, makeup" become "Skincare, m…". Caused by the `truncate` class on both label and description spans inside the mobile branch of `OptionCard`, which forces single-line display and clips overflow.
+In `src/components/app/freestyle/ModelSelectorChip.tsx`, the trigger button only wires its `onClick` for mobile:
 
-### Fix — `src/components/app/freestyle/PromptBuilderQuiz.tsx`
+```tsx
+onClick={isMobile ? () => onOpenChange(!open) : undefined}
+```
 
-Single component edit: the mobile branch of `OptionCard` (lines 107–119).
+When the desktop branch was switched from a `Popover` (which auto-handled triggering) to the new `ModelCatalogModal`, nothing was left to open the modal. Clicking the **Model** chip on desktop does nothing.
 
-**1. Allow labels to wrap (up to 2 lines, no clipping)**
-- Remove `truncate` from the label `<span>`.
-- Add `break-words` so long category names wrap cleanly.
-- Use `line-clamp-2` as a safety net on labels — visible on 2 lines, no ellipsis on common copy since none exceed two lines at the new column width.
+### Fix
 
-**2. Allow descriptions to wrap to 2 lines**
-- Remove `truncate` from the description span.
-- Add `line-clamp-2 break-words` so "Skincare, makeup" / "Furniture, decor" / "Vitamins, wellness" all stay visible.
+Single one-line change in `ModelSelectorChip.tsx` (line 86):
 
-**3. Let the card grow vertically**
-- Change mobile container from `items-center` to `items-start` so the icon stays top-aligned when text wraps to 2 lines.
-- Keep existing `gap-3 p-3` padding — already comfortable; vertical growth is fine.
+- Make the trigger button toggle `onOpenChange` on **all** viewports, not just mobile:
+  ```tsx
+  onClick={() => onOpenChange(!open)}
+  ```
 
-**4. Reduce label/desc font weight collision risk on small widths**
-- Drop the right-side `pr-5` on the text wrapper to `pr-6` only when `selected` (so it clears the absolute Check badge), `pr-1` otherwise — gives ~12px more horizontal room for the label per card. Implemented via `cn(... selected && 'pr-6')`.
+Both `MobilePickerSheet` (mobile branch) and `ModelCatalogModal` (desktop branch) are controlled via the `open` / `onOpenChange` props already passed in, so this single handler drives both correctly.
 
-**5. Apply consistently to all steps**
-The same `OptionCard` is used by Category / Subject / Interaction / Setting / Mood / Framing — fix once, every step benefits.
+### Validation
 
-### Result (390×818 mobile)
-
-- Step 1 Category: "Fashion & Apparel", "Beauty & Wellness", "Accessories", "Home & Living", "Food & Beverage", "Sports & Fitness", "Health & Wellness", "Other Products" all fully readable, wrapping to 2 lines as needed; descriptions ("Skincare, makeup", "Furniture, decor") fully visible.
-- Steps 2–6: same horizontal-card layout, no clipped text. Cards in a row size to the tallest sibling so the grid stays tidy.
-- Selected card: Check badge in top-right unaffected; text reserves space for it via conditional padding.
+- Desktop ≥1024px: click "Model" chip → `ModelCatalogModal` slides in from the right.
+- Mobile <768px: unchanged behavior — `MobilePickerSheet` still opens.
+- Clear-selection X button inside the chip still calls `e.stopPropagation()` so it won't trigger the modal.
 
 ### Untouched
 
-Desktop layout, grid column counts, step logic, sheet/dialog container, header, footer, all icon mappings, prompt assembly logic.
+`ModelCatalogModal.tsx`, mobile sheet, Freestyle page, all selection logic, upgrade flows.
