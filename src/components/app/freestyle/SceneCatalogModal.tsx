@@ -101,28 +101,8 @@ export function SceneCatalogModal({
   const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
   const counts = useSceneCounts();
 
-  // Custom scenes ("Freestyle Originals") — admin-curated rows from /app/admin/scenes.
+  // Custom scenes kept only to resolve `cs-` selection IDs from prior sessions.
   const customScenesQuery = useCustomScenes();
-
-  // Adapt CustomScene rows into CatalogScene shape so they render in the existing grid/rail.
-  const originalScenes = useMemo<CatalogScene[]>(() => {
-    const rows = customScenesQuery.scenes ?? [];
-    return rows.map(s => ({
-      id: `cs-${s.id}`,
-      scene_id: s.id,
-      title: s.name,
-      sub_category: null,
-      category_collection: null,
-      scene_type: null,
-      subject: null,
-      shot_style: null,
-      setting: null,
-      preview_image_url: s.preview_image_url || s.optimized_image_url || s.image_url,
-      prompt_template: s.prompt_hint || s.description || '',
-      filter_tags: null,
-      created_at: s.created_at,
-    }));
-  }, [customScenesQuery.scenes]);
 
   // Recommended rail — strip any "Essential Shots" rows defensively.
   const recommendedScenes = useMemo<CatalogScene[]>(() => {
@@ -305,19 +285,8 @@ export function SceneCatalogModal({
                   />
                   <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
                   <SceneCatalogGrid
-                    pages={(() => {
-                      const pages = grid.data?.pages ?? [];
-                      // Only pin admin Originals at the top under Recommended sort,
-                      // when no subject chip is active. Newest sort = pure created_at DESC.
-                      const canMergeOriginals =
-                        sort === 'recommended' &&
-                        subjects.length === 0 &&
-                        originalScenes.length > 0;
-                      if (!canMergeOriginals) return pages;
-                      const [first = [], ...rest] = pages;
-                      return [[...originalScenes, ...first], ...rest];
-                    })()}
-                    isLoading={grid.isLoading || customScenesQuery.isLoading}
+                    pages={grid.data?.pages ?? []}
+                    isLoading={grid.isLoading}
                     isFetchingNextPage={grid.isFetchingNextPage}
                     hasNextPage={!!grid.hasNextPage}
                     onLoadMore={() => grid.fetchNextPage()}
