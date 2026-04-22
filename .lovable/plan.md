@@ -1,44 +1,49 @@
 
 
-## Recording works ✅ — fix one more name/thumbnail resolver
+## Reset Scene Performance tracking — fresh start
 
-### What I checked
+Wipe historical scene_id data from `freestyle_generations` and `generation_jobs` so the dashboard starts clean from today, keeping only the one reference row (Sun Lounger Resort Pose generation from 19:15 UTC today).
 
-- Your freestyle generation at 19:15 UTC is correctly stored: `freestyle_generations.scene_id = "pis-swimwear-editorial-lounger-resort"`.
-- Tracking pipeline is healthy.
+### What gets cleared
 
-### One small bug found
+Two columns get nulled out (rows themselves are **not deleted** — your library, credits history, and activity feed stay intact):
 
-When Freestyle uses a **Product Visuals** scene (Scene Catalog modal), it namespaces the ID with a `pis-` prefix (`src/components/app/freestyle/SceneSelectorChip.tsx`, see `PIS_PREFIX` in `src/lib/sceneTaxonomy.ts`). But `/app/admin/scene-performance` only knows about three families:
+1. **`freestyle_generations.scene_id`** → set to `NULL` for all rows **except** the one Sun Lounger Resort Pose generation (`scene_id = 'pis-swimwear-editorial-lounger-resort'` from today ~19:15 UTC).
+2. **`generation_jobs.scene_id`** → set to `NULL` for **all** rows (no reference row needed there since the Sun Lounger one lives in `freestyle_generations`).
 
-1. Static `pose_*` / `scene_*` (mockTryOnPoses) ✅
-2. `custom-{uuid}` (custom_scenes) ✅
-3. Raw `product_image_scenes.scene_id` ✅
-4. **`pis-{scene_id}` (Freestyle's namespaced Product Visuals scenes) ❌** — currently shows raw ID + no thumbnail
+After this, the `scene_usage_unified` view (which feeds `get_scene_popularity`) will only see that single tracked row → dashboard shows exactly 1 scene with 1 use.
 
-The DB row exists as `swimwear-editorial-lounger-resort` in `product_image_scenes` ("Sun Lounger Resort Pose" with a thumbnail), but the lookup uses the prefixed string and finds nothing.
+### How
 
-### Fix (one file, ~10 lines)
+One data migration (uses INSERT/UPDATE tool, not schema migration):
 
-**`src/pages/admin/SceneUsage.tsx`** — same prefix-strip pattern we did for `custom-`:
+```sql
+-- Keep only the most recent Sun Lounger Resort Pose row as reference
+UPDATE freestyle_generations
+SET scene_id = NULL
+WHERE scene_id IS NOT NULL
+  AND id <> (
+    SELECT id FROM freestyle_generations
+    WHERE scene_id = 'pis-swimwear-editorial-lounger-resort'
+    ORDER BY created_at DESC
+    LIMIT 1
+  );
 
-In `load()`, where `pisIds` is built:
-- Detect IDs starting with `pis-`, strip the prefix to get the real `scene_id`.
-- Query `product_image_scenes` with the stripped IDs.
-- When writing into `metaMap`, re-key with the original `pis-{id}` so the table rows resolve.
-- Source badge: still classifies as "Freestyle" (correct — these come from `freestyle_generations`).
+UPDATE generation_jobs
+SET scene_id = NULL
+WHERE scene_id IS NOT NULL;
+```
 
-After fix, your row renders as **"Sun Lounger Resort Pose"** (Editorial Swimwear) with the proper thumbnail.
+### Untouched
 
-### No other changes needed
-
-- No DB / edge function / migration changes.
-- KPIs already accurate.
-- Top risers rail picks up the fix automatically (shares the same `meta` map).
+- No row deletes — only `scene_id` is nulled.
+- No schema changes, no edge function changes, no frontend changes.
+- KPIs (Total users, Total generations) on other admin pages unaffected — they don't depend on `scene_id`.
+- All future generations from now on will be tracked normally.
 
 ### Validation
 
-1. Reload `/app/admin/scene-performance` → your `pis-swimwear-editorial-lounger-resort` row shows real name + thumbnail.
-2. All other Freestyle Product-Visuals scenes (any `pis-*` ID) resolve too.
-3. Existing `pose_*`, `scene_*`, `custom-*`, and raw scene rows still work.
+1. Reload `/app/admin/scene-performance` (90d window) → only "Sun Lounger Resort Pose" row visible, 1 use, 1 unique user.
+2. Top risers rail → empty or shows just that row in 7d.
+3. Generate any new scene → appears immediately on next page load.
 
