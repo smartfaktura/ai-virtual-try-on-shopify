@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import { Camera, ChevronDown, X, Check } from 'lucide-react';
+import { SceneCatalogModal } from './SceneCatalogModal';
+import { sanitizePromptTemplate, toPisSceneId, fromPisSceneId, isPisSceneId } from '@/lib/sceneTaxonomy';
+import type { CatalogScene } from '@/hooks/useSceneCatalog';
+
+const CATALOG_V2_ENABLED = (import.meta.env.VITE_SCENE_CATALOG_V2 ?? 'true') !== 'false';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
