@@ -232,3 +232,132 @@ export function interleaveByFamily<
   result.push(...tail);
   return result;
 }
+
+/**
+ * Round-robin items by sub-family (`category_collection`) only.
+ *
+ * Used when a single family is filtered, so consecutive cards rotate across
+ * sub-families (e.g. garments → dresses → jeans → jackets) instead of
+ * clustering all of one sub-family together.
+ *
+ * Pure & deterministic. Items without a `category_collection` are appended last.
+ */
+export function interleaveBySubFamily<
+  T extends { category_collection?: string | null },
+>(items: T[]): T[] {
+  if (!items.length) return items.slice();
+
+  const queues = new Map<string, T[]>();
+  const order: string[] = [];
+  const tail: T[] = [];
+
+  for (const item of items) {
+    const slug = item.category_collection ?? null;
+    if (!slug) {
+      tail.push(item);
+      continue;
+    }
+    if (!queues.has(slug)) {
+      queues.set(slug, []);
+      order.push(slug);
+    }
+    queues.get(slug)!.push(item);
+  }
+
+  const result: T[] = [];
+  let drained = false;
+  while (!drained) {
+    drained = true;
+    for (const slug of order) {
+      const q = queues.get(slug);
+      if (!q || q.length === 0) continue;
+      result.push(q.shift()!);
+      if (q.length > 0) drained = false;
+    }
+  }
+
+  result.push(...tail);
+  return result;
+}
+
+/**
+ * Two-level interleave: for each family, round-robin across its sub-families
+ * (one item per sub-family per pass), then round-robin across families
+ * `familyChunk` items at a time in `FAMILY_ORDER`.
+ *
+ * Result for a typical catalog with `familyChunk=2, subFamilyChunk=1`:
+ *   [Fashion-garments, Fashion-dresses, Bags-backpacks, Bags-belts,
+ *    Beauty-skincare, Beauty-makeup, ...] then continues round-robin.
+ *
+ * Pure & deterministic. Items with unknown collections are appended at the end.
+ */
+export function interleaveByFamilyAndSubFamily<
+  T extends { category_collection?: string | null },
+>(
+  items: T[],
+  options: { familyChunk?: number; subFamilyChunk?: number } = {},
+): T[] {
+  const familyChunk = options.familyChunk ?? 2;
+  const subFamilyChunk = options.subFamilyChunk ?? 1;
+  if (!items.length) return items.slice();
+
+  // Group by family → sub-family → items (preserve incoming order within sub-family)
+  const familyToSubMap = new Map<string, Map<string, T[]>>();
+  const tail: T[] = [];
+
+  for (const item of items) {
+    const slug = item.category_collection ?? null;
+    const fam = slug ? CATEGORY_FAMILY_MAP[slug] : undefined;
+    if (!fam || !slug) {
+      tail.push(item);
+      continue;
+    }
+    if (!familyToSubMap.has(fam)) familyToSubMap.set(fam, new Map());
+    const subMap = familyToSubMap.get(fam)!;
+    if (!subMap.has(slug)) subMap.set(slug, []);
+    subMap.get(slug)!.push(item);
+  }
+
+  // For each family, build its sub-family-interleaved queue
+  const familyQueues = new Map<string, T[]>();
+  for (const [fam, subMap] of familyToSubMap.entries()) {
+    const subSlugs = Array.from(subMap.keys());
+    const interleaved: T[] = [];
+    let drained = false;
+    while (!drained) {
+      drained = true;
+      for (const slug of subSlugs) {
+        const q = subMap.get(slug)!;
+        if (q.length === 0) continue;
+        const taken = q.splice(0, subFamilyChunk);
+        interleaved.push(...taken);
+        if (q.length > 0) drained = false;
+      }
+    }
+    familyQueues.set(fam, interleaved);
+  }
+
+  // Family ordering: known FAMILY_ORDER first, then any extras alphabetically.
+  const orderedFamilies = [
+    ...FAMILY_ORDER.filter(f => familyQueues.has(f)),
+    ...Array.from(familyQueues.keys())
+      .filter(f => !FAMILY_ORDER.includes(f as any))
+      .sort(),
+  ];
+
+  const result: T[] = [];
+  let drained = false;
+  while (!drained) {
+    drained = true;
+    for (const fam of orderedFamilies) {
+      const q = familyQueues.get(fam);
+      if (!q || q.length === 0) continue;
+      const taken = q.splice(0, familyChunk);
+      result.push(...taken);
+      if (q.length > 0) drained = false;
+    }
+  }
+
+  result.push(...tail);
+  return result;
+}
