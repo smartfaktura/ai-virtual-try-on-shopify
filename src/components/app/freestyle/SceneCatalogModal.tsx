@@ -15,9 +15,9 @@ import { SceneCatalogGrid } from './SceneCatalogGrid';
 import { useSceneCatalog, useSceneRail, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
-import { mockTryOnPoses } from '@/data/mockData';
+import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
-import type { TryOnPose } from '@/types';
+import type { TryOnPose, PoseCategory } from '@/types';
 
 interface SceneCatalogModalProps {
   open: boolean;
