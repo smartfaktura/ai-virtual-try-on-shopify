@@ -83,13 +83,20 @@ export function ProductCatalogModal({
     if (typeFilter) {
       list = list.filter(p => p.product_type === typeFilter);
     }
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(p =>
+        p.title?.toLowerCase().includes(q) ||
+        p.product_type?.toLowerCase().includes(q),
+      );
+    }
     if (sort === 'name') {
       list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     } else if (sort === 'newest') {
       list = [...list].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
     }
     return list;
-  }, [allProducts, quickView, typeFilter, sort]);
+  }, [allProducts, quickView, typeFilter, sort, search]);
 
   const anyFilterActive = quickView !== 'all' || typeFilter !== null || sort !== 'featured';
 
