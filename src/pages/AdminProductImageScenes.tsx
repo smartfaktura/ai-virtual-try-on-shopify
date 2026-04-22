@@ -1102,6 +1102,143 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
         </div>
       )}
 
+      {/* Catalog Taxonomy — drives Freestyle Scene Catalog filters */}
+      <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-border/40">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-semibold">Catalog Taxonomy</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 text-[11px]"
+            onClick={() => {
+              // Auto-detect from prompt template + sub_category, fills only blanks
+              const p = (draft.prompt_template || '').toLowerCase();
+              const sub = (draft.sub_category || '').toLowerCase();
+              const trig = (draft.trigger_blocks || []) as string[];
+              const hasModelHint =
+                trig.includes('personDetails') ||
+                !!(draft as any).outfit_hint ||
+                /\{\{(persondirective|modeldirective)\}\}/.test(p) ||
+                /\b(model|wearing|holding|posed|body|face|walking|sitting|standing)\b/.test(p) ||
+                /(on-body|on-skin|poses|lifestyle|ugc|selfie|carry|worn)/.test(sub);
+              const hasHandsOnly =
+                ['macro', 'stilllife'].includes(draft.scene_type as string) &&
+                /\bhands?\b/.test(p) &&
+                !/\b(body|face|model|wearing)\b/.test(p);
+              const subject = hasModelHint ? 'with-model' : hasHandsOnly ? 'hands-only' : 'product-only';
+
+              let shotStyle = (draft as any).shot_style as string | undefined;
+              if (!shotStyle) {
+                if (/(editorial|campaign)/.test(sub)) shotStyle = 'editorial';
+                else if (/(flat ?lay)/.test(sub)) shotStyle = 'flatlay';
+                else if (/(macro|detail|texture|close ?up)/.test(sub)) shotStyle = 'macro';
+                else if (/(lifestyle|ugc|selfie|social)/.test(sub)) shotStyle = 'lifestyle';
+                else if (/(still ?life|tabletop)/.test(sub)) shotStyle = 'still-life';
+                else if (/(portrait|headshot)/.test(sub)) shotStyle = 'portrait';
+                else if (/(essential|packshot|hero|studio pack)/.test(sub)) shotStyle = 'packshot';
+                else if (draft.scene_type === 'stilllife') shotStyle = 'still-life';
+                else shotStyle = (draft.scene_type as string) || 'packshot';
+              }
+
+              let setting = (draft as any).setting as string | undefined;
+              if (!setting) {
+                if (['packshot', 'portrait', 'macro'].includes(shotStyle)) setting = 'studio';
+                else if (['flatlay', 'still-life'].includes(shotStyle)) setting = 'surface';
+                else if (shotStyle === 'lifestyle' && /(outdoor|street|park|beach|garden)/.test(sub)) setting = 'outdoor';
+                else if (shotStyle === 'lifestyle') setting = 'indoor';
+                else if (['editorial', 'campaign'].includes(shotStyle)) setting = 'editorial-set';
+                else setting = 'studio';
+              }
+
+              set('subject' as any, subject);
+              set('shot_style' as any, shotStyle);
+              set('setting' as any, setting);
+              toast.success('Auto-detected taxonomy');
+            }}
+          >
+            Auto-detect
+          </Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Drives the new Freestyle "Select Scene" catalog filters. Auto-detect uses your prompt template + sub-category to fill blanks; you can override anything.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Subject</Label>
+            <select
+              value={(draft as any).subject ?? ''}
+              onChange={e => set('subject' as any, e.target.value || null)}
+              className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+            >
+              <option value="">— none —</option>
+              <option value="product-only">Product Only</option>
+              <option value="with-model">With Model</option>
+              <option value="hands-only">Hands Only</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Shot Style</Label>
+            <select
+              value={(draft as any).shot_style ?? ''}
+              onChange={e => set('shot_style' as any, e.target.value || null)}
+              className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+            >
+              <option value="">— none —</option>
+              <option value="packshot">Packshot</option>
+              <option value="editorial">Editorial</option>
+              <option value="lifestyle">Lifestyle</option>
+              <option value="flatlay">Flat Lay</option>
+              <option value="macro">Close-up</option>
+              <option value="portrait">Portrait</option>
+              <option value="still-life">Still Life</option>
+              <option value="campaign">Campaign</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Setting</Label>
+            <select
+              value={(draft as any).setting ?? ''}
+              onChange={e => set('setting' as any, e.target.value || null)}
+              className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+            >
+              <option value="">— none —</option>
+              <option value="studio">Studio</option>
+              <option value="indoor">Indoor</option>
+              <option value="outdoor">Outdoor</option>
+              <option value="surface">Surface / Flat Lay</option>
+              <option value="editorial-set">Editorial Set</option>
+            </select>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Mood (optional)</Label>
+          <Input
+            value={(draft as any).mood ?? ''}
+            onChange={e => set('mood' as any, e.target.value || null)}
+            placeholder="cozy, warm, minimal, premium…"
+            className="h-8 text-xs"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Filter Tags (comma-separated)</Label>
+          <Input
+            value={((draft as any).filter_tags ?? []).join(', ')}
+            onChange={e =>
+              set(
+                'filter_tags' as any,
+                e.target.value
+                  .split(',')
+                  .map(s => s.trim())
+                  .filter(Boolean),
+              )
+            }
+            placeholder="seasonal, cozy, warm, minimal"
+            className="h-8 text-xs"
+          />
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <Label className="text-xs">Prompt Template</Label>
         <Textarea
