@@ -1,62 +1,33 @@
 
 
-## Fix mobile prompt-bar pills — equal 2-column sizing
+## Fix desktop/tablet pill layout in Freestyle prompt bar
 
-### What's wrong (from screenshot)
+### What broke
 
-In the 2-column mobile grid, pills don't fill their cells equally:
+In `FreestyleSettingsChips.tsx`, the wrapper divs around `productChip`, `modelChip`, and `sceneChip` (lines 221, 250, 266) were given `className="w-full"` during the mobile fix. On mobile that's correct (they sit inside a 2-column grid cell). On **desktop/tablet**, the parent is a `flex flex-wrap` row (line 478), so `w-full` makes each wrapper consume 100% of the row width — pushing every following chip onto its own line and producing the broken stack you're seeing in the screenshot (Product / Model / Scene Look each on their own row, leaving the rest cramped below).
 
-- **Row 1**: "Upload Image" (narrow, content-width) sits next to "Product" (140px capped) — both float left in their cells with empty space on the right.
-- **Row 3**: "Model" (140px capped) is much narrower than "1:1" (which already happens to be wider).
-- **Row 4**: "Prompt Helper" content-width vs "Advanced" content-width — also misaligned.
+### Fix — `src/components/app/freestyle/FreestyleSettingsChips.tsx`
 
-**Cause**: The `cellClass` rule `[&_button]:w-full` is too blunt and is being beaten by:
-- Selector chips (`ProductSelectorChip`, `ModelSelectorChip`, `SceneSelectorChip`) that hardcode `max-w-[140px]` on their trigger button.
-- Inline buttons (Upload Image, Prompt Helper, Aspect Ratio, Advanced) declared as `inline-flex` with no width.
+Make the `w-full` on the three selector-chip wrappers conditional on mobile only:
 
-The same `[&_button]:w-full` also leaks onto nested icon-buttons (like the chip's "✕ remove" button), and the `[&_button>svg:last-child]:absolute` rule can hit the wrong svg.
+- Line 221 (productChipInner wrapper): `'w-full'` → `isMobile && 'w-full'`
+- Line 250 (modelChip wrapper): `'w-full'` → `isMobile && 'w-full'`
+- Line 266 (sceneChip wrapper): `'w-full'` → `isMobile && 'w-full'`
 
-### Fix — `src/components/app/freestyle/FreestyleSettingsChips.tsx` (mobile branch ONLY)
-
-1. **Pass `fullWidth` to the three selector chips on mobile.** Add `fullWidth={isMobile}` (or unconditional `fullWidth` since this whole branch is mobile) to:
-   - `<ProductSelectorChip ... fullWidth />`
-   - `<ModelSelectorChip ... fullWidth />`
-   - `<SceneSelectorChip ... fullWidth />`
-   
-   Each already supports `fullWidth ? "w-full max-w-none" : "max-w-[140px]"` — wired and ready.
-
-2. **Make inline mobile buttons `w-full`** by switching from `inline-flex` to `flex` with `w-full justify-center`, and add `relative` so the absolute chevron anchors correctly:
-   - **Aspect Ratio chip** (line 114): currently `inline-flex ... h-8 px-3` → wrap in mobile-aware variant or just add `w-full justify-center relative` (since the chip is shared with desktop, instead pass a new optional `fullWidth` prop OR — simpler — wrap in the cell with `[&>button]:w-full [&>button]:justify-center` targeting only the **direct** child button, not all descendants).
-   - **Upload Image button** in `FreestylePromptPanel.tsx` (line 283–289): same — restructure so when used on mobile it gets `w-full justify-center relative`.
-   - **Prompt Helper button** (line 420–426): same.
-   - **Advanced button** (line 376): already has `relative`; just needs `w-full` instead of fixed.
-
-3. **Replace the leaky descendant selector** `cellClass = '[&_button]:w-full ...'` with a **direct-child** selector that won't bleed into nested icon buttons:
-   ```
-   cellClass = '[&>*]:w-full [&>*>button]:w-full [&>*>button]:justify-center [&>*>button]:relative [&>*>button]:px-4 [&>*>button>svg:last-child]:absolute [&>*>button>svg:last-child]:right-3 [&>*>button>svg:last-child]:opacity-40'
-   ```
-   - `[&>*]` ensures the wrapper `<div className="w-full">` inside chips also expands.
-   - `[&>*>button]` only targets the chip's actual trigger button — never a nested remove/clear button.
-   - Combined with explicit `fullWidth` props (step 1) and explicit `w-full` on inline buttons (step 2), the layout is now belt-and-suspenders.
-
-4. **Aspect Ratio chip on mobile** — since this chip doesn't have a `fullWidth` prop, take the simplest path: render an inline mobile-only version inside `FreestyleSettingsChips.tsx` that mirrors the desktop one but uses `w-full justify-center relative`. Reuses same Popover state / handlers — purely a className swap when `isMobile`.
+That's the entire change. Three one-line edits.
 
 ### Why this works
 
-- **Row 1**: Upload Image + Product → both now `w-full` inside their grid cells → equal 50/50.
-- **Row 2**: Scene Look (`col-span-2`) → already full width, unaffected.
-- **Row 3**: Model + 1:1 → both `w-full` → equal 50/50.
-- **Row 4**: Prompt Helper + Advanced → both `w-full` → equal 50/50.
-- Centered icon+label preserved; subtle right-edge chevron preserved; "Advanced" modified-dot preserved.
+- **Mobile (<768px)**: `isMobile === true`, wrappers stay `w-full`, mobile grid layout (with `cellClass` direct-child selectors and `fullWidth` props on the chips) keeps the equal 50/50 cells working exactly as we just fixed it.
+- **Desktop/tablet (≥768px)**: `isMobile === false`, wrappers shrink to content width again. The chips render as inline-flex pills inside the `flex flex-wrap gap-2` row — the original, correct desktop layout returns.
 
 ### Untouched
 
-Desktop branch (≥768px), Advanced popover internals, all selector logic/data, props API of selector chips (only `fullWidth` flag turned on), `Freestyle.tsx`, hooks, RLS.
+Mobile grid (still belt-and-suspenders correct), Advanced popover, all selector internals, `fullWidth` prop logic, aspect-ratio chip's mobile/desktop conditional, `Freestyle.tsx`, hooks, RLS.
 
-### Validation (390×818 mobile)
+### Validation
 
-- All 7 mobile chips render at equal 50% column width (Scene Look at 100%).
-- Icon + label centered in each pill; chevron pinned faintly to right.
-- Tapping "✕" on a selected Product/Model/Scene chip still works (no width leakage to nested buttons).
-- Desktop unchanged.
+- **Desktop ≥1024px**: All chips back on a single wrapping row — Upload, Product, Model, Scene Look, Framing, Brand, 1:1, Pro, Standard, Prompt Helper — each at its natural pill width.
+- **Tablet 768–1023px**: Same as desktop (this branch kicks in at `md:`).
+- **Mobile <768px**: Unchanged from current state — 2-column grid with equal-sized pills.
 
