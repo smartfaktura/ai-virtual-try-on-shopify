@@ -100,6 +100,9 @@ export function FreestyleSettingsChips({
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
   const [advancedOpenState, setAdvancedOpenState] = React.useState(false);
+  const [expandedSection, setExpandedSection] = React.useState<
+    'camera' | 'quality' | 'framing' | 'brand' | null
+  >(null);
 
   // --- Shared chip renderers ---
 
