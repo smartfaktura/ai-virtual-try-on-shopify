@@ -192,7 +192,7 @@ export function SceneCatalogSidebar({
         </div>
 
         {sectionLabel('Product Families')}
-        <div className={mobileMode ? 'space-y-1' : 'space-y-0.5'}>
+        <div className="space-y-1">
           {orderedFamilies.map(family => {
             const subs = subFamiliesByFamily[family] ?? [];
             const isActive = selectedFamily === family;
@@ -210,22 +210,21 @@ export function SceneCatalogSidebar({
                     'w-full flex items-center gap-2 text-left transition-colors',
                     mobileMode
                       ? 'px-4 py-3 rounded-xl text-sm'
-                      : 'px-2 py-1.5 rounded-md text-xs',
+                      : 'px-3 py-2.5 rounded-lg text-sm',
                     isActive && !selectedCategoryCollection
                       ? 'bg-primary/10 text-primary font-semibold'
                       : 'text-foreground/80 hover:bg-muted/60',
                   )}
                 >
                   {ChevronIcon ? (
-                    <ChevronIcon className={cn(mobileMode ? 'w-4 h-4' : 'w-3 h-3', 'opacity-60 shrink-0')} />
+                    <ChevronIcon className={cn(mobileMode ? 'w-4 h-4' : 'w-3.5 h-3.5', 'opacity-60 shrink-0')} />
                   ) : (
-                    <span className={cn(mobileMode ? 'w-4' : 'w-3', 'shrink-0')} />
+                    <span className={cn(mobileMode ? 'w-4' : 'w-3.5', 'shrink-0')} />
                   )}
                   <span className="truncate flex-1">{family}</span>
                   <span
                     className={cn(
-                      'tabular-nums',
-                      mobileMode ? 'text-xs' : 'text-[10px]',
+                      'tabular-nums text-xs',
                       isActive && !selectedCategoryCollection
                         ? 'text-primary'
                         : 'text-muted-foreground',
@@ -236,7 +235,7 @@ export function SceneCatalogSidebar({
                 </button>
 
                 {isActive && hasMultiple && (
-                  <div className={cn('mb-1', mobileMode ? 'mt-1 space-y-1' : 'mt-0.5 space-y-0.5')}>
+                  <div className={cn('mb-1', mobileMode ? 'mt-1 space-y-1' : 'mt-1 space-y-1')}>
                     {subs.map(({ slug, count }) =>
                       renderRow(
                         getSubFamilyLabel(slug),
