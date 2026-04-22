@@ -1,62 +1,92 @@
 
 
-## Safe fix — Product Images scene tracking (no risk to generation)
+## Fix `/app/admin/scene-performance` loading forever
 
-### Goal
+### What’s actually broken
 
-Make `/app/admin/scene-performance` show Product Images generations, without touching the generation pipeline itself.
+The issue is now in the **admin read path**, not in generation tracking:
 
-### Why it's safe
+- Recent Product Images rows are being recorded correctly again:
+  - `"Frozen Aura"` now has non-null `scene_id` values in `generation_jobs`
+- The underlying data source is not empty:
+  - `scene_usage_unified` currently contains thousands of rows in the 90d window
+- So the page is hanging because the **RPC/query path the admin page depends on is misconfigured**
 
-- **No change to how images are generated.** We only fix how `scene_id` is *recorded* into `generation_jobs`.
-- **No change to `process-queue`, no change to AI calls, no change to credits/refunds.**
-- **No schema changes.** Just a small, defensive read of `payload.scene_id` in one edge function.
-- **No frontend changes** (the previous fix already sends `scene_id` in the payload — confirmed in `generation_queue` rows).
-- **Backfill is a pure UPDATE** that only writes `scene_id` where it is currently `NULL` — it cannot break existing rows or affect images.
+### Most likely root cause
 
-### What changes (minimal)
+`src/pages/admin/SceneUsage.tsx` loads through:
 
-1. **`supabase/functions/generate-workflow/index.ts`** — one defensive line right before the `generation_jobs` insert:
+```ts
+supabase.rpc('get_scene_popularity', { p_days: windowDays })
+```
 
-   ```ts
-   const sceneIdForJob =
-     (payload as any)?.scene_id ??
-     (payload as any)?.pose?.id ??
-     (payload as any)?.scene?.id ??
-     null;
-   ```
+But the backend setup around that RPC is fragile right now:
 
-   Then use `scene_id: sceneIdForJob` in the insert. This guarantees the value from `generation_queue.payload.scene_id` is persisted.
+1. `get_scene_popularity()` appears to have **permission/exposure problems** in the live database
+2. `scene_usage_unified` was recreated with `security_invoker = true`, which makes reads depend on the caller’s direct table access/RLS
+3. The base tables behind it (`freestyle_generations`, and likely other scene sources) are user-scoped, so this is the wrong pattern for an admin-wide aggregate
 
-2. **One-time backfill (data only)** — match `generation_jobs.scene_name` → `product_image_scenes.title` to recover today's missed Product Images rows:
+That combination can leave the admin page waiting on a broken RPC path instead of getting a usable aggregate.
 
-   ```sql
-   UPDATE public.generation_jobs gj
-   SET scene_id = pis.scene_id
-   FROM public.product_image_scenes pis
-   WHERE gj.scene_id IS NULL
-     AND gj.scene_name IS NOT NULL
-     AND lower(gj.scene_name) = lower(pis.title);
-   ```
+### Safe fix plan
 
-   Only fills NULLs. Cannot overwrite existing data. Cannot affect images, credits, or generation.
+#### 1) Harden the admin aggregation function
+Update the migration setup so `public.get_scene_popularity(p_days int)` is the single reliable admin entry point:
 
-### What is NOT touched
+- keep it `SECURITY DEFINER`
+- keep the explicit admin check:
+  ```sql
+  if not public.has_role(auth.uid(), 'admin'::app_role) then
+    raise exception 'Access denied';
+  end if;
+  ```
+- make sure it is recreated cleanly and **granted to authenticated users**
+- verify it is callable from the client
 
-- `process-queue`, `enqueue-generation`, `generate-tryon`, `generate-freestyle`, `generate-catalog` — untouched.
-- `generation_queue` rows — untouched.
-- `freestyle_generations` — untouched (already works).
-- Credits, RLS, triggers, cron, frontend — untouched.
+#### 2) Remove the fragile dependency on `security_invoker` for admin analytics
+Replace the current read path with one of these safe patterns:
 
-### Rollback plan (if anything looks off)
+- safest option: have `get_scene_popularity()` aggregate directly from base tables
+- acceptable option: recreate `scene_usage_unified` without `security_invoker = true` and keep access only through the admin RPC
 
-- Edge function: revert the single `sceneIdForJob` line — generation continues working exactly as before.
-- Backfill: re-run `UPDATE generation_jobs SET scene_id = NULL WHERE …` for the same window if you want a clean slate again.
+This ensures admin analytics are not blocked by per-user RLS on source tables.
+
+#### 3) Keep the UI unchanged
+`src/pages/admin/SceneUsage.tsx` can stay mostly as-is. Only add a tiny defensive improvement if needed:
+
+- ensure RPC failures surface a clear toast/message
+- optionally render an inline error state instead of a spinner if the RPC fails
+
+### What will not be touched
+
+- No changes to image generation logic
+- No changes to credits, queueing, or AI calls
+- No changes to the Product Images frontend payload fix
+- No schema redesign needed
+- No risky refactor of the admin page UI
+
+### Why this is safe
+
+- This is an **analytics read-path fix only**
+- It does not touch the generation pipeline
+- It does not mutate existing image results
+- It only corrects how admin scene-performance aggregates are fetched
 
 ### Validation
 
-1. Generate 1 image via `/app/generate/product-images`.
-2. Confirm new `generation_jobs` row has non-null `scene_id`.
-3. Reload `/app/admin/scene-performance` → scene appears with name + thumbnail.
-4. Today's previously-missed Product Images rows also appear (from backfill).
+1. Call `get_scene_popularity(90)` successfully as an authenticated admin
+2. Open `/app/admin/scene-performance`
+3. Confirm KPI cards populate instead of showing endless loading
+4. Confirm the table renders rows
+5. Confirm recent Product Images generations like `"Frozen Aura"` appear
+6. Confirm the page still blocks non-admin users
+
+### Expected outcome
+
+After this fix:
+
+- `/app/admin/scene-performance` stops hanging
+- existing tracked rows render again
+- new Product Images generations appear normally
+- admin analytics no longer depend on fragile caller-side RLS behavior
 
