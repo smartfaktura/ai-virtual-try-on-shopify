@@ -314,7 +314,7 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
           {settingOptions.map(o => (
-            <OptionCard key={o.value} {...o} icon={SETTING_ICON_MAP[o.value]} selected={setting === o.value} onClick={setSetting} />
+            <OptionCard key={o.value} {...o} icon={SETTING_ICON_MAP[o.value]} selected={setting === o.value} onClick={setSetting} isMobile={isMobile} />
           ))}
         </div>
       </div>
