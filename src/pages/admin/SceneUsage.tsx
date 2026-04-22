@@ -150,8 +150,12 @@ export default function SceneUsage() {
   const [rows, setRows] = useState<PopularityRow[]>([]);
   const [risers, setRisers] = useState<Array<{ scene_id: string; delta: number; current: number }>>([]);
   const [meta, setMeta] = useState<Map<string, SceneMeta>>(new Map());
-  const [uniqueUsers, setUniqueUsers] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+  const [uniqueUsers, setUniqueUsers] = useState<number | null>(null);
+  const [mainLoading, setMainLoading] = useState(true);
+  const [uniqueUsersLoading, setUniqueUsersLoading] = useState(true);
+  const [uniqueUsersFailed, setUniqueUsersFailed] = useState(false);
+  const [risersLoading, setRisersLoading] = useState(true);
+  const [risersFailed, setRisersFailed] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('total_uses');
@@ -159,30 +163,69 @@ export default function SceneUsage() {
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   const metaRef = useRef(meta);
   metaRef.current = meta;
+  const inflightMetaRef = useRef<Set<string>>(new Set());
 
   // Reset pagination when filters/sort/window change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [windowDays, search, sortKey, sortDir]);
 
-  // Load popularity + unique users + risers (no per-scene metadata here)
+  // Progressive load: main popularity first, then secondary queries in parallel (non-blocking).
   useEffect(() => {
     if (!isRealAdmin) return;
     let cancelled = false;
 
-    async function load() {
-      setLoading(true);
+    setMainLoading(true);
+    setUniqueUsersLoading(true);
+    setUniqueUsersFailed(false);
+    setRisersLoading(true);
+    setRisersFailed(false);
+
+    // 1) Main popularity — unblocks the table + main KPIs
+    (async () => {
       try {
-        const [popRes, uniqRes, last7Res, prior14Res] = await Promise.all([
-          supabase.rpc('get_scene_popularity' as any, { p_days: windowDays }),
-          supabase.rpc('get_scene_unique_user_count' as any, { p_days: windowDays }),
+        const popRes = await supabase.rpc('get_scene_popularity' as any, { p_days: windowDays });
+        if (popRes.error) throw popRes.error;
+        if (cancelled) return;
+        setRows((popRes.data ?? []) as PopularityRow[]);
+      } catch (err: any) {
+        console.error('[SceneUsage] main popularity failed', err);
+        if (!cancelled) {
+          setRows([]);
+          toast.error(err?.message ?? 'Failed to load scene usage');
+        }
+      } finally {
+        if (!cancelled) setMainLoading(false);
+      }
+    })();
+
+    // 2) Unique users KPI — independent
+    (async () => {
+      try {
+        const uniqRes = await supabase.rpc('get_scene_unique_user_count' as any, { p_days: windowDays });
+        if (uniqRes.error) throw uniqRes.error;
+        if (cancelled) return;
+        setUniqueUsers(Number(uniqRes.data ?? 0));
+      } catch (err: any) {
+        console.error('[SceneUsage] unique users failed', err);
+        if (!cancelled) {
+          setUniqueUsers(null);
+          setUniqueUsersFailed(true);
+        }
+      } finally {
+        if (!cancelled) setUniqueUsersLoading(false);
+      }
+    })();
+
+    // 3) Risers — independent, also resolves its own meta
+    (async () => {
+      try {
+        const [last7Res, prior14Res] = await Promise.all([
           supabase.rpc('get_scene_popularity' as any, { p_days: 7 }),
           supabase.rpc('get_scene_popularity' as any, { p_days: 14 }),
         ]);
-        if (popRes.error) throw popRes.error;
-        const mainRows = (popRes.data ?? []) as PopularityRow[];
-        const trueUniqueUsers = Number(uniqRes.data ?? 0);
-
+        if (last7Res.error) throw last7Res.error;
+        if (prior14Res.error) throw prior14Res.error;
         const last7 = (last7Res.data ?? []) as PopularityRow[];
         const prior14 = (prior14Res.data ?? []) as PopularityRow[];
         const last7Map = new Map(last7.map((r) => [r.scene_id, Number(r.total_uses)]));
@@ -196,25 +239,28 @@ export default function SceneUsage() {
         }).filter((r) => r.current > 0).sort((a, b) => b.delta - a.delta).slice(0, 10);
 
         if (cancelled) return;
-        setRows(mainRows);
         setRisers(computedRisers);
-        setUniqueUsers(trueUniqueUsers);
 
-        // Resolve risers metadata immediately (only ~10 ids)
-        const riserIds = computedRisers.map((r) => r.scene_id);
+        const riserIds = computedRisers.map((r) => r.scene_id).filter((id) => !metaRef.current.has(id));
         if (riserIds.length) {
-          const nextMeta = await resolveMetaForIds(riserIds, metaRef.current);
-          if (!cancelled) setMeta(nextMeta);
+          try {
+            const nextMeta = await resolveMetaForIds(riserIds, metaRef.current);
+            if (!cancelled) setMeta(nextMeta);
+          } catch (metaErr) {
+            console.error('[SceneUsage] riser meta failed', metaErr);
+          }
         }
       } catch (err: any) {
-        console.error('[SceneUsage] load failed', err);
-        toast.error(err?.message ?? 'Failed to load scene usage');
+        console.error('[SceneUsage] risers failed', err);
+        if (!cancelled) {
+          setRisers([]);
+          setRisersFailed(true);
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setRisersLoading(false);
       }
-    }
+    })();
 
-    load();
     return () => { cancelled = true; };
   }, [isRealAdmin, windowDays]);
 
