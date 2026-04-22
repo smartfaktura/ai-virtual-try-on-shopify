@@ -34,6 +34,7 @@ interface SceneRow {
   preview_image_url: string | null;
   subject: string | null;
   shot_style: string | null;
+  sort_order: number;
 }
 
 interface RecommendedRow {
