@@ -2,7 +2,7 @@ import React from 'react';
 
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Smartphone, Camera, Lock, Gauge, Sparkles, Palette,
+  Smartphone, Camera, Lock, Gauge, Sparkles, Palette, Sliders,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -98,6 +98,7 @@ export function FreestyleSettingsChips({
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
+  const [advancedOpenState, setAdvancedOpenState] = React.useState(false);
 
   // --- Shared chip renderers ---
 
@@ -264,8 +265,18 @@ export function FreestyleSettingsChips({
     </div>
   );
 
-  // --- Mobile: inline flow layout ---
+  // --- Mobile: 4 primary chips + Advanced popover for the rest ---
   if (isMobile) {
+    const isAspectModified = aspectRatio !== '1:1';
+    const isCameraModified = cameraStyle !== 'pro';
+    const isQualityModified = quality !== 'standard';
+    const isFramingModified = !!framing;
+    const isBrandModified = !!selectedBrandProfile;
+    const advancedModified =
+      isAspectModified || isCameraModified || isQualityModified || isFramingModified || isBrandModified;
+
+    const [advancedOpen, setAdvancedOpenLocal] = [advancedOpenState, setAdvancedOpenState] as const;
+
     return (
       <TooltipProvider delayDuration={300}>
         <div className="flex items-center gap-1 flex-wrap">
@@ -273,42 +284,73 @@ export function FreestyleSettingsChips({
           {productChip}
           {modelChip}
           {sceneChip}
-          <FramingSelectorChip
-            framing={framing}
-            onFramingChange={onFramingChange}
-            open={framingPopoverOpen}
-            onOpenChange={onFramingPopoverChange}
-            modal={isMobile}
-          />
-          {disabledChips?.brand ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 opacity-40 cursor-default"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <Palette className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Brand</span>
-                  <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                Register to create your brand profile
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <BrandProfileChip
-              selectedProfile={selectedBrandProfile}
-              open={brandProfilePopoverOpen}
-              onOpenChange={onBrandProfilePopoverChange}
-              onSelect={onBrandProfileSelect}
-              profiles={brandProfiles}
-              isLoading={isLoadingBrandProfiles}
-            />
-          )}
-          {aspectRatioChip}
-          {cameraStyleChip}
-          {qualityChip}
+
+          <Popover open={advancedOpen} onOpenChange={setAdvancedOpenLocal}>
+            <PopoverTrigger asChild>
+              <button className="relative inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+                <Sliders className="w-3.5 h-3.5" />
+                Advanced
+                <ChevronDown className="w-3 h-3 opacity-40" />
+                {advancedModified && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary ring-2 ring-background" />
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[min(320px,calc(100vw-2rem))] p-3 space-y-3" align="start">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Framing</p>
+                <FramingSelectorChip
+                  framing={framing}
+                  onFramingChange={onFramingChange}
+                  open={framingPopoverOpen}
+                  onOpenChange={onFramingPopoverChange}
+                  modal={isMobile}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Brand</p>
+                {disabledChips?.brand ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 opacity-40 cursor-default"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <Palette className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Brand</span>
+                        <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      Register to create your brand profile
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <BrandProfileChip
+                    selectedProfile={selectedBrandProfile}
+                    open={brandProfilePopoverOpen}
+                    onOpenChange={onBrandProfilePopoverChange}
+                    onSelect={onBrandProfileSelect}
+                    profiles={brandProfiles}
+                    isLoading={isLoadingBrandProfiles}
+                  />
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Aspect ratio</p>
+                {aspectRatioChip}
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Camera style</p>
+                {cameraStyleChip}
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">Quality</p>
+                {qualityChip}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           {promptHelperButton}
         </div>
       </TooltipProvider>
