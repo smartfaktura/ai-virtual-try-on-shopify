@@ -4,7 +4,8 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, Package, Plus, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, Package, Plus, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -55,6 +56,12 @@ export function ProductCatalogModal({
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>('featured');
   const [pending, setPending] = useState<UserProduct | null>(null);
+  const [search, setSearch] = useState('');
+
+  const handleSheetOpenChange = (next: boolean) => {
+    if (!next) setSearch('');
+    onOpenChange(next);
+  };
 
   // Combine user products + samples (samples shown when user has none, or in samples view)
   const allProducts = useMemo<UserProduct[]>(() => {
@@ -76,13 +83,20 @@ export function ProductCatalogModal({
     if (typeFilter) {
       list = list.filter(p => p.product_type === typeFilter);
     }
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(p =>
+        p.title?.toLowerCase().includes(q) ||
+        p.product_type?.toLowerCase().includes(q),
+      );
+    }
     if (sort === 'name') {
       list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     } else if (sort === 'newest') {
       list = [...list].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
     }
     return list;
-  }, [allProducts, quickView, typeFilter, sort]);
+  }, [allProducts, quickView, typeFilter, sort, search]);
 
   const anyFilterActive = quickView !== 'all' || typeFilter !== null || sort !== 'featured';
 
@@ -96,12 +110,12 @@ export function ProductCatalogModal({
     if (pending) {
       onSelect(pending);
       setPending(null);
-      onOpenChange(false);
+      handleSheetOpenChange(false);
     }
   };
 
   const handleAddNew = () => {
-    onOpenChange(false);
+    handleSheetOpenChange(false);
     navigate('/app/products');
   };
 
@@ -113,19 +127,29 @@ export function ProductCatalogModal({
   const sampleCount = SAMPLE_PRODUCTS.length;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent
         side="right"
         onOpenAutoFocus={(e) => e.preventDefault()}
         className="p-0 gap-0 flex flex-col w-[92vw] max-w-[1500px] sm:max-w-[1500px]"
       >
         {/* Header */}
-        <header className="flex items-start justify-between px-4 sm:px-6 py-4 pr-12 sm:pr-6 border-b border-border/40">
+        <header className="flex flex-col gap-3 px-4 sm:px-6 py-4 pr-12 sm:pr-6 border-b border-border/40">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-foreground">Select a Product</h2>
             <p className="text-sm text-muted-foreground mt-0.5 tracking-tight">
               Pick what to feature in your scene
             </p>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search your products…"
+              className="pl-9 h-9 text-sm"
+            />
           </div>
         </header>
 
@@ -304,9 +328,21 @@ export function ProductCatalogModal({
                 </button>
 
                 {filtered.length === 0 && !isLoading && (
-                  <p className="col-span-full text-center text-sm text-muted-foreground py-10">
-                    No products match these filters
-                  </p>
+                  <div className="col-span-full flex flex-col items-center justify-center py-10 gap-2">
+                    <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center">
+                      <Search className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {search.trim()
+                        ? <>No products match &ldquo;{search}&rdquo;</>
+                        : 'No products match these filters'}
+                    </p>
+                    {search.trim() && (
+                      <Button variant="ghost" size="sm" onClick={() => setSearch('')}>
+                        Clear search
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -337,12 +373,12 @@ export function ProductCatalogModal({
             {selectedProduct && (
               <Button
                 variant="ghost"
-                onClick={() => { onSelect(null); setPending(null); onOpenChange(false); }}
+                onClick={() => { onSelect(null); setPending(null); handleSheetOpenChange(false); }}
               >
                 Clear
               </Button>
             )}
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button variant="ghost" onClick={() => handleSheetOpenChange(false)}>
               Cancel
             </Button>
             <Button disabled={!pending} onClick={handleConfirm}>
