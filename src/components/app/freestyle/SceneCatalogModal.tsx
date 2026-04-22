@@ -349,7 +349,7 @@ export function SceneCatalogModal({
                 </>
               ) : quickView === 'recommended' ? (
                 <SceneCatalogGrid
-                  pages={[recommended.data ?? []]}
+                  pages={[recommendedScenes]}
                   isLoading={recommended.isLoading}
                   isFetchingNextPage={false}
                   hasNextPage={false}
