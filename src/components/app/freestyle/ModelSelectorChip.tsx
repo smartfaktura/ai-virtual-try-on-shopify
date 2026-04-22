@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ChevronDown, X, Sparkles, Trash2, Crown, Check } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
+import { ModelCatalogModal } from './ModelCatalogModal';
 import type { ModelProfile } from '@/types';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels, useDeleteUserModel } from '@/hooks/useUserModels';
