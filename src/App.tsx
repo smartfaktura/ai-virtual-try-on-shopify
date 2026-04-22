@@ -51,6 +51,7 @@ const AdminChatSessions = lazy(() => import('@/pages/AdminChatSessions'));
 const AdminFeedback = lazy(() => import('@/pages/AdminFeedback'));
 const AdminStatus = lazy(() => import('@/pages/AdminStatus'));
 const AdminProductImageScenes = lazy(() => import('@/pages/AdminProductImageScenes'));
+const AdminRecommendedScenes = lazy(() => import('@/pages/AdminRecommendedScenes'));
 const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const Learn = lazy(() => import('@/pages/Learn'));
 const LearnGuide = lazy(() => import('@/pages/LearnGuide'));
@@ -223,6 +224,7 @@ const App = () => {
                         <Route path="/admin/feedback" element={<AdminFeedback />} />
                         <Route path="/admin/status" element={<AdminStatus />} />
                         <Route path="/admin/product-image-scenes" element={<AdminProductImageScenes />} />
+                        <Route path="/admin/recommended-scenes" element={<AdminRecommendedScenes />} />
                         <Route path="/admin/trend-watch" element={<AdminTrendWatch />} />
                         <Route path="/admin/scene-library" element={<AdminSceneLibrary />} />
                         <Route path="/admin/prompt-tokens" element={<AdminPromptTokens />} />

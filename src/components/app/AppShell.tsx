@@ -382,6 +382,13 @@ export function AppShell({ children }: AppShellProps) {
                       Product Visuals Scenes
                     </button>
                     <button
+                      onClick={() => { navigate('/app/admin/recommended-scenes'); setUserMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <Star className="w-4 h-4" />
+                      Recommended Scenes
+                    </button>
+                    <button
                       onClick={() => { navigate('/app/admin/trend-watch'); setUserMenuOpen(false); }}
                       className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
                     >
