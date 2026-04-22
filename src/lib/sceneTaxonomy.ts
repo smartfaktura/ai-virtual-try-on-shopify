@@ -178,3 +178,57 @@ export function toPisSceneId(rawId: string): string {
 export function fromPisSceneId(prefixed: string): string {
   return prefixed.startsWith(PIS_PREFIX) ? prefixed.slice(PIS_PREFIX.length) : prefixed;
 }
+
+/**
+ * Round-robin interleave of scenes across product families.
+ *
+ * Groups by `category_collection` → family (via CATEGORY_FAMILY_MAP), then pulls
+ * `chunkSize` items from each family queue in FAMILY_ORDER, repeating until all
+ * queues are drained. Items without a recognised family are appended at the end
+ * in their original order (stable for unknown collections).
+ *
+ * Pure & deterministic — safe for both UI render and recommendation fallback.
+ */
+export function interleaveByFamily<
+  T extends { category_collection?: string | null },
+>(items: T[], chunkSize = 2): T[] {
+  if (!items.length || chunkSize < 1) return items.slice();
+
+  const queues = new Map<string, T[]>();
+  const tail: T[] = [];
+
+  for (const item of items) {
+    const slug = item.category_collection ?? null;
+    const fam = slug ? CATEGORY_FAMILY_MAP[slug] : undefined;
+    if (!fam) {
+      tail.push(item);
+      continue;
+    }
+    if (!queues.has(fam)) queues.set(fam, []);
+    queues.get(fam)!.push(item);
+  }
+
+  // Order queues: known FAMILY_ORDER first, then any extras alphabetically.
+  const orderedFamilies = [
+    ...FAMILY_ORDER.filter(f => queues.has(f)),
+    ...Array.from(queues.keys())
+      .filter(f => !FAMILY_ORDER.includes(f as any))
+      .sort(),
+  ];
+
+  const result: T[] = [];
+  let drained = false;
+  while (!drained) {
+    drained = true;
+    for (const fam of orderedFamilies) {
+      const q = queues.get(fam);
+      if (!q || q.length === 0) continue;
+      const taken = q.splice(0, chunkSize);
+      result.push(...taken);
+      if (q.length > 0) drained = false;
+    }
+  }
+
+  result.push(...tail);
+  return result;
+}
