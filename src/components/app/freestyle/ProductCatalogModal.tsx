@@ -328,9 +328,21 @@ export function ProductCatalogModal({
                 </button>
 
                 {filtered.length === 0 && !isLoading && (
-                  <p className="col-span-full text-center text-sm text-muted-foreground py-10">
-                    No products match these filters
-                  </p>
+                  <div className="col-span-full flex flex-col items-center justify-center py-10 gap-2">
+                    <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center">
+                      <Search className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {search.trim()
+                        ? <>No products match &ldquo;{search}&rdquo;</>
+                        : 'No products match these filters'}
+                    </p>
+                    {search.trim() && (
+                      <Button variant="ghost" size="sm" onClick={() => setSearch('')}>
+                        Clear search
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
