@@ -325,9 +325,20 @@ export default function AdminRecommendedScenes() {
               <Badge variant="destructive" className="text-[10px]">Over cap</Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Use ↑ / ↓ on a card to reorder. Position 1 appears first in the user's rail.
-          </p>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={featuredPreview}
+                onChange={e => updateFeaturedPreview(e.target.checked)}
+                className="accent-primary"
+              />
+              Preview as user sees it
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Use ↑ / ↓ to reorder.
+            </p>
+          </div>
         </header>
         <div className="p-4">
           {recLoading ? (
