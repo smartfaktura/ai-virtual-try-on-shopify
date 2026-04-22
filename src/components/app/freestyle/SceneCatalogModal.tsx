@@ -123,21 +123,29 @@ export function SceneCatalogModal({
   );
   const withModelRail = useSceneRail(
     'with-model',
-    { subjects: ['with-model'] },
+    { subjects: ['with-model'], excludeEssentials: true },
     12,
     open && showRails,
   );
 
-  // Filtered grid (only fetched when a real filter is active and we're not showing only Recommended)
+  // Filtered grid (always exclude Essential Shots in Freestyle modal).
   const useGrid = anyFilterActive && quickView !== 'recommended';
-  const grid = useSceneCatalog(filters, open && useGrid);
+  const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
   const counts = useSceneCounts();
 
-  // Freestyle Originals — use mockTryOnPoses, deduped via hidden filter, capped at 12.
-  const freestyleOriginals = useMemo(() => {
+  // Freestyle Scenes — live custom_scenes from /app/admin/scenes, capped at 12.
+  const customScenesQuery = useCustomScenes();
+  const freestyleScenes = useMemo<CatalogScene[]>(() => {
     if (!showRails) return [];
-    return filterVisible(mockTryOnPoses).slice(0, 12).map(poseToCatalogShape);
-  }, [showRails, filterVisible]);
+    const rows = customScenesQuery.scenes ?? [];
+    return rows.slice(0, 12).map(customSceneToCatalogShape);
+  }, [showRails, customScenesQuery.scenes]);
+
+  // Recommended rail — strip any "Essential Shots" rows defensively.
+  const recommendedScenes = useMemo<CatalogScene[]>(() => {
+    const data = (recommended.data ?? []) as CatalogScene[];
+    return data.filter(s => !s.sub_category?.toLowerCase().includes('essential'));
+  }, [recommended.data]);
 
   const newCount = useMemo(() => {
     // Fast approximation — we don't fetch a separate count; just show no badge.
