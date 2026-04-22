@@ -78,7 +78,7 @@ export function SceneCatalogModal({
   const [family, setFamily] = useState<string | null>(null);
   const [categoryCollection, setCategoryCollection] = useState<string | null>(null);
   const [quickView, setQuickView] = useState<QuickView>('all');
-  const [sort, setSort] = useState<'recommended' | 'popular' | 'new'>('recommended');
+  const [sort, setSort] = useState<'recommended' | 'new'>('recommended');
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
   const [pendingLegacy, setPendingLegacy] = useState<TryOnPose | null>(null);
 
