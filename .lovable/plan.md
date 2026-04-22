@@ -1,31 +1,31 @@
 
 
-## Add bulk "personDetails" toggle in Import Scenes modal
+## Fix: scene reordering not reflecting until hard refresh
 
-In `/app/admin/product-image-scenes` → "Import to specific category" → Step 2 (Configure), add a one-click control next to the existing **Sub-category for all scenes** picker that toggles the `personDetails` trigger block on every scene being imported.
+### Root cause
+`handleMove` and `handleMoveToTop` issue 2-N parallel `updateScene.mutateAsync` calls via `Promise.all`. Each mutation's `onSuccess` (in `useProductImageScenes`) calls `invalidateAll()`. React Query coalesces invalidations and triggers a refetch the moment the **first** mutation resolves — that refetch reads the DB before the remaining parallel writes have committed, so the cache is repopulated with stale `sort_order` values. The page then shows the old order until you hard-refresh (which forces a fresh fetch after all writes have settled).
 
-### Change (single file: `src/components/app/ImportFromScenesModal.tsx`)
+### Fix (single file: `src/pages/AdminProductImageScenes.tsx`)
 
-In the bulk-controls bar (lines 333–405), add a second control on the right side: a small button labeled **+ Add personDetails to all** / **− Remove personDetails from all**.
+**1. Bypass the per-mutation invalidation for bulk reorder operations.**  
+Inside `handleMove` and `handleMoveToTop`, replace the `updateScene.mutateAsync(...)` calls with direct `supabase.from('product_image_scenes').update({ sort_order }).eq('id', s.id)` calls collected in a single `Promise.all`. After all writes resolve, call `queryClient.invalidateQueries` for the three scene query keys exactly once. This guarantees the refetch happens *after* every write is committed.
 
-Behavior:
-- Reads current state across all configs:
-  - If **every** scene already has `personDetails` in `trigger_blocks` → button shows "Remove personDetails from all" and clicking it strips the trigger from every config.
-  - Otherwise → button shows "Add personDetails to all" and clicking it adds `personDetails` to every config (no duplicates).
-- Single click updates all imported scenes at once. Per-scene checkboxes still work afterward for fine-tuning.
-- Uses the existing `Users` (or `UserCheck`) lucide icon for clarity.
+**2. Optimistic cache update for instant UI feedback.**  
+Before awaiting the writes, call `queryClient.setQueryData` on the active query key (`['product-image-scenes', cacheVariant]`) to mutate the in-cache `sort_order` values for the affected scenes. The list re-renders immediately; the subsequent invalidation reconciles with the server.
 
-### Why
-`personDetails` is needed on most apparel/accessory scenes during import. Today admins must check it 10–20 times per import session. One bulk toggle removes that friction without changing the per-scene UI.
+**3. Same fix applied to `handleMoveSubCategory`** (it uses the same parallel-mutate pattern).
+
+### Why this works
+- Single post-write invalidation eliminates the read-before-all-writes race.
+- Optimistic update makes the arrow click feel instant (no waiting on the round-trip + refetch).
+- `groupBySubCategory` already sorts by `sort_order` ascending, so the reordered cache renders correctly.
 
 ### Validation
-- Open Import Scenes modal in any category → select 5+ scenes → Step 2 shows the new "Add personDetails to all" button next to the sub-category picker.
-- Click it → every scene card's `personDetails` checkbox becomes checked.
-- Click again → all become unchecked.
-- Import → DB rows have `trigger_blocks` containing `personDetails` as expected.
+- `/app/admin/product-image-scenes` → Apparel → Creative Shots → click ↑ on `Urban NYC Street`: order changes immediately, no hard refresh needed.
+- Click ⏫ (move-to-top) on `Skatepark Golden Hour`: jumps to position #1 instantly.
+- Move sub-category `Creative Shots` up: reorders instantly.
+- Refresh the page → server-side order matches what was shown.
 
 ### Out of scope
-- No other trigger gets a bulk control (only `personDetails`, per request).
-- No changes to Step 1, scene defaults, or the analyze flow.
-- No schema, edge function, or prompt-builder changes.
+No schema changes, no other handlers, no realtime subscription (overkill for an admin-only page).
 
