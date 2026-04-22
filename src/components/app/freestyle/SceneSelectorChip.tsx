@@ -150,6 +150,16 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     onOpenChange(false);
   };
 
+  const handleCatalogSelectLegacy = (pose: TryOnPose) => {
+    onSelect(pose);
+    onOpenChange(false);
+  };
+
+  const selectedLegacyPoseId =
+    selectedScene && !isPisSceneId(selectedScene.poseId)
+      ? selectedScene.poseId
+      : null;
+
   const selectedPisSceneId =
     selectedScene && isPisSceneId(selectedScene.poseId)
       ? fromPisSceneId(selectedScene.poseId)
@@ -287,7 +297,9 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
           open={open}
           onOpenChange={onOpenChange}
           selectedPisSceneId={selectedPisSceneId}
+          selectedLegacyPoseId={selectedLegacyPoseId}
           onSelect={handleCatalogSelect}
+          onSelectLegacy={handleCatalogSelectLegacy}
         />
       </>
     );

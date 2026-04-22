@@ -2,7 +2,6 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { SHOT_STYLE_LABEL, SUBJECT_LABEL, type SceneShotStyle, type SceneSubject } from '@/lib/sceneTaxonomy';
 import type { CatalogScene } from '@/hooks/useSceneCatalog';
 
 interface SceneCatalogCardProps {
@@ -12,8 +11,6 @@ interface SceneCatalogCardProps {
 }
 
 export function SceneCatalogCard({ scene, selected, onSelect }: SceneCatalogCardProps) {
-  const subjectLabel = scene.subject ? SUBJECT_LABEL[scene.subject as SceneSubject] : null;
-  const styleLabel = scene.shot_style ? SHOT_STYLE_LABEL[scene.shot_style as SceneShotStyle] : null;
   const isNew = scene.created_at
     ? Date.now() - new Date(scene.created_at).getTime() < 14 * 24 * 60 * 60 * 1000
     : false;
@@ -53,22 +50,10 @@ export function SceneCatalogCard({ scene, selected, onSelect }: SceneCatalogCard
           </span>
         )}
       </div>
-      <div className="p-2.5 space-y-1.5">
-        <p className="text-[12px] font-medium text-foreground leading-tight line-clamp-2 min-h-[2.4em]">
+      <div className="px-2.5 py-2">
+        <p className="text-[12px] font-medium text-foreground leading-tight truncate">
           {scene.title}
         </p>
-        <div className="flex flex-wrap gap-1">
-          {subjectLabel && (
-            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-              {subjectLabel}
-            </span>
-          )}
-          {styleLabel && (
-            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-              {styleLabel}
-            </span>
-          )}
-        </div>
       </div>
     </button>
   );

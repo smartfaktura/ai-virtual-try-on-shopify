@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,36 +9,68 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   SceneCatalogFiltersBar, QUICK_CHIPS, type FilterChipDef,
 } from './SceneCatalogFilters';
-import { SceneCatalogSidebar } from './SceneCatalogSidebar';
+import { SceneCatalogSidebar, type QuickView } from './SceneCatalogSidebar';
 import { SceneCatalogRail } from './SceneCatalogRail';
 import { SceneCatalogGrid } from './SceneCatalogGrid';
 import { useSceneCatalog, useSceneRail, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
-import { SHOT_STYLE_LABEL, SUBJECT_LABEL, type SceneShotStyle, type SceneSubject } from '@/lib/sceneTaxonomy';
+import { mockTryOnPoses } from '@/data/mockData';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import type { TryOnPose } from '@/types';
 
 interface SceneCatalogModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** scene_id of currently-selected Product Visuals scene (without pis- prefix) */
   selectedPisSceneId?: string | null;
+  /** poseId of currently-selected mock/legacy pose (no prefix) */
+  selectedLegacyPoseId?: string | null;
   onSelect: (scene: CatalogScene) => void;
+  /** Called when the user picks one of the original Freestyle scenes (mockTryOnPoses). */
+  onSelectLegacy?: (pose: TryOnPose) => void;
 }
 
-export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSelect }: SceneCatalogModalProps) {
+/** Adapt a TryOnPose into a CatalogScene-shaped object so the rail can render it. */
+function poseToCatalogShape(pose: TryOnPose): CatalogScene {
+  return {
+    id: `legacy-${pose.poseId}`,
+    scene_id: pose.poseId,
+    title: pose.name,
+    sub_category: null,
+    category_collection: null,
+    scene_type: null,
+    subject: null,
+    shot_style: null,
+    setting: null,
+    preview_image_url: pose.previewUrl,
+    prompt_template: pose.promptHint ?? null,
+    filter_tags: null,
+    created_at: null,
+  };
+}
+
+export function SceneCatalogModal({
+  open,
+  onOpenChange,
+  selectedPisSceneId,
+  selectedLegacyPoseId,
+  onSelect,
+  onSelectLegacy,
+}: SceneCatalogModalProps) {
   const isMobile = useIsMobile();
+  const { filterVisible } = useHiddenScenes();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
-  const [shotStyles, setShotStyles] = useState<string[]>([]);
-  const [settings, setSettings] = useState<string[]>([]);
-  const [collections, setCollections] = useState<string[]>([]);
-  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [family, setFamily] = useState<string | null>(null);
+  const [quickView, setQuickView] = useState<QuickView>('all');
   const [sort, setSort] = useState<'recommended' | 'popular' | 'new'>('recommended');
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
+  const [pendingLegacy, setPendingLegacy] = useState<TryOnPose | null>(null);
 
   // Debounce search
-  useMemo(() => {
+  useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(t);
   }, [search]);
@@ -46,91 +78,150 @@ export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSe
   const anyFilterActive =
     !!debouncedSearch ||
     subjects.length > 0 ||
-    shotStyles.length > 0 ||
-    settings.length > 0 ||
-    collections.length > 0 ||
-    filterTags.length > 0 ||
-    sort !== 'recommended';
+    family !== null ||
+    quickView !== 'all';
 
-  const filters = {
-    search: debouncedSearch,
-    subjects,
-    shotStyles,
-    settings,
-    collections,
-    filterTags,
-    sort,
-  };
+  // Build filters for the grid query depending on the active quick view.
+  const filters = useMemo(() => {
+    const base = {
+      search: debouncedSearch,
+      subjects,
+      family,
+      sort,
+    };
+    if (quickView === 'new') return { ...base, sort: 'new' as const };
+    return base;
+  }, [debouncedSearch, subjects, family, sort, quickView]);
 
-  // Default rails (only when no filters)
+  // Default rails (only when no filters AND quickView === 'all')
   const showRails = !anyFilterActive;
 
-  const recommended = useRecommendedScenes(open && showRails);
-  const productOnlyRail = useSceneRail('product-only', { subjects: ['product-only'] }, 12, open && showRails);
-  const withModelRail = useSceneRail('with-model', { subjects: ['with-model'] }, 12, open && showRails);
-  const editorialRail = useSceneRail('editorial', { shotStyles: ['editorial', 'campaign'] }, 12, open && showRails);
+  const recommended = useRecommendedScenes(open && (showRails || quickView === 'recommended'));
+  const productOnlyRail = useSceneRail(
+    'product-only',
+    { subjects: ['product-only'], excludeEssentials: true },
+    12,
+    open && showRails,
+  );
+  const withModelRail = useSceneRail(
+    'with-model',
+    { subjects: ['with-model'] },
+    12,
+    open && showRails,
+  );
 
-  // Filtered grid
-  const grid = useSceneCatalog(filters, open && !showRails);
+  // Filtered grid (only fetched when a real filter is active and we're not showing only Recommended)
+  const useGrid = anyFilterActive && quickView !== 'recommended';
+  const grid = useSceneCatalog(filters, open && useGrid);
   const counts = useSceneCounts();
+
+  // Freestyle Originals — use mockTryOnPoses, deduped via hidden filter, capped at 12.
+  const freestyleOriginals = useMemo(() => {
+    if (!showRails) return [];
+    return filterVisible(mockTryOnPoses).slice(0, 12).map(poseToCatalogShape);
+  }, [showRails, filterVisible]);
+
+  const newCount = useMemo(() => {
+    // Fast approximation — we don't fetch a separate count; just show no badge.
+    return undefined;
+  }, []);
 
   const activeChipKeys = useMemo(() => {
     const set = new Set<string>();
     for (const chip of QUICK_CHIPS) {
       if (chip.axis === 'subject' && subjects.includes(chip.value)) set.add(chip.key);
-      if (chip.axis === 'shot_style' && shotStyles.includes(chip.value)) set.add(chip.key);
-      if (chip.axis === 'setting' && settings.includes(chip.value)) set.add(chip.key);
-      if (chip.axis === 'tag' && filterTags.includes(chip.value)) set.add(chip.key);
     }
     return set;
-  }, [subjects, shotStyles, settings, filterTags]);
+  }, [subjects]);
 
   const toggleArr = (arr: string[], value: string) =>
     arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
 
   const handleChipToggle = (chip: FilterChipDef) => {
     if (chip.axis === 'subject') setSubjects(prev => toggleArr(prev, chip.value));
-    else if (chip.axis === 'shot_style') setShotStyles(prev => toggleArr(prev, chip.value));
-    else if (chip.axis === 'setting') setSettings(prev => toggleArr(prev, chip.value));
-    else if (chip.axis === 'tag') setFilterTags(prev => toggleArr(prev, chip.value));
+    setQuickView('all');
   };
 
-  const handleSidebarToggle = (
-    axis: 'subject' | 'shot_style' | 'setting' | 'collection',
-    value: string,
-  ) => {
-    if (axis === 'subject') setSubjects(prev => toggleArr(prev, value));
-    else if (axis === 'shot_style') setShotStyles(prev => toggleArr(prev, value));
-    else if (axis === 'setting') setSettings(prev => toggleArr(prev, value));
-    else setCollections(prev => toggleArr(prev, value));
+  const handleToggleSubject = (value: string) => {
+    setSubjects(prev => toggleArr(prev, value));
+    setQuickView('all');
+  };
+
+  const handleSelectFamily = (next: string | null) => {
+    setFamily(next);
+    setQuickView('all');
+  };
+
+  const handleSelectQuickView = (view: QuickView) => {
+    setQuickView(view);
+    if (view !== 'all') {
+      // entering a focused view: clear other filters except subjects (still useful)
+      setFamily(null);
+    }
+    if (view === 'all') {
+      // "All scenes" clears everything
+      setSubjects([]);
+      setFamily(null);
+      setSearch('');
+      setDebouncedSearch('');
+      setSort('recommended');
+    }
   };
 
   const clearAll = () => {
-    setSubjects([]); setShotStyles([]); setSettings([]);
-    setCollections([]); setFilterTags([]);
-    setSearch(''); setDebouncedSearch('');
+    setSubjects([]);
+    setFamily(null);
+    setSearch('');
+    setDebouncedSearch('');
     setSort('recommended');
+    setQuickView('all');
   };
 
   const handleSelect = (scene: CatalogScene) => {
+    if (scene.id.startsWith('legacy-')) {
+      // Find the original mock pose to preserve full TryOnPose shape (incl. previewUrlMale, etc.)
+      const pose = mockTryOnPoses.find(p => p.poseId === scene.scene_id);
+      if (pose) {
+        setPendingLegacy(pose);
+        setPendingScene(null);
+        return;
+      }
+    }
     setPendingScene(scene);
+    setPendingLegacy(null);
   };
 
   const handleConfirm = () => {
+    if (pendingLegacy && onSelectLegacy) {
+      onSelectLegacy(pendingLegacy);
+      setPendingScene(null);
+      setPendingLegacy(null);
+      onOpenChange(false);
+      return;
+    }
     if (pendingScene) {
       onSelect(pendingScene);
       setPendingScene(null);
+      setPendingLegacy(null);
       onOpenChange(false);
     }
   };
 
-  const handleViewAll = (axis: 'subject' | 'shot_style', value: string) => {
-    clearAll();
-    if (axis === 'subject') setSubjects([value]);
-    else setShotStyles([value]);
+  const handleViewAllSubject = (value: string) => {
+    setSubjects([value]);
+    setFamily(null);
+    setQuickView('all');
   };
 
-  const currentSelectedId = pendingScene?.scene_id ?? selectedPisSceneId ?? null;
+  const currentSelectedId =
+    pendingLegacy?.poseId ??
+    pendingScene?.scene_id ??
+    selectedPisSceneId ??
+    selectedLegacyPoseId ??
+    null;
+
+  const footerThumb = pendingLegacy?.previewUrl ?? pendingScene?.preview_image_url ?? null;
+  const footerTitle = pendingLegacy?.name ?? pendingScene?.title ?? null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -164,7 +255,7 @@ export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSe
         {/* Filter bar */}
         <SceneCatalogFiltersBar
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={v => { setSearch(v); setQuickView('all'); }}
           activeChipKeys={activeChipKeys}
           onChipToggle={handleChipToggle}
           onClearAll={clearAll}
@@ -178,11 +269,14 @@ export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSe
         <div className="flex-1 flex min-h-0">
           <SceneCatalogSidebar
             counts={counts.data}
+            selectedFamily={family}
             selectedSubjects={subjects}
-            selectedShotStyles={shotStyles}
-            selectedSettings={settings}
-            selectedCollections={collections}
-            onToggle={handleSidebarToggle}
+            quickView={quickView}
+            recommendedCount={recommended.data?.length}
+            newCount={newCount}
+            onSelectFamily={handleSelectFamily}
+            onToggleSubject={handleToggleSubject}
+            onSelectQuickView={handleSelectQuickView}
           />
 
           <ScrollArea className="flex-1">
@@ -197,12 +291,19 @@ export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSe
                     onSelect={handleSelect}
                   />
                   <SceneCatalogRail
+                    title="Freestyle Originals"
+                    scenes={freestyleOriginals}
+                    isLoading={false}
+                    selectedSceneId={currentSelectedId}
+                    onSelect={handleSelect}
+                  />
+                  <SceneCatalogRail
                     title="Product Only"
                     scenes={productOnlyRail.data}
                     isLoading={productOnlyRail.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
-                    onViewAll={() => handleViewAll('subject', 'product-only')}
+                    onViewAll={() => handleViewAllSubject('product-only')}
                   />
                   <SceneCatalogRail
                     title="With Model"
@@ -210,17 +311,19 @@ export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSe
                     isLoading={withModelRail.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
-                    onViewAll={() => handleViewAll('subject', 'with-model')}
-                  />
-                  <SceneCatalogRail
-                    title="Editorial"
-                    scenes={editorialRail.data}
-                    isLoading={editorialRail.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                    onViewAll={() => handleViewAll('shot_style', 'editorial')}
+                    onViewAll={() => handleViewAllSubject('with-model')}
                   />
                 </>
+              ) : quickView === 'recommended' ? (
+                <SceneCatalogGrid
+                  pages={[recommended.data ?? []]}
+                  isLoading={recommended.isLoading}
+                  isFetchingNextPage={false}
+                  hasNextPage={false}
+                  onLoadMore={() => {}}
+                  selectedSceneId={currentSelectedId}
+                  onSelect={handleSelect}
+                />
               ) : (
                 <SceneCatalogGrid
                   pages={grid.data?.pages ?? []}
@@ -239,29 +342,17 @@ export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSe
         {/* Footer */}
         <footer className="border-t border-border/40 bg-background px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            {pendingScene ? (
+            {footerTitle ? (
               <>
-                {pendingScene.preview_image_url && (
+                {footerThumb && (
                   <img
-                    src={getOptimizedUrl(pendingScene.preview_image_url, { quality: 60 })}
+                    src={getOptimizedUrl(footerThumb, { quality: 60 })}
                     alt=""
                     className="w-10 h-10 rounded-lg object-cover shrink-0"
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground truncate">{pendingScene.title}</p>
-                  <div className="flex gap-1 mt-0.5">
-                    {pendingScene.subject && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {SUBJECT_LABEL[pendingScene.subject as SceneSubject]}
-                      </span>
-                    )}
-                    {pendingScene.shot_style && (
-                      <span className="text-[10px] text-muted-foreground">
-                        · {SHOT_STYLE_LABEL[pendingScene.shot_style as SceneShotStyle]}
-                      </span>
-                    )}
-                  </div>
+                  <p className="text-sm font-semibold text-foreground truncate">{footerTitle}</p>
                 </div>
               </>
             ) : (
@@ -272,7 +363,11 @@ export function SceneCatalogModal({ open, onOpenChange, selectedPisSceneId, onSe
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button size="sm" disabled={!pendingScene} onClick={handleConfirm}>
+            <Button
+              size="sm"
+              disabled={!pendingScene && !pendingLegacy}
+              onClick={handleConfirm}
+            >
               Use scene
             </Button>
           </div>
