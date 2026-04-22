@@ -16,7 +16,6 @@ import { useSceneCatalog, useSceneRail, type CatalogScene } from '@/hooks/useSce
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
-import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface SceneCatalogModalProps {
@@ -74,7 +73,6 @@ export function SceneCatalogModal({
   onSelectLegacy,
 }: SceneCatalogModalProps) {
   const isMobile = useIsMobile();
-  const { filterVisible } = useHiddenScenes();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
