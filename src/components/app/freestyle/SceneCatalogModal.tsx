@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -62,6 +62,30 @@ export function SceneCatalogModal({
   const [sort, setSort] = useState<'recommended' | 'new'>('recommended');
   const [pendingScene, setPendingScene] = useState<CatalogScene | null>(null);
   const [pendingLegacy, setPendingLegacy] = useState<TryOnPose | null>(null);
+
+  // Client-side pagination for the default interleaved view.
+  const PAGE_SIZE = 24;
+  const [visiblePageCount, setVisiblePageCount] = useState(1);
+
+  // Ref to the Radix ScrollArea viewport so we can reset scroll on section changes.
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const scrollAreaRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) {
+      viewportRef.current = null;
+      return;
+    }
+    viewportRef.current = node.querySelector(
+      '[data-radix-scroll-area-viewport]',
+    ) as HTMLDivElement | null;
+  }, []);
+
+  // Reset scroll + visible page count whenever the user changes section/filter/sort.
+  useEffect(() => {
+    setVisiblePageCount(1);
+    if (viewportRef.current) {
+      viewportRef.current.scrollTo({ top: 0 });
+    }
+  }, [quickView, family, categoryCollection, subjects, debouncedSearch, sort]);
 
   // Debounce search
   useEffect(() => {
@@ -272,19 +296,24 @@ export function SceneCatalogModal({
             onSelectQuickView={handleSelectQuickView}
           />
 
-          <ScrollArea className="flex-1 min-h-0">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
             <div className="px-4 sm:px-6 py-4 space-y-4">
-              {showRails ? (
-                <SceneCatalogGrid
-                  pages={interleavedGrid.data?.pages ?? []}
-                  isLoading={interleavedGrid.isLoading}
-                  isFetchingNextPage={false}
-                  hasNextPage={false}
-                  onLoadMore={() => {}}
-                  selectedSceneId={currentSelectedId}
-                  onSelect={handleSelect}
-                />
-              ) : quickView === 'recommended' ? (
+              {showRails ? (() => {
+                const fullList = interleavedGrid.data?.pages?.[0] ?? [];
+                const visible = fullList.slice(0, visiblePageCount * PAGE_SIZE);
+                const hasMore = fullList.length > visible.length;
+                return (
+                  <SceneCatalogGrid
+                    pages={[visible]}
+                    isLoading={interleavedGrid.isLoading}
+                    isFetchingNextPage={false}
+                    hasNextPage={hasMore}
+                    onLoadMore={() => setVisiblePageCount(c => c + 1)}
+                    selectedSceneId={currentSelectedId}
+                    onSelect={handleSelect}
+                  />
+                );
+              })() : quickView === 'recommended' ? (
                 <SceneCatalogGrid
                   pages={[recommendedScenes]}
                   isLoading={recommended.isLoading}
