@@ -121,8 +121,10 @@ export function SceneCatalogSidebar({
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-2 py-1.5 rounded-md text-left text-xs transition-colors',
-        indent ? 'pl-6 pr-2' : 'px-2',
+        'w-full flex items-center gap-2 text-left transition-colors',
+        mobileMode
+          ? cn('py-3 rounded-xl text-sm', indent ? 'pl-10 pr-4' : 'px-4')
+          : cn('py-1.5 rounded-md text-xs', indent ? 'pl-6 pr-2' : 'px-2'),
         active
           ? 'bg-primary/10 text-primary font-semibold'
           : 'text-foreground/80 hover:bg-muted/60',
@@ -131,7 +133,13 @@ export function SceneCatalogSidebar({
       {icon}
       <span className="truncate flex-1">{label}</span>
       {typeof count === 'number' && count > 0 && (
-        <span className={cn('text-[10px] tabular-nums', active ? 'text-primary' : 'text-muted-foreground')}>
+        <span
+          className={cn(
+            'tabular-nums',
+            mobileMode ? 'text-xs' : 'text-[10px]',
+            active ? 'text-primary' : 'text-muted-foreground',
+          )}
+        >
           {count}
         </span>
       )}
@@ -139,7 +147,12 @@ export function SceneCatalogSidebar({
   );
 
   const sectionLabel = (text: string) => (
-    <p className="px-2 pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+    <p
+      className={cn(
+        'font-semibold uppercase tracking-[0.12em] text-muted-foreground/70',
+        mobileMode ? 'px-4 pt-5 pb-2 text-[11px]' : 'px-2 pt-3 pb-1.5 text-[10px]',
+      )}
+    >
       {text}
     </p>
   );
