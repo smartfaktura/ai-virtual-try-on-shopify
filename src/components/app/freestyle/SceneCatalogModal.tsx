@@ -152,19 +152,26 @@ export function SceneCatalogModal({
 
   const handleSelectFamily = (next: string | null) => {
     setFamily(next);
+    if (next === null) setCategoryCollection(null);
+    else if (next !== family) setCategoryCollection(null);
+    setQuickView('all');
+  };
+
+  const handleSelectCategoryCollection = (slug: string | null) => {
+    setCategoryCollection(slug);
     setQuickView('all');
   };
 
   const handleSelectQuickView = (view: QuickView) => {
     setQuickView(view);
     if (view !== 'all') {
-      // entering a focused view: clear other filters except subjects (still useful)
       setFamily(null);
+      setCategoryCollection(null);
     }
     if (view === 'all') {
-      // "All scenes" clears everything
       setSubjects([]);
       setFamily(null);
+      setCategoryCollection(null);
       setSearch('');
       setDebouncedSearch('');
       setSort('recommended');
@@ -174,6 +181,7 @@ export function SceneCatalogModal({
   const clearAll = () => {
     setSubjects([]);
     setFamily(null);
+    setCategoryCollection(null);
     setSearch('');
     setDebouncedSearch('');
     setSort('recommended');
@@ -273,12 +281,13 @@ export function SceneCatalogModal({
           <SceneCatalogSidebar
             counts={counts.data}
             selectedFamily={family}
+            selectedCategoryCollection={categoryCollection}
             selectedSubjects={subjects}
             quickView={quickView}
             recommendedCount={recommended.data?.length}
             newCount={newCount}
             onSelectFamily={handleSelectFamily}
-            onToggleSubject={handleToggleSubject}
+            onSelectCategoryCollection={handleSelectCategoryCollection}
             onSelectQuickView={handleSelectQuickView}
           />
 
