@@ -361,12 +361,12 @@ export function ProductCatalogModal({
             {selectedProduct && (
               <Button
                 variant="ghost"
-                onClick={() => { onSelect(null); setPending(null); onOpenChange(false); }}
+                onClick={() => { onSelect(null); setPending(null); handleSheetOpenChange(false); }}
               >
                 Clear
               </Button>
             )}
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button variant="ghost" onClick={() => handleSheetOpenChange(false)}>
               Cancel
             </Button>
             <Button disabled={!pending} onClick={handleConfirm}>
