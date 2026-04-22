@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORY_FAMILY_MAP } from '@/lib/sceneTaxonomy';
+import { CATEGORY_FAMILY_MAP, interleaveByFamily } from '@/lib/sceneTaxonomy';
 
 export interface CatalogScene {
   id: string;
@@ -153,3 +153,32 @@ export function useSceneRail(
     },
   });
 }
+
+/**
+ * One-shot fetch of the full active scene catalog (excluding essentials),
+ * then interleaved across product families for visual variety.
+ *
+ * Returns data shaped like an infinite-query page array so it slots straight
+ * into <SceneCatalogGrid pages={...} />.
+ */
+export function useInterleavedSceneCatalog(enabled = true, chunkSize = 2) {
+  return useQuery({
+    queryKey: ['scene-catalog-interleaved', chunkSize],
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_image_scenes')
+        .select(SLIM_COLUMNS)
+        .eq('is_active', true)
+        .not('sub_category', 'ilike', '%essential%')
+        .order('sort_order', { ascending: true })
+        .limit(1500);
+      if (error) throw error;
+      const rows = (data ?? []) as CatalogScene[];
+      const interleaved = interleaveByFamily(rows, chunkSize);
+      return { pages: [interleaved] as CatalogScene[][] };
+    },
+  });
+}
+

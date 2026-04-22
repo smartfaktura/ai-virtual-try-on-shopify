@@ -9,9 +9,8 @@ import {
   SceneCatalogFiltersBar, QUICK_CHIPS, type FilterChipDef,
 } from './SceneCatalogFilters';
 import { SceneCatalogSidebar, type QuickView } from './SceneCatalogSidebar';
-import { SceneCatalogRail } from './SceneCatalogRail';
 import { SceneCatalogGrid } from './SceneCatalogGrid';
-import { useSceneCatalog, type CatalogScene } from '@/hooks/useSceneCatalog';
+import { useSceneCatalog, useInterleavedSceneCatalog, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
@@ -98,7 +97,8 @@ export function SceneCatalogModal({
   // Default grid: full Freestyle catalog (no filters, excluding Essential Shots).
   // When filters are active we use the same hook with the user-selected filters.
   const useGrid = quickView !== 'recommended';
-  const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
+  const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid && anyFilterActive);
+  const interleavedGrid = useInterleavedSceneCatalog(open && useGrid && !anyFilterActive, 2);
   const counts = useSceneCounts();
 
   // Custom scenes kept only to resolve `cs-` selection IDs from prior sessions.
@@ -275,25 +275,15 @@ export function SceneCatalogModal({
           <ScrollArea className="flex-1 min-h-0">
             <div className="px-4 sm:px-6 py-4 space-y-4">
               {showRails ? (
-                <>
-                  <SceneCatalogRail
-                    title="Recommended for you"
-                    scenes={recommendedScenes}
-                    isLoading={recommended.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                  />
-                  <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
-                  <SceneCatalogGrid
-                    pages={grid.data?.pages ?? []}
-                    isLoading={grid.isLoading}
-                    isFetchingNextPage={grid.isFetchingNextPage}
-                    hasNextPage={!!grid.hasNextPage}
-                    onLoadMore={() => grid.fetchNextPage()}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                  />
-                </>
+                <SceneCatalogGrid
+                  pages={interleavedGrid.data?.pages ?? []}
+                  isLoading={interleavedGrid.isLoading}
+                  isFetchingNextPage={false}
+                  hasNextPage={false}
+                  onLoadMore={() => {}}
+                  selectedSceneId={currentSelectedId}
+                  onSelect={handleSelect}
+                />
               ) : quickView === 'recommended' ? (
                 <SceneCatalogGrid
                   pages={[recommendedScenes]}

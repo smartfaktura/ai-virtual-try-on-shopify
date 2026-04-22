@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -17,9 +17,9 @@ interface SceneCatalogGridProps {
 
 const LOAD_ALL_PAGE_CAP = 10;
 
-export function SceneCatalogGrid({
+export const SceneCatalogGrid = forwardRef<HTMLDivElement, SceneCatalogGridProps>(function SceneCatalogGrid({
   pages, isLoading, isFetchingNextPage, hasNextPage, onLoadMore, selectedSceneId, onSelect,
-}: SceneCatalogGridProps) {
+}, _ref) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [loadingAll, setLoadingAll] = useState(false);
   const loadAllPagesRef = useRef(0);
@@ -84,7 +84,7 @@ export function SceneCatalogGrid({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
         {flat.map(scene => (
           <SceneCatalogCard
             key={scene.id}
@@ -120,4 +120,4 @@ export function SceneCatalogGrid({
       )}
     </div>
   );
-}
+});
