@@ -8,11 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay', 'stilllife', 'campaign'];
@@ -30,6 +31,7 @@ interface ImportConfig {
   sort_order: number;
   requires_extra_reference: boolean;
   is_active: boolean;
+  outfit_hint: string;
 }
 
 function slugify(name: string): string {
@@ -82,6 +84,7 @@ export default function ImportFromScenesModal({
   const [importing, setImporting] = useState(false);
   const [bulkSubCategory, setBulkSubCategory] = useState('__none__');
   const [bulkNewSubCat, setBulkNewSubCat] = useState('');
+  const [analyzing, setAnalyzing] = useState<Set<string>>(new Set());
 
   const allSubCategories = useMemo(() => {
     const fromConfigs = Array.from(configs.values())
@@ -127,10 +130,11 @@ export default function ImportFromScenesModal({
         scene_type: mapSceneType(scene.category),
         sub_category: null,
         sub_category_sort_order: 0,
-        trigger_blocks: ['background'],
+        trigger_blocks: [],
         sort_order: 999,
         requires_extra_reference: false,
         is_active: true,
+        outfit_hint: '',
       });
     }
     setConfigs(newConfigs);
@@ -207,6 +211,7 @@ export default function ImportFromScenesModal({
           sort_order: config.sort_order,
           requires_extra_reference: config.requires_extra_reference,
           is_active: config.is_active,
+          outfit_hint: config.outfit_hint?.trim() ? config.outfit_hint.trim() : null,
         });
         count++;
       }
