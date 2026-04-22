@@ -44,12 +44,11 @@ export function useRecommendedScenes(enabled = true) {
 
       // Helper: fetch recommended scene_ids for a given category (or null=Global)
       const fetchRecForCategory = async (category: string | null) => {
-        const q = supabase
+        let q: any = supabase
           .from('recommended_scenes' as any)
-          .select('scene_id, sort_order')
-          .order('sort_order', { ascending: true })
-          .limit(MAX);
-        const { data } = await (category === null ? q.is('category' as any, null) : q.eq('category' as any, category));
+          .select('scene_id, sort_order');
+        q = category === null ? q.is('category', null) : q.eq('category', category);
+        const { data } = await q.order('sort_order', { ascending: true }).limit(MAX);
         return ((data ?? []) as unknown) as { scene_id: string; sort_order: number }[];
       };
 
