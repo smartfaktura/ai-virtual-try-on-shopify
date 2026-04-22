@@ -313,14 +313,19 @@ export type Database = {
           created_by: string
           description: string
           discover_categories: string[]
+          filter_tags: string[] | null
           id: string
           image_url: string
           is_active: boolean
+          mood: string | null
           name: string
           optimized_image_url: string | null
           preview_image_url: string | null
           prompt_hint: string | null
           prompt_only: boolean | null
+          setting: string | null
+          shot_style: string | null
+          subject: string | null
         }
         Insert: {
           category?: string
@@ -328,14 +333,19 @@ export type Database = {
           created_by: string
           description?: string
           discover_categories?: string[]
+          filter_tags?: string[] | null
           id?: string
           image_url: string
           is_active?: boolean
+          mood?: string | null
           name: string
           optimized_image_url?: string | null
           preview_image_url?: string | null
           prompt_hint?: string | null
           prompt_only?: boolean | null
+          setting?: string | null
+          shot_style?: string | null
+          subject?: string | null
         }
         Update: {
           category?: string
@@ -343,14 +353,19 @@ export type Database = {
           created_by?: string
           description?: string
           discover_categories?: string[]
+          filter_tags?: string[] | null
           id?: string
           image_url?: string
           is_active?: boolean
+          mood?: string | null
           name?: string
           optimized_image_url?: string | null
           preview_image_url?: string | null
           prompt_hint?: string | null
           prompt_only?: boolean | null
+          setting?: string | null
+          shot_style?: string | null
+          subject?: string | null
         }
         Relationships: []
       }
@@ -1189,17 +1204,22 @@ export type Database = {
           category_sort_order: number | null
           created_at: string
           description: string
+          filter_tags: string[] | null
           id: string
           is_active: boolean
+          mood: string | null
           outfit_hint: string | null
           preview_image_url: string | null
           prompt_template: string
           requires_extra_reference: boolean
           scene_id: string
           scene_type: string
+          setting: string | null
+          shot_style: string | null
           sort_order: number
           sub_category: string | null
           sub_category_sort_order: number
+          subject: string | null
           suggested_colors: Json | null
           title: string
           trigger_blocks: string[]
@@ -1211,17 +1231,22 @@ export type Database = {
           category_sort_order?: number | null
           created_at?: string
           description?: string
+          filter_tags?: string[] | null
           id?: string
           is_active?: boolean
+          mood?: string | null
           outfit_hint?: string | null
           preview_image_url?: string | null
           prompt_template?: string
           requires_extra_reference?: boolean
           scene_id: string
           scene_type?: string
+          setting?: string | null
+          shot_style?: string | null
           sort_order?: number
           sub_category?: string | null
           sub_category_sort_order?: number
+          subject?: string | null
           suggested_colors?: Json | null
           title: string
           trigger_blocks?: string[]
@@ -1233,17 +1258,22 @@ export type Database = {
           category_sort_order?: number | null
           created_at?: string
           description?: string
+          filter_tags?: string[] | null
           id?: string
           is_active?: boolean
+          mood?: string | null
           outfit_hint?: string | null
           preview_image_url?: string | null
           prompt_template?: string
           requires_extra_reference?: boolean
           scene_id?: string
           scene_type?: string
+          setting?: string | null
+          shot_style?: string | null
           sort_order?: number
           sub_category?: string | null
           sub_category_sort_order?: number
+          subject?: string | null
           suggested_colors?: Json | null
           title?: string
           trigger_blocks?: string[]
@@ -1439,6 +1469,30 @@ export type Database = {
           id?: number
           locked_at?: string | null
           locked_by?: string | null
+        }
+        Relationships: []
+      }
+      recommended_scenes: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          scene_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          scene_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          scene_id?: string
+          sort_order?: number
         }
         Relationships: []
       }
