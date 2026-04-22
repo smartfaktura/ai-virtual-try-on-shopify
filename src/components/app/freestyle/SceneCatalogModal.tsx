@@ -147,7 +147,10 @@ export function SceneCatalogModal({
     arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
 
   const handleChipToggle = (chip: FilterChipDef) => {
-    if (chip.axis === 'subject') setSubjects(prev => toggleArr(prev, chip.value));
+    if (chip.axis === 'subject') {
+      // Mutually exclusive: toggling one subject clears any other and replaces it.
+      setSubjects(prev => (prev.includes(chip.value) ? [] : [chip.value]));
+    }
     setQuickView('all');
   };
 
@@ -304,7 +307,13 @@ export function SceneCatalogModal({
                   <SceneCatalogGrid
                     pages={(() => {
                       const pages = grid.data?.pages ?? [];
-                      if (originalScenes.length === 0) return pages;
+                      // Only pin admin Originals at the top under Recommended sort,
+                      // when no subject chip is active. Newest sort = pure created_at DESC.
+                      const canMergeOriginals =
+                        sort === 'recommended' &&
+                        subjects.length === 0 &&
+                        originalScenes.length > 0;
+                      if (!canMergeOriginals) return pages;
                       const [first = [], ...rest] = pages;
                       return [[...originalScenes, ...first], ...rest];
                     })()}
