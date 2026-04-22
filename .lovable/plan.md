@@ -1,61 +1,40 @@
 
-## Admin preview page for new loading animations
+## Add (non-autofocus) search to "Select a product" modal
 
-Build a sandbox page at `/app/admin/loading-lab` so you can see and compare the proposed `BrandLoader`, `DotPulse`, and `ShimmerBar` primitives **before** rolling them across the app. Nothing else changes — existing `Loader2` usages stay untouched until you approve the rollout.
+Add a search input to the product picker modal so users can filter products by name, but **don't autofocus** it on open — it stays passive until the user clicks/taps it. This avoids keyboards popping up on mobile and keeps the modal feeling calm.
 
-### New files
+### Edit — `src/components/app/freestyle/ProductCatalogModal.tsx`
 
-**1. `src/components/ui/brand-loader.tsx`**
-- `<BrandLoader fullScreen?, label?, hints? />`
-- Centered monogram "V" (Inter 600, primary color) inside a 64px ring.
-- Soft orbiting arc using `conic-gradient(from 0deg, transparent, hsl(var(--primary)/0.55), transparent 35%)` masked to a 1px ring, rotated by new `orbit` keyframe (1.6s linear infinite).
-- "V" gently breathes (1 → 1.04, 2s ease-in-out).
-- Optional rotating hint phrases under the mark (fade through every 2s).
-- `fullScreen` prop centers it on `min-h-screen bg-background`.
+(The modal that backs "Select a product" in `/app/freestyle`.)
 
-**2. `src/components/ui/dot-pulse.tsx`**
-- `<DotPulse size?: 'sm' | 'md', className? />`
-- Three dots (4px sm / 6px md) using `currentColor` so it adapts to dark sidebar contexts.
-- Staggered `dot-wave` keyframe (opacity 0.3↔1, scale 0.8↔1, 0.9s) with 0/160/320ms delays.
+1. **Add search state** at the top of the component:
+   - `const [search, setSearch] = useState('')`
+   - Reset to `''` inside the existing `onOpenChange` close handler so it doesn't persist between opens.
 
-**3. `src/components/ui/shimmer-bar.tsx`**
-- `<ShimmerBar visible />`
-- Fixed 2px bar at top using existing `pulse-slide` keyframe in `index.css`.
+2. **Render a search `Input`** directly under the modal header (above the product grid / sidebar split), styled like the Library picker pattern already used elsewhere:
+   - Left-aligned `Search` icon (lucide), `pl-9 h-9 text-sm`, placeholder `Search your products…`.
+   - **No `autoFocus`** prop — explicitly omitted so the field stays inert until clicked.
+   - Wrapped in the same horizontal padding as the rest of the modal body for alignment.
 
-**4. `src/pages/admin/LoadingLab.tsx`**
-- Admin-only page rendering each primitive inside labeled cards:
-  - **BrandLoader** — boxed 360×280 preview + a "Show full-screen" button that toggles a 4s overlay.
-  - **DotPulse** — sm + md side by side, plus dark-bg sample (sidebar context), plus inside a button and chip.
-  - **ShimmerBar** — toggle button that triggers a 3s top bar.
-  - **Side-by-side comparison**: today's `Loader2 animate-spin` next to `<DotPulse />` so the upgrade is obvious.
-  - **Reduced-motion note**: short paragraph explaining the `prefers-reduced-motion` fallback (static ring, opacity-only pulse).
+3. **Filter the product list** before it's rendered:
+   - Derive `filteredProducts = products.filter(p => p.title?.toLowerCase().includes(search.trim().toLowerCase()))` (also match against `productType` / category label if present, so "shoe" surfaces shoes).
+   - Pass `filteredProducts` to the existing grid renderer instead of `products`.
 
-### Edits
+4. **Empty state** when search yields nothing:
+   - Reuse the existing empty-state visual block (icon + muted text), with copy: `No products match "{search}"` and a small ghost button `Clear search` that resets `setSearch('')`.
 
-**`src/index.css`** — add 3 keyframes inside `@layer utilities`:
-- `@keyframes orbit` — `0%→360deg rotate`
-- `@keyframes breathe` — `1 → 1.04 scale`
-- `@keyframes dot-wave` — opacity + scale wave
-- `@media (prefers-reduced-motion: reduce)` block disabling orbit + dot-wave (keeps a soft opacity pulse).
-
-**`src/App.tsx`** (or wherever admin routes live) — add a single route:
-```tsx
-<Route path="/app/admin/loading-lab" element={<LoadingLab />} />
-```
-Wrapped in the existing admin guard pattern used by other `/app/admin/*` pages (`useIsAdmin` check, redirect on non-admin).
+5. **Keep mobile behaviour identical**: same drawer, same sidebar, same footer — only the new input row is added. Because there's no autofocus, the mobile keyboard won't open until the user taps the field.
 
 ### Validation
 
-- Visit `/app/admin/loading-lab` as admin → see all three primitives live, side-by-side with current `Loader2` for comparison.
-- Toggle full-screen `BrandLoader` and `ShimmerBar` to feel the motion in real layout.
-- macOS "Reduce motion" enabled → orbit/dots stop spinning, only opacity pulses (verify in System Settings).
-- Non-admin users hitting the route → redirected like other admin pages.
+- Open "Select a product" → search field is visible and **not focused** (cursor stays on the modal, no keyboard on mobile).
+- Type "shoe" → grid filters live; clearing the field restores full list.
+- Close + reopen → search resets to empty.
+- Sidebar filters (categories) and search compose naturally (filter applies on top of the current category view).
 
-### Untouched until you approve rollout
+### Untouched
 
-- All existing `Loader2` usages, `Auth.tsx` pulsing "V", `ProtectedRoute.tsx`, skeletons, and submit-button spinners.
-- No call-site swaps in this step — the lab is purely a preview surface so you can sign off on the look first.
+- Product card rendering, selection logic, footer "Use product" bar, sidebar categories, mobile drawer chrome, all upstream callers.
 
-### Next step (after approval, separate task)
-
-Once you confirm the lab feels right, swap `Auth.tsx` + `ProtectedRoute.tsx` to `<BrandLoader fullScreen />` and replace inline `Loader2` in non-button contexts with `<DotPulse />`. Save a `mem://style/loading-system` rule so future loaders default to these.
+### Note
+Your message was cut off after "Also" — once you share the second request I'll fold it into the same change (or a separate plan if it's unrelated).
