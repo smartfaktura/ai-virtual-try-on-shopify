@@ -60,6 +60,33 @@ export default function AdminRecommendedScenes() {
   const [activeCategory, setActiveCategory] = useState<string>(GLOBAL);
   const [familyFilter, setFamilyFilter] = useState<string | null>(null);
   const [collectionFilter, setCollectionFilter] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === 'undefined') return 'interleaved';
+    return (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'interleaved';
+  });
+  const [chunkSize, setChunkSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return 2;
+    const v = parseInt(localStorage.getItem(CHUNK_SIZE_KEY) || '2', 10);
+    return Number.isFinite(v) && v >= 1 && v <= 4 ? v : 2;
+  });
+  const [featuredPreview, setFeaturedPreview] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(FEATURED_PREVIEW_KEY) === '1';
+  });
+
+  const updateViewMode = (m: ViewMode) => {
+    setViewMode(m);
+    try { localStorage.setItem(VIEW_MODE_KEY, m); } catch {}
+  };
+  const updateChunkSize = (n: number) => {
+    const clamped = Math.min(4, Math.max(1, n));
+    setChunkSize(clamped);
+    try { localStorage.setItem(CHUNK_SIZE_KEY, String(clamped)); } catch {}
+  };
+  const updateFeaturedPreview = (v: boolean) => {
+    setFeaturedPreview(v);
+    try { localStorage.setItem(FEATURED_PREVIEW_KEY, v ? '1' : '0'); } catch {}
+  };
 
   const dbCategory = activeCategory === GLOBAL ? null : activeCategory;
 
