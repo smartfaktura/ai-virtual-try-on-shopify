@@ -265,15 +265,15 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
         </div>
         <div>
           <div className="mb-3"><SectionPill>With Person</SectionPill></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-5">
             {opts.withPerson.map(o => (
-              <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} />
+              <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} isMobile={isMobile} />
             ))}
           </div>
           <div className="mb-3"><SectionPill>Product Only</SectionPill></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
             {opts.productOnly.map(o => (
-              <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} />
+              <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} isMobile={isMobile} />
             ))}
           </div>
         </div>
