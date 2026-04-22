@@ -17,7 +17,13 @@ import {
   CATEGORY_FAMILY_MAP,
   FAMILY_ORDER,
   getSubFamilyLabel,
+  interleaveByFamily,
 } from '@/lib/sceneTaxonomy';
+
+type ViewMode = 'interleaved' | 'grouped';
+const VIEW_MODE_KEY = 'admin-rec-scenes:view-mode';
+const CHUNK_SIZE_KEY = 'admin-rec-scenes:chunk-size';
+const FEATURED_PREVIEW_KEY = 'admin-rec-scenes:featured-preview';
 
 interface SceneRow {
   id: string;
