@@ -135,8 +135,8 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
 
   const filtersAndGrid = (
     <>
-      {/* Header */}
-      <div className="mb-4">
+      {/* Header (desktop only — mobile sheet shows its own title) */}
+      <div className="mb-4 hidden lg:block">
         <h3 className="text-sm font-semibold text-foreground">Character Reference</h3>
         <p className="text-xs text-muted-foreground mt-0.5">Choose a model to guide the look and composition</p>
       </div>
@@ -159,8 +159,8 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
         ))}
       </div>
 
-      {/* Body type filter */}
-      <div className="flex gap-1.5 mb-4">
+      {/* Body type filter (desktop only) */}
+      <div className="hidden lg:flex gap-1.5 mb-4">
         {BODY_FILTERS.map(f => (
           <button
             key={f.value}
