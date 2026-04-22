@@ -102,7 +102,7 @@ export default function AdminRecommendedScenes() {
         const to = from + PAGE_SIZE - 1;
         const { data, error } = await supabase
           .from('product_image_scenes' as any)
-          .select('id, scene_id, title, sub_category, category_collection, preview_image_url, subject, shot_style')
+          .select('id, scene_id, title, sub_category, category_collection, preview_image_url, subject, shot_style, sort_order')
           .eq('is_active', true)
           .order('category_collection', { ascending: true })
           .order('sort_order', { ascending: true })
