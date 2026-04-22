@@ -56,6 +56,12 @@ export function ProductCatalogModal({
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>('featured');
   const [pending, setPending] = useState<UserProduct | null>(null);
+  const [search, setSearch] = useState('');
+
+  const handleSheetOpenChange = (next: boolean) => {
+    if (!next) setSearch('');
+    onOpenChange(next);
+  };
 
   // Combine user products + samples (samples shown when user has none, or in samples view)
   const allProducts = useMemo<UserProduct[]>(() => {
