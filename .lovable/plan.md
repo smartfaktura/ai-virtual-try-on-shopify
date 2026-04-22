@@ -1,69 +1,52 @@
 
 
-## Simplify "All scenes" ordering: just use `sort_order` + admin star button
+## Fix Scenes modal lag + scroll-position memory
 
-You're right — the current logic is too clever. It mixes admin picks + sub-family round-robin + family round-robin and ends up looking random. Let's strip it back to something predictable.
+Two small, focused fixes — no new features.
 
-### The new mental model
+### 1. Stop dumping 1,236 cards into the DOM at once
 
-**One signal controls order: `sort_order` on `product_image_scenes`.**
-- Lower number = shown earlier.
-- Admins control it from one place: **a star button on each scene card** in `/app/admin/recommended-scenes`.
-- Star a scene → its `sort_order` becomes a small negative number (e.g. `-1000 + position`) so it floats to the top of its family/sub-family.
-- Unstar → `sort_order` returns to its previous value (saved in a side column or recomputed).
+Today `useInterleavedSceneCatalog` returns every active scene in one page and `SceneCatalogGrid` flattens them all and renders simultaneously. Each card mounts a `ShimmerImage` (state + IntersectionObserver), so we mount 1k+ observers on open → that's the "laggy" feeling.
 
-No more `recommended_scenes` join, no more sub-family round-robin, no more 2-by-2 family rotation.
+Fix: paginate the interleaved view client-side and reuse the same infinite-scroll machinery the filtered view already uses.
 
-### What the user sees in the Scenes modal (default "All scenes")
+In `src/hooks/useSceneCatalog.ts` → `useInterleavedSceneCatalog`:
+- Keep the one-shot fetch + family-grouped ordering (it's fast — single SELECT, cached 10 min).
+- Instead of returning `{ pages: [finalList] }`, slice `finalList` into chunks of `PAGE_SIZE` (24) and return `{ pages: chunks }` plus a `pageParam`-shaped object so the consumer treats it like an infinite query.
+- Easier alternative (chosen): keep `useQuery` but expose two values in `SceneCatalogModal`: the full ordered array + a `visiblePageCount` state that grows on sentinel intersection. Pass `pages = orderedList.slice(0, visiblePageCount * 24)` as a single page array to `SceneCatalogGrid`, with a synthetic `hasNextPage = orderedList.length > visiblePageCount * 24` and an `onLoadMore` that bumps `visiblePageCount`.
 
-Top-down, simple:
+This way the initial render is 24 cards, scrolling reveals the rest 24 at a time, and the auto-`Load more` sentinel already in `SceneCatalogGrid` does the work — no new infra.
 
-```text
-For each family in FAMILY_ORDER:
-  show that family's scenes ordered by sort_order ASC
-  (starred ones come first because they have the smallest sort_order)
-```
+Initial mount drops from ~1236 cards to 24 → no more lag. Same total content available; just streamed in.
 
-So opening the modal shows: all Fashion (starred first, then the rest), then all Footwear (starred first), then Bags, then Watches… exactly the order an admin would expect when they look at `/app/admin/recommended-scenes`.
+### 2. Reset scroll to top when the user switches section / family / sub-family
 
-When a user filters by family **Fashion** → same logic inside Fashion: starred sub-families first within each sub-family group. No interleave.
+In `SceneCatalogModal.tsx`:
+- Wrap the `<ScrollArea>` with a ref to its viewport (Radix `ScrollArea` exposes the viewport via `data-radix-scroll-area-viewport`). Get it via a small ref callback.
+- Add a `useEffect` that calls `viewport.scrollTo({ top: 0 })` whenever any of these change: `quickView`, `family`, `categoryCollection`, `subjects`, `debouncedSearch`, `sort`. Reset the visible-page-count back to 1 in the same effect so the new section opens with 24 fresh cards (not whatever count you'd scrolled to).
 
-When a user filters by sub-family **Tops & Shirts** → straight `sort_order ASC` (which already puts starred first).
+Same effect also resets the per-section `visiblePageCount` so switching to "Beauty" doesn't render hundreds of cards immediately.
 
-### Admin UX — the new star button
+### 3. Tiny win: lazy-render with `content-visibility`
 
-File: `src/pages/AdminRecommendedScenes.tsx`
-
-- Each scene card in the "All scenes" grid gets a small star icon in the top-right corner (filled = featured, outline = not).
-- Click star → optimistically update; call a small RPC `toggle_scene_featured(scene_id)` which:
-  - If currently `sort_order < 0` → restore previous `sort_order` (stored as `previous_sort_order` int column we add), set `sort_order` back.
-  - Else → save current `sort_order` into `previous_sort_order`, set `sort_order = -1000 - row_count_of_already_featured_in_same_collection` so newest featured sits above older featured within the same sub-family.
-- The "Featured" sidebar section in the admin page becomes a simple read-only list of scenes where `sort_order < 0`, grouped by `category_collection`, ordered by `sort_order ASC`. Drag-to-reorder still works (updates `sort_order` numerically within the negative range).
-- The existing `recommended_scenes` table is no longer needed for ordering. Keep it for now to avoid a destructive migration; just stop reading from it on the user-facing path.
-
-### What gets removed
-
-- `useInterleavedSceneCatalog` two-level interleave + admin-pick join. Replaced with a one-shot fetch ordered by `(category_collection, sort_order)` — which inherently puts starred scenes first per sub-family, then walks through families in `FAMILY_ORDER` client-side.
-- `interleaveByFamilyAndSubFamily` helper — no longer used. Keep `interleaveByFamily` (still used by the 12-scene "Recommended for you" rail fallback in `useRecommendedScenes`).
-- The client-side sub-family round-robin in `useSceneCatalog` when family filter is active. Just sort by `sort_order ASC` — admin's stars + manual sort_order numbers control everything.
+Add `style={{ contentVisibility: 'auto', containIntrinsicSize: '320px' }}` on each `SceneCatalogCard` wrapper button. Browsers skip layout/paint of off-screen cards. Cheap and safe — covers any remaining jank if a user scrolls fast through the paginated list.
 
 ### Files touched
 
-- `src/hooks/useSceneCatalog.ts` — replace `useInterleavedSceneCatalog` body with: one-shot fetch, group by family in `FAMILY_ORDER`, concat. Remove sub-family interleave from `useSceneCatalog`.
-- `src/pages/AdminRecommendedScenes.tsx` — add star button on each scene card; wire to new RPC; remove (or hide behind a "Legacy" toggle) the manual recommended_scenes Add/Remove flow.
-- `src/lib/sceneTaxonomy.ts` — leave `interleaveByFamily` as-is (still used by recommended rail fallback). `interleaveByFamilyAndSubFamily` can stay unused or be removed in a later cleanup.
+- `src/components/app/freestyle/SceneCatalogModal.tsx` — add `viewport` ref + scroll-reset effect; replace the `interleavedGrid.data?.pages ?? []` prop with the sliced view; add `visiblePageCount` state; reset on filter change.
+- `src/components/app/freestyle/SceneCatalogCard.tsx` — add `content-visibility` style on the root `<button>`.
+- `src/hooks/useSceneCatalog.ts` — no signature change needed; we keep `useInterleavedSceneCatalog` returning the full ordered list and do the slicing in the modal (simpler, less churn).
 
-### Database
+### Untouched
 
-- Add column `previous_sort_order INT NULL` on `product_image_scenes`.
-- Add SECURITY DEFINER RPC `toggle_scene_featured(p_scene_id text)` — admin-only via `has_role(auth.uid(), 'admin')`. Returns the new `sort_order`. Atomic.
+DB, RLS, sort_order star logic, admin page, filter sidebar, `useSceneCatalog` paged query, recommended rail, generation pipeline.
 
 ### Validation
 
-- Open `/app/admin/recommended-scenes` → click star on "Volcanic Sunset" → it jumps to the top of the Beauty section instantly.
-- Open Scenes modal in `/app/freestyle` (recommended sort) → "Volcanic Sunset" is one of the first Beauty cards.
-- Click family **Beauty** in the sidebar → "Volcanic Sunset" is the first card.
-- Click star again on "Volcanic Sunset" → it returns to its original spot in both views.
-- Order across the full grid: all Fashion first (starred Fashion at the top of Fashion), then all Footwear, then Bags… in `FAMILY_ORDER`. Predictable, no surprises.
-- Sort = **Newest** still pure `created_at DESC` — stars do not pin in this view.
+- Open Scenes modal → first paint shows 24 cards instantly; no jank, no long freeze.
+- Scroll down → next 24 stream in via the existing sentinel loader, repeat until end.
+- Click sidebar **Beauty** while scrolled halfway down → grid jumps to top of Beauty view (not the middle of the previous list).
+- Click **All scenes** again → scroll resets to top of the full interleaved list.
+- Switching sort to **Newest** also resets scroll + page count.
+- Console no longer warns about ref forwarding (already fixed previously) and no new warnings.
 
