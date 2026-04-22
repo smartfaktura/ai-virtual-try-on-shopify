@@ -292,35 +292,24 @@ export function SceneCatalogModal({
               {showRails ? (
                 <>
                   <SceneCatalogRail
-                    title="Freestyle Scenes"
-                    scenes={freestyleScenes}
-                    isLoading={customScenesQuery.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                  />
-                  <SceneCatalogRail
                     title="Recommended for you"
                     scenes={recommendedScenes}
                     isLoading={recommended.isLoading}
                     selectedSceneId={currentSelectedId}
                     onSelect={handleSelect}
                   />
-                  <SceneCatalogRail
-                    title="Product Only"
-                    scenes={productOnlyRail.data}
-                    isLoading={productOnlyRail.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                    onViewAll={() => handleViewAllSubject('product-only')}
-                  />
-                  <SceneCatalogRail
-                    title="With Model"
-                    scenes={withModelRail.data}
-                    isLoading={withModelRail.isLoading}
-                    selectedSceneId={currentSelectedId}
-                    onSelect={handleSelect}
-                    onViewAll={() => handleViewAllSubject('with-model')}
-                  />
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-foreground px-0.5">Freestyle Scenes</h3>
+                    <SceneCatalogGrid
+                      pages={grid.data?.pages ?? []}
+                      isLoading={grid.isLoading}
+                      isFetchingNextPage={grid.isFetchingNextPage}
+                      hasNextPage={!!grid.hasNextPage}
+                      onLoadMore={() => grid.fetchNextPage()}
+                      selectedSceneId={currentSelectedId}
+                      onSelect={handleSelect}
+                    />
+                  </div>
                 </>
               ) : quickView === 'recommended' ? (
                 <SceneCatalogGrid

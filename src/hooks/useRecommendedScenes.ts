@@ -49,8 +49,8 @@ export function useRecommendedScenes(enabled = true) {
           .select('scene_id, sort_order')
           .order('sort_order', { ascending: true })
           .limit(MAX);
-        const { data } = await (category === null ? q.is('category', null) : q.eq('category', category));
-        return (data ?? []) as { scene_id: string; sort_order: number }[];
+        const { data } = await (category === null ? q.is('category' as any, null) : q.eq('category' as any, category));
+        return ((data ?? []) as unknown) as { scene_id: string; sort_order: number }[];
       };
 
       // 2. Per-category fetches in parallel
