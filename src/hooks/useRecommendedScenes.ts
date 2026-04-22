@@ -101,16 +101,51 @@ export function useRecommendedScenes(enabled = true) {
           .filter((r): r is CatalogScene => !!r);
       }
 
-      if (recommendedScenes.length > 0) return recommendedScenes;
+      if (recommendedScenes.length >= MAX) return recommendedScenes.slice(0, MAX);
 
-      // 5. Final fallback: top-12 by sort_order
-      const { data } = await supabase
-        .from('product_image_scenes')
-        .select(SLIM_COLUMNS)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .limit(MAX);
-      return (data ?? []) as CatalogScene[];
+      // 5. Interleaved fallback: pull top scenes per family the user picked
+      // (or all families if user has none), then round-robin 2-by-2 for visual variety.
+      const userFamilies: string[] = (() => {
+        if (!userCategories.length) return [...FAMILY_ORDER];
+        const collections = resolveUserCollections(userCategories);
+        const fams = new Set<string>();
+        for (const c of collections) {
+          const f = CATEGORY_FAMILY_MAP[c];
+          if (f) fams.add(f);
+        }
+        return fams.size ? Array.from(fams) : [...FAMILY_ORDER];
+      })();
+
+      // For each family, fetch its top scenes (use sort_order ASC)
+      const perFamilyLists = await Promise.all(
+        userFamilies.map(async fam => {
+          const collections = Object.entries(CATEGORY_FAMILY_MAP)
+            .filter(([, f]) => f === fam)
+            .map(([slug]) => slug);
+          if (!collections.length) return [] as CatalogScene[];
+          const { data } = await supabase
+            .from('product_image_scenes')
+            .select(SLIM_COLUMNS)
+            .eq('is_active', true)
+            .in('category_collection', collections)
+            .order('sort_order', { ascending: true })
+            .limit(MAX);
+          return (data ?? []) as CatalogScene[];
+        }),
+      );
+
+      // Flatten + dedupe against already-resolved curated picks
+      const flat: CatalogScene[] = [];
+      for (const list of perFamilyLists) {
+        for (const s of list) {
+          if (seen.has(s.scene_id)) continue;
+          seen.add(s.scene_id);
+          flat.push(s);
+        }
+      }
+
+      const interleaved = interleaveByFamily(flat, 2);
+      return [...recommendedScenes, ...interleaved].slice(0, MAX);
     },
   });
 }
