@@ -384,19 +384,21 @@ export default function SceneUsage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="p-4 border">
             <div className="text-xs text-muted-foreground uppercase tracking-wide">Scenes used</div>
-            <div className="text-2xl font-semibold mt-1">{loading ? '—' : totals.scenes.toLocaleString()}</div>
+            <div className="text-2xl font-semibold mt-1">{mainLoading ? '—' : totals.scenes.toLocaleString()}</div>
           </Card>
           <Card className="p-4 border">
             <div className="text-xs text-muted-foreground uppercase tracking-wide">Total generations</div>
-            <div className="text-2xl font-semibold mt-1">{loading ? '—' : totals.totalGens.toLocaleString()}</div>
+            <div className="text-2xl font-semibold mt-1">{mainLoading ? '—' : totals.totalGens.toLocaleString()}</div>
           </Card>
           <Card className="p-4 border">
             <div className="text-xs text-muted-foreground uppercase tracking-wide">Freestyle / Product Images</div>
-            <div className="text-2xl font-semibold mt-1">{loading ? '—' : `${totals.totalFs.toLocaleString()} / ${totals.totalPi.toLocaleString()}`}</div>
+            <div className="text-2xl font-semibold mt-1">{mainLoading ? '—' : `${totals.totalFs.toLocaleString()} / ${totals.totalPi.toLocaleString()}`}</div>
           </Card>
           <Card className="p-4 border">
             <div className="text-xs text-muted-foreground uppercase tracking-wide">Unique users</div>
-            <div className="text-2xl font-semibold mt-1">{loading ? '—' : uniqueUsers.toLocaleString()}</div>
+            <div className="text-2xl font-semibold mt-1">
+              {uniqueUsersLoading ? '—' : uniqueUsersFailed || uniqueUsers === null ? '—' : uniqueUsers.toLocaleString()}
+            </div>
           </Card>
         </div>
 
