@@ -40,6 +40,8 @@ export function SceneCatalogSidebar({
   onSelectFamily,
   onSelectCategoryCollection,
   onSelectQuickView,
+  mobileMode,
+  onAfterSelect,
 }: SceneCatalogSidebarProps) {
   // Group collection slugs by their family + aggregate per-family totals in one pass.
   const { familyCounts, subFamiliesByFamily } = useMemo(() => {
