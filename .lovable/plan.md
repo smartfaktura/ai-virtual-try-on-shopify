@@ -1,52 +1,57 @@
 
 
-## Fix Scenes modal lag + scroll-position memory
+## Fix Scenes modal mobile UX
 
-Two small, focused fixes — no new features.
+The modal was built desktop-first. On mobile the sidebar is hidden entirely (so families/Recommended/New are unreachable), the filter bar overflows so the sort dropdown disappears off-screen, and the sheet uses `100vh` which gets cut by browser chrome.
 
-### 1. Stop dumping 1,236 cards into the DOM at once
+### 1. Mobile filter bar — wrap + show all controls
 
-Today `useInterleavedSceneCatalog` returns every active scene in one page and `SceneCatalogGrid` flattens them all and renders simultaneously. Each card mounts a `ShimmerImage` (state + IntersectionObserver), so we mount 1k+ observers on open → that's the "laggy" feeling.
+`SceneCatalogFiltersBar.tsx`:
+- Change root from single-row `flex items-center gap-2` to a two-row layout on mobile: row 1 = search (full width) + a new **Filters** button (opens the family/quick-view drawer, see step 2) + sort, row 2 = chip strip (horizontal scroll). On `sm:` and up, revert to today's single-row layout.
+- Drop `max-w-[280px]` on search; on mobile use `flex-1`. On desktop cap at 280.
+- Always render the **Filters** button on mobile (`lg:hidden`) so families are reachable; remove the `showMobileFiltersBtn` prop gating from `SceneCatalogModal` (always pass true effectively, but the button itself is `lg:hidden`).
+- Sort `<Select>` keeps `w-[110px]` on mobile to fit; `w-[140px]` from `sm` up.
 
-Fix: paginate the interleaved view client-side and reuse the same infinite-scroll machinery the filtered view already uses.
+### 2. Mobile families drawer — make sidebar reachable
 
-In `src/hooks/useSceneCatalog.ts` → `useInterleavedSceneCatalog`:
-- Keep the one-shot fetch + family-grouped ordering (it's fast — single SELECT, cached 10 min).
-- Instead of returning `{ pages: [finalList] }`, slice `finalList` into chunks of `PAGE_SIZE` (24) and return `{ pages: chunks }` plus a `pageParam`-shaped object so the consumer treats it like an infinite query.
-- Easier alternative (chosen): keep `useQuery` but expose two values in `SceneCatalogModal`: the full ordered array + a `visiblePageCount` state that grows on sentinel intersection. Pass `pages = orderedList.slice(0, visiblePageCount * 24)` as a single page array to `SceneCatalogGrid`, with a synthetic `hasNextPage = orderedList.length > visiblePageCount * 24` and an `onLoadMore` that bumps `visiblePageCount`.
+`SceneCatalogModal.tsx`:
+- Add `mobileFiltersOpen` state.
+- When the user taps the new **Filters** button in the bar, open a left-side `Sheet` (nested) that renders the existing `<SceneCatalogSidebar>` content. Reuse the same component — wrap it in a small adapter that drops the `hidden lg:block` class on mobile and gives it `w-full h-full`.
+- Selecting a family / sub-family / quick view auto-closes the drawer (call existing handlers + `setMobileFiltersOpen(false)`).
+- The original aside in the body keeps `hidden lg:block`; on mobile the body is grid-only.
 
-This way the initial render is 24 cards, scrolling reveals the rest 24 at a time, and the auto-`Load more` sentinel already in `SceneCatalogGrid` does the work — no new infra.
+### 3. Sheet sizing + safe areas
 
-Initial mount drops from ~1236 cards to 24 → no more lag. Same total content available; just streamed in.
+`SceneCatalogModal.tsx`:
+- Replace `h-[100vh]` with `h-[100dvh]` so dynamic viewport (excluding browser chrome) is respected.
+- Header: add a small close `X` button on the right on mobile (Radix `SheetContent` renders one by default — verify it's positioned and not clipped; if hidden by our padding, give the header `pr-12` on mobile so the title doesn't run under the X).
+- Footer: on mobile add `pb-[max(0.75rem,env(safe-area-inset-bottom))]` so iOS home-indicator doesn't cover Use scene.
+- Footer buttons stay side-by-side but if `footerTitle` truncates fine; reduce gap on mobile and shorten Cancel to an icon-less compact button (size unchanged, just ensure `truncate` on title works because the right cluster is `shrink-0`).
 
-### 2. Reset scroll to top when the user switches section / family / sub-family
+### 4. Grid density on mobile
 
-In `SceneCatalogModal.tsx`:
-- Wrap the `<ScrollArea>` with a ref to its viewport (Radix `ScrollArea` exposes the viewport via `data-radix-scroll-area-viewport`). Get it via a small ref callback.
-- Add a `useEffect` that calls `viewport.scrollTo({ top: 0 })` whenever any of these change: `quickView`, `family`, `categoryCollection`, `subjects`, `debouncedSearch`, `sort`. Reset the visible-page-count back to 1 in the same effect so the new section opens with 24 fresh cards (not whatever count you'd scrolled to).
-
-Same effect also resets the per-section `visiblePageCount` so switching to "Beauty" doesn't render hundreds of cards immediately.
-
-### 3. Tiny win: lazy-render with `content-visibility`
-
-Add `style={{ contentVisibility: 'auto', containIntrinsicSize: '320px' }}` on each `SceneCatalogCard` wrapper button. Browsers skip layout/paint of off-screen cards. Cheap and safe — covers any remaining jank if a user scrolls fast through the paginated list.
+`SceneCatalogGrid.tsx` (verify): cards should be 2 columns at `< 640px`, 3 at `sm`, 4 at `lg`. If today it forces 3+ on mobile, override with `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Adjust `containIntrinsicSize` accordingly so off-screen reservation matches new card height.
 
 ### Files touched
 
-- `src/components/app/freestyle/SceneCatalogModal.tsx` — add `viewport` ref + scroll-reset effect; replace the `interleavedGrid.data?.pages ?? []` prop with the sliced view; add `visiblePageCount` state; reset on filter change.
-- `src/components/app/freestyle/SceneCatalogCard.tsx` — add `content-visibility` style on the root `<button>`.
-- `src/hooks/useSceneCatalog.ts` — no signature change needed; we keep `useInterleavedSceneCatalog` returning the full ordered list and do the slicing in the modal (simpler, less churn).
+- `src/components/app/freestyle/SceneCatalogFilters.tsx` — two-row mobile layout, always-rendered Filters button on `lg:hidden`, narrower sort on mobile.
+- `src/components/app/freestyle/SceneCatalogModal.tsx` — add mobile drawer with the sidebar; `h-[100dvh]`; safe-area footer padding; pass `onOpenMobileFilters` + `showMobileFiltersBtn`.
+- `src/components/app/freestyle/SceneCatalogGrid.tsx` — confirm/fix `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` on mobile.
+- `src/components/app/freestyle/SceneCatalogSidebar.tsx` — accept an optional `mobileMode` prop that strips `hidden lg:block` and the fixed `w-60` so it can fill the mobile drawer; auto-close on selection via callback prop `onAfterSelect?`.
 
 ### Untouched
 
-DB, RLS, sort_order star logic, admin page, filter sidebar, `useSceneCatalog` paged query, recommended rail, generation pipeline.
+DB, RLS, sort_order star logic, `useSceneCatalog`/`useInterleavedSceneCatalog`, recommended rail, generation pipeline, desktop layout (visually identical at `lg` and up).
 
-### Validation
+### Validation (375 × 812)
 
-- Open Scenes modal → first paint shows 24 cards instantly; no jank, no long freeze.
-- Scroll down → next 24 stream in via the existing sentinel loader, repeat until end.
-- Click sidebar **Beauty** while scrolled halfway down → grid jumps to top of Beauty view (not the middle of the previous list).
-- Click **All scenes** again → scroll resets to top of the full interleaved list.
-- Switching sort to **Newest** also resets scroll + page count.
-- Console no longer warns about ref forwarding (already fixed previously) and no new warnings.
+- Open `/app/freestyle` → tap Scene chip → modal opens at full dynamic-viewport height; nothing under the iOS home indicator.
+- Header shows title + close X, both visible.
+- Filter bar row 1: search fills width, **Filters** button + sort dropdown both visible (no horizontal overflow).
+- Filter bar row 2: Product Only / With Model chips scroll horizontally; sort isn't pushed off-screen.
+- Tap **Filters** → left drawer slides in showing All scenes / Recommended / New + every Product Family. Tap **Beauty** → drawer closes, grid shows Beauty scenes.
+- Grid renders 2 columns; thumbs aren't squished.
+- Footer: Cancel + Use scene fit on one row; selected thumb + title truncates.
+- Switching family resets scroll to top (existing effect).
+- Desktop ≥ 1024px: layout unchanged from today.
 
