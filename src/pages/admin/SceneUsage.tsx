@@ -295,18 +295,25 @@ export default function SceneUsage() {
 
   const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
-  // Lazy-load metadata for visible slice
+  // Lazy-load metadata for visible slice — dedupe & avoid duplicate in-flight requests
   useEffect(() => {
     if (visible.length === 0) return;
-    const missing = visible.map((v) => v.scene_id).filter((id) => !metaRef.current.has(id));
+    const missing = Array.from(new Set(
+      visible
+        .map((v) => v.scene_id)
+        .filter((id) => id && !metaRef.current.has(id) && !inflightMetaRef.current.has(id))
+    ));
     if (missing.length === 0) return;
     let cancelled = false;
+    missing.forEach((id) => inflightMetaRef.current.add(id));
     (async () => {
       try {
         const nextMeta = await resolveMetaForIds(missing, metaRef.current);
         if (!cancelled) setMeta(nextMeta);
       } catch (err: any) {
         console.error('[SceneUsage] meta resolve failed', err);
+      } finally {
+        missing.forEach((id) => inflightMetaRef.current.delete(id));
       }
     })();
     return () => { cancelled = true; };
