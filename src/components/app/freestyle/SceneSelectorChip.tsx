@@ -92,6 +92,32 @@ const filterTabs: { key: SceneFilter; label: string }[] = [
 
 const ON_MODEL_CATEGORIES: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
 
+/**
+ * Convert a Product Visuals CatalogScene → TryOnPose shape consumed by Freestyle.
+ * - poseId is namespaced with `pis-` so it never collides with mock/custom poseIds.
+ * - promptHint is sanitized (template tokens stripped).
+ * - category falls back to a neutral non-on-model bucket when subject != with-model,
+ *   so the Freestyle auto-prompt doesn't inject "worn by a model" for product-only shots.
+ */
+function pisSceneToPose(scene: CatalogScene): TryOnPose {
+  const isWithModel = scene.subject === 'with-model';
+  const category: PoseCategory = isWithModel
+    ? 'lifestyle'
+    : scene.shot_style === 'editorial' || scene.shot_style === 'campaign'
+      ? 'product-editorial'
+      : 'clean-studio';
+
+  return {
+    poseId: toPisSceneId(scene.scene_id),
+    name: scene.title,
+    category,
+    description: scene.sub_category ?? '',
+    promptHint: sanitizePromptTemplate(scene.prompt_template),
+    previewUrl: scene.preview_image_url ?? '',
+    promptOnly: false,
+  } as TryOnPose;
+}
+
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal, fullWidth }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -118,6 +144,16 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     onOpenChange(false);
     setIsExpanded(false);
   };
+
+  const handleCatalogSelect = (scene: CatalogScene) => {
+    onSelect(pisSceneToPose(scene));
+    onOpenChange(false);
+  };
+
+  const selectedPisSceneId =
+    selectedScene && isPisSceneId(selectedScene.poseId)
+      ? fromPisSceneId(selectedScene.poseId)
+      : null;
 
   const renderFilterTabs = (expanded: boolean) => (
     <div className={cn('flex items-center mb-4 flex-wrap gap-2', expanded && 'justify-between')}>
@@ -214,7 +250,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
 
   const triggerButton = (
     <button
-      onClick={isMobile ? () => onOpenChange(!open) : undefined}
+      onClick={(isMobile || CATALOG_V2_ENABLED) ? () => onOpenChange(!open) : undefined}
       className={cn(
         "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors min-w-0",
         fullWidth ? "w-full max-w-none" : "max-w-[140px]"
@@ -241,6 +277,21 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
       <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
     </button>
   );
+
+  // V2 Catalog Modal — full-screen sheet (replaces popover when flag is on)
+  if (CATALOG_V2_ENABLED) {
+    return (
+      <>
+        {triggerButton}
+        <SceneCatalogModal
+          open={open}
+          onOpenChange={onOpenChange}
+          selectedPisSceneId={selectedPisSceneId}
+          onSelect={handleCatalogSelect}
+        />
+      </>
+    );
+  }
 
   const pickerContent = (
     <>
