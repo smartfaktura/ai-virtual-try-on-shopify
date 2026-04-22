@@ -269,8 +269,10 @@ export default function ImportFromScenesModal({
                       <div className="flex items-center gap-1.5">
                         {(scene.preview_image_url || scene.image_url) && (
                           <img
-                            src={scene.preview_image_url || scene.image_url}
+                            src={getOptimizedUrl(scene.preview_image_url || scene.image_url, { width: 96, quality: 60 })}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="w-8 h-8 rounded object-cover shrink-0"
                           />
                         )}
