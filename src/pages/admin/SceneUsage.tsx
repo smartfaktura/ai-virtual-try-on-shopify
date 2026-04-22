@@ -126,14 +126,43 @@ export default function SceneUsage() {
           const customPrefixed = ids.filter((i) => i.startsWith('custom-'));
           const customIds = customPrefixed.map((i) => i.slice('custom-'.length));
 
-          const [pisRes, customRes] = await Promise.all([
+          async function fetchInChunks<T>(
+            ids: string[],
+            fetcher: (chunk: string[]) => Promise<{ data: T[] | null; error: any }>,
+            chunkSize = 200,
+          ): Promise<T[]> {
+            const out: T[] = [];
+            for (let i = 0; i < ids.length; i += chunkSize) {
+              const chunk = ids.slice(i, i + chunkSize);
+              const { data, error } = await fetcher(chunk);
+              if (error) throw error;
+              if (data) out.push(...data);
+            }
+            return out;
+          }
+
+          const [pisData, customData] = await Promise.all([
             pisQueryIds.length
-              ? supabase.from('product_image_scenes').select('scene_id,title,sub_category,category_collection,preview_image_url').in('scene_id', pisQueryIds)
-              : Promise.resolve({ data: [] as any[] }),
+              ? fetchInChunks<any>(pisQueryIds, async (chunk) => {
+                  const res = await supabase
+                    .from('product_image_scenes')
+                    .select('scene_id,title,sub_category,category_collection,preview_image_url')
+                    .in('scene_id', chunk);
+                  return { data: res.data, error: res.error };
+                })
+              : Promise.resolve([] as any[]),
             customIds.length
-              ? supabase.from('custom_scenes').select('id,name,category,preview_image_url,image_url').in('id', customIds)
-              : Promise.resolve({ data: [] as any[] }),
+              ? fetchInChunks<any>(customIds, async (chunk) => {
+                  const res = await supabase
+                    .from('custom_scenes')
+                    .select('id,name,category,preview_image_url,image_url')
+                    .in('id', chunk);
+                  return { data: res.data, error: res.error };
+                })
+              : Promise.resolve([] as any[]),
           ]);
+          const pisRes = { data: pisData };
+          const customRes = { data: customData };
           (pisRes.data ?? []).forEach((s: any) => {
             const meta: SceneMeta = {
               id: s.scene_id,
