@@ -289,9 +289,9 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
           <h3 className="text-lg font-semibold text-foreground">How should the product appear?</h3>
           <p className="text-sm text-muted-foreground/60 mt-1">Describe the product's relationship with the model.</p>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
           {opts.map(o => (
-            <OptionCard key={o.value} {...o} icon={INTERACTION_ICON_MAP[o.value]} selected={interaction === o.value} onClick={setInteraction} />
+            <OptionCard key={o.value} {...o} icon={INTERACTION_ICON_MAP[o.value]} selected={interaction === o.value} onClick={setInteraction} isMobile={isMobile} />
           ))}
         </div>
       </div>
