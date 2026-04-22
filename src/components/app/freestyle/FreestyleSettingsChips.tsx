@@ -230,6 +230,7 @@ export function FreestyleSettingsChips({
         products={products}
         isLoading={isLoadingProducts}
         modal={isMobile}
+        fullWidth={isMobile}
       />
     </div>
   );
@@ -256,6 +257,7 @@ export function FreestyleSettingsChips({
         onOpenChange={disabledChips?.model ? () => {} : onModelPopoverChange}
         onSelect={onModelSelect}
         modal={isMobile}
+        fullWidth={isMobile}
       />
     </div>
   );
@@ -271,6 +273,7 @@ export function FreestyleSettingsChips({
         onOpenChange={disabledChips?.scene ? () => {} : onScenePopoverChange}
         onSelect={onSceneSelect}
         modal={isMobile}
+        fullWidth={isMobile}
       />
     </div>
   );
