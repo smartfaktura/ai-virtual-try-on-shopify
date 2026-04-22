@@ -477,9 +477,64 @@ export default function AdminRecommendedScenes() {
             </div>
           )}
 
-          <p className="text-[11px] text-muted-foreground">
-            Browsing order: grouped by Product Family (does not affect what users see). Click a card to add or remove from Featured.
-          </p>
+          {/* View mode + chunk size */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">View</span>
+            <div className="inline-flex rounded-full border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => updateViewMode('interleaved')}
+                className={cn(
+                  'px-3 py-1 text-[11px] font-medium transition-colors',
+                  viewMode === 'interleaved'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                )}
+              >
+                Interleaved
+              </button>
+              <button
+                type="button"
+                onClick={() => updateViewMode('grouped')}
+                className={cn(
+                  'px-3 py-1 text-[11px] font-medium transition-colors border-l border-border',
+                  viewMode === 'grouped'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                )}
+              >
+                Grouped
+              </button>
+            </div>
+            {viewMode === 'interleaved' && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-muted-foreground">Chunk</span>
+                <div className="inline-flex rounded-full border border-border overflow-hidden">
+                  {[1, 2, 3, 4].map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => updateChunkSize(n)}
+                      className={cn(
+                        'w-7 py-1 text-[11px] font-medium transition-colors',
+                        n !== 1 && 'border-l border-border',
+                        chunkSize === n
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-background text-muted-foreground hover:bg-muted'
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground ml-auto">
+              {viewMode === 'interleaved'
+                ? `Round-robin ${chunkSize}/family — visual only.`
+                : 'Grouped by family.'} Click a card to add/remove.
+            </p>
+          </div>
         </header>
         <div className="p-4">
           {scenesLoading ? (
