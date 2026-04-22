@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { resolveUserCollections } from '@/lib/sceneTaxonomy';
 import type { CatalogScene } from './useSceneCatalog';
 
 const SLIM_COLUMNS =
@@ -10,11 +9,14 @@ const SLIM_COLUMNS =
 const MAX = 12;
 
 /**
- * Hybrid recommended rail:
- *   1. Admin-featured scenes that match user's onboarding categories
- *   2. Remaining admin-featured scenes
- *   3. Fill from user-category scenes
- *   4. Fallback: top-12 by sort_order
+ * Per-onboarding-category recommended rail.
+ *
+ * Resolution:
+ *   1. For each category the user picked → fetch up to 12 from
+ *      recommended_scenes WHERE category = <cat>, ordered by sort_order.
+ *      Merge in the order categories were selected, dedupe, cap at 12.
+ *   2. If still <12 → top up from category IS NULL (Global list).
+ *   3. Final fallback if still empty → top-12 by sort_order from product_image_scenes.
  *
  * Cached 10 min per user.
  */
@@ -27,84 +29,83 @@ export function useRecommendedScenes(enabled = true) {
     enabled: enabled && !!userId,
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
-      // 1. Admin-curated featured scene IDs
-      const { data: featured } = await supabase
-        .from('recommended_scenes')
-        .select('scene_id, sort_order')
-        .order('sort_order', { ascending: true });
-      const featuredIds = (featured ?? []).map(f => f.scene_id);
-
-      // 2. User onboarding categories → collections
-      let userCollections: string[] = [];
+      // 1. User's onboarding categories
+      let userCategories: string[] = [];
       if (userId) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('product_categories')
           .eq('user_id', userId)
           .maybeSingle();
-        userCollections = resolveUserCollections(profile?.product_categories ?? []);
+        userCategories = (profile?.product_categories ?? []).filter(
+          (c): c is string => !!c && c !== 'any',
+        );
       }
 
-      // 3. Fetch featured scenes in one query
-      let featuredScenes: CatalogScene[] = [];
-      if (featuredIds.length) {
-        const { data } = await supabase
-          .from('product_image_scenes')
-          .select(SLIM_COLUMNS)
-          .in('scene_id', featuredIds)
-          .eq('is_active', true);
-        featuredScenes = (data ?? []) as CatalogScene[];
-        // Preserve admin sort order
-        featuredScenes.sort((a, b) => featuredIds.indexOf(a.scene_id) - featuredIds.indexOf(b.scene_id));
-      }
-
-      // 4. Personalised scenes
-      let personalised: CatalogScene[] = [];
-      if (userCollections.length) {
-        const { data } = await supabase
-          .from('product_image_scenes')
-          .select(SLIM_COLUMNS)
-          .in('category_collection', userCollections)
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true })
-          .limit(MAX * 2);
-        personalised = (data ?? []) as CatalogScene[];
-      }
-
-      // 5. Merge in priority order, dedupe by id
-      const seen = new Set<string>();
-      const out: CatalogScene[] = [];
-
-      const pushIfNew = (s: CatalogScene) => {
-        if (out.length >= MAX) return;
-        if (seen.has(s.id)) return;
-        seen.add(s.id);
-        out.push(s);
-      };
-
-      // a) admin-featured matching user's collection
-      if (userCollections.length) {
-        for (const s of featuredScenes) {
-          if (s.category_collection && userCollections.includes(s.category_collection)) pushIfNew(s);
-        }
-      }
-      // b) all remaining admin-featured
-      for (const s of featuredScenes) pushIfNew(s);
-      // c) personalised
-      for (const s of personalised) pushIfNew(s);
-
-      // d) fallback if still empty: top-N by sort_order
-      if (out.length === 0) {
-        const { data } = await supabase
-          .from('product_image_scenes')
-          .select(SLIM_COLUMNS)
-          .eq('is_active', true)
+      // Helper: fetch recommended scene_ids for a given category (or null=Global)
+      const fetchRecForCategory = async (category: string | null) => {
+        const q = supabase
+          .from('recommended_scenes' as any)
+          .select('scene_id, sort_order')
           .order('sort_order', { ascending: true })
           .limit(MAX);
-        return (data ?? []) as CatalogScene[];
+        const { data } = await (category === null ? q.is('category', null) : q.eq('category', category));
+        return (data ?? []) as { scene_id: string; sort_order: number }[];
+      };
+
+      // 2. Per-category fetches in parallel
+      const perCategoryLists = await Promise.all(
+        userCategories.map(c => fetchRecForCategory(c)),
+      );
+
+      // Merge in selection order, dedupe by scene_id
+      const orderedSceneIds: string[] = [];
+      const seen = new Set<string>();
+      for (const list of perCategoryLists) {
+        for (const row of list) {
+          if (orderedSceneIds.length >= MAX) break;
+          if (seen.has(row.scene_id)) continue;
+          seen.add(row.scene_id);
+          orderedSceneIds.push(row.scene_id);
+        }
+        if (orderedSceneIds.length >= MAX) break;
       }
 
-      return out;
+      // 3. Top up from Global (category IS NULL) if still short
+      if (orderedSceneIds.length < MAX) {
+        const globalList = await fetchRecForCategory(null);
+        for (const row of globalList) {
+          if (orderedSceneIds.length >= MAX) break;
+          if (seen.has(row.scene_id)) continue;
+          seen.add(row.scene_id);
+          orderedSceneIds.push(row.scene_id);
+        }
+      }
+
+      // 4. Resolve scene_ids → full scene rows (preserving order)
+      let recommendedScenes: CatalogScene[] = [];
+      if (orderedSceneIds.length) {
+        const { data } = await supabase
+          .from('product_image_scenes')
+          .select(SLIM_COLUMNS)
+          .in('scene_id', orderedSceneIds)
+          .eq('is_active', true);
+        const rows = (data ?? []) as CatalogScene[];
+        recommendedScenes = orderedSceneIds
+          .map(id => rows.find(r => r.scene_id === id))
+          .filter((r): r is CatalogScene => !!r);
+      }
+
+      if (recommendedScenes.length > 0) return recommendedScenes;
+
+      // 5. Final fallback: top-12 by sort_order
+      const { data } = await supabase
+        .from('product_image_scenes')
+        .select(SLIM_COLUMNS)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .limit(MAX);
+      return (data ?? []) as CatalogScene[];
     },
   });
 }

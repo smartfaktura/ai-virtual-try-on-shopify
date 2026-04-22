@@ -112,31 +112,15 @@ export function SceneCatalogModal({
   const showRails = !anyFilterActive;
 
   const recommended = useRecommendedScenes(open && (showRails || quickView === 'recommended'));
-  const productOnlyRail = useSceneRail(
-    'product-only',
-    { subjects: ['product-only'], excludeEssentials: true },
-    12,
-    open && showRails,
-  );
-  const withModelRail = useSceneRail(
-    'with-model',
-    { subjects: ['with-model'], excludeEssentials: true },
-    12,
-    open && showRails,
-  );
 
-  // Filtered grid (always exclude Essential Shots in Freestyle modal).
-  const useGrid = anyFilterActive && quickView !== 'recommended';
+  // Default grid: full Freestyle catalog (no filters, excluding Essential Shots).
+  // When filters are active we use the same hook with the user-selected filters.
+  const useGrid = quickView !== 'recommended';
   const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid);
   const counts = useSceneCounts();
 
-  // Freestyle Scenes — live custom_scenes from /app/admin/scenes, capped at 12.
+  // Custom scenes still loaded so cs- selections continue to resolve correctly.
   const customScenesQuery = useCustomScenes();
-  const freestyleScenes = useMemo<CatalogScene[]>(() => {
-    if (!showRails) return [];
-    const rows = customScenesQuery.scenes ?? [];
-    return rows.slice(0, 12).map(customSceneToCatalogShape);
-  }, [showRails, customScenesQuery.scenes]);
 
   // Recommended rail — strip any "Essential Shots" rows defensively.
   const recommendedScenes = useMemo<CatalogScene[]>(() => {
