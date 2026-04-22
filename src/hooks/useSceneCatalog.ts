@@ -97,9 +97,9 @@ function applyFilters(query: any, filters: SceneCatalogFilters) {
 /**
  * Infinite paged scene query. Used in filtered / search mode.
  *
- * When a family filter is active, we fetch the page then locally re-rank rows so
- * any sub_category containing "essential" sinks to the bottom — this matches the
- * UX requirement without needing a custom RPC.
+ * Order is pure `sort_order ASC` — admins control everything from one place
+ * via the star button on `/app/admin/recommended-scenes` (featured scenes get
+ * negative `sort_order` so they float to the top of their sub-family).
  */
 export function useSceneCatalog(filters: SceneCatalogFilters, enabled = true) {
   return useInfiniteQuery({
@@ -114,26 +114,7 @@ export function useSceneCatalog(filters: SceneCatalogFilters, enabled = true) {
       q = applyFilters(q, filters).range(start, end);
       const { data, error } = await q;
       if (error) throw error;
-      const rows = (data ?? []) as CatalogScene[];
-
-      // Sub-family round-robin: when a family filter is active (no specific
-      // sub-family selected), rotate scenes across sub-families on each page so
-      // the user sees variety (one shirt, one dress, one jeans…) instead of
-      // a long cluster from a single sub-family.
-      const familyFilteredRows =
-        filters.family && !filters.categoryCollection
-          ? interleaveBySubFamily(rows)
-          : rows;
-
-      if (filters.family) {
-        // Stable sort: non-essentials first, essentials last.
-        return [...familyFilteredRows].sort((a, b) => {
-          const aE = a.sub_category?.toLowerCase().includes('essential') ? 1 : 0;
-          const bE = b.sub_category?.toLowerCase().includes('essential') ? 1 : 0;
-          return aE - bE;
-        });
-      }
-      return familyFilteredRows;
+      return (data ?? []) as CatalogScene[];
     },
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < PAGE_SIZE ? undefined : allPages.length,
