@@ -136,6 +136,17 @@ function SectionPill({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ——— Step labels ———
+const STEP_LABELS: Record<string, string> = {
+  category: 'Category',
+  subject: 'Subject',
+  interaction: 'Interaction',
+  setting: 'Setting',
+  mood: 'Mood',
+  framing: 'Framing',
+  review: 'Review',
+};
+
 // ——— Main Quiz Component ———
 interface PromptBuilderQuizProps {
   open: boolean;
