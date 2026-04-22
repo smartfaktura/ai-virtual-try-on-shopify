@@ -7,6 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const OUTFIT_DIRECTION_PROMPT = `Analyze this reference image and produce a single-paragraph outfit direction for a premium e-commerce shoot. Describe the hero piece, complementary garments (matching tops/bottoms appropriate to the scene), styling tone, footwear logic, color coordination, and what to avoid (e.g. denim, streetwear, loud branding when off-aesthetic). Write it as actionable styling rules a stylist would follow. Output ONLY the direction paragraph — no preamble, no headings, no bullet points.`;
+
 const SYSTEM_PROMPT = `You are an expert AI image prompt engineer. Given an image, analyze it in extreme detail and produce a single comma-separated prompt that could be used to reproduce a very similar image with an AI image generator.
 
 Your prompt MUST cover ALL of the following aspects (when visible/applicable):
@@ -57,7 +59,7 @@ serve(async (req) => {
       });
     }
 
-    const { imageUrl } = await req.json();
+    const { imageUrl, mode } = await req.json();
     if (!imageUrl) {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
         status: 400,
@@ -65,13 +67,19 @@ serve(async (req) => {
       });
     }
 
+    const isOutfitMode = mode === "outfit_direction";
+    const systemPrompt = isOutfitMode ? OUTFIT_DIRECTION_PROMPT : SYSTEM_PROMPT;
+    const userText = isOutfitMode
+      ? "Analyze this reference image and produce the outfit direction paragraph."
+      : "Analyze this image and generate a detailed AI image generation prompt to reproduce it.";
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const userContent: any[] = [
-      { type: "text", text: "Analyze this image and generate a detailed AI image generation prompt to reproduce it." },
+      { type: "text", text: userText },
       { type: "image_url", image_url: { url: imageUrl } },
     ];
 
@@ -84,7 +92,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
         ],
       }),
@@ -113,9 +121,9 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const prompt = data.choices?.[0]?.message?.content?.trim() || "";
+    const result = data.choices?.[0]?.message?.content?.trim() || "";
 
-    return new Response(JSON.stringify({ prompt }), {
+    return new Response(JSON.stringify(isOutfitMode ? { outfit_hint: result } : { prompt: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
