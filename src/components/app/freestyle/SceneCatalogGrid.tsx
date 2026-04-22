@@ -17,9 +17,9 @@ interface SceneCatalogGridProps {
 
 const LOAD_ALL_PAGE_CAP = 10;
 
-export function SceneCatalogGrid({
+export const SceneCatalogGrid = forwardRef<HTMLDivElement, SceneCatalogGridProps>(function SceneCatalogGrid({
   pages, isLoading, isFetchingNextPage, hasNextPage, onLoadMore, selectedSceneId, onSelect,
-}: SceneCatalogGridProps) {
+}, _ref) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [loadingAll, setLoadingAll] = useState(false);
   const loadAllPagesRef = useRef(0);
