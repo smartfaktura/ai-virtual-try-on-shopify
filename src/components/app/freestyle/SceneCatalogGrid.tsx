@@ -120,4 +120,4 @@ export const SceneCatalogGrid = forwardRef<HTMLDivElement, SceneCatalogGridProps
       )}
     </div>
   );
-}
+});
