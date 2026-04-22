@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle, Sparkles, Loader2, UserCheck } from 'lucide-react';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
