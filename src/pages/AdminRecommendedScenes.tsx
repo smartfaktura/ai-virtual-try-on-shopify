@@ -545,7 +545,7 @@ export default function AdminRecommendedScenes() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {filteredScenes.map(scene => {
+              {displayedScenes.map(scene => {
                 const isFeatured = recommendedMap.has(scene.scene_id);
                 return (
                   <button
