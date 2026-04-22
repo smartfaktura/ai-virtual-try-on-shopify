@@ -10,6 +10,20 @@ import { Card } from '@/components/ui/card';
 import { Loader2, Download, Search, ArrowUpDown, TrendingUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { mockTryOnPoses } from '@/data/mockData';
+
+// Static lookup for built-in freestyle/try-on scenes (pose_* and scene_* IDs)
+const STATIC_SCENE_META = new Map<string, SceneMeta>(
+  mockTryOnPoses.map((p) => [
+    p.poseId,
+    {
+      id: p.poseId,
+      name: p.name,
+      category: p.category ?? 'Freestyle',
+      thumbnail: (p.previewUrl as unknown as string) ?? null,
+    },
+  ])
+);
 
 type Window = 30 | 60 | 90;
 type SortKey = 'total_uses' | 'unique_users' | 'last_used_at' | 'name';
