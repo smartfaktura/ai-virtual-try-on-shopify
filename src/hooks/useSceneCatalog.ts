@@ -123,15 +123,24 @@ export function useSceneCatalog(filters: SceneCatalogFilters, enabled = true) {
       if (error) throw error;
       const rows = (data ?? []) as CatalogScene[];
 
+      // Sub-family round-robin: when a family filter is active (no specific
+      // sub-family selected), rotate scenes across sub-families on each page so
+      // the user sees variety (one shirt, one dress, one jeans…) instead of
+      // a long cluster from a single sub-family.
+      const familyFilteredRows =
+        filters.family && !filters.categoryCollection
+          ? interleaveBySubFamily(rows)
+          : rows;
+
       if (filters.family) {
         // Stable sort: non-essentials first, essentials last.
-        return [...rows].sort((a, b) => {
+        return [...familyFilteredRows].sort((a, b) => {
           const aE = a.sub_category?.toLowerCase().includes('essential') ? 1 : 0;
           const bE = b.sub_category?.toLowerCase().includes('essential') ? 1 : 0;
           return aE - bE;
         });
       }
-      return rows;
+      return familyFilteredRows;
     },
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < PAGE_SIZE ? undefined : allPages.length,
