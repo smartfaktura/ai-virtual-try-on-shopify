@@ -180,6 +180,33 @@ export default function ImportFromScenesModal({
     });
   };
 
+  const analyzeOutfit = async (sceneId: string) => {
+    const config = configs.get(sceneId);
+    if (!config?.preview_image_url) {
+      toast.error('No reference image available');
+      return;
+    }
+    setAnalyzing(prev => new Set(prev).add(sceneId));
+    try {
+      const { data, error } = await supabase.functions.invoke('describe-image', {
+        body: { imageUrl: config.preview_image_url, mode: 'outfit_direction' },
+      });
+      if (error) throw error;
+      const hint = (data as any)?.outfit_hint?.trim();
+      if (!hint) throw new Error('Empty result');
+      updateConfig(sceneId, { outfit_hint: hint });
+      toast.success('Outfit direction generated');
+    } catch (e: any) {
+      toast.error(`Analyze failed: ${e.message || 'Unknown error'}`);
+    } finally {
+      setAnalyzing(prev => {
+        const next = new Set(prev);
+        next.delete(sceneId);
+        return next;
+      });
+    }
+  };
+
   const duplicateIds = useMemo(() => {
     const dupes = new Set<string>();
     for (const [, config] of configs) {
@@ -486,6 +513,33 @@ export default function ImportFromScenesModal({
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="text-xs">Outfit Direction</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-[10px] gap-1"
+                        disabled={!config.preview_image_url || analyzing.has(id)}
+                        onClick={() => analyzeOutfit(id)}
+                      >
+                        {analyzing.has(id) ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3 h-3" />
+                        )}
+                        Analyze
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={config.outfit_hint}
+                      onChange={e => updateConfig(id, { outfit_hint: e.target.value })}
+                      placeholder="Describe the outfit styling rules for this scene…"
+                      className="text-xs min-h-[60px]"
+                    />
                   </div>
 
                   <div className="flex items-center gap-4">
