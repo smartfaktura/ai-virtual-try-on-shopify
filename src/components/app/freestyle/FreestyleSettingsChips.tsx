@@ -219,7 +219,7 @@ export function FreestyleSettingsChips({
   // --- Chip wrappers for model/scene/product with disabled + highlight support ---
   const productChipInner = (
     <div className={cn(
-      'w-full',
+      isMobile && 'w-full',
       disabledChips?.product && 'opacity-40'
     )}>
       <ProductSelectorChip
