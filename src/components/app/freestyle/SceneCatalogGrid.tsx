@@ -84,7 +84,7 @@ export const SceneCatalogGrid = forwardRef<HTMLDivElement, SceneCatalogGridProps
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
         {flat.map(scene => (
           <SceneCatalogCard
             key={scene.id}
