@@ -43,7 +43,7 @@ export function SceneCatalogFiltersBar({
   onOpenMobileFilters,
 }: SceneCatalogFiltersBarProps) {
   return (
-    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-2 px-4 sm:px-6 py-2.5 border-b border-border/40 bg-background/60 backdrop-blur-sm">
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-2 px-4 sm:px-6 py-2.5 lg:py-3.5 border-b border-border/40 bg-background/60 backdrop-blur-sm">
       {/* Mobile-only row: equal-width Filters + Sort pills */}
       <div className="flex items-center gap-2 w-full lg:hidden">
         {onOpenMobileFilters && (
@@ -69,29 +69,29 @@ export function SceneCatalogFiltersBar({
 
       {/* Desktop search */}
       <div className="hidden lg:flex items-center gap-2 lg:flex-1">
-        <div className="relative lg:w-[280px] min-w-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+        <div className="relative lg:w-[340px] min-w-0">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={e => onSearchChange(e.target.value)}
             placeholder="Search scenes..."
-            className="pl-8 pr-7 h-8 text-xs rounded-full"
+            className="pl-10 pr-9 h-10 text-sm rounded-full"
           />
           {search && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted"
               aria-label="Clear search"
             >
-              <X className="w-3 h-3 text-muted-foreground" />
+              <X className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           )}
         </div>
       </div>
 
       {/* Desktop subject chips */}
-      <div className="hidden lg:flex items-center gap-1.5 overflow-x-auto scrollbar-thin min-w-0 lg:flex-1">
+      <div className="hidden lg:flex items-center gap-2 overflow-x-auto scrollbar-thin min-w-0 lg:flex-1">
         {QUICK_CHIPS.map(chip => {
           const active = activeChipKeys.has(chip.key);
           return (
@@ -100,7 +100,7 @@ export function SceneCatalogFiltersBar({
               type="button"
               onClick={() => onChipToggle(chip)}
               className={cn(
-                'shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors border',
+                'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border',
                 active
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-background text-muted-foreground border-border/60 hover:bg-muted',
@@ -115,7 +115,7 @@ export function SceneCatalogFiltersBar({
           <button
             type="button"
             onClick={onClearAll}
-            className="shrink-0 ml-1 px-2 py-1 text-xs text-primary hover:underline"
+            className="shrink-0 ml-1 px-3 py-2 text-sm text-primary hover:underline"
           >
             Clear all
           </button>
@@ -124,7 +124,7 @@ export function SceneCatalogFiltersBar({
 
       {/* Desktop-only sort on the right */}
       <Select value={sort} onValueChange={v => onSortChange(v as 'recommended' | 'new')}>
-        <SelectTrigger className="hidden lg:flex h-8 w-[140px] rounded-full text-xs shrink-0">
+        <SelectTrigger className="hidden lg:flex h-10 w-[170px] rounded-full text-sm shrink-0">
           <SelectValue placeholder="Sort" />
         </SelectTrigger>
         <SelectContent>
