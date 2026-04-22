@@ -727,6 +727,7 @@ export default function ProductImages() {
                   aspectRatio: ratioForJob,
                   batch_id: batchId,
                   scene_name: scene.title,
+                  scene_id: scene.id,
                   batch_outfit_lock: true,
                   batch_size: scenesForProduct.length,
                 };
