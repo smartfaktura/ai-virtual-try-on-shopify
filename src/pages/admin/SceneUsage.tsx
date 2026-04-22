@@ -104,27 +104,47 @@ export default function SceneUsage() {
         }
 
         if (ids.length > 0) {
-          // 2) DB-backed product image scenes (scene_id is text, matches as-is)
-          const pisIds = ids.filter((i) => !metaMap.has(i) && !i.startsWith('custom-'));
+          // 2) DB-backed product image scenes — collect raw IDs and "pis-" prefixed IDs
+          //    from Freestyle (which namespaces Product Visuals scenes with PIS_PREFIX).
+          const remaining = ids.filter((i) => !metaMap.has(i) && !i.startsWith('custom-'));
+          const pisPrefixed = remaining.filter((i) => i.startsWith('pis-'));
+          const rawPisIds = remaining.filter((i) => !i.startsWith('pis-'));
+          const strippedFromPrefix = pisPrefixed.map((i) => i.slice('pis-'.length));
+          // Union of real scene_id values to query
+          const pisQueryIds = Array.from(new Set([...rawPisIds, ...strippedFromPrefix]));
+          // Reverse map: real scene_id -> all original keys to write back into metaMap
+          const reverseKeys = new Map<string, string[]>();
+          for (const id of rawPisIds) {
+            const arr = reverseKeys.get(id) ?? []; arr.push(id); reverseKeys.set(id, arr);
+          }
+          for (const id of pisPrefixed) {
+            const real = id.slice('pis-'.length);
+            const arr = reverseKeys.get(real) ?? []; arr.push(id); reverseKeys.set(real, arr);
+          }
+
           // 3) Custom scenes — strip "custom-" prefix to match UUID in custom_scenes.id
           const customPrefixed = ids.filter((i) => i.startsWith('custom-'));
           const customIds = customPrefixed.map((i) => i.slice('custom-'.length));
 
           const [pisRes, customRes] = await Promise.all([
-            pisIds.length
-              ? supabase.from('product_image_scenes').select('scene_id,title,sub_category,category_collection,preview_image_url').in('scene_id', pisIds)
+            pisQueryIds.length
+              ? supabase.from('product_image_scenes').select('scene_id,title,sub_category,category_collection,preview_image_url').in('scene_id', pisQueryIds)
               : Promise.resolve({ data: [] as any[] }),
             customIds.length
               ? supabase.from('custom_scenes').select('id,name,category,preview_image_url,image_url').in('id', customIds)
               : Promise.resolve({ data: [] as any[] }),
           ]);
           (pisRes.data ?? []).forEach((s: any) => {
-            metaMap.set(s.scene_id, {
+            const meta: SceneMeta = {
               id: s.scene_id,
               name: s.title ?? s.scene_id,
               category: s.category_collection ?? s.sub_category ?? 'Product Images',
               thumbnail: s.preview_image_url ?? null,
-            });
+            };
+            const keys = reverseKeys.get(s.scene_id) ?? [s.scene_id];
+            for (const k of keys) {
+              metaMap.set(k, { ...meta, id: k });
+            }
           });
           (customRes.data ?? []).forEach((s: any) => {
             const prefixedId = `custom-${s.id}`;
