@@ -273,14 +273,6 @@ export function SceneCatalogModal({
               Find the right shot for your product — over 1,000 curated scenes.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="p-1.5 rounded-full hover:bg-muted transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
         </header>
 
         {/* Filter bar */}
