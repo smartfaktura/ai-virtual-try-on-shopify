@@ -922,7 +922,7 @@ export default function Freestyle() {
   };
 
   return (
-    <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-24 lg:-mt-8 bg-muted/30 overflow-hidden flex flex-col lg:block" style={{ minHeight: '100%' }}>
+    <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-24 lg:-mt-8 bg-muted/30 overflow-hidden flex flex-col md:block" style={{ minHeight: '100%' }}>
       <SEOHead title="Freestyle Studio — VOVV.AI" description="Create AI product photography with freestyle prompts." noindex />
       <style>{`@media (min-width: 1024px) { .freestyle-root { height: 100dvh !important; margin-top: -2rem; } }`}</style>
       <style>{`@media (max-width: 1023px) { .freestyle-root { height: 100dvh !important; } }`}</style>
