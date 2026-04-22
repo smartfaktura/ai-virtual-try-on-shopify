@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, Import, AlertTriangle, Sparkles, Loader2, UserCheck } from 'lucide-react';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ALL_TRIGGER_KEYS } from '@/components/app/product-images/detailBlockConfig';
@@ -402,6 +402,33 @@ export default function ImportFromScenesModal({
                   </Button>
                 </div>
               )}
+              {(() => {
+                const entries = Array.from(configs.values());
+                const allHave = entries.length > 0 && entries.every(c => (c.trigger_blocks || []).includes('personDetails'));
+                return (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs px-3 shrink-0"
+                    onClick={() => {
+                      setConfigs(prev => {
+                        const next = new Map(prev);
+                        for (const [id, config] of next) {
+                          const blocks = new Set(config.trigger_blocks || []);
+                          if (allHave) blocks.delete('personDetails');
+                          else blocks.add('personDetails');
+                          next.set(id, { ...config, trigger_blocks: Array.from(blocks) });
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    <UserCheck className="w-3.5 h-3.5" />
+                    {allHave ? 'Remove personDetails from all' : 'Add personDetails to all'}
+                  </Button>
+                );
+              })()}
             </div>
 
             {Array.from(configs.entries()).map(([id, config]) => {
