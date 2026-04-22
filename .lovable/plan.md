@@ -1,58 +1,77 @@
 
 
-## Fix Scenes modal: remove rail, interleave grid, tighten layout
+## Make "All scenes" actually feel recommended
 
-Three targeted changes to `SceneCatalogModal.tsx` + a new fetch hook for the interleaved default grid.
+Two fixes layered into the default grid order. Pure ordering — no schema changes, no new queries on the hot path beyond one extra small fetch.
 
-### 1. Remove "Recommended for you" rail from the default view
+### New order for the default "All scenes" grid
 
-In the `showRails` branch, drop the `<SceneCatalogRail title="Recommended for you" …>` block and the "Freestyle Scenes" subheading. The default view becomes just one grid — no rail, no section headers.
+```text
+[1] Admin curated picks   (from recommended_scenes, Global + per-category, deduped)
+[2] Sub-family interleaved catalog
+        For each family in FAMILY_ORDER:
+          round-robin 1 scene from each sub-family (category_collection)
+        Then round-robin across families 2-by-2
+[3] Anything left, in original sort_order
+```
 
-The "Recommended" sidebar quick-view (left nav) keeps working — it still loads `useRecommendedScenes` and renders the dedicated grid when the user clicks it. Only the auto-rail on the main page is removed.
+So the user always opens to: admin's hand-picked scenes first, then a varied mix that touches every sub-family before repeating, then the long tail.
 
-### 2. Make the default grid show interleaved variety (Fashion → Beauty → Fragrance → Eyewear → repeat)
+### Implementation
 
-Today `useSceneCatalog` paginates `product_image_scenes ORDER BY sort_order ASC` — that clusters all Fashion together, then all Beauty, etc. The "interleaved" arrangement promised in the previous plan only lives in the admin tool and the recommended fallback, **not** in the user-facing main grid.
+**File: `src/hooks/useSceneCatalog.ts` — extend `useInterleavedSceneCatalog`**
 
-Add a new hook `useInterleavedSceneCatalog`:
+Replace the body so it does:
 
-- One-shot fetch (cached 10 min): up to 1,500 active scenes with the slim columns, excluding essentials, ordered by `sort_order ASC`.
-- Run `interleaveByFamily(rows, 2)` from `src/lib/sceneTaxonomy.ts` — same helper used everywhere else. Result: 2 Fashion, 2 Beauty, 2 Fragrance, 2 Eyewear, 2 Bags, 2 Watches, 2 Jewelry, 2 Home, 2 Tech, 2 Food&Drink, 2 Wellness, 2 Footwear, then repeat.
-- Return as a single page: `pages: [interleavedRows]`.
+1. **Fetch admin picks** (parallel with the catalog fetch):
+   - `recommended_scenes` rows where `category IS NULL` OR `category = ANY(user.product_categories)`, ordered by `(category NULLS LAST, sort_order ASC)`. Cap at 60.
+   - Resolve to full scene rows via `product_image_scenes WHERE scene_id IN (...) AND is_active`.
+   - Preserve admin's order; dedupe by `scene_id`.
 
-In `SceneCatalogModal.tsx`, when the default view is active (no filters, no search, sort=recommended), render this interleaved set via `SceneCatalogGrid` instead of the current `useSceneCatalog` infinite query. When **any** filter, search, or sort=Newest is active, fall back to the existing `useSceneCatalog` infinite query (current behaviour).
+2. **Fetch catalog** (existing): up to 1,500 active non-essential scenes by `sort_order ASC`.
 
-This gives the user a curated-looking mixed grid by default, while keeping fast filtered/sorted queries unchanged.
+3. **Build sub-family-aware interleave** — new helper in `src/lib/sceneTaxonomy.ts`:
+   ```ts
+   interleaveByFamilyAndSubFamily(items, { familyChunk: 2, subFamilyChunk: 1 })
+   ```
+   - Group items by `category_collection` (sub-family) → keep sort_order within each.
+   - Group sub-families by family via `CATEGORY_FAMILY_MAP`.
+   - For each family, round-robin `subFamilyChunk` (=1) item from each sub-family queue until family is drained → produces that family's "interleaved-by-sub-family" list.
+   - Then round-robin `familyChunk` (=2) items from each family's interleaved list, in `FAMILY_ORDER`.
+   - Unknown collections appended at the end (stable).
 
-### 3. Tighten the modal layout so cards don't feel oversized
+4. **Compose final list**: `[adminPicks, ...interleavedCatalog excluding adminPick scene_ids]`. Cap nothing — feed full list as a single page.
 
-At 1328px viewport with `w-[92vw]` (≈1221px) minus the 260px sidebar, the content area is ~960px. With `lg:grid-cols-4` cards render at ~225px each — fine. But the screenshot shows only 2 huge cards visible. Two fixes:
+5. **Cache key** includes `userId` so admin-pick personalisation per user is honored. Stale time 10 min unchanged.
 
-- Bump the grid breakpoints in `SceneCatalogGrid.tsx` so 4 columns kick in earlier:  
-  `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5`. At the modal's effective content width, this guarantees 4–5 columns visible above the fold instead of relying on the viewport-based `lg` breakpoint that the inner ScrollArea ignores.
-- Forward the ref properly on `SceneCatalogGrid` (wrap export in `React.forwardRef` with a no-op ref pass-through) to silence the "Function components cannot be given refs" warning currently logged.
+**File: `src/lib/sceneTaxonomy.ts` — add the new helper**
 
-### 4. Selecting Recommended sidebar item: keep current "grid view" behaviour
+Keep existing `interleaveByFamily` untouched (still used by admin tool & recommended fallback). Add `interleaveByFamilyAndSubFamily` with the two-level round-robin described above. Pure & deterministic.
 
-No change. That branch still shows the recommended scenes as a grid.
+**File: `src/components/app/freestyle/SceneCatalogModal.tsx`**
 
-### Files touched
+No render changes — `useInterleavedSceneCatalog` already feeds the grid. Just pass `userId` through (read from `useAuth` like `useRecommendedScenes` does) so the hook can fetch personalised admin picks.
 
-- `src/components/app/freestyle/SceneCatalogModal.tsx` — remove the rail block from `showRails`, swap default-grid source to the new interleaved hook.
-- `src/components/app/freestyle/SceneCatalogGrid.tsx` — bump grid column breakpoints; forwardRef wrapper.
-- `src/hooks/useSceneCatalog.ts` (or new `useInterleavedSceneCatalog.ts`) — add the one-shot interleaved fetcher returning a single page.
+### Within a single family filter (e.g., user clicks "Fashion")
+
+When a family filter is active, the grid uses `useSceneCatalog` (paged). Add the same sub-family round-robin **client-side per page**: after fetching a page, group its rows by `category_collection` and re-emit them round-robin (1 from garments, 1 from dresses, 1 from jeans…). This makes the filtered family view also show variety across sub-families instead of clustering.
+
+Implementation: small `interleaveBySubFamily(rows)` helper applied inside the `useSceneCatalog` `queryFn` only when `filters.family` is set and `filters.categoryCollection` is null.
 
 ### Untouched
 
-DB schema, RLS, `useRecommendedScenes`, sidebar, admin page, generation pipeline, scene card, filters bar.
+- DB schema, RLS, `recommended_scenes` table & admin page, generation pipeline.
+- `useRecommendedScenes` (sidebar "Recommended" tab keeps its richer per-onboarding-category logic).
+- Sort = "Newest" still pure `created_at DESC`.
+- Search / subject chip / sub-family filter → unchanged single-source query.
 
 ### Validation
 
-- Open `/app/freestyle` → Scenes modal default view shows **only** the Freestyle Scenes grid (no Recommended for you rail above it).
-- The grid's first 12 cards visibly mix product families (lipstick, sneaker, perfume, eyewear, bag…) instead of all Fashion in a row.
-- 4 cards per row visible above the fold at 1328px viewport.
-- Switching sort to **Newest** still shows pure `created_at DESC` (no interleaving).
-- Applying any subject chip / family / search still works through `useSceneCatalog` and shows accurate filtered results.
-- Clicking sidebar **Recommended** still opens the per-onboarding-category curated grid.
-- React ref warning for `SceneCatalogGrid` no longer appears in console.
+- Open `/app/freestyle` → Scenes modal default view: first 8–12 cards are admin's curated picks from `/app/admin/recommended-scenes` (Global + matching user categories), in admin's saved order.
+- Below that: variety mix where consecutive Fashion cards come from different sub-families (e.g. one shirt, one dress, one jacket — not three shirts in a row), then 2 from another family, then 2 from another.
+- Click family **Fashion** → first row mixes garments / dresses / jeans / jackets instead of all garments.
+- Click sub-family **Tops & Shirts** under Fashion → pure sort_order within that slug (no change — already tight).
+- Sort = **Newest** → pure `created_at DESC` (no admin picks pinned, no interleaving).
+- A user with `product_categories = ['fashion','beauty']` sees admin's `category='fashion'` + `category='beauty'` + `category IS NULL` picks at the top. A user with no categories sees only Global (`category IS NULL`) admin picks at top.
+- Admin reordering a scene at `/app/admin/recommended-scenes` is reflected on the user's grid within 10 min (cache TTL).
 
