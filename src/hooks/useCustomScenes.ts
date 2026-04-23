@@ -42,8 +42,9 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
   };
 }
 
-export function useCustomScenes() {
+export function useCustomScenes(opts?: { enabled?: boolean }) {
   const { user } = useAuth();
+  const enabled = opts?.enabled ?? true;
 
   const query = useQuery({
     queryKey: ['custom-scenes'],
@@ -52,7 +53,7 @@ export function useCustomScenes() {
       if (error) throw error;
       return (data as unknown as CustomScene[]) ?? [];
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
   });
 
   const scenes = query.data ?? [];
