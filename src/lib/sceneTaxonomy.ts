@@ -59,7 +59,8 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
 
 /** Human labels for category_collection slugs when shown as sub-family rows. */
 export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
-  'garments': 'Tops & Shirts',
+  'garments': 'Clothing & Apparel',
+  'activewear': 'Activewear & Sportswear',
   'hats-small': 'Hats',
   'wallets-cardholders': 'Cardholders',
   'bags-accessories': 'Bags',
@@ -113,7 +114,15 @@ export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
   supplements: ['supplements-wellness'],
 };
 
-export function resolveUserCollections(productCategories: string[] | null | undefined): string[] {
+export function resolveUserCollections(
+  productCategories: string[] | null | undefined,
+  productSubcategories?: string[] | null,
+): string[] {
+  // If the user picked granular sub-types in Step 3, those ARE collection slugs.
+  // Use them directly so recommendations narrow to the precise types.
+  if (productSubcategories?.length) {
+    return Array.from(new Set(productSubcategories.map(s => s.toLowerCase().trim()).filter(Boolean)));
+  }
   if (!productCategories?.length) return [];
   const set = new Set<string>();
   for (const cat of productCategories) {
