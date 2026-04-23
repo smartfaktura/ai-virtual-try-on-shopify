@@ -33,9 +33,10 @@ interface LibraryDetailModalProps {
   onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
   items?: LibraryItem[];
   initialIndex?: number;
+  onNavigate?: (item: LibraryItem) => void;
 }
 
-export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings, items, initialIndex = 0 }: LibraryDetailModalProps) {
+export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings, items, initialIndex = 0, onNavigate }: LibraryDetailModalProps) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
