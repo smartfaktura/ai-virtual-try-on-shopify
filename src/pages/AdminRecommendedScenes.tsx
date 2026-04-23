@@ -360,7 +360,10 @@ export default function AdminRecommendedScenes() {
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveCategory(tab.key)}
+              onClick={() => {
+                setActiveCategory(tab.key);
+                setActiveSubCollection(null);
+              }}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
                 isActive
@@ -373,6 +376,64 @@ export default function AdminRecommendedScenes() {
           );
         })}
       </div>
+
+      {/* Sub-family selector — only when active family has 2+ sub-types */}
+      {showSubStrip && activeFamilyName && (
+        <div className="space-y-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            <button
+              type="button"
+              onClick={() => setActiveSubCollection(null)}
+              className={cn(
+                'shrink-0 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                activeSubCollection === null
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-background text-foreground border-border hover:border-border/80'
+              )}
+            >
+              All {activeFamilyName}
+            </button>
+            {activeSubTypes.map(sub => {
+              const isActive = activeSubCollection === sub.slug;
+              const count = subCounts[sub.slug] ?? 0;
+              return (
+                <button
+                  key={sub.slug}
+                  type="button"
+                  onClick={() => setActiveSubCollection(sub.slug)}
+                  className={cn(
+                    'shrink-0 h-8 px-3 rounded-full text-xs font-medium border transition-colors inline-flex items-center gap-1.5',
+                    isActive
+                      ? 'bg-foreground text-background border-foreground'
+                      : 'bg-background text-foreground border-border hover:border-border/80'
+                  )}
+                >
+                  <span>{sub.label}</span>
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold',
+                        isActive
+                          ? 'bg-background/20 text-background'
+                          : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {activeSubCollection
+              ? `Curating sub-family scenes shown first to users who picked ${
+                  activeSubTypes.find(s => s.slug === activeSubCollection)?.label ?? activeSubCollection
+                }.`
+              : `Curating family-level fallback for all ${activeFamilyName} users.`}
+          </p>
+        </div>
+      )}
 
       {/* Featured set */}
       <section className="border border-border/40 rounded-xl bg-card">
