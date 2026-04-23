@@ -412,6 +412,7 @@ export type Database = {
           scene_name: string | null
           slug: string
           sort_order: number
+          subcategory: string | null
           tags: string[] | null
           title: string
           workflow_name: string | null
@@ -435,6 +436,7 @@ export type Database = {
           scene_name?: string | null
           slug: string
           sort_order?: number
+          subcategory?: string | null
           tags?: string[] | null
           title: string
           workflow_name?: string | null
@@ -458,6 +460,7 @@ export type Database = {
           scene_name?: string | null
           slug?: string
           sort_order?: number
+          subcategory?: string | null
           tags?: string[] | null
           title?: string
           workflow_name?: string | null

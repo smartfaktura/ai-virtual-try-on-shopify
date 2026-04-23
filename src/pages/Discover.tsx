@@ -7,6 +7,13 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PageHeader } from '@/components/app/PageHeader';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
+import { DiscoverSubCategoryBar } from '@/components/app/DiscoverSubCategoryBar';
+import {
+  getDiscoverFamilies,
+  getDiscoverSubtypes,
+  isMultiSubFamily,
+  itemMatchesDiscoverFilter,
+} from '@/lib/discoverTaxonomy';
 
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
@@ -26,17 +33,7 @@ import { getItemSlug } from '@/lib/slugUtils';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'beauty', label: 'Beauty' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'sports', label: 'Sports' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home' },
-  { id: 'food', label: 'Food & Drink' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'supplements', label: 'Health' },
+  ...getDiscoverFamilies().map((f) => ({ id: f.id, label: f.label })),
 ] as const;
 
 // Stop words for keyword extraction
@@ -199,20 +196,7 @@ function DiscoverLoadingState() {
   );
 }
 
-// Map onboarding family chip ids → discover category ids (for "For you" sort).
-const FAM_TO_DISC: Record<string, string[]> = {
-  fashion: ['fashion'],
-  footwear: ['fashion', 'sports'],
-  'bags-accessories': ['accessories'],
-  watches: ['accessories'],
-  eyewear: ['accessories'],
-  jewelry: ['jewelry'],
-  'beauty-fragrance': ['beauty', 'fragrances'],
-  home: ['home'],
-  tech: ['electronics'],
-  'food-drink': ['food'],
-  wellness: ['supplements'],
-};
+// Family ids ARE discover category ids now (unified taxonomy).
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -229,8 +213,14 @@ export default function Discover() {
   const columnCount = useColumnCount();
   
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
+
+  // Reset sub-tab whenever the family changes.
+  useEffect(() => {
+    setSelectedSubcategory('__all__');
+  }, [selectedCategory]);
 
   // Load user prefs once for "For you" sort on the All tab.
   const [userPrefs, setUserPrefs] = useState<{ families: string[]; subtypes: string[] }>({
@@ -358,14 +348,23 @@ export default function Discover() {
         return isSaved(itemType, itemId);
       }
 
-      // Category filter
+      // Family + sub-type filter (unified taxonomy)
       if (selectedCategory !== 'all') {
-        if (!itemMatchesProductCategory(item, selectedCategory)) return false;
+        const data = item.data as any;
+        if (
+          !itemMatchesDiscoverFilter(
+            { category: data.category, subcategory: data.subcategory, discover_categories: data.discover_categories },
+            selectedCategory,
+            selectedSubcategory,
+          )
+        ) {
+          return false;
+        }
       }
 
       return true;
     });
-  }, [allItems, selectedCategory, similarTo, isSaved, savedItems]);
+  }, [allItems, selectedCategory, selectedSubcategory, similarTo, isSaved, savedItems]);
 
   // Sort: featured items first → user-family bucket index → date DESC.
   // The user's onboarding families and sub-types take priority on the "All" tab.
@@ -375,14 +374,11 @@ export default function Discover() {
       return d ? new Date(d).getTime() : 0;
     };
 
-    // Build ordered list of discover category ids matching the user's families
+    // Family ids = onboarding family ids = discover category ids (unified).
     const userDiscoverCats: string[] = [];
-    const seen = new Set<string>();
+    const seenFam = new Set<string>();
     for (const famId of userPrefs.families) {
-      const mapped = FAM_TO_DISC[famId] ?? [];
-      for (const c of mapped) {
-        if (!seen.has(c)) { seen.add(c); userDiscoverCats.push(c); }
-      }
+      if (!seenFam.has(famId)) { seenFam.add(famId); userDiscoverCats.push(famId); }
     }
     const subtypeSet = new Set(userPrefs.subtypes.map(s => s.toLowerCase()));
     const useForYouOrder = selectedCategory === 'all' && userDiscoverCats.length > 0;
@@ -400,8 +396,8 @@ export default function Discover() {
 
     const subtypeRank = (item: DiscoverItem): number => {
       if (!useForYouOrder || subtypeSet.size === 0) return 1;
-      const cat = (getItemCategory(item) ?? '').toLowerCase();
-      return subtypeSet.has(cat) ? 0 : 1;
+      const sub = ((item.data as any).subcategory ?? '').toLowerCase();
+      return sub && subtypeSet.has(sub) ? 0 : 1;
     };
 
     return [...filtered].sort((a, b) => {
@@ -533,14 +529,24 @@ export default function Discover() {
       )}
 
       {/* Category filter bar + grid (tight grouping) */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {!similarTo && (
-          <DiscoverCategoryBar
-            categories={CATEGORIES}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-            savedCount={savedCount}
-          />
+          <>
+            <DiscoverCategoryBar
+              categories={CATEGORIES}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              savedCount={savedCount}
+            />
+            {selectedCategory !== 'all' && selectedCategory !== 'saved' && isMultiSubFamily(selectedCategory) && (
+              <DiscoverSubCategoryBar
+                familyLabel={CATEGORIES.find((c) => c.id === selectedCategory)?.label ?? ''}
+                subcategories={getDiscoverSubtypes(selectedCategory).map((s) => ({ id: s.slug, label: s.label }))}
+                selectedSubcategory={selectedSubcategory}
+                onSelectSubcategory={setSelectedSubcategory}
+              />
+            )}
+          </>
         )}
 
       {/* Masonry grid */}
