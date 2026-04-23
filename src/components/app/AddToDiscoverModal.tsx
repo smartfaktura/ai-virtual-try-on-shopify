@@ -564,11 +564,23 @@ export function AddToDiscoverModal({
                 </PopoverContent>
               </Popover>
               {sceneIsMissing && (
-                <div className="flex items-start gap-1.5 mt-1 px-1">
-                  <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-destructive leading-tight">
-                    No scene detected. Pick one so Recreate works.
-                  </p>
+                <div className="mt-1 px-1 space-y-1.5">
+                  <div className="flex items-start gap-1.5">
+                    <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-destructive leading-tight">
+                      No scene detected. Pick one so Recreate works.
+                    </p>
+                  </div>
+                  {aiSuggestedScene && (
+                    <button
+                      type="button"
+                      onClick={() => setPickedSceneName(aiSuggestedScene)}
+                      className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-medium transition-colors"
+                    >
+                      <Sparkles className="w-2.5 h-2.5" />
+                      Apply AI suggestion: "{aiSuggestedScene}"
+                    </button>
+                  )}
                 </div>
               )}
             </div>
