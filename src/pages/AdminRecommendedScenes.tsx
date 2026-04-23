@@ -479,7 +479,7 @@ export default function AdminRecommendedScenes() {
                 <div key={rec.id} className="relative group rounded-lg overflow-hidden border border-border bg-card">
                   {scene.preview_image_url ? (
                     <ShimmerImage
-                       src={getOptimizedUrl(scene.preview_image_url, { width: 320, quality: 60 })}
+                       src={getOptimizedUrl(scene.preview_image_url, { quality: 60 })}
                       alt={scene.title}
                       className="w-full aspect-[4/5] object-cover"
                       wrapperClassName="h-auto"
@@ -692,7 +692,7 @@ export default function AdminRecommendedScenes() {
                     >
                       {scene.preview_image_url ? (
                         <ShimmerImage
-                           src={getOptimizedUrl(scene.preview_image_url, { width: 320, quality: 60 })}
+                           src={getOptimizedUrl(scene.preview_image_url, { quality: 60 })}
                           alt={scene.title}
                           className="w-full aspect-[4/5] object-cover"
                           wrapperClassName="h-auto"
