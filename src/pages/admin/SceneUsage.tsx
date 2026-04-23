@@ -200,15 +200,12 @@ export default function SceneUsage() {
     setRisersLoading(true);
     setRisersFailed(false);
 
-    // 1) Main popularity — unblocks the table + main KPIs
+    // 1) Main popularity — unblocks the table + main KPIs (paged to bypass 1000-row cap)
     (async () => {
       try {
-        const popRes = await supabase
-          .rpc('get_scene_popularity' as any, { p_days: windowDays })
-          .range(0, 9999);
-        if (popRes.error) throw popRes.error;
+        const all = await fetchAllScenePopularity(windowDays);
         if (cancelled) return;
-        setRows((popRes.data ?? []) as PopularityRow[]);
+        setRows(all);
       } catch (err: any) {
         console.error('[SceneUsage] main popularity failed', err);
         if (!cancelled) {
