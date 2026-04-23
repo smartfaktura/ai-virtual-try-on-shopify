@@ -457,7 +457,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-20 overflow-x-clip max-w-full">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">Select shots</h2>
         <div className="flex items-center gap-2">
@@ -495,17 +495,20 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
       {/* From Explore — only when user arrived via Discover Recreate */}
       {resolvedDiscoverScene && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
-            <span>✨</span> From Explore
+        <div className="space-y-2 max-w-full">
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wide">
+            From Explore
           </h3>
-          <div className={`grid ${gridClass} gap-2`}>
+          <div className={`grid ${gridClass} gap-2 max-w-full`}>
             <SceneCard
               scene={resolvedDiscoverScene}
               selected={selectedSceneIds.has(resolvedDiscoverScene.id)}
               onToggle={() => toggleScene(resolvedDiscoverScene.id)}
             />
           </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Pre-selected from Explore. Add more shots below to get a richer set of visuals.
+          </p>
         </div>
       )}
 
