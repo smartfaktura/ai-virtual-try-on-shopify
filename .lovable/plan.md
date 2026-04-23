@@ -1,113 +1,96 @@
 
 
-## Fix: Recommended rail in `/app/freestyle` cuts off at 12 even when multiple sub-categories are curated
+## Fix: Sub-family pill should hide legacy untagged items once any item in that family is tagged
 
 ### Root cause
 
-In `src/hooks/useRecommendedScenes.ts` the rail is hard-capped at `MAX = 12`:
+Two compounding bugs in the Activewear sub-pill view:
 
-```ts
-const MAX = 12;
-const ingest = (rows) => {
-  for (const row of rows) {
-    if (orderedSceneIds.length >= MAX) break;   // ← stops here
-    …
-  }
-};
-```
+**1. Legacy fallback over-matches.** `itemMatchesDiscoverFilter` (in `src/lib/discoverTaxonomy.ts`, lines 103–106) currently says: *"if an item has no `subcategory`, surface it under any sub-pill within its family"*. This was added to avoid hiding old data, but it means clicking *Activewear* still shows all 92 fashion items that have `subcategory=NULL` — drowning the one item you actually tagged (`Pilates Studio Glow`).
 
-You picked **Clothing** *and* **Hoodies** in onboarding. Each has 12 curated scenes in `recommended_scenes`. PASS 1 iterates sub-categories in order:
+**2. Featured pin amplifies it.** Featured items sort to the top regardless of the active filter. 9 of the currently-featured Fashion items have `subcategory=NULL`, so they pass the legacy fallback and pin above your single tagged Activewear item — pushing it off the first screen.
+
+### Verified data state
 
 ```text
-Clothing (garments) → ingest 12 → cap reached → break
-Hoodies            → never reached
+Fashion items total           : 93
+  └─ subcategory='activewear' : 1   ← "Pilates Studio Glow" (featured)
+  └─ subcategory=NULL         : 92  ← all surfacing under every sub-pill
+Featured Fashion items        : ~30, all subcategory=NULL except Pilates
 ```
 
-So you see Clothing's 12 and 0 of Hoodies'. That's the bug.
+So clicking *Activewear* today renders ~30 NULL-subcategory featured items first, then ~62 NULL items, with Pilates somewhere in the middle.
 
-### The fix — scale the cap to what's actually curated, and interleave sub-categories
+### The fix — make the legacy fallback **family-scoped, not sub-pill-scoped**
 
-Two surgical changes inside `useRecommendedScenes.ts`. No DB change, no UI change.
+Change the rule to: *"NULL-subcategory items are visible in the family's `All` view, but **not** under specific sub-pills once that sub-pill is selected."*
 
-#### 1. Dynamic cap
+Once an admin starts tagging items (which you've now begun), users picking a specific sub-pill expect precise filtering. Untagged legacy items still appear under the family's *All* tab, so nothing is hidden globally.
 
-Replace the fixed `MAX = 12` with a per-user target that grows with the number of sub-categories the user picked:
+**File:** `src/lib/discoverTaxonomy.ts` — replace lines 103–106:
 
 ```ts
-const PER_BUCKET = 12;                 // curator's per-scope budget
-const HARD_CEILING = 60;               // safety so the rail never goes infinite
-const targetMax = Math.min(
-  HARD_CEILING,
-  Math.max(
-    PER_BUCKET,                        // always at least 12 (existing UX)
-    userSubcategories.length * PER_BUCKET,
-  ),
-);
+// Before
+if (sub) return sub === subFilter.toLowerCase();
+return true;  // legacy fallback — TOO PERMISSIVE
+
+// After
+return sub === subFilter.toLowerCase();
+// Items without a subcategory are only shown under the family's __all__ tab.
+// Admins can backfill via the Auto-classify button to surface them under sub-pills.
 ```
 
-Examples:
-- 0 sub-categories → 12 (today's behaviour, unchanged)
-- 1 sub-category → 12 (unchanged)
-- 2 sub-categories (Clothing + Hoodies) → **24**
-- 5 sub-categories → 60 (capped by ceiling)
+That's the entire functional change. The `__all__` path (line 101) is unchanged, so the family-wide *All* sub-pill keeps showing every item including untagged ones.
 
-#### 2. Round-robin sub-categories instead of draining one before the next
+### Behaviour after fix
 
-PASS 1 currently calls `ingest(list)` for the first sub-category until the cap is hit. Switch to a round-robin so the rail interleaves Clothing → Hoodies → Clothing → Hoodies …
+| Tab | Before | After |
+|---|---|---|
+| Fashion → All | 93 items (correct) | 93 items (unchanged) |
+| Fashion → Activewear | 93 items, Pilates buried | **1 item: Pilates Studio Glow** |
+| Fashion → Clothing | 93 items | 0 items (until you tag some) |
+| Fashion → Hoodies | 93 items | 0 items (until you tag some) |
 
-```ts
-// PASS 1: sub-category curated, round-robin
-if (userSubcategories.length) {
-  const perSubLists = await Promise.all(
-    userSubcategories.map(s => fetchRecForCategory(s)),
-  );
-  // Round-robin: take row 0 from each, then row 1 from each, …
-  const maxLen = Math.max(...perSubLists.map(l => l.length));
-  outer: for (let i = 0; i < maxLen; i++) {
-    for (const list of perSubLists) {
-      if (i >= list.length) continue;
-      if (orderedSceneIds.length >= targetMax) break outer;
-      const row = list[i];
-      if (!seen.has(row.scene_id)) {
-        seen.add(row.scene_id);
-        orderedSceneIds.push(row.scene_id);
-      }
-    }
-  }
-}
+Empty sub-pills are **the correct signal** — they tell you "this sub-family has no curated content yet, go tag some in admin or run Auto-classify."
+
+### Optional polish (recommended, ~10 lines)
+
+Add a friendly empty state when a sub-pill returns 0 results, so it doesn't look broken:
+
+**File:** `src/pages/Discover.tsx` — after the grid, before the modal:
+
+```tsx
+{sorted.length === 0 && selectedCategory !== 'all' && selectedSubcategory !== '__all__' && (
+  <div className="py-16 text-center text-muted-foreground text-sm">
+    No items tagged for this sub-family yet.
+    {isAdmin && ' Use Auto-classify or tag items individually in the admin drawer.'}
+  </div>
+)}
 ```
 
-PASS 2 (family curated), PASS 3 (Global), and PASS 4 (algorithmic) keep their existing logic but read the new `targetMax` instead of `MAX`. Final `.slice(0, targetMax)` replaces the existing `.slice(0, MAX)`.
-
-### Why this matches the platform model
-
-The recommended_scenes admin you just shipped lets curators tune **per-sub-family** (Clothing 12, Hoodies 12). The hook ought to honour that scoping by surfacing **all curated buckets the user actually maps to**, not just the first one alphabetically. Round-robin keeps the rail visually balanced — you'll see a mix of Clothing and Hoodies scenes from the very first row instead of 12 hoodies after 12 garments.
+Apply the same block to `src/pages/PublicDiscover.tsx` (without the admin hint) for parity.
 
 ### What does **not** change
 
-- `recommended_scenes` table, RLS, admin curation page — untouched.
-- `SceneCatalogModal.tsx` and the sidebar count badge — they read `recommended.data?.length` and will simply show the new larger number (e.g. "Recommended 24") automatically.
-- Family-level / Global / algorithmic fallback logic — still runs only if PASS 1 didn't fill `targetMax`.
-- Cache key (`['scene-recommended', userId]`) and 10-min stale time — unchanged.
+- DB schema, RLS, the new `subcategory` column, the backfill edge function — untouched.
+- Featured-items pinning logic — featured items still sort first, but **only among items that pass the filter**, so Pilates (the only featured-Activewear item) becomes the #1 card under Activewear.
+- The `__all__` family view (Fashion → All) keeps the existing inclusive behaviour — no regression for untagged content.
+- Sub-pill row, family pill row, sort order, "For you" personalization — untouched.
 
 ### Validation
 
-1. As a user with `product_subcategories = ['garments', 'hoodies']`:
-   - Open `/app/freestyle` → click **Recommended** in the left rail.
-   - Sidebar count reads **24** (was 12).
-   - Grid renders 24 scenes, **interleaved** Clothing/Hoodies, not all-Clothing-then-Hoodies.
-2. As a user with only `['garments']` → Recommended shows 12 (unchanged).
-3. As a user with no sub-categories but family = `fashion` → Recommended shows 12 from fashion family curation (unchanged).
-4. As a user with 5 sub-categories all curated → Recommended shows up to 60, round-robin interleaved.
-5. Add a 13th `recommended_scenes` row for `garments` in admin → still capped at 12 *per bucket* (the per-bucket fetch already `.limit(MAX)` = 12), so the dynamic cap stays correct.
+1. `/app/discover` → **Fashion** → **All** → still ~93 items, featured pinned (unchanged).
+2. `/app/discover` → **Fashion** → **Activewear** → **only "Pilates Studio Glow" appears** (currently buried).
+3. `/app/discover` → **Fashion** → **Clothing** → empty state: *"No items tagged for this sub-family yet…"*
+4. Tag any Fashion item as Clothing in the admin drawer → it appears immediately under the Clothing pill.
+5. `/discover` (public) → same behaviour, no admin hint in empty state.
+6. Run **Auto-classify sub-family** → previously-empty sub-pills populate as items get tagged automatically.
 
 ### Files touched
 
 ```text
-EDIT  src/hooks/useRecommendedScenes.ts
-        - Replace const MAX = 12 with PER_BUCKET / HARD_CEILING / targetMax
-        - PASS 1: replace sequential ingest with round-robin loop
-        - PASS 2/3/4: read targetMax instead of MAX
-        - Final slice uses targetMax
+EDIT  src/lib/discoverTaxonomy.ts   (3 lines — remove legacy NULL fallback)
+EDIT  src/pages/Discover.tsx        (~6 lines — empty state)
+EDIT  src/pages/PublicDiscover.tsx  (~4 lines — empty state, no admin hint)
 ```
 
