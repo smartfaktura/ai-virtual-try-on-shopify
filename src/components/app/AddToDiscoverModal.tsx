@@ -137,6 +137,18 @@ export function AddToDiscoverModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
+  // When workflow changes, drop a previously-picked scene that doesn't exist
+  // in the new workflow's library (product-images vs custom_scenes are disjoint).
+  useEffect(() => {
+    if (!pickedSceneName) return;
+    const stillValid = workflowScenes.some(s => s.name === pickedSceneName);
+    if (!stillValid) {
+      setPickedSceneName(null);
+      setAiSuggestedScene(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickedWorkflowSlug]);
+
   // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks)
   const initialSceneName = useMemo(() => {
     if (sceneName) return sceneName;
