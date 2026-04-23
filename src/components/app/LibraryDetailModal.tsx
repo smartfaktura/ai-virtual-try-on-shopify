@@ -76,14 +76,22 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   }, [hasMultiple, items, currentIndex, item]);
 
   const goPrev = useCallback(() => {
-    if (!hasMultiple) return;
-    setCurrentIndex(i => (i > 0 ? i - 1 : items.length - 1));
-  }, [hasMultiple, items?.length]);
+    if (!hasMultiple || !items?.length) return;
+    const i = items.findIndex(x => x.id === activeItem?.id);
+    const safeI = i >= 0 ? i : 0;
+    const next = safeI > 0 ? items[safeI - 1] : items[items.length - 1];
+    if (onNavigate) onNavigate(next);
+    else setCurrentIndex(safeI > 0 ? safeI - 1 : items.length - 1);
+  }, [hasMultiple, items, activeItem?.id, onNavigate]);
 
   const goNext = useCallback(() => {
-    if (!hasMultiple) return;
-    setCurrentIndex(i => (i < items.length - 1 ? i + 1 : 0));
-  }, [hasMultiple, items?.length]);
+    if (!hasMultiple || !items?.length) return;
+    const i = items.findIndex(x => x.id === activeItem?.id);
+    const safeI = i >= 0 ? i : 0;
+    const next = safeI < items.length - 1 ? items[safeI + 1] : items[0];
+    if (onNavigate) onNavigate(next);
+    else setCurrentIndex(safeI < items.length - 1 ? safeI + 1 : 0);
+  }, [hasMultiple, items, activeItem?.id, onNavigate]);
 
   // Reset prompt expanded when item changes
   useEffect(() => { setPromptExpanded(false); }, [activeItem?.id]);
