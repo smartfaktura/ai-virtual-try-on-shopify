@@ -22,6 +22,7 @@ import { useSavedItems } from '@/hooks/useSavedItems';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeaturedItems, useToggleFeatured } from '@/hooks/useFeaturedItems';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useRecommendedDiscoverItems } from '@/hooks/useRecommendedDiscoverItems';
 import { useAdminSubmissions } from '@/hooks/useDiscoverSubmissions';
 import { AdminSubmissionsPanel } from '@/components/app/AdminSubmissionsPanel';
 import { mockTryOnPoses } from '@/data/mockData';
@@ -276,15 +277,17 @@ export default function Discover() {
 
   const savedCount = savedItems.length;
 
+  const { data: recommendedPoses = [] } = useRecommendedDiscoverItems({ mode: 'auth' });
+
   // Build unified feed — deduplicate scenes that have been promoted to presets
   const allItems = useMemo<DiscoverItem[]>(() => {
     const presetItems: DiscoverItem[] = presets.map((p) => ({ type: 'preset', data: p }));
     const presetTitles = new Set(presets.map((p) => p.title));
-    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses]
+    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses, ...recommendedPoses]
       .filter((s) => !presetTitles.has(s.name))
       .map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
-  }, [presets, customScenePoses]);
+  }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
   // Read ?similar= param from Dashboard's "Similar" button
   const location = useLocation();

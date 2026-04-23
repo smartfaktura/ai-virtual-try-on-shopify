@@ -12,6 +12,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import { mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useRecommendedDiscoverItems } from '@/hooks/useRecommendedDiscoverItems';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { PublicDiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
@@ -125,6 +126,7 @@ export default function PublicDiscover() {
   });
 
   const customScenePoses = useMemo(() => customScenes.map(toTryOnPose), [customScenes]);
+  const { data: recommendedPoses = [] } = useRecommendedDiscoverItems({ mode: 'public' });
 
   // Track views when modal opens (deduplicated per session)
   const viewedItemsRef = useRef<Set<string>>(new Set());
@@ -158,11 +160,11 @@ export default function PublicDiscover() {
   const allItems = useMemo<DiscoverItem[]>(() => {
     const presetItems: DiscoverItem[] = presets.map((p) => ({ type: 'preset', data: p }));
     const presetTitles = new Set(presets.map((p) => p.title));
-    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses]
+    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses, ...recommendedPoses]
       .filter((s) => !presetTitles.has(s.name))
       .map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
-  }, [presets, customScenePoses]);
+  }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
   // Auto-open item from URL param (supports slug, UUID, and scene- prefix)
   useEffect(() => {
