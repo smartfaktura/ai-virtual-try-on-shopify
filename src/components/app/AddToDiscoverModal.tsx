@@ -22,6 +22,127 @@ import {
 
 const FAMILIES = getDiscoverFamilies();
 
+// Map product_type tokens (from analyze-product-category) → product_image_scenes.category_collection.
+// Used to disambiguate scene title collisions when scene_id is missing on legacy generation_jobs rows.
+const PRODUCT_TYPE_TO_COLLECTION: Record<string, string> = {
+  // Wallets / cardholders
+  wallet: 'wallets-cardholders',
+  cardholder: 'wallets-cardholders',
+  'card-holder': 'wallets-cardholders',
+  purse: 'wallets-cardholders',
+  // Bags & accessories
+  bag: 'bags-accessories',
+  handbag: 'bags-accessories',
+  tote: 'bags-accessories',
+  clutch: 'bags-accessories',
+  crossbody: 'bags-accessories',
+  backpack: 'backpacks',
+  // Footwear
+  shoe: 'shoes',
+  shoes: 'shoes',
+  sneaker: 'sneakers',
+  sneakers: 'sneakers',
+  boot: 'boots',
+  boots: 'boots',
+  heel: 'high-heels',
+  heels: 'high-heels',
+  'high-heels': 'high-heels',
+  // Apparel
+  garment: 'garments',
+  clothing: 'garments',
+  apparel: 'garments',
+  dress: 'dresses',
+  hoodie: 'hoodies',
+  jeans: 'jeans',
+  jacket: 'jackets',
+  activewear: 'activewear',
+  swimwear: 'swimwear',
+  lingerie: 'lingerie',
+  kidswear: 'kidswear',
+  streetwear: 'streetwear',
+  // Accessories
+  belt: 'belts',
+  scarf: 'scarves',
+  hat: 'hats-small',
+  // Jewellery
+  necklace: 'jewellery-necklaces',
+  earring: 'jewellery-earrings',
+  earrings: 'jewellery-earrings',
+  bracelet: 'jewellery-bracelets',
+  ring: 'jewellery-rings',
+  watch: 'watches',
+  eyewear: 'eyewear',
+  sunglasses: 'eyewear',
+  glasses: 'eyewear',
+  // Beauty
+  fragrance: 'fragrance',
+  perfume: 'fragrance',
+  cologne: 'fragrance',
+  beauty: 'beauty-skincare',
+  skincare: 'beauty-skincare',
+  makeup: 'makeup-lipsticks',
+  lipstick: 'makeup-lipsticks',
+  // Home / tech / consumables
+  furniture: 'furniture',
+  'home-decor': 'home-decor',
+  decor: 'home-decor',
+  tech: 'tech-devices',
+  device: 'tech-devices',
+  electronics: 'tech-devices',
+  food: 'food',
+  snack: 'food',
+  beverage: 'beverages',
+  drink: 'beverages',
+  supplement: 'supplements-wellness',
+  wellness: 'supplements-wellness',
+};
+
+function normalizeProductTypeToken(productType?: string | null): string | null {
+  if (!productType) return null;
+  const t = productType.toLowerCase().trim();
+  if (PRODUCT_TYPE_TO_COLLECTION[t]) return PRODUCT_TYPE_TO_COLLECTION[t];
+  // Try matching individual words / partial tokens
+  for (const key of Object.keys(PRODUCT_TYPE_TO_COLLECTION)) {
+    if (t.includes(key)) return PRODUCT_TYPE_TO_COLLECTION[key];
+  }
+  return null;
+}
+
+/** Resolve the most-likely scene_id for a given title + product type by querying product_image_scenes. */
+async function resolveSceneRefByTitleAndCategory(
+  sceneTitle: string,
+  productType?: string | null,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('product_image_scenes' as any)
+      .select('scene_id, category_collection')
+      .eq('title', sceneTitle)
+      .eq('is_active', true);
+    if (error || !data || (data as any[]).length === 0) return null;
+    const rows = (data as unknown) as Array<{ scene_id: string; category_collection: string | null }>;
+    if (rows.length === 1) return rows[0].scene_id;
+
+    const targetCollection = normalizeProductTypeToken(productType);
+    if (targetCollection) {
+      const match = rows.find(r => r.category_collection === targetCollection);
+      if (match) return match.scene_id;
+    }
+
+    // Fallback: stable default — pick the lowest-numbered variant
+    // (e.g. "botanical-oasis" before "botanical-oasis-10").
+    const sorted = [...rows].sort((a, b) => {
+      const numA = parseInt(a.scene_id.match(/-(\d+)$/)?.[1] ?? '0', 10);
+      const numB = parseInt(b.scene_id.match(/-(\d+)$/)?.[1] ?? '0', 10);
+      return numA - numB;
+    });
+    return sorted[0].scene_id;
+  } catch (err) {
+    console.warn('resolveSceneRefByTitleAndCategory failed', err);
+    return null;
+  }
+}
+
 interface AddToDiscoverModalProps {
   open: boolean;
   onClose: () => void;
@@ -75,6 +196,7 @@ export function AddToDiscoverModal({
   const [pickedModelName, setPickedModelName] = useState<string | null>(null);
   const [pickedWorkflowSlug, setPickedWorkflowSlug] = useState<string | null>(null);
   const [aiSuggestedScene, setAiSuggestedScene] = useState<string | null>(null);
+  const [resolvedSceneRef, setResolvedSceneRef] = useState<string | null>(null);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [workflowPopoverOpen, setWorkflowPopoverOpen] = useState(false);
@@ -185,6 +307,12 @@ export function AddToDiscoverModal({
     setPickedModelName(initialModelName);
     setPickedWorkflowSlug(workflowSlug ?? null);
     setAiSuggestedScene(null);
+    setResolvedSceneRef(null);
+
+    // Seed resolvedSceneRef from the prop sceneId if it's a real product_image_scenes ref.
+    if (sceneId && !sceneId.startsWith('custom-') && !mockTryOnPoses.find(p => p.poseId === sceneId)) {
+      setResolvedSceneRef(sceneId);
+    }
 
     let cancelled = false;
 
@@ -195,11 +323,14 @@ export function AddToDiscoverModal({
       let resolvedModelName = initialModelName;
       let resolvedWorkflowSlug = workflowSlug ?? null;
 
-      if (sourceGenerationId && (!resolvedSceneName || !resolvedModelName || !resolvedWorkflowSlug)) {
+      let resolvedProductType: string | null = null;
+      let resolvedSceneIdFromJob: string | null = null;
+
+      if (sourceGenerationId) {
         try {
           const { data } = await supabase
             .from('generation_jobs')
-            .select('scene_name, scene_id, scene_image_url, model_name, model_image_url, workflow_slug')
+            .select('scene_name, scene_id, scene_image_url, model_name, model_image_url, workflow_slug, user_products(product_type)')
             .eq('id', sourceGenerationId)
             .maybeSingle();
           if (!cancelled && data) {
@@ -215,11 +346,28 @@ export function AddToDiscoverModal({
               resolvedWorkflowSlug = data.workflow_slug;
               setPickedWorkflowSlug(data.workflow_slug);
             }
+            if ((data as any).scene_id) {
+              resolvedSceneIdFromJob = (data as any).scene_id;
+              setResolvedSceneRef((data as any).scene_id);
+            }
+            const up = (data as any).user_products;
+            const pt = Array.isArray(up) ? up[0]?.product_type : up?.product_type;
+            if (pt) resolvedProductType = pt;
           }
         } catch (err) {
           console.warn('AddToDiscover: generation_jobs lookup failed', err);
         }
         if (cancelled) return;
+      }
+
+      // Title + category resolver — for legacy product-images jobs where scene_id is null
+      // but scene_name exists. Disambiguates collisions by product category.
+      const isProductImagesFlow = (resolvedWorkflowSlug === 'product-images');
+      if (isProductImagesFlow && resolvedSceneName && !resolvedSceneIdFromJob && !resolvedSceneRef) {
+        const ref = await resolveSceneRefByTitleAndCategory(resolvedSceneName, resolvedProductType);
+        if (!cancelled && ref) {
+          setResolvedSceneRef(ref);
+        }
       }
 
       // If scene is STILL missing after DB fallback, ask AI to suggest one
@@ -352,10 +500,11 @@ export function AddToDiscoverModal({
     // so the wizard can resolve it deterministically. Prefer the authoritative
     // scene_id passed in from the source generation (exact ref the wizard used);
     // fall back to the picker's scene_ref (matched by title — may collide).
-    const authoritativeSceneRef =
+    const propSceneRef =
       sceneId && !sceneId.startsWith('custom-') && !mockTryOnPoses.find(p => p.poseId === sceneId)
         ? sceneId
         : null;
+    const authoritativeSceneRef = propSceneRef ?? resolvedSceneRef;
     const sceneRefToWrite =
       pickedWorkflow?.slug === 'product-images'
         ? (authoritativeSceneRef ?? pickedScene?.sceneRef ?? null)
