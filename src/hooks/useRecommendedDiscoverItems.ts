@@ -56,7 +56,7 @@ export function useRecommendedDiscoverItems(opts: { mode: 'auth' | 'public' } = 
         const { data, error } = await supabase.rpc('get_public_recommended_scenes');
         if (error) throw error;
         const rows = (data as any[]) ?? [];
-        return rows.map(mapRow);
+        return disambiguateTitles(rows.map(mapRow));
       }
 
       // Authenticated path: read both tables (RLS already allows it)
@@ -90,9 +90,36 @@ export function useRecommendedDiscoverItems(opts: { mode: 'auth' | 'public' } = 
         if (!scene || !scene.preview_image_url) continue;
         out.push(buildPose(scene, rec.created_at));
       }
-      return out;
+      return disambiguateTitles(out);
     },
   });
+}
+
+/**
+ * When multiple recommended scenes share the same title across different
+ * sub-categories (e.g. "Worn Portrait" exists for eyewear, hats, watches),
+ * append " — {SubFamilyLabel}" to the display name only. The DB row,
+ * scene_ref, and subcategory mapping stay untouched.
+ */
+function disambiguateTitles(poses: RecommendedDiscoverPose[]): RecommendedDiscoverPose[] {
+  const groups = new Map<string, RecommendedDiscoverPose[]>();
+  for (const p of poses) {
+    const key = p.name.trim().toLowerCase();
+    const arr = groups.get(key) ?? [];
+    arr.push(p);
+    groups.set(key, arr);
+  }
+  for (const arr of groups.values()) {
+    if (arr.length < 2) continue;
+    const distinctSubs = new Set(arr.map((p) => p.subcategory ?? '').filter(Boolean));
+    if (distinctSubs.size < 2) continue;
+    for (const p of arr) {
+      if (!p.subcategory) continue;
+      const label = getSubFamilyLabel(p.subcategory);
+      if (label) p.name = `${p.name} — ${label}`;
+    }
+  }
+  return poses;
 }
 
 function mapRow(row: any): RecommendedDiscoverPose {
