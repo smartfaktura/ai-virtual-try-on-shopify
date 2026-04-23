@@ -15,12 +15,12 @@ export function ProductContextStrip({ products, onChangeProducts }: ProductConte
 
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-muted/50 border border-border/60">
+      <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-muted/50 border border-border/60 min-w-0 max-w-full overflow-hidden">
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <span className="text-xs font-semibold text-muted-foreground">Products</span>
           <span className="text-xs font-bold text-foreground bg-primary/10 rounded-full w-5 h-5 flex items-center justify-center">{products.length}</span>
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none min-w-0 flex-1">
           {products.slice(0, 12).map(p => (
             <Tooltip key={p.id}>
               <TooltipTrigger asChild>

@@ -39,8 +39,8 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
   const showGenIcon = step === 4;
 
   return (
-    <div className="sticky bottom-4 z-10">
-      <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+    <div className="sticky bottom-4 z-10 max-w-full min-w-0 overflow-hidden">
+      <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
         {/* Mobile: stacked layout */}
         <div className="flex flex-col gap-2 p-2 sm:hidden">
           <div className="flex items-center justify-between">
