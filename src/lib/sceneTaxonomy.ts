@@ -28,6 +28,7 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
   'bags-accessories': 'Bags & Accessories',
   backpacks: 'Bags & Accessories',
   'wallets-cardholders': 'Bags & Accessories',
+  wallets: 'Bags & Accessories',
   belts: 'Bags & Accessories',
   scarves: 'Bags & Accessories',
   'hats-small': 'Bags & Accessories',
