@@ -1,81 +1,52 @@
 
 
-## Pre-select Discover shot in Product Images — minimal, isolated
+## Polish corner radii & sizing in `/app/generate/product-images`
 
-### What this does
-When a user clicks **Recreate** on a Product Images Discover preset, they land in `/app/generate/product-images?scene=<Title>`. They pick products as normal (Step 1, untouched). In Step 2, a new **From Explore** section renders directly above Recommended, containing just the one scene that came from Discover, auto-selected so the wizard can advance with it.
+### 1. Step 1 — Search bar + Select All / Clear (in `ProductMultiSelect.tsx`)
 
-That's it. No category matching against products. No variant resolution. No fallback banners. No changes to Recommended or Explore More.
+Both inputs and buttons should match the rest of the platform (e.g. freestyle scene search): pill-shaped, `h-10`, slightly larger and consistent.
 
-### Behaviour
+- **Search Input**: add `className="pl-9 h-10 rounded-full text-sm"` (currently default `rounded-lg`, no explicit height).
+- **Select All button**: change `size="sm"` → `size="default"` (default is `h-10 rounded-full`).
+- **Clear button**: same change → `size="default"`.
 
-| Entry | From Explore section | Rest of wizard |
-|---|---|---|
-| Discover Recreate (`?scene=` resolves to a `product_image_scenes` row) | Renders above Recommended, scene auto-selected | Untouched |
-| Discover Recreate (`?scene=` doesn't resolve — rare) | Hidden, silent `console.warn` | Untouched |
-| Normal entry to Product Images | Hidden | Untouched |
+Result: search bar and both buttons share the same `h-10` height and `rounded-full` corners — visually balanced row.
 
-### Scene resolution (deliberately simple)
-- Read `?scene=<Title>` from URL via `useSearchParams`.
-- `allScenes.find(s => s.title.trim().toLowerCase() === title.trim().toLowerCase())` — first match wins, no category logic, no variant scoring.
-- If found → stash `{ sceneId, title }` in component state, clear `?scene=` from URL with `replace: true`.
-- If not found → `console.warn`, store nothing, section hides.
+### 2. Step 2 — Category placeholders corner radius (in `ProductImagesStep2Scenes.tsx`)
 
-### Step 2 rendering
-```text
-{discoverScene && (
-  <section>
-    <SectionHeader>From Explore</SectionHeader>
-    <SceneCard scene={resolvedScene}
-               selected={selectedSceneIds.has(scene.id)}
-               onClick={toggleScene} />
-  </section>
-)}
-<RecommendedSection ... />   // untouched
-<ExploreMoreSection ... />   // untouched
-```
+The Recommended category headers, Explore More 2-column trigger rows, and uncategorized rows currently use `rounded-lg`. Other prominent placeholder cards across the app (WorkflowCard, ModelFilterBar, etc.) use `rounded-xl` for a softer, more premium feel.
 
-Auto-add effect (idempotent via `useRef`):
-```ts
-useEffect(() => {
-  if (!discoverScene?.sceneId) return;
-  if (autoAddedRef.current === discoverScene.sceneId) return;
-  setSelectedSceneIds(prev => new Set(prev).add(discoverScene.sceneId));
-  autoAddedRef.current = discoverScene.sceneId;
-}, [discoverScene?.sceneId]);
-```
+Change `rounded-lg` → `rounded-xl` in three places:
+- `UnifiedCategorySectionWithSelectAll` header trigger (around line 788–792).
+- `CategoryRowTrigger` button (line 653).
+- (Verify no other category row uses `rounded-lg` — fix any sibling that does for consistency.)
 
-### Files touched
+The `SceneCard` keeps its existing `rounded-xl` (already correct).
+
+### 3. Files touched
 
 ```text
-EDIT  src/pages/ProductImages.tsx
-        + read ?scene from URL once on mount
-        + resolve title → scene_id by exact title match in allScenes
-        + stash discoverScene state, clear URL param (replace:true)
-        + pass discoverScene prop into Step 2
+EDIT  src/components/app/ProductMultiSelect.tsx
+        - Input: pl-9 → "pl-9 h-10 rounded-full text-sm"
+        - Select All: size="sm" → size="default"
+        - Clear:      size="sm" → size="default"
 
 EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx
-        + accept optional discoverScene prop
-        + render <FromExploreSection> above Recommended when present
-        + auto-add sceneId to selectedSceneIds (useRef-gated)
+        - UnifiedCategorySectionWithSelectAll header: rounded-lg → rounded-xl
+        - CategoryRowTrigger:                         rounded-lg → rounded-xl
 ```
 
-No DB changes. No edge functions. No changes to product analysis, Recommended, Explore More, scene categories, ratios, quality, or any other wizard logic.
+### 4. Safety & performance
 
-### Safety & performance
-- Recommended / Explore More render paths: zero edits.
-- Resolver is one `Array.find` over already-loaded scenes (~200 items, <1 ms).
-- No new network calls, no realtime, no polling.
-- `useRef` gate prevents duplicate auto-adds across re-renders / back-forward.
-- URL param cleared after consumption → no replay loops.
-- Section is conditional → normal entries to Product Images render identically to today.
-- All null branches handled silently — wizard never crashes if title doesn't resolve.
+- Pure className changes. Zero logic, state, queries, or DB changes.
+- No new components, no new imports.
+- Existing keyboard focus rings, hover states, selected states all preserved (Tailwind classes additive).
+- No risk to wizard flow or scene selection.
 
-### Validation
-1. Recreate a PI Discover preset → Step 1 (pick any product) → Step 2 shows **From Explore** on top with the scene selected; Recommended and Explore More render unchanged below.
-2. Open `/app/generate/product-images` directly → no From Explore section, identical to today.
-3. Recreate → Step 2 → Back → forward → no duplicate auto-add.
-4. Recreate a freestyle preset → still routes to freestyle, Product Images untouched.
-5. Recreate a PI preset whose scene title was deleted from `product_image_scenes` → section hidden, console warning, wizard works normally.
-6. User can deselect the From Explore scene; wizard proceeds with whatever they choose.
+### 5. Validation
+
+1. Step 1: search bar, Select All, Clear all render at `h-10` with pill corners — visually identical row.
+2. Step 2: category cards (Shoes, Hoodies, Clothing & Apparel, Dresses, etc.) show softer `rounded-xl` corners matching other platform cards.
+3. Hover, selected, and expanded states still render correctly.
+4. Mobile + desktop layouts unchanged.
 
