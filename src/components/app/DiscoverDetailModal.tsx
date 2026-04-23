@@ -826,6 +826,8 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                   if (sceneTitle) params.set('scene', sceneTitle);
                   const sceneImg = d.previewUrl || d.scene_image_url || d.image_url;
                   if (sceneImg) params.set('sceneImage', sceneImg);
+                  // Pass origin category as a disambiguation hint for the resolver
+                  if (d.category) params.set('sceneCategory', d.category);
                   params.set('fromDiscover', '1');
                   navigate(`/app/generate/product-images?${params.toString()}`);
                   return;
