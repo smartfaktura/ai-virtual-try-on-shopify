@@ -790,7 +790,7 @@ export function AddToDiscoverModal({
       <SceneBrowserModal
         open={sceneBrowserOpen}
         onClose={() => setSceneBrowserOpen(false)}
-        scenes={allScenes}
+        scenes={workflowScenes}
         value={pickedSceneName}
         onSelect={(s) => { setPickedSceneName(s.name); setSceneBrowserOpen(false); }}
       />
