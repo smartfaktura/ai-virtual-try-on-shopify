@@ -81,10 +81,8 @@ function ContentPreferencesSection() {
   const toggleSub = (slug: string) =>
     setSubs((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
 
-  // Lazy-import to avoid circular paths in test envs
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { SUB_TYPES_BY_FAMILY, getMultiSubFamilies, getSingleSubFamilies, getAutoIncludedSlugs, resolveFamilyNames, cleanSubs } =
-    require('@/lib/onboardingTaxonomy') as typeof import('@/lib/onboardingTaxonomy');
+
+
 
   const familyNames = resolveFamilyNames(cats);
   const multiSubFamilies = getMultiSubFamilies(familyNames);
