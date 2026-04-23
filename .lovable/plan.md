@@ -1,54 +1,29 @@
 
 
-## Polish "From Explore" section
+## Polish the explainer card
 
-### Two fixes
+Three small refinements to the "Picked for your product" card in `src/components/app/product-images/ProductImagesStep2Scenes.tsx`:
 
-**1. Header now matches CREATIVE SHOTS exactly**
+**1. Bigger, more breathable text**
+- Title "Picked for your product": `text-[11px]` → `text-sm font-semibold`
+- Subtitle "From your Explore pick": `text-[10px]` → `text-xs text-muted-foreground`
+- Add `space-y-1.5` between avatar and text, plus a touch more vertical gap (`gap-3`) so the block breathes.
 
-Current "PRE-SELECTED FROM EXPLORE" uses `text-primary` (blue). Change to `text-muted-foreground` to match `SubGroupSection` (line 917). Same font size, weight, tracking — just neutral color so it reads as a section label, not a badge.
+**2. Swap Sparkles → Info icon**
+- Replace the corner `Sparkles` badge with `Info` from `lucide-react` (same `w-4 h-4`, same muted bubble) so it reads as an explainer, not a "magic" tag.
+- Update import line accordingly.
 
-**2. Explainer card matches SceneCard dimensions + adds a VOVV.AI avatar**
-
-Current explainer is `aspect-[4/5]` with no footer, so it's visibly shorter than `SceneCard` (which is `aspect-[3/4]` image **+** a `min-h-[44px]` footer with title). Mismatch = the bottom edges don't line up.
-
-Rebuild it to mirror SceneCard's exact two-part structure:
-- Top: `aspect-[3/4]` block, dashed border, soft `bg-muted/20`, with a small **VOVV.AI team avatar** (32px circle, `border-primary/20 ring-1 ring-primary/10`, picked from `TEAM_MEMBERS` in `@/data/teamData` — same source used by `CatalogGenerate.tsx`) + a `Sparkles` badge corner. Centered tagline: "Picked for your product".
-- Bottom: same `p-1.5 min-h-[44px]` footer block as SceneCard, holding "Add more shots below" in `text-[11px]` muted.
-
-Result: both cards share identical outer height, border radius, and footer rhythm — they sit flush on the same baseline.
+**3. Footer text bump**
+- "Add more shots below": `text-[11px]` → `text-xs` so it matches the new rhythm.
 
 ### File
 
 ```text
-EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx (lines 496–529)
-        - Change header color: text-primary → text-muted-foreground
-        - Rebuild explainer card to mirror SceneCard structure:
-            • aspect-[3/4] preview region (dashed border, muted bg)
-            • inside: VOVV avatar (TEAM_MEMBERS[0] or rotated) + Sparkles badge + tagline
-            • p-1.5 min-h-[44px] footer with "Add more shots below"
-        - Add import: TEAM_MEMBERS from '@/data/teamData'
-        - Add import: Avatar, AvatarImage, AvatarFallback from '@/components/ui/avatar'
-```
-
-### Visual result
-
-```text
-PRE-SELECTED FROM EXPLORE ─────────────────────────  1 selected
-┌──────────┐ ┌──────────┐
-│  Frozen  │ │ ╭──╮ ✨   │
-│   Aura   │ │ │👤│      │
-│  [scene] │ │ ╰──╯      │
-│          │ │ Picked   │
-│          │ │ for you  │
-├──────────┤ ├──────────┤
-│Frozen Aura│ │Add more… │
-└──────────┘ └──────────┘
-   exact same height, exact same footer rhythm
+EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx
+        - Replace Sparkles import → Info (keep other icon imports intact)
+        - Explainer card: bigger text, more spacing, Info icon in corner badge
 ```
 
 ### Out of scope
-
-- No data, routing, or selection-logic changes.
-- Other category sections untouched.
+- No changes to the actual SceneCard, header row, layout grid, or selection logic.
 
