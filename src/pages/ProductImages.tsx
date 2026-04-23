@@ -58,11 +58,35 @@ const PASTE_SHORTCUT = IS_MAC ? '⌘ V' : 'Ctrl + V';
 
 export default function ProductImages() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { balance, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
   const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds } = useProductAnalysis();
   const { allScenes } = useProductImageScenes();
+
+  // Discover Recreate: pre-select scene from ?scene=<Title>
+  const [discoverScene, setDiscoverScene] = useState<{ sceneId: string; title: string } | null>(null);
+  const discoverSceneConsumedRef = useRef(false);
+  useEffect(() => {
+    if (discoverSceneConsumedRef.current) return;
+    const sceneTitle = searchParams.get('scene');
+    if (!sceneTitle) return;
+    if (allScenes.length === 0) return; // wait for scenes to load
+    const target = sceneTitle.trim().toLowerCase();
+    const match = allScenes.find(s => s.title.trim().toLowerCase() === target);
+    if (match) {
+      setDiscoverScene({ sceneId: match.id, title: match.title });
+    } else {
+      console.warn('[ProductImages] Discover scene title did not resolve:', sceneTitle);
+    }
+    discoverSceneConsumedRef.current = true;
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete('scene');
+      return next;
+    }, { replace: true });
+  }, [allScenes, searchParams, setSearchParams]);
 
   const INITIAL_DETAILS: DetailSettings = {
     aspectRatio: '1:1', quality: 'high', imageCount: '1',
