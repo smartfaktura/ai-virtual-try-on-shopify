@@ -208,9 +208,10 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
                         <div className="aspect-square bg-muted overflow-hidden">
                           {scene.imageUrl ? (
                             <img
-                              src={scene.imageUrl}
+                              src={getOptimizedUrl(scene.imageUrl, { quality: 55 })}
                               alt={scene.name}
                               loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover transition-transform group-hover:scale-105"
                             />
                           ) : (
