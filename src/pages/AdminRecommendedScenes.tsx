@@ -141,6 +141,35 @@ export default function AdminRecommendedScenes() {
     },
   });
 
+  // Resolve active family canonical name (e.g. 'fashion' -> 'Fashion').
+  const activeFamilyName: string | null =
+    activeCategory === GLOBAL ? null : (FAMILY_ID_TO_NAME[activeCategory] ?? null);
+  const activeSubTypes = activeFamilyName ? (SUB_TYPES_BY_FAMILY[activeFamilyName] ?? []) : [];
+  const showSubStrip = activeSubTypes.length >= 2;
+
+  // Per-sub-family count of currently starred scenes (cached per family).
+  const subSlugsKey = activeSubTypes.map(s => s.slug).join(',');
+  const { data: subCounts = {} } = useQuery({
+    queryKey: ['admin-recommended-sub-counts', subSlugsKey],
+    enabled: isAdmin && showSubStrip,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const slugs = activeSubTypes.map(s => s.slug);
+      if (!slugs.length) return {} as Record<string, number>;
+      const { data, error } = await supabase
+        .from('recommended_scenes' as any)
+        .select('category')
+        .in('category', slugs);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      for (const row of (data ?? []) as { category: string | null }[]) {
+        if (!row.category) continue;
+        counts[row.category] = (counts[row.category] ?? 0) + 1;
+      }
+      return counts;
+    },
+  });
+
   const recommendedMap = useMemo(() => {
     const m = new Map<string, RecommendedRow>();
     for (const r of recommended) m.set(r.scene_id, r);
