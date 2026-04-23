@@ -1,85 +1,81 @@
 
 
-## Restore the Tech category — recover 5 misfiled headphone/earbud/speaker items
+## Pre-select Discover shot in Product Images — minimal, isolated
 
-### Root cause
+### What this does
+When a user clicks **Recreate** on a Product Images Discover preset, they land in `/app/generate/product-images?scene=<Title>`. They pick products as normal (Step 1, untouched). In Step 2, a new **From Explore** section renders directly above Recommended, containing just the one scene that came from Discover, auto-selected so the wizard can advance with it.
 
-Two bugs combined:
+That's it. No category matching against products. No variant resolution. No fallback banners. No changes to Recommended or Explore More.
 
-1. **Pass 2 SQL remap was too coarse.** I sent every `product-editorial` and `clean-studio` row to `home` in one sweep. Headphones / earbuds / speakers happened to live in those legacy families and got swept into `home` instead of `tech`.
-2. **Auto-tagger only searches within the row's family.** Even when a row's tags clearly say `tech, gadget, headphones`, the function never tries `tech-devices` slugs unless the row's `category` already equals `tech`. So the headphones row sat in `home` with no chance of being moved to Tech.
+### Behaviour
 
-Result: **0 rows** in `category = 'tech'`. Your screenshot's "No results found" under the Tech pill is correct — there's literally nothing there.
+| Entry | From Explore section | Rest of wizard |
+|---|---|---|
+| Discover Recreate (`?scene=` resolves to a `product_image_scenes` row) | Renders above Recommended, scene auto-selected | Untouched |
+| Discover Recreate (`?scene=` doesn't resolve — rare) | Hidden, silent `console.warn` | Untouched |
+| Normal entry to Product Images | Hidden | Untouched |
 
-### The 5 affected rows
+### Scene resolution (deliberately simple)
+- Read `?scene=<Title>` from URL via `useSearchParams`.
+- `allScenes.find(s => s.title.trim().toLowerCase() === title.trim().toLowerCase())` — first match wins, no category logic, no variant scoring.
+- If found → stash `{ sceneId, title }` in component state, clear `?scene=` from URL with `replace: true`.
+- If not found → `console.warn`, store nothing, section hides.
 
-| Title | Current category | Current sub | Should be |
-|---|---|---|---|
-| Premium Wireless Headphones | home | NULL | tech / tech-devices |
-| Aurenx Series One Wireless Earbuds | home | NULL | tech / tech-devices |
-| Aurenx Series One Wireless Earbuds (concrete variant) | home | NULL | tech / tech-devices |
-| Immersive Sound, Earthy Tones | home | NULL | tech / tech-devices |
-| Red Hot Beats (portable speaker) | home | **home-decor** ❌ | tech / tech-devices |
-
-All 5 have unambiguous `tech` / `gadget` / `headphones` / `earbuds` / `speaker` tags. Zero ambiguity.
-
-### Fix — one targeted SQL update, scoped by id
-
-Snapshot first, then update only these 5 rows:
-
-```sql
--- Backup
-COPY (SELECT id, category, subcategory FROM discover_presets WHERE id IN (...))
-TO '/mnt/documents/tech_recovery_backup_<ts>.csv' WITH CSV HEADER;
-
--- Move them to Tech
-UPDATE discover_presets
-SET category = 'tech', subcategory = 'tech-devices'
-WHERE id IN (
-  '53cf5c96-3738-4077-8c14-f445ead3bf12',  -- Premium Wireless Headphones
-  'b7fd113f-3ae1-48bd-8b66-aaff975594fb',  -- Aurenx Earbuds
-  '7eebb145-55aa-4b3d-b7dd-a14fe6b1da13',  -- Aurenx Earbuds (concrete)
-  '17e56e3a-bf07-46da-b03a-4f5e3124021f',  -- Immersive Sound
-  'a40c3498-1d0e-47ce-a9b5-ebfb362be7d6'   -- Red Hot Beats
-);
+### Step 2 rendering
+```text
+{discoverScene && (
+  <section>
+    <SectionHeader>From Explore</SectionHeader>
+    <SceneCard scene={resolvedScene}
+               selected={selectedSceneIds.has(scene.id)}
+               onClick={toggleScene} />
+  </section>
+)}
+<RecommendedSection ... />   // untouched
+<ExploreMoreSection ... />   // untouched
 ```
 
-### Prevention — tighten the Pass 2 remap going forward
-
-For the future, when an unknown family contains tech-tagged items they should land in `tech`, not `home`. I'll patch the edge function's pre-classifier to do a **family auto-correction pass** when:
-
-- Row's `tags` or `prompt` contains a strong tech signal (`headphone`, `earbud`, `speaker`, `tablet`, `laptop`, `wearable`, `gadget`, `tech`)
-- AND row's current category is `home`, `product-editorial`, `clean-studio`, `studio`, `surface`, `living-space`
-
-→ remap `category = 'tech'` and `subcategory = 'tech-devices'` in one pass.
-
-Same logic could later catch other strays (food bottles wrongly in `home`, jewelry in `fashion`, etc.) but for now we just need Tech populated. Strict scope: tech keywords only.
-
-### Safety guarantees
-
-- **Backup CSV** at `/mnt/documents/tech_recovery_backup_<ts>.csv` with prior `category` + `subcategory` for the 5 ids — one SQL UPDATE reverts.
-- **Scoped by explicit ids** — no risk of touching anything else.
-- **Only `category` and `subcategory` columns mutate** — `image_url`, `prompt`, `title`, `tags`, `is_featured`, `sort_order` untouched.
-- The future-prevention edge function patch is **dry-run gated** before commit, same as before.
+Auto-add effect (idempotent via `useRef`):
+```ts
+useEffect(() => {
+  if (!discoverScene?.sceneId) return;
+  if (autoAddedRef.current === discoverScene.sceneId) return;
+  setSelectedSceneIds(prev => new Set(prev).add(discoverScene.sceneId));
+  autoAddedRef.current = discoverScene.sceneId;
+}, [discoverScene?.sceneId]);
+```
 
 ### Files touched
 
 ```text
-RUN   1) snapshot 5 rows → /mnt/documents/tech_recovery_backup_<ts>.csv
-      2) UPDATE 5 rows → category='tech', subcategory='tech-devices'
-      3) verify SELECT * FROM discover_presets WHERE category='tech'
+EDIT  src/pages/ProductImages.tsx
+        + read ?scene from URL once on mount
+        + resolve title → scene_id by exact title match in allScenes
+        + stash discoverScene state, clear URL param (replace:true)
+        + pass discoverScene prop into Step 2
 
-EDIT  supabase/functions/backfill-discover-subcategories/index.ts
-        - Add tech-keyword family auto-correction (pre-classification step)
-        - Deploy
-        - Run dry-run preview to confirm no other strays elsewhere
+EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx
+        + accept optional discoverScene prop
+        + render <FromExploreSection> above Recommended when present
+        + auto-add sceneId to selectedSceneIds (useRef-gated)
 ```
 
-### Validation
+No DB changes. No edge functions. No changes to product analysis, Recommended, Explore More, scene categories, ratios, quality, or any other wizard logic.
 
-1. `/app/discover` → **Tech** pill → 5 items visible (Headphones, 2× Earbuds, Immersive Sound, Red Hot Beats).
-2. `/app/discover` → **Home** pill → those 5 items no longer appear.
-3. Spot-check 1 row in admin drawer → only `category` + `subcategory` differ from backup; `prompt`, `tags`, `image_url`, `title` unchanged.
-4. Backup CSV present in `/mnt/documents/`.
-5. Dry-run of the patched function reports 0 additional family-corrections (confirms no other tech strays hiding elsewhere).
+### Safety & performance
+- Recommended / Explore More render paths: zero edits.
+- Resolver is one `Array.find` over already-loaded scenes (~200 items, <1 ms).
+- No new network calls, no realtime, no polling.
+- `useRef` gate prevents duplicate auto-adds across re-renders / back-forward.
+- URL param cleared after consumption → no replay loops.
+- Section is conditional → normal entries to Product Images render identically to today.
+- All null branches handled silently — wizard never crashes if title doesn't resolve.
+
+### Validation
+1. Recreate a PI Discover preset → Step 1 (pick any product) → Step 2 shows **From Explore** on top with the scene selected; Recommended and Explore More render unchanged below.
+2. Open `/app/generate/product-images` directly → no From Explore section, identical to today.
+3. Recreate → Step 2 → Back → forward → no duplicate auto-add.
+4. Recreate a freestyle preset → still routes to freestyle, Product Images untouched.
+5. Recreate a PI preset whose scene title was deleted from `product_image_scenes` → section hidden, console warning, wizard works normally.
+6. User can deselect the From Explore scene; wizard proceeds with whatever they choose.
 
