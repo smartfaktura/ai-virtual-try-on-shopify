@@ -25,6 +25,7 @@ import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
 
 import { DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
+import { getDiscoverSubtypes, FAMILY_NAME_TO_ID } from '@/lib/discoverTaxonomy';
 
 const DISCOVER_CATEGORY_OPTIONS = DISCOVER_CATEGORIES.map(c => ({
   id: c,
