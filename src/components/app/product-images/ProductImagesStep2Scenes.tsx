@@ -406,20 +406,9 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
     return null;
   }, [discoverScene?.sceneId, discoverSceneFull, ACTIVE_CATEGORY_COLLECTIONS]);
 
-  // Auto-add discoverScene once (idempotent via ref)
-  const autoAddedRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!discoverScene?.sceneId) return;
-    if (autoAddedRef.current === discoverScene.sceneId) return;
-    if (selectedSceneIds.has(discoverScene.sceneId)) {
-      autoAddedRef.current = discoverScene.sceneId;
-      return;
-    }
-    const next = new Set(selectedSceneIds);
-    next.add(discoverScene.sceneId);
-    onSelectionChange(next);
-    autoAddedRef.current = discoverScene.sceneId;
-  }, [discoverScene?.sceneId, selectedSceneIds, onSelectionChange]);
+  // Auto-add of discoverScene now handled at the page level (ProductImages.tsx)
+  // so it happens before this component mounts/analysis completes.
+
 
   // Prune stale selections (but never prune the discoverScene id)
   useEffect(() => {
