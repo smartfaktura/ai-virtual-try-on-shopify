@@ -97,27 +97,57 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const dryRun: boolean = body?.dryRun !== false; // default true
 
+    // Pass 2.5: include rows with NULL subcategory OR rows currently in remappable families
+    // that have strong tech signals (so we can rescue strays from prior coarse remaps).
+    const TECH_REMAP_FROM = new Set(['home', 'product-editorial', 'clean-studio', 'studio', 'surface', 'living-space']);
+    const TECH_KEYWORDS = ['headphone', 'headphones', 'earbud', 'earbuds', 'speaker', 'tablet', 'laptop', 'wearable', 'gadget', 'gadgets', 'tech'];
+
     const { data: rows, error } = await supabase
       .from('discover_presets')
-      .select('id, category, subcategory, title, prompt, tags, scene_name')
-      .is('subcategory', null);
+      .select('id, category, subcategory, title, prompt, tags, scene_name');
     if (error) throw error;
 
     let classified = 0;
     let skipped = 0;
     let unknownFamily = 0;
-    const updates: { id: string; subcategory: string }[] = [];
+    let familyCorrected = 0;
+    const updates: { id: string; subcategory: string; category?: string }[] = [];
     const byFamily: Record<string, number> = {};
     const unknownFamilies: Record<string, number> = {};
+    const familyCorrections: { id: string; from: string; to: string; title: string }[] = [];
 
     for (const r of rows ?? []) {
-      const fam = (r.category || '').toLowerCase();
+      let fam = (r.category || '').toLowerCase();
+      const haystack = [r.title, r.prompt, r.scene_name, ...(r.tags ?? [])].filter(Boolean).join(' ').toLowerCase();
+
+      // Family auto-correction: tech-keyword stray detection.
+      // Only triggers when row sits in a remappable family AND haystack has a strong tech signal.
+      const hasTechSignal = TECH_KEYWORDS.some((kw) => {
+        const re = new RegExp(`(^|[^a-z0-9])${escapeRegex(kw)}([^a-z0-9]|$)`, 'i');
+        return re.test(haystack);
+      });
+      if (hasTechSignal && TECH_REMAP_FROM.has(fam)) {
+        familyCorrected++;
+        familyCorrections.push({ id: r.id, from: fam, to: 'tech', title: r.title ?? '' });
+        if (!dryRun) {
+          await supabase
+            .from('discover_presets')
+            .update({ category: 'tech', subcategory: 'tech-devices' })
+            .eq('id', r.id);
+        }
+        continue;
+      }
+
+      // Standard subcategory backfill — only NULL rows.
+      if (r.subcategory != null) {
+        skipped++;
+        continue;
+      }
       if (!SUBS_BY_FAMILY[fam]) {
         unknownFamily++;
         unknownFamilies[fam || '(empty)'] = (unknownFamilies[fam || '(empty)'] ?? 0) + 1;
         continue;
       }
-      const haystack = [r.title, r.prompt, r.scene_name, ...(r.tags ?? [])].filter(Boolean).join(' ');
       const slug = findSlugMatch(fam, haystack);
       if (slug) {
         classified++;
@@ -139,10 +169,12 @@ Deno.serve(async (req) => {
       classified,
       skipped,
       unknownFamily,
+      familyCorrected,
+      familyCorrections,
       byFamily,
       unknownFamilies,
       dryRun,
-      committed: !dryRun ? updates.length : 0,
+      committed: !dryRun ? updates.length + familyCorrected : 0,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
