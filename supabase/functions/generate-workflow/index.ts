@@ -1065,6 +1065,26 @@ serve(async (req) => {
 
     const body: WorkflowRequest & { user_id?: string; job_id?: string; credits_reserved?: number } = await req.json();
 
+    // ── Snapshot scene/model/product/workflow metadata IMMEDIATELY after parsing
+    // body, before any variation/fallback logic can mutate or shadow these fields.
+    // These frozen values are written back onto `body` so the existing
+    // `{ ...body, ... }` payload spread into completeQueueJob() always carries
+    // them through to the generation_jobs insert.
+    {
+      const b = body as any;
+      const sceneSnapshot = {
+        __scene_name:      b.pose?.name ?? b.scene_name ?? null,
+        __scene_id:        b.scene_id ?? b.pose?.id ?? b.scene?.id ?? null,
+        __scene_image_url: b.pose?.originalImageUrl ?? b.scene_image_url ?? null,
+        __model_name:      b.model?.name ?? b.model_name ?? null,
+        __model_image_url: b.model?.originalImageUrl ?? b.model_image_url ?? null,
+        __workflow_slug:   b.workflow_slug ?? null,
+        __product_name:    b.product_name ?? b.product?.title ?? null,
+        __product_image_url: b.product_image_url ?? b.product?.imageUrl ?? null,
+      };
+      Object.assign(b, sceneSnapshot);
+    }
+
     if (!body.workflow_id || !body.product) {
       return new Response(
         JSON.stringify({
