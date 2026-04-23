@@ -10,6 +10,8 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
 import { cn } from '@/lib/utils';
 import { SceneRequestBanner } from '@/components/app/SceneRequestBanner';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 /** Category label lookup */
 const CATEGORY_LABELS: Record<string, string> = {
@@ -497,7 +499,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       {resolvedDiscoverScene && (
         <div className="pt-3 pl-2 min-w-0 max-w-full">
           <div className="flex items-center gap-2 mb-1 flex-wrap min-w-0 max-w-full">
-            <p className="text-[11px] font-semibold text-primary uppercase tracking-wide shrink-0">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">
               Pre-selected from Explore
             </p>
             <div className="h-px flex-1 bg-border min-w-[20px]" />
@@ -513,14 +515,25 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               selected={selectedSceneIds.has(resolvedDiscoverScene.id)}
               onToggle={() => toggleScene(resolvedDiscoverScene.id)}
             />
-            <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 aspect-[4/5] p-3 flex flex-col justify-between text-left">
-              <Sparkles className="w-4 h-4 text-primary/80" />
-              <div className="space-y-1">
-                <p className="text-[12px] font-semibold leading-tight text-foreground">
-                  Picked from Explore
+            <div className="rounded-xl border-2 border-dashed border-border/70 bg-muted/20 overflow-hidden flex flex-col">
+              <div className="aspect-[3/4] relative flex flex-col items-center justify-center p-3 text-center">
+                <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <Avatar className="w-8 h-8 border border-primary/20 ring-1 ring-primary/10 mb-2">
+                  <AvatarImage src={TEAM_MEMBERS[0].avatar} alt={TEAM_MEMBERS[0].name} />
+                  <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[0].name[0]}</AvatarFallback>
+                </Avatar>
+                <p className="text-[11px] font-semibold text-foreground leading-tight">
+                  Picked for your product
                 </p>
-                <p className="text-[11px] text-muted-foreground leading-snug">
-                  Add more shots below for a richer set of visuals.
+                <p className="text-[10px] text-muted-foreground leading-snug mt-1">
+                  From your Explore pick
+                </p>
+              </div>
+              <div className="p-1.5 min-h-[44px] flex flex-col items-center justify-center gap-0.5 border-t border-dashed border-border/70">
+                <p className="text-[11px] text-muted-foreground text-center leading-tight">
+                  Add more shots below
                 </p>
               </div>
             </div>
