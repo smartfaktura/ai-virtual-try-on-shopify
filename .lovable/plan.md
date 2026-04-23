@@ -1,52 +1,116 @@
 
 
-## Polish corner radii & sizing in `/app/generate/product-images`
+## Auto-fill scene metadata when publishing from Library to Discover
 
-### 1. Step 1 — Search bar + Select All / Clear (in `ProductMultiSelect.tsx`)
+### What's broken
 
-Both inputs and buttons should match the rest of the platform (e.g. freestyle scene search): pill-shaped, `h-10`, slightly larger and consistent.
+1. **`SubmitToDiscoverModal` (user-facing "Add to Discover" — screenshot 2) drops scene/model metadata.** `LibraryDetailModal` only passes `imageUrl`, `prompt`, `aspectRatio`, `quality`, `productName`, `productImageUrl` — but `sceneName`, `modelName`, `sceneImageUrl`, `modelImageUrl`, `workflowSlug`, `workflowName` are all already on `activeItem`. They never reach the submission, so the resulting `discover_presets` row has `scene_name = null` → Recreate has nothing to pre-select.
 
-- **Search Input**: add `className="pl-9 h-10 rounded-full text-sm"` (currently default `rounded-lg`, no explicit height).
-- **Select All button**: change `size="sm"` → `size="default"` (default is `h-10 rounded-full`).
-- **Clear button**: same change → `size="default"`.
+2. **Admin "Edit Metadata" Scene Selection list (screenshot 1) is missing all `product_image_scenes`.** `allSceneOptions` only merges `mockTryOnPoses` (freestyle scenes) + `custom_scenes`. The 200+ Product Images scenes (Reflective Floral Display, etc.) are never in the picker, so admins can't pick the correct scene and auto-preselect silently fails when `scene_name` doesn't match any option in the list.
 
-Result: search bar and both buttons share the same `h-10` height and `rounded-full` corners — visually balanced row.
+3. **Auto-preselect already exists** (`setEditSceneName(d?.scene_name || '__none__')`) but appears broken because the matching scene isn't in `allSceneOptions`. Once we add product-images scenes to the list, the existing preselect logic will work.
 
-### 2. Step 2 — Category placeholders corner radius (in `ProductImagesStep2Scenes.tsx`)
+### Fix
 
-The Recommended category headers, Explore More 2-column trigger rows, and uncategorized rows currently use `rounded-lg`. Other prominent placeholder cards across the app (WorkflowCard, ModelFilterBar, etc.) use `rounded-xl` for a softer, more premium feel.
+**A. Pass full scene/model context from Library → SubmitToDiscoverModal**
 
-Change `rounded-lg` → `rounded-xl` in three places:
-- `UnifiedCategorySectionWithSelectAll` header trigger (around line 788–792).
-- `CategoryRowTrigger` button (line 653).
-- (Verify no other category row uses `rounded-lg` — fix any sibling that does for consistency.)
-
-The `SceneCard` keeps its existing `rounded-xl` (already correct).
-
-### 3. Files touched
+`src/components/app/LibraryDetailModal.tsx` (lines 516–527): forward the missing props that are already on `activeItem`.
 
 ```text
-EDIT  src/components/app/ProductMultiSelect.tsx
-        - Input: pl-9 → "pl-9 h-10 rounded-full text-sm"
-        - Select All: size="sm" → size="default"
-        - Clear:      size="sm" → size="default"
-
-EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx
-        - UnifiedCategorySectionWithSelectAll header: rounded-lg → rounded-xl
-        - CategoryRowTrigger:                         rounded-lg → rounded-xl
+<SubmitToDiscoverModal
+  ...existing props...
+  workflowSlug={activeItem.workflowSlug}
+  workflowName={activeItem.source === 'generation' ? activeItem.label : undefined}
+  sceneName={activeItem.sceneName}
+  modelName={activeItem.modelName}
+  sceneImageUrl={activeItem.sceneImageUrl}
+  modelImageUrl={activeItem.modelImageUrl}
+/>
 ```
 
-### 4. Safety & performance
+**B. Persist scene/model context through the user submission flow**
 
-- Pure className changes. Zero logic, state, queries, or DB changes.
-- No new components, no new imports.
-- Existing keyboard focus rings, hover states, selected states all preserved (Tailwind classes additive).
-- No risk to wizard flow or scene selection.
+`src/components/app/SubmitToDiscoverModal.tsx`:
+- Accept new optional props: `workflowSlug`, `workflowName`, `sceneName`, `modelName`, `sceneImageUrl`, `modelImageUrl`.
+- Show a small read-only "Scene used" / "Model used" preview row (mirrors the existing Product row pattern) so user sees what will be saved — with optional Switch toggles `showScene` / `showModel` (default ON) like `AddToDiscoverModal`.
+- Include them in the `submitMutation.mutate` payload.
 
-### 5. Validation
+`src/hooks/useDiscoverSubmissions.ts`:
+- Extend `useSubmitToDiscover` mutation input + insert payload with `workflow_slug`, `workflow_name`, `scene_name`, `model_name`, `scene_image_url`, `model_image_url`.
+- Extend `useApproveSubmission` to copy these fields into `discover_presets` on approval (currently drops them).
 
-1. Step 1: search bar, Select All, Clear all render at `h-10` with pill corners — visually identical row.
-2. Step 2: category cards (Shoes, Hoodies, Clothing & Apparel, Dresses, etc.) show softer `rounded-xl` corners matching other platform cards.
-3. Hover, selected, and expanded states still render correctly.
-4. Mobile + desktop layouts unchanged.
+`DiscoverSubmission` interface gains the same fields.
+
+**C. Add `product_image_scenes` to the admin Scene Selection list**
+
+`src/components/app/DiscoverDetailModal.tsx` (lines 82–88, `allSceneOptions`):
+- Add a `useQuery` that fetches `product_image_scenes` (id, scene_id, title, preview_image_url, category_collection) — `staleTime: 10min`, only when `isAdmin && open`.
+- Merge into `allSceneOptions` with `category` set to `category_collection ?? 'product-images'` and dedupe by name (existing `find` logic already de-dupes).
+- Existing init effect at line 132 (`setEditSceneName(d?.scene_name || '__none__')`) will then correctly preselect because the name now matches an option.
+- Existing grouped picker UI (line 527, `poseCategoryLabels[cat] ?? cat`) will render product-images scenes under their category collection group automatically.
+
+**D. Database migration: add submission columns**
+
+`discover_submissions` currently has no scene/model/workflow columns. Add (nullable, no default):
+```sql
+ALTER TABLE public.discover_submissions
+  ADD COLUMN workflow_slug text,
+  ADD COLUMN workflow_name text,
+  ADD COLUMN scene_name text,
+  ADD COLUMN model_name text,
+  ADD COLUMN scene_image_url text,
+  ADD COLUMN model_image_url text;
+```
+RLS unchanged (existing user-owned policies cover new columns). Zero impact on existing submissions.
+
+### Files touched
+
+```text
+DB MIGRATION
+  + 6 nullable columns on discover_submissions
+
+EDIT  src/components/app/LibraryDetailModal.tsx
+        + Forward workflowSlug/workflowName/sceneName/modelName/sceneImageUrl/modelImageUrl
+          to SubmitToDiscoverModal
+
+EDIT  src/components/app/SubmitToDiscoverModal.tsx
+        + Accept 6 new optional props
+        + Render read-only Scene + Model preview rows with Switch toggles
+        + Include them in submission payload
+
+EDIT  src/hooks/useDiscoverSubmissions.ts
+        + Extend DiscoverSubmission interface with 6 fields
+        + useSubmitToDiscover input + insert payload
+        + useApproveSubmission carries fields into discover_presets
+
+EDIT  src/components/app/DiscoverDetailModal.tsx
+        + useQuery for product_image_scenes (admin only, staleTime 10min)
+        + Merge into allSceneOptions with category grouping
+```
+
+No edge function changes. No changes to `describe-discover-metadata` (it's category-only AI suggestion — separate concern).
+
+### Behaviour after fix
+
+| Action | Before | After |
+|---|---|---|
+| User clicks Library image → Submit for Review | scene_name dropped → preset has no scene → Recreate broken | scene_name carried through submission → approval → preset → Recreate auto-selects scene |
+| Admin opens Discover detail (product-images preset) | "Scene Selection" picker missing the actual scene → can't fix preselect | Picker lists all 200+ product-images scenes, current scene already preselected |
+| Admin clicks "Recreate this" on product-images preset | Scene resolves via existing `?scene=` flow (already implemented) | Same — but now scene_name is reliably populated, so resolution succeeds |
+
+### Safety & performance
+
+- Library `activeItem` already carries all the new fields — zero new queries for path A/B.
+- New `product_image_scenes` query: admin-only, conditional on modal open, 10min staleTime, ~200 rows fetched once per session.
+- Migration: only adds nullable columns — no data backfill, no constraint changes, no RLS edits.
+- `useApproveSubmission` change is purely additive — old submissions with null fields work identically.
+- All new SubmitToDiscoverModal props optional → freestyle gallery's existing call site keeps working unchanged.
+
+### Validation
+
+1. Generate via Product Images → open in Library → Submit for Review → approve in admin → Recreate from Discover lands in Product Images with the correct scene auto-selected (existing `?scene=` resolver picks it up).
+2. Open existing Product Images preset in Discover as admin → "Scene Selection" picker lists product-images scenes grouped by category collection; current scene shown as selected.
+3. Submit a freestyle generation → still works, scene_name carried through (freestyle uses mockTryOnPoses names which already exist in allSceneOptions).
+4. Old submissions (pre-migration) approve normally with null scene fields.
+5. Non-admin users never trigger the product_image_scenes fetch.
 
