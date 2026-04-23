@@ -529,14 +529,24 @@ export default function Discover() {
       )}
 
       {/* Category filter bar + grid (tight grouping) */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {!similarTo && (
-          <DiscoverCategoryBar
-            categories={CATEGORIES}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-            savedCount={savedCount}
-          />
+          <>
+            <DiscoverCategoryBar
+              categories={CATEGORIES}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              savedCount={savedCount}
+            />
+            {selectedCategory !== 'all' && selectedCategory !== 'saved' && isMultiSubFamily(selectedCategory) && (
+              <DiscoverSubCategoryBar
+                familyLabel={CATEGORIES.find((c) => c.id === selectedCategory)?.label ?? ''}
+                subcategories={getDiscoverSubtypes(selectedCategory).map((s) => ({ id: s.slug, label: s.label }))}
+                selectedSubcategory={selectedSubcategory}
+                onSelectSubcategory={setSelectedSubcategory}
+              />
+            )}
+          </>
         )}
 
       {/* Masonry grid */}
