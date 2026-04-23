@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronDown, ChevronRight, Camera, Copy, AlertCircle, Paintbrush } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Camera, Copy, AlertCircle, Paintbrush, Sparkles } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -495,20 +495,36 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
       {/* From Explore — only when user arrived via Discover Recreate */}
       {resolvedDiscoverScene && (
-        <div className="space-y-2 max-w-full">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wide">
-            From Explore
-          </h3>
-          <div className={`grid ${gridClass} gap-2 max-w-full`}>
+        <div className="pt-3 pl-2 min-w-0 max-w-full">
+          <div className="flex items-center gap-2 mb-1 flex-wrap min-w-0 max-w-full">
+            <p className="text-[11px] font-semibold text-primary uppercase tracking-wide shrink-0">
+              Pre-selected from Explore
+            </p>
+            <div className="h-px flex-1 bg-border min-w-[20px]" />
+            {selectedSceneIds.has(resolvedDiscoverScene.id) && (
+              <span className="text-[10px] h-6 px-2 inline-flex items-center text-muted-foreground shrink-0">
+                1 selected
+              </span>
+            )}
+          </div>
+          <div className={`grid ${gridClass} gap-2`}>
             <SceneCard
               scene={resolvedDiscoverScene}
               selected={selectedSceneIds.has(resolvedDiscoverScene.id)}
               onToggle={() => toggleScene(resolvedDiscoverScene.id)}
             />
+            <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 aspect-[4/5] p-3 flex flex-col justify-between text-left">
+              <Sparkles className="w-4 h-4 text-primary/80" />
+              <div className="space-y-1">
+                <p className="text-[12px] font-semibold leading-tight text-foreground">
+                  Picked from Explore
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Add more shots below for a richer set of visuals.
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Pre-selected from Explore. Add more shots below to get a richer set of visuals.
-          </p>
         </div>
       )}
 
