@@ -325,6 +325,7 @@ export type Database = {
           prompt_only: boolean | null
           setting: string | null
           shot_style: string | null
+          subcategory: string | null
           subject: string | null
         }
         Insert: {
@@ -345,6 +346,7 @@ export type Database = {
           prompt_only?: boolean | null
           setting?: string | null
           shot_style?: string | null
+          subcategory?: string | null
           subject?: string | null
         }
         Update: {
@@ -365,6 +367,7 @@ export type Database = {
           prompt_only?: boolean | null
           setting?: string | null
           shot_style?: string | null
+          subcategory?: string | null
           subject?: string | null
         }
         Relationships: []
