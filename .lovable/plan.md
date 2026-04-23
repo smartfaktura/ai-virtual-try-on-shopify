@@ -1,114 +1,92 @@
 
 
-## Make scene + workflow visible and editable in "Add to Discover"
+## Fix scene picker: not clickable + wrongly preselected with AI guess
 
-### Problem
-When an admin clicks **Add to Discover** on a Library item that's missing `scene_name` (e.g. an item generated before metadata was populated, or one where the worker dropped the field), the published preset has no scene → Recreate from Discover can't pre-select anything → user lands in Product Images with no scene. The current modal doesn't show what scene/workflow it's about to publish, so the admin can't catch or fix it.
+### Root causes (from `AddToDiscoverModal.tsx`)
 
-### Fix: turn the Add to Discover modal into a **scene + workflow confirmation step**
+1. **Picker is invisible/unclickable.** `PopoverContent` uses `z-50` (default `src/components/ui/popover.tsx` line 20) but the modal backdrop is `z-[300]` (line 324–325). The popover portals to `<body>` and renders **behind** the backdrop, so the search input + scene options sit under the dim layer. Any click on them hits the backdrop, which has `onClick={onClose}` (line 324), and the modal closes.
 
-Replace the silent "Show scene name" / "Show model name" toggles with **visible, preselected, editable pickers** so the admin always confirms what's being published.
+2. **Wrong scene preselected as if it were correct.** This Library item is older and has `job.scene_name = null` (`useLibraryItems.ts` line 89), so `initialSceneName` is null. The AI auto-fill effect (lines 184–190) then **writes the AI suggestion into `pickedSceneName`** with only a small "AI" badge. Admin sees a confidently-selected wrong scene ("Shadow Play") and the missing-scene warning is hidden. The original generation context simply isn't in the DB — we can't recover it, but we should not pretend we did.
 
-### New section in `AddToDiscoverModal.tsx`
+### Fix
 
-Replace the current `Visibility` block with a richer **Generation Context** block:
+**A. Make pickers actually usable inside the modal**
+
+In `AddToDiscoverModal.tsx`, raise the z-index of each `PopoverContent` above the modal backdrop:
+
+```tsx
+<PopoverContent
+  className="z-[320] w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto"
+  align="start"
+>
+```
+
+Apply to all three pickers (Workflow line 482, Scene line 523, Model line 592). Use `z-[320]` so it sits above the modal's `z-[300]` wrapper but below any global toast layer.
+
+We do **not** edit `src/components/ui/popover.tsx` itself — keep the global default at `z-50` and override only inside this modal so we don't affect popovers elsewhere.
+
+Sanity check on click-outside: backdrop has `onClick={onClose}` and the modal box uses `e.stopPropagation()` (line 328). The popover is portaled to `<body>` so its clicks don't bubble through the modal at all — once it's visible above the backdrop, clicks land on its options correctly. Radix's own outside-click handler will close the popover (not the modal) when clicking the backdrop while the popover is open.
+
+**B. Stop pre-applying the AI scene guess as a confirmed selection**
+
+Change the AI auto-fill block (lines 183–190) so the suggestion is **offered**, not **applied**:
+
+```tsx
+// AI scene suggestion — store as suggestion only, do NOT auto-select
+if (!initialSceneName && data.suggested_scene_name) {
+  const match = allScenes.find(s => s.name === data.suggested_scene_name);
+  if (match) {
+    setAiSuggestedScene(match.name);
+    // pickedSceneName stays null → warning + "Apply suggestion" CTA shown
+  }
+}
+```
+
+Then update the missing-scene block (lines 567–574) to render the suggestion as a one-click hint:
 
 ```text
-GENERATION CONTEXT  (admin can edit any field)
-
-  Workflow         [ Product Images ▾ ]    ← combobox, preselected from workflowSlug
-  Scene            [ Marble Console ▾ ]    ← searchable combobox, preselected from sceneName
-                   [thumb] Marble Console Vignette · interior collection
-  Model            [ None ▾ ]              ← searchable combobox, preselected from modelName
-                   [thumb] (only if selected)
-  Product          [✓] Show product reference   ← existing toggle, unchanged
-                   [thumb] Olive Wallet
+⚠ No scene detected. Pick one so Recreate works.
+[Apply AI suggestion: "Shadow Play"]   ← small inline button, only shown when aiSuggestedScene && !pickedSceneName
 ```
 
-Behavior:
-- All three pickers preselect from the props passed in (`workflowSlug`, `sceneName`, `modelName`).
-- If `sceneName` is missing, picker shows `— No scene —` placeholder with subtle yellow hint: "No scene detected. Pick one so Recreate works."
-- Scene picker lists **all 200+ `product_image_scenes`** (already merged in `DiscoverDetailModal` — same `useQuery` reused via a small hook), grouped by `category_collection`, plus freestyle scenes from `mockTryOnPoses` and `custom_scenes` (via `get_public_custom_scenes`).
-- Model picker lists `mockModels` + `custom_models` (admin-readable).
-- Workflow picker lists active rows from `workflows` table (small query, staleTime 10min, admin-only).
-- Each picker has a "Clear" option → publishes `null` for that field.
-- Submit uses the **picker values** instead of the raw props. If admin picks a scene with a thumbnail, that thumbnail is published as `scene_image_url` (overrides the prop).
+The "Apply" button calls `setPickedSceneName(aiSuggestedScene)`. Admin keeps full control: they can ignore it and pick the correct scene from the (now-clickable) picker, or accept the suggestion with one click.
 
-### Shared hook for picker options
-
-Extract `useDiscoverPickerOptions()` in `src/hooks/useDiscoverPickerOptions.ts`:
-- Returns `{ scenes, models, workflows }` with all three sources merged + grouped.
-- Admin-only (gated by `useIsAdmin`), `staleTime: 10min`, only fetches when `enabled`.
-- Reused by both `AddToDiscoverModal` (admin direct publish) and `DiscoverDetailModal` (admin edit) — eliminates duplicate logic.
-
-### Submit payload changes
-
-`handlePublish` builds `presetData` from picker state:
-```ts
-scene_name:      pickedScene?.name ?? null,
-scene_image_url: pickedScene?.imageUrl ?? null,
-model_name:      pickedModel?.name ?? null,
-model_image_url: pickedModel?.imageUrl ?? null,
-workflow_slug:   pickedWorkflow?.slug ?? null,
-workflow_name:   pickedWorkflow?.name ?? null,
-```
-
-The existing dedupe-update path (lines 281–297) already updates by `image_url` → republishing the same image with a now-correct scene **fixes** the existing preset in place. No duplicate entries.
-
-### Light QoL: AI auto-detect scene when missing
-
-If `sceneName` is null/empty when modal opens, send the image + `allScenes[].title` list to `describe-discover-metadata` with a new `?suggestScene=true` flag. The function already runs Gemini on the image — extend it to also return `suggested_scene_name`. Pre-select that suggestion (with a subtle "AI suggested" badge) but admin still confirms. **Strictly fallback**: if the prop has a scene name, skip the suggestion call.
-
-This is an additive optional flag — old `describe-discover-metadata` callers (the user-facing `SubmitToDiscoverModal`) keep working unchanged.
+The existing "AI" badge inside the picker trigger (lines 516–518) keeps working — it now appears only after the admin actually applies the suggestion.
 
 ### Files touched
 
 ```text
-NEW   src/hooks/useDiscoverPickerOptions.ts
-        - Admin-only merged scenes + models + workflows
-        - staleTime 10min, conditional fetch
-
 EDIT  src/components/app/AddToDiscoverModal.tsx
-        - Replace Visibility block with Generation Context section
-        - Three Combobox-style pickers (Workflow / Scene / Model) preselected from props
-        - Submit uses picker state, not raw props
-        - Yellow hint when scene is empty
-        - Optional: render AI scene suggestion when prop is missing
-
-EDIT  supabase/functions/describe-discover-metadata/index.ts
-        - Accept optional `sceneOptions: string[]` in body
-        - When provided, prompt Gemini to return `suggested_scene_name` matching one option
-        - Backward-compatible (field is optional in response)
-
-EDIT  src/components/app/DiscoverDetailModal.tsx
-        - Refactor to use shared useDiscoverPickerOptions hook
-        - (No behavior change, just dedupe — optional, can skip if risky)
+        - PopoverContent (×3): add z-[320] to className
+        - AI auto-fill: store suggestion in aiSuggestedScene only; do not setPickedSceneName
+        - Missing-scene warning: add "Apply AI suggestion: <name>" button when suggestion exists
 ```
 
-No DB migration. No RLS changes. No changes to `LibraryDetailModal` props (already forwards everything correctly).
+No other files. No DB migration. No edge function changes. Other consumers of Popover, Library, freestyle gallery — all untouched.
 
-### Why this fixes the user's report
+### Behavior after fix
 
-1. **Newly uploaded bag item with no scene metadata** → admin opens modal → sees yellow hint "No scene detected" + AI-suggested scene preselected → confirms → preset is published with the correct `scene_name` → Recreate works.
-2. **Item with detected scene** → admin sees scene + thumbnail preselected → confirms → publishes as before, but admin had a chance to verify.
-3. **Wrong scene detected by AI** → admin opens picker → searches → corrects → publishes with the right scene.
-4. **Admin republishes a previously-broken preset** → existing dedupe path updates the same row → no duplicates.
+| Case | Before | After |
+|---|---|---|
+| Admin clicks Scene/Workflow/Model picker in modal | Popover opens behind backdrop, clicks close the modal | Popover renders above backdrop, options clickable, modal stays open |
+| Library item has no `scene_name` in DB | AI guess silently set as the picked scene → wrong metadata published | Picker stays empty, red warning + one-click "Apply AI suggestion" button shown — admin always confirms |
+| Library item has correct `scene_name` | Preselected from prop (already worked) | Unchanged |
+| Admin republishes a previously-broken preset with correct scene | Existing dedupe-by-`image_url` updates the row | Unchanged |
 
 ### Safety & performance
 
-- All three picker queries run **only when modal is open and user is admin** (gated by `enabled`).
-- 10-minute staleTime → typically one fetch per admin session.
-- AI suggestion call only runs when scene metadata is missing → zero extra cost for items that already have it.
-- Picker state is local to the modal → no impact on Library, freestyle, or other consumers of `AddToDiscoverModal`.
-- If picker queries fail, modal falls back to the raw props (current behavior) — no crash, no regression.
-- No edge function signature changes are breaking — all new fields optional.
+- Pure className + small effect-body changes. Zero new queries, hooks, deps, or schema changes.
+- z-index override is scoped to this modal — `src/components/ui/popover.tsx` untouched, every other popover in the app keeps its current behavior.
+- AI suggestion still runs (existing `describe-discover-metadata` call), just no longer auto-applied.
+- If `aiSuggestedScene` is null (no suggestion or suggestion not in list), the warning falls back to its current text — no regression.
+- Submit payload (lines 272–291) is unchanged: it already reads from `pickedSceneName`, so an empty selection correctly publishes `scene_name: null` rather than a wrong guess.
 
 ### Validation
 
-1. Upload + generate a bag item that ends up with `scene_name = ''` → click Add to Discover → modal shows yellow hint + AI-suggested scene preselected → admin confirms → Discover preset has correct `scene_name` → Recreate from Discover lands in Product Images with that scene auto-selected.
-2. Item with proper `sceneName` prop → modal shows scene preselected with thumbnail → publish unchanged.
-3. Admin clears the scene and publishes → preset has `scene_name = null` (Recreate falls back to no preselection, which is current behavior for those entries).
-4. Republish same image with corrected scene → existing preset row updated in place.
-5. Non-admin call sites of `AddToDiscoverModal` (none today, but defensive): pickers gracefully no-op if the admin-only queries return empty.
-6. `SubmitToDiscoverModal` (user-facing) unaffected — separate component, separate flow.
+1. Open Library item with missing scene → click Add to Discover → Scene picker opens above backdrop, search + scroll + select all work, modal stays open until admin clicks Publish.
+2. Same item shows red warning + "Apply AI suggestion: Shadow Play" button. Clicking it sets the picker to Shadow Play with the AI badge. Clicking the picker instead lets admin pick the actual scene.
+3. Open Library item with correct scene → picker preselected as before, no warning, no AI badge.
+4. Workflow + Model pickers also clickable; selections persist into the published preset.
+5. Clicking the dim backdrop (outside modal, outside popover) still closes the modal.
+6. Discover entries created from broken items now reliably carry the admin-confirmed `scene_name`, restoring Recreate.
 
