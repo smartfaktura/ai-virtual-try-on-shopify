@@ -107,7 +107,7 @@ export default function ProductImages() {
 
     if (!match && sceneTitle) {
       const target = sceneTitle.trim().toLowerCase();
-      const candidates = allScenes.filter(s => s.title.trim().toLowerCase() === target);
+      let candidates = allScenes.filter(s => s.title.trim().toLowerCase() === target);
 
       if (candidates.length === 0) {
         // No matching title — give up so we don't re-run forever
@@ -116,11 +116,30 @@ export default function ProductImages() {
         return;
       }
 
-      // 2. URL category hint (highest priority after sceneId)
+      // HARD FILTER: when products are selected, restrict candidates to the
+      // product's category FIRST. This guarantees we never return a watch
+      // scene for a beverage product, even if URL hints are missing/wrong.
+      if (selectedProductIds.size > 0) {
+        const resolvedCats = Array.from(selectedProductIds)
+          .map(pid => analyses[pid]?.category)
+          .filter(Boolean) as string[];
+        if (resolvedCats.length === 0) {
+          // Products selected but analyses not back yet — WAIT. Don't fall through.
+          return;
+        }
+        const userCats = new Set(resolvedCats.map(c => c.toLowerCase()));
+        const filtered = candidates.filter(c => {
+          const cc = (c.categoryCollection ?? '').toLowerCase();
+          return cc && userCats.has(cc);
+        });
+        // Only narrow when the filter actually keeps something — otherwise
+        // fall through to URL hints so we don't strand the user with no scene.
+        if (filtered.length > 0) candidates = filtered;
+      }
+
+      // 2. URL category hint (highest priority after sceneId, within filtered set)
       if (sceneCategoryParam) {
         const hint = sceneCategoryParam.trim().toLowerCase();
-        // Try exact, then trim trailing 's' (custom_scenes uses 'fragrances' but
-        // product_image_scenes uses 'fragrance'), then a contains check.
         match =
           candidates.find(c => (c.categoryCollection ?? '').toLowerCase() === hint) ??
           candidates.find(c => (c.categoryCollection ?? '').toLowerCase() === hint.replace(/s$/, '')) ??
@@ -137,21 +156,8 @@ export default function ProductImages() {
         match = candidates.find(c => (c as any).previewUrl === sceneImageParam) ?? null;
       }
 
-      // 3. Product analysis category — only when analyses have actually resolved.
-      if (!match && selectedProductIds.size > 0) {
-        const resolvedCats = Array.from(selectedProductIds)
-          .map(pid => analyses[pid]?.category)
-          .filter(Boolean) as string[];
-        if (resolvedCats.length === 0) {
-          // Products selected but analyses not back yet — WAIT. Don't fall through.
-          return;
-        }
-        const userCats = new Set(resolvedCats);
-        match = candidates.find(c => c.categoryCollection && userCats.has(c.categoryCollection)) ?? null;
-      }
-
-      // 4. Last resort — only when no products selected (deep-link case).
-      if (!match && selectedProductIds.size === 0) {
+      // 3. First in (already category-filtered) candidates.
+      if (!match) {
         match = candidates[0] ?? null;
       }
 
