@@ -149,14 +149,50 @@ export function AddToDiscoverModal({
     setPickedWorkflowSlug(workflowSlug ?? null);
     setAiSuggestedScene(null);
 
-    // If scene is missing, ask AI to suggest one from the full scene list
-    const sceneOptions = !initialSceneName ? allScenes.map(s => s.name) : undefined;
+    let cancelled = false;
 
-    supabase.functions
-      .invoke('describe-discover-metadata', {
-        body: { imageUrl, prompt, sceneOptions },
-      })
-      .then(({ data, error }) => {
+    (async () => {
+      // ── DB fallback: if scene/model is missing in props but we have a source
+      // generation ID, look it up directly before paying for AI guessing.
+      let resolvedSceneName = initialSceneName;
+      let resolvedModelName = initialModelName;
+      let resolvedWorkflowSlug = workflowSlug ?? null;
+
+      if (sourceGenerationId && (!resolvedSceneName || !resolvedModelName || !resolvedWorkflowSlug)) {
+        try {
+          const { data } = await supabase
+            .from('generation_jobs')
+            .select('scene_name, scene_id, scene_image_url, model_name, model_image_url, workflow_slug')
+            .eq('id', sourceGenerationId)
+            .maybeSingle();
+          if (!cancelled && data) {
+            if (!resolvedSceneName && data.scene_name) {
+              resolvedSceneName = data.scene_name;
+              setPickedSceneName(data.scene_name);
+            }
+            if (!resolvedModelName && data.model_name) {
+              resolvedModelName = data.model_name;
+              setPickedModelName(data.model_name);
+            }
+            if (!resolvedWorkflowSlug && data.workflow_slug) {
+              resolvedWorkflowSlug = data.workflow_slug;
+              setPickedWorkflowSlug(data.workflow_slug);
+            }
+          }
+        } catch (err) {
+          console.warn('AddToDiscover: generation_jobs lookup failed', err);
+        }
+        if (cancelled) return;
+      }
+
+      // If scene is STILL missing after DB fallback, ask AI to suggest one
+      const sceneOptions = !resolvedSceneName ? allScenes.map(s => s.name) : undefined;
+
+      try {
+        const { data, error } = await supabase.functions.invoke('describe-discover-metadata', {
+          body: { imageUrl, prompt, sceneOptions },
+        });
+        if (cancelled) return;
         if (error || !data) {
           console.warn('AI auto-fill failed:', error);
           return;
@@ -182,16 +218,21 @@ export function AddToDiscoverModal({
           }
         }
         if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
-        // AI scene suggestion — store as suggestion only, do NOT auto-select
-        if (!initialSceneName && data.suggested_scene_name) {
+        // AI scene suggestion — only if STILL missing after props + DB fallback
+        if (!resolvedSceneName && data.suggested_scene_name) {
           const match = allScenes.find(s => s.name === data.suggested_scene_name);
           if (match) {
             setAiSuggestedScene(match.name);
           }
         }
-      })
-      .catch(() => {})
-      .finally(() => setAiLoading(false));
+      } catch {
+        /* swallow */
+      } finally {
+        if (!cancelled) setAiLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, imageUrl, prompt]);
 
