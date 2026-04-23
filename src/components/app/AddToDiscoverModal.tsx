@@ -346,10 +346,17 @@ export function AddToDiscoverModal({
     }
 
     // For product-images workflow, persist the picked scene's `scene_ref`
-    // so the wizard can resolve it deterministically. Other workflows leave
-    // scene_ref null and rely on legacy scene_name.
+    // so the wizard can resolve it deterministically. Prefer the authoritative
+    // scene_id passed in from the source generation (exact ref the wizard used);
+    // fall back to the picker's scene_ref (matched by title — may collide).
+    const authoritativeSceneRef =
+      sceneId && !sceneId.startsWith('custom-') && !mockTryOnPoses.find(p => p.poseId === sceneId)
+        ? sceneId
+        : null;
     const sceneRefToWrite =
-      pickedWorkflow?.slug === 'product-images' ? (pickedScene?.sceneRef ?? null) : null;
+      pickedWorkflow?.slug === 'product-images'
+        ? (authoritativeSceneRef ?? pickedScene?.sceneRef ?? null)
+        : null;
 
     const presetData = {
       title: title.trim(),
