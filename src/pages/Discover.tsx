@@ -84,15 +84,34 @@ function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boo
   return Array.isArray(cats) && cats.includes(productCat);
 }
 
+function getItemCollection(item: DiscoverItem): string | null {
+  const data = item.data as any;
+  if (data.subcategory) return String(data.subcategory).toLowerCase();
+  const cats = data.discover_categories;
+  if (Array.isArray(cats) && cats.length > 1) return String(cats[1]).toLowerCase();
+  return null;
+}
+
+function getWorkflowSlug(item: DiscoverItem): string | null {
+  const data = item.data as any;
+  return data.workflow_slug ?? null;
+}
+
 function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
   let score = 0;
   const aCat = resolveCategory(getItemCategory(a));
   const bCat = resolveCategory(getItemCategory(b));
-  if (aCat === bCat) score += 2;
+  const aColl = getItemCollection(a);
+  const bColl = getItemCollection(b);
+  const sameCollection = !!aColl && aColl === bColl;
+
+  // Same collection (e.g. fragrance==fragrance) is the strong signal
+  if (sameCollection) score += 5;
+  // Same family but different collection: no points (was +2)
   if (a.type === b.type) score += 1;
 
-  // Scene-to-scene bonus
-  if (a.type === 'scene' && b.type === 'scene') score += 3;
+  // Scene-to-scene bonus only when collections also match
+  if (a.type === 'scene' && b.type === 'scene' && sameCollection) score += 3;
 
   // Tag overlap (weighted)
   const aTags = getItemTags(a);
@@ -101,24 +120,29 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
     if (bTags.includes(t)) score += 1.5;
   }
 
-  // Workflow slug match
+  // Workflow slug match (presets)
   if (a.type === 'preset' && b.type === 'preset') {
     if (a.data.workflow_slug && a.data.workflow_slug === b.data.workflow_slug) score += 2;
   }
+
+  // Product-images workflow + same collection boost (covers scene+preset cross-type)
+  const aWf = getWorkflowSlug(a);
+  const bWf = getWorkflowSlug(b);
+  if (aWf === 'product-images' && bWf === 'product-images' && sameCollection) score += 2;
 
   // Cross-type category overlap
   if (a.type !== b.type) {
     if (getItemCategory(a) === getItemCategory(b)) score += 2;
   }
 
-  // Description keyword overlap
+  // Description keyword overlap — capped at +1 and require >=2 overlapping keywords
   const aWords = extractKeywords(getItemDescription(a));
   const bWords = new Set(extractKeywords(getItemDescription(b)));
   let kwOverlap = 0;
   for (const w of aWords) {
     if (bWords.has(w)) kwOverlap++;
   }
-  score += Math.min(kwOverlap * 0.5, 4);
+  if (kwOverlap >= 2) score += 1;
 
   return score;
 }
