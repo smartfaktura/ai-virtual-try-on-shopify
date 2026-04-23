@@ -31,6 +31,7 @@ export function DashboardDiscoverSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
+  const { data: recommended = [], isLoading: isLoadingRec } = useRecommendedDiscoverItems({ mode: 'auth' });
   const { featuredMap } = useFeaturedItems();
   const { isSaved, toggleSave } = useSavedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
