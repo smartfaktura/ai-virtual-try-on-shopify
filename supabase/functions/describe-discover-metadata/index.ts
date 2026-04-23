@@ -68,6 +68,10 @@ CATEGORY DEFINITIONS — pick the single best match:
 
 Be concise and catchy.`;
 
+    const sceneSuggestionBlock = sceneList.length > 0
+      ? `\n\nSCENE SUGGESTION — pick ONE scene name from this list that best matches the image. If none match, return an empty string for "suggested_scene_name". You MUST return EXACTLY one of these strings (or empty):\n${sceneList.map(s => `- ${s}`).join('\n')}`
+      : '';
+
     const userContent: any[] = [
       {
         type: "image_url",
@@ -75,9 +79,10 @@ Be concise and catchy.`;
       },
       {
         type: "text",
-        text: prompt
+        text: (prompt
           ? `The prompt used to generate this image was: "${prompt}". Suggest a short catchy title, the best category, and relevant tags.`
-          : "Suggest a short catchy title, the best category, and relevant tags for this image.",
+          : "Suggest a short catchy title, the best category, and relevant tags for this image.")
+          + sceneSuggestionBlock,
       },
     ];
 
