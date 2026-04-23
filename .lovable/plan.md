@@ -1,92 +1,156 @@
 
 
-## Fix scene picker: not clickable + wrongly preselected with AI guess
+## Fix Add to Discover modal: bigger layout, scene browser modal, and wrong-image bug
 
-### Root causes (from `AddToDiscoverModal.tsx`)
+### Three fixes in this loop
 
-1. **Picker is invisible/unclickable.** `PopoverContent` uses `z-50` (default `src/components/ui/popover.tsx` line 20) but the modal backdrop is `z-[300]` (line 324–325). The popover portals to `<body>` and renders **behind** the backdrop, so the search input + scene options sit under the dim layer. Any click on them hits the backdrop, which has `onClick={onClose}` (line 324), and the modal closes.
+---
 
-2. **Wrong scene preselected as if it were correct.** This Library item is older and has `job.scene_name = null` (`useLibraryItems.ts` line 89), so `initialSceneName` is null. The AI auto-fill effect (lines 184–190) then **writes the AI suggestion into `pickedSceneName`** with only a small "AI" badge. Admin sees a confidently-selected wrong scene ("Shadow Play") and the missing-scene warning is hidden. The original generation context simply isn't in the DB — we can't recover it, but we should not pretend we did.
+### 1. Wrong image opens in Library lightbox (regression)
 
-### Fix
+**Root cause** in `src/components/app/LibraryDetailModal.tsx`:
+- `activeItem = hasMultiple ? items[currentIndex] ?? item : item` (line 59)
+- `currentIndex` is reset via `useEffect(() => setCurrentIndex(initialIndex), [initialIndex, open])` (line 57)
+- When the user clicks a different thumbnail in `/app/library`, parent re-renders with new `selectedItem` + new `initialIndex`. For one render cycle, `currentIndex` still holds the **previous** value → `items[currentIndex]` resolves to the wrong item (especially when the list has shifted from a refetch).
+- Same root cause makes `items[currentIndex]` go stale when react-query refetches `items` while the modal is open — index now points to a different row.
 
-**A. Make pickers actually usable inside the modal**
-
-In `AddToDiscoverModal.tsx`, raise the z-index of each `PopoverContent` above the modal backdrop:
-
-```tsx
-<PopoverContent
-  className="z-[320] w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto"
-  align="start"
->
-```
-
-Apply to all three pickers (Workflow line 482, Scene line 523, Model line 592). Use `z-[320]` so it sits above the modal's `z-[300]` wrapper but below any global toast layer.
-
-We do **not** edit `src/components/ui/popover.tsx` itself — keep the global default at `z-50` and override only inside this modal so we don't affect popovers elsewhere.
-
-Sanity check on click-outside: backdrop has `onClick={onClose}` and the modal box uses `e.stopPropagation()` (line 328). The popover is portaled to `<body>` so its clicks don't bubble through the modal at all — once it's visible above the backdrop, clicks land on its options correctly. Radix's own outside-click handler will close the popover (not the modal) when clicking the backdrop while the popover is open.
-
-**B. Stop pre-applying the AI scene guess as a confirmed selection**
-
-Change the AI auto-fill block (lines 183–190) so the suggestion is **offered**, not **applied**:
+**Fix**: derive the active item by **id**, not by index, and use `item` as the source of truth, with `items` only used for navigation.
 
 ```tsx
-// AI scene suggestion — store as suggestion only, do NOT auto-select
-if (!initialSceneName && data.suggested_scene_name) {
-  const match = allScenes.find(s => s.name === data.suggested_scene_name);
-  if (match) {
-    setAiSuggestedScene(match.name);
-    // pickedSceneName stays null → warning + "Apply suggestion" CTA shown
-  }
-}
+// Replace:
+const activeItem = hasMultiple ? items[currentIndex] ?? item : item;
+
+// With:
+const activeItem = useMemo(() => {
+  if (!hasMultiple) return item;
+  // Prefer current index match, but fall back to id lookup, then to `item`
+  const byIndex = items[currentIndex];
+  if (byIndex && byIndex.id === item?.id) return byIndex;
+  const byId = item ? items.find(i => i.id === item.id) : null;
+  return byId ?? items[currentIndex] ?? item;
+}, [hasMultiple, items, currentIndex, item]);
+
+// And re-sync currentIndex whenever the parent's `item.id` changes:
+useEffect(() => {
+  if (!item || !hasMultiple) return;
+  const idx = items.findIndex(i => i.id === item.id);
+  if (idx >= 0 && idx !== currentIndex) setCurrentIndex(idx);
+}, [item?.id, items, hasMultiple]); // intentionally not including currentIndex
 ```
 
-Then update the missing-scene block (lines 567–574) to render the suggestion as a one-click hint:
+This makes the modal **id-driven** instead of index-driven, eliminating the wrong-image flash and the stale-index drift after refetches.
 
+---
+
+### 2. Bigger "Add to Discover" modal so all info fits
+
+**File**: `src/components/app/AddToDiscoverModal.tsx`
+
+Currently `max-w-md` (~448px) with everything stacked → Generation Context section gets cramped, pickers get cut off. Change to a **two-column layout on md+** with a wider container, keep single column on mobile.
+
+- Container: `max-w-md mx-4` → `max-w-3xl mx-4` (768px). Outer wrapper gains `max-h-[90vh] flex flex-col`.
+- Header stays full-width.
+- Below header, body becomes `grid md:grid-cols-2 gap-6` with internal scroll: `flex-1 overflow-y-auto`.
+  - **Left column**: image preview (larger — `max-h-72`), Title, Tags.
+  - **Right column**: Category (family + sub-row), Generation Context block (Workflow / Scene / Model / Product toggle).
+- Footer (Publish button + helper text) stays full-width, sticky bottom inside the container, `border-t border-border/30 px-6 py-4`.
+
+This gives all controls room to breathe; pickers, tag input, and category chips no longer overlap.
+
+---
+
+### 3. Replace 1000-row Scene popover with a category-browser modal
+
+**Current behaviour**: Scene picker is a `<Popover>` with a single long scrollable list of ~1100 scenes (mocks + custom + product_image_scenes). That's slow to mount, slow to scroll, hides the structure.
+
+**Fix**: Open a dedicated **`SceneBrowserModal`** when the user clicks the Scene picker (instead of the Popover) — but **only when the auto-detected scene is null** (so admins keep the fast inline picker for confirmed scenes). User can always force-open the browser via a small "Browse all scenes" button next to the picker trigger.
+
+#### New file: `src/components/app/SceneBrowserModal.tsx`
+
+Dedicated picker that mirrors the `/app/generate/product-images` Step-2 category structure using existing `CATEGORY_FAMILY_MAP` + `SUB_FAMILY_LABEL_OVERRIDES` from `src/lib/sceneTaxonomy.ts`.
+
+Layout:
 ```text
-⚠ No scene detected. Pick one so Recreate works.
-[Apply AI suggestion: "Shadow Play"]   ← small inline button, only shown when aiSuggestedScene && !pickedSceneName
+┌───────────────────────────────────────────────────────────────┐
+│ Browse Scenes                              [search…]      [×] │
+├──────────────┬────────────────────────────────────────────────┤
+│ FAMILIES     │  Subfamily tabs (chips):                       │
+│ • Fashion    │  [All] [Garments] [Dresses] [Hoodies] …        │
+│ • Footwear   │                                                │
+│ • Bags       │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐               │
+│ • Watches    │  │ thumb│ │ thumb│ │ thumb│ │ thumb│           │
+│ • Eyewear    │  │ name │ │ name │ │ name │ │ name │           │
+│ • Jewelry    │  └─────┘ └─────┘ └─────┘ └─────┘               │
+│ • Beauty     │  …                                              │
+│ • Home       │                                                │
+│ • Tech       │                                                │
+│ • Food       │                                                │
+│ • Wellness   │                                                │
+│ • Freestyle  │  ← non-mapped slugs grouped here               │
+└──────────────┴────────────────────────────────────────────────┘
 ```
 
-The "Apply" button calls `setPickedSceneName(aiSuggestedScene)`. Admin keeps full control: they can ignore it and pick the correct scene from the (now-clickable) picker, or accept the suggestion with one click.
+Behaviour:
+- Reuses `useDiscoverPickerOptions(open)` — no new query, no extra fetch.
+- Group `scenes` by family using `CATEGORY_FAMILY_MAP[scene.category]` → fast, in-memory, runs once.
+- Left rail: family list with counts. Selecting a family scopes the right side.
+- Top of right side: subfamily chips (the raw `category_collection` slugs that fall under the selected family) + an "All" chip. Labels via `getSubFamilyLabel(slug)`.
+- Right side: 4-col grid of scene cards (thumbnail + name) — virtualised lightly with `max-h-[60vh] overflow-y-auto` + lazy `<img loading="lazy">`. No virtual list dependency; ~200 visible items per family is fine.
+- Search bar in the header filters across the **currently selected family** (or all if no family selected) by name.
+- Selecting a card calls `onSelect(scene)` and closes.
+- Container: `max-w-5xl max-h-[85vh]` so it sits above `AddToDiscoverModal` without crowding.
 
-The existing "AI" badge inside the picker trigger (lines 516–518) keeps working — it now appears only after the admin actually applies the suggestion.
+Z-index: `z-[340]` (above the AddToDiscoverModal at `z-[300]` and its popovers at `z-[320]`).
+
+#### Wire it into `AddToDiscoverModal.tsx`
+
+- Add state: `const [sceneBrowserOpen, setSceneBrowserOpen] = useState(false);`
+- The Scene picker trigger button now branches:
+  - When `pickedSceneName` is null **and** `aiSuggestedScene` is also null → clicking the trigger opens `SceneBrowserModal` directly (skips the Popover).
+  - Otherwise → keeps the existing Popover with a small "Browse all" button at its top that opens `SceneBrowserModal` (so admin can always switch to the structured picker).
+- Render `<SceneBrowserModal open={sceneBrowserOpen} onClose={…} scenes={allScenes} value={pickedSceneName} onSelect={(s) => { setPickedSceneName(s.name); setSceneBrowserOpen(false); }} />` at the modal root.
+
+#### Performance note (image appearance speed)
+Yes, mounting 1000+ `<img>` tags inside a Popover slows the modal down — every popover open paints them all. The new browser modal:
+- only renders the visible family's items (typically <200),
+- uses `loading="lazy"` so off-screen thumbnails don't hit the network,
+- mounts only when explicitly opened.
+
+This eliminates the slowness. The inline AI-detected scene case (most common path) keeps the lightweight Popover.
+
+---
 
 ### Files touched
 
 ```text
+EDIT  src/components/app/LibraryDetailModal.tsx
+        - Make activeItem id-driven (memo)
+        - Re-sync currentIndex from item.id when parent changes selection
+
 EDIT  src/components/app/AddToDiscoverModal.tsx
-        - PopoverContent (×3): add z-[320] to className
-        - AI auto-fill: store suggestion in aiSuggestedScene only; do not setPickedSceneName
-        - Missing-scene warning: add "Apply AI suggestion: <name>" button when suggestion exists
+        - Container: max-w-3xl, max-h-[90vh], two-column body grid on md+
+        - Sticky footer with Publish button
+        - Scene picker: open SceneBrowserModal when scene is null;
+          add "Browse all" button inside Popover for the populated case
+        - State + render for SceneBrowserModal
+
+NEW   src/components/app/SceneBrowserModal.tsx
+        - Two-pane category browser (families left, grid right)
+        - Reuses useDiscoverPickerOptions data; CATEGORY_FAMILY_MAP for grouping
+        - Search input scoped to selected family
+        - z-[340], lazy images, responsive grid
 ```
 
-No other files. No DB migration. No edge function changes. Other consumers of Popover, Library, freestyle gallery — all untouched.
-
-### Behavior after fix
-
-| Case | Before | After |
-|---|---|---|
-| Admin clicks Scene/Workflow/Model picker in modal | Popover opens behind backdrop, clicks close the modal | Popover renders above backdrop, options clickable, modal stays open |
-| Library item has no `scene_name` in DB | AI guess silently set as the picked scene → wrong metadata published | Picker stays empty, red warning + one-click "Apply AI suggestion" button shown — admin always confirms |
-| Library item has correct `scene_name` | Preselected from prop (already worked) | Unchanged |
-| Admin republishes a previously-broken preset with correct scene | Existing dedupe-by-`image_url` updates the row | Unchanged |
-
-### Safety & performance
-
-- Pure className + small effect-body changes. Zero new queries, hooks, deps, or schema changes.
-- z-index override is scoped to this modal — `src/components/ui/popover.tsx` untouched, every other popover in the app keeps its current behavior.
-- AI suggestion still runs (existing `describe-discover-metadata` call), just no longer auto-applied.
-- If `aiSuggestedScene` is null (no suggestion or suggestion not in list), the warning falls back to its current text — no regression.
-- Submit payload (lines 272–291) is unchanged: it already reads from `pickedSceneName`, so an empty selection correctly publishes `scene_name: null` rather than a wrong guess.
+No DB migration. No edge function changes. No changes to `useDiscoverPickerOptions` (data is already in the right shape). No impact on `SubmitToDiscoverModal`, `DiscoverDetailModal`, freestyle gallery, or any other Library consumer.
 
 ### Validation
 
-1. Open Library item with missing scene → click Add to Discover → Scene picker opens above backdrop, search + scroll + select all work, modal stays open until admin clicks Publish.
-2. Same item shows red warning + "Apply AI suggestion: Shadow Play" button. Clicking it sets the picker to Shadow Play with the AI badge. Clicking the picker instead lets admin pick the actual scene.
-3. Open Library item with correct scene → picker preselected as before, no warning, no AI badge.
-4. Workflow + Model pickers also clickable; selections persist into the published preset.
-5. Clicking the dim backdrop (outside modal, outside popover) still closes the modal.
-6. Discover entries created from broken items now reliably carry the admin-confirmed `scene_name`, restoring Recreate.
+1. `/app/library` → click image #1 → correct image opens. Click ✕ → click image #5 → image #5 opens (not #1 flash). Trigger a refetch by submitting another generation → reopen library → no stale image.
+2. Add to Discover modal opens at ~768px wide on desktop, all controls visible without inner scroll on a 1080p viewport; mobile collapses to single column.
+3. Click Scene picker on an item with detected scene → fast inline Popover shows preselected scene (current behaviour). "Browse all" link inside Popover opens the browser modal.
+4. Click Scene picker on an item with no scene → SceneBrowserModal opens directly with families listed.
+5. Pick "Bags & Accessories" → see only ~80 scenes; subfamily chips filter to "Bags / Cardholders / Belts / Backpacks". Search "olive" filters within family.
+6. Selecting a scene closes the browser, populates the picker, removes the missing-scene warning.
+7. Publish — preset includes correct `scene_name` and `scene_image_url` from the picked card.
+8. Other places using Popover-based scene selection (none today besides this modal) unaffected; freestyle pickers untouched.
 
