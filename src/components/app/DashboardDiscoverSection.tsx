@@ -15,6 +15,7 @@ import {
   familyIdForSubtype,
 } from '@/lib/discoverTaxonomy';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
+import { useRecommendedDiscoverItems } from '@/hooks/useRecommendedDiscoverItems';
 import { useFeaturedItems } from '@/hooks/useFeaturedItems';
 import { useSavedItems } from '@/hooks/useSavedItems';
 import { Skeleton } from '@/components/ui/skeleton';
