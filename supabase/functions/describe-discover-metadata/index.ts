@@ -35,7 +35,10 @@ serve(async (req) => {
       });
     }
 
-    const { imageUrl, prompt } = await req.json();
+    const { imageUrl, prompt, sceneOptions } = await req.json();
+    const sceneList: string[] = Array.isArray(sceneOptions)
+      ? sceneOptions.filter((s: any) => typeof s === 'string' && s.length > 0).slice(0, 400)
+      : [];
 
     if (!imageUrl) {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
@@ -65,6 +68,10 @@ CATEGORY DEFINITIONS — pick the single best match:
 
 Be concise and catchy.`;
 
+    const sceneSuggestionBlock = sceneList.length > 0
+      ? `\n\nSCENE SUGGESTION — pick ONE scene name from this list that best matches the image. If none match, return an empty string for "suggested_scene_name". You MUST return EXACTLY one of these strings (or empty):\n${sceneList.map(s => `- ${s}`).join('\n')}`
+      : '';
+
     const userContent: any[] = [
       {
         type: "image_url",
@@ -72,9 +79,10 @@ Be concise and catchy.`;
       },
       {
         type: "text",
-        text: prompt
+        text: (prompt
           ? `The prompt used to generate this image was: "${prompt}". Suggest a short catchy title, the best category, and relevant tags.`
-          : "Suggest a short catchy title, the best category, and relevant tags for this image.",
+          : "Suggest a short catchy title, the best category, and relevant tags for this image.")
+          + sceneSuggestionBlock,
       },
     ];
 
@@ -129,6 +137,11 @@ Be concise and catchy.`;
                       items: { type: "string" },
                       description:
                         "3 to 5 single-word lowercase tags describing the image.",
+                    },
+                    suggested_scene_name: {
+                      type: "string",
+                      description:
+                        "If a scene options list was provided, return the EXACT name of the best-matching scene from that list, or empty string if none match. If no list was provided, return empty string.",
                     },
                   },
                   required: ["title", "category", "tags"],

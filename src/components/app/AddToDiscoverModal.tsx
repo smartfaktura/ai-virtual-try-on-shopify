@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
-import { X, Globe, Tag, Sparkles } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { X, Globe, Tag, Sparkles, AlertTriangle, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/brandedToast';
-import { mockModels, mockTryOnPoses } from '@/data/mockData';
+import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
+import { useDiscoverPickerOptions, type PickerSceneOption, type PickerModelOption, type PickerWorkflowOption } from '@/hooks/useDiscoverPickerOptions';
 import {
   getDiscoverFamilies,
   getDiscoverSubtypes,
@@ -65,10 +67,38 @@ export function AddToDiscoverModal({
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [showModel, setShowModel] = useState(true);
-  const [showScene, setShowScene] = useState(true);
   const [showProduct, setShowProduct] = useState(false);
+
+  // Picker state — preselected from props on open
+  const [pickedSceneName, setPickedSceneName] = useState<string | null>(null);
+  const [pickedModelName, setPickedModelName] = useState<string | null>(null);
+  const [pickedWorkflowSlug, setPickedWorkflowSlug] = useState<string | null>(null);
+  const [aiSuggestedScene, setAiSuggestedScene] = useState<string | null>(null);
+  const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
+  const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
+  const [workflowPopoverOpen, setWorkflowPopoverOpen] = useState(false);
+  const [sceneSearch, setSceneSearch] = useState('');
+  const [modelSearch, setModelSearch] = useState('');
+
   const queryClient = useQueryClient();
+
+  const { scenes: allScenes, scenesByCategory, models: allModels, workflows: allWorkflows } =
+    useDiscoverPickerOptions(open);
+
+  const pickedScene = useMemo<PickerSceneOption | null>(
+    () => allScenes.find(s => s.name === pickedSceneName) ?? null,
+    [allScenes, pickedSceneName]
+  );
+  const pickedModel = useMemo<PickerModelOption | null>(
+    () => allModels.find(m => m.name === pickedModelName) ?? null,
+    [allModels, pickedModelName]
+  );
+  const pickedWorkflow = useMemo<PickerWorkflowOption | null>(
+    () => allWorkflows.find(w => w.slug === pickedWorkflowSlug) ?? null,
+    [allWorkflows, pickedWorkflowSlug]
+  );
+
+  const sceneIsMissing = !pickedSceneName;
 
   const subtypeOptions = getDiscoverSubtypes(category);
   const showSubRow = isMultiSubFamily(category);
@@ -76,32 +106,53 @@ export function AddToDiscoverModal({
   // When the family changes, reset / auto-pick the sub-type.
   useEffect(() => {
     if (!showSubRow) {
-      // Single sub-type families auto-set their only slug.
       setSubcategory(subtypeOptions[0]?.slug ?? null);
     } else if (subcategory && !subtypeOptions.some((s) => s.slug === subcategory)) {
-      // Sub-type doesn't belong to the new family — clear it.
       setSubcategory(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
-  // Auto-fill with AI when modal opens
+  // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks)
+  const initialSceneName = useMemo(() => {
+    if (sceneName) return sceneName;
+    if (sceneId && !sceneId.startsWith('custom-')) {
+      const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
+      if (mock) return mock.name;
+    }
+    return null;
+  }, [sceneName, sceneId]);
+
+  const initialModelName = useMemo(() => {
+    if (modelName) return modelName;
+    if (modelId && !modelId.startsWith('custom-')) {
+      const mock = mockModels.find(m => m.modelId === modelId);
+      if (mock) return mock.name;
+    }
+    return null;
+  }, [modelName, modelId]);
+
+  // Reset & auto-fill when modal opens
   useEffect(() => {
     if (!open) return;
-    // Reset state
     setTitle('');
     setCategory(FAMILIES[0]?.id ?? 'fashion');
     setSubcategory(null);
     setTags([]);
     setTagInput('');
     setAiLoading(true);
-    setShowModel(true);
-    setShowScene(true);
     setShowProduct(false);
+    setPickedSceneName(initialSceneName);
+    setPickedModelName(initialModelName);
+    setPickedWorkflowSlug(workflowSlug ?? null);
+    setAiSuggestedScene(null);
+
+    // If scene is missing, ask AI to suggest one from the full scene list
+    const sceneOptions = !initialSceneName ? allScenes.map(s => s.name) : undefined;
 
     supabase.functions
       .invoke('describe-discover-metadata', {
-        body: { imageUrl, prompt },
+        body: { imageUrl, prompt, sceneOptions },
       })
       .then(({ data, error }) => {
         if (error || !data) {
@@ -109,7 +160,6 @@ export function AddToDiscoverModal({
           return;
         }
         if (data.title) setTitle(data.title);
-        // Accept either {family, subtype} (new) or {category} (legacy fallback).
         const fam: string | undefined = data.family ?? data.category;
         if (fam && DISCOVER_FAMILY_IDS.includes(fam)) {
           setCategory(fam);
@@ -123,7 +173,6 @@ export function AddToDiscoverModal({
             setSubcategory(null);
           }
         } else if (data.subtype) {
-          // No family but a subtype — derive family from it.
           const derived = familyIdForSubtype(data.subtype);
           if (derived) {
             setCategory(derived);
@@ -131,9 +180,18 @@ export function AddToDiscoverModal({
           }
         }
         if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
+        // AI scene suggestion — only apply if scene was missing AND option exists in list
+        if (!initialSceneName && data.suggested_scene_name) {
+          const match = allScenes.find(s => s.name === data.suggested_scene_name);
+          if (match) {
+            setPickedSceneName(match.name);
+            setAiSuggestedScene(match.name);
+          }
+        }
       })
       .catch(() => {})
       .finally(() => setAiLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, imageUrl, prompt]);
 
   if (!open) return null;
@@ -160,79 +218,35 @@ export function AddToDiscoverModal({
   const handlePublish = async () => {
     if (!title.trim()) return;
     setPublishing(true);
-    const effectiveSlug = workflowSlug || (workflowName ? workflowName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null);
 
-    // Resolve names and image URLs from IDs if not already provided
-    let resolvedModelName = modelName || null;
-    let resolvedModelImageUrl = modelImageUrl || null;
-    let resolvedSceneName = sceneName || null;
-    let resolvedSceneImageUrl = sceneImageUrl || null;
+    // Resolve scene image URL: prefer picker thumbnail, then fall back to prop / DB lookup
+    let resolvedSceneImageUrl: string | null = pickedScene?.imageUrl || null;
+    if (pickedSceneName && !resolvedSceneImageUrl) {
+      // Fall back to original prop or DB lookup
+      resolvedSceneImageUrl = sceneImageUrl || null;
+      if (!resolvedSceneImageUrl) {
+        try {
+          const { data: customScenes } = await supabase.rpc('get_public_custom_scenes');
+          const match = (customScenes as any[] ?? []).find((s: any) => s.name === pickedSceneName);
+          if (match) resolvedSceneImageUrl = match.image_url;
+        } catch {}
+      }
+    }
 
-    // Resolve model by ID
-    if (modelId && (!resolvedModelName || !resolvedModelImageUrl)) {
-      if (modelId.startsWith('custom-')) {
+    // Resolve model image URL: prefer picker thumbnail, then fall back to prop / DB lookup
+    let resolvedModelImageUrl: string | null = pickedModel?.imageUrl || null;
+    if (pickedModelName && !resolvedModelImageUrl) {
+      resolvedModelImageUrl = modelImageUrl || null;
+      if (!resolvedModelImageUrl) {
         try {
           const { data } = await supabase
             .from('custom_models' as any)
-            .select('name, image_url')
-            .eq('id', modelId.replace('custom-', ''))
+            .select('image_url')
+            .eq('name', pickedModelName)
             .limit(1)
             .single();
-          if (data) {
-            resolvedModelName = resolvedModelName || (data as any).name;
-            resolvedModelImageUrl = resolvedModelImageUrl || (data as any).image_url;
-          }
+          if (data) resolvedModelImageUrl = (data as any).image_url;
         } catch {}
-      } else {
-        const mock = mockModels.find(m => m.modelId === modelId);
-        if (mock) {
-          resolvedModelName = resolvedModelName || mock.name;
-          resolvedModelImageUrl = resolvedModelImageUrl || mock.previewUrl;
-        }
-      }
-    }
-
-    // Resolve scene by ID
-    if (sceneId && (!resolvedSceneName || !resolvedSceneImageUrl)) {
-      if (sceneId.startsWith('custom-')) {
-        try {
-          const { data: allScenes } = await supabase.rpc('get_public_custom_scenes');
-          const match = (allScenes as any[] ?? []).find((s: any) => s.id === sceneId.replace('custom-', ''));
-          if (match) {
-            resolvedSceneName = resolvedSceneName || match.name;
-            resolvedSceneImageUrl = resolvedSceneImageUrl || match.image_url;
-          }
-        } catch {}
-      } else {
-        const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
-        if (mock) {
-          resolvedSceneName = resolvedSceneName || mock.name;
-          resolvedSceneImageUrl = resolvedSceneImageUrl || mock.previewUrl;
-        }
-      }
-    }
-
-    // Fallback: resolve by name if we have names but no images
-    if (!resolvedSceneImageUrl && resolvedSceneName) {
-      try {
-        const { data: allScenes2 } = await supabase.rpc('get_public_custom_scenes');
-        const match2 = (allScenes2 as any[] ?? []).find((s: any) => s.name === resolvedSceneName);
-        if (match2) resolvedSceneImageUrl = match2.image_url;
-      } catch {}
-    }
-    if (!resolvedModelImageUrl && resolvedModelName) {
-      try {
-        const { data } = await supabase
-          .from('custom_models' as any)
-          .select('image_url')
-          .eq('name', resolvedModelName)
-          .limit(1)
-          .single();
-        if (data) resolvedModelImageUrl = (data as any).image_url;
-      } catch {}
-      if (!resolvedModelImageUrl) {
-        const mock = mockModels.find(m => m.name === resolvedModelName);
-        if (mock) resolvedModelImageUrl = mock.previewUrl;
       }
     }
 
@@ -266,12 +280,12 @@ export function AddToDiscoverModal({
       quality,
       sort_order: 0,
       is_featured: false,
-      workflow_slug: effectiveSlug,
-      workflow_name: workflowName || null,
-      scene_name: showScene ? resolvedSceneName : null,
-      model_name: showModel ? resolvedModelName : null,
-      scene_image_url: showScene ? resolvedSceneImageUrl : null,
-      model_image_url: showModel ? resolvedModelImageUrl : null,
+      workflow_slug: pickedWorkflow?.slug ?? null,
+      workflow_name: pickedWorkflow?.name ?? workflowName ?? null,
+      scene_name: pickedSceneName,
+      model_name: pickedModelName,
+      scene_image_url: pickedSceneName ? resolvedSceneImageUrl : null,
+      model_image_url: pickedModelName ? resolvedModelImageUrl : null,
       product_name: safeProductName,
       product_image_url: safeProductImageUrl,
     } as any;
@@ -446,24 +460,179 @@ export function AddToDiscoverModal({
             <p className="text-[10px] text-muted-foreground/50">{tags.length}/5 tags</p>
           </div>
 
-          {/* Visibility toggles */}
-          <div className="space-y-2.5 p-3 rounded-xl bg-muted/30 border border-border/30">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">Visibility</p>
-            {(modelName || modelId) && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-foreground/80">Show model name</span>
-                <Switch checked={showModel} onCheckedChange={setShowModel} />
-              </div>
-            )}
-            {(sceneName || sceneId) && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-foreground/80">Show scene name</span>
-                <Switch checked={showScene} onCheckedChange={setShowScene} />
-              </div>
-            )}
+          {/* Generation Context — admin can edit any field */}
+          <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border/30">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">Generation Context</p>
+              <p className="text-[10px] text-muted-foreground/50">Confirm or edit</p>
+            </div>
+
+            {/* Workflow picker */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground/80">Workflow</label>
+              <Popover open={workflowPopoverOpen} onOpenChange={setWorkflowPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
+                    <span className={cn('truncate', !pickedWorkflow && 'text-muted-foreground/60')}>
+                      {pickedWorkflow?.name ?? '— No workflow —'}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto" align="start">
+                  <button
+                    onClick={() => { setPickedWorkflowSlug(null); setWorkflowPopoverOpen(false); }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
+                  >
+                    — No workflow —
+                  </button>
+                  {allWorkflows.map(w => (
+                    <button
+                      key={w.slug}
+                      onClick={() => { setPickedWorkflowSlug(w.slug); setWorkflowPopoverOpen(false); }}
+                      className={cn(
+                        'w-full text-left px-2.5 py-1.5 rounded-md text-xs hover:bg-muted',
+                        pickedWorkflowSlug === w.slug && 'bg-muted font-medium'
+                      )}
+                    >
+                      {w.name}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Scene picker */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground/80">Scene</label>
+              <Popover open={scenePopoverOpen} onOpenChange={(o) => { setScenePopoverOpen(o); if (!o) setSceneSearch(''); }}>
+                <PopoverTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
+                    <span className={cn('truncate flex items-center gap-2', !pickedScene && 'text-muted-foreground/60')}>
+                      {pickedScene?.imageUrl && (
+                        <img src={pickedScene.imageUrl} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                      )}
+                      <span className="truncate">{pickedSceneName ?? '— No scene —'}</span>
+                      {aiSuggestedScene && pickedSceneName === aiSuggestedScene && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-medium shrink-0">AI</span>
+                      )}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-80 overflow-auto" align="start">
+                  <Input
+                    autoFocus
+                    placeholder="Search scenes..."
+                    value={sceneSearch}
+                    onChange={e => setSceneSearch(e.target.value)}
+                    className="h-8 text-xs mb-2"
+                  />
+                  <button
+                    onClick={() => { setPickedSceneName(null); setScenePopoverOpen(false); }}
+                    className="w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
+                  >
+                    — No scene —
+                  </button>
+                  {Object.entries(scenesByCategory).map(([cat, list]) => {
+                    const filtered = sceneSearch
+                      ? list.filter(s => s.name.toLowerCase().includes(sceneSearch.toLowerCase()))
+                      : list;
+                    if (filtered.length === 0) return null;
+                    return (
+                      <div key={cat} className="mt-2">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 px-2 py-1">
+                          {poseCategoryLabels[cat] ?? cat}
+                        </p>
+                        {filtered.map(s => (
+                          <button
+                            key={s.name}
+                            onClick={() => { setPickedSceneName(s.name); setScenePopoverOpen(false); }}
+                            className={cn(
+                              'w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted',
+                              pickedSceneName === s.name && 'bg-muted font-medium'
+                            )}
+                          >
+                            {s.imageUrl && (
+                              <img src={s.imageUrl} alt="" className="w-6 h-6 rounded object-cover shrink-0" />
+                            )}
+                            <span className="truncate">{s.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
+              {sceneIsMissing && (
+                <div className="flex items-start gap-1.5 mt-1 px-1">
+                  <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-destructive leading-tight">
+                    No scene detected. Pick one so Recreate works.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Model picker */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground/80">Model</label>
+              <Popover open={modelPopoverOpen} onOpenChange={(o) => { setModelPopoverOpen(o); if (!o) setModelSearch(''); }}>
+                <PopoverTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
+                    <span className={cn('truncate flex items-center gap-2', !pickedModel && 'text-muted-foreground/60')}>
+                      {pickedModel?.imageUrl && (
+                        <img src={pickedModel.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" />
+                      )}
+                      <span className="truncate">{pickedModelName ?? '— No model —'}</span>
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-72 overflow-auto" align="start">
+                  <Input
+                    autoFocus
+                    placeholder="Search models..."
+                    value={modelSearch}
+                    onChange={e => setModelSearch(e.target.value)}
+                    className="h-8 text-xs mb-2"
+                  />
+                  <button
+                    onClick={() => { setPickedModelName(null); setModelPopoverOpen(false); }}
+                    className="w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
+                  >
+                    — No model —
+                  </button>
+                  {allModels
+                    .filter(m => !modelSearch || m.name.toLowerCase().includes(modelSearch.toLowerCase()))
+                    .map(m => (
+                      <button
+                        key={m.name}
+                        onClick={() => { setPickedModelName(m.name); setModelPopoverOpen(false); }}
+                        className={cn(
+                          'w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted',
+                          pickedModelName === m.name && 'bg-muted font-medium'
+                        )}
+                      >
+                        {m.imageUrl && (
+                          <img src={m.imageUrl} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                        )}
+                        <span className="truncate">{m.name}</span>
+                      </button>
+                    ))}
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Product toggle (existing behaviour) */}
             {productName && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-foreground/80">Show product used</span>
+              <div className="flex items-center justify-between pt-1 border-t border-border/30">
+                <div className="flex items-center gap-2">
+                  {productImageUrl && (
+                    <img src={productImageUrl} alt="" className="w-6 h-6 rounded object-cover" />
+                  )}
+                  <span className="text-xs text-foreground/80 truncate">Show product: {productName}</span>
+                </div>
                 <Switch checked={showProduct} onCheckedChange={setShowProduct} />
               </div>
             )}
