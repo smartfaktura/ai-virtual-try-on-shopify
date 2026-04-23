@@ -1,39 +1,54 @@
 
 
-## Restyle "From Explore" to match category sections
+## Polish "From Explore" section
 
-### Problem
-The "From Explore" section in Wizard Step 2 currently renders as a giant single card stretched across the full grid (~5 columns wide), making it look broken next to the tight "Creative Shots" / "Beverages" category grids. The explainer text is a small caption below it.
+### Two fixes
 
-### Fix
+**1. Header now matches CREATIVE SHOTS exactly**
 
-**File:** `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (lines 496–513)
+Current "PRE-SELECTED FROM EXPLORE" uses `text-primary` (blue). Change to `text-muted-foreground` to match `SubGroupSection` (line 917). Same font size, weight, tracking — just neutral color so it reads as a section label, not a badge.
 
-Match the visual rhythm of `SubGroupSection`:
-1. **Header row** — same style as "CREATIVE SHOTS": `text-[11px] font-semibold uppercase tracking-wide`, with the colored "Pre-selected" tag inline + a thin divider line + a "1 selected" pill on the right (mirrors `Select All` placement).
-2. **Grid** — keep the same `gridClass` the other sections use, but render two cards side-by-side at the same size as Creative Shots cards:
-   - **Card A**: the actual scene card (`SceneCard`, normal size — no longer full-width).
-   - **Card B**: a sibling **explainer card** with the same dimensions — light dashed border, `Sparkles` icon, title "Pre-selected from Explore", body "Add more shots below to get a richer set of visuals." This makes the row feel intentional instead of empty.
-3. Remove the standalone `<p>` caption below (now lives inside the explainer card).
+**2. Explainer card matches SceneCard dimensions + adds a VOVV.AI avatar**
+
+Current explainer is `aspect-[4/5]` with no footer, so it's visibly shorter than `SceneCard` (which is `aspect-[3/4]` image **+** a `min-h-[44px]` footer with title). Mismatch = the bottom edges don't line up.
+
+Rebuild it to mirror SceneCard's exact two-part structure:
+- Top: `aspect-[3/4]` block, dashed border, soft `bg-muted/20`, with a small **VOVV.AI team avatar** (32px circle, `border-primary/20 ring-1 ring-primary/10`, picked from `TEAM_MEMBERS` in `@/data/teamData` — same source used by `CatalogGenerate.tsx`) + a `Sparkles` badge corner. Centered tagline: "Picked for your product".
+- Bottom: same `p-1.5 min-h-[44px]` footer block as SceneCard, holding "Add more shots below" in `text-[11px]` muted.
+
+Result: both cards share identical outer height, border radius, and footer rhythm — they sit flush on the same baseline.
+
+### File
+
+```text
+EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx (lines 496–529)
+        - Change header color: text-primary → text-muted-foreground
+        - Rebuild explainer card to mirror SceneCard structure:
+            • aspect-[3/4] preview region (dashed border, muted bg)
+            • inside: VOVV avatar (TEAM_MEMBERS[0] or rotated) + Sparkles badge + tagline
+            • p-1.5 min-h-[44px] footer with "Add more shots below"
+        - Add import: TEAM_MEMBERS from '@/data/teamData'
+        - Add import: Avatar, AvatarImage, AvatarFallback from '@/components/ui/avatar'
+```
 
 ### Visual result
 
 ```text
-PRE-SELECTED FROM EXPLORE ─────────────────────────────  1 selected
+PRE-SELECTED FROM EXPLORE ─────────────────────────  1 selected
 ┌──────────┐ ┌──────────┐
-│  Frozen  │ │ ✨        │
-│   Aura   │ │ Picked   │
-│  [scene] │ │ from     │
-│          │ │ Explore  │
+│  Frozen  │ │ ╭──╮ ✨   │
+│   Aura   │ │ │👤│      │
+│  [scene] │ │ ╰──╯      │
+│          │ │ Picked   │
+│          │ │ for you  │
+├──────────┤ ├──────────┤
+│Frozen Aura│ │Add more… │
 └──────────┘ └──────────┘
-
-CREATIVE SHOTS ────────────────────────────────  Select All (1/14)
-┌──┐┌──┐┌──┐┌──┐ …
+   exact same height, exact same footer rhythm
 ```
 
-Both cards now follow the same `aspect-[4/5]` proportions, same border radius, same gap — visually consistent with all other category rows.
-
 ### Out of scope
-- No changes to data flow, scene resolution, selection logic, or routing.
-- Other category sections (`UnifiedCategorySectionWithSelectAll`, `SubGroupSection`) are untouched.
+
+- No data, routing, or selection-logic changes.
+- Other category sections untouched.
 
