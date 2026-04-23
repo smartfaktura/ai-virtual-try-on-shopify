@@ -26,7 +26,7 @@ const STATIC_SCENE_META = new Map<string, SceneMeta>(
   ])
 );
 
-type Window = 30 | 60 | 90;
+type Window = 1 | 7 | 30 | 60 | 90 | 360;
 type SortKey = 'total_uses' | 'unique_users' | 'last_used_at' | 'name';
 type Dir = 'asc' | 'desc';
 const PAGE_SIZE = 50;
