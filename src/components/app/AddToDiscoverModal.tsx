@@ -84,12 +84,34 @@ export function AddToDiscoverModal({
 
   const queryClient = useQueryClient();
 
-  const { scenes: allScenes, scenesByCategory, models: allModels, workflows: allWorkflows } =
+  const { scenes: allScenes, scenesForWorkflow, models: allModels, workflows: allWorkflows } =
     useDiscoverPickerOptions(open);
 
+  // Workflow-aware scene library: product-images → product_image_scenes (writes scene_ref);
+  // anything else → custom_scenes (legacy scene_name only).
+  const workflowScenes = useMemo(
+    () => scenesForWorkflow(pickedWorkflowSlug),
+    [scenesForWorkflow, pickedWorkflowSlug],
+  );
+  const workflowScenesByCategory = useMemo(() => {
+    const groups: Record<string, PickerSceneOption[]> = {};
+    workflowScenes.forEach(s => {
+      const key = s.category || 'other';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
+    });
+    return groups;
+  }, [workflowScenes]);
+
+  // Match against the workflow-specific library first; fall back to combined list
+  // so a previously-picked scene from a different workflow is still resolvable
+  // for display before being cleared on workflow switch.
   const pickedScene = useMemo<PickerSceneOption | null>(
-    () => allScenes.find(s => s.name === pickedSceneName) ?? null,
-    [allScenes, pickedSceneName]
+    () =>
+      workflowScenes.find(s => s.name === pickedSceneName) ??
+      allScenes.find(s => s.name === pickedSceneName) ??
+      null,
+    [workflowScenes, allScenes, pickedSceneName]
   );
   const pickedModel = useMemo<PickerModelOption | null>(
     () => allModels.find(m => m.name === pickedModelName) ?? null,
@@ -114,6 +136,18 @@ export function AddToDiscoverModal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
+
+  // When workflow changes, drop a previously-picked scene that doesn't exist
+  // in the new workflow's library (product-images vs custom_scenes are disjoint).
+  useEffect(() => {
+    if (!pickedSceneName) return;
+    const stillValid = workflowScenes.some(s => s.name === pickedSceneName);
+    if (!stillValid) {
+      setPickedSceneName(null);
+      setAiSuggestedScene(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickedWorkflowSlug]);
 
   // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks)
   const initialSceneName = useMemo(() => {
@@ -311,6 +345,12 @@ export function AddToDiscoverModal({
       }
     }
 
+    // For product-images workflow, persist the picked scene's `scene_ref`
+    // so the wizard can resolve it deterministically. Other workflows leave
+    // scene_ref null and rely on legacy scene_name.
+    const sceneRefToWrite =
+      pickedWorkflow?.slug === 'product-images' ? (pickedScene?.sceneRef ?? null) : null;
+
     const presetData = {
       title: title.trim(),
       prompt,
@@ -325,6 +365,7 @@ export function AddToDiscoverModal({
       workflow_slug: pickedWorkflow?.slug ?? null,
       workflow_name: pickedWorkflow?.name ?? workflowName ?? null,
       scene_name: pickedSceneName,
+      scene_ref: sceneRefToWrite,
       model_name: pickedModelName,
       scene_image_url: pickedSceneName ? resolvedSceneImageUrl : null,
       model_image_url: pickedModelName ? resolvedModelImageUrl : null,
@@ -546,10 +587,15 @@ export function AddToDiscoverModal({
                   </Popover>
                 </div>
 
-                {/* Scene picker */}
+                {/* Scene picker — library swaps based on selected workflow */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] text-muted-foreground/80">Scene</label>
+                    <label className="text-[11px] text-muted-foreground/80">
+                      Scene
+                      <span className="ml-1.5 text-[9px] text-muted-foreground/50 font-normal">
+                        ({pickedWorkflowSlug === 'product-images' ? 'product-images library' : 'custom scenes library'})
+                      </span>
+                    </label>
                     <button
                       type="button"
                       onClick={() => setSceneBrowserOpen(true)}
@@ -606,7 +652,7 @@ export function AddToDiscoverModal({
                         >
                           — No scene —
                         </button>
-                        {Object.entries(scenesByCategory).map(([cat, list]) => {
+                        {Object.entries(workflowScenesByCategory).map(([cat, list]) => {
                           const filtered = sceneSearch
                             ? list.filter(s => s.name.toLowerCase().includes(sceneSearch.toLowerCase()))
                             : list;
@@ -618,7 +664,7 @@ export function AddToDiscoverModal({
                               </p>
                               {filtered.map(s => (
                                 <button
-                                  key={s.name}
+                                  key={`${s.name}::${s.category}::${s.subCategory ?? ''}`}
                                   onClick={() => { setPickedSceneName(s.name); setScenePopoverOpen(false); }}
                                   className={cn(
                                     'w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted',
@@ -629,6 +675,9 @@ export function AddToDiscoverModal({
                                     <img src={s.imageUrl} alt="" className="w-6 h-6 rounded object-cover shrink-0" />
                                   )}
                                   <span className="truncate">{s.name}</span>
+                                  {s.subCategory && (
+                                    <span className="ml-auto text-[9px] text-muted-foreground/50 shrink-0">{s.subCategory}</span>
+                                  )}
                                 </button>
                               ))}
                             </div>
@@ -746,7 +795,7 @@ export function AddToDiscoverModal({
       <SceneBrowserModal
         open={sceneBrowserOpen}
         onClose={() => setSceneBrowserOpen(false)}
-        scenes={allScenes}
+        scenes={workflowScenes}
         value={pickedSceneName}
         onSelect={(s) => { setPickedSceneName(s.name); setSceneBrowserOpen(false); }}
       />
