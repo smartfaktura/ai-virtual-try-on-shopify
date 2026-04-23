@@ -99,9 +99,29 @@ export function DashboardDiscoverSection() {
   }, [defaultCategory]);
 
   const allItems = useMemo<DiscoverItem[]>(
-    () => presets.map((p) => ({ type: 'preset' as const, data: p })),
-    [presets]
+    () => [
+      ...presets.map((p) => ({ type: 'preset' as const, data: p })),
+      ...recommended.map((r) => ({ type: 'scene' as const, data: r })),
+    ],
+    [presets, recommended]
   );
+
+  // Hide chips that have zero items after merge
+  const orderedCategoriesFiltered = useMemo(() => {
+    const nonEmpty = new Set<string>(['all']);
+    for (const item of allItems) {
+      if (activeCategory === 'all' || true) {
+        // mark every family that has at least one matching item under '__all__'
+        for (const cat of CATEGORIES) {
+          if (cat.id === 'all') continue;
+          if (itemMatchesDiscoverFilter(item.data, cat.id, '__all__')) {
+            nonEmpty.add(cat.id);
+          }
+        }
+      }
+    }
+    return orderedCategories.filter((c) => nonEmpty.has(c.id));
+  }, [allItems]);
 
   const filtered = useMemo(() => {
     const items = activeCategory === 'all'
