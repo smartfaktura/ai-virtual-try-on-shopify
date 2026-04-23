@@ -1,73 +1,39 @@
 
 
-## Make Discover handoff workflow-aware
+## Restyle "From Explore" to match category sections
 
-You're right — we don't need to merge libraries. We just need Discover to read the **right** scene library based on the **workflow** the item belongs to.
+### Problem
+The "From Explore" section in Wizard Step 2 currently renders as a giant single card stretched across the full grid (~5 columns wide), making it look broken next to the tight "Creative Shots" / "Beverages" category grids. The explainer text is a small caption below it.
 
-### The simple rule
+### Fix
 
-| Discover item's `workflow_slug` | Scene picker source | URL param |
-|---|---|---|
-| `product-images` (or null/legacy "create product visuals") | `product_image_scenes` | `?sceneRef=<scene_id>` |
-| `freestyle` / any other workflow | `custom_scenes` | `?sceneId=<custom_scenes.id>` (existing) |
+**File:** `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (lines 496–513)
 
-That's it. No library merge, no migration of `custom_scenes`, no Phase 2 modal swap.
+Match the visual rhythm of `SubGroupSection`:
+1. **Header row** — same style as "CREATIVE SHOTS": `text-[11px] font-semibold uppercase tracking-wide`, with the colored "Pre-selected" tag inline + a thin divider line + a "1 selected" pill on the right (mirrors `Select All` placement).
+2. **Grid** — keep the same `gridClass` the other sections use, but render two cards side-by-side at the same size as Creative Shots cards:
+   - **Card A**: the actual scene card (`SceneCard`, normal size — no longer full-width).
+   - **Card B**: a sibling **explainer card** with the same dimensions — light dashed border, `Sparkles` icon, title "Pre-selected from Explore", body "Add more shots below to get a richer set of visuals." This makes the row feel intentional instead of empty.
+3. Remove the standalone `<p>` caption below (now lives inside the explainer card).
 
-### What Phase 1 already shipped (keep as-is)
-
-- `discover_presets.scene_ref` column ✅
-- Backfill for product-images items ✅
-- `?sceneRef` resolver in `ProductImages.tsx` with hard-stop on miss ✅
-- `Discover.tsx` + `DiscoverDetailModal.tsx` send `?sceneRef` when set ✅
-
-### What still needs fixing
-
-1. **Admin Discover form — workflow-aware scene picker**
-   `src/pages/admin/Discover*.tsx` (create + edit forms):
-   - When admin picks `workflow_slug = product-images` → Scene picker reads `product_image_scenes` (full 1500+ catalog, grouped by `category_collection` → `sub_category`), writes `scene_ref`.
-   - When admin picks any other workflow (`freestyle`, etc.) → Scene picker reads `custom_scenes`, writes `scene_name` only (legacy behavior, `scene_ref` stays null).
-   - Switching workflow clears the previously picked scene.
-
-2. **"Needs scene link" admin badge**
-   In the admin Discover list, flag rows where `workflow_slug = product-images` AND `scene_ref IS NULL`. One-click inline picker fixes them. (Other workflows are exempt — they don't need `scene_ref`.)
-
-3. **Verify Discover handoff is workflow-aware**
-   `Discover.tsx handleUseItem` and `DiscoverDetailModal.tsx` Recreate CTA:
-   - If `workflow_slug = product-images` → route to `/app/generate/product-images?sceneRef=…`
-   - If `workflow_slug = freestyle` → route to `/app/freestyle?…` with the existing freestyle params (no change)
-   - Other workflows → existing routing unchanged
-
-### Files to change
+### Visual result
 
 ```text
-EDIT  src/pages/admin/Discover*.tsx (create + edit forms)
-        - Workflow-aware scene picker (two sources, switched by workflow_slug)
-        - "Needs scene link" badge on the admin list
+PRE-SELECTED FROM EXPLORE ─────────────────────────────  1 selected
+┌──────────┐ ┌──────────┐
+│  Frozen  │ │ ✨        │
+│   Aura   │ │ Picked   │
+│  [scene] │ │ from     │
+│          │ │ Explore  │
+└──────────┘ └──────────┘
 
-EDIT  src/pages/Discover.tsx
-        - Confirm routing branches on workflow_slug; no fallthrough into wrong wizard
-
-EDIT  src/components/app/DiscoverDetailModal.tsx
-        - Same routing audit on Recreate CTA
-
-NO CHANGE
-  - product_image_scenes / custom_scenes tables
-  - Wizard Step 2 (already correct)
-  - Freestyle scene picker (already correct, uses custom_scenes)
-  - EditMetadataModal / ImageEditModal (don't exist here — Phase 2 cancelled)
-  - RLS, generation pipeline, prompt engine
+CREATIVE SHOTS ────────────────────────────────  Select All (1/14)
+┌──┐┌──┐┌──┐┌──┐ …
 ```
 
-### Validation
-
-1. Admin creates a Discover item with `workflow_slug = product-images` → picker shows `product_image_scenes`, saved row has `scene_ref` populated.
-2. Admin creates a Discover item with `workflow_slug = freestyle` → picker shows `custom_scenes`, saved row has `scene_name` only.
-3. User taps a product-images Discover item → wizard pre-ticks correct scene by `scene_ref`.
-4. User taps a freestyle Discover item → freestyle opens with the existing custom_scenes scene (unchanged).
-5. Admin list shows "Needs scene link" only on product-images rows missing `scene_ref`.
+Both cards now follow the same `aspect-[4/5]` proportions, same border radius, same gap — visually consistent with all other category rows.
 
 ### Out of scope
-
-- Touching `custom_scenes` data, Freestyle picker, Library, generation pipeline, RLS.
-- Any further unification — confirmed not needed.
+- No changes to data flow, scene resolution, selection logic, or routing.
+- Other category sections (`UnifiedCategorySectionWithSelectAll`, `SubGroupSection`) are untouched.
 
