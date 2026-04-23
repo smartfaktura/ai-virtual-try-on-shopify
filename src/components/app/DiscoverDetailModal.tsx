@@ -23,6 +23,7 @@ import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData'
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
+import { useDiscoverPickerOptions } from '@/hooks/useDiscoverPickerOptions';
 
 import { getDiscoverSubtypes, getDiscoverFamilies, FAMILY_NAME_TO_ID } from '@/lib/discoverTaxonomy';
 
