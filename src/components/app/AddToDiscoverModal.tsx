@@ -500,10 +500,11 @@ export function AddToDiscoverModal({
     // so the wizard can resolve it deterministically. Prefer the authoritative
     // scene_id passed in from the source generation (exact ref the wizard used);
     // fall back to the picker's scene_ref (matched by title — may collide).
-    const authoritativeSceneRef =
+    const propSceneRef =
       sceneId && !sceneId.startsWith('custom-') && !mockTryOnPoses.find(p => p.poseId === sceneId)
         ? sceneId
         : null;
+    const authoritativeSceneRef = propSceneRef ?? resolvedSceneRef;
     const sceneRefToWrite =
       pickedWorkflow?.slug === 'product-images'
         ? (authoritativeSceneRef ?? pickedScene?.sceneRef ?? null)
