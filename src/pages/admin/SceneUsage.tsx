@@ -500,7 +500,7 @@ export default function SceneUsage() {
                   return (
                     <li key={r.scene_id} className="flex items-center gap-2 text-sm">
                       {m?.thumbnail ? (
-                        <img src={getOptimizedUrl(m.thumbnail, { width: 80, quality: 60 })} alt="" className="w-7 h-9 rounded object-cover bg-muted" loading="lazy" />
+                        <img src={getOptimizedUrl(m.thumbnail, { width: 56, height: 72, quality: 60, resize: 'contain' })} alt="" className="w-7 h-9 rounded object-contain bg-muted" loading="lazy" />
                       ) : (
                         <div className="w-7 h-9 rounded bg-muted" />
                       )}
