@@ -96,6 +96,12 @@ export function DiscoverDetailModal({
   const [editSceneDisplayName, setEditSceneDisplayName] = useState('');
   const [editSceneCategory, setEditSceneCategory] = useState('lifestyle');
 
+  // Workflow-aware scene options.
+  const allSceneOptions = useMemo(
+    () => scenesForWorkflow(editWorkflowSlug === '__freestyle__' ? null : editWorkflowSlug),
+    [scenesForWorkflow, editWorkflowSlug],
+  );
+
   const { allCategoryLabels, allCategorySlugs } = useSceneCategories();
 
   const { data: workflows } = useQuery({
