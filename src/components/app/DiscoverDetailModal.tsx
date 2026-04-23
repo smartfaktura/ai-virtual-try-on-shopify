@@ -818,6 +818,18 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
               onClick={() => {
                 const d = item.data as any;
                 const wSlug = d.workflow_slug;
+                // Scene-type items always belong to product-images
+                if (item.type === 'scene') {
+                  onClose();
+                  const params = new URLSearchParams();
+                  const sceneTitle = d.name || d.scene_name;
+                  if (sceneTitle) params.set('scene', sceneTitle);
+                  const sceneImg = d.previewUrl || d.scene_image_url || d.image_url;
+                  if (sceneImg) params.set('sceneImage', sceneImg);
+                  params.set('fromDiscover', '1');
+                  navigate(`/app/generate/product-images?${params.toString()}`);
+                  return;
+                }
                 if (wSlug) {
                   onClose();
                   const params = new URLSearchParams();
@@ -825,13 +837,10 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                   if (d.scene_name) params.set('scene', d.scene_name);
                   if (d.model_image_url) params.set('modelImage', d.model_image_url);
                   if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
-                  if (!d.scene_image_url && item.type === 'scene' && (item.data as any).previewUrl) {
-                    params.set('sceneImage', (item.data as any).previewUrl);
-                    if (!d.scene_name && (item.data as any).name) params.set('scene', (item.data as any).name);
-                  }
                   if (!params.get('sceneImage') && d.image_url) {
                     params.set('sceneImage', d.image_url);
                   }
+                  params.set('fromDiscover', '1');
                   navigate(`/app/generate/${wSlug}?${params.toString()}`);
                 } else {
                   onClose();

@@ -459,12 +459,13 @@ export default function Discover() {
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
+      // Scene-type Discover items always belong to product-images workflow
       const sp = new URLSearchParams();
-      sp.set('scene', item.data.poseId);
+      if (item.data.name) sp.set('scene', item.data.name);
       if (item.data.previewUrl) sp.set('sceneImage', item.data.previewUrl);
       if (item.data.name) sp.set('sceneName', item.data.name);
       sp.set('fromDiscover', '1');
-      navigate(`/app/freestyle?${sp.toString()}`);
+      navigate(`/app/generate/product-images?${sp.toString()}`);
     } else {
       const d = item.data;
       // If it's a workflow preset, route to Generate page with model/scene pre-filled
@@ -472,6 +473,8 @@ export default function Discover() {
         const params = new URLSearchParams();
         if (d.model_name) params.set('model', d.model_name);
         if (d.scene_name) params.set('scene', d.scene_name);
+        if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
+        params.set('fromDiscover', '1');
         navigate(`/app/generate/${d.workflow_slug}?${params.toString()}`);
       } else {
         const params = new URLSearchParams({
