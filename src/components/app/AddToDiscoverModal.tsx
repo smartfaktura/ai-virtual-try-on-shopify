@@ -478,7 +478,7 @@ export function AddToDiscoverModal({
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto" align="start">
+                <PopoverContent className="z-[320] w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto" align="start">
                   <button
                     onClick={() => { setPickedWorkflowSlug(null); setWorkflowPopoverOpen(false); }}
                     className="w-full text-left px-2.5 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
