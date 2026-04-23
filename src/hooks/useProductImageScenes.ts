@@ -64,11 +64,12 @@ function selectCols(includePromptTemplate: boolean): string {
 
 // On-demand single-row fetch — used when the user picks a scene that came from
 // the slim "rest" payload and we need its full prompt_template + description.
-async function fetchSceneById(id: string): Promise<DbScene | null> {
+// Queries by the text `scene_id` slug (e.g. "acrylic-cube-shot"), NOT the UUID.
+async function fetchSceneById(sceneId: string): Promise<DbScene | null> {
   const { data, error } = await supabase
     .from('product_image_scenes' as any)
     .select('*')
-    .eq('id', id)
+    .eq('scene_id', sceneId)
     .maybeSingle();
   if (error) throw error;
   return (data as unknown as DbScene) ?? null;
