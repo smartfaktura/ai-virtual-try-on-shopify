@@ -1,66 +1,73 @@
 
 
-## Safety review of the unified-scenes plan
+## Make Discover handoff workflow-aware
 
-Short answer: **the plan is safe in principle, but as written it has 3 risks that need mitigation before we ship.** Here is what's safe, what's risky, and the adjusted plan.
+You're right — we don't need to merge libraries. We just need Discover to read the **right** scene library based on the **workflow** the item belongs to.
 
-### What's safe ✅
+### The simple rule
 
-- **Adding `scene_ref` column to `discover_presets`** — additive, nullable, no impact on existing reads.
-- **New `useAllScenes()` hook** — reads from `product_image_scenes`, which already powers Step 2. Same RLS, same data, no new attack surface.
-- **Resolver priority `?sceneRef` first, legacy fallback second** — pure addition, doesn't break old Discover items, old shareable URLs, or in-flight wizard sessions.
-- **Admin Discover form picker writing `scene_ref`** — admin-only, behind existing `has_role('admin')` RLS.
+| Discover item's `workflow_slug` | Scene picker source | URL param |
+|---|---|---|
+| `product-images` (or null/legacy "create product visuals") | `product_image_scenes` | `?sceneRef=<scene_id>` |
+| `freestyle` / any other workflow | `custom_scenes` | `?sceneId=<custom_scenes.id>` (existing) |
 
-### Risks that must be mitigated ⚠️
+That's it. No library merge, no migration of `custom_scenes`, no Phase 2 modal swap.
 
-**Risk 1 — `EditMetadataModal` and `ImageEditModal` swap data sources**
-These modals today read from `custom_scenes` (Discover-curated subset). The plan swaps them to the full `product_image_scenes` library (1500+ rows vs ~200). Two concrete dangers:
-- Any saved metadata that referenced a `custom_scenes.id` (uuid) won't resolve in the new picker (which keys by `scene_id` text). Users could see "Scene: unknown" on existing assets.
-- If the Edit Image "Browse scenes" modal **applies** the picked scene's `prompt_template` to re-edit the image, swapping to `product_image_scenes` changes the prompt domain — some templates require product references the modal doesn't supply.
+### What Phase 1 already shipped (keep as-is)
 
-  → **Mitigation:** before swapping, audit what each modal **does** with the picked scene (display-only label vs. drives a prompt). If it drives a prompt, keep the modal on its current source for now and only unify the **picker UI** in a separate follow-up. If it's display-only, swap is safe.
+- `discover_presets.scene_ref` column ✅
+- Backfill for product-images items ✅
+- `?sceneRef` resolver in `ProductImages.tsx` with hard-stop on miss ✅
+- `Discover.tsx` + `DiscoverDetailModal.tsx` send `?sceneRef` when set ✅
 
-**Risk 2 — Backfill ambiguity for `discover_presets.scene_ref`**
-The plan says "unambiguous matches only." For ambiguous titles (Frozen Aura ×9), `scene_ref` stays NULL → those Discover items fall back to legacy resolver → **same wrong-variant bug as today** until admin manually fixes each one.
-  → **Mitigation:** for ambiguous titles, also auto-match using `discover_presets.category` → `product_image_scenes.category_collection` mapping (we already maintain a category map in the codebase). Only leave NULL when even that doesn't disambiguate. Surface NULL rows in the admin Discover list with a "Needs scene link" badge.
+### What still needs fixing
 
-**Risk 3 — Live Discover items currently using `?sceneImage` URL matching**
-A few legacy resolver paths in `ProductImages.tsx` match by image URL substring. If we don't carefully order the priority chain, `?sceneRef` lookup failures could fall through to image matching and pick the wrong row again.
-  → **Mitigation:** when `?sceneRef` is present but doesn't resolve to an active scene, **stop**. Show a soft toast ("This Explore scene is no longer available"), don't fall back to URL/title guessing. This is safer than silently picking a wrong scene.
+1. **Admin Discover form — workflow-aware scene picker**
+   `src/pages/admin/Discover*.tsx` (create + edit forms):
+   - When admin picks `workflow_slug = product-images` → Scene picker reads `product_image_scenes` (full 1500+ catalog, grouped by `category_collection` → `sub_category`), writes `scene_ref`.
+   - When admin picks any other workflow (`freestyle`, etc.) → Scene picker reads `custom_scenes`, writes `scene_name` only (legacy behavior, `scene_ref` stays null).
+   - Switching workflow clears the previously picked scene.
 
-### Out-of-scope risks (no impact)
+2. **"Needs scene link" admin badge**
+   In the admin Discover list, flag rows where `workflow_slug = product-images` AND `scene_ref IS NULL`. One-click inline picker fixes them. (Other workflows are exempt — they don't need `scene_ref`.)
 
-- Freestyle, presets-library, prompt-only Discover items, Add-to-Discover modal, Catalog Studio, Brand Models, Short Film, Creative Drops, generation queue, RLS on any table, edge functions, Stripe / billing, credit math.
+3. **Verify Discover handoff is workflow-aware**
+   `Discover.tsx handleUseItem` and `DiscoverDetailModal.tsx` Recreate CTA:
+   - If `workflow_slug = product-images` → route to `/app/generate/product-images?sceneRef=…`
+   - If `workflow_slug = freestyle` → route to `/app/freestyle?…` with the existing freestyle params (no change)
+   - Other workflows → existing routing unchanged
 
-### Adjusted, safer plan
-
-Same as before, with these changes:
-
-1. **Phase the modal swap.** Phase 1 ships only: DB column + backfill + Discover handoff + Wizard resolver + admin Discover picker. Phase 2 (separate PR) tackles `EditMetadataModal` / `ImageEditModal` after a per-modal audit.
-2. **Smarter backfill.** Use both title and category mapping; flag remaining NULLs in admin UI.
-3. **Hard stop on `?sceneRef` miss.** No silent fallback to title/image matching. Toast + leave wizard in normal Step 2 state.
-4. **Keep legacy resolver** untouched for Discover items without `scene_ref` (no regression for old links).
-
-### Files (unchanged from previous plan, minus the modal edits in Phase 1)
+### Files to change
 
 ```text
-DB migration   ALTER TABLE discover_presets ADD COLUMN scene_ref text + index
-DB data fix    Backfill scene_ref by title + category mapping
-NEW            src/hooks/useAllScenes.ts
-EDIT           src/pages/Discover.tsx              (handoff via ?sceneRef)
-EDIT           src/components/app/DiscoverDetailModal.tsx
-EDIT           src/pages/ProductImages.tsx         (resolver: sceneRef first, hard stop on miss)
-EDIT           src/pages/admin/Discover*.tsx       (scene picker writes scene_ref)
+EDIT  src/pages/admin/Discover*.tsx (create + edit forms)
+        - Workflow-aware scene picker (two sources, switched by workflow_slug)
+        - "Needs scene link" badge on the admin list
 
-DEFERRED to Phase 2 (after audit):
-   src/components/app/library/EditMetadataModal.tsx
-   src/components/app/library/ImageEditModal.tsx
+EDIT  src/pages/Discover.tsx
+        - Confirm routing branches on workflow_slug; no fallthrough into wrong wizard
+
+EDIT  src/components/app/DiscoverDetailModal.tsx
+        - Same routing audit on Recreate CTA
+
+NO CHANGE
+  - product_image_scenes / custom_scenes tables
+  - Wizard Step 2 (already correct)
+  - Freestyle scene picker (already correct, uses custom_scenes)
+  - EditMetadataModal / ImageEditModal (don't exist here — Phase 2 cancelled)
+  - RLS, generation pipeline, prompt engine
 ```
 
-### Validation gates before merging Phase 1
+### Validation
 
-1. Old Discover items without `scene_ref` still recreate exactly as today.
-2. New `?sceneRef` items land on the correct scene row regardless of product category.
-3. Admin can see and fix any "Needs scene link" rows.
-4. No change to Library, Edit Metadata, Edit Image, Freestyle, or any generation pipeline.
+1. Admin creates a Discover item with `workflow_slug = product-images` → picker shows `product_image_scenes`, saved row has `scene_ref` populated.
+2. Admin creates a Discover item with `workflow_slug = freestyle` → picker shows `custom_scenes`, saved row has `scene_name` only.
+3. User taps a product-images Discover item → wizard pre-ticks correct scene by `scene_ref`.
+4. User taps a freestyle Discover item → freestyle opens with the existing custom_scenes scene (unchanged).
+5. Admin list shows "Needs scene link" only on product-images rows missing `scene_ref`.
+
+### Out of scope
+
+- Touching `custom_scenes` data, Freestyle picker, Library, generation pipeline, RLS.
+- Any further unification — confirmed not needed.
 
