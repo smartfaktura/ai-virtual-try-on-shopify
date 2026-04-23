@@ -59,8 +59,8 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
 
 /** Human labels for category_collection slugs when shown as sub-family rows. */
 export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
-  'garments': 'Clothing & Apparel',
-  'activewear': 'Activewear & Sportswear',
+  'garments': 'Clothing',
+  'activewear': 'Activewear',
   'hats-small': 'Hats',
   'wallets-cardholders': 'Cardholders',
   'bags-accessories': 'Bags',

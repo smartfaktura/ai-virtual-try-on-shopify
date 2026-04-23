@@ -347,22 +347,27 @@ export default function Onboarding() {
             </Button>
 
             {step === 3 && !saving && (
-              <button
+              <Button
+                variant="outline"
+                size="pill"
                 onClick={handleSkipStep3}
-                className="w-full mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                disabled={saving}
+                className="w-full mt-3 font-medium bg-background hover:bg-muted"
               >
                 Skip for now
-              </button>
+              </Button>
             )}
 
             {step > 1 && (
-              <button
+              <Button
+                variant="ghost"
+                size="pill"
                 onClick={() => setStep(step - 1)}
                 disabled={saving}
-                className="w-full mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                className="w-full mt-2 font-medium text-muted-foreground hover:text-foreground"
               >
                 Go back
-              </button>
+              </Button>
             )}
           </div>
         </div>
