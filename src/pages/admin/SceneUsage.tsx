@@ -11,6 +11,7 @@ import { Loader2, Download, Search, ArrowUpDown, TrendingUp } from 'lucide-react
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { mockTryOnPoses } from '@/data/mockData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 // Static lookup for built-in freestyle/try-on scenes (pose_* and scene_* IDs)
 const STATIC_SCENE_META = new Map<string, SceneMeta>(
