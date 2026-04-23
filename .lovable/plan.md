@@ -1,61 +1,78 @@
 
 
-## Fix: Add to Discover loses the original `scene_id` from Product Visuals jobs
+## Fix: "No scene detected" on legacy Library items + bulletproof title-matching for product-images
 
-### Root cause
+### Why the previous fix wasn't enough
 
-When you generated the wallet on aloe leaves via Product Visuals, the wizard knew the exact scene ref (`botanical-oasis-10`). But by the time you opened **Add to Discover** from the Library, that ref was lost — so the modal shows "No scene detected" and tries to AI-guess instead.
+The earlier change made the modal **read** `scene_id` from the source job — but every existing `generation_jobs` row created before yesterday has `scene_id = NULL` in the DB (only `scene_name` was persisted). So for the wallet-on-aloe item you opened, there's nothing to read. The modal falls back to AI guessing → "No scene detected".
 
-There are **three breaks in the chain**, all small:
+I confirmed in the DB:
+- "Botanical Oasis" exists as **10 sibling rows**, one per `category_collection` (e.g. `botanical-oasis-10` = wallets-cardholders, `botanical-oasis-2` = sneakers, etc.).
+- All your past product-images jobs have `scene_id = NULL` — only the one new job after yesterday's wizard fix carries it.
 
-1. **Wizard → DB**: `src/pages/ProductImages.tsx` line 886 sends `scene_id: scene.id` in the payload, and `generate-workflow` line 988 reads it. But a quick DB check shows `generation_jobs.scene_id` is null on every recent product-images job, while `scene_name` is populated. Need to verify the field actually lands (likely a payload nesting issue — the snapshot at line 1078 reads `b.scene_id` but the wizard payload is correct, so something between is dropping it). Worst case: add a defensive log and re-confirm the field name.
+So we need a **deterministic title + category fallback** in the modal for legacy items, plus the existing `scene_id` short-circuit for new ones.
 
-2. **DB → Library hook**: `src/hooks/useLibraryItems.ts` line 89 reads `scene_name` and `scene_image_url` but never reads `scene_id`. The library item it builds has no `sceneId`, so downstream consumers can't get a stable ref.
+### Fix — `src/components/app/AddToDiscoverModal.tsx`
 
-3. **Library → Modal**: `src/components/app/LibraryDetailModal.tsx` line 524-540 passes `sceneName`/`modelName` but no `sceneId`. The modal accepts `sceneId` (line 41) but only uses it for mock-pose lookup — never as the authoritative `scene_ref` to write back to `discover_presets`.
+Extend the `(async () => {...})()` block (around lines 191-223) so that when we resolve metadata from `generation_jobs`, we also pull `product_id` and use it to disambiguate the scene title.
 
-### Fix — three small touches
+Concretely:
 
-#### 1. `src/pages/ProductImages.tsx`
+1. **Extend the source-job lookup** to include `product_id` (and `product_type` via a small join on `user_products`):
+   ```ts
+   .select('scene_name, scene_id, scene_image_url, model_name, model_image_url, workflow_slug, product_id, user_products(product_type, analysis_json)')
+   ```
 
-Verify `scene_id` is actually being persisted on new jobs. If the recent jobs (yesterday) really don't have it, dig one level deeper — either the wizard was deployed after those jobs, or the queue worker is dropping it. Add a `console.log('[wizard] enqueue scene_id', payload.scene_id)` before the enqueue call, generate one image, then re-query. If the field is reaching the edge function but not landing in DB, fix the snapshot field at `generate-workflow/index.ts` line 1078.
+2. **New resolver `resolveSceneRefByTitleAndCategory(sceneName, productType)`**:
+   - Query `product_image_scenes` for all rows where `title === sceneName`.
+   - If exactly one row → use it.
+   - If multiple → map `productType` (e.g. `"wallet"`, `"sneaker"`) to `category_collection` via a small lookup table that mirrors the existing category normalization (already lives in `tech-stack/product-category-normalization` memory). Pick the matching row's `scene_id`.
+   - If still ambiguous → pick the lowest-numbered variant (e.g. `botanical-oasis` over `botanical-oasis-10`) as a stable default.
 
-#### 2. `src/hooks/useLibraryItems.ts` (line 75-97)
+3. **Pre-fill `pickedSceneName` AND a new local `resolvedSceneRef`** before the AI describe call runs. This:
+   - Makes the scene visibly selected in the dropdown (no "No scene detected" warning).
+   - Skips the costly AI suggestion call when we already have a deterministic match.
 
-Add `scene_id` to the select and to the item:
+4. **Use `resolvedSceneRef` in the `authoritativeSceneRef` calculation** (currently lines 355-358) so the title-based fallback writes the correct `scene_ref` to `discover_presets`.
+
+### Mapping table (small, in-file)
+
 ```ts
-sceneId: job.scene_id || undefined,
+// product_type token → product_image_scenes.category_collection
+const PRODUCT_TYPE_TO_COLLECTION: Record<string, string> = {
+  wallet: 'wallets-cardholders',
+  cardholder: 'wallets-cardholders',
+  sneaker: 'sneakers',
+  fragrance: 'fragrance',
+  perfume: 'fragrance',
+  watch: 'watches',
+  ring: 'jewellery-rings',
+  bracelet: 'jewellery-bracelets',
+  necklace: 'jewellery-necklaces',
+  // ...full set mirrors the existing normalization in analyze-product-category
+};
 ```
-Also extend the LibraryItem type to carry `sceneId?: string`.
 
-Update the `select` clause at the top of the query (find the columns list — likely a few lines above) to include `scene_id`.
-
-#### 3. `src/components/app/LibraryDetailModal.tsx` (line 524-540) and `src/components/app/AddToDiscoverModal.tsx`
-
-- **LibraryDetailModal**: pass `sceneId={activeItem.sceneId}` into both `AddToDiscoverModal` and `SubmitToDiscoverModal`.
-- **AddToDiscoverModal**: 
-  - In the existing `(async () => {...})()` block at line 188, when `sourceGenerationId` lookup runs, also pull `scene_id` and store it as `resolvedSceneRef` (new local).
-  - When `sceneId` prop is a real `product_image_scenes.scene_id` (not a mock id), skip mock matching and treat it as the authoritative `scene_ref`.
-  - At line 351, change `sceneRefToWrite` so it prefers (in order): the prop/DB-resolved authoritative `scene_ref` → `pickedScene?.sceneRef`. This way, even if title-matching fails (because all 11 "Botanical Oasis" rows share the same title), we write the exact original ref — not a sibling.
-
-This makes the Add to Discover modal **deterministic** for any Product Visuals library item: the wallet-on-aloe asset publishes with `scene_ref = "botanical-oasis-10"` automatically — no AI guessing, no title collision.
+(We extract the mapping from the existing `analyze-product-category` edge function so it stays consistent — no duplication, just import the const.)
 
 ### Behaviour after fix
 
-- Open the wallet-on-aloe Library item → click Add to Discover → modal opens with Workflow=Product Visuals, Scene=**Botanical Oasis** (auto-picked from the original `scene_id`), red "No scene detected" warning gone.
-- Publish → `discover_presets.scene_ref = "botanical-oasis-10"` written exactly as the wizard used it.
-- Click Recreate from Explore → wizard pre-selects the exact same scene (with the soft-fallback we just shipped, even if the user opens it for a different product category).
+- Open the wallet-on-aloe Library item → modal opens → DB lookup finds `scene_name = "Botanical Oasis"` + `product_type = "wallet"` → resolver picks `botanical-oasis-10` → scene shows pre-selected, "No scene detected" warning gone, AI guess skipped.
+- Publish → `discover_presets.scene_ref = "botanical-oasis-10"` written deterministically.
+- New jobs (with `scene_id` populated) still take the fast path via the existing `authoritativeSceneRef` shortcut.
 
 ### Out of scope
-- No DB migration or de-duplication of "Botanical Oasis" rows.
-- No changes to mock-pose handling or Freestyle (`custom_scenes`) paths.
-- No layout, copy, or memory changes.
+- No DB migration to backfill `scene_id` on legacy jobs (would be ~thousands of rows; the in-modal resolver covers it without touching data).
+- No de-duplication of the 10 "Botanical Oasis" rows.
+- No changes to wizard payload (already correct going forward).
 
-### Files touched
+### File touched
 ```text
-EDIT  src/hooks/useLibraryItems.ts          — add scene_id to select + item
-EDIT  src/components/app/LibraryDetailModal.tsx — forward sceneId prop
-EDIT  src/components/app/AddToDiscoverModal.tsx — use sceneId/scene_id as authoritative scene_ref
-VERIFY src/pages/ProductImages.tsx           — confirm scene_id reaches DB; fix payload key if not
+EDIT  src/components/app/AddToDiscoverModal.tsx
+        - Extend source-job select with product_id + user_products join
+        - Add resolveSceneRefByTitleAndCategory helper + PRODUCT_TYPE_TO_COLLECTION map
+        - Pre-fill pickedSceneName + resolvedSceneRef from title+category
+        - Skip AI describe scene suggestion when resolver succeeds
+        - Use resolvedSceneRef in authoritativeSceneRef calc
 ```
 
