@@ -162,7 +162,7 @@ export default function AdminRecommendedScenes() {
         .in('category', slugs);
       if (error) throw error;
       const counts: Record<string, number> = {};
-      for (const row of (data ?? []) as { category: string | null }[]) {
+      for (const row of ((data ?? []) as unknown as { category: string | null }[])) {
         if (!row.category) continue;
         counts[row.category] = (counts[row.category] ?? 0) + 1;
       }
