@@ -22,6 +22,7 @@ import { useSavedItems } from '@/hooks/useSavedItems';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeaturedItems, useToggleFeatured } from '@/hooks/useFeaturedItems';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useRecommendedDiscoverItems } from '@/hooks/useRecommendedDiscoverItems';
 import { useAdminSubmissions } from '@/hooks/useDiscoverSubmissions';
 import { AdminSubmissionsPanel } from '@/components/app/AdminSubmissionsPanel';
 import { mockTryOnPoses } from '@/data/mockData';
