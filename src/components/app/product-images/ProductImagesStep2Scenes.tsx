@@ -384,15 +384,41 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
     return ids;
   }, [unifiedRecommended, unifiedOther]);
 
-  // Prune stale selections
+  // Resolve discoverScene to a full scene object across all loaded collections
+  const resolvedDiscoverScene = useMemo(() => {
+    if (!discoverScene?.sceneId) return null;
+    for (const c of ACTIVE_CATEGORY_COLLECTIONS) {
+      const found = c.scenes.find(s => s.id === discoverScene.sceneId);
+      if (found) return found;
+    }
+    return null;
+  }, [discoverScene?.sceneId, ACTIVE_CATEGORY_COLLECTIONS]);
+
+  // Auto-add discoverScene once (idempotent via ref)
+  const autoAddedRef = useRef<string | null>(null);
   useEffect(() => {
-    const stale = Array.from(selectedSceneIds).filter(id => !allVisibleIds.has(id));
+    if (!discoverScene?.sceneId) return;
+    if (autoAddedRef.current === discoverScene.sceneId) return;
+    if (selectedSceneIds.has(discoverScene.sceneId)) {
+      autoAddedRef.current = discoverScene.sceneId;
+      return;
+    }
+    const next = new Set(selectedSceneIds);
+    next.add(discoverScene.sceneId);
+    onSelectionChange(next);
+    autoAddedRef.current = discoverScene.sceneId;
+  }, [discoverScene?.sceneId, selectedSceneIds, onSelectionChange]);
+
+  // Prune stale selections (but never prune the discoverScene id)
+  useEffect(() => {
+    const protectedId = discoverScene?.sceneId;
+    const stale = Array.from(selectedSceneIds).filter(id => !allVisibleIds.has(id) && id !== protectedId);
     if (stale.length > 0) {
       const next = new Set(selectedSceneIds);
       stale.forEach(id => next.delete(id));
       onSelectionChange(next);
     }
-  }, [allVisibleIds, selectedSceneIds, onSelectionChange]);
+  }, [allVisibleIds, selectedSceneIds, onSelectionChange, discoverScene?.sceneId]);
 
   useEffect(() => {
     setExpandedCategories(new Set(relevantCatIds));
