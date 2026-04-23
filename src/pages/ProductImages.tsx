@@ -1254,6 +1254,14 @@ export default function ProductImages() {
       )}
 
       <div className="mt-2" ref={wizardContentRef}>
+        {step === 1 && discoverSceneFull && (
+          <DiscoverPreselectedCard
+            scene={discoverSceneFull}
+            selectedSceneIds={selectedSceneIds}
+            onSelectionChange={setSelectedSceneIds}
+            step={1}
+          />
+        )}
         {step === 1 && (
           <>
             <div className="space-y-3">
@@ -1486,6 +1494,7 @@ export default function ProductImages() {
                 scene={discoverSceneFull}
                 selectedSceneIds={selectedSceneIds}
                 onSelectionChange={setSelectedSceneIds}
+                step={2}
               />
             )}
           <Suspense fallback={<div className="space-y-4 py-8"><Skeleton className="h-8 w-48" /><div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div></div>}>
