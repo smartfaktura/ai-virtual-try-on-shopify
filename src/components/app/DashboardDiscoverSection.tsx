@@ -47,7 +47,7 @@ export function DashboardDiscoverSection() {
     queryFn: async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('product_categories')
+        .select('product_categories, product_subcategories')
         .eq('user_id', user!.id)
         .maybeSingle();
       return data;
@@ -56,11 +56,38 @@ export function DashboardDiscoverSection() {
     staleTime: 10 * 60 * 1000,
   });
 
+  const SUBTYPE_TO_DISCOVER: Record<string, string> = {
+    'beauty-skincare': 'beauty', 'makeup-lipsticks': 'beauty', 'fragrance': 'fragrances',
+    'jewellery-rings': 'jewelry', 'jewellery-necklaces': 'jewelry',
+    'jewellery-earrings': 'jewelry', 'jewellery-bracelets': 'jewelry', 'watches': 'jewelry',
+    'tech-devices': 'electronics',
+    'food': 'food', 'beverages': 'food', 'snacks-food': 'food',
+    'home-decor': 'home', 'furniture': 'home',
+    'supplements-wellness': 'supplements', 'activewear': 'sports',
+    'eyewear': 'accessories', 'bags-accessories': 'accessories', 'backpacks': 'accessories',
+    'belts': 'accessories', 'scarves': 'accessories', 'hats-small': 'accessories',
+    'wallets-cardholders': 'accessories',
+  };
+
   const defaultCategory = useMemo(() => {
+    const subs = (profileCats as any)?.product_subcategories as string[] | null;
+    if (subs?.length === 1) {
+      const mapped = SUBTYPE_TO_DISCOVER[subs[0]];
+      if (mapped && CATEGORIES.find(c => c.id === mapped)) return mapped;
+    }
     const cats = profileCats?.product_categories as string[] | null;
     if (cats?.length && cats[0] !== 'any') {
-      const match = CATEGORIES.find(c => c.id === cats[0]);
-      if (match) return match.id;
+      const fam = cats[0];
+      const direct = CATEGORIES.find(c => c.id === fam);
+      if (direct) return direct.id;
+      // Map new family ids → discover category ids
+      const FAM_TO_DISC: Record<string, string> = {
+        'bags-accessories': 'accessories', 'beauty-fragrance': 'beauty',
+        'food-drink': 'food', 'tech': 'electronics', 'wellness': 'supplements',
+        'watches': 'jewelry', 'eyewear': 'accessories', 'footwear': 'fashion',
+      };
+      const mapped = FAM_TO_DISC[fam];
+      if (mapped) return mapped;
     }
     return 'all';
   }, [profileCats]);

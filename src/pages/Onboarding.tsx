@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,14 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/lib/brandedToast';
 import { PRODUCT_CATEGORIES as SHARED_CATEGORIES } from '@/lib/categoryConstants';
+import {
+  SUB_TYPES_BY_FAMILY,
+  getMultiSubFamilies,
+  getSingleSubFamilies,
+  getAutoIncludedSlugs,
+  resolveFamilyNames,
+} from '@/lib/onboardingTaxonomy';
 import { ArrowRight, Check } from 'lucide-react';
 import { AuthHeroGallery } from '@/components/app/AuthHeroGallery';
 
-const PRODUCT_CATEGORIES = SHARED_CATEGORIES.map((c) =>
-  c.id === 'any' ? { ...c, label: 'Any Product' } : c
-);
-
-const TOTAL_STEPS = 2;
+const PRODUCT_CATEGORIES = SHARED_CATEGORIES.filter((c) => c.id !== 'any');
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -29,8 +32,27 @@ export default function Onboarding() {
   const [companyUrl, setCompanyUrl] = useState('');
   const [marketingOptIn, setMarketingOptIn] = useState(true);
 
-  // Step 2: Categories
+  // Step 2: Families
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  // Step 3: Sub-types (only for families with 2+ sub-types)
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
+
+  // ── Dynamic step calculation ─────────────────────────────────────
+  const familyNames = useMemo(
+    () => resolveFamilyNames(selectedCategories),
+    [selectedCategories],
+  );
+  const multiSubFamilies = useMemo(
+    () => getMultiSubFamilies(familyNames),
+    [familyNames],
+  );
+  const singleSubFamilies = useMemo(
+    () => getSingleSubFamilies(familyNames),
+    [familyNames],
+  );
+  const showStep3 = multiSubFamilies.length > 0;
+  const totalSteps = showStep3 ? 3 : 2;
 
   if (!isLoading && !user) {
     return <Navigate to="/auth" replace />;
@@ -42,26 +64,41 @@ export default function Onboarding() {
     );
   };
 
+  const toggleSubcategory = (slug: string) => {
+    setSelectedSubcategories((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  };
+
   const canProceed = () => {
     switch (step) {
       case 1:
         return firstName.trim().length > 0;
       case 2:
         return selectedCategories.length > 0;
+      case 3:
+        return true; // Step 3 is always optional
       default:
         return true;
     }
   };
 
-  const handleNext = async () => {
-    if (step < TOTAL_STEPS) {
-      setStep(step + 1);
-      return;
-    }
-
-    // Final step — save everything
+  const handleFinish = async (subcategoryPicks: string[]) => {
     if (!user) return;
     setSaving(true);
+
+    // Final sub-categories = user picks in Step 3 + auto-included single-sub-type families
+    const finalSubcategories = Array.from(
+      new Set([
+        ...subcategoryPicks.filter(s =>
+          // Drop picks from families no longer in selection (defensive)
+          multiSubFamilies.some(fam =>
+            (SUB_TYPES_BY_FAMILY[fam] ?? []).some(t => t.slug === s),
+          ),
+        ),
+        ...getAutoIncludedSlugs(singleSubFamilies),
+      ]),
+    );
 
     const { error } = await supabase
       .from('profiles')
@@ -70,38 +107,63 @@ export default function Onboarding() {
         last_name: lastName.trim() || null,
         company_url: companyUrl.trim() || null,
         product_categories: selectedCategories,
+        product_subcategories: finalSubcategories,
         marketing_emails_opted_in: marketingOptIn,
         onboarding_completed: true,
-      })
+      } as any)
       .eq('user_id', user.id);
 
     if (error) {
       toast.error('Failed to save profile. Please try again.');
       console.error(error);
-    } else {
-      // Sync marketing preference + properties to Resend audience
-      supabase.functions.invoke('sync-resend-contact', {
-        body: {
-          email: user.email,
-          first_name: firstName.trim(),
-          opted_in: marketingOptIn,
-          properties: {
-            plan: 'free',
-            credits_balance: 60,
-            has_generated: false,
-            signup_date: user.created_at || new Date().toISOString(),
-            product_categories: selectedCategories
-              .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
-              .join(', '),
-          },
-        },
-      }).catch(() => {});
-      toast.success('Welcome to VOVV.AI!');
-      localStorage.setItem(`dashboard_mode_hint_${user.id}`, 'new');
-      navigate('/app', { replace: true });
+      setSaving(false);
+      return;
     }
 
+    // Sync marketing preference + properties to Resend audience
+    supabase.functions.invoke('sync-resend-contact', {
+      body: {
+        email: user.email,
+        first_name: firstName.trim(),
+        opted_in: marketingOptIn,
+        properties: {
+          plan: 'free',
+          credits_balance: 60,
+          has_generated: false,
+          signup_date: user.created_at || new Date().toISOString(),
+          product_categories: selectedCategories
+            .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
+            .join(', '),
+          product_subcategories: finalSubcategories.join(', '),
+        },
+      },
+    }).catch(() => {});
+    toast.success('Welcome to VOVV.AI!');
+    localStorage.setItem(`dashboard_mode_hint_${user.id}`, 'new');
+    navigate('/app', { replace: true });
     setSaving(false);
+  };
+
+  const handleNext = async () => {
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+    if (step === 2) {
+      // If Step 3 is not needed, finish directly with empty user picks (auto-included still added)
+      if (!showStep3) {
+        await handleFinish([]);
+        return;
+      }
+      setStep(3);
+      return;
+    }
+    // step === 3
+    await handleFinish(selectedSubcategories);
+  };
+
+  const handleSkipStep3 = async () => {
+    await handleFinish([]);
   };
 
   return (
@@ -110,7 +172,7 @@ export default function Onboarding() {
       <div className="flex-1 flex flex-col px-6 sm:px-12 lg:px-16 xl:px-24 py-8">
         {/* Step indicators */}
         <div className="flex items-center gap-2 mb-12">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+          {Array.from({ length: totalSteps }).map((_, i) => (
             <div
               key={i}
               className={`h-2 rounded-full transition-all duration-300 ${
@@ -122,10 +184,10 @@ export default function Onboarding() {
           ))}
         </div>
 
-        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
+        <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
           {/* Step 1: Your Profile */}
           {step === 1 && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 animate-fade-in max-w-md">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                   Your profile
@@ -185,9 +247,9 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 2: Product categories */}
+          {/* Step 2: Product families */}
           {step === 2 && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 animate-fade-in max-w-md">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                   What do you sell?
@@ -221,22 +283,83 @@ export default function Onboarding() {
             </div>
           )}
 
+          {/* Step 3: Product sub-types */}
+          {step === 3 && (
+            <div className="space-y-6 animate-fade-in">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+                  Tell us what you sell
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  Optional — pick the specific types you work with for sharper recommendations
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {multiSubFamilies.map((fam) => {
+                  const types = SUB_TYPES_BY_FAMILY[fam] ?? [];
+                  return (
+                    <div key={fam} className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-muted-foreground">
+                          {fam}
+                        </span>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {types.map(({ slug, label }) => {
+                          const isSelected = selectedSubcategories.includes(slug);
+                          return (
+                            <button
+                              key={slug}
+                              onClick={() => toggleSubcategory(slug)}
+                              className={`relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-sm font-medium transition-all ${
+                                isSelected
+                                  ? 'border-primary bg-primary/5 text-foreground'
+                                  : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                              }`}
+                            >
+                              {isSelected && (
+                                <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                              )}
+                              <span>{label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Navigation */}
-          <div className="mt-10">
+          <div className="mt-10 max-w-md">
             <Button
               size="pill"
               onClick={handleNext}
               disabled={!canProceed() || saving}
               className="w-full font-semibold gap-2"
             >
-              {saving ? 'Saving…' : step === TOTAL_STEPS ? 'Get Started' : 'Continue'}
+              {saving ? 'Saving…' : step === totalSteps ? 'Get Started' : 'Continue'}
               {!saving && <ArrowRight className="w-4 h-4" />}
             </Button>
+
+            {step === 3 && !saving && (
+              <button
+                onClick={handleSkipStep3}
+                className="w-full mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Skip for now
+              </button>
+            )}
 
             {step > 1 && (
               <button
                 onClick={() => setStep(step - 1)}
-                className="w-full mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                disabled={saving}
+                className="w-full mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
               >
                 Go back
               </button>

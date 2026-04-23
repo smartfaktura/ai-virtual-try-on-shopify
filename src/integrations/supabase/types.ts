@@ -1346,6 +1346,7 @@ export type Database = {
           onboarding_completed: boolean
           plan: string
           product_categories: string[]
+          product_subcategories: string[]
           referral_source: string | null
           settings: Json | null
           stripe_customer_id: string | null
@@ -1373,6 +1374,7 @@ export type Database = {
           onboarding_completed?: boolean
           plan?: string
           product_categories?: string[]
+          product_subcategories?: string[]
           referral_source?: string | null
           settings?: Json | null
           stripe_customer_id?: string | null
@@ -1400,6 +1402,7 @@ export type Database = {
           onboarding_completed?: boolean
           plan?: string
           product_categories?: string[]
+          product_subcategories?: string[]
           referral_source?: string | null
           settings?: Json | null
           stripe_customer_id?: string | null

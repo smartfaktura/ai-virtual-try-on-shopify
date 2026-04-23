@@ -47,39 +47,63 @@ const DEFAULT_SETTINGS: UserSettings = {
 function ContentPreferencesSection() {
   const { user } = useAuth();
   const [cats, setCats] = useState<string[]>([]);
-  const [original, setOriginal] = useState<string[]>([]);
+  const [subs, setSubs] = useState<string[]>([]);
+  const [original, setOriginal] = useState<{ cats: string[]; subs: string[] }>({ cats: [], subs: [] });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from('profiles')
-      .select('product_categories')
+      .select('product_categories, product_subcategories')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
         const c = (data?.product_categories as string[]) ?? [];
+        const s = ((data as any)?.product_subcategories as string[]) ?? [];
         setCats(c);
-        setOriginal(c);
+        setSubs(s);
+        setOriginal({ cats: c, subs: s });
       });
   }, [user]);
 
   const toggle = (id: string) =>
     setCats((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
 
+  const toggleSub = (slug: string) =>
+    setSubs((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+
+  // Lazy-import to avoid circular paths in test envs
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { SUB_TYPES_BY_FAMILY, getMultiSubFamilies, getSingleSubFamilies, getAutoIncludedSlugs, resolveFamilyNames } =
+    require('@/lib/onboardingTaxonomy') as typeof import('@/lib/onboardingTaxonomy');
+
+  const familyNames = resolveFamilyNames(cats);
+  const multiSubFamilies = getMultiSubFamilies(familyNames);
+  const singleSubFamilies = getSingleSubFamilies(familyNames);
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
+    // Drop any sub-picks no longer reachable; always re-add single-sub-type auto-includes
+    const validSubSlugs = new Set(
+      multiSubFamilies.flatMap(fam => (SUB_TYPES_BY_FAMILY[fam] ?? []).map(t => t.slug)),
+    );
+    const finalSubs = Array.from(new Set([
+      ...subs.filter(s => validSubSlugs.has(s)),
+      ...getAutoIncludedSlugs(singleSubFamilies),
+    ]));
+
     const { error } = await supabase
       .from('profiles')
-      .update({ product_categories: cats })
+      .update({ product_categories: cats, product_subcategories: finalSubs } as any)
       .eq('user_id', user.id);
     if (error) toast.error('Failed to save');
     else {
-      setOriginal(cats);
+      setSubs(finalSubs);
+      setOriginal({ cats, subs: finalSubs });
       toast.success('Preferences saved');
 
-      // Sync updated categories to Resend audience
       const { data: profile } = await supabase
         .from('profiles')
         .select('marketing_emails_opted_in, plan, credits_balance, first_name')
@@ -97,6 +121,7 @@ function ContentPreferencesSection() {
               product_categories: cats
                 .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
                 .join(', '),
+              product_subcategories: finalSubs.join(', '),
             },
           },
         }).catch(() => {});
@@ -106,7 +131,7 @@ function ContentPreferencesSection() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       <div>
         <h3 className="text-sm font-semibold">Content Preferences</h3>
         <p className="text-xs text-muted-foreground">
@@ -127,12 +152,59 @@ function ContentPreferencesSection() {
           </div>
         ))}
       </div>
+
+      {multiSubFamilies.length > 0 && (
+        <div className="space-y-3 pt-2 border-t border-border">
+          <div>
+            <h4 className="text-sm font-semibold">Specific product types</h4>
+            <p className="text-xs text-muted-foreground">
+              Optional — pick the precise types you work with for sharper recommendations
+            </p>
+          </div>
+          <div className="space-y-4">
+            {multiSubFamilies.map((fam) => {
+              const types = SUB_TYPES_BY_FAMILY[fam] ?? [];
+              return (
+                <div key={fam} className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-muted-foreground">
+                      {fam}
+                    </span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {types.map(({ slug, label }) => {
+                      const isSelected = subs.includes(slug);
+                      return (
+                        <button
+                          key={slug}
+                          type="button"
+                          onClick={() => toggleSub(slug)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary/5 text-foreground'
+                              : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-primary" />}
+                          <span>{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         <Button size="pill" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : 'Save preferences'}
         </Button>
         <button
-          onClick={() => setCats(original)}
+          onClick={() => { setCats(original.cats); setSubs(original.subs); }}
           className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
         >
           <RotateCcw className="w-3 h-3" />

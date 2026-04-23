@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
       };
 
       // Forward custom properties for Resend audience segmentation
+      // (callers may include product_categories AND product_subcategories for granular targeting)
       if (properties && typeof properties === "object") {
         contactPayload.properties = properties;
       }

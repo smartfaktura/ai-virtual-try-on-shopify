@@ -1,45 +1,99 @@
+// 11 canonical product families — single source of truth for onboarding Step 2,
+// the Settings editor, and dashboard headlines. Mirrors FAMILY_ORDER in sceneTaxonomy.ts.
+
 export const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements', 'editorial', 'commercial', 'lifestyle', 'campaign', 'cinematic', 'photography', 'styling', 'ads'] as const;
 
 export const PRODUCT_CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'beauty', label: 'Beauty & Skincare' },
-  { id: 'fragrances', label: 'Fragrances' },
+  { id: 'footwear', label: 'Footwear' },
+  { id: 'bags-accessories', label: 'Bags & Accessories' },
+  { id: 'watches', label: 'Watches' },
+  { id: 'eyewear', label: 'Eyewear' },
   { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home & Decor' },
-  { id: 'food', label: 'Food & Beverage' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports & Fitness' },
-  { id: 'supplements', label: 'Health & Supplements' },
+  { id: 'beauty-fragrance', label: 'Beauty & Fragrance' },
+  { id: 'home', label: 'Home' },
+  { id: 'tech', label: 'Tech' },
+  { id: 'food-drink', label: 'Food & Drink' },
+  { id: 'wellness', label: 'Wellness' },
   { id: 'any', label: 'All products' },
 ];
 
+// Family-level headlines (Step 2 chip selection)
 export const CATEGORY_HEADLINES: Record<string, string> = {
   fashion: 'Create your first fashion campaign in seconds - no photoshoot needed.',
+  footwear: 'Create your first footwear campaign in seconds - no photoshoot needed.',
+  'bags-accessories': 'Create your first bags & accessories campaign in seconds - no photoshoot needed.',
+  watches: 'Create your first watch campaign in seconds - no photoshoot needed.',
+  eyewear: 'Create your first eyewear campaign in seconds - no photoshoot needed.',
+  jewelry: 'Launch your first jewelry campaign in seconds - no photoshoot needed.',
+  'beauty-fragrance': 'Launch your first beauty & fragrance campaign in seconds - no photoshoot needed.',
   beauty: 'Launch your first beauty campaign in seconds - no photoshoot needed.',
   fragrances: 'Create your first fragrance campaign in seconds - no photoshoot needed.',
-  jewelry: 'Launch your first jewelry campaign in seconds - no photoshoot needed.',
   accessories: 'Create your first accessories campaign in seconds - no photoshoot needed.',
-  home: 'Launch your first home & decor campaign in seconds - no photoshoot needed.',
-  food: 'Create your first food campaign in seconds - no photoshoot needed.',
+  home: 'Launch your first home campaign in seconds - no photoshoot needed.',
+  tech: 'Launch your first tech campaign in seconds - no photoshoot needed.',
   electronics: 'Launch your first electronics campaign in seconds - no photoshoot needed.',
+  'food-drink': 'Create your first food & drink campaign in seconds - no photoshoot needed.',
+  food: 'Create your first food campaign in seconds - no photoshoot needed.',
   sports: 'Create your first sports campaign in seconds - no photoshoot needed.',
+  wellness: 'Launch your first wellness campaign in seconds - no photoshoot needed.',
   supplements: 'Launch your first supplements campaign in seconds - no photoshoot needed.',
   any: 'Create your first campaign in seconds - no photoshoot needed.',
 };
 
 export const CATEGORY_HEADLINES_RETURNING: Record<string, string> = {
   fashion: 'Create campaign-ready fashion visuals - no photoshoot needed.',
+  footwear: 'Create campaign-ready footwear visuals - no photoshoot needed.',
+  'bags-accessories': 'Create campaign-ready bags & accessories visuals - no photoshoot needed.',
+  watches: 'Create campaign-ready watch visuals - no photoshoot needed.',
+  eyewear: 'Create campaign-ready eyewear visuals - no photoshoot needed.',
+  jewelry: 'Create campaign-ready jewelry visuals - no photoshoot needed.',
+  'beauty-fragrance': 'Create campaign-ready beauty & fragrance visuals - no photoshoot needed.',
   beauty: 'Create campaign-ready beauty visuals - no photoshoot needed.',
   fragrances: 'Create campaign-ready fragrance visuals - no photoshoot needed.',
-  jewelry: 'Create campaign-ready jewelry visuals - no photoshoot needed.',
   accessories: 'Create campaign-ready accessories visuals - no photoshoot needed.',
-  home: 'Create campaign-ready home & decor visuals - no photoshoot needed.',
-  food: 'Create campaign-ready food visuals - no photoshoot needed.',
+  home: 'Create campaign-ready home visuals - no photoshoot needed.',
+  tech: 'Create campaign-ready tech visuals - no photoshoot needed.',
   electronics: 'Create campaign-ready electronics visuals - no photoshoot needed.',
+  'food-drink': 'Create campaign-ready food & drink visuals - no photoshoot needed.',
+  food: 'Create campaign-ready food visuals - no photoshoot needed.',
   sports: 'Create campaign-ready sports visuals - no photoshoot needed.',
+  wellness: 'Create campaign-ready wellness visuals - no photoshoot needed.',
   supplements: 'Create campaign-ready supplements visuals - no photoshoot needed.',
   any: 'Create campaign-ready visuals in seconds - no photoshoot needed.',
+};
+
+// Sub-type headlines (Step 3 — when a single sub-type is picked, override the family copy)
+export const SUBTYPE_HEADLINES: Record<string, string> = {
+  hoodies: 'Create your first hoodie campaign in seconds - no photoshoot needed.',
+  dresses: 'Create your first dress campaign in seconds - no photoshoot needed.',
+  jeans: 'Create your first denim campaign in seconds - no photoshoot needed.',
+  jackets: 'Create your first jacket campaign in seconds - no photoshoot needed.',
+  activewear: 'Create your first activewear campaign in seconds - no photoshoot needed.',
+  swimwear: 'Create your first swimwear campaign in seconds - no photoshoot needed.',
+  lingerie: 'Create your first lingerie campaign in seconds - no photoshoot needed.',
+  sneakers: 'Create your first sneaker campaign in seconds - no photoshoot needed.',
+  boots: 'Create your first boots campaign in seconds - no photoshoot needed.',
+  'high-heels': 'Create your first heels campaign in seconds - no photoshoot needed.',
+  backpacks: 'Create your first backpack campaign in seconds - no photoshoot needed.',
+  fragrance: 'Create your first fragrance campaign in seconds - no photoshoot needed.',
+  furniture: 'Create your first furniture campaign in seconds - no photoshoot needed.',
+};
+
+export const SUBTYPE_HEADLINES_RETURNING: Record<string, string> = {
+  hoodies: 'Create campaign-ready hoodie visuals - no photoshoot needed.',
+  dresses: 'Create campaign-ready dress visuals - no photoshoot needed.',
+  jeans: 'Create campaign-ready denim visuals - no photoshoot needed.',
+  jackets: 'Create campaign-ready jacket visuals - no photoshoot needed.',
+  activewear: 'Create campaign-ready activewear visuals - no photoshoot needed.',
+  swimwear: 'Create campaign-ready swimwear visuals - no photoshoot needed.',
+  lingerie: 'Create campaign-ready lingerie visuals - no photoshoot needed.',
+  sneakers: 'Create campaign-ready sneaker visuals - no photoshoot needed.',
+  boots: 'Create campaign-ready boots visuals - no photoshoot needed.',
+  'high-heels': 'Create campaign-ready heels visuals - no photoshoot needed.',
+  backpacks: 'Create campaign-ready backpack visuals - no photoshoot needed.',
+  fragrance: 'Create campaign-ready fragrance visuals - no photoshoot needed.',
+  furniture: 'Create campaign-ready furniture visuals - no photoshoot needed.',
 };
 
 /** Display label for the pill selector */
@@ -60,9 +114,25 @@ export function getCategoryLabel(ids: string[]): string {
   return 'Your product mix';
 }
 
-/** Dynamic headline based on selected categories */
-export function getCategoryHeadline(ids: string[], isReturning: boolean = false): string {
+/**
+ * Dynamic headline based on selected categories.
+ * If a single product_subcategory is provided (Step 3 picks), it takes precedence
+ * and yields a sub-type-specific headline. Otherwise falls back to family-level copy.
+ */
+export function getCategoryHeadline(
+  ids: string[],
+  isReturning: boolean = false,
+  subcategories?: string[] | null,
+): string {
   const headlineMap = isReturning ? CATEGORY_HEADLINES_RETURNING : CATEGORY_HEADLINES;
+  const subMap = isReturning ? SUBTYPE_HEADLINES_RETURNING : SUBTYPE_HEADLINES;
+
+  // Sub-type-aware: if exactly one sub-type with a known headline, use it
+  if (subcategories && subcategories.length === 1) {
+    const hit = subMap[subcategories[0]];
+    if (hit) return hit;
+  }
+
   const filtered = ids.filter((id) => id !== 'any');
   if (filtered.length === 0 || ids.includes('any')) {
     return headlineMap.any;

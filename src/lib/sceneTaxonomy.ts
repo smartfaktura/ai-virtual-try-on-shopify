@@ -59,7 +59,8 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
 
 /** Human labels for category_collection slugs when shown as sub-family rows. */
 export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
-  'garments': 'Tops & Shirts',
+  'garments': 'Clothing & Apparel',
+  'activewear': 'Activewear & Sportswear',
   'hats-small': 'Hats',
   'wallets-cardholders': 'Cardholders',
   'bags-accessories': 'Bags',
@@ -88,16 +89,18 @@ export const FAMILY_ORDER = [
 
 /** Map onboarding product_categories slugs → category_collection slugs for personalisation. */
 export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
-  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'],
+  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'],
   footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
   shoes: ['shoes', 'sneakers', 'boots', 'high-heels'],
   bags: ['bags-accessories', 'backpacks', 'wallets-cardholders'],
   accessories: ['bags-accessories', 'belts', 'scarves', 'hats-small'],
+  'bags-accessories': ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'],
   jewelry: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
   jewellery: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
   watches: ['watches'],
   eyewear: ['eyewear'],
   beauty: ['beauty-skincare', 'makeup-lipsticks'],
+  'beauty-fragrance': ['beauty-skincare', 'makeup-lipsticks', 'fragrance'],
   skincare: ['beauty-skincare'],
   makeup: ['makeup-lipsticks'],
   fragrance: ['fragrance'],
@@ -107,13 +110,22 @@ export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
   tech: ['tech-devices'],
   electronics: ['tech-devices'],
   food: ['food'],
+  'food-drink': ['food', 'beverages', 'snacks-food'],
   beverages: ['beverages'],
   drinks: ['beverages'],
   wellness: ['supplements-wellness'],
   supplements: ['supplements-wellness'],
 };
 
-export function resolveUserCollections(productCategories: string[] | null | undefined): string[] {
+export function resolveUserCollections(
+  productCategories: string[] | null | undefined,
+  productSubcategories?: string[] | null,
+): string[] {
+  // If the user picked granular sub-types in Step 3, those ARE collection slugs.
+  // Use them directly so recommendations narrow to the precise types.
+  if (productSubcategories?.length) {
+    return Array.from(new Set(productSubcategories.map(s => s.toLowerCase().trim()).filter(Boolean)));
+  }
   if (!productCategories?.length) return [];
   const set = new Set<string>();
   for (const cat of productCategories) {

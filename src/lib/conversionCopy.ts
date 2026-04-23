@@ -11,20 +11,24 @@ export type ConversionCategory =
   | 'accessories'
   | 'fallback';
 
-/** Map raw product_categories values to our conversion categories */
+/** Map raw product_categories / product_subcategories values to our conversion categories */
 export function resolveConversionCategory(raw?: string[] | string | null): ConversionCategory {
   if (!raw) return 'fallback';
-  const cats = Array.isArray(raw) ? raw : [raw];
-  const first = cats.find(c => c !== 'any')?.toLowerCase() ?? '';
-
-  if (first.includes('fashion') || first.includes('apparel') || first.includes('garment') || first.includes('clothing')) return 'fashion';
-  if (first.includes('beauty') || first.includes('skincare') || first.includes('cosmetic')) return 'beauty';
-  if (first.includes('jewel') || first.includes('watch')) return 'jewelry';
-  if (first.includes('fragrance') || first.includes('perfume')) return 'fragrances';
-  if (first.includes('food') || first.includes('beverage') || first.includes('drink')) return 'food';
-  if (first.includes('electronic') || first.includes('tech') || first.includes('gadget')) return 'electronics';
-  if (first.includes('home') || first.includes('decor') || first.includes('furniture')) return 'home';
-  if (first.includes('accessor') || first.includes('bag') || first.includes('hat') || first.includes('scarf')) return 'accessories';
+  const cats = (Array.isArray(raw) ? raw : [raw])
+    .map(c => (c ?? '').toLowerCase())
+    .filter(c => c && c !== 'any');
+  // Scan ALL provided slugs (family + sub-type) so we can route on the most specific signal
+  for (const c of cats) {
+    if (c.includes('fragrance') || c.includes('perfume')) return 'fragrances';
+    if (c.includes('beauty') || c.includes('skincare') || c.includes('cosmetic') || c.includes('makeup') || c === 'beauty-skincare' || c === 'makeup-lipsticks') return 'beauty';
+    if (c.includes('jewel') || c.includes('watch')) return 'jewelry';
+    if (c.includes('electronic') || c === 'tech' || c === 'tech-devices' || c.includes('gadget') || c.includes('device')) return 'electronics';
+    if (c.includes('food') || c.includes('beverage') || c.includes('drink') || c === 'snacks-food') return 'food';
+    if (c.includes('home') || c.includes('decor') || c.includes('furniture')) return 'home';
+    if (c.includes('fashion') || c.includes('apparel') || c.includes('garment') || c.includes('clothing') || c === 'hoodies' || c === 'dresses' || c === 'jeans' || c === 'jackets' || c === 'activewear' || c === 'swimwear' || c === 'lingerie' || c === 'kidswear' || c === 'streetwear') return 'fashion';
+    if (c === 'footwear' || c === 'shoes' || c === 'sneakers' || c === 'boots' || c === 'high-heels') return 'fashion';
+    if (c.includes('accessor') || c.includes('bag') || c.includes('hat') || c.includes('scarf') || c === 'bags-accessories' || c === 'backpacks' || c === 'wallets-cardholders' || c === 'belts' || c === 'eyewear') return 'accessories';
+  }
   return 'fallback';
 }
 
