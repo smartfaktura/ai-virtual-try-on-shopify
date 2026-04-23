@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { X, Search, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   CATEGORY_FAMILY_MAP,
   FAMILY_ORDER,
@@ -61,13 +62,15 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
     }
   }, [open, orderedFamilies, activeFamily]);
 
-  // Sub-family slugs available within active family
-  const subSlugs = useMemo(() => {
+  // Sub-family slugs available within active family, with counts (sorted by count desc, then alpha)
+  const subSlugCounts = useMemo<Array<[string, number]>>(() => {
     if (!activeFamily) return [];
     const items = familyGroups.get(activeFamily) ?? [];
-    const set = new Set<string>();
-    for (const item of items) set.add(item.category);
-    return Array.from(set).sort();
+    const counts = new Map<string, number>();
+    for (const it of items) counts.set(it.category, (counts.get(it.category) ?? 0) + 1);
+    return Array.from(counts.entries()).sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    );
   }, [familyGroups, activeFamily]);
 
   // Reset sub when family changes
@@ -147,7 +150,7 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
           {/* Right — subfamily chips + grid */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Subfamily chips */}
-            {subSlugs.length > 1 && (
+            {subSlugCounts.length > 0 && (
               <div className="flex flex-wrap gap-1.5 px-5 py-3 border-b border-border/20 shrink-0">
                 <button
                   onClick={() => setActiveSub(null)}
@@ -160,18 +163,22 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
                 >
                   All
                 </button>
-                {subSlugs.map(slug => (
+                {subSlugCounts.map(([slug, count]) => (
                   <button
                     key={slug}
                     onClick={() => setActiveSub(slug)}
                     className={cn(
-                      'px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                      'px-3 py-1 rounded-full text-xs font-medium transition-colors inline-flex items-center gap-1.5',
                       activeSub === slug
                         ? 'bg-foreground text-background'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted',
                     )}
                   >
-                    {getSubFamilyLabel(slug)}
+                    <span>{getSubFamilyLabel(slug)}</span>
+                    <span className={cn(
+                      'text-[10px] tabular-nums',
+                      activeSub === slug ? 'text-background/70' : 'text-muted-foreground/60',
+                    )}>{count}</span>
                   </button>
                 ))}
               </div>
@@ -201,9 +208,10 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
                         <div className="aspect-square bg-muted overflow-hidden">
                           {scene.imageUrl ? (
                             <img
-                              src={scene.imageUrl}
+                              src={getOptimizedUrl(scene.imageUrl, { quality: 55 })}
                               alt={scene.name}
                               loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover transition-transform group-hover:scale-105"
                             />
                           ) : (
