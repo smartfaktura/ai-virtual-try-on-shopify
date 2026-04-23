@@ -3,6 +3,9 @@ import { Check, X, Loader2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/lib/brandedToast';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useAdminSubmissions,
   useApproveSubmission,
@@ -19,8 +22,27 @@ export function AdminSubmissionsPanel() {
   const [activeTab, setActiveTab] = useState<string>('pending');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState('');
+  const [classifying, setClassifying] = useState(false);
+  const queryClient = useQueryClient();
 
-  const filtered = submissions.filter(s => s.status === activeTab);
+  const handleAutoClassify = async () => {
+    if (classifying) return;
+    setClassifying(true);
+    try {
+      const { data: dry, error: dryErr } = await supabase.functions.invoke('backfill-discover-subcategories', { body: { dryRun: true } });
+      if (dryErr) throw dryErr;
+      const msg = `Will classify ${dry.classified} / ${dry.total} Explore items by scanning their existing prompt + tags. Continue?`;
+      if (!confirm(msg)) return;
+      const { data: real, error: realErr } = await supabase.functions.invoke('backfill-discover-subcategories', { body: { dryRun: false } });
+      if (realErr) throw realErr;
+      toast.success(`Classified ${real.committed} items`);
+      queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Backfill failed');
+    } finally {
+      setClassifying(false);
+    }
+  };
   const pendingCount = submissions.filter(s => s.status === 'pending').length;
 
   const handleReject = (id: string) => {
