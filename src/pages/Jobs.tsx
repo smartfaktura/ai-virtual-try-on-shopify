@@ -739,6 +739,7 @@ export default function Jobs() {
         isUpscaling={liveSelected ? upscalingSourceIds.has(liveSelected.id) : false}
         items={items}
         initialIndex={liveIndex}
+        onNavigate={(next) => setSelectedItem(next)}
       />
 
       {allItems.length > 0 && <FeedbackBanner />}
