@@ -1,5 +1,6 @@
 // Auto-classify Discover preset subcategory based on tags/prompt/title.
 // Admin-only. Supports dry-run preview before committing.
+// Only writes the `subcategory` column on rows where it IS NULL — never touches other fields.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
@@ -7,36 +8,70 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Mirror of SUB_TYPES_BY_FAMILY from src/lib/onboardingTaxonomy (kebab-case family ids).
-// Keep in sync if taxonomy changes — only slugs are needed here.
+// Canonical family id (kebab-case, matches discover_presets.category) → canonical sub-type slugs.
+// Mirrors src/lib/onboardingTaxonomy SUB_TYPES_BY_FAMILY. Edge functions can't import from src/.
 const SUBS_BY_FAMILY: Record<string, string[]> = {
-  fashion: ['clothing', 'hoodies', 'dresses', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'streetwear', 'garments'],
-  footwear: ['sneakers', 'shoes', 'boots', 'heels', 'sandals'],
-  bags: ['handbags', 'backpacks', 'totes', 'clutches', 'travel-bags'],
-  accessories: ['hats', 'belts', 'scarves', 'gloves', 'wallets'],
-  jewelry: ['rings', 'necklaces', 'earrings', 'bracelets', 'watches'],
-  beauty: ['skincare', 'makeup', 'haircare', 'tools'],
-  fragrance: ['eau-de-parfum', 'eau-de-toilette', 'cologne', 'body-mist'],
-  fragrances: ['eau-de-parfum', 'eau-de-toilette', 'cologne', 'body-mist'],
-  eyewear: ['sunglasses', 'optical'],
-  electronics: ['headphones', 'phones', 'laptops', 'wearables', 'speakers'],
-  home: ['decor', 'kitchen', 'bedding', 'lighting'],
-  food: ['snacks', 'beverages', 'desserts', 'meals'],
-  beverage: ['coffee', 'tea', 'spirits', 'wine', 'soft-drinks'],
-  beverages: ['coffee', 'tea', 'spirits', 'wine', 'soft-drinks'],
-  pets: ['toys', 'food', 'accessories'],
-  kids: ['toys', 'clothing', 'accessories'],
-  sports: ['equipment', 'apparel', 'footwear'],
+  fashion: ['garments', 'hoodies', 'dresses', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'streetwear'],
+  footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
+  'bags-accessories': ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'],
+  watches: ['watches'],
+  eyewear: ['eyewear'],
+  jewelry: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
+  'beauty-fragrance': ['beauty-skincare', 'makeup-lipsticks', 'fragrance'],
+  home: ['home-decor', 'furniture'],
+  tech: ['tech-devices'],
+  'food-drink': ['food', 'beverages', 'snacks-food'],
+  wellness: ['supplements-wellness'],
 };
+
+// Loose tag/prompt phrases → canonical slug. Word-boundary, case-insensitive.
+const SLUG_SYNONYMS: Record<string, string[]> = {
+  garments: ['clothing', 'garment', 'tee', 't-shirt', 'shirt', 'top', 'blouse'],
+  hoodies: ['hoodie', 'sweatshirt'],
+  dresses: ['dress', 'gown'],
+  jeans: ['jean', 'denim'],
+  jackets: ['jacket', 'blazer', 'coat'],
+  activewear: ['activewear', 'sportswear', 'gym', 'yoga', 'pilates', 'athleisure', 'leggings'],
+  swimwear: ['swimwear', 'bikini', 'swimsuit'],
+  lingerie: ['lingerie', 'underwear', 'bra'],
+  streetwear: ['streetwear', 'urban'],
+  shoes: ['shoe', 'loafer', 'derby', 'oxford'],
+  sneakers: ['sneaker', 'trainer', 'runner'],
+  boots: ['boot', 'bootie'],
+  'high-heels': ['heel', 'heels', 'stiletto', 'pump'],
+  'bags-accessories': ['handbag', 'tote', 'clutch', 'shoulder bag', 'crossbody', 'purse'],
+  backpacks: ['backpack', 'rucksack'],
+  'wallets-cardholders': ['wallet', 'cardholder', 'card holder'],
+  belts: ['belt'],
+  scarves: ['scarf', 'scarves'],
+  'hats-small': ['hat', 'cap', 'beanie', 'beret'],
+  'jewellery-rings': ['ring', 'rings'],
+  'jewellery-necklaces': ['necklace', 'pendant', 'chain'],
+  'jewellery-earrings': ['earring', 'earrings', 'stud', 'hoop'],
+  'jewellery-bracelets': ['bracelet', 'bangle', 'cuff'],
+  'beauty-skincare': ['skincare', 'serum', 'moisturizer', 'cream', 'cleanser', 'toner'],
+  'makeup-lipsticks': ['lipstick', 'makeup', 'mascara', 'foundation', 'blush', 'lip gloss'],
+  fragrance: ['fragrance', 'perfume', 'eau de parfum', 'cologne', 'body mist'],
+  'home-decor': ['decor', 'vase', 'candle', 'art'],
+  furniture: ['furniture', 'chair', 'sofa', 'table', 'lamp'],
+  'tech-devices': ['headphone', 'speaker', 'phone', 'laptop', 'wearable', 'device'],
+  food: ['meal', 'dish', 'snack', 'dessert'],
+  beverages: ['beverage', 'coffee', 'tea', 'wine', 'spirit', 'soft drink', 'juice'],
+  'snacks-food': ['snack', 'chips', 'cookie', 'bar'],
+  'supplements-wellness': ['supplement', 'vitamin', 'wellness', 'protein'],
+};
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 function findSlugMatch(family: string, haystack: string): string | null {
   const subs = SUBS_BY_FAMILY[family?.toLowerCase()] ?? [];
   const text = haystack.toLowerCase();
   for (const slug of subs) {
-    // word-boundary, also accept hyphen-as-space
-    const variants = [slug, slug.replace(/-/g, ' '), slug.replace(/-/g, '')];
-    for (const v of variants) {
-      const re = new RegExp(`(^|[^a-z0-9])${v.replace(/[.*+?^${}()|[\\\\]\\\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i');
+    const candidates = [slug, ...(SLUG_SYNONYMS[slug] ?? [])];
+    for (const c of candidates) {
+      const re = new RegExp(`(^|[^a-z0-9])${escapeRegex(c.toLowerCase())}([^a-z0-9]|$)`, 'i');
       if (re.test(text)) return slug;
     }
   }
@@ -70,11 +105,18 @@ Deno.serve(async (req) => {
 
     let classified = 0;
     let skipped = 0;
+    let unknownFamily = 0;
     const updates: { id: string; subcategory: string }[] = [];
     const byFamily: Record<string, number> = {};
+    const unknownFamilies: Record<string, number> = {};
 
     for (const r of rows ?? []) {
       const fam = (r.category || '').toLowerCase();
+      if (!SUBS_BY_FAMILY[fam]) {
+        unknownFamily++;
+        unknownFamilies[fam || '(empty)'] = (unknownFamilies[fam || '(empty)'] ?? 0) + 1;
+        continue;
+      }
       const haystack = [r.title, r.prompt, r.scene_name, ...(r.tags ?? [])].filter(Boolean).join(' ');
       const slug = findSlugMatch(fam, haystack);
       if (slug) {
@@ -87,7 +129,6 @@ Deno.serve(async (req) => {
     }
 
     if (!dryRun && updates.length > 0) {
-      // Batch update
       for (const u of updates) {
         await supabase.from('discover_presets').update({ subcategory: u.subcategory }).eq('id', u.id);
       }
@@ -97,7 +138,9 @@ Deno.serve(async (req) => {
       total: rows?.length ?? 0,
       classified,
       skipped,
+      unknownFamily,
       byFamily,
+      unknownFamilies,
       dryRun,
       committed: !dryRun ? updates.length : 0,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
