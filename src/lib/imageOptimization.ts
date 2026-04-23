@@ -8,7 +8,9 @@
 
 interface OptimizationOptions {
   width?: number;
+  height?: number;
   quality?: number;
+  resize?: 'cover' | 'contain' | 'fill';
 }
 
 const SUPABASE_STORAGE_MARKER = '/storage/v1/object/';
@@ -26,13 +28,15 @@ export function getOptimizedUrl(
   // Already transformed
   if (url.includes(SUPABASE_RENDER_MARKER)) return url;
 
-  const { width, quality = 60 } = options;
+  const { width, height, quality = 60, resize } = options;
 
   const transformed = url.replace(SUPABASE_STORAGE_MARKER, SUPABASE_RENDER_MARKER);
 
   const params: string[] = [];
   if (width) params.push(`width=${width}`);
+  if (height) params.push(`height=${height}`);
   params.push(`quality=${quality}`);
+  if (resize) params.push(`resize=${resize}`);
 
   const separator = transformed.includes('?') ? '&' : '?';
   return `${transformed}${separator}${params.join('&')}`;
