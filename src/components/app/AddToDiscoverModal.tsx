@@ -566,8 +566,8 @@ export function AddToDiscoverModal({
               </Popover>
               {sceneIsMissing && (
                 <div className="flex items-start gap-1.5 mt-1 px-1">
-                  <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-tight">
+                  <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-destructive leading-tight">
                     No scene detected. Pick one so Recreate works.
                   </p>
                 </div>
