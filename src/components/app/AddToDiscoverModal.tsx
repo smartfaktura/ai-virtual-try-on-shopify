@@ -628,7 +628,7 @@ export function AddToDiscoverModal({
                         >
                           — No scene —
                         </button>
-                        {Object.entries(scenesByCategory).map(([cat, list]) => {
+                        {Object.entries(workflowScenesByCategory).map(([cat, list]) => {
                           const filtered = sceneSearch
                             ? list.filter(s => s.name.toLowerCase().includes(sceneSearch.toLowerCase()))
                             : list;
@@ -640,7 +640,7 @@ export function AddToDiscoverModal({
                               </p>
                               {filtered.map(s => (
                                 <button
-                                  key={s.name}
+                                  key={`${s.name}::${s.category}::${s.subCategory ?? ''}`}
                                   onClick={() => { setPickedSceneName(s.name); setScenePopoverOpen(false); }}
                                   className={cn(
                                     'w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted',
@@ -651,6 +651,9 @@ export function AddToDiscoverModal({
                                     <img src={s.imageUrl} alt="" className="w-6 h-6 rounded object-cover shrink-0" />
                                   )}
                                   <span className="truncate">{s.name}</span>
+                                  {s.subCategory && (
+                                    <span className="ml-auto text-[9px] text-muted-foreground/50 shrink-0">{s.subCategory}</span>
+                                  )}
                                 </button>
                               ))}
                             </div>
