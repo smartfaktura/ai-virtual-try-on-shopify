@@ -1,65 +1,63 @@
 
 
-## Polish Discover sub-category bar — coherent hierarchy, no redundancy, identical on `/discover` and `/app/discover`
+## Replace sub-category pill row with a quiet text-link sub-nav
 
-Three issues to fix together:
+You're right — the second pill row doesn't belong. Two pill rows stacked feels heavy and foreign to the rest of the site (which uses underlines, hairlines, and restraint). The fix is to drop the chip metaphor entirely for level-2 and use a thin **text-link rail** — same pattern Apple, Linear, and Stripe use for nested filters.
 
-### 1. "All Bags & Accessories" reads redundant
-
-The sub-bar's first pill currently builds `All ${familyLabel}`, producing **"All Bags & Accessories"** — which already says "all" twice in spirit and stutters next to the active *Bags & Accessories* family pill above it.
-
-Fix: replace the labeling rule with a clean **"All"** pill (no family name repeated). Context is already obvious from the highlighted family chip directly above it. Same treatment as Apple/Vercel-style nested filter rails.
+### What changes visually
 
 ```text
-Before:   [Bags & Accessories]            ← family
-          [All Bags & Accessories] [Bags] [Backpacks] …
+Before:  [All] [Bags] [Backpacks] [Belts] [Scarves] …    ← chips, blur fade, redundant "All"
 
-After:    [Bags & Accessories]            ← family
-          [All] [Bags] [Backpacks] [Belts] [Scarves] …
+After:    Bags · Backpacks · Belts · Scarves · Hats · Wallets · Eyewear
+                ────────                                              ← thin underline = active
 ```
 
-### 2. "Text on text" — sub-bar lacks visual hierarchy
+Plain text labels separated by hairline dividers. The active sub-type gets a 1px underline (`underline underline-offset-4 decoration-1 text-foreground`). Inactive = `text-muted-foreground/70 hover:text-foreground`. No chips, no background fills, no fade mask, no border.
 
-Today the sub-bar pills sit on the same page background with a faint `border-border/40` outline and lowercase muted text — visually they read as a second, equally-weighted row of pills, fighting the dark family pill above. There is no spatial cue that they're a *child* of the family selection.
+### Why this fixes every complaint
 
-Fix — three small moves:
+| Complaint | Fix |
+|---|---|
+| "Blurred transparent effect on the side" | Remove `fade-scroll` mask. Text rail uses simple `overflow-x-auto scrollbar-hide` with no gradient overlay. |
+| "Selected sub-button looks bad" | Replace flat gray `bg-foreground/10` chip with elegant underline — matches the site's underline-driven typography aesthetic (footer links, learn guides). |
+| "Fewer inputs than whole line" feels off-balance | Text rail naturally fills its width without chip sizing constraints; visually subordinate by design, not awkward. |
+| "Redundant info" (All pill) | Drop the All pill. Clicking the family pill itself = All. To clear a sub-type, user clicks the active sub-type again (toggles off) OR clicks the family pill above. Tooltip on first visit not needed — pattern is intuitive. |
+| "Different style from overall website" | Text + underline is the same level-2 nav pattern used elsewhere in the app (Settings tabs, Learn nav). |
 
-1. **Tighten vertical rhythm**: pull the sub-bar 4px closer to the family bar (`-mt-1` on its wrapper inside the page; remove the parent `space-y-8` gap for this pair specifically — wrap family + sub bars in one `<div className="space-y-2.5">`).
-2. **De-emphasize the pills**: drop the border, switch to a subtle filled style. Inactive = `bg-muted/30 text-muted-foreground/80 hover:bg-muted/60 hover:text-foreground`. Active = `bg-foreground/10 text-foreground` (a quiet inverse of the family's solid `bg-foreground text-background`). This creates a clear weight ladder: **solid → tinted → ghost**.
-3. **Indent + smaller scale**: `pl-1` on the sub-row container and keep pills slightly smaller (`px-3 py-1 text-[11px]`) so they read as secondary controls, not equals.
+### Interaction details
 
-Result: family bar is the loud level-1 selector, sub bar is a quiet level-2 refinement — no more "text-on-text" feeling.
+- **Click an inactive sub-type** → filters to that sub-type (sets `selectedSubcategory = sub.id`).
+- **Click the active sub-type** → toggles back to `__all__` (shows everything in the family).
+- **Click any family pill above** → resets `selectedSubcategory` to `__all__` (already wired via the existing `useEffect`).
+- Keyboard accessible: `<button>` elements, `aria-pressed` reflects active state.
 
-### 3. `/discover` ≠ `/app/discover` spacing
+### Spacing & rhythm
 
-Root cause: `/app/discover` (`Discover.tsx`) renders inside `AppShell` with one outer container, while `/discover` (`PublicDiscover.tsx`) renders inside `PageLayout` with its own `max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-8`. The `space-y-8` gap on the public page pushes the sub-bar much further from the family bar than on the app page.
-
-Fix: in BOTH pages, group the family bar + sub bar inside a single `<div className="space-y-2.5">…</div>` so the parent `space-y-*` no longer separates them. Then the spacing between family and sub rows is identical on both surfaces, regardless of the outer rhythm.
+The wrapper stays `<div className="space-y-2.5">` so the text rail sits ~10px under the family pills on both `/discover` and `/app/discover`. Container indent reduced from `pl-1` to `pl-0` (text rail aligns flush-left under the family bar — no need to indent text the way you'd indent secondary chips).
 
 ### Files touched
 
 ```text
 EDIT  src/components/app/DiscoverSubCategoryBar.tsx
-        - First pill label: 'All' (drop family name)
-        - Pill style: bg-muted/30 inactive, bg-foreground/10 active, no border
-        - Smaller scale: px-3 py-1 text-[11px], gap-1
-        - Container: pl-1 to indent under family bar
-
-EDIT  src/pages/Discover.tsx
-        - Wrap <DiscoverCategoryBar/> + <DiscoverSubCategoryBar/> in
-          <div className="space-y-2.5"> so they hug
-
-EDIT  src/pages/PublicDiscover.tsx
-        - Same wrapper grouping for identical rhythm
+        - Drop "All" item from items array
+        - Replace pill button styles with:
+            inactive: 'text-muted-foreground/70 hover:text-foreground'
+            active:   'text-foreground underline underline-offset-4 decoration-1'
+        - Remove fade-scroll class (no gradient mask)
+        - Remove pl-1; add subtle separators (· interpunct between items, muted)
+        - Click active → call onSelectSubcategory('__all__') to toggle off
+        - Smaller scroll arrows kept (only show if overflow), no chevron background
 ```
 
-No DB, no edge function, no taxonomy changes.
+No changes to `Discover.tsx`, `PublicDiscover.tsx`, `DashboardDiscoverSection.tsx`, taxonomy, or DB — they all already pass the same props. The component swap is fully drop-in.
 
 ### Validation
 
-1. `/app/discover` → click *Fashion*: sub-row appears tightly under the family row (~10px gap), pills are visibly secondary (lighter, smaller, no border). First pill reads **"All"**, not "All Fashion".
-2. Same on `/discover` — spacing now matches `/app/discover` exactly.
-3. *Bags & Accessories* sub-row reads: **All · Bags · Backpacks · Belts · Scarves · Hats · Wallets · Eyewear** — no redundant "All Bags & Accessories".
-4. Active sub-pill (e.g. *Hoodies*) is clearly distinguishable from inactive ones but visibly subordinate to the solid black *Fashion* family pill above.
-5. Single-sub families (Watches, Tech, Wellness) still hide the sub-row entirely (existing `isMultiSubFamily` guard unchanged).
+1. `/app/discover` → click *Fashion*: under the family bar, a single line of plain text reads `Clothing · Hoodies · Dresses · Jeans · Jackets · Activewear · Swimwear · Lingerie · Streetwear` — no chips, no blur, no "All".
+2. Click *Hoodies* → underlined, grid filters to hoodies.
+3. Click *Hoodies* again → underline gone, grid shows all Fashion (toggled back to family-wide view).
+4. `/discover` looks identical to `/app/discover` (same component, same spacing).
+5. Visually the level-2 rail reads as a quiet refinement — not a competing component.
+6. No "blurred transparent edge" anywhere on the sub-row.
 
