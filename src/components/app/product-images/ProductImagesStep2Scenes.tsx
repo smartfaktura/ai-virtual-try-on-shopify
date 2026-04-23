@@ -41,6 +41,8 @@ interface Step2Props {
   forcedActiveCategoryId?: string | null;
   onForcedActiveCategoryIdConsumed?: () => void;
   discoverScene?: { sceneId: string; title: string } | null;
+  /** Full scene object resolved at the page level — lets the From Explore card render instantly. */
+  discoverSceneFull?: ProductImageScene | null;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
