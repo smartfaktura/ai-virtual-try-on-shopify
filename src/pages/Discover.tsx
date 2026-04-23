@@ -196,20 +196,7 @@ function DiscoverLoadingState() {
   );
 }
 
-// Map onboarding family chip ids → discover category ids (for "For you" sort).
-const FAM_TO_DISC: Record<string, string[]> = {
-  fashion: ['fashion'],
-  footwear: ['fashion', 'sports'],
-  'bags-accessories': ['accessories'],
-  watches: ['accessories'],
-  eyewear: ['accessories'],
-  jewelry: ['jewelry'],
-  'beauty-fragrance': ['beauty', 'fragrances'],
-  home: ['home'],
-  tech: ['electronics'],
-  'food-drink': ['food'],
-  wellness: ['supplements'],
-};
+// Family ids ARE discover category ids now (unified taxonomy).
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -226,8 +213,14 @@ export default function Discover() {
   const columnCount = useColumnCount();
   
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
+
+  // Reset sub-tab whenever the family changes.
+  useEffect(() => {
+    setSelectedSubcategory('__all__');
+  }, [selectedCategory]);
 
   // Load user prefs once for "For you" sort on the All tab.
   const [userPrefs, setUserPrefs] = useState<{ families: string[]; subtypes: string[] }>({
