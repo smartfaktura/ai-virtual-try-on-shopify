@@ -63,7 +63,15 @@ export default function ProductImages() {
   const { balance, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
   const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds } = useProductAnalysis();
-  const { allScenes } = useProductImageScenes();
+  const { allScenes: baseScenes, fetchSceneById } = useProductImageScenes();
+  // Out-of-category scene injected when Recreate from Explore points to a
+  // scene_ref scoped to a different product family than the current product.
+  const [injectedScene, setInjectedScene] = useState<typeof baseScenes[number] | null>(null);
+  const allScenes = useMemo(() => {
+    if (!injectedScene) return baseScenes;
+    if (baseScenes.some(s => s.id === injectedScene.id)) return baseScenes;
+    return [...baseScenes, injectedScene];
+  }, [baseScenes, injectedScene]);
 
   // Discover Recreate: pre-select scene from ?sceneId=<uuid> (preferred) or ?scene=<Title>
   const [discoverScene, setDiscoverScene] = useState<{ sceneId: string; title: string } | null>(null);
