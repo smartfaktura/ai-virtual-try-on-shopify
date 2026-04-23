@@ -90,20 +90,43 @@ export default function ProductImages() {
   const prevProductIdsRef = useRef<string | null>(null);
 
   // Discover Recreate resolver. Match priority:
-  //   1. ?sceneId  (UUID — deterministic)
-  //   2. ?sceneCategory (origin category from Discover — deterministic)
-  //   3. Product analysis category (when products selected AND analyses ready)
-  //   4. First candidate (only as last resort with no products selected at all)
+  //   1. ?sceneRef (text scene_id from product_image_scenes — deterministic, hard-stop on miss)
+  //   2. ?sceneId (UUID — legacy)
+  //   3. ?sceneCategory (origin category from Discover — legacy)
+  //   4. Product analysis category (when products selected AND analyses ready)
+  //   5. First candidate (only as last resort with no products selected at all)
   useEffect(() => {
     if (discoverSceneConsumedRef.current) return;
+    const sceneRefParam = searchParams.get('sceneRef');
     const sceneIdParam = searchParams.get('sceneId');
     const sceneTitle = searchParams.get('scene');
     const sceneCategoryParam = searchParams.get('sceneCategory');
     const sceneImageParam = searchParams.get('sceneImage');
-    if (!sceneIdParam && !sceneTitle) return;
+    if (!sceneRefParam && !sceneIdParam && !sceneTitle) return;
     if (allScenes.length === 0) return;
 
-    let match = sceneIdParam ? allScenes.find(s => s.id === sceneIdParam) : null;
+    let match: typeof allScenes[number] | null = null;
+
+    // 1. sceneRef → exact scene_id lookup. HARD STOP on miss (no silent fallback).
+    if (sceneRefParam) {
+      // allScenes uses the wizard's frontend shape where `id` === DB scene_id (text).
+      match = allScenes.find(s => s.id === sceneRefParam) ?? null;
+      if (!match) {
+        console.warn('[ProductImages] sceneRef did not resolve to an active scene:', sceneRefParam);
+        discoverSceneConsumedRef.current = true;
+        setSearchParams(prev => {
+          const next = new URLSearchParams(prev);
+          next.delete('sceneRef');
+          return next;
+        }, { replace: true });
+        toast.info('That Explore scene is no longer available. Pick another shot to continue.');
+        return;
+      }
+    }
+
+    if (!match && sceneIdParam) {
+      match = allScenes.find(s => s.id === sceneIdParam) ?? null;
+    }
 
     if (!match && sceneTitle) {
       const target = sceneTitle.trim().toLowerCase();
@@ -172,6 +195,7 @@ export default function ProductImages() {
         const next = new URLSearchParams(prev);
         next.delete('scene');
         next.delete('sceneId');
+        next.delete('sceneRef');
         next.delete('sceneCategory');
         return next;
       }, { replace: true });
