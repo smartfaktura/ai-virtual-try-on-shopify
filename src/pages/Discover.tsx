@@ -514,27 +514,6 @@ export default function Discover() {
           {adminPendingCount} pending
         </span>
       )}
-      {isAdmin && (
-        <button
-          onClick={async () => {
-            try {
-              const { data: dry, error: dryErr } = await supabase.functions.invoke('backfill-discover-subcategories', { body: { dryRun: true } });
-              if (dryErr) throw dryErr;
-              const msg = `Will classify ${dry.classified} / ${dry.total} items. Continue?`;
-              if (!confirm(msg)) return;
-              const { data: real, error: realErr } = await supabase.functions.invoke('backfill-discover-subcategories', { body: { dryRun: false } });
-              if (realErr) throw realErr;
-              toast.success(`Classified ${real.committed} items`);
-              queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
-            } catch (e: any) {
-              toast.error(e?.message ?? 'Backfill failed');
-            }
-          }}
-          className="px-3 py-1 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors w-fit"
-        >
-          Auto-classify sub-family
-        </button>
-      )}
 
 
       {/* Similar-to chip */}
@@ -581,7 +560,7 @@ export default function Discover() {
               <p className="text-sm font-medium text-muted-foreground mb-1">No items tagged for this sub-family yet</p>
               <p className="text-xs text-muted-foreground/70 max-w-xs">
                 {isAdmin
-                  ? 'Use Auto-classify or tag items individually in the admin drawer.'
+                  ? 'Tag items individually in the admin drawer, or run Auto-classify in the Community Submissions section below.'
                   : 'Check back soon — new items are added regularly.'}{' '}
                 <button
                   onClick={() => setSelectedSubcategory('__all__')}

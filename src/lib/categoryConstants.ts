@@ -1,7 +1,11 @@
 // 11 canonical product families — single source of truth for onboarding Step 2,
 // the Settings editor, and dashboard headlines. Mirrors FAMILY_ORDER in sceneTaxonomy.ts.
 
-export const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements', 'editorial', 'commercial', 'lifestyle', 'campaign', 'cinematic', 'photography', 'styling', 'ads'] as const;
+import { getDiscoverFamilies } from '@/lib/discoverTaxonomy';
+
+// Re-export canonical family ids so any legacy importer gets the same source of
+// truth as the user-facing pill row in /app/discover.
+export const DISCOVER_CATEGORIES = getDiscoverFamilies().map((f) => f.id);
 
 export const PRODUCT_CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel' },

@@ -3,6 +3,9 @@ import { Check, X, Loader2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/lib/brandedToast';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useAdminSubmissions,
   useApproveSubmission,
@@ -19,6 +22,27 @@ export function AdminSubmissionsPanel() {
   const [activeTab, setActiveTab] = useState<string>('pending');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState('');
+  const [classifying, setClassifying] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleAutoClassify = async () => {
+    if (classifying) return;
+    setClassifying(true);
+    try {
+      const { data: dry, error: dryErr } = await supabase.functions.invoke('backfill-discover-subcategories', { body: { dryRun: true } });
+      if (dryErr) throw dryErr;
+      const msg = `Will classify ${dry.classified} / ${dry.total} Explore items by scanning their existing prompt + tags. Continue?`;
+      if (!confirm(msg)) return;
+      const { data: real, error: realErr } = await supabase.functions.invoke('backfill-discover-subcategories', { body: { dryRun: false } });
+      if (realErr) throw realErr;
+      toast.success(`Classified ${real.committed} items`);
+      queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Backfill failed');
+    } finally {
+      setClassifying(false);
+    }
+  };
 
   const filtered = submissions.filter(s => s.status === activeTab);
   const pendingCount = submissions.filter(s => s.status === 'pending').length;
@@ -45,14 +69,25 @@ export function AdminSubmissionsPanel() {
 
   return (
     <div className="space-y-5">
-      {/* Title */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">Community Submissions</h3>
-        {pendingCount > 0 && (
-          <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-            {pendingCount} pending
-          </span>
-        )}
+      {/* Title + admin actions */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground">Community Submissions</h3>
+          {pendingCount > 0 && (
+            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+              {pendingCount} pending
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleAutoClassify}
+          disabled={classifying}
+          title="Auto-tags untagged Explore items by scanning their existing prompt + tags. Admin-only maintenance tool — safe to re-run (only touches items with no sub-family yet)."
+          className="px-3 py-1 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors disabled:opacity-50"
+        >
+          {classifying ? 'Classifying…' : 'Auto-classify sub-family'}
+        </button>
       </div>
 
       {/* Tabs */}
