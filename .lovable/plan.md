@@ -1,156 +1,150 @@
 
 
-## Fix Add to Discover modal: bigger layout, scene browser modal, and wrong-image bug
+## Fix Library: stale `selectedItem`, AddToDiscoverModal mounting overhead, and Skeleton ref warning
 
-### Three fixes in this loop
+### Root causes (real bugs found)
 
----
-
-### 1. Wrong image opens in Library lightbox (regression)
-
-**Root cause** in `src/components/app/LibraryDetailModal.tsx`:
-- `activeItem = hasMultiple ? items[currentIndex] ?? item : item` (line 59)
-- `currentIndex` is reset via `useEffect(() => setCurrentIndex(initialIndex), [initialIndex, open])` (line 57)
-- When the user clicks a different thumbnail in `/app/library`, parent re-renders with new `selectedItem` + new `initialIndex`. For one render cycle, `currentIndex` still holds the **previous** value → `items[currentIndex]` resolves to the wrong item (especially when the list has shifted from a refetch).
-- Same root cause makes `items[currentIndex]` go stale when react-query refetches `items` while the modal is open — index now points to a different row.
-
-**Fix**: derive the active item by **id**, not by index, and use `item` as the source of truth, with `items` only used for navigation.
+**1. `selectedItem` becomes stale → wrong image / "items not loading well"** (`src/pages/Jobs.tsx:718-725`)
 
 ```tsx
-// Replace:
-const activeItem = hasMultiple ? items[currentIndex] ?? item : item;
+<LibraryDetailModal
+  item={selectedItem}        // ← snapshot from useState, never updated
+  items={items}              // ← live, updates on refetch / smartView change
+  initialIndex={selectedItem ? items.findIndex(i => i.id === selectedItem.id) : 0}
+/>
+```
 
-// With:
-const activeItem = useMemo(() => {
-  if (!hasMultiple) return item;
-  // Prefer current index match, but fall back to id lookup, then to `item`
-  const byIndex = items[currentIndex];
-  if (byIndex && byIndex.id === item?.id) return byIndex;
-  const byId = item ? items.find(i => i.id === item.id) : null;
-  return byId ?? items[currentIndex] ?? item;
-}, [hasMultiple, items, currentIndex, item]);
+`selectedItem` is captured into local state on click. When react-query refetches `items` (every generation completion, every favorite toggle, every status change — the page invalidates `['library']` constantly), the `selectedItem` reference is now stale: it may reference an item that no longer exists, or one that's been replaced by an updated version. The modal's id-driven memo tries to reconcile but `item.id` keeps pointing at the old snapshot, so:
+- if the refetch removed/reordered the item → `items.find(i => i.id === item.id)` returns undefined → falls back to `items[currentIndex]` which is now a **different image**.
+- new items shifted into earlier indexes → `currentIndex` mismatches.
 
-// And re-sync currentIndex whenever the parent's `item.id` changes:
+**2. `AddToDiscoverModal` always mounts → heavy fetches on every Library click** (`src/components/app/LibraryDetailModal.tsx:514`)
+
+```tsx
+{discoverModalOpen && item && ( <AddToDiscoverModal open={…} … /> )}
+```
+
+Looks gated, but `useDiscoverPickerOptions(open)` only short-circuits queries — the **hook still runs every render** of the modal subtree. More importantly, `useCustomScenes()` inside it (line 31 of the hook) is **NOT gated by `enabled`** — it always fetches `get_public_custom_scenes` whenever the AddToDiscoverModal mounts. Combined with the 200-row `product_image_scenes` fetch firing as soon as `discoverModalOpen` flips true, this slows down the library lightbox and competes with `useLibraryItems` for network.
+
+**3. Skeleton ref warning (the console error)** (`src/components/ui/skeleton.tsx`)
+
+Skeleton is a plain function component that doesn't forward refs. shadcn's Tooltip / Popover / Slot wrappers attempt to attach a ref to it via `asChild` chains. Doesn't crash but pollutes console and triggers React DevTools warnings during the AddToDiscoverModal render path.
+
+---
+
+### Fix
+
+**A. Make `selectedItem` self-healing in `Jobs.tsx`**
+
+Compute the live item from `items` by id — never trust the captured `selectedItem` for rendering:
+
+```tsx
+// Replace direct use of selectedItem with a reconciled "live" item
+const liveSelected = useMemo(() => {
+  if (!selectedItem) return null;
+  return items.find(i => i.id === selectedItem.id) ?? null;
+}, [selectedItem, items]);
+
+const liveIndex = useMemo(() => {
+  if (!liveSelected) return 0;
+  const idx = items.findIndex(i => i.id === liveSelected.id);
+  return idx >= 0 ? idx : 0;
+}, [liveSelected, items]);
+
+// If the selected item disappears from items (deleted, filtered out), close the modal
 useEffect(() => {
-  if (!item || !hasMultiple) return;
-  const idx = items.findIndex(i => i.id === item.id);
-  if (idx >= 0 && idx !== currentIndex) setCurrentIndex(idx);
-}, [item?.id, items, hasMultiple]); // intentionally not including currentIndex
+  if (selectedItem && !liveSelected) setSelectedItem(null);
+}, [selectedItem, liveSelected]);
+
+<LibraryDetailModal
+  item={liveSelected}
+  open={!!liveSelected}
+  onClose={() => setSelectedItem(null)}
+  isUpscaling={liveSelected ? upscalingSourceIds.has(liveSelected.id) : false}
+  items={items}
+  initialIndex={liveIndex}
+/>
 ```
 
-This makes the modal **id-driven** instead of index-driven, eliminating the wrong-image flash and the stale-index drift after refetches.
+This eliminates wrong-image flashes after every refetch / smartView change / favorite toggle, and cleanly closes the modal if the item was deleted.
 
----
+**B. Guard `AddToDiscoverModal` mount + gate all picker fetches**
 
-### 2. Bigger "Add to Discover" modal so all info fits
+Two small changes:
 
-**File**: `src/components/app/AddToDiscoverModal.tsx`
+1. In `LibraryDetailModal.tsx`, only render the modal when its trigger has fired AND the user is admin:
+   ```tsx
+   {discoverModalOpen && item && isAdmin && ( <AddToDiscoverModal … /> )}
+   ```
+   (Defensive; the trigger button is already admin-gated, but this prevents the hook tree from ever instantiating for non-admins.)
 
-Currently `max-w-md` (~448px) with everything stacked → Generation Context section gets cramped, pickers get cut off. Change to a **two-column layout on md+** with a wider container, keep single column on mobile.
+2. In `src/hooks/useDiscoverPickerOptions.ts`, **propagate `enabled`** to the custom-scenes fetch so it doesn't fire on every mount of any modal. Add a wrapper:
+   ```tsx
+   const { asPoses: customSceneProfiles } = enabled
+     ? useCustomScenes()
+     : { asPoses: [] as TryOnPose[] };
+   ```
+   Since hooks can't be conditional, instead pass a new `enabled` arg to `useCustomScenes({ enabled })` and gate its `useQuery` with `enabled: enabled && !!user`. (Mirror what `useCustomModels({ enabled })` already does.)
 
-- Container: `max-w-md mx-4` → `max-w-3xl mx-4` (768px). Outer wrapper gains `max-h-[90vh] flex flex-col`.
-- Header stays full-width.
-- Below header, body becomes `grid md:grid-cols-2 gap-6` with internal scroll: `flex-1 overflow-y-auto`.
-  - **Left column**: image preview (larger — `max-h-72`), Title, Tags.
-  - **Right column**: Category (family + sub-row), Generation Context block (Workflow / Scene / Model / Product toggle).
-- Footer (Publish button + helper text) stays full-width, sticky bottom inside the container, `border-t border-border/30 px-6 py-4`.
+This brings the AddToDiscoverModal cold-mount from ~3 parallel queries down to 0 until the admin actually opens it, which is what was already documented in the file's JSDoc but not implemented for the scenes path.
 
-This gives all controls room to breathe; pickers, tag input, and category chips no longer overlap.
+**C. Fix the Skeleton ref warning**
 
----
+Convert `src/components/ui/skeleton.tsx` to forward refs (5-line change):
 
-### 3. Replace 1000-row Scene popover with a category-browser modal
+```tsx
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-**Current behaviour**: Scene picker is a `<Popover>` with a single long scrollable list of ~1100 scenes (mocks + custom + product_image_scenes). That's slow to mount, slow to scroll, hides the structure.
+const Skeleton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("animate-pulse rounded-md bg-muted", className)} {...props} />
+  )
+);
+Skeleton.displayName = "Skeleton";
 
-**Fix**: Open a dedicated **`SceneBrowserModal`** when the user clicks the Scene picker (instead of the Popover) — but **only when the auto-detected scene is null** (so admins keep the fast inline picker for confirmed scenes). User can always force-open the browser via a small "Browse all scenes" button next to the picker trigger.
-
-#### New file: `src/components/app/SceneBrowserModal.tsx`
-
-Dedicated picker that mirrors the `/app/generate/product-images` Step-2 category structure using existing `CATEGORY_FAMILY_MAP` + `SUB_FAMILY_LABEL_OVERRIDES` from `src/lib/sceneTaxonomy.ts`.
-
-Layout:
-```text
-┌───────────────────────────────────────────────────────────────┐
-│ Browse Scenes                              [search…]      [×] │
-├──────────────┬────────────────────────────────────────────────┤
-│ FAMILIES     │  Subfamily tabs (chips):                       │
-│ • Fashion    │  [All] [Garments] [Dresses] [Hoodies] …        │
-│ • Footwear   │                                                │
-│ • Bags       │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐               │
-│ • Watches    │  │ thumb│ │ thumb│ │ thumb│ │ thumb│           │
-│ • Eyewear    │  │ name │ │ name │ │ name │ │ name │           │
-│ • Jewelry    │  └─────┘ └─────┘ └─────┘ └─────┘               │
-│ • Beauty     │  …                                              │
-│ • Home       │                                                │
-│ • Tech       │                                                │
-│ • Food       │                                                │
-│ • Wellness   │                                                │
-│ • Freestyle  │  ← non-mapped slugs grouped here               │
-└──────────────┴────────────────────────────────────────────────┘
+export { Skeleton };
 ```
 
-Behaviour:
-- Reuses `useDiscoverPickerOptions(open)` — no new query, no extra fetch.
-- Group `scenes` by family using `CATEGORY_FAMILY_MAP[scene.category]` → fast, in-memory, runs once.
-- Left rail: family list with counts. Selecting a family scopes the right side.
-- Top of right side: subfamily chips (the raw `category_collection` slugs that fall under the selected family) + an "All" chip. Labels via `getSubFamilyLabel(slug)`.
-- Right side: 4-col grid of scene cards (thumbnail + name) — virtualised lightly with `max-h-[60vh] overflow-y-auto` + lazy `<img loading="lazy">`. No virtual list dependency; ~200 visible items per family is fine.
-- Search bar in the header filters across the **currently selected family** (or all if no family selected) by name.
-- Selecting a card calls `onSelect(scene)` and closes.
-- Container: `max-w-5xl max-h-[85vh]` so it sits above `AddToDiscoverModal` without crowding.
-
-Z-index: `z-[340]` (above the AddToDiscoverModal at `z-[300]` and its popovers at `z-[320]`).
-
-#### Wire it into `AddToDiscoverModal.tsx`
-
-- Add state: `const [sceneBrowserOpen, setSceneBrowserOpen] = useState(false);`
-- The Scene picker trigger button now branches:
-  - When `pickedSceneName` is null **and** `aiSuggestedScene` is also null → clicking the trigger opens `SceneBrowserModal` directly (skips the Popover).
-  - Otherwise → keeps the existing Popover with a small "Browse all" button at its top that opens `SceneBrowserModal` (so admin can always switch to the structured picker).
-- Render `<SceneBrowserModal open={sceneBrowserOpen} onClose={…} scenes={allScenes} value={pickedSceneName} onSelect={(s) => { setPickedSceneName(s.name); setSceneBrowserOpen(false); }} />` at the modal root.
-
-#### Performance note (image appearance speed)
-Yes, mounting 1000+ `<img>` tags inside a Popover slows the modal down — every popover open paints them all. The new browser modal:
-- only renders the visible family's items (typically <200),
-- uses `loading="lazy"` so off-screen thumbnails don't hit the network,
-- mounts only when explicitly opened.
-
-This eliminates the slowness. The inline AI-detected scene case (most common path) keeps the lightweight Popover.
+Removes the React warning without touching any consumer.
 
 ---
 
 ### Files touched
 
 ```text
+EDIT  src/pages/Jobs.tsx
+        - Add liveSelected + liveIndex useMemos
+        - Auto-close modal when selected item disappears from items
+        - Pass liveSelected to LibraryDetailModal
+
 EDIT  src/components/app/LibraryDetailModal.tsx
-        - Make activeItem id-driven (memo)
-        - Re-sync currentIndex from item.id when parent changes selection
+        - Add isAdmin gate to AddToDiscoverModal mount
 
-EDIT  src/components/app/AddToDiscoverModal.tsx
-        - Container: max-w-3xl, max-h-[90vh], two-column body grid on md+
-        - Sticky footer with Publish button
-        - Scene picker: open SceneBrowserModal when scene is null;
-          add "Browse all" button inside Popover for the populated case
-        - State + render for SceneBrowserModal
+EDIT  src/hooks/useDiscoverPickerOptions.ts
+        - Pass enabled to useCustomScenes
 
-NEW   src/components/app/SceneBrowserModal.tsx
-        - Two-pane category browser (families left, grid right)
-        - Reuses useDiscoverPickerOptions data; CATEGORY_FAMILY_MAP for grouping
-        - Search input scoped to selected family
-        - z-[340], lazy images, responsive grid
+EDIT  src/hooks/useCustomScenes.ts
+        - Accept optional { enabled } arg, gate the useQuery
+
+EDIT  src/components/ui/skeleton.tsx
+        - forwardRef so Popover/Slot don't warn
 ```
 
-No DB migration. No edge function changes. No changes to `useDiscoverPickerOptions` (data is already in the right shape). No impact on `SubmitToDiscoverModal`, `DiscoverDetailModal`, freestyle gallery, or any other Library consumer.
+No DB / RLS / edge function changes. No behaviour change to freestyle gallery, DiscoverDetailModal, or any other Skeleton consumer.
+
+### Why this fixes the user's report
+
+- "Library items not load well" → caused by `AddToDiscoverModal` firing 2-3 admin queries on every modal open, competing with the library refetch. Gating `useCustomScenes` removes that contention.
+- "Wrong image opens" → the live-id reconciliation in `Jobs.tsx` keeps `item` always pointing at the actual current row, even across refetches.
+- "Crashing" → the Skeleton ref warning was loud in console but the practical crash was the stale-`selectedItem` rendering an `undefined` activeItem briefly. Both now resolved.
 
 ### Validation
 
-1. `/app/library` → click image #1 → correct image opens. Click ✕ → click image #5 → image #5 opens (not #1 flash). Trigger a refetch by submitting another generation → reopen library → no stale image.
-2. Add to Discover modal opens at ~768px wide on desktop, all controls visible without inner scroll on a 1080p viewport; mobile collapses to single column.
-3. Click Scene picker on an item with detected scene → fast inline Popover shows preselected scene (current behaviour). "Browse all" link inside Popover opens the browser modal.
-4. Click Scene picker on an item with no scene → SceneBrowserModal opens directly with families listed.
-5. Pick "Bags & Accessories" → see only ~80 scenes; subfamily chips filter to "Bags / Cardholders / Belts / Backpacks". Search "olive" filters within family.
-6. Selecting a scene closes the browser, populates the picker, removes the missing-scene warning.
-7. Publish — preset includes correct `scene_name` and `scene_image_url` from the picked card.
-8. Other places using Popover-based scene selection (none today besides this modal) unaffected; freestyle pickers untouched.
+1. Click library image → correct image opens. Submit a generation while the modal is open → list refetches → modal still shows the same image (no flicker, no swap).
+2. Delete the open image → modal closes cleanly instead of showing a stale neighbour.
+3. Switch smartView (Favorites / Brand Ready) while modal is open → if the current item is filtered out, modal closes; otherwise stays on it.
+4. As non-admin: open library, network tab shows zero `product_image_scenes` / `get_public_custom_scenes` requests when opening the lightbox.
+5. As admin: open lightbox → no extra requests until clicking "Add to Discover" → then the 3 picker queries fire (cached 10min after).
+6. No more "Function components cannot be given refs" warning when AddToDiscoverModal opens.
 
