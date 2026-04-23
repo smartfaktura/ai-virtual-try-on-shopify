@@ -59,3 +59,50 @@ export function familyIdForSubtype(slug: string): string | null {
   }
   return null;
 }
+
+/**
+ * Test whether a discover item matches the active family / sub-type filter.
+ *
+ * Item shape: { category: string; subcategory?: string|null; discover_categories?: string[] }
+ *
+ * Rules:
+ *  - familyId === 'all' → match everything.
+ *  - subFilter === '__all__' (default for a family) → match items where:
+ *       category === familyId OR subcategory belongs to that family
+ *       OR discover_categories includes familyId (legacy).
+ *  - subFilter === '<slug>' → match items where subcategory === slug.
+ *    Backwards-compat: also match legacy items that lack a subcategory but
+ *    whose category matches the family (so old rows still appear when the
+ *    user has only the family pill or any sub-type within it picked).
+ *    To keep sub-type filtering meaningful we only fall back when the item
+ *    has NO subcategory at all.
+ */
+export function itemMatchesDiscoverFilter(
+  item: { category?: string | null; subcategory?: string | null; discover_categories?: string[] | null },
+  familyId: string,
+  subFilter: string,
+): boolean {
+  if (familyId === 'all') return true;
+
+  const cat = (item.category ?? '').toLowerCase();
+  const sub = (item.subcategory ?? '').toLowerCase();
+  const extra = Array.isArray(item.discover_categories)
+    ? item.discover_categories.map((c) => c.toLowerCase())
+    : [];
+  const familySubs = getDiscoverSubtypes(familyId).map((s) => s.slug.toLowerCase());
+
+  const inFamily =
+    cat === familyId.toLowerCase() ||
+    extra.includes(familyId.toLowerCase()) ||
+    (sub && familySubs.includes(sub));
+
+  if (!inFamily) return false;
+
+  if (subFilter === '__all__' || !subFilter) return true;
+
+  if (sub) return sub === subFilter.toLowerCase();
+  // Legacy row with no subcategory — surface under any sub-type pill within
+  // its family so old data isn't hidden.
+  return true;
+}
+
