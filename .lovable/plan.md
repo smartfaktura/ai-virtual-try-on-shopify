@@ -1,77 +1,113 @@
 
 
-## Fix: clicking "star" on Clothing (or any sub-family) tab actually pins to that sub-family's Featured (0/12) panel
+## Add sub-family selector to Discover admin (and a smart backfill)
 
-### Root cause
+### Problem
 
-Your screenshot shows `Fashion & Apparel · Featured (0/12)` even after starring 5 cards under the **Clothing** sub-family tab. The DB confirms it: `recommended_scenes` has rows for family-level keys (`fashion`, `jewelry`, …) and `null` (Global) — **zero rows for any sub-family slug** (`garments`, `clothing`, `hoodies`, etc.).
+`discover_presets.subcategory` already exists in the DB and the filter logic (`itemMatchesDiscoverFilter`) already reads it — but **none of the 366 existing items have it set**, and the admin edit drawer (`DiscoverDetailModal`) has no UI to assign one. Result: when a user picks a sub-family pill (e.g. *Hoodies*), the grid only matches via legacy fallback rather than precise sub-family targeting.
 
-The page has **two stars on each card** with overlapping meaning:
+### The fix — three small, surgical changes
 
-| Star | Action | What it actually writes |
-|---|---|---|
-| **Top-left (large, prominent)** — what users click | `toggle_scene_featured` RPC | Sets `product_image_scenes.sort_order` to a small negative number. **Family-wide. Ignores the active sub-family tab.** |
-| **Top-right (tiny, only visible after add)** | `addMutation` → `INSERT INTO recommended_scenes` | Correctly writes a row scoped to `category = dbCategory` (the active sub-family slug). |
+#### 1. Add a "Sub-family" picker to the admin edit drawer
 
-Users naturally click the big top-left star, expecting it to add to the visible "Featured (0/12)" panel — but that star calls the wrong mutation, so the panel never updates.
+**File:** `src/components/app/DiscoverDetailModal.tsx`
 
-The "All Fashion" and "Global" tabs **appear** to work because both stars happen to align there: at the family level, the user has previously populated those rows, and `toggle_scene_featured` also re-sorts cards visually so it looks like the click "did something".
-
-### The fix
-
-Collapse the two stars into **one prominent star per card** whose behaviour is **scoped by the active tab**:
+Insert a new field directly under the existing **Explore Categories** pill row (around line 385). It dynamically reflects the **first selected family** in `editCategories`:
 
 ```text
-Active tab          | Star click =
---------------------|--------------------------------------------------
-Global              | INSERT recommended_scenes (category = NULL)
-Family (e.g. Fashion) | INSERT recommended_scenes (category = 'fashion')
-Sub-family (Clothing) | INSERT recommended_scenes (category = 'garments')
+Explore Categories
+[Fashion] [Beauty] [Fragrances] …                    ← existing
+
+Sub-family (Fashion)                                 ← NEW
+[None] [Clothing] [Hoodies] [Dresses] [Jeans] [Jackets]
+[Activewear] [Swimwear] [Lingerie] [Streetwear]
 ```
 
-Clicking again while the scene is already in that scope removes it (existing `removeMutation`).
+Behavior:
+- Pulled live from `getDiscoverSubtypes(firstFamilyId)` — same source as the user-facing sub-row, so they always stay in sync.
+- Single-select pill row (matching the new sub-category pill style we just shipped: `rounded-full px-4 py-1.5 text-[12px] border`, solid black active).
+- Hidden when the family has 0 or 1 sub-types (e.g. Watches, Eyewear) — nothing to choose.
+- Shows **"None"** as the first pill so admins can leave it family-wide.
+- Resets to `null` whenever the admin changes the primary family (so a Fashion-tagged item can't keep a Footwear sub-family).
 
-This means:
-1. The "Featured (N/12)" panel at the top of the page becomes the single source of truth for what the active scope curates.
-2. Sub-family panels (Clothing, Hoodies, Dresses…) finally get populated when admins click stars while on those tabs.
-3. The user-facing `useRecommendedScenes` hook (which already runs PASS 1 = sub-categories, PASS 2 = families, PASS 3 = global) immediately surfaces the new sub-family curation.
+State: add `editSubcategory: string | null` next to `editCategories`. Initialize from `d?.subcategory ?? null` in the existing reset effect.
 
-### What changes in the file
+#### 2. Persist it on save
 
-**`src/pages/AdminRecommendedScenes.tsx`** — single file, surgical edit:
+**Same file**, in the save handler (~line 657):
 
-1. **Remove the `toggleFeaturedMutation` star button** (top-left, lines ~712–730). Keep the RPC import — admins can still pin globally via other UIs if needed, but it doesn't belong on a per-scope curation page where it confuses the model.
+```ts
+const presetData: Record<string, any> = {
+  category: editCategories[0] || 'fashion',
+  discover_categories: editCategories,
+  subcategory: editSubcategory,           // NEW
+  …
+};
+```
 
-2. **Promote the "in recommended" indicator to the prominent top-left position** and merge it with the click target. The single star now:
-   - Filled gold/primary when the scene is in the active scope's `recommended_scenes` (i.e. `recommendedMap.has(scene.scene_id)`).
-   - Outlined when not.
-   - On click → `addMutation` if not in scope, `removeMutation` if in scope. (These already correctly use `dbCategory`.)
+And mirror to `custom_scenes` (which doesn't have the column yet — we'll add it in the migration below) so promoted scenes also get it.
 
-3. **Replace the now-redundant whole-card click** (lines 683–710) with a non-toggling click area (just opens preview / does nothing). The star is the only mutation control.
+The existing "unsaved changes" detection on the Save button (line 631) gets one more comparison: `editSubcategory !== (item.data as any).subcategory`.
 
-4. **Header copy clarification** under "Featured (N/12)":
-   - Sub-family active: `Curating Clothing scenes — shown first to users who picked Clothing in onboarding.`
-   - Family active: `Curating Fashion & Apparel scenes — shown to all Fashion users when no sub-family curation exists.`
-   - Global: `Curating Global scenes — shown to everyone as final fallback.`
+#### 3. Surface the value on the read-only metadata panel
 
-5. **Optional polish** — the `subCounts` query already runs and shows the count next to each sub-pill. Keep it; it'll start showing real numbers once stars actually persist.
+In the small key/value grid above the editors (~line 323), add one row right after **DB Category**:
+
+```text
+DB Category     fashion
+DB Sub-family   hoodies   ← NEW (or "—" when null)
+DB Workflow     virtual-try-on-set
+```
+
+So admins can see at a glance whether an item has a sub-family without opening the picker.
+
+### DB migration
+
+Two tiny additions:
+
+```sql
+-- 1. custom_scenes: mirror the column so promoted scenes carry sub-family
+ALTER TABLE public.custom_scenes
+  ADD COLUMN IF NOT EXISTS subcategory text;
+
+-- 2. Index for fast filtering on the user-facing grid
+CREATE INDEX IF NOT EXISTS idx_discover_presets_subcategory
+  ON public.discover_presets (subcategory)
+  WHERE subcategory IS NOT NULL;
+```
+
+No RLS changes — `subcategory` falls under existing policies.
+
+### Optional: lightweight backfill (one-shot, admin-only)
+
+Most items can be auto-classified by inspecting their existing `tags`, `prompt`, and `scene_name` against the sub-family slugs. We add a **"Auto-classify sub-family"** button to `/app/admin/discover` (top-right toolbar) that runs once:
+
+```text
+For each row WHERE subcategory IS NULL:
+  1. Take its `category` (family).
+  2. Look up its family's sub-type slugs.
+  3. If any slug appears in tags[] or prompt or title (case-insensitive
+     word-boundary match) → set subcategory to that slug.
+  4. Otherwise leave NULL (admin handles manually).
+```
+
+Implemented as a new edge function `backfill-discover-subcategories` (admin JWT check, dry-run mode returns counts before committing). Safe, idempotent, free to re-run.
 
 ### What does **not** change
 
-- DB schema, RLS, the `toggle_scene_featured` RPC itself.
-- `useRecommendedScenes` (already correctly does sub→family→global cascade).
-- `recommended_scenes` table contents — existing family-level + Global rows stay intact.
-- The card grid layout, filters, search, or interleave/grouped views.
+- `itemMatchesDiscoverFilter` — already correct, already supports sub-family.
+- User-facing `Discover.tsx` / `PublicDiscover.tsx` — already pass `subFilter` through.
+- Sub-category pill row — just shipped, untouched.
+- Onboarding sub-type taxonomy — single source of truth, both UIs read from it.
 
 ### Validation
 
-1. Go to `/app/admin/recommended-scenes` → **Fashion & Apparel** → **Clothing** tab.
-2. Click the star on 5 cards. The header counter ticks up to **Featured (5/12)** in real time.
-3. The featured strip at the top renders those 5 scenes immediately.
-4. The "Clothing (N)" pill in the sub-strip shows **5**.
-5. DB check: `SELECT * FROM recommended_scenes WHERE category = 'garments'` returns 5 rows.
-6. As a user with `'garments'` in `profiles.product_subcategories`, refresh the app: the workflow rail now shows those 5 scenes first (PASS 1 hit in `useRecommendedScenes`).
-7. Click the star again on one card → it disappears from the strip; counter drops to 4.
-8. Switch to **Hoodies** sub-tab → "Featured (0/12)", independent of Clothing. Star a different card → only Hoodies featured grows.
-9. Switch to **All Fashion** → existing 12 family-level featured scenes still show, untouched.
+1. `/app/admin/discover` → click any Fashion item → drawer opens.
+2. Below the existing "Explore Categories" row, the new **Sub-family (Fashion)** pill row shows: `[None] [Clothing] [Hoodies] …`.
+3. Click *Hoodies* → Save → toast confirms; drawer reflects `DB Sub-family: hoodies`.
+4. Open `/app/discover` → select **Fashion → Hoodies** → that item appears in the grid (precise match, not legacy fallback).
+5. Switch the same item's family from Fashion to Beauty → Sub-family row instantly re-renders with `[None] [Skincare] [Makeup] [Fragrance]`; previous *Hoodies* selection auto-clears.
+6. Open a Watches item → Sub-family row is hidden (only one sub-type).
+7. Click **Auto-classify sub-family** in the toolbar → dry-run shows e.g. *"148 / 366 will be classified"* → confirm → counts persisted, drawer reflects new values.
+8. Custom scenes promoted via the drawer also write `subcategory` to both `discover_presets` and `custom_scenes`.
 
