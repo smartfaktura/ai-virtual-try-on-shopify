@@ -106,7 +106,7 @@ export default function ProductImages() {
       if (selectedProductIds.size > 0) {
         const userCats = new Set(
           Array.from(selectedProductIds)
-            .map(pid => analyses[pid]?.categoryCollection)
+            .map(pid => analyses[pid]?.category)
             .filter(Boolean) as string[]
         );
         match = candidates.find(c => c.categoryCollection && userCats.has(c.categoryCollection)) ?? candidates[0] ?? null;
