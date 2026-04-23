@@ -19,6 +19,10 @@ import {
   getSubFamilyLabel,
   interleaveByFamily,
 } from '@/lib/sceneTaxonomy';
+import {
+  SUB_TYPES_BY_FAMILY,
+  FAMILY_ID_TO_NAME,
+} from '@/lib/onboardingTaxonomy';
 
 type ViewMode = 'interleaved' | 'grouped';
 const VIEW_MODE_KEY = 'admin-rec-scenes:view-mode';
