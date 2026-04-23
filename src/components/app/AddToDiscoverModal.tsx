@@ -84,12 +84,34 @@ export function AddToDiscoverModal({
 
   const queryClient = useQueryClient();
 
-  const { scenes: allScenes, scenesByCategory, models: allModels, workflows: allWorkflows } =
+  const { scenes: allScenes, scenesForWorkflow, models: allModels, workflows: allWorkflows } =
     useDiscoverPickerOptions(open);
 
+  // Workflow-aware scene library: product-images → product_image_scenes (writes scene_ref);
+  // anything else → custom_scenes (legacy scene_name only).
+  const workflowScenes = useMemo(
+    () => scenesForWorkflow(pickedWorkflowSlug),
+    [scenesForWorkflow, pickedWorkflowSlug],
+  );
+  const workflowScenesByCategory = useMemo(() => {
+    const groups: Record<string, PickerSceneOption[]> = {};
+    workflowScenes.forEach(s => {
+      const key = s.category || 'other';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
+    });
+    return groups;
+  }, [workflowScenes]);
+
+  // Match against the workflow-specific library first; fall back to combined list
+  // so a previously-picked scene from a different workflow is still resolvable
+  // for display before being cleared on workflow switch.
   const pickedScene = useMemo<PickerSceneOption | null>(
-    () => allScenes.find(s => s.name === pickedSceneName) ?? null,
-    [allScenes, pickedSceneName]
+    () =>
+      workflowScenes.find(s => s.name === pickedSceneName) ??
+      allScenes.find(s => s.name === pickedSceneName) ??
+      null,
+    [workflowScenes, allScenes, pickedSceneName]
   );
   const pickedModel = useMemo<PickerModelOption | null>(
     () => allModels.find(m => m.name === pickedModelName) ?? null,
