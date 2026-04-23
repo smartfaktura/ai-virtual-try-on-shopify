@@ -1,88 +1,99 @@
 
 
-## Fix Browse Scenes: show all categories + sub-families, optimize thumbnails
+## Fix Browse Scenes: stop dedupe loss + surface `sub_category` chips
 
-### Issues found
+### Root causes
 
-**1. ~22 scenes missing from sidebar** — `category_collection='wallets'` (22 active rows) isn't mapped in `CATEGORY_FAMILY_MAP` so they fall into the "Other" bucket. The sidebar shows everything except the Bags & Accessories sub-family they should belong to.
+**Bug 1 — name-based dedupe drops 60–70% of scenes** (`src/hooks/useDiscoverPickerOptions.ts:71`)
 
-**2. Sub-family chips don't show all real sub-families** — chips are derived from whatever scenes happen to be in the family, but **only render when `subSlugs.length > 1`** and the labels for some slugs (e.g. `wallets`, `furniture`) are missing from `SUB_FAMILY_LABEL_OVERRIDES`, so they appear as raw slugs ("Wallets", which is fine, but "Furniture" auto-titled). Worse, sub-families with zero matching scenes are entirely invisible — user has no way to see they exist.
+```ts
+if (!items.find(i => i.name === ps.title)) { ... }
+```
 
-**3. Thumbnails load full-size (multi-MB PNGs)** — `SceneBrowserModal` renders `<img src={scene.imageUrl} />` directly. With ~1,500 scenes and ~80–160 visible at once, the browser pulls original-resolution images. Slow + the screenshot's empty grey cards are scenes still mid-download.
+Many scenes share the same `title` across different `category_collection`s ("Top View", "Sunlit Glow", "Pickup Gesture Detail", etc.). The `find` uniqueness check throws away all but the first occurrence, so:
+
+- Beverages DB: **64 active** → modal shows **25**
+- Snacks DB: **24** → shows **24** (lucky)
+- Food DB: **27** → shows **3**
+- Across the catalog this hides ~600+ scenes silently.
+
+**Bug 2 — `sub_category` isn't fetched, so "Creative Shots" can't appear**
+
+The picker query selects only `id, scene_id, title, preview_image_url, category_collection`. The DB column `sub_category` (which holds "Creative Shots", "Essential Shots", "Editorial Drink Studio", "Aesthetic Color Beverage Stories", etc.) is dropped before reaching the modal. The modal groups the right pane by `category_collection` only, so the rich curated buckets the user expects are invisible.
 
 ### Fixes
 
-#### 1. `src/lib/sceneTaxonomy.ts` — map orphan slug + add label
+#### 1. `src/hooks/useDiscoverPickerOptions.ts` — fetch `sub_category`, dedupe by stable key
+
+- Add `sub_category` to the SELECT.
+- Replace the O(n²) `find()` dedupe with a `Set` keyed on **`title + category_collection + sub_category`** so distinct curated rows survive.
+- Add `subCategory` to `PickerSceneOption`.
 
 ```ts
-// CATEGORY_FAMILY_MAP additions
-'wallets': 'Bags & Accessories',     // 22 scenes currently orphaned
+.select('id, scene_id, title, preview_image_url, category_collection, sub_category')
 
-// SUB_FAMILY_LABEL_OVERRIDES additions (cosmetic, kept tidy)
-'wallets': 'Wallets',
-'furniture': 'Furniture',
-'home-decor': 'Decor',                // already present, keep
+// dedupe across mocks + custom + product_image_scenes
+const seen = new Set<string>();
+const push = (item: PickerSceneOption) => {
+  const key = `${item.name}::${item.category}::${item.subCategory ?? ''}`;
+  if (seen.has(key)) return;
+  seen.add(key);
+  items.push(item);
+};
 ```
 
-Result: 22 wallet scenes move from "Other" into "Bags & Accessories"; counts on left rail update automatically (Bags & Accessories goes from 125 → 147; Other drops by 22).
+`PickerSceneOption` gains `subCategory?: string | null`. `mockTryOnPoses` and `customSceneProfiles` pass `subCategory: undefined` (already work today; nothing breaks).
 
-#### 2. `src/components/app/SceneBrowserModal.tsx` — show all sub-family chips, always
+#### 2. `src/components/app/SceneBrowserModal.tsx` — three-level navigation: Family → Sub-family → Sub-category
 
-- Always render the chip row when the active family has any sub-family (drop the `subSlugs.length > 1` gate — show even a single chip for consistency).
-- Display chip count badges (e.g. `Wallets · 22`) so admins immediately see what's available before clicking.
-- Sort sub-family chips by **scene count descending**, then alpha — most-populated sub-families first.
-- Keep the "All" chip as the default selected state.
+- Keep left rail (families) as-is.
+- Replace the current sub-family chip row with a **two-row chip header**:
+  - **Row 1:** sub-family chips (existing behavior — `category_collection` slugs sorted by count).
+  - **Row 2:** `sub_category` chips for whatever is selected above (e.g. "All", "Creative Shots", "Essential Shots", "Editorial Drink Studio", …) sorted by count.
+- "All" on either row clears that level's filter; the grid then shows everything matching the higher levels.
+- Sub-category chips use the raw `sub_category` string as the label (it's already human-readable like "Creative Shots").
 
 ```tsx
-const subSlugCounts = useMemo(() => {
-  const items = familyGroups.get(activeFamily!) ?? [];
+const subCategoryCounts = useMemo<Array<[string, number]>>(() => {
+  if (!activeFamily) return [];
+  let list = familyGroups.get(activeFamily) ?? [];
+  if (activeSub) list = list.filter(s => s.category === activeSub);
   const counts = new Map<string, number>();
-  for (const it of items) counts.set(it.category, (counts.get(it.category) ?? 0) + 1);
+  for (const s of list) {
+    const key = s.subCategory?.trim() || 'Other';
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
   return Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-}, [familyGroups, activeFamily]);
+}, [familyGroups, activeFamily, activeSub]);
 ```
 
-Render chips from `subSlugCounts` and show the count next to each label.
+Filter pipeline becomes: family → optional sub-family → optional sub-category → search.
 
-#### 3. `src/components/app/SceneBrowserModal.tsx` — optimize thumbnails
-
-- Import `getOptimizedUrl` from `@/lib/imageOptimization`.
-- Wrap each thumb URL with **quality only** (`quality: 55`) — **no width / no height** per the project's no-crop image rule (`mem://style/image-optimization-no-crop`). This compresses the image server-side without forcing a crop or zoom.
-- Keep `loading="lazy"` (already present) and add `decoding="async"`.
-- Add a small fade-in via `onLoad` to mask the grey skeleton until the image arrives.
-
-```tsx
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-
-const thumb = getOptimizedUrl(scene.imageUrl, { quality: 55 });
-// <img src={thumb} loading="lazy" decoding="async" ...
-```
-
-For external URLs (mocks, custom uploads not in Supabase Storage) the helper passes through unchanged — safe.
+Existing `getOptimizedUrl({ quality: 55 })` thumb path stays unchanged.
 
 ### Files touched
 
 ```text
-EDIT  src/lib/sceneTaxonomy.ts
-        - CATEGORY_FAMILY_MAP: add 'wallets' → 'Bags & Accessories'
-        - SUB_FAMILY_LABEL_OVERRIDES: add 'wallets', 'furniture'
+EDIT  src/hooks/useDiscoverPickerOptions.ts
+        - SELECT now includes sub_category
+        - PickerSceneOption gains subCategory?: string | null
+        - dedupe key = name + category + subCategory (Set, not find())
 
 EDIT  src/components/app/SceneBrowserModal.tsx
-        - Always render sub-family chip row (drop length>1 gate)
-        - Compute subSlugCounts; sort by count desc; show count badge
-        - getOptimizedUrl(url, { quality: 55 }) for every thumb
-        - decoding="async" on <img>
+        - Add second chip row for sub_category (within active family + sub-family)
+        - Counts + sort desc; "All" clears that level
+        - Filter pipeline gains the new level
 ```
 
-No DB / RLS / edge function changes. No type changes. No effect on other consumers of `sceneTaxonomy.ts` (interleave helpers etc. just gain one more known mapping).
+No DB / RLS / edge function changes. No other consumer of `PickerSceneOption` relies on dedupe semantics — the existing inline grids in Add/Edit Discover modals just iterate the array.
 
 ### Validation
 
-1. Open Library → admin opens "Add to Discover" → click "Browse all" on Scene picker.
-2. Left rail: same families as before, but **Bags & Accessories now ~147 (was 125)** and **Other drops by ~22**. No category appears empty.
-3. Click any family with multiple sub-families → chip row visible with `Sub · count` badges, sorted by count.
-4. Click a single-sub-family family (e.g. Watches) → still sees the lone chip (consistency).
-5. Network tab: thumbnails load via `/storage/v1/render/image/...?quality=55` — file sizes drop ~5–10× vs originals. Initial paint completes in <1s for 80-card grid.
-6. Picked thumbnail is **not zoomed/cropped** — full uncropped composition (no width/height transformation).
-7. Selecting a scene works as before; modal closes; picker hydrates.
+1. Open Library → "Add to Discover" → "Browse all" on Scene picker.
+2. Sidebar counts jump significantly: e.g. **Food & Drink** goes from ~52 → ~115; **Fashion** ~161 → ~400+. Total grid scenes match `SELECT count(*) FROM product_image_scenes WHERE is_active=true` (~1,500).
+3. Click **Food & Drink → Beverages**. A second chip row appears: `All · Editorial Drink Studio 17 · Creative Shots 14 · Essential Shots 12 · Social Lifestyle / Sport / Party UGC 9 · Fruit / Pour / Surface Still Life 6 · Aesthetic Color Beverage Stories 6`. Clicking each filters the grid.
+4. Click **Activewear → Creative Shots** → 24 scenes show up (matches DB).
+5. Search still works within the active family + sub-family + sub-category context.
+6. Selecting any scene closes the modal and hydrates the picker with the correct preview / name (no regression).
+7. Network: still one query per cache window (10 min stale). Thumbnails still load `?quality=55` (no crop).
 
