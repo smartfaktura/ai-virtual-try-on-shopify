@@ -23,6 +23,7 @@ import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData'
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
+import { useDiscoverPickerOptions } from '@/hooks/useDiscoverPickerOptions';
 
 import { getDiscoverSubtypes, getDiscoverFamilies, FAMILY_NAME_TO_ID } from '@/lib/discoverTaxonomy';
 
@@ -68,46 +69,25 @@ export function DiscoverDetailModal({
   const queryClient = useQueryClient();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const { asProfiles: customModelProfiles } = useCustomModels();
-  const { asPoses: customSceneProfiles } = useCustomScenes();
+  // Shared picker options — composite-key dedupe (name::category::subCategory),
+  // surfaces all variants (e.g. all 9 "Frozen Aura" entries) with captions below.
+  const { models: sharedModelOpts, scenes: sharedSceneOpts } = useDiscoverPickerOptions(!!isAdmin && open);
 
-  const allModelOptions = useMemo(() => {
-    const items: { name: string; imageUrl: string }[] = mockModels.map(m => ({ name: m.name, imageUrl: m.previewUrl }));
-    customModelProfiles?.forEach(cm => {
-      if (!items.find(i => i.name === cm.name)) items.push({ name: cm.name, imageUrl: cm.previewUrl });
-    });
-    return items;
-  }, [customModelProfiles]);
+  const allModelOptions = useMemo(
+    () => sharedModelOpts.map(m => ({ name: m.name, imageUrl: m.imageUrl })),
+    [sharedModelOpts],
+  );
 
-  const { data: productImageScenes } = useQuery({
-    queryKey: ['product-image-scenes-picker'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('product_image_scenes')
-        .select('id, scene_id, title, preview_image_url, category_collection')
-        .eq('is_active', true);
-      return data ?? [];
-    },
-    enabled: !!isAdmin && open,
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const allSceneOptions = useMemo(() => {
-    const items: { name: string; imageUrl: string; category: string }[] = mockTryOnPoses.map(s => ({ name: s.name, imageUrl: s.previewUrl, category: s.category }));
-    customSceneProfiles?.forEach(cs => {
-      if (!items.find(i => i.name === cs.name)) items.push({ name: cs.name, imageUrl: cs.previewUrl, category: cs.category });
-    });
-    productImageScenes?.forEach((ps: any) => {
-      if (!items.find(i => i.name === ps.title)) {
-        items.push({
-          name: ps.title,
-          imageUrl: ps.preview_image_url || '',
-          category: ps.category_collection ?? 'product-images',
-        });
-      }
-    });
-    return items;
-  }, [customSceneProfiles, productImageScenes]);
+  const allSceneOptions = useMemo(
+    () =>
+      sharedSceneOpts.map(s => ({
+        name: s.name,
+        imageUrl: s.imageUrl,
+        category: s.category,
+        subCategory: s.subCategory ?? null,
+      })),
+    [sharedSceneOpts],
+  );
 
   const [editModelName, setEditModelName] = useState('__none__');
   const [editSceneName, setEditSceneName] = useState('__none__');
@@ -549,12 +529,12 @@ export function DiscoverDetailModal({
                               return Array.from(grouped.entries()).map(([cat, scenes]) => (
                                 <div key={cat}>
                                   <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-2 px-1">
-                                    {poseCategoryLabels[cat] ?? cat}
+                                    {poseCategoryLabels[cat] ?? cat} <span className="text-muted-foreground/40 normal-case tracking-normal">· {scenes.length}</span>
                                   </p>
                                   <div className="grid grid-cols-4 gap-2">
-                                    {scenes.map(s => (
+                                    {scenes.map((s, idx) => (
                                       <button
-                                        key={s.name}
+                                        key={`${s.name}::${s.category}::${s.subCategory ?? ''}::${idx}`}
                                         onClick={() => { setEditSceneName(s.name); setSceneDialogOpen(false); }}
                                         className={cn(
                                           'rounded-lg overflow-hidden border-2 transition-all',
@@ -571,6 +551,9 @@ export function DiscoverDetailModal({
                                         />
                                         <div className="px-1.5 py-1 bg-background">
                                           <p className="text-[10px] font-medium text-foreground leading-tight truncate">{s.name}</p>
+                                          {s.subCategory && (
+                                            <p className="text-[9px] text-muted-foreground/60 leading-tight truncate">{s.subCategory}</p>
+                                          )}
                                         </div>
                                       </button>
                                     ))}
@@ -826,6 +809,8 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                   if (sceneTitle) params.set('scene', sceneTitle);
                   const sceneImg = d.previewUrl || d.scene_image_url || d.image_url;
                   if (sceneImg) params.set('sceneImage', sceneImg);
+                  // Pass origin category as a disambiguation hint for the resolver
+                  if (d.category) params.set('sceneCategory', d.category);
                   params.set('fromDiscover', '1');
                   navigate(`/app/generate/product-images?${params.toString()}`);
                   return;
