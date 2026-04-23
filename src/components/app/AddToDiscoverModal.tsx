@@ -218,79 +218,35 @@ export function AddToDiscoverModal({
   const handlePublish = async () => {
     if (!title.trim()) return;
     setPublishing(true);
-    const effectiveSlug = workflowSlug || (workflowName ? workflowName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null);
 
-    // Resolve names and image URLs from IDs if not already provided
-    let resolvedModelName = modelName || null;
-    let resolvedModelImageUrl = modelImageUrl || null;
-    let resolvedSceneName = sceneName || null;
-    let resolvedSceneImageUrl = sceneImageUrl || null;
+    // Resolve scene image URL: prefer picker thumbnail, then fall back to prop / DB lookup
+    let resolvedSceneImageUrl: string | null = pickedScene?.imageUrl || null;
+    if (pickedSceneName && !resolvedSceneImageUrl) {
+      // Fall back to original prop or DB lookup
+      resolvedSceneImageUrl = sceneImageUrl || null;
+      if (!resolvedSceneImageUrl) {
+        try {
+          const { data: customScenes } = await supabase.rpc('get_public_custom_scenes');
+          const match = (customScenes as any[] ?? []).find((s: any) => s.name === pickedSceneName);
+          if (match) resolvedSceneImageUrl = match.image_url;
+        } catch {}
+      }
+    }
 
-    // Resolve model by ID
-    if (modelId && (!resolvedModelName || !resolvedModelImageUrl)) {
-      if (modelId.startsWith('custom-')) {
+    // Resolve model image URL: prefer picker thumbnail, then fall back to prop / DB lookup
+    let resolvedModelImageUrl: string | null = pickedModel?.imageUrl || null;
+    if (pickedModelName && !resolvedModelImageUrl) {
+      resolvedModelImageUrl = modelImageUrl || null;
+      if (!resolvedModelImageUrl) {
         try {
           const { data } = await supabase
             .from('custom_models' as any)
-            .select('name, image_url')
-            .eq('id', modelId.replace('custom-', ''))
+            .select('image_url')
+            .eq('name', pickedModelName)
             .limit(1)
             .single();
-          if (data) {
-            resolvedModelName = resolvedModelName || (data as any).name;
-            resolvedModelImageUrl = resolvedModelImageUrl || (data as any).image_url;
-          }
+          if (data) resolvedModelImageUrl = (data as any).image_url;
         } catch {}
-      } else {
-        const mock = mockModels.find(m => m.modelId === modelId);
-        if (mock) {
-          resolvedModelName = resolvedModelName || mock.name;
-          resolvedModelImageUrl = resolvedModelImageUrl || mock.previewUrl;
-        }
-      }
-    }
-
-    // Resolve scene by ID
-    if (sceneId && (!resolvedSceneName || !resolvedSceneImageUrl)) {
-      if (sceneId.startsWith('custom-')) {
-        try {
-          const { data: allScenes } = await supabase.rpc('get_public_custom_scenes');
-          const match = (allScenes as any[] ?? []).find((s: any) => s.id === sceneId.replace('custom-', ''));
-          if (match) {
-            resolvedSceneName = resolvedSceneName || match.name;
-            resolvedSceneImageUrl = resolvedSceneImageUrl || match.image_url;
-          }
-        } catch {}
-      } else {
-        const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
-        if (mock) {
-          resolvedSceneName = resolvedSceneName || mock.name;
-          resolvedSceneImageUrl = resolvedSceneImageUrl || mock.previewUrl;
-        }
-      }
-    }
-
-    // Fallback: resolve by name if we have names but no images
-    if (!resolvedSceneImageUrl && resolvedSceneName) {
-      try {
-        const { data: allScenes2 } = await supabase.rpc('get_public_custom_scenes');
-        const match2 = (allScenes2 as any[] ?? []).find((s: any) => s.name === resolvedSceneName);
-        if (match2) resolvedSceneImageUrl = match2.image_url;
-      } catch {}
-    }
-    if (!resolvedModelImageUrl && resolvedModelName) {
-      try {
-        const { data } = await supabase
-          .from('custom_models' as any)
-          .select('image_url')
-          .eq('name', resolvedModelName)
-          .limit(1)
-          .single();
-        if (data) resolvedModelImageUrl = (data as any).image_url;
-      } catch {}
-      if (!resolvedModelImageUrl) {
-        const mock = mockModels.find(m => m.name === resolvedModelName);
-        if (mock) resolvedModelImageUrl = mock.previewUrl;
       }
     }
 
@@ -324,12 +280,12 @@ export function AddToDiscoverModal({
       quality,
       sort_order: 0,
       is_featured: false,
-      workflow_slug: effectiveSlug,
-      workflow_name: workflowName || null,
-      scene_name: showScene ? resolvedSceneName : null,
-      model_name: showModel ? resolvedModelName : null,
-      scene_image_url: showScene ? resolvedSceneImageUrl : null,
-      model_image_url: showModel ? resolvedModelImageUrl : null,
+      workflow_slug: pickedWorkflow?.slug ?? null,
+      workflow_name: pickedWorkflow?.name ?? workflowName ?? null,
+      scene_name: pickedSceneName,
+      model_name: pickedModelName,
+      scene_image_url: pickedSceneName ? resolvedSceneImageUrl : null,
+      model_image_url: pickedModelName ? resolvedModelImageUrl : null,
       product_name: safeProductName,
       product_image_url: safeProductImageUrl,
     } as any;
