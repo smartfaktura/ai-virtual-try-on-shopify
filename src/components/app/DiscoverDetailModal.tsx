@@ -142,6 +142,16 @@ export function DiscoverDetailModal({
     setEditSceneCategory(d?.category || 'lifestyle');
   }, [itemId, open]);
 
+  // When the primary family changes, clear sub-family if it no longer belongs.
+  useEffect(() => {
+    if (!editSubcategory) return;
+    const firstFam = editCategories[0];
+    const subs = firstFam ? getDiscoverSubtypes(firstFam) : [];
+    if (!subs.some(s => s.slug === editSubcategory)) {
+      setEditSubcategory(null);
+    }
+  }, [editCategories, editSubcategory]);
+
   // Lock body scroll when open
   useEffect(() => {
     if (open) {
