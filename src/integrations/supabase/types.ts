@@ -2547,6 +2547,17 @@ export type Database = {
           sort_order: number
         }[]
       }
+      get_public_recommended_scenes: {
+        Args: never
+        Returns: {
+          category_collection: string
+          created_at: string
+          description: string
+          preview_image_url: string
+          scene_id: string
+          title: string
+        }[]
+      }
       get_scene_popularity: {
         Args: { p_days?: number }
         Returns: {
