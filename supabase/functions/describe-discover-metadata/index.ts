@@ -35,7 +35,10 @@ serve(async (req) => {
       });
     }
 
-    const { imageUrl, prompt } = await req.json();
+    const { imageUrl, prompt, sceneOptions } = await req.json();
+    const sceneList: string[] = Array.isArray(sceneOptions)
+      ? sceneOptions.filter((s: any) => typeof s === 'string' && s.length > 0).slice(0, 400)
+      : [];
 
     if (!imageUrl) {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
