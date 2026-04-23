@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { X, Search, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   CATEGORY_FAMILY_MAP,
   FAMILY_ORDER,
