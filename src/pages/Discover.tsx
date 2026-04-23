@@ -560,7 +560,7 @@ export default function Discover() {
               <p className="text-sm font-medium text-muted-foreground mb-1">No items tagged for this sub-family yet</p>
               <p className="text-xs text-muted-foreground/70 max-w-xs">
                 {isAdmin
-                  ? 'Tag items individually in the admin drawer, or run Auto-classify in the Community Submissions section below.'
+                  ? 'Tag items individually in the admin drawer to surface them here.'
                   : 'Check back soon — new items are added regularly.'}{' '}
                 <button
                   onClick={() => setSelectedSubcategory('__all__')}
