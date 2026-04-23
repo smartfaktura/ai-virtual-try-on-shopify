@@ -9,17 +9,20 @@ interface DiscoverPreselectedCardProps {
   scene: ProductImageScene;
   selectedSceneIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
+  /** Wizard step the card is rendered on. Step 1 shows a CTA to add a product. */
+  step?: 1 | 2;
 }
 
 /**
  * "Pre-selected from Explore" card — rendered at the page level so it paints
- * instantly when the user lands on Step 2, regardless of product analysis or
+ * instantly when the user lands on Step 1/2, regardless of product analysis or
  * lazy chunk loading state.
  */
 export function DiscoverPreselectedCard({
   scene,
   selectedSceneIds,
   onSelectionChange,
+  step = 2,
 }: DiscoverPreselectedCardProps) {
   const selected = selectedSceneIds.has(scene.id);
 
@@ -86,6 +89,11 @@ export function DiscoverPreselectedCard({
           </div>
         </button>
       </div>
+      {step === 1 && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Add a product below to continue with this scene.
+        </p>
+      )}
     </div>
   );
 }

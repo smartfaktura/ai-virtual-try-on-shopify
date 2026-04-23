@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORY_FAMILY_MAP } from '@/lib/sceneTaxonomy';
+import { CATEGORY_FAMILY_MAP, getSubFamilyLabel } from '@/lib/sceneTaxonomy';
 import { FAMILY_NAME_TO_ID } from '@/lib/onboardingTaxonomy';
 import type { TryOnPose, PoseCategory } from '@/types';
 
