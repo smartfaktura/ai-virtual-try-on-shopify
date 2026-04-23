@@ -12,7 +12,7 @@ import type { CatalogScene } from './useSceneCatalog';
 const SLIM_COLUMNS =
   'id, scene_id, title, sub_category, category_collection, scene_type, subject, shot_style, setting, preview_image_url, prompt_template, filter_tags, created_at';
 
-const PER_BUCKET = 12;
+const PER_BUCKET = 18;
 const HARD_CEILING = 60;
 
 /**
@@ -26,7 +26,7 @@ const HARD_CEILING = 60;
  *   3. Global top-up — rows WHERE category IS NULL.
  *   4. Algorithmic fallback — interleave top scenes per family the user picked.
  *
- * Cached 10 min per user. Output is deduped & capped at 12.
+ * Cached 10 min per user. Output is deduped & capped at 18.
  */
 export function useRecommendedScenes(enabled = true) {
   const { user } = useAuth();
