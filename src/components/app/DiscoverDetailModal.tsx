@@ -666,7 +666,8 @@ export function DiscoverDetailModal({
                   const origProduct = (item.data as any).product_name || '';
                   const origSceneDisplayName = (item.data as any).name || '';
                   const origSceneCategory = (item.data as any).category || 'lifestyle';
-                  const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
+                  const origSubcategory = (item.data as any).subcategory ?? null;
+                  const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || editSubcategory !== origSubcategory || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                   return null; // rendered below
                 })()}
                 <Button
@@ -682,7 +683,8 @@ export function DiscoverDetailModal({
                     const origProduct = (item.data as any).product_name || '';
                     const origSceneDisplayName = (item.data as any).name || '';
                     const origSceneCategory = (item.data as any).category || 'lifestyle';
-                    const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
+                    const origSubcategory = (item.data as any).subcategory ?? null;
+                    const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || editSubcategory !== origSubcategory || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                     return hasChanges ? 'border-primary text-primary hover:bg-primary/10' : '';
                   })())}
                   onClick={async () => {
