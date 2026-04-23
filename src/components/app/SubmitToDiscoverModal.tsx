@@ -24,6 +24,12 @@ interface SubmitToDiscoverModalProps {
   sourceGenerationId?: string;
   productName?: string;
   productImageUrl?: string;
+  workflowSlug?: string;
+  workflowName?: string;
+  sceneName?: string;
+  modelName?: string;
+  sceneImageUrl?: string;
+  modelImageUrl?: string;
 }
 
 export function SubmitToDiscoverModal({
@@ -36,6 +42,12 @@ export function SubmitToDiscoverModal({
   sourceGenerationId,
   productName,
   productImageUrl,
+  workflowSlug,
+  workflowName,
+  sceneName,
+  modelName,
+  sceneImageUrl,
+  modelImageUrl,
 }: SubmitToDiscoverModalProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>('fashion');
@@ -43,9 +55,13 @@ export function SubmitToDiscoverModal({
   const [tags, setTags] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [includeProduct, setIncludeProduct] = useState(false);
+  const [includeScene, setIncludeScene] = useState(true);
+  const [includeModel, setIncludeModel] = useState(true);
   const submitMutation = useSubmitToDiscover();
 
   const hasProduct = !!(productName && productImageUrl);
+  const hasScene = !!(sceneName);
+  const hasModel = !!(modelName);
 
   // Auto-fill with AI when modal opens
   useEffect(() => {
@@ -127,6 +143,12 @@ export function SubmitToDiscoverModal({
         quality,
         product_name: finalProductName,
         product_image_url: finalProductImageUrl,
+        workflow_slug: workflowSlug,
+        workflow_name: workflowName,
+        scene_name: includeScene && hasScene ? sceneName : undefined,
+        model_name: includeModel && hasModel ? modelName : undefined,
+        scene_image_url: includeScene && hasScene ? sceneImageUrl : undefined,
+        model_image_url: includeModel && hasModel ? modelImageUrl : undefined,
       },
       { onSuccess: onClose },
     );
@@ -229,6 +251,76 @@ export function SubmitToDiscoverModal({
                   </p>
                 </div>
                 <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+              </div>
+            </div>
+          )}
+
+          {/* Scene — auto-detected from generation */}
+          {hasScene && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Scene</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Include</span>
+                  <Switch checked={includeScene} onCheckedChange={setIncludeScene} />
+                </div>
+              </div>
+              <div className={cn(
+                'flex items-center gap-3 p-2.5 rounded-xl border border-border/30 transition-opacity',
+                includeScene ? 'bg-muted/30' : 'bg-muted/10 opacity-50',
+              )}>
+                {sceneImageUrl ? (
+                  <img
+                    src={getOptimizedUrl(sceneImageUrl, { quality: 60 })}
+                    alt={sceneName}
+                    className="w-9 h-9 rounded-lg object-cover border border-border/30"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-lg bg-muted/40 border border-border/30 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{sceneName}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {includeScene ? 'Helps Recreate auto-select this scene' : 'Scene metadata won\'t be saved'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Model — auto-detected from generation */}
+          {hasModel && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Model</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Include</span>
+                  <Switch checked={includeModel} onCheckedChange={setIncludeModel} />
+                </div>
+              </div>
+              <div className={cn(
+                'flex items-center gap-3 p-2.5 rounded-xl border border-border/30 transition-opacity',
+                includeModel ? 'bg-muted/30' : 'bg-muted/10 opacity-50',
+              )}>
+                {modelImageUrl ? (
+                  <img
+                    src={getOptimizedUrl(modelImageUrl, { quality: 60 })}
+                    alt={modelName}
+                    className="w-9 h-9 rounded-lg object-cover border border-border/30"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-lg bg-muted/40 border border-border/30 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{modelName}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {includeModel ? 'Helps Recreate auto-select this model' : 'Model metadata won\'t be saved'}
+                  </p>
+                </div>
               </div>
             </div>
           )}

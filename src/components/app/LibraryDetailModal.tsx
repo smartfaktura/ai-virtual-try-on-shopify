@@ -523,6 +523,12 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           quality={activeItem.quality}
           productName={activeItem.productName}
           productImageUrl={activeItem.productImageUrl}
+          workflowSlug={activeItem.workflowSlug}
+          workflowName={activeItem.source === 'generation' ? activeItem.label : undefined}
+          sceneName={activeItem.sceneName}
+          modelName={activeItem.modelName}
+          sceneImageUrl={activeItem.sceneImageUrl}
+          modelImageUrl={activeItem.modelImageUrl}
         />
       )}
       {upscaleModalOpen && item && (

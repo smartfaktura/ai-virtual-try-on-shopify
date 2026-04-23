@@ -19,6 +19,12 @@ export interface DiscoverSubmission {
   created_at: string;
   product_name?: string | null;
   product_image_url?: string | null;
+  workflow_slug?: string | null;
+  workflow_name?: string | null;
+  scene_name?: string | null;
+  model_name?: string | null;
+  scene_image_url?: string | null;
+  model_image_url?: string | null;
 }
 
 export function useDiscoverSubmissions() {
@@ -59,6 +65,12 @@ export function useSubmitToDiscover() {
       quality: string;
       product_name?: string;
       product_image_url?: string;
+      workflow_slug?: string;
+      workflow_name?: string;
+      scene_name?: string;
+      model_name?: string;
+      scene_image_url?: string;
+      model_image_url?: string;
     }) => {
       if (!user) throw new Error('Not authenticated');
 
@@ -130,6 +142,12 @@ export function useApproveSubmission() {
           is_featured: false,
           product_name: submission.product_name || null,
           product_image_url: submission.product_image_url || null,
+          workflow_slug: (submission as any).workflow_slug || null,
+          workflow_name: (submission as any).workflow_name || null,
+          scene_name: (submission as any).scene_name || null,
+          model_name: (submission as any).model_name || null,
+          scene_image_url: (submission as any).scene_image_url || null,
+          model_image_url: (submission as any).model_image_url || null,
         });
       if (insertError) throw insertError;
 

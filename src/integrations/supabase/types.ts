@@ -479,15 +479,21 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          model_image_url: string | null
+          model_name: string | null
           product_image_url: string | null
           product_name: string | null
           prompt: string
           quality: string
+          scene_image_url: string | null
+          scene_name: string | null
           source_generation_id: string | null
           status: string
           tags: string[] | null
           title: string
           user_id: string
+          workflow_name: string | null
+          workflow_slug: string | null
         }
         Insert: {
           admin_note?: string | null
@@ -496,15 +502,21 @@ export type Database = {
           created_at?: string
           id?: string
           image_url: string
+          model_image_url?: string | null
+          model_name?: string | null
           product_image_url?: string | null
           product_name?: string | null
           prompt?: string
           quality?: string
+          scene_image_url?: string | null
+          scene_name?: string | null
           source_generation_id?: string | null
           status?: string
           tags?: string[] | null
           title: string
           user_id: string
+          workflow_name?: string | null
+          workflow_slug?: string | null
         }
         Update: {
           admin_note?: string | null
@@ -513,15 +525,21 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          model_image_url?: string | null
+          model_name?: string | null
           product_image_url?: string | null
           product_name?: string | null
           prompt?: string
           quality?: string
+          scene_image_url?: string | null
+          scene_name?: string | null
           source_generation_id?: string | null
           status?: string
           tags?: string[] | null
           title?: string
           user_id?: string
+          workflow_name?: string | null
+          workflow_slug?: string | null
         }
         Relationships: [
           {
