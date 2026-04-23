@@ -188,7 +188,6 @@ export function AddToDiscoverModal({
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
   const [showProduct, setShowProduct] = useState(false);
 
   // Picker state — preselected from props on open
@@ -301,7 +300,6 @@ export function AddToDiscoverModal({
     setSubcategory(null);
     setTags([]);
     setTagInput('');
-    setAiLoading(true);
     setShowProduct(false);
     setPickedSceneName(initialSceneName);
     setPickedModelName(initialModelName);
@@ -318,9 +316,9 @@ export function AddToDiscoverModal({
 
     (async () => {
       // ── DB fallback: if scene/model is missing in props but we have a source
-      // generation ID, look it up directly before paying for AI guessing.
+      // generation ID, look it up directly. Used for deterministic scene resolution only;
+      // category/title/tags are left blank for the user to fill in manually.
       let resolvedSceneName = initialSceneName;
-      let resolvedModelName = initialModelName;
       let resolvedWorkflowSlug = workflowSlug ?? null;
 
       let resolvedProductType: string | null = null;
@@ -338,8 +336,7 @@ export function AddToDiscoverModal({
               resolvedSceneName = data.scene_name;
               setPickedSceneName(data.scene_name);
             }
-            if (!resolvedModelName && data.model_name) {
-              resolvedModelName = data.model_name;
+            if (!initialModelName && data.model_name) {
               setPickedModelName(data.model_name);
             }
             if (!resolvedWorkflowSlug && data.workflow_slug) {
@@ -368,52 +365,6 @@ export function AddToDiscoverModal({
         if (!cancelled && ref) {
           setResolvedSceneRef(ref);
         }
-      }
-
-      // If scene is STILL missing after DB fallback, ask AI to suggest one
-      const sceneOptions = !resolvedSceneName ? allScenes.map(s => s.name) : undefined;
-
-      try {
-        const { data, error } = await supabase.functions.invoke('describe-discover-metadata', {
-          body: { imageUrl, prompt, sceneOptions },
-        });
-        if (cancelled) return;
-        if (error || !data) {
-          console.warn('AI auto-fill failed:', error);
-          return;
-        }
-        if (data.title) setTitle(data.title);
-        const fam: string | undefined = data.family ?? data.category;
-        if (fam && DISCOVER_FAMILY_IDS.includes(fam)) {
-          setCategory(fam);
-          const subs = getDiscoverSubtypes(fam);
-          const picked: string | undefined = data.subtype;
-          if (picked && subs.some((s) => s.slug === picked)) {
-            setSubcategory(picked);
-          } else if (subs.length === 1) {
-            setSubcategory(subs[0].slug);
-          } else {
-            setSubcategory(null);
-          }
-        } else if (data.subtype) {
-          const derived = familyIdForSubtype(data.subtype);
-          if (derived) {
-            setCategory(derived);
-            setSubcategory(data.subtype);
-          }
-        }
-        if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
-        // AI scene suggestion — only if STILL missing after props + DB fallback
-        if (!resolvedSceneName && data.suggested_scene_name) {
-          const match = allScenes.find(s => s.name === data.suggested_scene_name);
-          if (match) {
-            setAiSuggestedScene(match.name);
-          }
-        }
-      } catch {
-        /* swallow */
-      } finally {
-        if (!cancelled) setAiLoading(false);
       }
     })();
 
@@ -573,12 +524,6 @@ export function AddToDiscoverModal({
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border/30 shrink-0">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-foreground">Add to Discover</h3>
-            {aiLoading && (
-              <span className="flex items-center gap-1 text-[10px] text-primary font-medium animate-pulse">
-                <Sparkles className="w-3 h-3" />
-                AI filling...
-              </span>
-            )}
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
@@ -599,64 +544,50 @@ export function AddToDiscoverModal({
               {/* Title */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title *</label>
-                {aiLoading ? (
-                  <Skeleton className="h-10 w-full rounded-lg" />
-                ) : (
-                  <Input
-                    value={title}
-                    onChange={e => setTitle(e.target.value.slice(0, 60))}
-                    placeholder="Give it a title..."
-                  />
-                )}
+                <Input
+                  value={title}
+                  onChange={e => setTitle(e.target.value.slice(0, 60))}
+                  placeholder="Give it a title..."
+                />
                 <p className="text-[10px] text-muted-foreground/50 text-right">{title.length}/60</p>
               </div>
 
               {/* Tags */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tags (optional)</label>
-                {aiLoading ? (
-                  <div className="flex gap-1.5">
-                    <Skeleton className="h-7 w-16 rounded-full" />
-                    <Skeleton className="h-7 w-20 rounded-full" />
-                    <Skeleton className="h-7 w-14 rounded-full" />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex gap-2">
-                      <Input
-                        value={tagInput}
-                        onChange={e => setTagInput(e.target.value)}
-                        onKeyDown={handleTagKeyDown}
-                        placeholder="Add a tag..."
-                        className="rounded-xl h-10 flex-1"
-                        disabled={tags.length >= 5}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddTag}
-                        disabled={!tagInput.trim() || tags.length >= 5}
-                        className="rounded-xl h-10 px-3"
+                <div className="flex gap-2">
+                  <Input
+                    value={tagInput}
+                    onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="Add a tag..."
+                    className="rounded-xl h-10 flex-1"
+                    disabled={tags.length >= 5}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddTag}
+                    disabled={!tagInput.trim() || tags.length >= 5}
+                    className="rounded-xl h-10 px-3"
+                  >
+                    <Tag className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {tags.map(tag => (
+                      <span
+                        key={tag}
+                        className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
                       >
-                        <Tag className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {tags.map(tag => (
-                          <span
-                            key={tag}
-                            className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
-                          >
-                            #{tag}
-                            <button onClick={() => handleRemoveTag(tag)} className="hover:text-primary/70">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </>
+                        #{tag}
+                        <button onClick={() => handleRemoveTag(tag)} className="hover:text-primary/70">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 )}
                 <p className="text-[10px] text-muted-foreground/50">{tags.length}/5 tags</p>
               </div>
@@ -938,7 +869,7 @@ export function AddToDiscoverModal({
         <div className="border-t border-border/30 px-6 py-4 shrink-0 bg-background">
           <Button
             onClick={handlePublish}
-            disabled={!title.trim() || publishing || aiLoading}
+            disabled={!title.trim() || publishing}
             className="w-full font-medium"
           >
             <Globe className="w-4 h-4 mr-2" />
