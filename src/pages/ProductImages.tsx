@@ -28,10 +28,12 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
 import { DemoProductPicker } from '@/components/app/product-images/DemoProductPicker';
+import { DiscoverPreselectedCard } from '@/components/app/product-images/DiscoverPreselectedCard';
 import type { DemoProduct } from '@/data/demoProducts';
 
 // Lazy-load step components for faster initial render
-const ProductImagesStep2Scenes = lazy(() => import('@/components/app/product-images/ProductImagesStep2Scenes'));
+const step2Loader = () => import('@/components/app/product-images/ProductImagesStep2Scenes');
+const ProductImagesStep2Scenes = lazy(step2Loader);
 const ProductImagesStep3Refine = lazy(() => import('@/components/app/product-images/ProductImagesStep3Refine'));
 const ProductImagesStep4Review = lazy(() => import('@/components/app/product-images/ProductImagesStep4Review'));
 const ProductImagesStep5Generating = lazy(() => import('@/components/app/product-images/ProductImagesStep5Generating'));
