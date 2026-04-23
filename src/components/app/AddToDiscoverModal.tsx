@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { X, Globe, Tag, Sparkles, AlertTriangle, ChevronDown } from 'lucide-react';
+import { X, Globe, Tag, Sparkles, AlertTriangle, ChevronDown, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/brandedToast';
 import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useDiscoverPickerOptions, type PickerSceneOption, type PickerModelOption, type PickerWorkflowOption } from '@/hooks/useDiscoverPickerOptions';
+import { SceneBrowserModal } from '@/components/app/SceneBrowserModal';
 import {
   getDiscoverFamilies,
   getDiscoverSubtypes,
@@ -79,6 +80,7 @@ export function AddToDiscoverModal({
   const [workflowPopoverOpen, setWorkflowPopoverOpen] = useState(false);
   const [sceneSearch, setSceneSearch] = useState('');
   const [modelSearch, setModelSearch] = useState('');
+  const [sceneBrowserOpen, setSceneBrowserOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
