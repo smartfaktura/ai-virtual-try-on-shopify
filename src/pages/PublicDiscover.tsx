@@ -273,7 +273,7 @@ export default function PublicDiscover() {
   // Related items for modal
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
-    
+
     // Prioritize same scene_name for presets
     if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
       const sameScene = allItems.filter((i) =>
@@ -283,7 +283,39 @@ export default function PublicDiscover() {
       );
       if (sameScene.length >= 3) return sameScene.slice(0, 9);
     }
-    
+
+    // Fast-path for recommended scenes: match by scene_ref or scene title
+    const selData = selectedItem.data as any;
+    const selSceneRef = selData.scene_ref as string | undefined;
+    const selSceneTitle = selectedItem.type === 'scene' ? selData.name : null;
+    if (selSceneRef || selSceneTitle) {
+      const sameSceneRef = allItems.filter((i) => {
+        if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
+        const d = i.data as any;
+        if (selSceneRef && d.scene_ref && d.scene_ref === selSceneRef) return true;
+        if (selSceneTitle && i.type === 'preset' && d.scene_name === selSceneTitle) return true;
+        return false;
+      });
+      if (sameSceneRef.length >= 3) return sameSceneRef.slice(0, 9);
+    }
+
+    // Same collection (subcategory or discover_categories[1]) match
+    const getColl = (it: DiscoverItem): string | null => {
+      const d = it.data as any;
+      if (d.subcategory) return String(d.subcategory).toLowerCase();
+      const cats = d.discover_categories;
+      if (Array.isArray(cats) && cats.length > 1) return String(cats[1]).toLowerCase();
+      return null;
+    };
+    const selColl = getColl(selectedItem);
+    if (selColl) {
+      const sameColl = allItems
+        .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
+        .filter((i) => getColl(i) === selColl)
+        .slice(0, 9);
+      if (sameColl.length >= 1) return sameColl;
+    }
+
     const selCat = resolveCategory(getItemCategory(selectedItem));
     return allItems
       .filter((i) => {
