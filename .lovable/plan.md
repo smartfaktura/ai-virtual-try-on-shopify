@@ -1,86 +1,122 @@
 
 
-## Polish Step 3 — pill buttons, hide Kidswear, shorter chip labels, cleaner Go back
+## 5-fix plan: better personalization wiring + multi-cat headlines + Resend visibility + data hygiene
 
-Four small UX fixes on the onboarding Step 3 (and a label tweak in the shared taxonomy).
+### 1. Recommended scenes — extend admin curation to cover sub-categories
 
-### 1. "Skip for now" → real pill button (white/alternative variant)
+**Problem.** `recommended_scenes.category` only stores family-level slugs (`fashion`, `beauty`, …). When a user picks `hoodies` + `sneakers` in Step 3, the rail still pulls family-level rows, never sub-type-curated picks.
 
-Replace the underlined text link with a proper `Button` matching the primary CTA's shape but in an alternative white style so the dark "Get Started" stays the dominant action.
+**Fix.**
+- Keep one table, expand the meaning of `category`: it can now store either a **family id** (`fashion`) OR a **sub-family slug** (`hoodies`, `sneakers`, `fragrance`, `watches`, …). This is purely additive — existing rows keep working.
+- `useRecommendedScenes.ts` resolution becomes 3-pass:
+  1. **Sub-category curated** (only if user has `product_subcategories`): for each sub-type slug → `WHERE category = <slug>` ordered by `sort_order`.
+  2. **Family curated**: for each family id → `WHERE category = <family>` (current behavior).
+  3. **Global** (`category IS NULL`) top-up.
+  4. Algorithmic fallback (already in place) fills any remainder.
+- `AdminRecommendedScenes.tsx`: add a second tab strip below the family tabs showing sub-family slugs for the active family, so admins can curate "Hoodies", "Sneakers", "Fragrance" lists without leaving the page. `dbCategory` switches to the sub-family slug when one is active.
+- No DB migration. The `category` column already accepts text.
 
-```tsx
-<Button
-  variant="outline"
-  size="pill"
-  onClick={handleSkipStep3}
-  disabled={saving}
-  className="w-full mt-3 font-medium bg-background hover:bg-muted"
->
-  Skip for now
-</Button>
-```
+### 2. Explore / Discover home grid — group order by user's families
 
-Result: same height/shape as `Get Started`, white background, subtle border — clearly secondary.
+**Problem.** Discover currently shows a flat reverse-chronological grid filtered by a single category tab. When a Fashion user opens Discover they don't see Fashion content first; they see whatever was added most recently.
 
-### 2. "Go back" → clean ghost pill button
+**Fix.**
+- Default tab logic in `Discover.tsx` already maps the user's first family to a discover category. Extend that with a new **"For you" sort** applied when `selectedCategory === 'all'`:
+  1. Read `profiles.product_categories` + `product_subcategories` once on mount.
+  2. Compute an ordered list of **discover category ids** that match the user (Fashion → `fashion`, Footwear → `fashion` + sub-type cues, etc — using the existing `FAM_TO_DISC` map already present in the dashboard).
+  3. Sort items by: featured first → user-family bucket index ASC (so picked families come first, in onboarding order) → date DESC.
+- Within a family bucket, sort items so any item whose `category` exactly matches a picked **sub-type** floats above the rest.
+- The existing per-tab filter still works untouched. No layout change.
 
-The current bare text under "Skip for now" looks orphaned. Convert it to a `Button variant="ghost" size="pill"` so the three actions form a tidy vertical stack: dark pill → white pill → ghost pill.
+### 3. SceneCatalogModal — keep "show everything" but lead with the user's stuff
 
-Also applies to the same "Go back" rendered on Step 2 (keep it consistent across steps).
+**Problem (per your direction).** We must NOT auto-collapse the sidebar to picked sub-types. The catalog should still display every scene.
 
-```tsx
-<Button
-  variant="ghost"
-  size="pill"
-  onClick={() => setStep(step - 1)}
-  disabled={saving}
-  className="w-full mt-2 font-medium text-muted-foreground hover:text-foreground"
->
-  Go back
-</Button>
-```
+**Fix.**
+- Sidebar: keep showing every family + sub-family unchanged. No auto-expand, no hiding.
+- Default grid only: `useInterleavedSceneCatalog` already orders by `FAMILY_ORDER`. Add an optional `userFamilyOrder` arg pulled from `profiles.product_categories` so the user's families appear **first** in the interleaved walk (rest follow in `FAMILY_ORDER`). One extra parameter, ~10 lines.
+- Within each family, if `product_subcategories` is non-empty, items whose `category_collection` matches a picked sub-type sort to the front of that family's queue (stable, deterministic). Everything else still renders below — nothing is hidden.
+- Result: a Watches+Hoodies user opens the modal and the first row is watches & hoodies scenes; scrolling down still surfaces the entire 1,200+ catalog.
 
-### 3. Hide "Kidswear" from Step 3 for now
+### 4. Multi sub-type headline — your-product-mix copy that names the picks
 
-Remove `'kidswear'` from `FAMILY_SUB_ORDER.Fashion` in `src/lib/onboardingTaxonomy.ts`. The slug stays defined in `sceneTaxonomy.ts` (Catalog still works), it just won't render as a chip in onboarding/Settings.
+**Problem.** Today, picking 2+ sub-types reverts to generic family copy. You want named multi-pick headlines.
 
-Before:
-```ts
-Fashion: ['garments','hoodies','dresses','jeans','jackets','activewear','swimwear','lingerie','kidswear','streetwear'],
-```
+**Fix in `categoryConstants.ts`'s `getCategoryHeadline()`:**
 
-After:
-```ts
-Fashion: ['garments','hoodies','dresses','jeans','jackets','activewear','swimwear','lingerie','streetwear'],
-```
+Add a new branch that runs BEFORE the existing fallbacks when `subcategories.length >= 2`:
 
-Easy to re-enable later by adding it back to that one array.
+- **2 sub-types of same family**: "Your hoodie & denim drops, ready in seconds." (uses `SUBTYPE_NOUN` lookup: `hoodies → hoodie`, `jeans → denim`, `sneakers → sneaker`, `fragrance → fragrance`, …)
+- **3+ sub-types of same family**: "Your {Family} mix, ready in seconds — hoodies, denim, jackets and more."
+- **Sub-types across 2 families**: "Your fashion & footwear edits — no photoshoot needed."
+- **Sub-types across 3+ families**: existing "Turn your product mix into consistent, high-quality visuals" copy (proven good).
 
-### 4. Shorter chip labels — no overflowing pills
+Implementation: one small `SUBTYPE_NOUN: Record<string,string>` map + a `buildMultiSubtypeHeadline(subs, families, isReturning)` helper. Pure function, fully unit-testable.
 
-Two labels currently break the single-line pill aesthetic on a 390 px viewport (and even on desktop wrap awkwardly):
+The same function powers Settings preview + Dashboard headline + first-gen empty state.
 
-| Slug | Before | After |
-|---|---|---|
-| `garments` | Clothing & Apparel | **Clothing** |
-| `activewear` | Activewear & Sportswear | **Activewear** |
+### 5. Resend audience — explicit, segmentable properties
 
-Edit `SUB_FAMILY_LABEL_OVERRIDES` in `src/lib/sceneTaxonomy.ts` to set these shorter labels. Catalog will inherit the shorter labels too — which is desirable since pills there have the same constraint.
+**Problem.** Right now `sync-resend-contact` forwards a generic `properties` blob. Sub-categories ride along but aren't easy to segment on.
 
-If you'd prefer Catalog keeps the longer names and only Onboarding uses short ones, say the word and we'll add an `ONBOARDING_LABEL_OVERRIDES` map in `onboardingTaxonomy.ts` instead.
+**Fix.**
+- `Onboarding.tsx` and `Settings.tsx` already call `sync-resend-contact` after save. Standardise the `properties` payload to:
+  ```
+  {
+    families: ["Fashion","Footwear"],            // human-readable names
+    subtypes: ["hoodies","sneakers","watches"],   // slugs
+    families_csv: "Fashion, Footwear",            // for Resend filters that need string
+    subtypes_csv: "hoodies, sneakers, watches",
+    primary_family: "Fashion",
+    primary_subtype: "hoodies"
+  }
+  ```
+- This gives marketing 6 first-class fields visible in the Resend contact view, and CSV variants for filter rules that don't support arrays.
+- Edge function: pass-through (already does). One tiny enrichment: if caller forgets `families_csv`, derive it from the array.
+- Backfill script (one-shot SQL via the migration tool) is **not** needed — the next time each user logs in or edits Settings, the sync runs. We'll also extend `Settings.tsx`'s save hook to re-sync on every save (it already does for opt-in changes).
+
+### One small data-hygiene note on `product_subcategories`
+
+We saw it: 0 users currently have `product_subcategories` populated (the column was added recently). Two cleanups worth doing now while volume is zero:
+
+1. **Normalise on write.** Wrap every write to `product_subcategories` (Onboarding + Settings) with a tiny helper:
+   ```ts
+   const cleanSubs = (xs: string[]) =>
+     Array.from(new Set(
+       xs.map(s => s.trim().toLowerCase())
+         .filter(Boolean)
+         .filter(s => s in SUB_TYPE_SLUG_SET)   // built from SUB_TYPES_BY_FAMILY
+     ));
+   ```
+   Prevents typos, casing drift, and slugs that no longer exist after taxonomy edits.
+
+2. **Keep families & subs consistent.** When a user removes a family in Settings, drop any `product_subcategories` slugs that belong only to that family (single source: `CATEGORY_FAMILY_MAP`). Same helper, runs in the Settings save handler. Zero migration needed because no current data is dirty.
+
+Optional later: a daily Postgres function that strips invalid slugs from any future drift, but that's not needed yet.
 
 ### Files touched
 
 ```text
-EDIT  src/pages/Onboarding.tsx          Skip + Go back as Buttons
-EDIT  src/lib/onboardingTaxonomy.ts     remove 'kidswear' from Fashion order
-EDIT  src/lib/sceneTaxonomy.ts          shorten 'garments' & 'activewear' labels
+EDIT  src/hooks/useRecommendedScenes.ts                3-pass: subtype → family → global
+EDIT  src/pages/AdminRecommendedScenes.tsx             sub-family tab strip per active family
+EDIT  src/pages/Discover.tsx                           "For you" ordering on All tab
+EDIT  src/hooks/useSceneCatalog.ts                     userFamilyOrder + subtype-first sort
+EDIT  src/components/app/freestyle/SceneCatalogModal.tsx  pass user prefs to interleaved hook
+EDIT  src/lib/categoryConstants.ts                     buildMultiSubtypeHeadline + SUBTYPE_NOUN
+EDIT  src/pages/Onboarding.tsx                         use cleanSubs helper, richer Resend props
+EDIT  src/pages/Settings.tsx                           cleanSubs + family-removal cleanup, richer Resend props
+EDIT  src/lib/onboardingTaxonomy.ts                    export SUB_TYPE_SLUG_SET + cleanSubs helper
+EDIT  supabase/functions/sync-resend-contact/index.ts  derive families_csv if missing
 ```
+
+No DB migrations.
 
 ### Validation
 
-1. Step 3 shows three vertically stacked buttons: dark "Get Started" → white "Skip for now" → ghost "Go back" — all same pill shape & width
-2. Step 2 "Go back" matches the new ghost pill style
-3. Fashion section in Step 3 no longer shows the Kidswear chip
-4. Pills read "Clothing" and "Activewear" — fit on one line on 390 px viewport without wrapping
+1. Admin opens `/app/admin/recommended-scenes`, picks **Fashion** family tab, then sub-tab **Hoodies**, stars 6 hoodie scenes. A user with `product_subcategories=['hoodies']` sees those 6 first in the dashboard rail.
+2. Discover with onboarding `Fashion` + `Footwear`: All tab now shows fashion items, then footwear items, then everything else (featured items still float above).
+3. SceneCatalogModal still shows every family in the sidebar; the default grid leads with the user's families and within each family the user's sub-types come first.
+4. Picking **hoodies + jeans** in Step 3 → dashboard headline reads *"Your hoodie & denim drops, ready in seconds."* Picking **hoodies + sneakers** → *"Your fashion & footwear edits — no photoshoot needed."*
+5. Resend: visiting Settings and saving creates/updates a contact whose properties include `families`, `subtypes`, `primary_family`, `primary_subtype`, plus the CSV variants — visible in the Resend dashboard contact panel and usable in segment rules.
+6. In Settings, unselecting **Footwear** automatically drops `sneakers`/`boots`/etc from `product_subcategories` on save; the row only ever stores valid, lower-case, deduped slugs.
 
