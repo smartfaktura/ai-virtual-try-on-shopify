@@ -196,6 +196,7 @@ export function AddToDiscoverModal({
   const [pickedModelName, setPickedModelName] = useState<string | null>(null);
   const [pickedWorkflowSlug, setPickedWorkflowSlug] = useState<string | null>(null);
   const [aiSuggestedScene, setAiSuggestedScene] = useState<string | null>(null);
+  const [resolvedSceneRef, setResolvedSceneRef] = useState<string | null>(null);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [workflowPopoverOpen, setWorkflowPopoverOpen] = useState(false);
