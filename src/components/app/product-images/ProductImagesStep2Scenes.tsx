@@ -341,9 +341,15 @@ interface UnifiedCategorySectionProps {
 
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
-function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses, discoverScene }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses' | 'discoverScene'>) {
+function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses, discoverScene, discoverSceneFull }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses' | 'discoverScene' | 'discoverSceneFull'>) {
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
-  const priorityCats = useMemo(() => Array.from(relevantCatIds), [relevantCatIds]);
+  const priorityCats = useMemo(() => {
+    const ids = new Set<string>(relevantCatIds);
+    // Ensure the discover scene's collection loads in the first round so its
+    // category section is expanded immediately under the From Explore card.
+    if (discoverSceneFull?.categoryCollection) ids.add(discoverSceneFull.categoryCollection);
+    return Array.from(ids);
+  }, [relevantCatIds, discoverSceneFull?.categoryCollection]);
   const { categoryCollections: hookCategoryCollections, isLoading: isLoadingScenes, isLoadingRest } = useProductImageScenes({
     priorityCategories: priorityCats.length > 0 ? priorityCats : undefined,
   });
