@@ -140,7 +140,7 @@ export function PublicDiscoverDetailModal({
                       </div>
                     </div>
                   )}
-                  {item.data.model_name && (
+                  {isPreset && item.data.model_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.model_image_url && (
                           <img
