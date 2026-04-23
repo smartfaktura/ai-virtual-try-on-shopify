@@ -385,7 +385,7 @@ export default function SceneUsage() {
     <div className="space-y-6">
       <PageHeader title="Scene & Shot Performance" subtitle={`Tracking accurate from ${TRACKING_START}. Older rows without a canonical scene id are excluded.`}>
         <div className="flex flex-wrap items-center gap-2">
-          {([30, 60, 90] as Window[]).map((d) => (
+          {([1, 7, 30, 60, 90, 360] as Window[]).map((d) => (
             <Button key={d} size="sm" variant={windowDays === d ? 'default' : 'outline'} onClick={() => setWindowDays(d)}>{d}d</Button>
           ))}
           <div className="flex-1" />
