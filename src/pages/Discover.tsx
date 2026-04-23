@@ -7,6 +7,13 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PageHeader } from '@/components/app/PageHeader';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
+import { DiscoverSubCategoryBar } from '@/components/app/DiscoverSubCategoryBar';
+import {
+  getDiscoverFamilies,
+  getDiscoverSubtypes,
+  isMultiSubFamily,
+  itemMatchesDiscoverFilter,
+} from '@/lib/discoverTaxonomy';
 
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
@@ -26,17 +33,7 @@ import { getItemSlug } from '@/lib/slugUtils';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'beauty', label: 'Beauty' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'sports', label: 'Sports' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home' },
-  { id: 'food', label: 'Food & Drink' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'supplements', label: 'Health' },
+  ...getDiscoverFamilies().map((f) => ({ id: f.id, label: f.label })),
 ] as const;
 
 // Stop words for keyword extraction
