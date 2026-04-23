@@ -587,10 +587,15 @@ export function AddToDiscoverModal({
                   </Popover>
                 </div>
 
-                {/* Scene picker */}
+                {/* Scene picker — library swaps based on selected workflow */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] text-muted-foreground/80">Scene</label>
+                    <label className="text-[11px] text-muted-foreground/80">
+                      Scene
+                      <span className="ml-1.5 text-[9px] text-muted-foreground/50 font-normal">
+                        ({pickedWorkflowSlug === 'product-images' ? 'product-images library' : 'custom scenes library'})
+                      </span>
+                    </label>
                     <button
                       type="button"
                       onClick={() => setSceneBrowserOpen(true)}
