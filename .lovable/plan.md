@@ -1,55 +1,50 @@
 
 
-## Wire up sub-family curation tabs in AdminRecommendedScenes
+## Fix Settings page crash (`require is not defined`)
 
-Finish the last missing piece from the previous plan: render a sub-family pill row beneath the family tabs in `/app/admin/recommended-scenes` so admins can curate per sub-type (Hoodies, Sneakers, Fragrance, etc.). Data plumbing (`activeSubCollection`, `dbCategory`, query key) is already in place — only the UI is missing.
+### Root cause
 
-### What gets added
+`src/pages/Settings.tsx` (lines 76-79) inside `ContentPreferencesSection` uses CommonJS `require()` to lazy-import `@/lib/onboardingTaxonomy`. Vite is ESM-only — `require` doesn't exist in the browser, so the component throws `ReferenceError: require is not defined` the moment a user visits `/app/settings`, triggering the ErrorBoundary.
 
-A horizontal pill strip below the existing family tab row, showing all sub-families that belong to the currently active family. An "All {Family}" pill on the left represents "no sub-filter" (current family-level behavior).
-
+```ts
+// current — broken
+const { SUB_TYPES_BY_FAMILY, getMultiSubFamilies, … cleanSubs } =
+  require('@/lib/onboardingTaxonomy') as typeof import('@/lib/onboardingTaxonomy');
 ```
-[ Global | Fashion | Footwear | Beauty | Watches | Eyewear | … ]   ← existing
-[ All Fashion | Clothing | Hoodies | Dresses | Jeans | Jackets …]  ← NEW
+
+The "lazy-import to avoid circular paths in test envs" comment is a leftover precaution that isn't needed — `onboardingTaxonomy.ts` is a pure-data module with no React/circular deps, and the rest of the app already imports it statically.
+
+### Fix
+
+Convert to a normal ES static import at the top of the file, alongside the other `@/lib/*` imports, and delete the in-function `require` block.
+
+**1. Add to the import block at the top of `src/pages/Settings.tsx`:**
+
+```ts
+import {
+  SUB_TYPES_BY_FAMILY,
+  getMultiSubFamilies,
+  getSingleSubFamilies,
+  getAutoIncludedSlugs,
+  resolveFamilyNames,
+  cleanSubs,
+} from '@/lib/onboardingTaxonomy';
 ```
 
-### Behavior
-
-- **Source of sub-families**: `FAMILY_SUB_ORDER` from `src/lib/onboardingTaxonomy.ts` keyed by the active family (e.g. `Fashion → ['garments','hoodies','dresses',…]`). Labels resolved via `SUB_FAMILY_LABEL_OVERRIDES` / existing label helper in `sceneTaxonomy.ts`.
-- **Hidden when**:
-  - Active tab is `Global` (no family context)
-  - Active family has only 1 sub-type (Watches, Eyewear, Tech, Wellness) — the family tab itself is already the curated bucket
-- **Default state**: when an admin clicks a family tab, sub-tab resets to "All {Family}" (`activeSubCollection = null`) so existing family-level curation keeps working untouched.
-- **Pill click**: sets `activeSubCollection = <slug>`. The existing `dbCategory` resolver already returns the sub slug when set, so the recommended list, the star/unstar mutations, and the React Query cache key all switch to that sub-family bucket automatically.
-- **Visual selected count**: each sub-pill shows a small count badge of how many scenes are currently starred for that sub-family (one extra lightweight query: `SELECT category, count(*) FROM recommended_scenes WHERE category = ANY(<subSlugs>) GROUP BY category`). Cached 60s. Optional polish — drop if it complicates.
-
-### Helper text
-
-Below the strip, a one-line muted caption that updates contextually:
-
-- All Fashion selected → "Curating family-level fallback for all Fashion users."
-- Hoodies selected → "Curating sub-family scenes shown first to users who picked Hoodies."
-
-### Styling
-
-- Same `Tabs`/`Badge` primitives already used on the page — no new components.
-- Sub-pills use `variant="outline"` with active state filled, smaller (`h-8`, `text-xs`) than the family tabs to communicate hierarchy.
-- Horizontal scroll on overflow (Fashion has 9 sub-types post-Kidswear-removal) with `overflow-x-auto` and momentum scrolling.
+**2. Delete lines 76-79** (the `require` block + its eslint-disable comment). Everything below that already references the same names — no other changes needed.
 
 ### Files touched
 
 ```text
-EDIT  src/pages/AdminRecommendedScenes.tsx   render sub-family pill strip + reset on family change + optional count badges
+EDIT  src/pages/Settings.tsx   replace require() with ES import
 ```
 
-No DB migration. No taxonomy changes. No edge function changes.
+No DB, no edge function, no taxonomy changes. Other pages (Onboarding, hooks) already use the static import and are unaffected.
 
 ### Validation
 
-1. Open `/app/admin/recommended-scenes`. Click **Fashion** → sub-strip appears with `All Fashion · Clothing · Hoodies · Dresses · Jeans · Jackets · Activewear · Swimwear · Lingerie · Streetwear`.
-2. Click **Watches** family tab → sub-strip is hidden (single sub-type family).
-3. Click **Global** → sub-strip is hidden.
-4. From Fashion, click **Hoodies** → list refetches, starring a scene writes a row with `category='hoodies'`. Switching to **All Fashion** shows only the family-level rows again (`category='fashion'`).
-5. Switching family from Fashion → Footwear resets the sub-tab to "All Footwear" automatically.
-6. A user with `product_subcategories=['hoodies']` opens the dashboard → the hoodie-starred scenes appear at the top of the recommended rail (PASS 1 of `useRecommendedScenes`).
+1. Navigate to `/app/settings` — page renders, no ErrorBoundary
+2. "Content preferences" card shows current families + sub-types from profile
+3. Toggle a sub-type, click Save → row updates, Resend sync still fires
+4. Remove a family → its sub-types are pruned on save (unchanged behavior)
 
