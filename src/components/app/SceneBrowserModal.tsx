@@ -28,6 +28,7 @@ const OTHER_FAMILY = 'Other';
 export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: SceneBrowserModalProps) {
   const [activeFamily, setActiveFamily] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   // Group scenes by family
@@ -59,6 +60,7 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
     if (!open) {
       setSearch('');
       setActiveSub(null);
+      setActiveSubCategory(null);
     }
   }, [open, orderedFamilies, activeFamily]);
 
@@ -74,19 +76,38 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
   }, [familyGroups, activeFamily]);
 
   // Reset sub when family changes
-  useEffect(() => { setActiveSub(null); }, [activeFamily]);
+  useEffect(() => { setActiveSub(null); setActiveSubCategory(null); }, [activeFamily]);
+  // Reset sub-category when sub changes
+  useEffect(() => { setActiveSubCategory(null); }, [activeSub]);
+
+  // Sub-category counts (within active family + active sub)
+  const subCategoryCounts = useMemo<Array<[string, number]>>(() => {
+    if (!activeFamily) return [];
+    let list = familyGroups.get(activeFamily) ?? [];
+    if (activeSub) list = list.filter(s => s.category === activeSub);
+    const counts = new Map<string, number>();
+    for (const s of list) {
+      const key = s.subCategory?.trim();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    );
+  }, [familyGroups, activeFamily, activeSub]);
 
   // Filtered scene list shown in grid
   const visibleScenes = useMemo(() => {
     if (!activeFamily) return [];
     let list = familyGroups.get(activeFamily) ?? [];
     if (activeSub) list = list.filter(s => s.category === activeSub);
+    if (activeSubCategory) list = list.filter(s => (s.subCategory?.trim() || '') === activeSubCategory);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(s => s.name.toLowerCase().includes(q));
     }
     return list;
-  }, [familyGroups, activeFamily, activeSub, search]);
+  }, [familyGroups, activeFamily, activeSub, activeSubCategory, search]);
 
   // Lock body scroll
   useEffect(() => {
@@ -178,6 +199,41 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
                     <span className={cn(
                       'text-[10px] tabular-nums',
                       activeSub === slug ? 'text-background/70' : 'text-muted-foreground/60',
+                    )}>{count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Sub-category chips (Row 2) */}
+            {subCategoryCounts.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 px-5 py-2.5 border-b border-border/20 shrink-0 bg-muted/20">
+                <button
+                  onClick={() => setActiveSubCategory(null)}
+                  className={cn(
+                    'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors',
+                    activeSubCategory === null
+                      ? 'bg-foreground text-background'
+                      : 'bg-background/60 text-muted-foreground hover:bg-background border border-border/40',
+                  )}
+                >
+                  All
+                </button>
+                {subCategoryCounts.map(([sc, count]) => (
+                  <button
+                    key={sc}
+                    onClick={() => setActiveSubCategory(sc)}
+                    className={cn(
+                      'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors inline-flex items-center gap-1.5',
+                      activeSubCategory === sc
+                        ? 'bg-foreground text-background'
+                        : 'bg-background/60 text-muted-foreground hover:bg-background border border-border/40',
+                    )}
+                  >
+                    <span>{sc}</span>
+                    <span className={cn(
+                      'text-[10px] tabular-nums',
+                      activeSubCategory === sc ? 'text-background/70' : 'text-muted-foreground/60',
                     )}>{count}</span>
                   </button>
                 ))}

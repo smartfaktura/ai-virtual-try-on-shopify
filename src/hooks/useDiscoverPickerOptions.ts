@@ -9,6 +9,7 @@ export interface PickerSceneOption {
   name: string;
   imageUrl: string;
   category: string;
+  subCategory?: string | null;
 }
 
 export interface PickerModelOption {
@@ -35,7 +36,7 @@ export function useDiscoverPickerOptions(enabled: boolean) {
     queryFn: async () => {
       const { data } = await supabase
         .from('product_image_scenes')
-        .select('id, scene_id, title, preview_image_url, category_collection')
+        .select('id, scene_id, title, preview_image_url, category_collection, sub_category')
         .eq('is_active', true);
       return data ?? [];
     },
@@ -57,25 +58,33 @@ export function useDiscoverPickerOptions(enabled: boolean) {
   });
 
   const scenes = useMemo<PickerSceneOption[]>(() => {
-    const items: PickerSceneOption[] = mockTryOnPoses.map(s => ({
+    const items: PickerSceneOption[] = [];
+    const seen = new Set<string>();
+    const push = (item: PickerSceneOption) => {
+      const key = `${item.name}::${item.category}::${item.subCategory ?? ''}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      items.push(item);
+    };
+
+    mockTryOnPoses.forEach(s => push({
       name: s.name,
       imageUrl: s.previewUrl,
       category: s.category,
+      subCategory: null,
     }));
-    customSceneProfiles?.forEach(cs => {
-      if (!items.find(i => i.name === cs.name)) {
-        items.push({ name: cs.name, imageUrl: cs.previewUrl, category: cs.category });
-      }
-    });
-    productImageScenes?.forEach((ps: any) => {
-      if (!items.find(i => i.name === ps.title)) {
-        items.push({
-          name: ps.title,
-          imageUrl: ps.preview_image_url || '',
-          category: ps.category_collection ?? 'product-images',
-        });
-      }
-    });
+    customSceneProfiles?.forEach(cs => push({
+      name: cs.name,
+      imageUrl: cs.previewUrl,
+      category: cs.category,
+      subCategory: null,
+    }));
+    productImageScenes?.forEach((ps: any) => push({
+      name: ps.title,
+      imageUrl: ps.preview_image_url || '',
+      category: ps.category_collection ?? 'product-images',
+      subCategory: ps.sub_category ?? null,
+    }));
     return items;
   }, [customSceneProfiles, productImageScenes]);
 
