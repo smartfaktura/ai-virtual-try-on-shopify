@@ -1,57 +1,38 @@
 
 
-## Fix: "Pre-selected from Explore" card visible instantly on Step 2
+## Fix: Pre-selected from Explore card sizing & spacing
 
-### Why it still feels slow
+### Issues
+1. **Card too large** — `DiscoverPreselectedCard` uses a 2-col / sm:3-col grid → on a 1328px viewport each card is ~530px wide. The "Select shots" grid below uses 4–6 cols (small thumbnails ~150–200px wide). The two surfaces look completely different.
+2. **No spacing** between the card block and the "Select shots" heading underneath.
+3. Aspect ratio mismatch: this card uses `aspect-[3/4]`, but the Step 2 catalog cards use `aspect-[4/5]` (see `SceneCatalogCard`).
 
-After last fix, `discoverScene` + `discoverSceneFull` are ready within ~200 ms, but the card itself still only renders *inside* `ProductImagesStep2Scenes`. When the user clicks **Continue** from Step 1, Step 2 hits two gates before it shows anything:
+### Fix — `src/components/app/product-images/DiscoverPreselectedCard.tsx`
 
-1. **Lazy chunk load** — `ProductImagesStep2Scenes` is `React.lazy()`, so first navigation shows the generic `<Suspense>` skeleton (`src/pages/ProductImages.tsx` line 1449) for 200–600 ms while the JS chunk downloads.
-2. **Product analysis gate** — even after the chunk loads, lines 1451–1497 short-circuit the entire Step 2 render to a "Analyzing your product…" skeleton until `analyses[productId]` is populated. The "Pre-selected from Explore" card lives *inside* the real Step 2 component, so it's hidden behind this skeleton too.
+1. **Match grid density to the Select shots grid** — switch the grid to `grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6` so the preselected tile renders at the same width as a regular shot card. The "Picked for you" companion tile drops out at this density (it crowds the layout) — replace it with a single-tile render and move the "Picked for you / From Explore" hint into the section header chip area, which keeps the meaning without eating a full grid cell.
+2. **Aspect ratio** — change `aspect-[3/4]` → `aspect-[4/5]` to match `SceneCatalogCard`.
+3. **Typography** — match `SceneCatalogCard`: `px-2.5 py-2`, `text-[12px] font-medium … truncate`, drop the `min-h-[44px]` two-line caption block.
+4. **Bottom spacing** — wrap the whole block with `mb-6` (or change the outer `pt-3 pl-2` to `pt-3 pl-2 pb-4`) so there's clear breathing room before the "Select shots" heading. Also remove the stray `pl-2` so the card aligns flush with the grid below.
+5. **Header row** — keep the "PRE-SELECTED FROM EXPLORE" label + divider, append a small inline pill "· Picked for you from Explore" so the avatar/info that lived in the second tile isn't lost.
 
-Net effect: the card only paints after the lazy chunk + product analysis both finish, which is exactly the lag the user is reporting.
-
-### Fix — make the From Explore card render-first
-
-Two tiny changes, no logic rewrite.
-
-**1. Lift the "Pre-selected from Explore" card up to the page level (`src/pages/ProductImages.tsx`)**
-
-- Extract the existing JSX block (currently at `ProductImagesStep2Scenes.tsx` lines 498–544) into a small `<DiscoverPreselectedCard />` component that takes `discoverSceneFull`, `selectedSceneIds`, `onSelectionChange` as props.
-- In `ProductImages.tsx` Step 2 branch (line 1448–1497), render `<DiscoverPreselectedCard />` **above** both the analysis skeleton and the `<Suspense>` boundary, gated only on `discoverSceneFull` being non-null. So it paints immediately, regardless of analysis state or chunk-load state.
-- Remove the duplicate render inside `ProductImagesStep2Scenes` to avoid double-render once the chunk is loaded.
-- The auto-add-to-selection effect (Step2 lines 411–422) also moves to the page level so the scene is selected the moment it resolves, not after analysis finishes.
-
-**2. Preload the Step 2 lazy chunk as soon as Discover Recreate is detected**
-
-In `src/pages/ProductImages.tsx`, inside the `sceneRef` resolver effect (line 119+), call `import('@/components/app/product-images/ProductImagesStep2Scenes')` once (fire-and-forget) so the chunk is in cache by the time the user clicks Continue. Eliminates the Suspense fallback flash on first navigation.
-
-### Behaviour after fix
-
-- Land via Explore → Step 1 → click Continue → Step 2 paints with the "Pre-selected from Explore" card already visible at top, scene already in `selectedSceneIds`. The "Analyzing your products…" skeleton only renders *below* the card, where the rest of the scene library will appear.
-- No dependency on product analysis completing before the From Explore card appears.
-- No Suspense flash because the chunk was preloaded during Step 1.
+### Result
+- Preselected card renders at the exact same size as cards in the "Select shots" grid below.
+- Same `aspect-[4/5]`, same caption style, same border treatment when selected.
+- Clear vertical gap (`mb-6`) between the preselected block and the "Select shots" heading.
+- "Picked for you / From Explore" context preserved in the section header, no oversized companion tile.
 
 ### Out of scope
-
-- No change to how `sceneRef` is resolved (last fix stands).
-- No change to product-analysis flow or the rest-of-library skeleton.
-- No styling/copy changes to the card itself.
+- No change to the resolver / preload logic from previous fixes.
+- No change to `SceneCatalogCard` itself.
+- No change to the Step 2 grid layout.
 
 ### File touched
-
 ```text
-EDIT  src/pages/ProductImages.tsx
-        - Add small <DiscoverPreselectedCard /> inline (or import)
-        - Render it inside Step 2 branch, ABOVE the analysis skeleton
-          and the <Suspense> boundary, gated only on discoverSceneFull
-        - Move the auto-add-to-selection effect from Step2 to the page
-        - Fire-and-forget preload import() of Step2 chunk in the
-          sceneRef resolver
-
-EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx
-        - Remove the now-duplicate "Pre-selected from Explore" block
-          (current lines 498–544) and its auto-add effect (411–422),
-          since the page renders them
+EDIT  src/components/app/product-images/DiscoverPreselectedCard.tsx
+        - Grid: 3/4/5/6 cols to match Select shots density
+        - Tile: aspect-[4/5], px-2.5 py-2 caption, truncate single line
+        - Drop the dashed "Picked for you" companion tile
+        - Move "Picked for you · From Explore" into the header row
+        - Add mb-6 outer spacing; remove stray pl-2 to align with grid
 ```
 
