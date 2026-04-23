@@ -22,6 +22,127 @@ import {
 
 const FAMILIES = getDiscoverFamilies();
 
+// Map product_type tokens (from analyze-product-category) → product_image_scenes.category_collection.
+// Used to disambiguate scene title collisions when scene_id is missing on legacy generation_jobs rows.
+const PRODUCT_TYPE_TO_COLLECTION: Record<string, string> = {
+  // Wallets / cardholders
+  wallet: 'wallets-cardholders',
+  cardholder: 'wallets-cardholders',
+  'card-holder': 'wallets-cardholders',
+  purse: 'wallets-cardholders',
+  // Bags & accessories
+  bag: 'bags-accessories',
+  handbag: 'bags-accessories',
+  tote: 'bags-accessories',
+  clutch: 'bags-accessories',
+  crossbody: 'bags-accessories',
+  backpack: 'backpacks',
+  // Footwear
+  shoe: 'shoes',
+  shoes: 'shoes',
+  sneaker: 'sneakers',
+  sneakers: 'sneakers',
+  boot: 'boots',
+  boots: 'boots',
+  heel: 'high-heels',
+  heels: 'high-heels',
+  'high-heels': 'high-heels',
+  // Apparel
+  garment: 'garments',
+  clothing: 'garments',
+  apparel: 'garments',
+  dress: 'dresses',
+  hoodie: 'hoodies',
+  jeans: 'jeans',
+  jacket: 'jackets',
+  activewear: 'activewear',
+  swimwear: 'swimwear',
+  lingerie: 'lingerie',
+  kidswear: 'kidswear',
+  streetwear: 'streetwear',
+  // Accessories
+  belt: 'belts',
+  scarf: 'scarves',
+  hat: 'hats-small',
+  // Jewellery
+  necklace: 'jewellery-necklaces',
+  earring: 'jewellery-earrings',
+  earrings: 'jewellery-earrings',
+  bracelet: 'jewellery-bracelets',
+  ring: 'jewellery-rings',
+  watch: 'watches',
+  eyewear: 'eyewear',
+  sunglasses: 'eyewear',
+  glasses: 'eyewear',
+  // Beauty
+  fragrance: 'fragrance',
+  perfume: 'fragrance',
+  cologne: 'fragrance',
+  beauty: 'beauty-skincare',
+  skincare: 'beauty-skincare',
+  makeup: 'makeup-lipsticks',
+  lipstick: 'makeup-lipsticks',
+  // Home / tech / consumables
+  furniture: 'furniture',
+  'home-decor': 'home-decor',
+  decor: 'home-decor',
+  tech: 'tech-devices',
+  device: 'tech-devices',
+  electronics: 'tech-devices',
+  food: 'food',
+  snack: 'food',
+  beverage: 'beverages',
+  drink: 'beverages',
+  supplement: 'supplements-wellness',
+  wellness: 'supplements-wellness',
+};
+
+function normalizeProductTypeToken(productType?: string | null): string | null {
+  if (!productType) return null;
+  const t = productType.toLowerCase().trim();
+  if (PRODUCT_TYPE_TO_COLLECTION[t]) return PRODUCT_TYPE_TO_COLLECTION[t];
+  // Try matching individual words / partial tokens
+  for (const key of Object.keys(PRODUCT_TYPE_TO_COLLECTION)) {
+    if (t.includes(key)) return PRODUCT_TYPE_TO_COLLECTION[key];
+  }
+  return null;
+}
+
+/** Resolve the most-likely scene_id for a given title + product type by querying product_image_scenes. */
+async function resolveSceneRefByTitleAndCategory(
+  sceneTitle: string,
+  productType?: string | null,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('product_image_scenes' as any)
+      .select('scene_id, category_collection')
+      .eq('title', sceneTitle)
+      .eq('is_active', true);
+    if (error || !data || data.length === 0) return null;
+    const rows = data as Array<{ scene_id: string; category_collection: string | null }>;
+    if (rows.length === 1) return rows[0].scene_id;
+
+    const targetCollection = normalizeProductTypeToken(productType);
+    if (targetCollection) {
+      const match = rows.find(r => r.category_collection === targetCollection);
+      if (match) return match.scene_id;
+    }
+
+    // Fallback: stable default — pick the lowest-numbered variant
+    // (e.g. "botanical-oasis" before "botanical-oasis-10").
+    const sorted = [...rows].sort((a, b) => {
+      const numA = parseInt(a.scene_id.match(/-(\d+)$/)?.[1] ?? '0', 10);
+      const numB = parseInt(b.scene_id.match(/-(\d+)$/)?.[1] ?? '0', 10);
+      return numA - numB;
+    });
+    return sorted[0].scene_id;
+  } catch (err) {
+    console.warn('resolveSceneRefByTitleAndCategory failed', err);
+    return null;
+  }
+}
+
 interface AddToDiscoverModalProps {
   open: boolean;
   onClose: () => void;
