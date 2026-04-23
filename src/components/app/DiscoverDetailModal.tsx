@@ -805,12 +805,26 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                 if (item.type === 'scene') {
                   onClose();
                   const params = new URLSearchParams();
-                  const sceneTitle = d.name || d.scene_name;
-                  if (sceneTitle) params.set('scene', sceneTitle);
-                  const sceneImg = d.previewUrl || d.scene_image_url || d.image_url;
-                  if (sceneImg) params.set('sceneImage', sceneImg);
-                  // Pass origin category as a disambiguation hint for the resolver
-                  if (d.category) params.set('sceneCategory', d.category);
+                  // PRIMARY: scene_ref points directly to product_image_scenes.scene_id
+                  if (d.scene_ref) {
+                    params.set('sceneRef', d.scene_ref);
+                  } else {
+                    // LEGACY fallback for items not yet linked
+                    const sceneTitle = d.name || d.scene_name;
+                    if (sceneTitle) params.set('scene', sceneTitle);
+                    const sceneImg = d.previewUrl || d.scene_image_url || d.image_url;
+                    if (sceneImg) params.set('sceneImage', sceneImg);
+                    if (d.category) params.set('sceneCategory', d.category);
+                  }
+                  params.set('fromDiscover', '1');
+                  navigate(`/app/generate/product-images?${params.toString()}`);
+                  return;
+                }
+                // Preset linked to product-images via scene_ref
+                if (d.scene_ref && (wSlug === 'product-images' || !wSlug)) {
+                  onClose();
+                  const params = new URLSearchParams();
+                  params.set('sceneRef', d.scene_ref);
                   params.set('fromDiscover', '1');
                   navigate(`/app/generate/product-images?${params.toString()}`);
                   return;
