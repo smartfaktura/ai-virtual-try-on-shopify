@@ -69,46 +69,25 @@ export function DiscoverDetailModal({
   const queryClient = useQueryClient();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const { asProfiles: customModelProfiles } = useCustomModels();
-  const { asPoses: customSceneProfiles } = useCustomScenes();
+  // Shared picker options — composite-key dedupe (name::category::subCategory),
+  // surfaces all variants (e.g. all 9 "Frozen Aura" entries) with captions below.
+  const { models: sharedModelOpts, scenes: sharedSceneOpts } = useDiscoverPickerOptions(!!isAdmin && open);
 
-  const allModelOptions = useMemo(() => {
-    const items: { name: string; imageUrl: string }[] = mockModels.map(m => ({ name: m.name, imageUrl: m.previewUrl }));
-    customModelProfiles?.forEach(cm => {
-      if (!items.find(i => i.name === cm.name)) items.push({ name: cm.name, imageUrl: cm.previewUrl });
-    });
-    return items;
-  }, [customModelProfiles]);
+  const allModelOptions = useMemo(
+    () => sharedModelOpts.map(m => ({ name: m.name, imageUrl: m.imageUrl })),
+    [sharedModelOpts],
+  );
 
-  const { data: productImageScenes } = useQuery({
-    queryKey: ['product-image-scenes-picker'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('product_image_scenes')
-        .select('id, scene_id, title, preview_image_url, category_collection')
-        .eq('is_active', true);
-      return data ?? [];
-    },
-    enabled: !!isAdmin && open,
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const allSceneOptions = useMemo(() => {
-    const items: { name: string; imageUrl: string; category: string }[] = mockTryOnPoses.map(s => ({ name: s.name, imageUrl: s.previewUrl, category: s.category }));
-    customSceneProfiles?.forEach(cs => {
-      if (!items.find(i => i.name === cs.name)) items.push({ name: cs.name, imageUrl: cs.previewUrl, category: cs.category });
-    });
-    productImageScenes?.forEach((ps: any) => {
-      if (!items.find(i => i.name === ps.title)) {
-        items.push({
-          name: ps.title,
-          imageUrl: ps.preview_image_url || '',
-          category: ps.category_collection ?? 'product-images',
-        });
-      }
-    });
-    return items;
-  }, [customSceneProfiles, productImageScenes]);
+  const allSceneOptions = useMemo(
+    () =>
+      sharedSceneOpts.map(s => ({
+        name: s.name,
+        imageUrl: s.imageUrl,
+        category: s.category,
+        subCategory: s.subCategory ?? null,
+      })),
+    [sharedSceneOpts],
+  );
 
   const [editModelName, setEditModelName] = useState('__none__');
   const [editSceneName, setEditSceneName] = useState('__none__');
