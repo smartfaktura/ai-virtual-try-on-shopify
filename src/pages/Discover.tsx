@@ -348,14 +348,23 @@ export default function Discover() {
         return isSaved(itemType, itemId);
       }
 
-      // Category filter
+      // Family + sub-type filter (unified taxonomy)
       if (selectedCategory !== 'all') {
-        if (!itemMatchesProductCategory(item, selectedCategory)) return false;
+        const data = item.data as any;
+        if (
+          !itemMatchesDiscoverFilter(
+            { category: data.category, subcategory: data.subcategory, discover_categories: data.discover_categories },
+            selectedCategory,
+            selectedSubcategory,
+          )
+        ) {
+          return false;
+        }
       }
 
       return true;
     });
-  }, [allItems, selectedCategory, similarTo, isSaved, savedItems]);
+  }, [allItems, selectedCategory, selectedSubcategory, similarTo, isSaved, savedItems]);
 
   // Sort: featured items first → user-family bucket index → date DESC.
   // The user's onboarding families and sub-types take priority on the "All" tab.
@@ -365,14 +374,11 @@ export default function Discover() {
       return d ? new Date(d).getTime() : 0;
     };
 
-    // Build ordered list of discover category ids matching the user's families
+    // Family ids = onboarding family ids = discover category ids (unified).
     const userDiscoverCats: string[] = [];
-    const seen = new Set<string>();
+    const seenFam = new Set<string>();
     for (const famId of userPrefs.families) {
-      const mapped = FAM_TO_DISC[famId] ?? [];
-      for (const c of mapped) {
-        if (!seen.has(c)) { seen.add(c); userDiscoverCats.push(c); }
-      }
+      if (!seenFam.has(famId)) { seenFam.add(famId); userDiscoverCats.push(famId); }
     }
     const subtypeSet = new Set(userPrefs.subtypes.map(s => s.toLowerCase()));
     const useForYouOrder = selectedCategory === 'all' && userDiscoverCats.length > 0;
@@ -390,8 +396,8 @@ export default function Discover() {
 
     const subtypeRank = (item: DiscoverItem): number => {
       if (!useForYouOrder || subtypeSet.size === 0) return 1;
-      const cat = (getItemCategory(item) ?? '').toLowerCase();
-      return subtypeSet.has(cat) ? 0 : 1;
+      const sub = ((item.data as any).subcategory ?? '').toLowerCase();
+      return sub && subtypeSet.has(sub) ? 0 : 1;
     };
 
     return [...filtered].sort((a, b) => {
