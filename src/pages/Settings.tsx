@@ -23,6 +23,14 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 import { toast } from '@/lib/brandedToast';
+import {
+  SUB_TYPES_BY_FAMILY,
+  getMultiSubFamilies,
+  getSingleSubFamilies,
+  getAutoIncludedSlugs,
+  resolveFamilyNames,
+  cleanSubs,
+} from '@/lib/onboardingTaxonomy';
 
 interface UserSettings {
   emailOnComplete: boolean;
