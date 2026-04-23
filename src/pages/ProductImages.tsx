@@ -253,7 +253,40 @@ export default function ProductImages() {
   // Resolve full scene object for instant "From Explore" rendering in Step 2.
   const discoverSceneFull = useMemo(() => {
     if (!discoverScene?.sceneId) return null;
-    return allScenes.find(s => s.id === discoverScene.sceneId) ?? null;
+    const fromAll = allScenes.find(s => s.id === discoverScene.sceneId);
+    if (fromAll) return fromAll;
+    if (injectedScene && injectedScene.id === discoverScene.sceneId) return injectedScene;
+    return null;
+  }, [discoverScene?.sceneId, allScenes, injectedScene]);
+
+  // Preload the Step 2 lazy chunk as soon as we detect a Discover Recreate
+  // landing — eliminates Suspense fallback flash when user clicks Continue.
+  useEffect(() => {
+    const hasDiscoverParam =
+      searchParams.get('sceneRef') ||
+      searchParams.get('sceneId') ||
+      searchParams.get('scene');
+    if (hasDiscoverParam) {
+      step2Loader().catch(() => {});
+    }
+  }, [searchParams]);
+
+  // Auto-add the discoverScene to selection the moment it resolves — runs at
+  // page level so selection happens regardless of Step 2 mount/analysis state.
+  const autoAddedDiscoverRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!discoverScene?.sceneId) return;
+    if (autoAddedDiscoverRef.current === discoverScene.sceneId) return;
+    if (selectedSceneIds.has(discoverScene.sceneId)) {
+      autoAddedDiscoverRef.current = discoverScene.sceneId;
+      return;
+    }
+    const next = new Set(selectedSceneIds);
+    next.add(discoverScene.sceneId);
+    setSelectedSceneIds(next);
+    autoAddedDiscoverRef.current = discoverScene.sceneId;
+  }, [discoverScene?.sceneId, selectedSceneIds]);
+
   }, [discoverScene?.sceneId, allScenes]);
 
   // Load models for Refine step
