@@ -1,113 +1,113 @@
 
 
-## Add sub-family selector to Discover admin (and a smart backfill)
+## Fix: Recommended rail in `/app/freestyle` cuts off at 12 even when multiple sub-categories are curated
 
-### Problem
+### Root cause
 
-`discover_presets.subcategory` already exists in the DB and the filter logic (`itemMatchesDiscoverFilter`) already reads it — but **none of the 366 existing items have it set**, and the admin edit drawer (`DiscoverDetailModal`) has no UI to assign one. Result: when a user picks a sub-family pill (e.g. *Hoodies*), the grid only matches via legacy fallback rather than precise sub-family targeting.
-
-### The fix — three small, surgical changes
-
-#### 1. Add a "Sub-family" picker to the admin edit drawer
-
-**File:** `src/components/app/DiscoverDetailModal.tsx`
-
-Insert a new field directly under the existing **Explore Categories** pill row (around line 385). It dynamically reflects the **first selected family** in `editCategories`:
-
-```text
-Explore Categories
-[Fashion] [Beauty] [Fragrances] …                    ← existing
-
-Sub-family (Fashion)                                 ← NEW
-[None] [Clothing] [Hoodies] [Dresses] [Jeans] [Jackets]
-[Activewear] [Swimwear] [Lingerie] [Streetwear]
-```
-
-Behavior:
-- Pulled live from `getDiscoverSubtypes(firstFamilyId)` — same source as the user-facing sub-row, so they always stay in sync.
-- Single-select pill row (matching the new sub-category pill style we just shipped: `rounded-full px-4 py-1.5 text-[12px] border`, solid black active).
-- Hidden when the family has 0 or 1 sub-types (e.g. Watches, Eyewear) — nothing to choose.
-- Shows **"None"** as the first pill so admins can leave it family-wide.
-- Resets to `null` whenever the admin changes the primary family (so a Fashion-tagged item can't keep a Footwear sub-family).
-
-State: add `editSubcategory: string | null` next to `editCategories`. Initialize from `d?.subcategory ?? null` in the existing reset effect.
-
-#### 2. Persist it on save
-
-**Same file**, in the save handler (~line 657):
+In `src/hooks/useRecommendedScenes.ts` the rail is hard-capped at `MAX = 12`:
 
 ```ts
-const presetData: Record<string, any> = {
-  category: editCategories[0] || 'fashion',
-  discover_categories: editCategories,
-  subcategory: editSubcategory,           // NEW
-  …
+const MAX = 12;
+const ingest = (rows) => {
+  for (const row of rows) {
+    if (orderedSceneIds.length >= MAX) break;   // ← stops here
+    …
+  }
 };
 ```
 
-And mirror to `custom_scenes` (which doesn't have the column yet — we'll add it in the migration below) so promoted scenes also get it.
-
-The existing "unsaved changes" detection on the Save button (line 631) gets one more comparison: `editSubcategory !== (item.data as any).subcategory`.
-
-#### 3. Surface the value on the read-only metadata panel
-
-In the small key/value grid above the editors (~line 323), add one row right after **DB Category**:
+You picked **Clothing** *and* **Hoodies** in onboarding. Each has 12 curated scenes in `recommended_scenes`. PASS 1 iterates sub-categories in order:
 
 ```text
-DB Category     fashion
-DB Sub-family   hoodies   ← NEW (or "—" when null)
-DB Workflow     virtual-try-on-set
+Clothing (garments) → ingest 12 → cap reached → break
+Hoodies            → never reached
 ```
 
-So admins can see at a glance whether an item has a sub-family without opening the picker.
+So you see Clothing's 12 and 0 of Hoodies'. That's the bug.
 
-### DB migration
+### The fix — scale the cap to what's actually curated, and interleave sub-categories
 
-Two tiny additions:
+Two surgical changes inside `useRecommendedScenes.ts`. No DB change, no UI change.
 
-```sql
--- 1. custom_scenes: mirror the column so promoted scenes carry sub-family
-ALTER TABLE public.custom_scenes
-  ADD COLUMN IF NOT EXISTS subcategory text;
+#### 1. Dynamic cap
 
--- 2. Index for fast filtering on the user-facing grid
-CREATE INDEX IF NOT EXISTS idx_discover_presets_subcategory
-  ON public.discover_presets (subcategory)
-  WHERE subcategory IS NOT NULL;
+Replace the fixed `MAX = 12` with a per-user target that grows with the number of sub-categories the user picked:
+
+```ts
+const PER_BUCKET = 12;                 // curator's per-scope budget
+const HARD_CEILING = 60;               // safety so the rail never goes infinite
+const targetMax = Math.min(
+  HARD_CEILING,
+  Math.max(
+    PER_BUCKET,                        // always at least 12 (existing UX)
+    userSubcategories.length * PER_BUCKET,
+  ),
+);
 ```
 
-No RLS changes — `subcategory` falls under existing policies.
+Examples:
+- 0 sub-categories → 12 (today's behaviour, unchanged)
+- 1 sub-category → 12 (unchanged)
+- 2 sub-categories (Clothing + Hoodies) → **24**
+- 5 sub-categories → 60 (capped by ceiling)
 
-### Optional: lightweight backfill (one-shot, admin-only)
+#### 2. Round-robin sub-categories instead of draining one before the next
 
-Most items can be auto-classified by inspecting their existing `tags`, `prompt`, and `scene_name` against the sub-family slugs. We add a **"Auto-classify sub-family"** button to `/app/admin/discover` (top-right toolbar) that runs once:
+PASS 1 currently calls `ingest(list)` for the first sub-category until the cap is hit. Switch to a round-robin so the rail interleaves Clothing → Hoodies → Clothing → Hoodies …
 
-```text
-For each row WHERE subcategory IS NULL:
-  1. Take its `category` (family).
-  2. Look up its family's sub-type slugs.
-  3. If any slug appears in tags[] or prompt or title (case-insensitive
-     word-boundary match) → set subcategory to that slug.
-  4. Otherwise leave NULL (admin handles manually).
+```ts
+// PASS 1: sub-category curated, round-robin
+if (userSubcategories.length) {
+  const perSubLists = await Promise.all(
+    userSubcategories.map(s => fetchRecForCategory(s)),
+  );
+  // Round-robin: take row 0 from each, then row 1 from each, …
+  const maxLen = Math.max(...perSubLists.map(l => l.length));
+  outer: for (let i = 0; i < maxLen; i++) {
+    for (const list of perSubLists) {
+      if (i >= list.length) continue;
+      if (orderedSceneIds.length >= targetMax) break outer;
+      const row = list[i];
+      if (!seen.has(row.scene_id)) {
+        seen.add(row.scene_id);
+        orderedSceneIds.push(row.scene_id);
+      }
+    }
+  }
+}
 ```
 
-Implemented as a new edge function `backfill-discover-subcategories` (admin JWT check, dry-run mode returns counts before committing). Safe, idempotent, free to re-run.
+PASS 2 (family curated), PASS 3 (Global), and PASS 4 (algorithmic) keep their existing logic but read the new `targetMax` instead of `MAX`. Final `.slice(0, targetMax)` replaces the existing `.slice(0, MAX)`.
+
+### Why this matches the platform model
+
+The recommended_scenes admin you just shipped lets curators tune **per-sub-family** (Clothing 12, Hoodies 12). The hook ought to honour that scoping by surfacing **all curated buckets the user actually maps to**, not just the first one alphabetically. Round-robin keeps the rail visually balanced — you'll see a mix of Clothing and Hoodies scenes from the very first row instead of 12 hoodies after 12 garments.
 
 ### What does **not** change
 
-- `itemMatchesDiscoverFilter` — already correct, already supports sub-family.
-- User-facing `Discover.tsx` / `PublicDiscover.tsx` — already pass `subFilter` through.
-- Sub-category pill row — just shipped, untouched.
-- Onboarding sub-type taxonomy — single source of truth, both UIs read from it.
+- `recommended_scenes` table, RLS, admin curation page — untouched.
+- `SceneCatalogModal.tsx` and the sidebar count badge — they read `recommended.data?.length` and will simply show the new larger number (e.g. "Recommended 24") automatically.
+- Family-level / Global / algorithmic fallback logic — still runs only if PASS 1 didn't fill `targetMax`.
+- Cache key (`['scene-recommended', userId]`) and 10-min stale time — unchanged.
 
 ### Validation
 
-1. `/app/admin/discover` → click any Fashion item → drawer opens.
-2. Below the existing "Explore Categories" row, the new **Sub-family (Fashion)** pill row shows: `[None] [Clothing] [Hoodies] …`.
-3. Click *Hoodies* → Save → toast confirms; drawer reflects `DB Sub-family: hoodies`.
-4. Open `/app/discover` → select **Fashion → Hoodies** → that item appears in the grid (precise match, not legacy fallback).
-5. Switch the same item's family from Fashion to Beauty → Sub-family row instantly re-renders with `[None] [Skincare] [Makeup] [Fragrance]`; previous *Hoodies* selection auto-clears.
-6. Open a Watches item → Sub-family row is hidden (only one sub-type).
-7. Click **Auto-classify sub-family** in the toolbar → dry-run shows e.g. *"148 / 366 will be classified"* → confirm → counts persisted, drawer reflects new values.
-8. Custom scenes promoted via the drawer also write `subcategory` to both `discover_presets` and `custom_scenes`.
+1. As a user with `product_subcategories = ['garments', 'hoodies']`:
+   - Open `/app/freestyle` → click **Recommended** in the left rail.
+   - Sidebar count reads **24** (was 12).
+   - Grid renders 24 scenes, **interleaved** Clothing/Hoodies, not all-Clothing-then-Hoodies.
+2. As a user with only `['garments']` → Recommended shows 12 (unchanged).
+3. As a user with no sub-categories but family = `fashion` → Recommended shows 12 from fashion family curation (unchanged).
+4. As a user with 5 sub-categories all curated → Recommended shows up to 60, round-robin interleaved.
+5. Add a 13th `recommended_scenes` row for `garments` in admin → still capped at 12 *per bucket* (the per-bucket fetch already `.limit(MAX)` = 12), so the dynamic cap stays correct.
+
+### Files touched
+
+```text
+EDIT  src/hooks/useRecommendedScenes.ts
+        - Replace const MAX = 12 with PER_BUCKET / HARD_CEILING / targetMax
+        - PASS 1: replace sequential ingest with round-robin loop
+        - PASS 2/3/4: read targetMax instead of MAX
+        - Final slice uses targetMax
+```
 
