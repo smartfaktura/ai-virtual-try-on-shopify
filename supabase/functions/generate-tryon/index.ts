@@ -635,14 +635,14 @@ async function completeQueueJob(
     credits_used: creditsReserved,
     creative_drop_id: payload.creative_drop_id || null,
     prompt_final: payload.prompt || null,
-    scene_name: payload.pose?.name || null,
-    scene_id: (payload.pose as any)?.id ?? null,
-    model_name: payload.model?.name || null,
-    scene_image_url: payload.pose?.originalImageUrl || null,
-    model_image_url: payload.model?.originalImageUrl || null,
-    workflow_slug: payload.workflow_slug || null,
-    product_name: payload.product_name || null,
-    product_image_url: payload.product_image_url || null,
+    scene_name: (payload as any).__scene_name ?? (payload as any).pose?.name ?? null,
+    scene_id: (payload as any).__scene_id ?? (payload as any).pose?.id ?? null,
+    model_name: (payload as any).__model_name ?? (payload as any).model?.name ?? null,
+    scene_image_url: (payload as any).__scene_image_url ?? (payload as any).pose?.originalImageUrl ?? null,
+    model_image_url: (payload as any).__model_image_url ?? (payload as any).model?.originalImageUrl ?? null,
+    workflow_slug: (payload as any).__workflow_slug ?? payload.workflow_slug ?? null,
+    product_name: (payload as any).__product_name ?? payload.product_name ?? null,
+    product_image_url: (payload as any).__product_image_url ?? payload.product_image_url ?? null,
   });
 
   if (generatedCount < requestedCount) {
