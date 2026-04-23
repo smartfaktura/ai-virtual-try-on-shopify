@@ -54,13 +54,18 @@ export function useRecommendedScenes(enabled = true) {
         );
       }
 
+      const targetMax = Math.min(
+        HARD_CEILING,
+        Math.max(PER_BUCKET, userSubcategories.length * PER_BUCKET),
+      );
+
       // Helper: fetch recommended scene_ids for a given category key (or null=Global)
       const fetchRecForCategory = async (category: string | null) => {
         let q: any = supabase
           .from('recommended_scenes' as any)
           .select('scene_id, sort_order');
         q = category === null ? q.is('category', null) : q.eq('category', category);
-        const { data } = await q.order('sort_order', { ascending: true }).limit(MAX);
+        const { data } = await q.order('sort_order', { ascending: true }).limit(PER_BUCKET);
         return ((data ?? []) as unknown) as { scene_id: string; sort_order: number }[];
       };
 
@@ -69,37 +74,44 @@ export function useRecommendedScenes(enabled = true) {
 
       const ingest = (rows: { scene_id: string; sort_order: number }[]) => {
         for (const row of rows) {
-          if (orderedSceneIds.length >= MAX) break;
+          if (orderedSceneIds.length >= targetMax) break;
           if (seen.has(row.scene_id)) continue;
           seen.add(row.scene_id);
           orderedSceneIds.push(row.scene_id);
         }
       };
 
-      // PASS 1: sub-category curated (highest precision)
+      // PASS 1: sub-category curated (highest precision) — round-robin
       if (userSubcategories.length) {
         const perSubLists = await Promise.all(
           userSubcategories.map(s => fetchRecForCategory(s)),
         );
-        for (const list of perSubLists) {
-          ingest(list);
-          if (orderedSceneIds.length >= MAX) break;
+        const maxLen = Math.max(0, ...perSubLists.map(l => l.length));
+        outer: for (let i = 0; i < maxLen; i++) {
+          for (const list of perSubLists) {
+            if (i >= list.length) continue;
+            if (orderedSceneIds.length >= targetMax) break outer;
+            const row = list[i];
+            if (seen.has(row.scene_id)) continue;
+            seen.add(row.scene_id);
+            orderedSceneIds.push(row.scene_id);
+          }
         }
       }
 
       // PASS 2: family curated (existing behaviour)
-      if (orderedSceneIds.length < MAX && userCategories.length) {
+      if (orderedSceneIds.length < targetMax && userCategories.length) {
         const perCategoryLists = await Promise.all(
           userCategories.map(c => fetchRecForCategory(c)),
         );
         for (const list of perCategoryLists) {
           ingest(list);
-          if (orderedSceneIds.length >= MAX) break;
+          if (orderedSceneIds.length >= targetMax) break;
         }
       }
 
       // PASS 3: Global top-up (category IS NULL)
-      if (orderedSceneIds.length < MAX) {
+      if (orderedSceneIds.length < targetMax) {
         const globalList = await fetchRecForCategory(null);
         ingest(globalList);
       }
@@ -118,7 +130,7 @@ export function useRecommendedScenes(enabled = true) {
           .filter((r): r is CatalogScene => !!r);
       }
 
-      if (recommendedScenes.length >= MAX) return recommendedScenes.slice(0, MAX);
+      if (recommendedScenes.length >= targetMax) return recommendedScenes.slice(0, targetMax);
 
       // 5. Algorithmic fallback: top scenes per family the user picked,
       // narrowed to picked sub-categories when present.
@@ -150,7 +162,7 @@ export function useRecommendedScenes(enabled = true) {
             .eq('is_active', true)
             .in('category_collection', collections)
             .order('sort_order', { ascending: true })
-            .limit(MAX);
+            .limit(targetMax);
           return (data ?? []) as CatalogScene[];
         }),
       );
@@ -165,7 +177,7 @@ export function useRecommendedScenes(enabled = true) {
       }
 
       const interleaved = interleaveByFamily(flat, 2);
-      return [...recommendedScenes, ...interleaved].slice(0, MAX);
+      return [...recommendedScenes, ...interleaved].slice(0, targetMax);
     },
   });
 }
