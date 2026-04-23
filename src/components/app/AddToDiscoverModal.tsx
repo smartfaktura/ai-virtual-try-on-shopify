@@ -600,7 +600,7 @@ export function AddToDiscoverModal({
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-72 overflow-auto" align="start">
+                <PopoverContent className="z-[320] w-[var(--radix-popover-trigger-width)] p-2 max-h-72 overflow-auto" align="start">
                   <Input
                     autoFocus
                     placeholder="Search models..."
