@@ -205,6 +205,41 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
               </div>
             )}
 
+            {/* Sub-category chips (Row 2) */}
+            {subCategoryCounts.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 px-5 py-2.5 border-b border-border/20 shrink-0 bg-muted/20">
+                <button
+                  onClick={() => setActiveSubCategory(null)}
+                  className={cn(
+                    'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors',
+                    activeSubCategory === null
+                      ? 'bg-foreground text-background'
+                      : 'bg-background/60 text-muted-foreground hover:bg-background border border-border/40',
+                  )}
+                >
+                  All
+                </button>
+                {subCategoryCounts.map(([sc, count]) => (
+                  <button
+                    key={sc}
+                    onClick={() => setActiveSubCategory(sc)}
+                    className={cn(
+                      'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors inline-flex items-center gap-1.5',
+                      activeSubCategory === sc
+                        ? 'bg-foreground text-background'
+                        : 'bg-background/60 text-muted-foreground hover:bg-background border border-border/40',
+                    )}
+                  >
+                    <span>{sc}</span>
+                    <span className={cn(
+                      'text-[10px] tabular-nums',
+                      activeSubCategory === sc ? 'text-background/70' : 'text-muted-foreground/60',
+                    )}>{count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Scene grid */}
             <div className="flex-1 overflow-y-auto p-5">
               {visibleScenes.length === 0 ? (
