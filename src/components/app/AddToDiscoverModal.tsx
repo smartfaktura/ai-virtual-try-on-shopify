@@ -869,7 +869,7 @@ export function AddToDiscoverModal({
         <div className="border-t border-border/30 px-6 py-4 shrink-0 bg-background">
           <Button
             onClick={handlePublish}
-            disabled={!title.trim() || publishing || aiLoading}
+            disabled={!title.trim() || publishing}
             className="w-full font-medium"
           >
             <Globe className="w-4 h-4 mr-2" />
