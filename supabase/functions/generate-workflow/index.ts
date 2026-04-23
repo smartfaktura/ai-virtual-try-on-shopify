@@ -982,18 +982,19 @@ async function completeQueueJob(
     credits_used: creditsReserved,
     creative_drop_id: payload.creative_drop_id || null,
     prompt_final: payload.prompt || null,
-    scene_name: payload.pose?.name || payload.scene_name || null,
+    scene_name: (payload as any).__scene_name ?? (payload as any).pose?.name ?? payload.scene_name ?? null,
     scene_id:
+      (payload as any).__scene_id ??
       (payload as any)?.scene_id ??
       (payload as any)?.pose?.id ??
       (payload as any)?.scene?.id ??
       null,
-    model_name: payload.model?.name || payload.model_name || null,
-    scene_image_url: payload.pose?.originalImageUrl || null,
-    model_image_url: payload.model?.originalImageUrl || null,
-    workflow_slug: payload.workflow_slug || null,
-    product_name: payload.product_name || null,
-    product_image_url: payload.product_image_url || null,
+    model_name: (payload as any).__model_name ?? (payload as any).model?.name ?? (payload as any).model_name ?? null,
+    scene_image_url: (payload as any).__scene_image_url ?? (payload as any).pose?.originalImageUrl ?? null,
+    model_image_url: (payload as any).__model_image_url ?? (payload as any).model?.originalImageUrl ?? null,
+    workflow_slug: (payload as any).__workflow_slug ?? payload.workflow_slug ?? null,
+    product_name: (payload as any).__product_name ?? payload.product_name ?? null,
+    product_image_url: (payload as any).__product_image_url ?? payload.product_image_url ?? null,
   });
 
   if (generatedCount < requestedCount) {
@@ -1064,6 +1065,26 @@ serve(async (req) => {
     }
 
     const body: WorkflowRequest & { user_id?: string; job_id?: string; credits_reserved?: number } = await req.json();
+
+    // ── Snapshot scene/model/product/workflow metadata IMMEDIATELY after parsing
+    // body, before any variation/fallback logic can mutate or shadow these fields.
+    // These frozen values are written back onto `body` so the existing
+    // `{ ...body, ... }` payload spread into completeQueueJob() always carries
+    // them through to the generation_jobs insert.
+    {
+      const b = body as any;
+      const sceneSnapshot = {
+        __scene_name:      b.pose?.name ?? b.scene_name ?? null,
+        __scene_id:        b.scene_id ?? b.pose?.id ?? b.scene?.id ?? null,
+        __scene_image_url: b.pose?.originalImageUrl ?? b.scene_image_url ?? null,
+        __model_name:      b.model?.name ?? b.model_name ?? null,
+        __model_image_url: b.model?.originalImageUrl ?? b.model_image_url ?? null,
+        __workflow_slug:   b.workflow_slug ?? null,
+        __product_name:    b.product_name ?? b.product?.title ?? null,
+        __product_image_url: b.product_image_url ?? b.product?.imageUrl ?? null,
+      };
+      Object.assign(b, sceneSnapshot);
+    }
 
     if (!body.workflow_id || !body.product) {
       return new Response(

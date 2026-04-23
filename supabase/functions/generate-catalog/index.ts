@@ -344,13 +344,14 @@ async function completeQueueJob(
     quality: "standard",
     requested_count: requestedCount,
     credits_used: creditsReserved,
-    scene_name: (payload.pose as Record<string, unknown>)?.name || (payload.shot_id as string) || null,
-    scene_id: ((payload.pose as Record<string, unknown>)?.id as string) ?? (payload.shot_id as string) ?? null,
-    model_name: (payload.model as Record<string, unknown>)?.name || null,
-    model_image_url: (payload.model as Record<string, unknown>)?.originalImageUrl || null,
-    workflow_slug: "catalog-studio",
-    product_name: payload.product_name || (payload.product as Record<string, unknown>)?.title || null,
-    product_image_url: (payload.product_image_url as string) || null,
+    scene_name: (payload as any).__scene_name ?? (payload.pose as Record<string, unknown>)?.name ?? (payload.shot_id as string) ?? null,
+    scene_id: (payload as any).__scene_id ?? ((payload.pose as Record<string, unknown>)?.id as string) ?? (payload.shot_id as string) ?? null,
+    model_name: (payload as any).__model_name ?? (payload.model as Record<string, unknown>)?.name ?? null,
+    scene_image_url: (payload as any).__scene_image_url ?? null,
+    model_image_url: (payload as any).__model_image_url ?? (payload.model as Record<string, unknown>)?.originalImageUrl ?? null,
+    workflow_slug: (payload as any).__workflow_slug ?? "catalog-studio",
+    product_name: (payload as any).__product_name ?? payload.product_name ?? (payload.product as Record<string, unknown>)?.title ?? null,
+    product_image_url: (payload as any).__product_image_url ?? (payload.product_image_url as string) ?? null,
   });
 
   console.log(`[generate-catalog] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
@@ -367,6 +368,22 @@ serve(async (req) => {
 
   try {
     body = await req.json();
+
+    // ── Snapshot scene/model/product/workflow metadata IMMEDIATELY after parsing
+    // body so it can't be lost by any later mutation/fallback path.
+    {
+      const b = body as any;
+      Object.assign(b, {
+        __scene_name:      b.pose?.name ?? b.scene_name ?? b.shot_id ?? null,
+        __scene_id:        b.scene_id ?? b.pose?.id ?? b.shot_id ?? null,
+        __scene_image_url: b.pose?.originalImageUrl ?? b.scene_image_url ?? null,
+        __model_name:      b.model?.name ?? b.model_name ?? null,
+        __model_image_url: b.model?.originalImageUrl ?? b.model_image_url ?? null,
+        __workflow_slug:   b.workflow_slug ?? "catalog-studio",
+        __product_name:    b.product_name ?? b.product?.title ?? null,
+        __product_image_url: b.product_image_url ?? b.product?.imageUrl ?? null,
+      });
+    }
 
     // Validate: product.imageUrl is always required; model is optional for product-only mode
     if (!body.product?.imageUrl) {

@@ -635,14 +635,14 @@ async function completeQueueJob(
     credits_used: creditsReserved,
     creative_drop_id: payload.creative_drop_id || null,
     prompt_final: payload.prompt || null,
-    scene_name: payload.pose?.name || null,
-    scene_id: (payload.pose as any)?.id ?? null,
-    model_name: payload.model?.name || null,
-    scene_image_url: payload.pose?.originalImageUrl || null,
-    model_image_url: payload.model?.originalImageUrl || null,
-    workflow_slug: payload.workflow_slug || null,
-    product_name: payload.product_name || null,
-    product_image_url: payload.product_image_url || null,
+    scene_name: (payload as any).__scene_name ?? (payload as any).pose?.name ?? null,
+    scene_id: (payload as any).__scene_id ?? (payload as any).pose?.id ?? null,
+    model_name: (payload as any).__model_name ?? (payload as any).model?.name ?? null,
+    scene_image_url: (payload as any).__scene_image_url ?? (payload as any).pose?.originalImageUrl ?? null,
+    model_image_url: (payload as any).__model_image_url ?? (payload as any).model?.originalImageUrl ?? null,
+    workflow_slug: (payload as any).__workflow_slug ?? payload.workflow_slug ?? null,
+    product_name: (payload as any).__product_name ?? payload.product_name ?? null,
+    product_image_url: (payload as any).__product_image_url ?? payload.product_image_url ?? null,
   });
 
   if (generatedCount < requestedCount) {
@@ -724,6 +724,22 @@ serve(async (req) => {
       theme_notes?: string;
       brand_profile?: Record<string, unknown>;
     } = await req.json();
+
+    // ── Snapshot scene/model/product/workflow metadata IMMEDIATELY after parsing
+    // body so it can't be lost by any later mutation/fallback path.
+    {
+      const b = body as any;
+      Object.assign(b, {
+        __scene_name:      b.pose?.name ?? b.scene_name ?? null,
+        __scene_id:        b.scene_id ?? b.pose?.id ?? b.scene?.id ?? null,
+        __scene_image_url: b.pose?.originalImageUrl ?? b.scene_image_url ?? null,
+        __model_name:      b.model?.name ?? b.model_name ?? null,
+        __model_image_url: b.model?.originalImageUrl ?? b.model_image_url ?? null,
+        __workflow_slug:   b.workflow_slug ?? null,
+        __product_name:    b.product_name ?? b.product?.title ?? null,
+        __product_image_url: b.product_image_url ?? b.product?.imageUrl ?? null,
+      });
+    }
 
     const userId = body.user_id;
 
