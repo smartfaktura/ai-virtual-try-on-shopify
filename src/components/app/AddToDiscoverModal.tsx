@@ -345,6 +345,12 @@ export function AddToDiscoverModal({
       }
     }
 
+    // For product-images workflow, persist the picked scene's `scene_ref`
+    // so the wizard can resolve it deterministically. Other workflows leave
+    // scene_ref null and rely on legacy scene_name.
+    const sceneRefToWrite =
+      pickedWorkflow?.slug === 'product-images' ? (pickedScene?.sceneRef ?? null) : null;
+
     const presetData = {
       title: title.trim(),
       prompt,
@@ -359,6 +365,7 @@ export function AddToDiscoverModal({
       workflow_slug: pickedWorkflow?.slug ?? null,
       workflow_name: pickedWorkflow?.name ?? workflowName ?? null,
       scene_name: pickedSceneName,
+      scene_ref: sceneRefToWrite,
       model_name: pickedModelName,
       scene_image_url: pickedSceneName ? resolvedSceneImageUrl : null,
       model_image_url: pickedModelName ? resolvedModelImageUrl : null,
