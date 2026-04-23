@@ -115,9 +115,83 @@ export function getCategoryLabel(ids: string[]): string {
 }
 
 /**
+ * Map an onboarding family chip id (e.g. 'fashion', 'beauty-fragrance') to a short
+ * adjective used inside multi-family copy (e.g. "fashion & footwear edits").
+ */
+const FAMILY_ID_TO_ADJ: Record<string, string> = {
+  fashion: 'fashion',
+  footwear: 'footwear',
+  'bags-accessories': 'accessories',
+  watches: 'watch',
+  eyewear: 'eyewear',
+  jewelry: 'jewelry',
+  'beauty-fragrance': 'beauty',
+  home: 'home',
+  tech: 'tech',
+  'food-drink': 'food & drink',
+  wellness: 'wellness',
+};
+
+/**
+ * Build a multi-pick headline when the user selected 2+ sub-types.
+ * Pure function. Returns null if no multi-pick branch applies.
+ */
+export function buildMultiSubtypeHeadline(
+  subcategories: string[],
+  familyIds: string[],
+  isReturning: boolean,
+): string | null {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { SUBTYPE_NOUN, getFamilyForSubtype } =
+    require('@/lib/onboardingTaxonomy') as typeof import('@/lib/onboardingTaxonomy');
+
+  const subs = (subcategories ?? []).filter(s => !!s && SUBTYPE_NOUN[s]);
+  if (subs.length < 2) return null;
+
+  const subFamilies = new Set<string>();
+  for (const s of subs) {
+    const fam = getFamilyForSubtype(s);
+    if (fam) subFamilies.add(fam);
+  }
+
+  const pickedFamilyAdjs = (familyIds ?? [])
+    .filter(id => id !== 'any')
+    .map(id => FAMILY_ID_TO_ADJ[id])
+    .filter(Boolean);
+
+  // ── Same-family branch ─────────────────────────────────────────────
+  if (subFamilies.size === 1) {
+    const fam = Array.from(subFamilies)[0];
+    if (subs.length === 2) {
+      const a = SUBTYPE_NOUN[subs[0]];
+      const b = SUBTYPE_NOUN[subs[1]];
+      return isReturning
+        ? `Your ${a} & ${b} drops, ready when you are.`
+        : `Your ${a} & ${b} drops, ready in seconds.`;
+    }
+    const nouns = subs.map(s => SUBTYPE_NOUN[s]);
+    const head = nouns.slice(0, -1).join(', ');
+    const tail = nouns[nouns.length - 1];
+    return isReturning
+      ? `Your ${fam} mix — ${head} and ${tail}, ready when you are.`
+      : `Your ${fam} mix, ready in seconds — ${head} and ${tail}.`;
+  }
+
+  // ── Cross-family branch ────────────────────────────────────────────
+  if (subFamilies.size === 2 && pickedFamilyAdjs.length >= 2) {
+    const [a, b] = pickedFamilyAdjs;
+    return isReturning
+      ? `Your ${a} & ${b} edits — campaign-ready, no photoshoot.`
+      : `Your ${a} & ${b} edits — no photoshoot needed.`;
+  }
+
+  // 3+ families → fall through to generic copy
+  return null;
+}
+
+/**
  * Dynamic headline based on selected categories.
- * If a single product_subcategory is provided (Step 3 picks), it takes precedence
- * and yields a sub-type-specific headline. Otherwise falls back to family-level copy.
+ * Resolution: 1) single sub-type override → 2) multi sub-type copy → 3) family fallbacks.
  */
 export function getCategoryHeadline(
   ids: string[],
@@ -127,10 +201,14 @@ export function getCategoryHeadline(
   const headlineMap = isReturning ? CATEGORY_HEADLINES_RETURNING : CATEGORY_HEADLINES;
   const subMap = isReturning ? SUBTYPE_HEADLINES_RETURNING : SUBTYPE_HEADLINES;
 
-  // Sub-type-aware: if exactly one sub-type with a known headline, use it
   if (subcategories && subcategories.length === 1) {
     const hit = subMap[subcategories[0]];
     if (hit) return hit;
+  }
+
+  if (subcategories && subcategories.length >= 2) {
+    const multi = buildMultiSubtypeHeadline(subcategories, ids, isReturning);
+    if (multi) return multi;
   }
 
   const filtered = ids.filter((id) => id !== 'any');

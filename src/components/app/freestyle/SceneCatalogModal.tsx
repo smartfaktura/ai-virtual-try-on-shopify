@@ -5,6 +5,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { resolveFamilyNames } from '@/lib/onboardingTaxonomy';
 import {
   SceneCatalogFiltersBar, QUICK_CHIPS, type FilterChipDef,
 } from './SceneCatalogFilters';
@@ -119,11 +123,34 @@ export function SceneCatalogModal({
 
   const recommended = useRecommendedScenes(open && (showRails || quickView === 'recommended'));
 
+  // Lead the default catalog with the user's families + sub-types (no hiding).
+  const { user } = useAuth();
+  const { data: userPrefs } = useQuery({
+    queryKey: ['catalog-user-prefs', user?.id ?? null],
+    enabled: !!user?.id && open,
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('product_categories, product_subcategories')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return {
+        familyOrder: resolveFamilyNames((data?.product_categories as string[] | null) ?? []),
+        subtypes: (((data as any)?.product_subcategories as string[] | null) ?? []),
+      };
+    },
+  });
+
   // Default grid: full Freestyle catalog (no filters, excluding Essential Shots).
-  // When filters are active we use the same hook with the user-selected filters.
   const useGrid = quickView !== 'recommended';
   const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid && anyFilterActive);
-  const interleavedGrid = useInterleavedSceneCatalog(open && useGrid && !anyFilterActive, 2);
+  const interleavedGrid = useInterleavedSceneCatalog(
+    open && useGrid && !anyFilterActive,
+    2,
+    userPrefs?.familyOrder ?? [],
+    userPrefs?.subtypes ?? [],
+  );
   const counts = useSceneCounts();
 
   // Custom scenes kept only to resolve `cs-` selection IDs from prior sessions.

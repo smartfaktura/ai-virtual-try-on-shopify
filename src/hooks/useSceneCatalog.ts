@@ -156,9 +156,24 @@ export function useSceneRail(
  *
  * No interleaving, no joins, no per-user personalisation. Predictable.
  */
-export function useInterleavedSceneCatalog(enabled = true, _chunkSize = 2) {
+/**
+ * One-shot fetch of the active scene catalog for the default "All scenes" view.
+ *
+ * When `userFamilyOrder` is provided, those families appear FIRST in the output
+ * (in the order given), followed by remaining FAMILY_ORDER entries. Within each
+ * family, items whose `category_collection` matches a slug in `userSubtypes`
+ * float to the front of that family's queue. Nothing is hidden.
+ */
+export function useInterleavedSceneCatalog(
+  enabled = true,
+  _chunkSize = 2,
+  userFamilyOrder: string[] = [],
+  userSubtypes: string[] = [],
+) {
+  const familyKey = userFamilyOrder.join('|');
+  const subtypeKey = userSubtypes.join('|');
   return useQuery({
-    queryKey: ['scene-catalog-interleaved-v2'],
+    queryKey: ['scene-catalog-interleaved-v2', familyKey, subtypeKey],
     enabled,
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
@@ -173,7 +188,6 @@ export function useInterleavedSceneCatalog(enabled = true, _chunkSize = 2) {
       if (error) throw error;
       const catalog = (data ?? []) as CatalogScene[];
 
-      // Group by family — preserve sort_order within each (already sorted ASC).
       const byFamily = new Map<string, CatalogScene[]>();
       const tail: CatalogScene[] = [];
       for (const s of catalog) {
@@ -187,11 +201,27 @@ export function useInterleavedSceneCatalog(enabled = true, _chunkSize = 2) {
         byFamily.get(fam)!.push(s);
       }
 
-      // Walk FAMILY_ORDER, then any unknown families alphabetically, then tail.
+      // Subtype-first sort within each family (stable).
+      if (userSubtypes.length) {
+        const subSet = new Set(userSubtypes.map(s => s.toLowerCase()));
+        for (const [fam, list] of byFamily.entries()) {
+          const head: CatalogScene[] = [];
+          const rest: CatalogScene[] = [];
+          for (const s of list) {
+            const slug = (s.category_collection ?? '').toLowerCase();
+            if (slug && subSet.has(slug)) head.push(s);
+            else rest.push(s);
+          }
+          byFamily.set(fam, [...head, ...rest]);
+        }
+      }
+
+      const userFamSet = new Set(userFamilyOrder.filter(f => byFamily.has(f)));
       const orderedFamilies = [
-        ...FAMILY_ORDER.filter(f => byFamily.has(f)),
+        ...userFamilyOrder.filter(f => byFamily.has(f)),
+        ...FAMILY_ORDER.filter(f => byFamily.has(f) && !userFamSet.has(f)),
         ...Array.from(byFamily.keys())
-          .filter(f => !FAMILY_ORDER.includes(f as any))
+          .filter(f => !FAMILY_ORDER.includes(f as any) && !userFamSet.has(f))
           .sort(),
       ];
 

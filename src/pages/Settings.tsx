@@ -75,7 +75,7 @@ function ContentPreferencesSection() {
 
   // Lazy-import to avoid circular paths in test envs
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { SUB_TYPES_BY_FAMILY, getMultiSubFamilies, getSingleSubFamilies, getAutoIncludedSlugs, resolveFamilyNames } =
+  const { SUB_TYPES_BY_FAMILY, getMultiSubFamilies, getSingleSubFamilies, getAutoIncludedSlugs, resolveFamilyNames, cleanSubs } =
     require('@/lib/onboardingTaxonomy') as typeof import('@/lib/onboardingTaxonomy');
 
   const familyNames = resolveFamilyNames(cats);
@@ -85,14 +85,15 @@ function ContentPreferencesSection() {
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
-    // Drop any sub-picks no longer reachable; always re-add single-sub-type auto-includes
+    // Drop sub-picks no longer reachable (e.g. user removed the parent family),
+    // re-add single-sub-type auto-includes, then normalise via cleanSubs (lowercase / dedup / valid-slug only).
     const validSubSlugs = new Set(
       multiSubFamilies.flatMap(fam => (SUB_TYPES_BY_FAMILY[fam] ?? []).map(t => t.slug)),
     );
-    const finalSubs = Array.from(new Set([
+    const finalSubs = cleanSubs([
       ...subs.filter(s => validSubSlugs.has(s)),
       ...getAutoIncludedSlugs(singleSubFamilies),
-    ]));
+    ]);
 
     const { error } = await supabase
       .from('profiles')
@@ -110,6 +111,8 @@ function ContentPreferencesSection() {
         .eq('user_id', user.id)
         .single();
       if (profile) {
+        const familyLabels = cats
+          .map(id => PRODUCT_CATEGORIES.find(c => c.id === id)?.label ?? id);
         supabase.functions.invoke('sync-resend-contact', {
           body: {
             email: user.email,
@@ -118,10 +121,14 @@ function ContentPreferencesSection() {
             properties: {
               plan: profile.plan,
               credits_balance: profile.credits_balance,
-              product_categories: cats
-                .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
-                .join(', '),
+              // Legacy keys
+              product_categories: familyLabels.join(', '),
               product_subcategories: finalSubs.join(', '),
+              // New explicit, segmentable fields
+              families: familyNames,
+              subtypes: finalSubs,
+              primary_family: familyNames[0] ?? null,
+              primary_subtype: finalSubs[0] ?? null,
             },
           },
         }).catch(() => {});
@@ -287,13 +294,19 @@ export default function Settings() {
     if (error) {
       toast.error('Failed to save settings');
     } else {
-      // Sync marketing preference + properties to Resend audience
-      // Fetch categories to include in Resend sync
+      // Sync marketing preference + categories to Resend audience.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { resolveFamilyNames } =
+        require('@/lib/onboardingTaxonomy') as typeof import('@/lib/onboardingTaxonomy');
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('product_categories, first_name')
+        .select('product_categories, product_subcategories, first_name')
         .eq('user_id', user.id)
         .single();
+      const cats = ((profileData?.product_categories as string[]) ?? []);
+      const subs = (((profileData as any)?.product_subcategories as string[]) ?? []);
+      const familyLabels = cats.map(id => PRODUCT_CATEGORIES.find(c => c.id === id)?.label ?? id);
+      const familyNames = resolveFamilyNames(cats);
       supabase.functions.invoke('sync-resend-contact', {
         body: {
           email: user.email,
@@ -304,9 +317,12 @@ export default function Settings() {
             credits_balance: balance,
             has_generated: true,
             signup_date: user.created_at || new Date().toISOString(),
-            product_categories: ((profileData?.product_categories as string[]) ?? [])
-              .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
-              .join(', '),
+            product_categories: familyLabels.join(', '),
+            product_subcategories: subs.join(', '),
+            families: familyNames,
+            subtypes: subs,
+            primary_family: familyNames[0] ?? null,
+            primary_subtype: subs[0] ?? null,
           },
         },
       }).catch(() => {});

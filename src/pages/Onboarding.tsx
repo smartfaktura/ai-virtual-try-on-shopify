@@ -14,7 +14,9 @@ import {
   getSingleSubFamilies,
   getAutoIncludedSlugs,
   resolveFamilyNames,
+  cleanSubs,
 } from '@/lib/onboardingTaxonomy';
+import { FAMILY_ORDER } from '@/lib/sceneTaxonomy';
 import { ArrowRight, Check } from 'lucide-react';
 import { AuthHeroGallery } from '@/components/app/AuthHeroGallery';
 
@@ -87,18 +89,16 @@ export default function Onboarding() {
     if (!user) return;
     setSaving(true);
 
-    // Final sub-categories = user picks in Step 3 + auto-included single-sub-type families
-    const finalSubcategories = Array.from(
-      new Set([
-        ...subcategoryPicks.filter(s =>
-          // Drop picks from families no longer in selection (defensive)
-          multiSubFamilies.some(fam =>
-            (SUB_TYPES_BY_FAMILY[fam] ?? []).some(t => t.slug === s),
-          ),
+    // Final sub-categories = user picks in Step 3 + auto-included single-sub-type families.
+    // cleanSubs guarantees lowercase, deduped, and only known slugs are stored.
+    const finalSubcategories = cleanSubs([
+      ...subcategoryPicks.filter(s =>
+        multiSubFamilies.some(fam =>
+          (SUB_TYPES_BY_FAMILY[fam] ?? []).some(t => t.slug === s),
         ),
-        ...getAutoIncludedSlugs(singleSubFamilies),
-      ]),
-    );
+      ),
+      ...getAutoIncludedSlugs(singleSubFamilies),
+    ]);
 
     const { error } = await supabase
       .from('profiles')
@@ -120,7 +120,11 @@ export default function Onboarding() {
       return;
     }
 
-    // Sync marketing preference + properties to Resend audience
+    // Sync marketing preference + properties to Resend audience.
+    // Standardised payload — see sync-resend-contact for *_csv + primary_* enrichment.
+    const familyLabels = selectedCategories
+      .map(id => PRODUCT_CATEGORIES.find(c => c.id === id)?.label ?? id);
+    const familyNamesForResend = resolveFamilyNames(selectedCategories);
     supabase.functions.invoke('sync-resend-contact', {
       body: {
         email: user.email,
@@ -131,10 +135,14 @@ export default function Onboarding() {
           credits_balance: 60,
           has_generated: false,
           signup_date: user.created_at || new Date().toISOString(),
-          product_categories: selectedCategories
-            .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
-            .join(', '),
+          // Legacy keys (kept for backwards compat with existing Resend rules)
+          product_categories: familyLabels.join(', '),
           product_subcategories: finalSubcategories.join(', '),
+          // New explicit, segmentable fields
+          families: familyNamesForResend,
+          subtypes: finalSubcategories,
+          primary_family: familyNamesForResend[0] ?? null,
+          primary_subtype: finalSubcategories[0] ?? null,
         },
       },
     }).catch(() => {});

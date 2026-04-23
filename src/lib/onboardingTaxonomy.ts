@@ -130,3 +130,93 @@ export function resolveFamilyNames(familyIds: string[]): string[] {
 
 /** Re-export so callers don't need to know about sceneTaxonomy. */
 export { SUB_FAMILY_LABEL_OVERRIDES };
+
+/**
+ * Set of all valid sub-type slugs across all families.
+ * Used by `cleanSubs` to drop typos / removed slugs on write.
+ */
+export const SUB_TYPE_SLUG_SET: Record<string, true> = (() => {
+  const set: Record<string, true> = {};
+  for (const fam of Object.keys(SUB_TYPES_BY_FAMILY)) {
+    for (const t of SUB_TYPES_BY_FAMILY[fam]) set[t.slug] = true;
+  }
+  return set;
+})();
+
+/**
+ * Normalise a sub-type slug list before writing to `profiles.product_subcategories`.
+ * - lowercases + trims
+ * - dedupes
+ * - drops anything not in SUB_TYPE_SLUG_SET (typos, taxonomy drift)
+ */
+export function cleanSubs(xs: string[] | null | undefined): string[] {
+  if (!xs || !xs.length) return [];
+  return Array.from(
+    new Set(
+      xs
+        .filter((s): s is string => typeof s === 'string')
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean)
+        .filter(s => SUB_TYPE_SLUG_SET[s] === true),
+    ),
+  );
+}
+
+/**
+ * Singular noun lookup for sub-type slugs.
+ * Used by buildMultiSubtypeHeadline() to render copy like
+ *   "Your hoodie & denim drops, ready in seconds."
+ */
+export const SUBTYPE_NOUN: Record<string, string> = {
+  // Fashion
+  garments: 'clothing',
+  hoodies: 'hoodie',
+  dresses: 'dress',
+  jeans: 'denim',
+  jackets: 'jacket',
+  activewear: 'activewear',
+  swimwear: 'swimwear',
+  lingerie: 'lingerie',
+  streetwear: 'streetwear',
+  // Footwear
+  shoes: 'shoe',
+  sneakers: 'sneaker',
+  boots: 'boot',
+  'high-heels': 'heels',
+  // Bags & Accessories
+  'bags-accessories': 'bag',
+  backpacks: 'backpack',
+  'wallets-cardholders': 'cardholder',
+  belts: 'belt',
+  scarves: 'scarf',
+  'hats-small': 'hat',
+  // Watches / Eyewear
+  watches: 'watch',
+  eyewear: 'eyewear',
+  // Jewelry
+  'jewellery-rings': 'ring',
+  'jewellery-necklaces': 'necklace',
+  'jewellery-earrings': 'earring',
+  'jewellery-bracelets': 'bracelet',
+  // Beauty
+  'beauty-skincare': 'skincare',
+  'makeup-lipsticks': 'makeup',
+  fragrance: 'fragrance',
+  // Home / Tech
+  'home-decor': 'decor',
+  furniture: 'furniture',
+  'tech-devices': 'device',
+  // Food / Wellness
+  food: 'food',
+  beverages: 'drink',
+  'snacks-food': 'snack',
+  'supplements-wellness': 'wellness',
+};
+
+/** Sub-type slug → its family name (e.g. 'hoodies' -> 'Fashion'). */
+export function getFamilyForSubtype(slug: string): string | null {
+  for (const fam of Object.keys(SUB_TYPES_BY_FAMILY)) {
+    if (SUB_TYPES_BY_FAMILY[fam].some(t => t.slug === slug)) return fam;
+  }
+  return null;
+}
