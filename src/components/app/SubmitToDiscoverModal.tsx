@@ -24,6 +24,12 @@ interface SubmitToDiscoverModalProps {
   sourceGenerationId?: string;
   productName?: string;
   productImageUrl?: string;
+  workflowSlug?: string;
+  workflowName?: string;
+  sceneName?: string;
+  modelName?: string;
+  sceneImageUrl?: string;
+  modelImageUrl?: string;
 }
 
 export function SubmitToDiscoverModal({
@@ -36,6 +42,12 @@ export function SubmitToDiscoverModal({
   sourceGenerationId,
   productName,
   productImageUrl,
+  workflowSlug,
+  workflowName,
+  sceneName,
+  modelName,
+  sceneImageUrl,
+  modelImageUrl,
 }: SubmitToDiscoverModalProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>('fashion');
@@ -43,9 +55,13 @@ export function SubmitToDiscoverModal({
   const [tags, setTags] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [includeProduct, setIncludeProduct] = useState(false);
+  const [includeScene, setIncludeScene] = useState(true);
+  const [includeModel, setIncludeModel] = useState(true);
   const submitMutation = useSubmitToDiscover();
 
   const hasProduct = !!(productName && productImageUrl);
+  const hasScene = !!(sceneName);
+  const hasModel = !!(modelName);
 
   // Auto-fill with AI when modal opens
   useEffect(() => {
@@ -127,6 +143,12 @@ export function SubmitToDiscoverModal({
         quality,
         product_name: finalProductName,
         product_image_url: finalProductImageUrl,
+        workflow_slug: workflowSlug,
+        workflow_name: workflowName,
+        scene_name: includeScene && hasScene ? sceneName : undefined,
+        model_name: includeModel && hasModel ? modelName : undefined,
+        scene_image_url: includeScene && hasScene ? sceneImageUrl : undefined,
+        model_image_url: includeModel && hasModel ? modelImageUrl : undefined,
       },
       { onSuccess: onClose },
     );
