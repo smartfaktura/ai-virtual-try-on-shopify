@@ -15,6 +15,7 @@ import {
   familyIdForSubtype,
 } from '@/lib/discoverTaxonomy';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
+import { useRecommendedDiscoverItems } from '@/hooks/useRecommendedDiscoverItems';
 import { useFeaturedItems } from '@/hooks/useFeaturedItems';
 import { useSavedItems } from '@/hooks/useSavedItems';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,6 +31,7 @@ export function DashboardDiscoverSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
+  const { data: recommended = [], isLoading: isLoadingRec } = useRecommendedDiscoverItems({ mode: 'auth' });
   const { featuredMap } = useFeaturedItems();
   const { isSaved, toggleSave } = useSavedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -97,9 +99,29 @@ export function DashboardDiscoverSection() {
   }, [defaultCategory]);
 
   const allItems = useMemo<DiscoverItem[]>(
-    () => presets.map((p) => ({ type: 'preset' as const, data: p })),
-    [presets]
+    () => [
+      ...presets.map((p) => ({ type: 'preset' as const, data: p })),
+      ...recommended.map((r) => ({ type: 'scene' as const, data: r })),
+    ],
+    [presets, recommended]
   );
+
+  // Hide chips that have zero items after merge
+  const orderedCategoriesFiltered = useMemo(() => {
+    const nonEmpty = new Set<string>(['all']);
+    for (const item of allItems) {
+      if (activeCategory === 'all' || true) {
+        // mark every family that has at least one matching item under '__all__'
+        for (const cat of CATEGORIES) {
+          if (cat.id === 'all') continue;
+          if (itemMatchesDiscoverFilter(item.data, cat.id, '__all__')) {
+            nonEmpty.add(cat.id);
+          }
+        }
+      }
+    }
+    return orderedCategories.filter((c) => nonEmpty.has(c.id));
+  }, [allItems]);
 
   const filtered = useMemo(() => {
     const items = activeCategory === 'all'
@@ -174,7 +196,7 @@ export function DashboardDiscoverSection() {
     ? isSaved(selectedItem.type, selectedItem.type === 'preset' ? selectedItem.data.id : selectedItem.data.poseId)
     : false;
 
-  if (isLoading) {
+  if (isLoading || isLoadingRec) {
     return (
       <div className="space-y-4 min-h-[820px] sm:min-h-[760px] lg:min-h-[680px]">
         <div className="flex items-center justify-between">
@@ -202,28 +224,34 @@ export function DashboardDiscoverSection() {
       </div>
 
       <DiscoverCategoryBar
-        categories={orderedCategories}
+        categories={orderedCategoriesFiltered}
         selectedCategory={activeCategory}
         onSelectCategory={setSelectedCategory}
         
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {visible.map((item, idx) => (
-          <DiscoverCard
-            key={item.type === 'preset' ? item.data.id : item.data.poseId}
-            item={item}
-            aspectRatioOverride="3/4"
-            eager={idx < 8}
-            fetchPriority={idx === 0 ? 'high' : undefined}
-            onClick={() => setSelectedItem(item)}
-            onRecreate={(e) => {
-              e.stopPropagation();
-              handleUseItem(item);
-            }}
-          />
-        ))}
-      </div>
+      {visible.length === 0 ? (
+        <div className="py-12 text-center text-sm text-muted-foreground">
+          No looks yet in this category — check back soon.
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {visible.map((item, idx) => (
+            <DiscoverCard
+              key={item.type === 'preset' ? item.data.id : item.data.poseId}
+              item={item}
+              aspectRatioOverride="3/4"
+              eager={idx < 8}
+              fetchPriority={idx === 0 ? 'high' : undefined}
+              onClick={() => setSelectedItem(item)}
+              onRecreate={(e) => {
+                e.stopPropagation();
+                handleUseItem(item);
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <DiscoverDetailModal
         item={selectedItem}
