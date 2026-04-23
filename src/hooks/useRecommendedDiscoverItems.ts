@@ -34,6 +34,9 @@ export interface RecommendedDiscoverPose extends TryOnPose {
   discover_categories: string[];
   /** sub-family slug */
   subcategory?: string;
+  /** Workflow metadata so consumers can display "Created with Product Visuals" */
+  workflow_slug?: string;
+  workflow_name?: string;
 }
 
 function familyIdFor(collection: string | null | undefined): string {
@@ -150,5 +153,7 @@ function buildPose(scene: SceneRow, createdAt: string): RecommendedDiscoverPose 
     scene_ref: scene.scene_id,
     subcategory,
     discover_categories: discoverCategories,
+    workflow_slug: 'product-images',
+    workflow_name: 'Product Visuals',
   };
 }
