@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
-import { X, Globe, Tag, Sparkles } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { X, Globe, Tag, Sparkles, AlertTriangle, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/brandedToast';
-import { mockModels, mockTryOnPoses } from '@/data/mockData';
+import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
+import { useDiscoverPickerOptions, type PickerSceneOption, type PickerModelOption, type PickerWorkflowOption } from '@/hooks/useDiscoverPickerOptions';
 import {
   getDiscoverFamilies,
   getDiscoverSubtypes,
