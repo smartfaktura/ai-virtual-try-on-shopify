@@ -1653,6 +1653,7 @@ export default function ProductImages() {
               />
             )}
           </Suspense>
+          </>
         )}
       </div>
 
