@@ -388,6 +388,45 @@ export function DiscoverDetailModal({
                     })}
                   </div>
                 </div>
+                {(() => {
+                  const firstFam = editCategories[0];
+                  const subs = firstFam ? getDiscoverSubtypes(firstFam) : [];
+                  if (subs.length < 2) return null;
+                  const famLabel = DISCOVER_CATEGORY_OPTIONS.find(c => c.id === firstFam)?.label ?? firstFam;
+                  return (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-medium text-muted-foreground/60">Sub-family ({famLabel})</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setEditSubcategory(null)}
+                          className={cn(
+                            'rounded-full px-3 py-1 text-[11px] font-medium border transition-colors',
+                            editSubcategory === null
+                              ? 'bg-foreground text-background border-foreground'
+                              : 'border-border/60 bg-background text-muted-foreground/70 hover:text-foreground hover:border-border'
+                          )}
+                        >None</button>
+                        {subs.map(s => {
+                          const active = editSubcategory === s.slug;
+                          return (
+                            <button
+                              key={s.slug}
+                              type="button"
+                              onClick={() => setEditSubcategory(active ? null : s.slug)}
+                              className={cn(
+                                'rounded-full px-3 py-1 text-[11px] font-medium border transition-colors',
+                                active
+                                  ? 'bg-foreground text-background border-foreground'
+                                  : 'border-border/60 bg-background text-muted-foreground/70 hover:text-foreground hover:border-border'
+                              )}
+                            >{s.label}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <p className="text-[10px] font-medium text-muted-foreground/60">Workflow</p>
