@@ -1,71 +1,46 @@
 
 
-## Fix: "Pre-selected from Explore" not visible on Step 1 + duplicate-title clarity
+## Fix: Recommended scenes display as "Product Visuals" workflow with scene thumbnail
 
-The Recreate flow IS firing correctly — the scene auto-adds to `selectedSceneIds` the moment the URL is consumed. But the user sees nothing on Step 1 (Products), so they conclude it's broken. The "subcategory mapping" complaint is also visual — multiple scenes share the title "Worn Portrait" across different sub-families (eyewear, hats, watches), so identical tiles appear under different chips.
+The Recreate routing IS correct already — `handleUseItem` in `Discover.tsx` (line 463-480) sends every scene-type tile to `/app/generate/product-images?sceneRef=...&fromDiscover=1`. What's broken is purely **visual labeling** in the modals and card hover. Recommended scene tiles render as a bare `"Scene"` instead of mirroring the Ice Cold Energy Boost layout (workflow chip + scene thumbnail row).
 
-### Fix 1 — Show preselected scene on Step 1 (Products)
+### What changes
 
-**File:** `src/pages/ProductImages.tsx`
+**1. `src/components/app/DiscoverDetailModal.tsx`**
+- `workflowLabel` (line 179-181): for scene-type items, return `"Product Visuals"` instead of `"Scene"`.
+- "Created with" Scene row (line 250-264): also render when `item.type === 'scene'`, using `item.data.name` as the scene name and `item.data.previewUrl` as the thumbnail.
+- "Created with" workflow click handler (line 235-244): for scenes, navigate to `/app/generate/product-images?sceneRef={scene_ref}&fromDiscover=1`.
 
-Lift the `DiscoverPreselectedCard` out of the `step === 2` block and render it on **Step 1 too** so users immediately see "Pre-selected from Explore: <Scene Title> + thumbnail" the moment they land on the wizard. Keep it on Step 2 as well.
+**2. `src/components/app/PublicDiscoverDetailModal.tsx`**
+- Mirror the same three changes (workflowLabel, scene-thumbnail row, click handler).
 
-Change the gate at line 1484 from:
-```tsx
-{step === 2 && discoverSceneFull && ( <DiscoverPreselectedCard ... /> )}
-```
-to render the card at the top of Step 1's product picker AND on Step 2:
-- Add a Step-1-specific render right before the products grid (~line 1257) with a tightened compact variant
-- Keep the Step 2 render as-is
+**3. `src/components/app/DiscoverCard.tsx`**
+- `getGenerationLabel` (line 28-34): scene-type returns `"Product Visuals"` instead of `"Scene"`.
+- Hover overlay (line 92-113): for scenes, render a single Scene row using `item.data.name` + `item.data.previewUrl` as the thumbnail (same visual as preset's scene-thumb row).
 
-The card already paints instantly because `discoverSceneFull` resolves from `injectedScene` (the DB row we fetched) — no extra fetches needed.
+**4. `src/hooks/useRecommendedDiscoverItems.ts`** (single line)
+- Add `workflow_slug: 'product-images'` and `workflow_name: 'Product Visuals'` as additional fields on the `RecommendedDiscoverPose` so any future consumer that branches on these gets the right values. Existing UI code that explicitly checks `item.type === 'scene'` keeps working.
 
-### Fix 2 — Reassuring sub-text + product CTA on the Step 1 banner
+### Result
 
-The Step 1 variant of `DiscoverPreselectedCard` adds a single line:
-> "Add a product below to continue with this scene."
+Hovering or opening any recommended scene tile now shows:
+- **Top label**: "Created with **Product Visuals**" (clickable → opens Product Images wizard)
+- **Scene row**: 40×40 thumbnail of the scene preview + scene name + "Scene" sub-label
+- **Recreate this** button: routes to `/app/generate/product-images?sceneRef=...&fromDiscover=1` (already worked)
 
-So the user understands the scene is locked in and just needs a product. No new components — pass an `onStep` prop to the existing `DiscoverPreselectedCard` to switch the helper text.
-
-### Fix 3 — Disambiguate duplicate-title tiles in Explore
-
-Scenes like "Worn Portrait" exist for hats, eyewear, and watches with identical titles. After dedupe by `scene_id`, all three tiles publish, all titled "Worn Portrait". Under the **All** chip they look like duplicates.
-
-**File:** `src/hooks/useRecommendedDiscoverItems.ts`
-
-When the title is shared across collections, append a sub-family suffix in parentheses to the *display name only* (DB and `scene_ref` untouched):
-- `"Worn Portrait"` (eyewear) → `"Worn Portrait — Eyewear"`
-- `"Worn Portrait"` (hats-small) → `"Worn Portrait — Hats"`
-- `"Worn Portrait"` (watches) → `"Worn Portrait — Watches"`
-
-Implementation: after building all poses, group by lowercase `name`. For any group with ≥2 distinct `subcategory` values, append ` — ${getSubFamilyLabel(subcategory)}` to each tile in that group. Single-occurrence titles stay unchanged.
-
-### What stays untouched
-
-- `scene_ref` — still the canonical `scene_id`. Recreate keeps preselecting the exact right scene.
-- `useProductImageScenes.fetchSceneById` — already querying by `scene_id` (last fix). No changes.
-- Family/sub-chip filtering — already correct (verified all 35 active collections in the recommended set map cleanly through `CATEGORY_FAMILY_MAP`).
-- Public RPC and authenticated hook — no changes.
+Identical visual treatment to the Ice Cold Energy Boost example in the screenshot, but powered entirely by data already on the recommended-scene rows. No DB or RPC changes.
 
 ### Files to edit
 
 ```text
-src/pages/ProductImages.tsx
-  - Render DiscoverPreselectedCard on Step 1 (above product picker), keep on Step 2
-  - Pass step prop so card renders the right helper sub-text
-
-src/components/app/product-images/DiscoverPreselectedCard.tsx
-  - Accept optional `step` prop (default 2) to switch helper text on Step 1
-
+src/components/app/DiscoverDetailModal.tsx
+src/components/app/PublicDiscoverDetailModal.tsx
+src/components/app/DiscoverCard.tsx
 src/hooks/useRecommendedDiscoverItems.ts
-  - After building poses, append " — {SubFamilyLabel}" to display names
-    that collide across multiple subcategories
 ```
 
-### Verification after fix
-
-- Click Recreate on any recommended Explore tile (in-category or out-of-category) → wizard opens at Step 1 with the "Pre-selected from Explore" card visible at the top. ✓
-- Add a product → Continue → Step 2 still shows the same card with the scene already checked. ✓
-- "Worn Portrait" tiles under All chip now read "Worn Portrait — Eyewear", "Worn Portrait — Hats", "Worn Portrait — Watches" — clearly distinguishable. ✓
-- Single-occurrence titles ("Greenhouse Elegance" etc.) stay unchanged. ✓
+### Out of scope
+- No DB/RLS/RPC changes
+- No Product Images wizard changes (Step 1/Step 2 logic untouched)
+- No new components
 
