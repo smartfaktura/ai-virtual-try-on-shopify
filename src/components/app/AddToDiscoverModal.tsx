@@ -544,15 +544,11 @@ export function AddToDiscoverModal({
               {/* Title */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title *</label>
-                {aiLoading ? (
-                  <Skeleton className="h-10 w-full rounded-lg" />
-                ) : (
-                  <Input
-                    value={title}
-                    onChange={e => setTitle(e.target.value.slice(0, 60))}
-                    placeholder="Give it a title..."
-                  />
-                )}
+                <Input
+                  value={title}
+                  onChange={e => setTitle(e.target.value.slice(0, 60))}
+                  placeholder="Give it a title..."
+                />
                 <p className="text-[10px] text-muted-foreground/50 text-right">{title.length}/60</p>
               </div>
 
