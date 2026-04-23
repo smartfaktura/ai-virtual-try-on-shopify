@@ -852,10 +852,6 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
                   if (d.scene_name) params.set('scene', d.scene_name);
                   if (d.model_image_url) params.set('modelImage', d.model_image_url);
                   if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
-                  if (!d.scene_image_url && item.type === 'scene' && (item.data as any).previewUrl) {
-                    params.set('sceneImage', (item.data as any).previewUrl);
-                    if (!d.scene_name && (item.data as any).name) params.set('scene', (item.data as any).name);
-                  }
                   if (!params.get('sceneImage') && d.image_url) {
                     params.set('sceneImage', d.image_url);
                   }
