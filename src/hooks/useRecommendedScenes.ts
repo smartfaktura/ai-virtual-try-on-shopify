@@ -15,16 +15,17 @@ const SLIM_COLUMNS =
 const MAX = 12;
 
 /**
- * Per-onboarding-category recommended rail.
+ * Per-user recommended rail.
  *
- * Resolution:
- *   1. For each category the user picked → fetch up to 12 from
- *      recommended_scenes WHERE category = <cat>, ordered by sort_order.
- *      Merge in the order categories were selected, dedupe, cap at 12.
- *   2. If still <12 → top up from category IS NULL (Global list).
- *   3. Final fallback if still empty → top-12 by sort_order from product_image_scenes.
+ * Resolution (3-pass on the recommended_scenes table, then algorithmic):
+ *   1. Sub-category curated — for each sub-type slug the user picked in
+ *      Step 3, fetch rows WHERE category = <slug> ordered by sort_order.
+ *   2. Family curated — for each family id from Step 2, fetch rows WHERE
+ *      category = <family>.
+ *   3. Global top-up — rows WHERE category IS NULL.
+ *   4. Algorithmic fallback — interleave top scenes per family the user picked.
  *
- * Cached 10 min per user.
+ * Cached 10 min per user. Output is deduped & capped at 12.
  */
 export function useRecommendedScenes(enabled = true) {
   const { user } = useAuth();
@@ -52,7 +53,7 @@ export function useRecommendedScenes(enabled = true) {
         );
       }
 
-      // Helper: fetch recommended scene_ids for a given category (or null=Global)
+      // Helper: fetch recommended scene_ids for a given category key (or null=Global)
       const fetchRecForCategory = async (category: string | null) => {
         let q: any = supabase
           .from('recommended_scenes' as any)
@@ -62,33 +63,44 @@ export function useRecommendedScenes(enabled = true) {
         return ((data ?? []) as unknown) as { scene_id: string; sort_order: number }[];
       };
 
-      // 2. Per-category fetches in parallel
-      const perCategoryLists = await Promise.all(
-        userCategories.map(c => fetchRecForCategory(c)),
-      );
-
-      // Merge in selection order, dedupe by scene_id
       const orderedSceneIds: string[] = [];
       const seen = new Set<string>();
-      for (const list of perCategoryLists) {
-        for (const row of list) {
+
+      const ingest = (rows: { scene_id: string; sort_order: number }[]) => {
+        for (const row of rows) {
           if (orderedSceneIds.length >= MAX) break;
           if (seen.has(row.scene_id)) continue;
           seen.add(row.scene_id);
           orderedSceneIds.push(row.scene_id);
         }
-        if (orderedSceneIds.length >= MAX) break;
+      };
+
+      // PASS 1: sub-category curated (highest precision)
+      if (userSubcategories.length) {
+        const perSubLists = await Promise.all(
+          userSubcategories.map(s => fetchRecForCategory(s)),
+        );
+        for (const list of perSubLists) {
+          ingest(list);
+          if (orderedSceneIds.length >= MAX) break;
+        }
       }
 
-      // 3. Top up from Global (category IS NULL) if still short
+      // PASS 2: family curated (existing behaviour)
+      if (orderedSceneIds.length < MAX && userCategories.length) {
+        const perCategoryLists = await Promise.all(
+          userCategories.map(c => fetchRecForCategory(c)),
+        );
+        for (const list of perCategoryLists) {
+          ingest(list);
+          if (orderedSceneIds.length >= MAX) break;
+        }
+      }
+
+      // PASS 3: Global top-up (category IS NULL)
       if (orderedSceneIds.length < MAX) {
         const globalList = await fetchRecForCategory(null);
-        for (const row of globalList) {
-          if (orderedSceneIds.length >= MAX) break;
-          if (seen.has(row.scene_id)) continue;
-          seen.add(row.scene_id);
-          orderedSceneIds.push(row.scene_id);
-        }
+        ingest(globalList);
       }
 
       // 4. Resolve scene_ids → full scene rows (preserving order)
@@ -107,9 +119,8 @@ export function useRecommendedScenes(enabled = true) {
 
       if (recommendedScenes.length >= MAX) return recommendedScenes.slice(0, MAX);
 
-      // 5. Interleaved fallback: pull top scenes per family the user picked
-      // (or all families if user has none), then round-robin 2-by-2 for visual variety.
-      // Sub-categories take precedence — narrow to those exact collections when present.
+      // 5. Algorithmic fallback: top scenes per family the user picked,
+      // narrowed to picked sub-categories when present.
       const userFamilies: string[] = (() => {
         if (!userCategories.length && !userSubcategories.length) return [...FAMILY_ORDER];
         const collections = resolveUserCollections(userCategories, userSubcategories);
@@ -121,8 +132,6 @@ export function useRecommendedScenes(enabled = true) {
         return fams.size ? Array.from(fams) : [...FAMILY_ORDER];
       })();
 
-      // For each family, fetch its top scenes (use sort_order ASC).
-      // If sub-categories were picked, restrict to ONLY those collections inside each family.
       const subcategorySet = new Set(userSubcategories.map(s => s.toLowerCase()));
       const perFamilyLists = await Promise.all(
         userFamilies.map(async fam => {
@@ -145,7 +154,6 @@ export function useRecommendedScenes(enabled = true) {
         }),
       );
 
-      // Flatten + dedupe against already-resolved curated picks
       const flat: CatalogScene[] = [];
       for (const list of perFamilyLists) {
         for (const s of list) {
