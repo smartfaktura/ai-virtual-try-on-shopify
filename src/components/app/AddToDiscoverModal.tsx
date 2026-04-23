@@ -84,7 +84,7 @@ export function AddToDiscoverModal({
 
   const queryClient = useQueryClient();
 
-  const { scenes: allScenes, scenesForWorkflow, models: allModels, workflows: allWorkflows } =
+  const { scenes: allScenes, scenesForWorkflow, productImageScenes, models: allModels, workflows: allWorkflows } =
     useDiscoverPickerOptions(open);
 
   // Workflow-aware scene library: product-images → product_image_scenes (writes scene_ref);
@@ -149,15 +149,18 @@ export function AddToDiscoverModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pickedWorkflowSlug]);
 
-  // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks)
+  // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks
+  // OR via sceneId matching a product_image_scenes row's scene_ref).
   const initialSceneName = useMemo(() => {
     if (sceneName) return sceneName;
     if (sceneId && !sceneId.startsWith('custom-')) {
       const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
       if (mock) return mock.name;
+      const pis = productImageScenes.find(s => s.sceneRef === sceneId);
+      if (pis) return pis.name;
     }
     return null;
-  }, [sceneName, sceneId]);
+  }, [sceneName, sceneId, productImageScenes]);
 
   const initialModelName = useMemo(() => {
     if (modelName) return modelName;
@@ -346,10 +349,17 @@ export function AddToDiscoverModal({
     }
 
     // For product-images workflow, persist the picked scene's `scene_ref`
-    // so the wizard can resolve it deterministically. Other workflows leave
-    // scene_ref null and rely on legacy scene_name.
+    // so the wizard can resolve it deterministically. Prefer the authoritative
+    // scene_id passed in from the source generation (exact ref the wizard used);
+    // fall back to the picker's scene_ref (matched by title — may collide).
+    const authoritativeSceneRef =
+      sceneId && !sceneId.startsWith('custom-') && !mockTryOnPoses.find(p => p.poseId === sceneId)
+        ? sceneId
+        : null;
     const sceneRefToWrite =
-      pickedWorkflow?.slug === 'product-images' ? (pickedScene?.sceneRef ?? null) : null;
+      pickedWorkflow?.slug === 'product-images'
+        ? (authoritativeSceneRef ?? pickedScene?.sceneRef ?? null)
+        : null;
 
     const presetData = {
       title: title.trim(),
