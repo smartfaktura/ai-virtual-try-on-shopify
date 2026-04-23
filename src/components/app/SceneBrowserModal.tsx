@@ -28,6 +28,7 @@ const OTHER_FAMILY = 'Other';
 export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: SceneBrowserModalProps) {
   const [activeFamily, setActiveFamily] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   // Group scenes by family
@@ -59,6 +60,7 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
     if (!open) {
       setSearch('');
       setActiveSub(null);
+      setActiveSubCategory(null);
     }
   }, [open, orderedFamilies, activeFamily]);
 
@@ -74,19 +76,38 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
   }, [familyGroups, activeFamily]);
 
   // Reset sub when family changes
-  useEffect(() => { setActiveSub(null); }, [activeFamily]);
+  useEffect(() => { setActiveSub(null); setActiveSubCategory(null); }, [activeFamily]);
+  // Reset sub-category when sub changes
+  useEffect(() => { setActiveSubCategory(null); }, [activeSub]);
+
+  // Sub-category counts (within active family + active sub)
+  const subCategoryCounts = useMemo<Array<[string, number]>>(() => {
+    if (!activeFamily) return [];
+    let list = familyGroups.get(activeFamily) ?? [];
+    if (activeSub) list = list.filter(s => s.category === activeSub);
+    const counts = new Map<string, number>();
+    for (const s of list) {
+      const key = s.subCategory?.trim();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    );
+  }, [familyGroups, activeFamily, activeSub]);
 
   // Filtered scene list shown in grid
   const visibleScenes = useMemo(() => {
     if (!activeFamily) return [];
     let list = familyGroups.get(activeFamily) ?? [];
     if (activeSub) list = list.filter(s => s.category === activeSub);
+    if (activeSubCategory) list = list.filter(s => (s.subCategory?.trim() || '') === activeSubCategory);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(s => s.name.toLowerCase().includes(q));
     }
     return list;
-  }, [familyGroups, activeFamily, activeSub, search]);
+  }, [familyGroups, activeFamily, activeSub, activeSubCategory, search]);
 
   // Lock body scroll
   useEffect(() => {
