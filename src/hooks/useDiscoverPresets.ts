@@ -25,6 +25,7 @@ export interface DiscoverPreset {
   discover_categories: string[] | null;
   created_at: string;
   slug: string;
+  scene_ref: string | null;
 }
 
 export function useDiscoverPresets() {
