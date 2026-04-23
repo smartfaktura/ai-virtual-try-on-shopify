@@ -1,168 +1,76 @@
 
-## Fix `/app/admin/scene-performance` so it stops hanging and loads fast
 
-### What’s actually still wrong
+## Optimize `/app/admin/recommended-scenes` thumbnails + fix truncated "Scenes used" count
 
-The page is no longer trying to render all metadata at once, but it still blocks the whole screen on several heavy analytics queries before showing anything.
+### Issue 1 — Thumbnails are fetched at full original size
 
-Current behavior in `src/pages/admin/SceneUsage.tsx`:
-- it waits for 4 backend calls together before clearing `loading`
-- 3 of those are large aggregate reads:
-  - main window popularity
-  - last 7 days popularity
-  - prior 14 days popularity
-- plus a distinct-user count query
-- the page keeps the KPI cards and both panels in loading state until all of that finishes
+On `/app/admin/recommended-scenes`, both the **Featured** grid and the **All scenes** grid render thumbnails through:
+```ts
+getOptimizedUrl(scene.preview_image_url, { quality: 60 })
+```
 
-So even with the “show 50 rows first” change, the page can still feel stuck or hang on mobile.
+Quality-only is correct for full-bleed/hero images, but these are **fixed grid tiles** (≤6 cols, 4:5 aspect, ~180–240 px wide). Loading the original ~2K PNG for each of the 1,000+ tiles is what makes the page heavy on first load.
 
-### Safe fix
+Per the project's image optimization rule (memory: `image-optimization-no-crop`):
+> Quality-only for full-bleed/carousel/background images; **width param is fine for fixed thumbnails.**
 
-Use a two-layer fix:
+These admin grid tiles qualify as fixed thumbnails.
 
-1. Make the page render progressively instead of waiting for everything
-2. Speed up the backend queries with proper read indexes and tighter filters
+### Issue 2 — "Scenes used 1000" is a silent truncation, not a real value
 
-### Changes to make
+`get_scene_popularity` actually returns **1,063 rows** (verified against the database). The client only receives **1,000** because PostgREST applies a default 1,000-row cap to RPC responses unless an explicit range is requested. The KPI then reports `enriched.length === 1000`.
 
-#### 1) Split the loading state in `src/pages/admin/SceneUsage.tsx`
+This is the same root cause the AdminRecommendedScenes page already works around with paged fetching (`HARD_CAP = 5000`).
 
-Replace the single `loading` gate with section-level loading:
+### Fix
 
-- `mainLoading` for:
-  - scene list
-  - primary KPIs derived from main rows
-- `uniqueUsersLoading` for the unique-users KPI only
-- `risersLoading` for the risers card only
+Frontend-only, in two files.
 
-Result:
-- the table and main KPIs render as soon as the main popularity query returns
-- unique users can populate a moment later
-- top risers can populate separately
-- one slow side query no longer freezes the whole page
+#### 1) `src/pages/AdminRecommendedScenes.tsx` — optimize grid thumbnails
 
-#### 2) Stop using one `Promise.all` for all analytics
+Replace both `getOptimizedUrl(..., { quality: 60 })` calls (Featured grid + All scenes grid) with:
+```ts
+getOptimizedUrl(scene.preview_image_url, { width: 320, quality: 60 })
+```
 
-Refactor the load effect so it does this order:
+`width: 320` covers retina (2x) for ~160 px tiles up through the densest 6-col layout. Massive bandwidth/render reduction with no visible quality drop. No layout/CSS changes needed — the `<ShimmerImage>` wrapper already enforces `aspect-[4/5]`.
 
-- first:
-  - `get_scene_popularity(windowDays)` for the main dataset
-- then in parallel, without blocking the page:
-  - `get_scene_unique_user_count(windowDays)`
-  - risers computation queries
+Result: each tile drops from ~2 MB to ~30–60 KB.
 
-This keeps the page usable even if the risers query is slow.
+#### 2) `src/pages/admin/SceneUsage.tsx` — fetch all popularity rows past the 1k cap
 
-#### 3) Keep the existing 50-row lazy rendering
+In the main popularity load (the `get_scene_popularity` call around line 187), explicitly request a larger range so PostgREST returns the full set:
 
-Preserve the current safe optimization:
-- render only first 50 rows
-- “Load more” adds 50 more
-- metadata resolves only for visible rows
-- CSV still exports the full filtered set
+```ts
+const popRes = await supabase
+  .rpc('get_scene_popularity' as any, { p_days: windowDays })
+  .range(0, 9999);
+```
 
-That part is good and should stay.
+This restores the true count (~1,063 today) and keeps the existing 50-row visible pagination intact — the rendering side already lazy-resolves metadata only for visible rows, so the cost stays low.
 
-#### 4) Add proper analytics indexes in a migration
+Same `.range(0, 9999)` is added to the two risers calls (`p_days: 7` and `p_days: 14`) for consistency, in case they ever cross the 1k threshold.
 
-The current indexes lead with `scene_id`, but these analytics functions filter by time window first. That makes them a poor fit for the actual query shape.
+### Why it's safe
 
-Add partial indexes better aligned to the RPCs:
-
-- `freestyle_generations(created_at desc, scene_id, user_id) where scene_id is not null`
-- `generation_jobs(created_at desc, scene_id, user_id) where scene_id is not null and status = 'completed'`
-
-This improves:
-- main popularity query
-- unique user count query
-- risers queries
-
-#### 5) Tighten the Product Images analytics filter
-
-Update the analytics functions so `generation_jobs` only counts completed generations for scene usage reporting.
-
-That restores safer semantics and avoids counting queued/failed rows in performance metrics.
-
-#### 6) Add non-blocking fallbacks in the UI
-
-If a secondary query fails:
-- main table should still render if main popularity succeeded
-- unique users card should show a small fallback like `—`
-- risers card should show a compact error/empty state instead of spinner forever
-
-#### 7) Prevent repeated metadata churn
-
-Keep the current lazy metadata behavior, but make it slightly more defensive:
-- dedupe missing IDs before fetch
-- avoid re-requesting the same missing set while one request is in flight
-- keep riser metadata separate from main-table loading so it never blocks the page
-
-### Why this is safe
-
-- keeps the existing admin page structure
-- preserves the current 50-row incremental rendering
-- does not change generation flow, credits, queues, or user-facing creation flows
-- backend change is read-performance only: indexes plus safer analytics filters
-- no write permissions or RLS widening needed
-- easy rollback:
-  - revert one page file
-  - drop the new indexes if necessary
-
-### Files likely involved
-
-- `src/pages/admin/SceneUsage.tsx`
-- new migration in `supabase/migrations/*` for:
-  - analytics indexes
-  - updated analytics function filters if needed
+- **Frontend only**, two files, no DB / RPC / RLS / edge function changes
+- Thumbnail change uses an officially-allowed pattern (fixed thumbnails) per the project's image-optimization rule
+- `.range(0, 9999)` is a standard PostgREST pagination hint; it doesn't change RPC behavior, only widens the response window
+- KPI cards, table, sort, search, CSV, "Load more", risers — all keep working
+- Generation pipeline, queues, credits — untouched
+- Trivial rollback: revert the two files
 
 ### Validation
 
-1. Open `/app/admin/scene-performance`
-2. Main KPI cards and first 50 rows appear quickly instead of all cards staying on `—`
-3. Unique users can fill in slightly later without blocking the page
-4. Top risers can load independently
-5. “Load more” still works in 50-row increments
-6. Scene names and thumbnails still resolve correctly for visible rows
-7. CSV still exports the full filtered dataset
-8. Non-admin users remain blocked
-9. No endless spinner if a secondary analytics call fails
+1. `/app/admin/recommended-scenes` loads visibly faster, especially scrolling through the All scenes grid; thumbnails look identical
+2. Network panel shows thumbnail responses ~30–60 KB instead of multi-MB
+3. `/app/admin/scene-performance` "Scenes used" KPI now shows the real number (~1,063 for 90d), not a flat 1,000
+4. Switching 30d / 60d / 90d updates the count to the true value for that window
+5. Top risers still load and resolve names/thumbnails
+6. CSV export still contains all rows (now uncapped)
 
-### Technical details
+### Files
 
-```text
-Before
-------
-single loading state
-  -> waits for:
-     main popularity
-     unique users
-     last 7d popularity
-     prior 14d popularity
-  -> then render
+- `src/pages/AdminRecommendedScenes.tsx` — add `width: 320` to two `getOptimizedUrl` calls
+- `src/pages/admin/SceneUsage.tsx` — add `.range(0, 9999)` to the three `get_scene_popularity` RPC calls
 
-After
------
-mainLoading
-  -> fetch main popularity
-  -> render table + main KPIs immediately
-
-secondary async loads
-  -> unique users KPI
-  -> top risers card
-  -> visible-row metadata
-```
-
-```text
-DB optimization
----------------
-Current index shape:
-(scene_id, created_at)
-
-Needed query shape:
-WHERE created_at >= window
-GROUP BY scene_id
-COUNT DISTINCT user_id
-
-Better partial index:
-(created_at, scene_id, user_id)
-```
