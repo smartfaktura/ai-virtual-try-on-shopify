@@ -1480,6 +1480,14 @@ export default function ProductImages() {
         )}
 
         {step >= 2 && step <= 6 && (
+          <>
+            {step === 2 && discoverSceneFull && (
+              <DiscoverPreselectedCard
+                scene={discoverSceneFull}
+                selectedSceneIds={selectedSceneIds}
+                onSelectionChange={setSelectedSceneIds}
+              />
+            )}
           <Suspense fallback={<div className="space-y-4 py-8"><Skeleton className="h-8 w-48" /><div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div></div>}>
             {step === 2 && (() => {
               const needsAnalysis = selectedProducts.some(p => pendingIds.has(p.id) && !analyses[p.id] && !(p as any).analysis_json);
