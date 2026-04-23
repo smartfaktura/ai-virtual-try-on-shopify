@@ -669,7 +669,7 @@ export default function AdminRecommendedScenes() {
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {displayedScenes.map(scene => {
                 const isFeatured = recommendedMap.has(scene.scene_id);
-                const isStarPinned = scene.sort_order < 0;
+                const isPending = addMutation.isPending || removeMutation.isPending;
                 return (
                   <div
                     key={scene.id}
@@ -680,19 +680,10 @@ export default function AdminRecommendedScenes() {
                         : 'border-transparent hover:border-border/60'
                     )}
                   >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        isFeatured
-                          ? removeMutation.mutate(scene.scene_id)
-                          : addMutation.mutate(scene.scene_id)
-                      }
-                      className="block w-full text-left"
-                      aria-label={isFeatured ? 'Remove from recommended' : 'Add to recommended'}
-                    >
+                    <div className="block w-full text-left">
                       {scene.preview_image_url ? (
                         <ShimmerImage
-                           src={getOptimizedUrl(scene.preview_image_url, { quality: 60 })}
+                          src={getOptimizedUrl(scene.preview_image_url, { quality: 60 })}
                           alt={scene.title}
                           className="w-full aspect-[4/5] object-cover"
                           wrapperClassName="h-auto"
@@ -707,34 +698,35 @@ export default function AdminRecommendedScenes() {
                           {scene.sub_category || scene.category_collection || '—'}
                         </p>
                       </div>
-                    </button>
+                    </div>
 
-                    {/* Pin star — top-left. Controls the new sort_order-based featured signal. */}
+                    {/* Single scope-aware star — writes to recommended_scenes for the active tab */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleFeaturedMutation.mutate(scene.scene_id);
+                        if (isFeatured) {
+                          removeMutation.mutate(scene.scene_id);
+                        } else {
+                          addMutation.mutate(scene.scene_id);
+                        }
                       }}
-                      disabled={toggleFeaturedMutation.isPending}
+                      disabled={isPending}
                       className={cn(
                         'absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center shadow-md border transition-all',
-                        isStarPinned
+                        isFeatured
                           ? 'bg-primary border-primary text-primary-foreground hover:opacity-90'
                           : 'bg-background/95 border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
                       )}
-                      title={isStarPinned ? 'Pinned to top of sub-family. Click to unpin.' : 'Pin to top of sub-family for users'}
-                      aria-label={isStarPinned ? 'Unpin from top' : 'Pin to top'}
+                      title={
+                        isFeatured
+                          ? `Remove from ${activeLabel} featured`
+                          : `Add to ${activeLabel} featured`
+                      }
+                      aria-label={isFeatured ? 'Remove from featured' : 'Add to featured'}
                     >
-                      <Star className={cn('w-3.5 h-3.5', isStarPinned && 'fill-current')} />
+                      <Star className={cn('w-3.5 h-3.5', isFeatured && 'fill-current')} />
                     </button>
-
-                    {/* Legacy "in recommended_scenes" star — top-right */}
-                    {isFeatured && (
-                      <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow">
-                        <Star className="w-3 h-3 text-primary-foreground fill-current" />
-                      </div>
-                    )}
                   </div>
                 );
               })}
