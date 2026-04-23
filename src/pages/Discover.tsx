@@ -199,6 +199,21 @@ function DiscoverLoadingState() {
   );
 }
 
+// Map onboarding family chip ids → discover category ids (for "For you" sort).
+const FAM_TO_DISC: Record<string, string[]> = {
+  fashion: ['fashion'],
+  footwear: ['fashion', 'sports'],
+  'bags-accessories': ['accessories'],
+  watches: ['accessories'],
+  eyewear: ['accessories'],
+  jewelry: ['jewelry'],
+  'beauty-fragrance': ['beauty', 'fragrances'],
+  home: ['home'],
+  tech: ['electronics'],
+  'food-drink': ['food'],
+  wellness: ['supplements'],
+};
+
 export default function Discover() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
