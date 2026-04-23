@@ -511,7 +511,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
       {modelModalUrl && (
         <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
       )}
-      {discoverModalOpen && item && (
+      {discoverModalOpen && item && isAdmin && (
         <AddToDiscoverModal
           open={discoverModalOpen}
           onClose={() => setDiscoverModalOpen(false)}

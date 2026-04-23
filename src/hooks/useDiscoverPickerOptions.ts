@@ -28,7 +28,7 @@ export interface PickerWorkflowOption {
  */
 export function useDiscoverPickerOptions(enabled: boolean) {
   const { asProfiles: customModelProfiles } = useCustomModels({ enabled });
-  const { asPoses: customSceneProfiles } = useCustomScenes();
+  const { asPoses: customSceneProfiles } = useCustomScenes({ enabled });
 
   const { data: productImageScenes } = useQuery({
     queryKey: ['discover-picker-product-image-scenes'],

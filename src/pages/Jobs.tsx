@@ -146,6 +146,23 @@ export default function Jobs() {
   const { lastCompletedAt } = useGenerationQueue();
   const { count: columnCount, options: columnOptions, setColumns } = useColumnCount();
 
+  // Reconcile selectedItem against the live items list to avoid stale snapshots
+  const liveSelected = useMemo(() => {
+    if (!selectedItem) return null;
+    return items.find(i => i.id === selectedItem.id) ?? null;
+  }, [selectedItem, items]);
+
+  const liveIndex = useMemo(() => {
+    if (!liveSelected) return 0;
+    const idx = items.findIndex(i => i.id === liveSelected.id);
+    return idx >= 0 ? idx : 0;
+  }, [liveSelected, items]);
+
+  // Auto-close modal if the selected item disappears from the list (deleted/filtered)
+  useEffect(() => {
+    if (selectedItem && !liveSelected) setSelectedItem(null);
+  }, [selectedItem, liveSelected]);
+
   // Track which images are currently being upscaled
   const { data: upscalingSourceIds = new Set<string>() } = useQuery({
     queryKey: ['upscaling-jobs', user?.id],
@@ -716,12 +733,12 @@ export default function Jobs() {
       />
 
       <LibraryDetailModal
-        item={selectedItem}
-        open={!!selectedItem}
+        item={liveSelected}
+        open={!!liveSelected}
         onClose={() => setSelectedItem(null)}
-        isUpscaling={selectedItem ? upscalingSourceIds.has(selectedItem.id) : false}
+        isUpscaling={liveSelected ? upscalingSourceIds.has(liveSelected.id) : false}
         items={items}
-        initialIndex={selectedItem ? items.findIndex(i => i.id === selectedItem.id) : 0}
+        initialIndex={liveIndex}
       />
 
       {allItems.length > 0 && <FeedbackBanner />}
