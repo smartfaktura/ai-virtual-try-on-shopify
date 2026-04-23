@@ -35,16 +35,20 @@ export function useRecommendedScenes(enabled = true) {
     enabled: enabled && !!userId,
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
-      // 1. User's onboarding categories
+      // 1. User's onboarding categories + sub-categories
       let userCategories: string[] = [];
+      let userSubcategories: string[] = [];
       if (userId) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('product_categories')
+          .select('product_categories, product_subcategories')
           .eq('user_id', userId)
           .maybeSingle();
         userCategories = (profile?.product_categories ?? []).filter(
           (c): c is string => !!c && c !== 'any',
+        );
+        userSubcategories = (((profile as any)?.product_subcategories) ?? []).filter(
+          (c: any): c is string => !!c && typeof c === 'string',
         );
       }
 
@@ -105,9 +109,10 @@ export function useRecommendedScenes(enabled = true) {
 
       // 5. Interleaved fallback: pull top scenes per family the user picked
       // (or all families if user has none), then round-robin 2-by-2 for visual variety.
+      // Sub-categories take precedence — narrow to those exact collections when present.
       const userFamilies: string[] = (() => {
-        if (!userCategories.length) return [...FAMILY_ORDER];
-        const collections = resolveUserCollections(userCategories);
+        if (!userCategories.length && !userSubcategories.length) return [...FAMILY_ORDER];
+        const collections = resolveUserCollections(userCategories, userSubcategories);
         const fams = new Set<string>();
         for (const c of collections) {
           const f = CATEGORY_FAMILY_MAP[c];
@@ -116,12 +121,18 @@ export function useRecommendedScenes(enabled = true) {
         return fams.size ? Array.from(fams) : [...FAMILY_ORDER];
       })();
 
-      // For each family, fetch its top scenes (use sort_order ASC)
+      // For each family, fetch its top scenes (use sort_order ASC).
+      // If sub-categories were picked, restrict to ONLY those collections inside each family.
+      const subcategorySet = new Set(userSubcategories.map(s => s.toLowerCase()));
       const perFamilyLists = await Promise.all(
         userFamilies.map(async fam => {
-          const collections = Object.entries(CATEGORY_FAMILY_MAP)
+          let collections = Object.entries(CATEGORY_FAMILY_MAP)
             .filter(([, f]) => f === fam)
             .map(([slug]) => slug);
+          if (subcategorySet.size) {
+            const narrowed = collections.filter(s => subcategorySet.has(s));
+            if (narrowed.length) collections = narrowed;
+          }
           if (!collections.length) return [] as CatalogScene[];
           const { data } = await supabase
             .from('product_image_scenes')
