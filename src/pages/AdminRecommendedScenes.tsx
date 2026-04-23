@@ -19,6 +19,10 @@ import {
   getSubFamilyLabel,
   interleaveByFamily,
 } from '@/lib/sceneTaxonomy';
+import {
+  SUB_TYPES_BY_FAMILY,
+  FAMILY_ID_TO_NAME,
+} from '@/lib/onboardingTaxonomy';
 
 type ViewMode = 'interleaved' | 'grouped';
 const VIEW_MODE_KEY = 'admin-rec-scenes:view-mode';
@@ -134,6 +138,35 @@ export default function AdminRecommendedScenes() {
       const { data, error } = await q.order('sort_order', { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as RecommendedRow[];
+    },
+  });
+
+  // Resolve active family canonical name (e.g. 'fashion' -> 'Fashion').
+  const activeFamilyName: string | null =
+    activeCategory === GLOBAL ? null : (FAMILY_ID_TO_NAME[activeCategory] ?? null);
+  const activeSubTypes = activeFamilyName ? (SUB_TYPES_BY_FAMILY[activeFamilyName] ?? []) : [];
+  const showSubStrip = activeSubTypes.length >= 2;
+
+  // Per-sub-family count of currently starred scenes (cached per family).
+  const subSlugsKey = activeSubTypes.map(s => s.slug).join(',');
+  const { data: subCounts = {} } = useQuery({
+    queryKey: ['admin-recommended-sub-counts', subSlugsKey],
+    enabled: isAdmin && showSubStrip,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const slugs = activeSubTypes.map(s => s.slug);
+      if (!slugs.length) return {} as Record<string, number>;
+      const { data, error } = await supabase
+        .from('recommended_scenes' as any)
+        .select('category')
+        .in('category', slugs);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      for (const row of ((data ?? []) as unknown as { category: string | null }[])) {
+        if (!row.category) continue;
+        counts[row.category] = (counts[row.category] ?? 0) + 1;
+      }
+      return counts;
     },
   });
 
@@ -327,7 +360,10 @@ export default function AdminRecommendedScenes() {
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveCategory(tab.key)}
+              onClick={() => {
+                setActiveCategory(tab.key);
+                setActiveSubCollection(null);
+              }}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
                 isActive
@@ -340,6 +376,64 @@ export default function AdminRecommendedScenes() {
           );
         })}
       </div>
+
+      {/* Sub-family selector — only when active family has 2+ sub-types */}
+      {showSubStrip && activeFamilyName && (
+        <div className="space-y-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            <button
+              type="button"
+              onClick={() => setActiveSubCollection(null)}
+              className={cn(
+                'shrink-0 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                activeSubCollection === null
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-background text-foreground border-border hover:border-border/80'
+              )}
+            >
+              All {activeFamilyName}
+            </button>
+            {activeSubTypes.map(sub => {
+              const isActive = activeSubCollection === sub.slug;
+              const count = subCounts[sub.slug] ?? 0;
+              return (
+                <button
+                  key={sub.slug}
+                  type="button"
+                  onClick={() => setActiveSubCollection(sub.slug)}
+                  className={cn(
+                    'shrink-0 h-8 px-3 rounded-full text-xs font-medium border transition-colors inline-flex items-center gap-1.5',
+                    isActive
+                      ? 'bg-foreground text-background border-foreground'
+                      : 'bg-background text-foreground border-border hover:border-border/80'
+                  )}
+                >
+                  <span>{sub.label}</span>
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold',
+                        isActive
+                          ? 'bg-background/20 text-background'
+                          : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {activeSubCollection
+              ? `Curating sub-family scenes shown first to users who picked ${
+                  activeSubTypes.find(s => s.slug === activeSubCollection)?.label ?? activeSubCollection
+                }.`
+              : `Curating family-level fallback for all ${activeFamilyName} users.`}
+          </p>
+        </div>
+      )}
 
       {/* Featured set */}
       <section className="border border-border/40 rounded-xl bg-card">
