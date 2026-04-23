@@ -300,7 +300,6 @@ export function AddToDiscoverModal({
     setSubcategory(null);
     setTags([]);
     setTagInput('');
-    setAiLoading(true);
     setShowProduct(false);
     setPickedSceneName(initialSceneName);
     setPickedModelName(initialModelName);
@@ -317,9 +316,9 @@ export function AddToDiscoverModal({
 
     (async () => {
       // ── DB fallback: if scene/model is missing in props but we have a source
-      // generation ID, look it up directly before paying for AI guessing.
+      // generation ID, look it up directly. Used for deterministic scene resolution only;
+      // category/title/tags are left blank for the user to fill in manually.
       let resolvedSceneName = initialSceneName;
-      let resolvedModelName = initialModelName;
       let resolvedWorkflowSlug = workflowSlug ?? null;
 
       let resolvedProductType: string | null = null;
@@ -337,8 +336,7 @@ export function AddToDiscoverModal({
               resolvedSceneName = data.scene_name;
               setPickedSceneName(data.scene_name);
             }
-            if (!resolvedModelName && data.model_name) {
-              resolvedModelName = data.model_name;
+            if (!initialModelName && data.model_name) {
               setPickedModelName(data.model_name);
             }
             if (!resolvedWorkflowSlug && data.workflow_slug) {
@@ -367,52 +365,6 @@ export function AddToDiscoverModal({
         if (!cancelled && ref) {
           setResolvedSceneRef(ref);
         }
-      }
-
-      // If scene is STILL missing after DB fallback, ask AI to suggest one
-      const sceneOptions = !resolvedSceneName ? allScenes.map(s => s.name) : undefined;
-
-      try {
-        const { data, error } = await supabase.functions.invoke('describe-discover-metadata', {
-          body: { imageUrl, prompt, sceneOptions },
-        });
-        if (cancelled) return;
-        if (error || !data) {
-          console.warn('AI auto-fill failed:', error);
-          return;
-        }
-        if (data.title) setTitle(data.title);
-        const fam: string | undefined = data.family ?? data.category;
-        if (fam && DISCOVER_FAMILY_IDS.includes(fam)) {
-          setCategory(fam);
-          const subs = getDiscoverSubtypes(fam);
-          const picked: string | undefined = data.subtype;
-          if (picked && subs.some((s) => s.slug === picked)) {
-            setSubcategory(picked);
-          } else if (subs.length === 1) {
-            setSubcategory(subs[0].slug);
-          } else {
-            setSubcategory(null);
-          }
-        } else if (data.subtype) {
-          const derived = familyIdForSubtype(data.subtype);
-          if (derived) {
-            setCategory(derived);
-            setSubcategory(data.subtype);
-          }
-        }
-        if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
-        // AI scene suggestion — only if STILL missing after props + DB fallback
-        if (!resolvedSceneName && data.suggested_scene_name) {
-          const match = allScenes.find(s => s.name === data.suggested_scene_name);
-          if (match) {
-            setAiSuggestedScene(match.name);
-          }
-        }
-      } catch {
-        /* swallow */
-      } finally {
-        if (!cancelled) setAiLoading(false);
       }
     })();
 
