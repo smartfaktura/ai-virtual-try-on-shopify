@@ -224,8 +224,8 @@ export default function SceneUsage() {
     (async () => {
       try {
         const [last7Res, prior14Res] = await Promise.all([
-          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }).range(0, 9999),
-          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }).range(0, 9999),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }).range(0, 499),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }).range(0, 499),
         ]);
         if (last7Res.error) throw last7Res.error;
         if (prior14Res.error) throw prior14Res.error;
