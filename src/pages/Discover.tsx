@@ -464,6 +464,9 @@ export default function Discover() {
       if (item.data.name) sp.set('scene', item.data.name);
       if (item.data.previewUrl) sp.set('sceneImage', item.data.previewUrl);
       if (item.data.name) sp.set('sceneName', item.data.name);
+      // Pass origin category as a disambiguation hint for the resolver
+      const sceneCat = (item.data as any).category;
+      if (sceneCat) sp.set('sceneCategory', sceneCat);
       sp.set('fromDiscover', '1');
       navigate(`/app/generate/product-images?${sp.toString()}`);
     } else {
