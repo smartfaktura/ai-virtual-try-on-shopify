@@ -28,7 +28,7 @@ export interface DbScene {
   updated_at: string;
 }
 
-function dbToFrontend(d: DbScene): ProductImageScene {
+export function dbToFrontend(d: DbScene): ProductImageScene {
   return {
     id: d.scene_id,
     title: d.title,
