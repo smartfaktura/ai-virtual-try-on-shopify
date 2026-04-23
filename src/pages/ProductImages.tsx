@@ -1254,14 +1254,7 @@ export default function ProductImages() {
       )}
 
       <div className="mt-2" ref={wizardContentRef}>
-        {step === 1 && discoverSceneFull && (
-          <DiscoverPreselectedCard
-            scene={discoverSceneFull}
-            selectedSceneIds={selectedSceneIds}
-            onSelectionChange={setSelectedSceneIds}
-            step={1}
-          />
-        )}
+        {/* Step 1 keeps the Pre-selected scene silently in state; banner only renders on Step 2 (Shots). */}
         {step === 1 && (
           <>
             <div className="space-y-3">
