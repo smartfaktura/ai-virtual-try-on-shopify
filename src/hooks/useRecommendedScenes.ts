@@ -12,7 +12,8 @@ import type { CatalogScene } from './useSceneCatalog';
 const SLIM_COLUMNS =
   'id, scene_id, title, sub_category, category_collection, scene_type, subject, shot_style, setting, preview_image_url, prompt_template, filter_tags, created_at';
 
-const MAX = 12;
+const PER_BUCKET = 12;
+const HARD_CEILING = 60;
 
 /**
  * Per-user recommended rail.
