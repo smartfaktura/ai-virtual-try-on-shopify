@@ -58,10 +58,26 @@ Deno.serve(async (req) => {
         unsubscribed: false,
       };
 
-      // Forward custom properties for Resend audience segmentation
-      // (callers may include product_categories AND product_subcategories for granular targeting)
+      // Forward custom properties for Resend audience segmentation.
+      // Enrich: derive *_csv + primary_* variants from arrays so segmentation
+      // rules that need plain string filters work out of the box.
       if (properties && typeof properties === "object") {
-        contactPayload.properties = properties;
+        const enriched: Record<string, unknown> = { ...properties };
+        const fams = (properties as any).families;
+        const subs = (properties as any).subtypes;
+        if (Array.isArray(fams) && enriched.families_csv === undefined) {
+          enriched.families_csv = fams.join(", ");
+        }
+        if (Array.isArray(subs) && enriched.subtypes_csv === undefined) {
+          enriched.subtypes_csv = subs.join(", ");
+        }
+        if (Array.isArray(fams) && fams.length && enriched.primary_family === undefined) {
+          enriched.primary_family = fams[0];
+        }
+        if (Array.isArray(subs) && subs.length && enriched.primary_subtype === undefined) {
+          enriched.primary_subtype = subs[0];
+        }
+        contactPayload.properties = enriched;
       }
 
       const res = await fetch(
