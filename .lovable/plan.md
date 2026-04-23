@@ -1,52 +1,61 @@
 
 
-## Fix: Recreate from Explore — never block on category-scoped scene_ref
+## Fix: Add to Discover loses the original `scene_id` from Product Visuals jobs
 
 ### Root cause
 
-The Aloe Essence Bag preset's `scene_ref = "botanical-oasis-10"` is real and active in `product_image_scenes`, but it's scoped to a `category_collection` that doesn't match the user's product. The wizard's `useProductImageScenes` is called with `priorityCategories` matching the product, so `botanical-oasis-10` isn't in `allScenes` — exact-id lookup fails and the toast fires.
+When you generated the wallet on aloe leaves via Product Visuals, the wizard knew the exact scene ref (`botanical-oasis-10`). But by the time you opened **Add to Discover** from the Library, that ref was lost — so the modal shows "No scene detected" and tries to AI-guess instead.
 
-User feedback: when recreating from Explore, it's **fine** to show a scene outside the recommended category. The category filter shouldn't gate Recreate.
+There are **three breaks in the chain**, all small:
 
-### Fix — `src/pages/ProductImages.tsx` (sceneRef branch, ~lines 110–125)
+1. **Wizard → DB**: `src/pages/ProductImages.tsx` line 886 sends `scene_id: scene.id` in the payload, and `generate-workflow` line 988 reads it. But a quick DB check shows `generation_jobs.scene_id` is null on every recent product-images job, while `scene_name` is populated. Need to verify the field actually lands (likely a payload nesting issue — the snapshot at line 1078 reads `b.scene_id` but the wizard payload is correct, so something between is dropping it). Worst case: add a defensive log and re-confirm the field name.
 
-Convert hard-fail into a DB fallback, and surface the scene even if it's outside the user's category:
+2. **DB → Library hook**: `src/hooks/useLibraryItems.ts` line 89 reads `scene_name` and `scene_image_url` but never reads `scene_id`. The library item it builds has no `sceneId`, so downstream consumers can't get a stable ref.
 
-1. **Try exact match** in `allScenes` first (fast path).
-2. **On miss**, call `fetchSceneById(sceneRef)` (already exported from `useProductImageScenes`) — direct DB lookup, ignores category filter.
-3. If found:
-   - Convert via `dbToFrontend` and use it directly as the selected scene.
-   - Inject it into the local scene set (or pass it through state) so Step 2 / Review can render its title, preview, and prompt template without the wizard treating it as "missing".
-   - Optional soft toast: *"Showing this Explore shot — it's outside your product's usual category, but it'll work."* (low-key, no blocker.)
-4. **Toast only on true DB miss** (returns null) — meaning the scene was actually deleted.
+3. **Library → Modal**: `src/components/app/LibraryDetailModal.tsx` line 524-540 passes `sceneName`/`modelName` but no `sceneId`. The modal accepts `sceneId` (line 41) but only uses it for mock-pose lookup — never as the authoritative `scene_ref` to write back to `discover_presets`.
 
-### Wizard integration
+### Fix — three small touches
 
-The wizard's scene picker, prompt builder, and review step all read from the merged `allScenes` array. To support an out-of-category injected scene:
+#### 1. `src/pages/ProductImages.tsx`
 
-- Hold the fetched scene in a `useState<ProductImageScene | null>` (e.g. `injectedScene`).
-- When present, merge it into the working scene list passed to Step 2 and downstream steps so it renders, is selectable, and has a prompt template.
-- The existing title/preview/promptTemplate on the DB row is enough — no extra resolution needed.
+Verify `scene_id` is actually being persisted on new jobs. If the recent jobs (yesterday) really don't have it, dig one level deeper — either the wizard was deployed after those jobs, or the queue worker is dropping it. Add a `console.log('[wizard] enqueue scene_id', payload.scene_id)` before the enqueue call, generate one image, then re-query. If the field is reaching the edge function but not landing in DB, fix the snapshot field at `generate-workflow/index.ts` line 1078.
+
+#### 2. `src/hooks/useLibraryItems.ts` (line 75-97)
+
+Add `scene_id` to the select and to the item:
+```ts
+sceneId: job.scene_id || undefined,
+```
+Also extend the LibraryItem type to carry `sceneId?: string`.
+
+Update the `select` clause at the top of the query (find the columns list — likely a few lines above) to include `scene_id`.
+
+#### 3. `src/components/app/LibraryDetailModal.tsx` (line 524-540) and `src/components/app/AddToDiscoverModal.tsx`
+
+- **LibraryDetailModal**: pass `sceneId={activeItem.sceneId}` into both `AddToDiscoverModal` and `SubmitToDiscoverModal`.
+- **AddToDiscoverModal**: 
+  - In the existing `(async () => {...})()` block at line 188, when `sourceGenerationId` lookup runs, also pull `scene_id` and store it as `resolvedSceneRef` (new local).
+  - When `sceneId` prop is a real `product_image_scenes.scene_id` (not a mock id), skip mock matching and treat it as the authoritative `scene_ref`.
+  - At line 351, change `sceneRefToWrite` so it prefers (in order): the prop/DB-resolved authoritative `scene_ref` → `pickedScene?.sceneRef`. This way, even if title-matching fails (because all 11 "Botanical Oasis" rows share the same title), we write the exact original ref — not a sibling.
+
+This makes the Add to Discover modal **deterministic** for any Product Visuals library item: the wallet-on-aloe asset publishes with `scene_ref = "botanical-oasis-10"` automatically — no AI guessing, no title collision.
 
 ### Behaviour after fix
 
-- Click Recreate on Aloe Essence Bag → wizard loads with bag product → `botanical-oasis-10` not in filtered set → `fetchSceneById` finds it → injected as selected scene → wizard proceeds normally with the exact scene the user picked from Explore.
-- Truly archived scenes (rare) → toast + Step 2.
-
-### File touched
-
-```text
-EDIT  src/pages/ProductImages.tsx
-        - Replace hard-stop sceneRef block (~lines 110-125) with:
-          1) exact match in allScenes (fast path)
-          2) await fetchSceneById(sceneRef) → dbToFrontend → inject as selected scene
-          3) toast only on true DB null
-        - Add small useState to hold injected out-of-category scene and merge it
-          into the scene set consumed by Step 2 / Review.
-```
+- Open the wallet-on-aloe Library item → click Add to Discover → modal opens with Workflow=Product Visuals, Scene=**Botanical Oasis** (auto-picked from the original `scene_id`), red "No scene detected" warning gone.
+- Publish → `discover_presets.scene_ref = "botanical-oasis-10"` written exactly as the wizard used it.
+- Click Recreate from Explore → wizard pre-selects the exact same scene (with the soft-fallback we just shipped, even if the user opens it for a different product category).
 
 ### Out of scope
-- DB cleanup of duplicated `botanical-oasis-N` rows.
-- Changes to `useProductImageScenes` hook (reuses existing `fetchSceneById` export).
-- No layout, styling, or memory changes.
+- No DB migration or de-duplication of "Botanical Oasis" rows.
+- No changes to mock-pose handling or Freestyle (`custom_scenes`) paths.
+- No layout, copy, or memory changes.
+
+### Files touched
+```text
+EDIT  src/hooks/useLibraryItems.ts          — add scene_id to select + item
+EDIT  src/components/app/LibraryDetailModal.tsx — forward sceneId prop
+EDIT  src/components/app/AddToDiscoverModal.tsx — use sceneId/scene_id as authoritative scene_ref
+VERIFY src/pages/ProductImages.tsx           — confirm scene_id reaches DB; fix payload key if not
+```
 
