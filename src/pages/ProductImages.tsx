@@ -109,7 +109,7 @@ export default function ProductImages() {
             .map(pid => analyses[pid]?.categoryCollection)
             .filter(Boolean) as string[]
         );
-        match = candidates.find(c => c.category_collection && userCats.has(c.category_collection)) ?? candidates[0] ?? null;
+        match = candidates.find(c => c.categoryCollection && userCats.has(c.categoryCollection)) ?? candidates[0] ?? null;
       } else if (candidates.length > 0) {
         // No products yet — wait so we can disambiguate by category
         return;
