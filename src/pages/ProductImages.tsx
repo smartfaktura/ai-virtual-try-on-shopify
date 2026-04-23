@@ -99,6 +99,7 @@ export default function ProductImages() {
     const sceneIdParam = searchParams.get('sceneId');
     const sceneTitle = searchParams.get('scene');
     const sceneCategoryParam = searchParams.get('sceneCategory');
+    const sceneImageParam = searchParams.get('sceneImage');
     if (!sceneIdParam && !sceneTitle) return;
     if (allScenes.length === 0) return;
 
@@ -128,6 +129,12 @@ export default function ProductImages() {
             return cc.includes(hint) || hint.includes(cc);
           }) ??
           null;
+      }
+
+      // 2b. Preview image URL exact match — bulletproof fallback if sceneCategory
+      // misses (slug drift) or wasn't passed. preview_image_url is unique per row.
+      if (!match && sceneImageParam) {
+        match = candidates.find(c => (c as any).previewUrl === sceneImageParam) ?? null;
       }
 
       // 3. Product analysis category — only when analyses have actually resolved.
