@@ -40,6 +40,7 @@ interface Step2Props {
   hasMultipleCategories?: boolean;
   forcedActiveCategoryId?: string | null;
   onForcedActiveCategoryIdConsumed?: () => void;
+  discoverScene?: { sceneId: string; title: string } | null;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
