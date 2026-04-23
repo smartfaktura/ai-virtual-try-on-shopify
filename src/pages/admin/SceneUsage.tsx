@@ -50,6 +50,24 @@ interface SceneMeta {
 
 const TRACKING_START = '2026-04-22';
 
+// Page through the popularity RPC to bypass PostgREST's project-level 1000-row ceiling.
+async function fetchAllScenePopularity(p_days: number, hardCap = 10000): Promise<PopularityRow[]> {
+  const PAGE = 1000;
+  const all: PopularityRow[] = [];
+  let page = 0;
+  while (all.length < hardCap) {
+    const from = page * PAGE;
+    const to = from + PAGE - 1;
+    const res = await supabase.rpc('get_scene_popularity' as any, { p_days }).range(from, to);
+    if (res.error) throw res.error;
+    const chunk = (res.data ?? []) as PopularityRow[];
+    all.push(...chunk);
+    if (chunk.length < PAGE) break;
+    page++;
+  }
+  return all;
+}
+
 async function fetchInChunks<T>(
   ids: string[],
   fetcher: (chunk: string[]) => Promise<{ data: T[] | null; error: any }>,
