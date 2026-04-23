@@ -91,6 +91,7 @@ export function DiscoverDetailModal({
   const [editModelName, setEditModelName] = useState('__none__');
   const [editSceneName, setEditSceneName] = useState('__none__');
   const [editCategories, setEditCategories] = useState<string[]>(['fashion']);
+  const [editSubcategory, setEditSubcategory] = useState<string | null>(null);
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
   const [editPrompt, setEditPrompt] = useState('');
   const [editProductName, setEditProductName] = useState('');
@@ -131,6 +132,7 @@ export function DiscoverDetailModal({
     setEditModelName(d?.model_name || '__none__');
     setEditSceneName(d?.scene_name || '__none__');
     setEditCategories(d?.discover_categories?.length ? [...d.discover_categories] : d?.category ? [d.category] : ['fashion']);
+    setEditSubcategory(d?.subcategory ?? null);
     setEditWorkflowSlug(d?.workflow_slug || '__freestyle__');
     setEditPrompt(d?.prompt || '');
     setEditProductName(d?.product_name || '');
@@ -323,6 +325,8 @@ export function DiscoverDetailModal({
                   )}
                   <span className="text-muted-foreground/60">DB Category</span>
                   <span className="text-foreground/80">{isScene ? (item.data as any).category || '—' : (item.data as any).category || '—'}</span>
+                  <span className="text-muted-foreground/60">DB Sub-family</span>
+                  <span className="text-foreground/80">{(item.data as any).subcategory || '—'}</span>
                   <span className="text-muted-foreground/60">DB Workflow</span>
                   <span className="text-foreground/80">{(item.data as any).workflow_slug || '—'}</span>
                 </div>
