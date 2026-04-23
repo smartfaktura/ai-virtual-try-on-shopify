@@ -86,6 +86,7 @@ function jobsToRawItems(jobsData: any[], q: string): RawItem[] {
           status: job.status,
           aspectRatio: job.ratio,
           quality: job.quality,
+          sceneId: job.scene_id || undefined,
           sceneName: job.scene_name || undefined,
           modelName: job.model_name || undefined,
           sceneImageUrl: job.scene_image_url || undefined,
@@ -167,7 +168,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         // Build jobs query
         let jobsQuery = supabase
           .from('generation_jobs')
-          .select('id, results, created_at, status, ratio, quality, prompt_final, scene_name, model_name, scene_image_url, model_image_url, workflow_slug, product_name, product_image_url, workflows(name), user_products(title)')
+          .select('id, results, created_at, status, ratio, quality, prompt_final, scene_id, scene_name, model_name, scene_image_url, model_image_url, workflow_slug, product_name, product_image_url, workflows(name), user_products(title)')
           .order('created_at', { ascending })
           .limit(JOB_FETCH_LIMIT);
 

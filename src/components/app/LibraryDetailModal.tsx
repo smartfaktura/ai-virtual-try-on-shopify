@@ -532,10 +532,13 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           workflowSlug={activeItem.workflowSlug}
           sceneName={activeItem.sceneName}
           modelName={activeItem.modelName}
+          sceneId={activeItem.sceneId}
+          modelId={activeItem.modelId}
           sceneImageUrl={activeItem.sceneImageUrl}
           modelImageUrl={activeItem.modelImageUrl}
           productName={activeItem.productName}
           productImageUrl={activeItem.productImageUrl}
+          sourceGenerationId={activeItem.id?.split('-').slice(0, 5).join('-')}
         />
       )}
       {submitDiscoverOpen && item && (
