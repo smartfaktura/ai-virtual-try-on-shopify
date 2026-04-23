@@ -111,50 +111,64 @@ export default function ProductImages() {
     const sceneCategoryParam = searchParams.get('sceneCategory');
     const sceneImageParam = searchParams.get('sceneImage');
     if (!sceneRefParam && !sceneIdParam && !sceneTitle) return;
+
+    // Fast path: sceneRef is deterministic (text scene_id). Resolve immediately
+    // without waiting for the full scene library to load. Check cache first,
+    // then fall back to a single-row DB fetch + injectedScene render so the
+    // "Pre-selected from Explore" card appears within ~200ms of landing.
+    if (sceneRefParam) {
+      const cached = allScenes.find(s => s.id === sceneRefParam);
+      if (cached) {
+        setDiscoverScene({ sceneId: cached.id, title: cached.title });
+        discoverSceneConsumedRef.current = true;
+        setSearchParams(prev => {
+          const next = new URLSearchParams(prev);
+          next.delete('scene');
+          next.delete('sceneId');
+          next.delete('sceneRef');
+          next.delete('sceneCategory');
+          return next;
+        }, { replace: true });
+        return;
+      }
+
+      // Not in cache yet (cold library OR out-of-category). Fetch the single
+      // row directly from DB — instant, doesn't wait for the full library.
+      discoverSceneConsumedRef.current = true;
+      (async () => {
+        try {
+          const dbRow = await fetchSceneById(sceneRefParam);
+          if (!dbRow) {
+            setSearchParams(prev => {
+              const next = new URLSearchParams(prev);
+              next.delete('sceneRef');
+              return next;
+            }, { replace: true });
+            toast.info('That Explore scene is no longer available. Pick another shot to continue.');
+            return;
+          }
+          const fe = dbToFrontend(dbRow);
+          setInjectedScene(fe);
+          setDiscoverScene({ sceneId: fe.id, title: fe.title });
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.delete('scene');
+            next.delete('sceneId');
+            next.delete('sceneRef');
+            next.delete('sceneCategory');
+            return next;
+          }, { replace: true });
+        } catch (err) {
+          console.warn('[ProductImages] sceneRef DB fetch failed:', err);
+        }
+      })();
+      return;
+    }
+
+    // sceneId / title resolvers still need the full library to disambiguate.
     if (allScenes.length === 0) return;
 
     let match: typeof allScenes[number] | null = null;
-
-    // 1. sceneRef → exact scene_id lookup. If miss, fall back to a direct DB
-    // fetch so out-of-category Explore presets still work.
-    if (sceneRefParam) {
-      // allScenes uses the wizard's frontend shape where `id` === DB scene_id (text).
-      match = allScenes.find(s => s.id === sceneRefParam) ?? null;
-
-      if (!match) {
-        // Not in the user's category-filtered set. Fetch directly from DB and
-        // inject as an out-of-category scene so the wizard can still render it.
-        discoverSceneConsumedRef.current = true;
-        (async () => {
-          try {
-            const dbRow = await fetchSceneById(sceneRefParam);
-            if (!dbRow) {
-              setSearchParams(prev => {
-                const next = new URLSearchParams(prev);
-                next.delete('sceneRef');
-                return next;
-              }, { replace: true });
-              toast.info('That Explore scene is no longer available. Pick another shot to continue.');
-              return;
-            }
-            const fe = dbToFrontend(dbRow);
-            setInjectedScene(fe);
-            setDiscoverScene({ sceneId: fe.id, title: fe.title });
-            setSearchParams(prev => {
-              const next = new URLSearchParams(prev);
-              next.delete('scene');
-              next.delete('sceneId');
-              next.delete('sceneRef');
-              next.delete('sceneCategory');
-              return next;
-            }, { replace: true });
-          } catch (err) {
-            console.warn('[ProductImages] sceneRef DB fetch failed:', err);
-          }
-        })();
-        return;
-      }
-    }
 
     if (!match && sceneIdParam) {
       match = allScenes.find(s => s.id === sceneIdParam) ?? null;
