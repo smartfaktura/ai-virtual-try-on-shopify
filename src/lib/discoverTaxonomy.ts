@@ -100,9 +100,8 @@ export function itemMatchesDiscoverFilter(
 
   if (subFilter === '__all__' || !subFilter) return true;
 
-  if (sub) return sub === subFilter.toLowerCase();
-  // Legacy row with no subcategory — surface under any sub-type pill within
-  // its family so old data isn't hidden.
-  return true;
+  return sub === subFilter.toLowerCase();
+  // Items without a subcategory are only shown under the family's __all__ tab.
+  // Admins can backfill via the Auto-classify button to surface them under sub-pills.
 }
 

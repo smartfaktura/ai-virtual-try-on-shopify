@@ -576,16 +576,35 @@ export default function Discover() {
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
-          <p className="text-sm font-medium text-muted-foreground mb-1">No results found</p>
-          <p className="text-xs text-muted-foreground/70 max-w-xs">
-            Try a different category or{' '}
-            <button
-              onClick={() => { setSelectedCategory('all'); setSimilarTo(null); }}
-              className="text-primary hover:underline"
-            >
-              browse all
-            </button>
-          </p>
+          {selectedCategory !== 'all' && selectedCategory !== 'saved' && selectedSubcategory !== '__all__' ? (
+            <>
+              <p className="text-sm font-medium text-muted-foreground mb-1">No items tagged for this sub-family yet</p>
+              <p className="text-xs text-muted-foreground/70 max-w-xs">
+                {isAdmin
+                  ? 'Use Auto-classify or tag items individually in the admin drawer.'
+                  : 'Check back soon — new items are added regularly.'}{' '}
+                <button
+                  onClick={() => setSelectedSubcategory('__all__')}
+                  className="text-primary hover:underline"
+                >
+                  View all
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-medium text-muted-foreground mb-1">No results found</p>
+              <p className="text-xs text-muted-foreground/70 max-w-xs">
+                Try a different category or{' '}
+                <button
+                  onClick={() => { setSelectedCategory('all'); setSimilarTo(null); }}
+                  className="text-primary hover:underline"
+                >
+                  browse all
+                </button>
+              </p>
+            </>
+          )}
         </div>
       ) : (
         (() => {
