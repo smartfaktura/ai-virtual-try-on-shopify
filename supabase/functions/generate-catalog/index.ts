@@ -368,6 +368,22 @@ serve(async (req) => {
   try {
     body = await req.json();
 
+    // ── Snapshot scene/model/product/workflow metadata IMMEDIATELY after parsing
+    // body so it can't be lost by any later mutation/fallback path.
+    {
+      const b = body as any;
+      Object.assign(b, {
+        __scene_name:      b.pose?.name ?? b.scene_name ?? b.shot_id ?? null,
+        __scene_id:        b.scene_id ?? b.pose?.id ?? b.shot_id ?? null,
+        __scene_image_url: b.pose?.originalImageUrl ?? b.scene_image_url ?? null,
+        __model_name:      b.model?.name ?? b.model_name ?? null,
+        __model_image_url: b.model?.originalImageUrl ?? b.model_image_url ?? null,
+        __workflow_slug:   b.workflow_slug ?? "catalog-studio",
+        __product_name:    b.product_name ?? b.product?.title ?? null,
+        __product_image_url: b.product_image_url ?? b.product?.imageUrl ?? null,
+      });
+    }
+
     // Validate: product.imageUrl is always required; model is optional for product-only mode
     if (!body.product?.imageUrl) {
       return new Response(
