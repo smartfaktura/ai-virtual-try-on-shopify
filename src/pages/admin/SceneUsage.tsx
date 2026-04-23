@@ -184,7 +184,9 @@ export default function SceneUsage() {
     // 1) Main popularity — unblocks the table + main KPIs
     (async () => {
       try {
-        const popRes = await supabase.rpc('get_scene_popularity' as any, { p_days: windowDays });
+        const popRes = await supabase
+          .rpc('get_scene_popularity' as any, { p_days: windowDays })
+          .range(0, 9999);
         if (popRes.error) throw popRes.error;
         if (cancelled) return;
         setRows((popRes.data ?? []) as PopularityRow[]);
@@ -221,8 +223,8 @@ export default function SceneUsage() {
     (async () => {
       try {
         const [last7Res, prior14Res] = await Promise.all([
-          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }),
-          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }).range(0, 9999),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }).range(0, 9999),
         ]);
         if (last7Res.error) throw last7Res.error;
         if (prior14Res.error) throw prior14Res.error;
