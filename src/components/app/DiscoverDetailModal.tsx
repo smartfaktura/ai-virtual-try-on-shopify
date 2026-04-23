@@ -711,7 +711,7 @@ export function DiscoverDetailModal({
                     const presetData: Record<string, any> = {
                       category: editCategories[0] || 'fashion',
                       discover_categories: editCategories,
-                      model_name: selectedModel?.name ?? null,
+                      subcategory: editSubcategory,
                       model_image_url: selectedModel?.imageUrl ?? null,
                       scene_name: selectedScene?.name ?? null,
                       scene_image_url: selectedScene?.imageUrl ?? null,
@@ -736,7 +736,8 @@ export function DiscoverDetailModal({
                             category: editSceneCategory || editCategories[0] || 'fashion',
                             name: editSceneDisplayName.trim() || (item.data as any).name,
                             discover_categories: editCategories,
-                          })
+                            subcategory: editSubcategory,
+                          } as any)
                           .eq('id', realId);
                       }
 
