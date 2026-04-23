@@ -84,15 +84,34 @@ function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boo
   return Array.isArray(cats) && cats.includes(productCat);
 }
 
+function getItemCollection(item: DiscoverItem): string | null {
+  const data = item.data as any;
+  if (data.subcategory) return String(data.subcategory).toLowerCase();
+  const cats = data.discover_categories;
+  if (Array.isArray(cats) && cats.length > 1) return String(cats[1]).toLowerCase();
+  return null;
+}
+
+function getWorkflowSlug(item: DiscoverItem): string | null {
+  const data = item.data as any;
+  return data.workflow_slug ?? null;
+}
+
 function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
   let score = 0;
   const aCat = resolveCategory(getItemCategory(a));
   const bCat = resolveCategory(getItemCategory(b));
-  if (aCat === bCat) score += 2;
+  const aColl = getItemCollection(a);
+  const bColl = getItemCollection(b);
+  const sameCollection = !!aColl && aColl === bColl;
+
+  // Same collection (e.g. fragrance==fragrance) is the strong signal
+  if (sameCollection) score += 5;
+  // Same family but different collection: no points (was +2)
   if (a.type === b.type) score += 1;
 
-  // Scene-to-scene bonus
-  if (a.type === 'scene' && b.type === 'scene') score += 3;
+  // Scene-to-scene bonus only when collections also match
+  if (a.type === 'scene' && b.type === 'scene' && sameCollection) score += 3;
 
   // Tag overlap (weighted)
   const aTags = getItemTags(a);
@@ -101,24 +120,29 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
     if (bTags.includes(t)) score += 1.5;
   }
 
-  // Workflow slug match
+  // Workflow slug match (presets)
   if (a.type === 'preset' && b.type === 'preset') {
     if (a.data.workflow_slug && a.data.workflow_slug === b.data.workflow_slug) score += 2;
   }
+
+  // Product-images workflow + same collection boost (covers scene+preset cross-type)
+  const aWf = getWorkflowSlug(a);
+  const bWf = getWorkflowSlug(b);
+  if (aWf === 'product-images' && bWf === 'product-images' && sameCollection) score += 2;
 
   // Cross-type category overlap
   if (a.type !== b.type) {
     if (getItemCategory(a) === getItemCategory(b)) score += 2;
   }
 
-  // Description keyword overlap
+  // Description keyword overlap — capped at +1 and require >=2 overlapping keywords
   const aWords = extractKeywords(getItemDescription(a));
   const bWords = new Set(extractKeywords(getItemDescription(b)));
   let kwOverlap = 0;
   for (const w of aWords) {
     if (bWords.has(w)) kwOverlap++;
   }
-  score += Math.min(kwOverlap * 0.5, 4);
+  if (kwOverlap >= 2) score += 1;
 
   return score;
 }
@@ -429,7 +453,7 @@ export default function Discover() {
   // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
-    
+
     // Prioritize same scene_name for presets
     if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
       const sameScene = allItems.filter((i) =>
@@ -439,14 +463,42 @@ export default function Discover() {
       );
       if (sameScene.length >= 3) return sameScene.slice(0, 9);
     }
-    
-    return allItems
+
+    // Fast-path for recommended scenes: match by scene_ref or scene title
+    const selData = selectedItem.data as any;
+    const selSceneRef = selData.scene_ref as string | undefined;
+    const selSceneTitle = selectedItem.type === 'scene' ? selData.name : null;
+    if (selSceneRef || selSceneTitle) {
+      const sameSceneRef = allItems.filter((i) => {
+        if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
+        const d = i.data as any;
+        if (selSceneRef && d.scene_ref && d.scene_ref === selSceneRef) return true;
+        if (selSceneTitle && i.type === 'preset' && d.scene_name === selSceneTitle) return true;
+        return false;
+      });
+      if (sameSceneRef.length >= 3) return sameSceneRef.slice(0, 9);
+    }
+
+    const scored = allItems
       .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
       .map((i) => ({ item: i, score: scoreSimilarity(selectedItem, i) }))
-      .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 9)
-      .map((x) => x.item);
+      .sort((a, b) => b.score - a.score);
+
+    // Hard floor: only items with score >= 4
+    const strong = scored.filter((x) => x.score >= 4).slice(0, 9).map((x) => x.item);
+    if (strong.length >= 3) return strong;
+
+    // Fallback: same collection only
+    const selColl = getItemCollection(selectedItem);
+    if (selColl) {
+      const sameColl = allItems
+        .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
+        .filter((i) => getItemCollection(i) === selColl)
+        .slice(0, 9);
+      if (sameColl.length >= 1) return sameColl;
+    }
+
+    return strong;
   }, [allItems, selectedItem]);
 
   const handleItemClick = (item: DiscoverItem) => {
