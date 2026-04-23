@@ -287,7 +287,6 @@ export default function ProductImages() {
     autoAddedDiscoverRef.current = discoverScene.sceneId;
   }, [discoverScene?.sceneId, selectedSceneIds]);
 
-  }, [discoverScene?.sceneId, allScenes]);
 
   // Load models for Refine step
   // Defer model queries until Refine step
