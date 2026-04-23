@@ -25,6 +25,7 @@ import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
 
 import { DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
+import { getDiscoverSubtypes, FAMILY_NAME_TO_ID } from '@/lib/discoverTaxonomy';
 
 const DISCOVER_CATEGORY_OPTIONS = DISCOVER_CATEGORIES.map(c => ({
   id: c,
@@ -90,6 +91,7 @@ export function DiscoverDetailModal({
   const [editModelName, setEditModelName] = useState('__none__');
   const [editSceneName, setEditSceneName] = useState('__none__');
   const [editCategories, setEditCategories] = useState<string[]>(['fashion']);
+  const [editSubcategory, setEditSubcategory] = useState<string | null>(null);
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
   const [editPrompt, setEditPrompt] = useState('');
   const [editProductName, setEditProductName] = useState('');
@@ -130,6 +132,7 @@ export function DiscoverDetailModal({
     setEditModelName(d?.model_name || '__none__');
     setEditSceneName(d?.scene_name || '__none__');
     setEditCategories(d?.discover_categories?.length ? [...d.discover_categories] : d?.category ? [d.category] : ['fashion']);
+    setEditSubcategory(d?.subcategory ?? null);
     setEditWorkflowSlug(d?.workflow_slug || '__freestyle__');
     setEditPrompt(d?.prompt || '');
     setEditProductName(d?.product_name || '');
@@ -138,6 +141,16 @@ export function DiscoverDetailModal({
     setEditSceneDisplayName(d?.name || '');
     setEditSceneCategory(d?.category || 'lifestyle');
   }, [itemId, open]);
+
+  // When the primary family changes, clear sub-family if it no longer belongs.
+  useEffect(() => {
+    if (!editSubcategory) return;
+    const firstFam = editCategories[0];
+    const subs = firstFam ? getDiscoverSubtypes(firstFam) : [];
+    if (!subs.some(s => s.slug === editSubcategory)) {
+      setEditSubcategory(null);
+    }
+  }, [editCategories, editSubcategory]);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -322,6 +335,8 @@ export function DiscoverDetailModal({
                   )}
                   <span className="text-muted-foreground/60">DB Category</span>
                   <span className="text-foreground/80">{isScene ? (item.data as any).category || '—' : (item.data as any).category || '—'}</span>
+                  <span className="text-muted-foreground/60">DB Sub-family</span>
+                  <span className="text-foreground/80">{(item.data as any).subcategory || '—'}</span>
                   <span className="text-muted-foreground/60">DB Workflow</span>
                   <span className="text-foreground/80">{(item.data as any).workflow_slug || '—'}</span>
                 </div>
@@ -383,6 +398,45 @@ export function DiscoverDetailModal({
                     })}
                   </div>
                 </div>
+                {(() => {
+                  const firstFam = editCategories[0];
+                  const subs = firstFam ? getDiscoverSubtypes(firstFam) : [];
+                  if (subs.length < 2) return null;
+                  const famLabel = DISCOVER_CATEGORY_OPTIONS.find(c => c.id === firstFam)?.label ?? firstFam;
+                  return (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-medium text-muted-foreground/60">Sub-family ({famLabel})</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setEditSubcategory(null)}
+                          className={cn(
+                            'rounded-full px-3 py-1 text-[11px] font-medium border transition-colors',
+                            editSubcategory === null
+                              ? 'bg-foreground text-background border-foreground'
+                              : 'border-border/60 bg-background text-muted-foreground/70 hover:text-foreground hover:border-border'
+                          )}
+                        >None</button>
+                        {subs.map(s => {
+                          const active = editSubcategory === s.slug;
+                          return (
+                            <button
+                              key={s.slug}
+                              type="button"
+                              onClick={() => setEditSubcategory(active ? null : s.slug)}
+                              className={cn(
+                                'rounded-full px-3 py-1 text-[11px] font-medium border transition-colors',
+                                active
+                                  ? 'bg-foreground text-background border-foreground'
+                                  : 'border-border/60 bg-background text-muted-foreground/70 hover:text-foreground hover:border-border'
+                              )}
+                            >{s.label}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <p className="text-[10px] font-medium text-muted-foreground/60">Workflow</p>
@@ -612,7 +666,8 @@ export function DiscoverDetailModal({
                   const origProduct = (item.data as any).product_name || '';
                   const origSceneDisplayName = (item.data as any).name || '';
                   const origSceneCategory = (item.data as any).category || 'lifestyle';
-                  const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
+                  const origSubcategory = (item.data as any).subcategory ?? null;
+                  const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || editSubcategory !== origSubcategory || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                   return null; // rendered below
                 })()}
                 <Button
@@ -628,7 +683,8 @@ export function DiscoverDetailModal({
                     const origProduct = (item.data as any).product_name || '';
                     const origSceneDisplayName = (item.data as any).name || '';
                     const origSceneCategory = (item.data as any).category || 'lifestyle';
-                    const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
+                    const origSubcategory = (item.data as any).subcategory ?? null;
+                    const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || editSubcategory !== origSubcategory || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                     return hasChanges ? 'border-primary text-primary hover:bg-primary/10' : '';
                   })())}
                   onClick={async () => {
@@ -657,7 +713,7 @@ export function DiscoverDetailModal({
                     const presetData: Record<string, any> = {
                       category: editCategories[0] || 'fashion',
                       discover_categories: editCategories,
-                      model_name: selectedModel?.name ?? null,
+                      subcategory: editSubcategory,
                       model_image_url: selectedModel?.imageUrl ?? null,
                       scene_name: selectedScene?.name ?? null,
                       scene_image_url: selectedScene?.imageUrl ?? null,
@@ -682,7 +738,8 @@ export function DiscoverDetailModal({
                             category: editSceneCategory || editCategories[0] || 'fashion',
                             name: editSceneDisplayName.trim() || (item.data as any).name,
                             discover_categories: editCategories,
-                          })
+                            subcategory: editSubcategory,
+                          } as any)
                           .eq('id', realId);
                       }
 
