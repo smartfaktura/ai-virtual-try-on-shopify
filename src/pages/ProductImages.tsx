@@ -115,19 +115,43 @@ export default function ProductImages() {
 
     let match: typeof allScenes[number] | null = null;
 
-    // 1. sceneRef → exact scene_id lookup. HARD STOP on miss (no silent fallback).
+    // 1. sceneRef → exact scene_id lookup. If miss, fall back to a direct DB
+    // fetch so out-of-category Explore presets still work.
     if (sceneRefParam) {
       // allScenes uses the wizard's frontend shape where `id` === DB scene_id (text).
       match = allScenes.find(s => s.id === sceneRefParam) ?? null;
+
       if (!match) {
-        console.warn('[ProductImages] sceneRef did not resolve to an active scene:', sceneRefParam);
+        // Not in the user's category-filtered set. Fetch directly from DB and
+        // inject as an out-of-category scene so the wizard can still render it.
         discoverSceneConsumedRef.current = true;
-        setSearchParams(prev => {
-          const next = new URLSearchParams(prev);
-          next.delete('sceneRef');
-          return next;
-        }, { replace: true });
-        toast.info('That Explore scene is no longer available. Pick another shot to continue.');
+        (async () => {
+          try {
+            const dbRow = await fetchSceneById(sceneRefParam);
+            if (!dbRow) {
+              setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.delete('sceneRef');
+                return next;
+              }, { replace: true });
+              toast.info('That Explore scene is no longer available. Pick another shot to continue.');
+              return;
+            }
+            const fe = dbToFrontend(dbRow);
+            setInjectedScene(fe);
+            setDiscoverScene({ sceneId: fe.id, title: fe.title });
+            setSearchParams(prev => {
+              const next = new URLSearchParams(prev);
+              next.delete('scene');
+              next.delete('sceneId');
+              next.delete('sceneRef');
+              next.delete('sceneCategory');
+              return next;
+            }, { replace: true });
+          } catch (err) {
+            console.warn('[ProductImages] sceneRef DB fetch failed:', err);
+          }
+        })();
         return;
       }
     }
