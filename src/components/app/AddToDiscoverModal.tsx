@@ -180,11 +180,10 @@ export function AddToDiscoverModal({
           }
         }
         if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
-        // AI scene suggestion — only apply if scene was missing AND option exists in list
+        // AI scene suggestion — store as suggestion only, do NOT auto-select
         if (!initialSceneName && data.suggested_scene_name) {
           const match = allScenes.find(s => s.name === data.suggested_scene_name);
           if (match) {
-            setPickedSceneName(match.name);
             setAiSuggestedScene(match.name);
           }
         }
@@ -479,7 +478,7 @@ export function AddToDiscoverModal({
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto" align="start">
+                <PopoverContent className="z-[320] w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto" align="start">
                   <button
                     onClick={() => { setPickedWorkflowSlug(null); setWorkflowPopoverOpen(false); }}
                     className="w-full text-left px-2.5 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
@@ -520,7 +519,7 @@ export function AddToDiscoverModal({
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-80 overflow-auto" align="start">
+                <PopoverContent className="z-[320] w-[var(--radix-popover-trigger-width)] p-2 max-h-80 overflow-auto" align="start">
                   <Input
                     autoFocus
                     placeholder="Search scenes..."
@@ -565,11 +564,23 @@ export function AddToDiscoverModal({
                 </PopoverContent>
               </Popover>
               {sceneIsMissing && (
-                <div className="flex items-start gap-1.5 mt-1 px-1">
-                  <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-destructive leading-tight">
-                    No scene detected. Pick one so Recreate works.
-                  </p>
+                <div className="mt-1 px-1 space-y-1.5">
+                  <div className="flex items-start gap-1.5">
+                    <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-destructive leading-tight">
+                      No scene detected. Pick one so Recreate works.
+                    </p>
+                  </div>
+                  {aiSuggestedScene && (
+                    <button
+                      type="button"
+                      onClick={() => setPickedSceneName(aiSuggestedScene)}
+                      className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-medium transition-colors"
+                    >
+                      <Sparkles className="w-2.5 h-2.5" />
+                      Apply AI suggestion: "{aiSuggestedScene}"
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -589,7 +600,7 @@ export function AddToDiscoverModal({
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-72 overflow-auto" align="start">
+                <PopoverContent className="z-[320] w-[var(--radix-popover-trigger-width)] p-2 max-h-72 overflow-auto" align="start">
                   <Input
                     autoFocus
                     placeholder="Search models..."
