@@ -62,13 +62,15 @@ export function SceneBrowserModal({ open, onClose, scenes, value, onSelect }: Sc
     }
   }, [open, orderedFamilies, activeFamily]);
 
-  // Sub-family slugs available within active family
-  const subSlugs = useMemo(() => {
+  // Sub-family slugs available within active family, with counts (sorted by count desc, then alpha)
+  const subSlugCounts = useMemo<Array<[string, number]>>(() => {
     if (!activeFamily) return [];
     const items = familyGroups.get(activeFamily) ?? [];
-    const set = new Set<string>();
-    for (const item of items) set.add(item.category);
-    return Array.from(set).sort();
+    const counts = new Map<string, number>();
+    for (const it of items) counts.set(it.category, (counts.get(it.category) ?? 0) + 1);
+    return Array.from(counts.entries()).sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    );
   }, [familyGroups, activeFamily]);
 
   // Reset sub when family changes
