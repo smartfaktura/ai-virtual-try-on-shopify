@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, Fragment } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,7 +8,7 @@ export interface SubCategoryItem {
 }
 
 interface DiscoverSubCategoryBarProps {
-  /** Family label used to render the "All <family>" pill (id: '__all__'). */
+  /** Family label — kept for API compatibility, no longer rendered. */
   familyLabel: string;
   subcategories: readonly SubCategoryItem[];
   /** '__all__' means "no sub-type filter, show all of family". */
@@ -47,7 +47,6 @@ function useScrollArrows(ref: React.RefObject<HTMLDivElement>) {
 }
 
 export function DiscoverSubCategoryBar({
-  familyLabel,
   subcategories,
   selectedSubcategory,
   onSelectSubcategory,
@@ -55,13 +54,10 @@ export function DiscoverSubCategoryBar({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useScrollArrows(scrollRef);
 
-  const items: SubCategoryItem[] = [
-    { id: '__all__', label: 'All' },
-    ...subcategories,
-  ];
+  if (!subcategories.length) return null;
 
   return (
-    <div className="flex items-center pl-1">
+    <div className="flex items-center">
       <button
         onClick={scrollLeft}
         className={cn(
@@ -75,22 +71,30 @@ export function DiscoverSubCategoryBar({
 
       <div
         ref={scrollRef}
-        className="fade-scroll flex gap-1 overflow-x-auto scrollbar-hide pb-1 -mb-1 cursor-grab active:cursor-grabbing scroll-smooth"
+        className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1 -mb-1 scroll-smooth"
       >
-        {items.map((sub) => (
-          <button
-            key={sub.id}
-            onClick={() => onSelectSubcategory(sub.id)}
-            className={cn(
-              'px-3 py-1 rounded-full text-[11px] font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
-              selectedSubcategory === sub.id
-                ? 'bg-foreground/10 text-foreground'
-                : 'bg-muted/30 text-muted-foreground/80 hover:bg-muted/60 hover:text-foreground',
-            )}
-          >
-            {sub.label}
-          </button>
-        ))}
+        {subcategories.map((sub, idx) => {
+          const isActive = selectedSubcategory === sub.id;
+          return (
+            <Fragment key={sub.id}>
+              {idx > 0 && (
+                <span className="text-muted-foreground/30 text-[11px] select-none" aria-hidden="true">·</span>
+              )}
+              <button
+                onClick={() => onSelectSubcategory(isActive ? '__all__' : sub.id)}
+                aria-pressed={isActive}
+                className={cn(
+                  'text-[12px] font-medium tracking-wide transition-colors duration-200 whitespace-nowrap shrink-0 underline-offset-4 decoration-1',
+                  isActive
+                    ? 'text-foreground underline'
+                    : 'text-muted-foreground/70 hover:text-foreground',
+                )}
+              >
+                {sub.label}
+              </button>
+            </Fragment>
+          );
+        })}
       </div>
 
       <button
