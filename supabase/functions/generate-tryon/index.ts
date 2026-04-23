@@ -725,6 +725,22 @@ serve(async (req) => {
       brand_profile?: Record<string, unknown>;
     } = await req.json();
 
+    // ── Snapshot scene/model/product/workflow metadata IMMEDIATELY after parsing
+    // body so it can't be lost by any later mutation/fallback path.
+    {
+      const b = body as any;
+      Object.assign(b, {
+        __scene_name:      b.pose?.name ?? b.scene_name ?? null,
+        __scene_id:        b.scene_id ?? b.pose?.id ?? b.scene?.id ?? null,
+        __scene_image_url: b.pose?.originalImageUrl ?? b.scene_image_url ?? null,
+        __model_name:      b.model?.name ?? b.model_name ?? null,
+        __model_image_url: b.model?.originalImageUrl ?? b.model_image_url ?? null,
+        __workflow_slug:   b.workflow_slug ?? null,
+        __product_name:    b.product_name ?? b.product?.title ?? null,
+        __product_image_url: b.product_image_url ?? b.product?.imageUrl ?? null,
+      });
+    }
+
     const userId = body.user_id;
 
     if (!userId) {
