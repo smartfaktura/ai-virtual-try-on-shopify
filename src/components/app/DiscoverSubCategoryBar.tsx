@@ -56,12 +56,12 @@ export function DiscoverSubCategoryBar({
   const { canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useScrollArrows(scrollRef);
 
   const items: SubCategoryItem[] = [
-    { id: '__all__', label: `All ${familyLabel}` },
+    { id: '__all__', label: 'All' },
     ...subcategories,
   ];
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center pl-1">
       <button
         onClick={scrollLeft}
         className={cn(
@@ -75,17 +75,17 @@ export function DiscoverSubCategoryBar({
 
       <div
         ref={scrollRef}
-        className="fade-scroll flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mb-1 cursor-grab active:cursor-grabbing scroll-smooth"
+        className="fade-scroll flex gap-1 overflow-x-auto scrollbar-hide pb-1 -mb-1 cursor-grab active:cursor-grabbing scroll-smooth"
       >
         {items.map((sub) => (
           <button
             key={sub.id}
             onClick={() => onSelectSubcategory(sub.id)}
             className={cn(
-              'px-3.5 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
+              'px-3 py-1 rounded-full text-[11px] font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
               selectedSubcategory === sub.id
-                ? 'bg-primary/15 text-primary border border-primary/30'
-                : 'bg-transparent text-muted-foreground/70 border border-border/40 hover:bg-muted/40 hover:text-foreground',
+                ? 'bg-foreground/10 text-foreground'
+                : 'bg-muted/30 text-muted-foreground/80 hover:bg-muted/60 hover:text-foreground',
             )}
           >
             {sub.label}

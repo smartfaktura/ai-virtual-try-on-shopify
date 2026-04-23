@@ -351,19 +351,21 @@ export default function PublicDiscover() {
 
 
         {/* Category filter bar */}
-        <PublicDiscoverCategoryBar
-          categories={CATEGORIES}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-        {selectedCategory !== 'all' && isMultiSubFamily(selectedCategory) && (
-          <DiscoverSubCategoryBar
-            familyLabel={CATEGORIES.find((c) => c.id === selectedCategory)?.label ?? ''}
-            subcategories={getDiscoverSubtypes(selectedCategory).map((s) => ({ id: s.slug, label: s.label }))}
-            selectedSubcategory={selectedSubcategory}
-            onSelectSubcategory={setSelectedSubcategory}
+        <div className="space-y-2.5">
+          <PublicDiscoverCategoryBar
+            categories={CATEGORIES}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
           />
-        )}
+          {selectedCategory !== 'all' && isMultiSubFamily(selectedCategory) && (
+            <DiscoverSubCategoryBar
+              familyLabel={CATEGORIES.find((c) => c.id === selectedCategory)?.label ?? ''}
+              subcategories={getDiscoverSubtypes(selectedCategory).map((s) => ({ id: s.slug, label: s.label }))}
+              selectedSubcategory={selectedSubcategory}
+              onSelectSubcategory={setSelectedSubcategory}
+            />
+          )}
+        </div>
 
         {/* Masonry grid */}
         {isLoading ? (

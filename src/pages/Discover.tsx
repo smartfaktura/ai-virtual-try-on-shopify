@@ -531,7 +531,7 @@ export default function Discover() {
       {/* Category filter bar + grid (tight grouping) */}
       <div className="space-y-3">
         {!similarTo && (
-          <>
+          <div className="space-y-2.5">
             <DiscoverCategoryBar
               categories={CATEGORIES}
               selectedCategory={selectedCategory}
@@ -546,7 +546,7 @@ export default function Discover() {
                 onSelectSubcategory={setSelectedSubcategory}
               />
             )}
-          </>
+          </div>
         )}
 
       {/* Masonry grid */}
