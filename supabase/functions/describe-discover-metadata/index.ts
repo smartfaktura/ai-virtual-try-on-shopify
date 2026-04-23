@@ -138,6 +138,11 @@ Be concise and catchy.`;
                       description:
                         "3 to 5 single-word lowercase tags describing the image.",
                     },
+                    suggested_scene_name: {
+                      type: "string",
+                      description:
+                        "If a scene options list was provided, return the EXACT name of the best-matching scene from that list, or empty string if none match. If no list was provided, return empty string.",
+                    },
                   },
                   required: ["title", "category", "tags"],
                   additionalProperties: false,
