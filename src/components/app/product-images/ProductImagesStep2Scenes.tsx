@@ -516,23 +516,25 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               onToggle={() => toggleScene(resolvedDiscoverScene.id)}
             />
             <div className="rounded-xl border-2 border-dashed border-border/70 bg-muted/20 overflow-hidden flex flex-col">
-              <div className="aspect-[3/4] relative flex flex-col items-center justify-center p-3 text-center">
-                <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <div className="aspect-[3/4] relative flex flex-col items-center justify-center px-4 py-5 text-center gap-3">
+                <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                  <Info className="w-3.5 h-3.5 text-muted-foreground" />
                 </div>
-                <Avatar className="w-8 h-8 border border-primary/20 ring-1 ring-primary/10 mb-2">
+                <Avatar className="w-10 h-10 border border-primary/20 ring-1 ring-primary/10">
                   <AvatarImage src={TEAM_MEMBERS[0].avatar} alt={TEAM_MEMBERS[0].name} />
                   <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[0].name[0]}</AvatarFallback>
                 </Avatar>
-                <p className="text-[11px] font-semibold text-foreground leading-tight">
-                  Picked for your product
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-snug mt-1">
-                  From your Explore pick
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-sm font-semibold text-foreground leading-snug">
+                    Picked for your product
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-snug">
+                    From your Explore pick
+                  </p>
+                </div>
               </div>
               <div className="p-1.5 min-h-[44px] flex flex-col items-center justify-center gap-0.5 border-t border-dashed border-border/70">
-                <p className="text-[11px] text-muted-foreground text-center leading-tight">
+                <p className="text-xs text-muted-foreground text-center leading-tight">
                   Add more shots below
                 </p>
               </div>
