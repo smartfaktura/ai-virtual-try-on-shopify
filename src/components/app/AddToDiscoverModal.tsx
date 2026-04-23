@@ -555,49 +555,39 @@ export function AddToDiscoverModal({
               {/* Tags */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tags (optional)</label>
-                {aiLoading ? (
-                  <div className="flex gap-1.5">
-                    <Skeleton className="h-7 w-16 rounded-full" />
-                    <Skeleton className="h-7 w-20 rounded-full" />
-                    <Skeleton className="h-7 w-14 rounded-full" />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex gap-2">
-                      <Input
-                        value={tagInput}
-                        onChange={e => setTagInput(e.target.value)}
-                        onKeyDown={handleTagKeyDown}
-                        placeholder="Add a tag..."
-                        className="rounded-xl h-10 flex-1"
-                        disabled={tags.length >= 5}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddTag}
-                        disabled={!tagInput.trim() || tags.length >= 5}
-                        className="rounded-xl h-10 px-3"
+                <div className="flex gap-2">
+                  <Input
+                    value={tagInput}
+                    onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="Add a tag..."
+                    className="rounded-xl h-10 flex-1"
+                    disabled={tags.length >= 5}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddTag}
+                    disabled={!tagInput.trim() || tags.length >= 5}
+                    className="rounded-xl h-10 px-3"
+                  >
+                    <Tag className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {tags.map(tag => (
+                      <span
+                        key={tag}
+                        className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
                       >
-                        <Tag className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {tags.map(tag => (
-                          <span
-                            key={tag}
-                            className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
-                          >
-                            #{tag}
-                            <button onClick={() => handleRemoveTag(tag)} className="hover:text-primary/70">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </>
+                        #{tag}
+                        <button onClick={() => handleRemoveTag(tag)} className="hover:text-primary/70">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 )}
                 <p className="text-[10px] text-muted-foreground/50">{tags.length}/5 tags</p>
               </div>
