@@ -79,6 +79,8 @@ export function DiscoverDetailModal({
 
   const [editModelName, setEditModelName] = useState('__none__');
   const [editSceneName, setEditSceneName] = useState('__none__');
+  // Scene library derived from the currently-selected workflow.
+  // product-images → product_image_scenes (carries sceneRef); else → custom_scenes.
   const [editCategories, setEditCategories] = useState<string[]>(['fashion']);
   const [editSubcategory, setEditSubcategory] = useState<string | null>(null);
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
