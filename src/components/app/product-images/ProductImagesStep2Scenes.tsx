@@ -392,15 +392,17 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
     return ids;
   }, [unifiedRecommended, unifiedOther]);
 
-  // Resolve discoverScene to a full scene object across all loaded collections
+  // Resolve discoverScene to a full scene object — prefer the parent-provided
+  // full object (instant, independent of fetch timing), then search loaded collections.
   const resolvedDiscoverScene = useMemo(() => {
     if (!discoverScene?.sceneId) return null;
+    if (discoverSceneFull && discoverSceneFull.id === discoverScene.sceneId) return discoverSceneFull;
     for (const c of ACTIVE_CATEGORY_COLLECTIONS) {
       const found = c.scenes.find(s => s.id === discoverScene.sceneId);
       if (found) return found;
     }
     return null;
-  }, [discoverScene?.sceneId, ACTIVE_CATEGORY_COLLECTIONS]);
+  }, [discoverScene?.sceneId, discoverSceneFull, ACTIVE_CATEGORY_COLLECTIONS]);
 
   // Auto-add discoverScene once (idempotent via ref)
   const autoAddedRef = useRef<string | null>(null);
