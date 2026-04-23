@@ -196,7 +196,7 @@ export function DashboardDiscoverSection() {
     ? isSaved(selectedItem.type, selectedItem.type === 'preset' ? selectedItem.data.id : selectedItem.data.poseId)
     : false;
 
-  if (isLoading) {
+  if (isLoading || isLoadingRec) {
     return (
       <div className="space-y-4 min-h-[820px] sm:min-h-[760px] lg:min-h-[680px]">
         <div className="flex items-center justify-between">
