@@ -1,99 +1,96 @@
 
 
-## Fix Browse Scenes: stop dedupe loss + surface `sub_category` chips
+## Fix "Recreate this" not preselecting the scene in Product Images Step 2
 
-### Root causes
+### Two real bugs
 
-**Bug 1 — name-based dedupe drops 60–70% of scenes** (`src/hooks/useDiscoverPickerOptions.ts:71`)
+**Bug A — Scene-type Discover items always route to Freestyle, never to Product Images.**
+`DiscoverDetailModal.tsx` (line 836–854) and `Discover.tsx` `handleUseItem` (line 460–490): when `item.type === 'scene'` (which is what "Frozen Aura" is — a `product_image_scenes` row surfaced as a Discover scene card), there's no `workflow_slug`, so the code falls into the `/app/freestyle?…` branch. Freestyle has no Step 2 / "From Explore" highlight UI, so the user lands somewhere with no preselection at all.
 
-```ts
-if (!items.find(i => i.name === ps.title)) { ... }
-```
-
-Many scenes share the same `title` across different `category_collection`s ("Top View", "Sunlit Glow", "Pickup Gesture Detail", etc.). The `find` uniqueness check throws away all but the first occurrence, so:
-
-- Beverages DB: **64 active** → modal shows **25**
-- Snacks DB: **24** → shows **24** (lucky)
-- Food DB: **27** → shows **3**
-- Across the catalog this hides ~600+ scenes silently.
-
-**Bug 2 — `sub_category` isn't fetched, so "Creative Shots" can't appear**
-
-The picker query selects only `id, scene_id, title, preview_image_url, category_collection`. The DB column `sub_category` (which holds "Creative Shots", "Essential Shots", "Editorial Drink Studio", "Aesthetic Color Beverage Stories", etc.) is dropped before reaching the modal. The modal groups the right pane by `category_collection` only, so the rich curated buckets the user expects are invisible.
+**Bug B — "Frozen Aura" (and ~hundreds of other titles) is a duplicated title across 9 categories.**
+DB confirms 9 rows titled "Frozen Aura" (`fragrance`, `food`, `beverages`, `sneakers`, `watches`, `supplements-wellness`, `hats-small`, `makeup-lipsticks`, `beauty-skincare`). `ProductImages.tsx` resolves the URL `?scene=` param via `allScenes.find(s => s.title === sceneTitle)` — first match wins, which is essentially random vs the user's actual product category. When the matched scene's `category_collection` doesn't intersect the user's product categories, the "From Explore" section never renders in `SharedScenePicker` because `resolvedDiscoverScene` is in a collection not relevant to the active product.
 
 ### Fixes
 
-#### 1. `src/hooks/useDiscoverPickerOptions.ts` — fetch `sub_category`, dedupe by stable key
+#### 1. Route scene-type Discover items to Product Images, not Freestyle
 
-- Add `sub_category` to the SELECT.
-- Replace the O(n²) `find()` dedupe with a `Set` keyed on **`title + category_collection + sub_category`** so distinct curated rows survive.
-- Add `subCategory` to `PickerSceneOption`.
+Update both Recreate handlers (`Discover.tsx` `handleUseItem` and `DiscoverDetailModal.tsx`) so that when `item.type === 'scene'`:
+
+- Navigate to `/app/generate/product-images?scene=<title>&sceneId=<uuid>&sceneImage=<url>&fromDiscover=1`.
+- Drop the freestyle branch for scene items entirely. (Freestyle stays for prompt-only presets without a `workflow_slug`.)
+
+For `preset` items already pointing at `workflow_slug='product-images'`, additionally pass `sceneId` (when the preset row has a `scene_id` column; if not, just pass `scene`).
+
+#### 2. Match by stable scene id first, fall back to title
+
+Change `ProductImages.tsx` lines 67–89 to prefer `?sceneId=` (UUID, unique) over `?scene=` (title, ambiguous):
 
 ```ts
-.select('id, scene_id, title, preview_image_url, category_collection, sub_category')
+const sceneIdParam = searchParams.get('sceneId');
+const sceneTitle = searchParams.get('scene');
 
-// dedupe across mocks + custom + product_image_scenes
-const seen = new Set<string>();
-const push = (item: PickerSceneOption) => {
-  const key = `${item.name}::${item.category}::${item.subCategory ?? ''}`;
-  if (seen.has(key)) return;
-  seen.add(key);
-  items.push(item);
-};
-```
+// 1. Try UUID match (unique, deterministic)
+let match = sceneIdParam
+  ? allScenes.find(s => s.id === sceneIdParam)
+  : null;
 
-`PickerSceneOption` gains `subCategory?: string | null`. `mockTryOnPoses` and `customSceneProfiles` pass `subCategory: undefined` (already work today; nothing breaks).
+// 2. Title fallback — pick the variant whose category overlaps the user's products.
+//    If no products selected yet, take the first match (current behavior).
+if (!match && sceneTitle) {
+  const target = sceneTitle.trim().toLowerCase();
+  const candidates = allScenes.filter(s => s.title.trim().toLowerCase() === target);
 
-#### 2. `src/components/app/SceneBrowserModal.tsx` — three-level navigation: Family → Sub-family → Sub-category
-
-- Keep left rail (families) as-is.
-- Replace the current sub-family chip row with a **two-row chip header**:
-  - **Row 1:** sub-family chips (existing behavior — `category_collection` slugs sorted by count).
-  - **Row 2:** `sub_category` chips for whatever is selected above (e.g. "All", "Creative Shots", "Essential Shots", "Editorial Drink Studio", …) sorted by count.
-- "All" on either row clears that level's filter; the grid then shows everything matching the higher levels.
-- Sub-category chips use the raw `sub_category` string as the label (it's already human-readable like "Creative Shots").
-
-```tsx
-const subCategoryCounts = useMemo<Array<[string, number]>>(() => {
-  if (!activeFamily) return [];
-  let list = familyGroups.get(activeFamily) ?? [];
-  if (activeSub) list = list.filter(s => s.category === activeSub);
-  const counts = new Map<string, number>();
-  for (const s of list) {
-    const key = s.subCategory?.trim() || 'Other';
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+  if (selectedProductIds.size > 0) {
+    const userCats = new Set(
+      Array.from(selectedProductIds)
+        .map(pid => analyses[pid]?.category_collection)
+        .filter(Boolean)
+    );
+    match = candidates.find(c => userCats.has(c.category_collection)) ?? candidates[0] ?? null;
+  } else {
+    match = candidates[0] ?? null;
   }
-  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-}, [familyGroups, activeFamily, activeSub]);
+}
+
+if (match) setDiscoverScene({ sceneId: match.id, title: match.title });
 ```
 
-Filter pipeline becomes: family → optional sub-family → optional sub-category → search.
+Trigger this effect on `[allScenes, selectedProductIds, analyses, searchParams]` so it re-resolves once the user picks their product (Step 1 → Step 2 transition). Keep `discoverSceneConsumedRef` so it sets state at most once per navigation.
 
-Existing `getOptimizedUrl({ quality: 55 })` thumb path stays unchanged.
+#### 3. Make sure the "From Explore" section actually surfaces
+
+`SharedScenePicker` already renders a "From Explore" block when `resolvedDiscoverScene` is found anywhere in `ACTIVE_CATEGORY_COLLECTIONS`. Once Bug B is fixed, the resolved scene's collection will always overlap the user's active category, so the section renders correctly above the recommended grid.
+
+Also: persist `discoverScene` across category-tab switches in the multi-category branch (already works — prop is threaded into `SharedScenePicker` for every tab), and surface a small "From Explore" pill on the category tab itself when that tab contains the discover scene. Skip if it adds complexity — current rendering is enough.
 
 ### Files touched
 
 ```text
-EDIT  src/hooks/useDiscoverPickerOptions.ts
-        - SELECT now includes sub_category
-        - PickerSceneOption gains subCategory?: string | null
-        - dedupe key = name + category + subCategory (Set, not find())
+EDIT  src/pages/Discover.tsx
+        - handleUseItem: scene items route to /app/generate/product-images
+          with ?scene, ?sceneId, ?sceneImage, ?fromDiscover
 
-EDIT  src/components/app/SceneBrowserModal.tsx
-        - Add second chip row for sub_category (within active family + sub-family)
-        - Counts + sort desc; "All" clears that level
-        - Filter pipeline gains the new level
+EDIT  src/components/app/DiscoverDetailModal.tsx
+        - Recreate button: scene items route to /app/generate/product-images
+          (same param shape). Preset items unchanged except gain ?sceneId
+          when available.
+
+EDIT  src/pages/ProductImages.tsx
+        - Read ?sceneId first, then ?scene
+        - Title fallback chooses the variant whose category_collection
+          matches the user's product (via analyses)
+        - Re-run resolver when products/analyses change (covers
+          land-at-step-1-then-pick-product flow)
 ```
 
-No DB / RLS / edge function changes. No other consumer of `PickerSceneOption` relies on dedupe semantics — the existing inline grids in Add/Edit Discover modals just iterate the array.
+No DB / RLS / edge function changes. No type changes beyond URL params.
 
 ### Validation
 
-1. Open Library → "Add to Discover" → "Browse all" on Scene picker.
-2. Sidebar counts jump significantly: e.g. **Food & Drink** goes from ~52 → ~115; **Fashion** ~161 → ~400+. Total grid scenes match `SELECT count(*) FROM product_image_scenes WHERE is_active=true` (~1,500).
-3. Click **Food & Drink → Beverages**. A second chip row appears: `All · Editorial Drink Studio 17 · Creative Shots 14 · Essential Shots 12 · Social Lifestyle / Sport / Party UGC 9 · Fruit / Pour / Surface Still Life 6 · Aesthetic Color Beverage Stories 6`. Clicking each filters the grid.
-4. Click **Activewear → Creative Shots** → 24 scenes show up (matches DB).
-5. Search still works within the active family + sub-family + sub-category context.
-6. Selecting any scene closes the modal and hydrates the picker with the correct preview / name (no regression).
-7. Network: still one query per cache window (10 min stale). Thumbnails still load `?quality=55` (no crop).
+1. Open `/app/discover`, click "Frozen Aura" (scene card, beverages preview) → Recreate this → lands on `/app/generate/product-images` (not Freestyle).
+2. Pick a beverage product → Continue to Step 2 → "From Explore" section renders at the top with the **beverages variant** of Frozen Aura preselected and ticked.
+3. Pick a fragrance product first instead → Step 2 surfaces the **fragrance variant** of Frozen Aura.
+4. Click Recreate on a preset whose `workflow_slug='product-images'` and `scene_name='Sunlit Glow'` → same flow, Step 2 highlights the right Sunlit Glow.
+5. Direct deep link `/app/generate/product-images?sceneId=<uuid>` always resolves that exact scene, regardless of products.
+6. Existing prompt-only preset Recreate (no `workflow_slug`, no scene) still routes to Freestyle as before.
 
