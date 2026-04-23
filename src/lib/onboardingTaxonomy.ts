@@ -31,7 +31,6 @@ const FAMILY_SUB_ORDER: Record<string, string[]> = {
     'activewear',
     'swimwear',
     'lingerie',
-    'kidswear',
     'streetwear',
   ],
   Footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
