@@ -89,6 +89,49 @@ export default function ProductImages() {
   const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
   const prevProductIdsRef = useRef<string | null>(null);
 
+  // Discover Recreate resolver: prefer ?sceneId=<uuid> (deterministic),
+  // fall back to ?scene=<title> using user's product category to disambiguate.
+  useEffect(() => {
+    if (discoverSceneConsumedRef.current) return;
+    const sceneIdParam = searchParams.get('sceneId');
+    const sceneTitle = searchParams.get('scene');
+    if (!sceneIdParam && !sceneTitle) return;
+    if (allScenes.length === 0) return;
+
+    let match = sceneIdParam ? allScenes.find(s => s.id === sceneIdParam) : null;
+
+    if (!match && sceneTitle) {
+      const target = sceneTitle.trim().toLowerCase();
+      const candidates = allScenes.filter(s => s.title.trim().toLowerCase() === target);
+      if (selectedProductIds.size > 0) {
+        const userCats = new Set(
+          Array.from(selectedProductIds)
+            .map(pid => analyses[pid]?.categoryCollection)
+            .filter(Boolean) as string[]
+        );
+        match = candidates.find(c => c.category_collection && userCats.has(c.category_collection)) ?? candidates[0] ?? null;
+      } else if (candidates.length > 0) {
+        // No products yet — wait so we can disambiguate by category
+        return;
+      }
+    }
+
+    if (match) {
+      setDiscoverScene({ sceneId: match.id, title: match.title });
+      discoverSceneConsumedRef.current = true;
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('scene');
+        next.delete('sceneId');
+        return next;
+      }, { replace: true });
+    } else if (!sceneIdParam && sceneTitle) {
+      // No matching title at all — give up so we don't re-run forever
+      console.warn('[ProductImages] Discover scene title did not resolve:', sceneTitle);
+      discoverSceneConsumedRef.current = true;
+    }
+  }, [allScenes, selectedProductIds, analyses, searchParams, setSearchParams]);
+
   // Load models for Refine step
   // Defer model queries until Refine step
   const { asProfiles: userModelProfiles } = useUserModels({ enabled: step >= 3 });
