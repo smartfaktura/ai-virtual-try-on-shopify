@@ -11,6 +11,7 @@ import { Loader2, Download, Search, ArrowUpDown, TrendingUp } from 'lucide-react
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { mockTryOnPoses } from '@/data/mockData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 // Static lookup for built-in freestyle/try-on scenes (pose_* and scene_* IDs)
 const STATIC_SCENE_META = new Map<string, SceneMeta>(
@@ -223,8 +224,8 @@ export default function SceneUsage() {
     (async () => {
       try {
         const [last7Res, prior14Res] = await Promise.all([
-          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }).range(0, 9999),
-          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }).range(0, 9999),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 7 }).range(0, 499),
+          supabase.rpc('get_scene_popularity' as any, { p_days: 14 }).range(0, 499),
         ]);
         if (last7Res.error) throw last7Res.error;
         if (prior14Res.error) throw prior14Res.error;
@@ -432,7 +433,7 @@ export default function SceneUsage() {
                         <tr key={r.scene_id} className="border-t hover:bg-muted/20">
                           <td className="px-3 py-2">
                             {r.thumbnail ? (
-                              <img src={r.thumbnail} alt="" className="w-10 h-10 rounded object-cover bg-muted" loading="lazy" />
+                              <img src={getOptimizedUrl(r.thumbnail, { width: 80, quality: 60 })} alt="" className="w-10 h-10 rounded object-cover bg-muted" loading="lazy" />
                             ) : (
                               <div className="w-10 h-10 rounded bg-muted" />
                             )}
@@ -484,7 +485,7 @@ export default function SceneUsage() {
                   return (
                     <li key={r.scene_id} className="flex items-center gap-2 text-sm">
                       {m?.thumbnail ? (
-                        <img src={m.thumbnail} alt="" className="w-7 h-7 rounded object-cover bg-muted" loading="lazy" />
+                        <img src={getOptimizedUrl(m.thumbnail, { width: 80, quality: 60 })} alt="" className="w-7 h-7 rounded object-cover bg-muted" loading="lazy" />
                       ) : (
                         <div className="w-7 h-7 rounded bg-muted" />
                       )}
