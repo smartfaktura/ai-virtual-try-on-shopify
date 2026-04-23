@@ -650,7 +650,7 @@ function CategoryRowTrigger({ catId, catTitle, allScenes, selectedSceneIds, isOp
     <button
       id={`explore-cat-${catId}`}
       onClick={onToggleOpen}
-      className={`flex items-center justify-between w-full p-3 rounded-lg border transition-colors cursor-pointer ${
+      className={`flex items-center justify-between w-full p-3 rounded-xl border transition-colors cursor-pointer ${
         isOpen ? 'border-primary/30 bg-primary/[0.03]' : 'border-border hover:bg-muted/30'
       }`}
     >
@@ -785,7 +785,7 @@ function UnifiedCategorySectionWithSelectAll({
   return (
     <Collapsible open={isOpen} onOpenChange={onToggleOpen}>
       <CollapsibleTrigger className="w-full">
-        <div className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+        <div className={`flex items-center justify-between p-3 rounded-xl border transition-colors cursor-pointer ${
           isRecommended
             ? 'border-primary/20 bg-primary/[0.02] hover:bg-primary/[0.05]'
             : 'border-border hover:bg-muted/30'

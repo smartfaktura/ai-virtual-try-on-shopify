@@ -65,10 +65,10 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
       <div className="flex gap-3 items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search products..." value={searchQuery} onChange={(e) => onSearchChange(e.target.value)} className="pl-9" />
+          <Input placeholder="Search products..." value={searchQuery} onChange={(e) => onSearchChange(e.target.value)} className="pl-9 h-10 rounded-full text-sm" />
         </div>
-        <Button size="sm" variant="outline" onClick={handleSelectAll}>Select All</Button>
-        <Button size="sm" variant="outline" onClick={() => onSelectionChange(new Set())}>Clear</Button>
+        <Button size="default" variant="outline" onClick={handleSelectAll}>Select All</Button>
+        <Button size="default" variant="outline" onClick={() => onSelectionChange(new Set())}>Clear</Button>
       </div>
       <div className="flex gap-2 items-center">
         <Badge variant={selectedIds.size >= 2 ? 'default' : 'secondary'}>{selectedIds.size} selected</Badge>
