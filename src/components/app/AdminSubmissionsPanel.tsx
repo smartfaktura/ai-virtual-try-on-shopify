@@ -43,6 +43,8 @@ export function AdminSubmissionsPanel() {
       setClassifying(false);
     }
   };
+
+  const filtered = submissions.filter(s => s.status === activeTab);
   const pendingCount = submissions.filter(s => s.status === 'pending').length;
 
   const handleReject = (id: string) => {
@@ -67,14 +69,25 @@ export function AdminSubmissionsPanel() {
 
   return (
     <div className="space-y-5">
-      {/* Title */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">Community Submissions</h3>
-        {pendingCount > 0 && (
-          <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-            {pendingCount} pending
-          </span>
-        )}
+      {/* Title + admin actions */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground">Community Submissions</h3>
+          {pendingCount > 0 && (
+            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+              {pendingCount} pending
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleAutoClassify}
+          disabled={classifying}
+          title="Auto-tags untagged Explore items by scanning their existing prompt + tags. Admin-only maintenance tool — safe to re-run (only touches items with no sub-family yet)."
+          className="px-3 py-1 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors disabled:opacity-50"
+        >
+          {classifying ? 'Classifying…' : 'Auto-classify sub-family'}
+        </button>
       </div>
 
       {/* Tabs */}
