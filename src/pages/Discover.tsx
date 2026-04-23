@@ -477,10 +477,10 @@ export default function Discover() {
       navigate(`/app/generate/product-images?${sp.toString()}`);
     } else {
       const d = item.data;
-      // If preset is linked to product-images via scene_ref, route to wizard with sceneRef.
-      if (d.scene_ref && (d.workflow_slug === 'product-images' || !d.workflow_slug)) {
+      // Only route to product-images wizard when explicitly that workflow.
+      if (d.workflow_slug === 'product-images') {
         const params = new URLSearchParams();
-        params.set('sceneRef', d.scene_ref);
+        if (d.scene_ref) params.set('sceneRef', d.scene_ref);
         params.set('fromDiscover', '1');
         navigate(`/app/generate/product-images?${params.toString()}`);
         return;
