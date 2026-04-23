@@ -460,24 +460,179 @@ export function AddToDiscoverModal({
             <p className="text-[10px] text-muted-foreground/50">{tags.length}/5 tags</p>
           </div>
 
-          {/* Visibility toggles */}
-          <div className="space-y-2.5 p-3 rounded-xl bg-muted/30 border border-border/30">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">Visibility</p>
-            {(modelName || modelId) && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-foreground/80">Show model name</span>
-                <Switch checked={showModel} onCheckedChange={setShowModel} />
-              </div>
-            )}
-            {(sceneName || sceneId) && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-foreground/80">Show scene name</span>
-                <Switch checked={showScene} onCheckedChange={setShowScene} />
-              </div>
-            )}
+          {/* Generation Context — admin can edit any field */}
+          <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border/30">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">Generation Context</p>
+              <p className="text-[10px] text-muted-foreground/50">Confirm or edit</p>
+            </div>
+
+            {/* Workflow picker */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground/80">Workflow</label>
+              <Popover open={workflowPopoverOpen} onOpenChange={setWorkflowPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
+                    <span className={cn('truncate', !pickedWorkflow && 'text-muted-foreground/60')}>
+                      {pickedWorkflow?.name ?? '— No workflow —'}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1 max-h-64 overflow-auto" align="start">
+                  <button
+                    onClick={() => { setPickedWorkflowSlug(null); setWorkflowPopoverOpen(false); }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
+                  >
+                    — No workflow —
+                  </button>
+                  {allWorkflows.map(w => (
+                    <button
+                      key={w.slug}
+                      onClick={() => { setPickedWorkflowSlug(w.slug); setWorkflowPopoverOpen(false); }}
+                      className={cn(
+                        'w-full text-left px-2.5 py-1.5 rounded-md text-xs hover:bg-muted',
+                        pickedWorkflowSlug === w.slug && 'bg-muted font-medium'
+                      )}
+                    >
+                      {w.name}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Scene picker */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground/80">Scene</label>
+              <Popover open={scenePopoverOpen} onOpenChange={(o) => { setScenePopoverOpen(o); if (!o) setSceneSearch(''); }}>
+                <PopoverTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
+                    <span className={cn('truncate flex items-center gap-2', !pickedScene && 'text-muted-foreground/60')}>
+                      {pickedScene?.imageUrl && (
+                        <img src={pickedScene.imageUrl} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                      )}
+                      <span className="truncate">{pickedSceneName ?? '— No scene —'}</span>
+                      {aiSuggestedScene && pickedSceneName === aiSuggestedScene && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-medium shrink-0">AI</span>
+                      )}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-80 overflow-auto" align="start">
+                  <Input
+                    autoFocus
+                    placeholder="Search scenes..."
+                    value={sceneSearch}
+                    onChange={e => setSceneSearch(e.target.value)}
+                    className="h-8 text-xs mb-2"
+                  />
+                  <button
+                    onClick={() => { setPickedSceneName(null); setScenePopoverOpen(false); }}
+                    className="w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
+                  >
+                    — No scene —
+                  </button>
+                  {Object.entries(scenesByCategory).map(([cat, list]) => {
+                    const filtered = sceneSearch
+                      ? list.filter(s => s.name.toLowerCase().includes(sceneSearch.toLowerCase()))
+                      : list;
+                    if (filtered.length === 0) return null;
+                    return (
+                      <div key={cat} className="mt-2">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 px-2 py-1">
+                          {poseCategoryLabels[cat] ?? cat}
+                        </p>
+                        {filtered.map(s => (
+                          <button
+                            key={s.name}
+                            onClick={() => { setPickedSceneName(s.name); setScenePopoverOpen(false); }}
+                            className={cn(
+                              'w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted',
+                              pickedSceneName === s.name && 'bg-muted font-medium'
+                            )}
+                          >
+                            {s.imageUrl && (
+                              <img src={s.imageUrl} alt="" className="w-6 h-6 rounded object-cover shrink-0" />
+                            )}
+                            <span className="truncate">{s.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
+              {sceneIsMissing && (
+                <div className="flex items-start gap-1.5 mt-1 px-1">
+                  <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-tight">
+                    No scene detected. Pick one so Recreate works.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Model picker */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground/80">Model</label>
+              <Popover open={modelPopoverOpen} onOpenChange={(o) => { setModelPopoverOpen(o); if (!o) setModelSearch(''); }}>
+                <PopoverTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
+                    <span className={cn('truncate flex items-center gap-2', !pickedModel && 'text-muted-foreground/60')}>
+                      {pickedModel?.imageUrl && (
+                        <img src={pickedModel.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" />
+                      )}
+                      <span className="truncate">{pickedModelName ?? '— No model —'}</span>
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 ml-2 shrink-0" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-72 overflow-auto" align="start">
+                  <Input
+                    autoFocus
+                    placeholder="Search models..."
+                    value={modelSearch}
+                    onChange={e => setModelSearch(e.target.value)}
+                    className="h-8 text-xs mb-2"
+                  />
+                  <button
+                    onClick={() => { setPickedModelName(null); setModelPopoverOpen(false); }}
+                    className="w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted text-muted-foreground"
+                  >
+                    — No model —
+                  </button>
+                  {allModels
+                    .filter(m => !modelSearch || m.name.toLowerCase().includes(modelSearch.toLowerCase()))
+                    .map(m => (
+                      <button
+                        key={m.name}
+                        onClick={() => { setPickedModelName(m.name); setModelPopoverOpen(false); }}
+                        className={cn(
+                          'w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted',
+                          pickedModelName === m.name && 'bg-muted font-medium'
+                        )}
+                      >
+                        {m.imageUrl && (
+                          <img src={m.imageUrl} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                        )}
+                        <span className="truncate">{m.name}</span>
+                      </button>
+                    ))}
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Product toggle (existing behaviour) */}
             {productName && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-foreground/80">Show product used</span>
+              <div className="flex items-center justify-between pt-1 border-t border-border/30">
+                <div className="flex items-center gap-2">
+                  {productImageUrl && (
+                    <img src={productImageUrl} alt="" className="w-6 h-6 rounded object-cover" />
+                  )}
+                  <span className="text-xs text-foreground/80 truncate">Show product: {productName}</span>
+                </div>
                 <Switch checked={showProduct} onCheckedChange={setShowProduct} />
               </div>
             )}
