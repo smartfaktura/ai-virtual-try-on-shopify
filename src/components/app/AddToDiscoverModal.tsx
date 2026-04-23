@@ -180,11 +180,10 @@ export function AddToDiscoverModal({
           }
         }
         if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
-        // AI scene suggestion — only apply if scene was missing AND option exists in list
+        // AI scene suggestion — store as suggestion only, do NOT auto-select
         if (!initialSceneName && data.suggested_scene_name) {
           const match = allScenes.find(s => s.name === data.suggested_scene_name);
           if (match) {
-            setPickedSceneName(match.name);
             setAiSuggestedScene(match.name);
           }
         }
