@@ -461,16 +461,30 @@ export default function Discover() {
     if (item.type === 'scene') {
       // Scene-type Discover items always belong to product-images workflow
       const sp = new URLSearchParams();
-      if (item.data.name) sp.set('scene', item.data.name);
-      if (item.data.previewUrl) sp.set('sceneImage', item.data.previewUrl);
-      if (item.data.name) sp.set('sceneName', item.data.name);
-      // Pass origin category as a disambiguation hint for the resolver
-      const sceneCat = (item.data as any).category;
-      if (sceneCat) sp.set('sceneCategory', sceneCat);
+      // PRIMARY: scene_ref points directly to product_image_scenes.scene_id (no guessing).
+      const sceneRef = (item.data as any).scene_ref as string | undefined;
+      if (sceneRef) {
+        sp.set('sceneRef', sceneRef);
+      } else {
+        // LEGACY fallback for items not yet linked
+        if (item.data.name) sp.set('scene', item.data.name);
+        if (item.data.previewUrl) sp.set('sceneImage', item.data.previewUrl);
+        if (item.data.name) sp.set('sceneName', item.data.name);
+        const sceneCat = (item.data as any).category;
+        if (sceneCat) sp.set('sceneCategory', sceneCat);
+      }
       sp.set('fromDiscover', '1');
       navigate(`/app/generate/product-images?${sp.toString()}`);
     } else {
       const d = item.data;
+      // If preset is linked to product-images via scene_ref, route to wizard with sceneRef.
+      if (d.scene_ref && (d.workflow_slug === 'product-images' || !d.workflow_slug)) {
+        const params = new URLSearchParams();
+        params.set('sceneRef', d.scene_ref);
+        params.set('fromDiscover', '1');
+        navigate(`/app/generate/product-images?${params.toString()}`);
+        return;
+      }
       // If it's a workflow preset, route to Generate page with model/scene pre-filled
       if (d.workflow_slug) {
         const params = new URLSearchParams();
