@@ -339,7 +339,7 @@ interface UnifiedCategorySectionProps {
 
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
-function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses'>) {
+function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses, discoverScene }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses' | 'discoverScene'>) {
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const priorityCats = useMemo(() => Array.from(relevantCatIds), [relevantCatIds]);
   const { categoryCollections: hookCategoryCollections, isLoading: isLoadingScenes, isLoadingRest } = useProductImageScenes({
