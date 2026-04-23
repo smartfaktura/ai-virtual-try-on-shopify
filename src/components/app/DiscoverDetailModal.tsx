@@ -529,12 +529,12 @@ export function DiscoverDetailModal({
                               return Array.from(grouped.entries()).map(([cat, scenes]) => (
                                 <div key={cat}>
                                   <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-2 px-1">
-                                    {poseCategoryLabels[cat] ?? cat}
+                                    {poseCategoryLabels[cat] ?? cat} <span className="text-muted-foreground/40 normal-case tracking-normal">· {scenes.length}</span>
                                   </p>
                                   <div className="grid grid-cols-4 gap-2">
-                                    {scenes.map(s => (
+                                    {scenes.map((s, idx) => (
                                       <button
-                                        key={s.name}
+                                        key={`${s.name}::${s.category}::${s.subCategory ?? ''}::${idx}`}
                                         onClick={() => { setEditSceneName(s.name); setSceneDialogOpen(false); }}
                                         className={cn(
                                           'rounded-lg overflow-hidden border-2 transition-all',
@@ -551,6 +551,9 @@ export function DiscoverDetailModal({
                                         />
                                         <div className="px-1.5 py-1 bg-background">
                                           <p className="text-[10px] font-medium text-foreground leading-tight truncate">{s.name}</p>
+                                          {s.subCategory && (
+                                            <p className="text-[9px] text-muted-foreground/60 leading-tight truncate">{s.subCategory}</p>
+                                          )}
                                         </div>
                                       </button>
                                     ))}
