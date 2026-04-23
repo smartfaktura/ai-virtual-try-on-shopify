@@ -1,45 +1,37 @@
 
 
-## Safe plan to verify and finish the Recreate-from-Explore fixes
+## QA-only plan: verify Recreate-from-Explore → Product Images
 
-The last edits already shipped the routing + resolver + picker changes. Before declaring it done, I want to verify against the live DB and patch the two gaps most likely to still bite, with zero risk to other flows.
+Investigation only. No code edits. I'll spot-check code, query the DB, and run the live preview to confirm all three fixes hold.
 
-### What I'll verify (read-only, no code changes yet)
+### Steps
 
-1. Query `product_image_scenes` for every "Frozen Aura" row and confirm each has a distinct `category_collection` + `preview_image_url`. This proves the resolver can actually pick the beverages variant when `?sceneCategory=beverages` is passed.
-2. Spot-check `Discover.tsx` `handleUseItem` — confirm `sceneCategory` is being set from the scene card's source category (not from a stale field).
-3. Spot-check `ProductImagesStep2Scenes.tsx` — confirm `discoverSceneFull` actually renders the "From Explore" card before `useProductImageScenes` resolves, and that the scene's `categoryCollection` is injected into `priorityCategories`.
+1. **Code spot-check (read-only)**
+   - `src/pages/Discover.tsx` `handleUseItem` — confirm scene items pass `scene`, `sceneId`, `sceneImage`, `sceneCategory`, `fromDiscover=1`.
+   - `src/components/app/DiscoverDetailModal.tsx` Recreate CTA — same params; Add-to-Discover picker uses `useDiscoverPickerOptions`.
+   - `src/pages/ProductImages.tsx` resolver — priority `sceneId` → `sceneCategory` → `sceneImage` → product analysis → `candidates[0]`; waits when analyses pending.
+   - `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — `discoverSceneFull` renders From-Explore card immediately and injects `categoryCollection` into `priorityCategories`.
 
-### Two small, safe patches I expect to ship after verification
+2. **DB sanity (read-only SQL)**
+   - All 9 "Frozen Aura" rows distinct by `category_collection` + `preview_image_url`.
+   - Active scene total matches what Add-to-Discover modal shows.
 
-**Patch A — guarantee the "From Explore" card renders first, every time**
-If `discoverSceneFull` is present, render the "From Explore" section unconditionally at the top of Step 2 using only the prop data (preview image, title). Do **not** gate it on `useProductImageScenes` having loaded the matching collection. The grid below can still hydrate later — but the hero card the user expects is instant.
+3. **Live preview QA (browser tool)**
+   - `/app/discover` → click Beverages "Frozen Aura" → Recreate this.
+   - Confirm URL: `/app/generate/product-images?scene=Frozen+Aura&sceneId=…&sceneImage=…&sceneCategory=beverages&fromDiscover=1`.
+   - Pick a beverage product → Step 2 → "From Explore" card appears <200 ms with **beverages** preview, pre-ticked.
+   - Repeat with Watches variant → confirm watches card.
+   - Library → admin → Add to Discover → Scene picker shows all 9 Frozen Aura rows with `category · sub_category` captions.
 
-**Patch B — make the resolver deterministic when `?sceneId` is missing**
-Today: `?sceneCategory` hint → product analysis → first candidate.
-Add one safety net: if `?sceneCategory` is provided but no candidate matches it (data drift, renamed slug), fall back to `?sceneImage` exact match against `preview_image_url` before resorting to `candidates[0]`. Image URL is unique per row, so this nails the right variant even if the slug map drifts.
+4. **Regression spot-check**
+   - Prompt-only preset Recreate → still routes to Freestyle.
+   - `workflow_slug='product-images'` preset Recreate → routes to product-images with correct scene.
 
-### Files that would change (only if verification confirms the gaps)
+### Deliverable
 
-```text
-EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx
-        - Render "From Explore" hero card from discoverSceneFull immediately
-          (no dependency on useProductImageScenes load state)
+Short report: ✅/❌ per validation step, with exact URL/screenshot/console evidence. If all pass, mark done. If any fail, I come back with a separate patch plan — no code edits in this loop.
 
-EDIT  src/pages/ProductImages.tsx
-        - Resolver: after sceneCategory miss, try preview_image_url match
-          against ?sceneImage before falling back to candidates[0]
-```
+### Out of scope
 
-No DB / RLS / edge function / routing changes. No impact on prompt-only Recreate, Freestyle, presets, or Add-to-Discover modal (that one is already correct).
-
-### Validation after patches
-
-1. Click "Frozen Aura" (beverages preview) in Explore → land on Step 2 → "From Explore" card visible in <200 ms with the **beverages** preview, before the rest of the grid loads.
-2. Same scene, watches preview → watches variant card.
-3. Manually craft a URL with bad `?sceneCategory=fooBar` but correct `?sceneImage=<beverages-url>` → still picks the beverages row (image fallback wins).
-4. No URL params → Step 2 behaves exactly as before (no regression).
-5. Add-to-Discover Scene picker still lists all 9 Frozen Aura entries with category · sub-category captions.
-
-If verification (step 1–3 above) shows everything is already wired correctly, I'll skip the patches and just report back — no unnecessary churn.
+No file edits. No DB writes. No edge function deploys. If the preview requires login, I stop and ask.
 
