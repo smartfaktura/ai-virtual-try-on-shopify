@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback, Fragment } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +56,8 @@ export function DiscoverSubCategoryBar({
 
   if (!subcategories.length) return null;
 
+  const items: SubCategoryItem[] = [{ id: '__all__', label: 'All' }, ...subcategories];
+
   return (
     <div className="flex items-center">
       <button
@@ -66,33 +68,29 @@ export function DiscoverSubCategoryBar({
         )}
         aria-label="Scroll left"
       >
-        <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" />
+        <ChevronLeft className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
       </button>
 
       <div
         ref={scrollRef}
-        className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1 -mb-1 scroll-smooth"
+        className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 scroll-smooth"
       >
-        {subcategories.map((sub, idx) => {
+        {items.map((sub) => {
           const isActive = selectedSubcategory === sub.id;
           return (
-            <Fragment key={sub.id}>
-              {idx > 0 && (
-                <span className="text-muted-foreground/30 text-[11px] select-none" aria-hidden="true">·</span>
+            <button
+              key={sub.id}
+              onClick={() => onSelectSubcategory(sub.id)}
+              aria-pressed={isActive}
+              className={cn(
+                'rounded-full px-4 py-1.5 text-[12px] font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0 border',
+                isActive
+                  ? 'bg-foreground text-background border-foreground shadow-sm'
+                  : 'bg-transparent border-border/60 text-muted-foreground/80 hover:border-foreground/40 hover:text-foreground',
               )}
-              <button
-                onClick={() => onSelectSubcategory(isActive ? '__all__' : sub.id)}
-                aria-pressed={isActive}
-                className={cn(
-                  'text-[12px] font-medium tracking-wide transition-colors duration-200 whitespace-nowrap shrink-0 underline-offset-4 decoration-1',
-                  isActive
-                    ? 'text-foreground underline'
-                    : 'text-muted-foreground/70 hover:text-foreground',
-                )}
-              >
-                {sub.label}
-              </button>
-            </Fragment>
+            >
+              {sub.label}
+            </button>
           );
         })}
       </div>
@@ -105,7 +103,7 @@ export function DiscoverSubCategoryBar({
         )}
         aria-label="Scroll right"
       >
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
       </button>
     </div>
   );
