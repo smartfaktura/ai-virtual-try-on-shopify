@@ -520,16 +520,16 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
                 <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-muted flex items-center justify-center">
                   <Info className="w-3.5 h-3.5 text-muted-foreground" />
                 </div>
-                <Avatar className="w-10 h-10 border border-primary/20 ring-1 ring-primary/10">
+                <Avatar className="w-9 h-9 border border-primary/20 ring-1 ring-primary/10">
                   <AvatarImage src={TEAM_MEMBERS[0].avatar} alt={TEAM_MEMBERS[0].name} />
                   <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[0].name[0]}</AvatarFallback>
                 </Avatar>
-                <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-foreground leading-snug">
-                    Picked for your product
+                <div className="space-y-1">
+                  <p className="text-[13px] font-semibold tracking-tight text-foreground leading-snug">
+                    Picked for you
                   </p>
                   <p className="text-xs text-muted-foreground leading-snug">
-                    From your Explore pick
+                    From Explore
                   </p>
                 </div>
               </div>
