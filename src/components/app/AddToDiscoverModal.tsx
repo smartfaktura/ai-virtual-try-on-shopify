@@ -84,7 +84,7 @@ export function AddToDiscoverModal({
 
   const queryClient = useQueryClient();
 
-  const { scenes: allScenes, scenesForWorkflow, models: allModels, workflows: allWorkflows } =
+  const { scenes: allScenes, scenesForWorkflow, productImageScenes, models: allModels, workflows: allWorkflows } =
     useDiscoverPickerOptions(open);
 
   // Workflow-aware scene library: product-images → product_image_scenes (writes scene_ref);
@@ -149,15 +149,18 @@ export function AddToDiscoverModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pickedWorkflowSlug]);
 
-  // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks)
+  // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks
+  // OR via sceneId matching a product_image_scenes row's scene_ref).
   const initialSceneName = useMemo(() => {
     if (sceneName) return sceneName;
     if (sceneId && !sceneId.startsWith('custom-')) {
       const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
       if (mock) return mock.name;
+      const pis = productImageScenes.find(s => s.sceneRef === sceneId);
+      if (pis) return pis.name;
     }
     return null;
-  }, [sceneName, sceneId]);
+  }, [sceneName, sceneId, productImageScenes]);
 
   const initialModelName = useMemo(() => {
     if (modelName) return modelName;
