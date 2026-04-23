@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { buildLibraryFileName } from '@/lib/downloadFileName';
@@ -56,7 +56,23 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   // Reset index when modal opens with new items
   useEffect(() => { setCurrentIndex(initialIndex); }, [initialIndex, open]);
 
-  const activeItem = hasMultiple ? items[currentIndex] ?? item : item;
+  // Re-sync currentIndex whenever the parent's selected item.id changes
+  // (e.g. user clicks a different thumbnail, or react-query refetches and shifts the list).
+  useEffect(() => {
+    if (!item || !hasMultiple || !items) return;
+    const idx = items.findIndex(i => i.id === item.id);
+    if (idx >= 0 && idx !== currentIndex) setCurrentIndex(idx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id, items, hasMultiple]);
+
+  // Derive activeItem by ID (not stale index) so we never show the wrong image.
+  const activeItem = useMemo(() => {
+    if (!hasMultiple || !items) return item;
+    const byIndex = items[currentIndex];
+    if (byIndex && byIndex.id === item?.id) return byIndex;
+    const byId = item ? items.find(i => i.id === item.id) : null;
+    return byId ?? items[currentIndex] ?? item;
+  }, [hasMultiple, items, currentIndex, item]);
 
   const goPrev = useCallback(() => {
     if (!hasMultiple) return;
