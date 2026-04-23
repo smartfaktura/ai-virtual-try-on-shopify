@@ -1,87 +1,88 @@
 
 
-## Final safe plan: stop scene metadata leak, backfill history, add UI fallback
+## Fix Browse Scenes: show all categories + sub-families, optimize thumbnails
 
-Three small, isolated changes. No RLS or schema changes. Fully idempotent.
+### Issues found
 
-### 1. Stop the leak (edge functions)
+**1. ~22 scenes missing from sidebar** — `category_collection='wallets'` (22 active rows) isn't mapped in `CATEGORY_FAMILY_MAP` so they fall into the "Other" bucket. The sidebar shows everything except the Bags & Accessories sub-family they should belong to.
 
-In `generate-workflow`, `generate-tryon`, and `generate-catalog`: snapshot scene/model/product/workflow metadata into a frozen const **immediately after** parsing the queue `body`, before any variation/fallback logic runs. Use that frozen object in the `generation_jobs` insert instead of re-reading `body.*` / `payload.*`.
+**2. Sub-family chips don't show all real sub-families** — chips are derived from whatever scenes happen to be in the family, but **only render when `subSlugs.length > 1`** and the labels for some slugs (e.g. `wallets`, `furniture`) are missing from `SUB_FAMILY_LABEL_OVERRIDES`, so they appear as raw slugs ("Wallets", which is fine, but "Furniture" auto-titled). Worse, sub-families with zero matching scenes are entirely invisible — user has no way to see they exist.
 
-```ts
-const sceneSnapshot = {
-  scene_name:      (body.pose as any)?.name ?? body.scene_name ?? null,
-  scene_id:        (body as any).scene_id ?? (body.pose as any)?.id ?? (body.scene as any)?.id ?? null,
-  scene_image_url: (body.pose as any)?.originalImageUrl ?? null,
-  model_name:      body.model?.name ?? body.model_name ?? null,
-  model_image_url: body.model?.originalImageUrl ?? null,
-  workflow_slug:   body.workflow_slug ?? null,
-  product_name:    body.product_name ?? body.product?.title ?? null,
-  product_image_url: body.product_image_url ?? null,
-};
-```
+**3. Thumbnails load full-size (multi-MB PNGs)** — `SceneBrowserModal` renders `<img src={scene.imageUrl} />` directly. With ~1,500 scenes and ~80–160 visible at once, the browser pulls original-resolution images. Slow + the screenshot's empty grey cards are scenes still mid-download.
 
-Thread it into `completeQueueJob(...)` and use those frozen values at the insert site (replacing the current `payload.pose?.name || payload.scene_name || null` style lookups).
+### Fixes
 
-### 2. Backfill historical NULLs (one-shot SQL migration)
-
-Recover data from `generation_queue.payload` by matching the queue UUID embedded in the result image URL. `COALESCE` ensures existing good data is never overwritten — safe to re-run.
-
-```sql
-UPDATE generation_jobs gj
-SET
-  scene_name        = COALESCE(gj.scene_name,        gq.payload->>'scene_name'),
-  scene_id          = COALESCE(gj.scene_id,          gq.payload->>'scene_id'),
-  scene_image_url   = COALESCE(gj.scene_image_url,   gq.payload->>'scene_image_url'),
-  model_name        = COALESCE(gj.model_name,        gq.payload->>'model_name'),
-  model_image_url   = COALESCE(gj.model_image_url,   gq.payload->>'model_image_url'),
-  product_image_url = COALESCE(gj.product_image_url, gq.payload->>'product_image_url'),
-  workflow_slug     = COALESCE(gj.workflow_slug,     gq.payload->>'workflow_slug')
-FROM generation_queue gq
-WHERE gj.scene_name IS NULL
-  AND gq.payload->>'scene_name' IS NOT NULL
-  AND (gj.results->>0) ILIKE '%/' || gq.id::text || '/%';
-```
-
-### 3. UI safety net (`AddToDiscoverModal.tsx`)
-
-When `sceneName` prop is missing but `sourceGenerationId` is present, do a single indexed lookup against `generation_jobs` before falling back to AI suggestion. ~5ms, primary-key indexed.
+#### 1. `src/lib/sceneTaxonomy.ts` — map orphan slug + add label
 
 ```ts
-if (!sceneName && sourceGenerationId) {
-  const { data } = await supabase
-    .from('generation_jobs')
-    .select('scene_name, scene_id, scene_image_url')
-    .eq('id', sourceGenerationId)
-    .maybeSingle();
-  if (data?.scene_name) {
-    // hydrate scene picker from DB, skip AI describe
-  }
-}
+// CATEGORY_FAMILY_MAP additions
+'wallets': 'Bags & Accessories',     // 22 scenes currently orphaned
+
+// SUB_FAMILY_LABEL_OVERRIDES additions (cosmetic, kept tidy)
+'wallets': 'Wallets',
+'furniture': 'Furniture',
+'home-decor': 'Decor',                // already present, keep
 ```
+
+Result: 22 wallet scenes move from "Other" into "Bags & Accessories"; counts on left rail update automatically (Bags & Accessories goes from 125 → 147; Other drops by 22).
+
+#### 2. `src/components/app/SceneBrowserModal.tsx` — show all sub-family chips, always
+
+- Always render the chip row when the active family has any sub-family (drop the `subSlugs.length > 1` gate — show even a single chip for consistency).
+- Display chip count badges (e.g. `Wallets · 22`) so admins immediately see what's available before clicking.
+- Sort sub-family chips by **scene count descending**, then alpha — most-populated sub-families first.
+- Keep the "All" chip as the default selected state.
+
+```tsx
+const subSlugCounts = useMemo(() => {
+  const items = familyGroups.get(activeFamily!) ?? [];
+  const counts = new Map<string, number>();
+  for (const it of items) counts.set(it.category, (counts.get(it.category) ?? 0) + 1);
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}, [familyGroups, activeFamily]);
+```
+
+Render chips from `subSlugCounts` and show the count next to each label.
+
+#### 3. `src/components/app/SceneBrowserModal.tsx` — optimize thumbnails
+
+- Import `getOptimizedUrl` from `@/lib/imageOptimization`.
+- Wrap each thumb URL with **quality only** (`quality: 55`) — **no width / no height** per the project's no-crop image rule (`mem://style/image-optimization-no-crop`). This compresses the image server-side without forcing a crop or zoom.
+- Keep `loading="lazy"` (already present) and add `decoding="async"`.
+- Add a small fade-in via `onLoad` to mask the grey skeleton until the image arrives.
+
+```tsx
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const thumb = getOptimizedUrl(scene.imageUrl, { quality: 55 });
+// <img src={thumb} loading="lazy" decoding="async" ...
+```
+
+For external URLs (mocks, custom uploads not in Supabase Storage) the helper passes through unchanged — safe.
 
 ### Files touched
 
 ```text
-EDIT  supabase/functions/generate-workflow/index.ts   (snapshot pattern)
-EDIT  supabase/functions/generate-tryon/index.ts      (snapshot pattern)
-EDIT  supabase/functions/generate-catalog/index.ts    (snapshot pattern)
-NEW   supabase/migrations/<ts>_backfill_generation_jobs_scene_metadata.sql
-EDIT  src/components/app/AddToDiscoverModal.tsx       (DB fallback before AI)
+EDIT  src/lib/sceneTaxonomy.ts
+        - CATEGORY_FAMILY_MAP: add 'wallets' → 'Bags & Accessories'
+        - SUB_FAMILY_LABEL_OVERRIDES: add 'wallets', 'furniture'
+
+EDIT  src/components/app/SceneBrowserModal.tsx
+        - Always render sub-family chip row (drop length>1 gate)
+        - Compute subSlugCounts; sort by count desc; show count badge
+        - getOptimizedUrl(url, { quality: 55 }) for every thumb
+        - decoding="async" on <img>
 ```
 
-### Why this is safe
-
-- Edge function changes are purely additive — worst case a field stays NULL like today.
-- Backfill is `WHERE … IS NULL` + `COALESCE` — idempotent, never overwrites good data, only touches broken rows where matching queue payload still exists.
-- UI fallback is a single `.maybeSingle()` on an indexed PK, wrapped in the existing async open effect.
-- No RLS, schema, type, or breaking changes.
+No DB / RLS / edge function changes. No type changes. No effect on other consumers of `sceneTaxonomy.ts` (interleave helpers etc. just gain one more known mapping).
 
 ### Validation
 
-1. Generate a fresh batch from `/app/generate/product-images` → every new `generation_jobs` row has `scene_name`, `scene_id`, `scene_image_url`, `model_name`, `product_image_url` populated.
-2. After backfill: `SELECT count(*) FILTER (WHERE scene_name IS NULL) FROM generation_jobs WHERE workflow_slug='product-images'` drops dramatically.
-3. Open an older library item that previously said "No scene detected" → scene picker now preselects the real scene from DB (no AI fallback, no warning).
-4. Open a brand-new generation → scene picker hydrates from props instantly (no DB roundtrip).
-5. Recreate from Discover after publishing → lands on the correct scene preselected.
+1. Open Library → admin opens "Add to Discover" → click "Browse all" on Scene picker.
+2. Left rail: same families as before, but **Bags & Accessories now ~147 (was 125)** and **Other drops by ~22**. No category appears empty.
+3. Click any family with multiple sub-families → chip row visible with `Sub · count` badges, sorted by count.
+4. Click a single-sub-family family (e.g. Watches) → still sees the lone chip (consistency).
+5. Network tab: thumbnails load via `/storage/v1/render/image/...?quality=55` — file sizes drop ~5–10× vs originals. Initial paint completes in <1s for 80-card grid.
+6. Picked thumbnail is **not zoomed/cropped** — full uncropped composition (no width/height transformation).
+7. Selecting a scene works as before; modal closes; picker hydrates.
 
