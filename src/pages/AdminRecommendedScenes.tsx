@@ -59,6 +59,8 @@ export default function AdminRecommendedScenes() {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>(GLOBAL);
+  /** Sub-family slug curation tab (curates recommended_scenes WHERE category = <slug>). */
+  const [activeSubCollection, setActiveSubCollection] = useState<string | null>(null);
   const [familyFilter, setFamilyFilter] = useState<string | null>(null);
   const [collectionFilter, setCollectionFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -89,7 +91,11 @@ export default function AdminRecommendedScenes() {
     try { localStorage.setItem(FEATURED_PREVIEW_KEY, v ? '1' : '0'); } catch {}
   };
 
-  const dbCategory = activeCategory === GLOBAL ? null : activeCategory;
+  // Resolve which `category` value is being curated.
+  // Sub-family slug takes precedence over family id; null = Global.
+  const dbCategory: string | null = activeSubCollection
+    ? activeSubCollection
+    : (activeCategory === GLOBAL ? null : activeCategory);
 
   // Paged fetch — bypass PostgREST 1k cap.
   const { data: scenes = [], isLoading: scenesLoading } = useQuery({

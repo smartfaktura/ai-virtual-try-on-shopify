@@ -232,6 +232,30 @@ export default function Discover() {
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
 
+  // Load user prefs once for "For you" sort on the All tab.
+  const [userPrefs, setUserPrefs] = useState<{ families: string[]; subtypes: string[] }>({
+    families: [],
+    subtypes: [],
+  });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('product_categories, product_subcategories')
+        .eq('user_id', u.user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setUserPrefs({
+        families: (data?.product_categories as string[] | null) ?? [],
+        subtypes: (((data as any)?.product_subcategories as string[] | null) ?? []),
+      });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Track views when modal opens (deduplicated per session)
   const viewedItemsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -343,12 +367,43 @@ export default function Discover() {
     });
   }, [allItems, selectedCategory, similarTo, isSaved, savedItems]);
 
-  // Sort: featured items first (by created_at desc), then newest first
+  // Sort: featured items first → user-family bucket index → date DESC.
+  // The user's onboarding families and sub-types take priority on the "All" tab.
   const sorted = useMemo(() => {
     const getDate = (item: DiscoverItem): number => {
       const d = item.type === 'preset' ? item.data.created_at : item.data.created_at;
       return d ? new Date(d).getTime() : 0;
     };
+
+    // Build ordered list of discover category ids matching the user's families
+    const userDiscoverCats: string[] = [];
+    const seen = new Set<string>();
+    for (const famId of userPrefs.families) {
+      const mapped = FAM_TO_DISC[famId] ?? [];
+      for (const c of mapped) {
+        if (!seen.has(c)) { seen.add(c); userDiscoverCats.push(c); }
+      }
+    }
+    const subtypeSet = new Set(userPrefs.subtypes.map(s => s.toLowerCase()));
+    const useForYouOrder = selectedCategory === 'all' && userDiscoverCats.length > 0;
+
+    const familyBucket = (item: DiscoverItem): number => {
+      if (!useForYouOrder) return 0;
+      const cat = getItemCategory(item);
+      const cats = (item.data as any).discover_categories as string[] | undefined;
+      const all = [cat, ...(Array.isArray(cats) ? cats : [])];
+      for (let i = 0; i < userDiscoverCats.length; i++) {
+        if (all.includes(userDiscoverCats[i])) return i;
+      }
+      return userDiscoverCats.length; // unmatched → after all user buckets
+    };
+
+    const subtypeRank = (item: DiscoverItem): number => {
+      if (!useForYouOrder || subtypeSet.size === 0) return 1;
+      const cat = (getItemCategory(item) ?? '').toLowerCase();
+      return subtypeSet.has(cat) ? 0 : 1;
+    };
+
     return [...filtered].sort((a, b) => {
       const aKey = `${a.type}:${getItemId(a)}`;
       const bKey = `${b.type}:${getItemId(b)}`;
@@ -357,9 +412,20 @@ export default function Discover() {
       if (aFeat && !bFeat) return -1;
       if (!aFeat && bFeat) return 1;
       if (aFeat && bFeat) return new Date(bFeat.created_at).getTime() - new Date(aFeat.created_at).getTime();
+
+      // User family bucket (lower index = earlier)
+      const aBucket = familyBucket(a);
+      const bBucket = familyBucket(b);
+      if (aBucket !== bBucket) return aBucket - bBucket;
+
+      // Within bucket, sub-type matches first
+      const aSub = subtypeRank(a);
+      const bSub = subtypeRank(b);
+      if (aSub !== bSub) return aSub - bSub;
+
       return getDate(b) - getDate(a);
     });
-  }, [filtered, featuredMap]);
+  }, [filtered, featuredMap, userPrefs, selectedCategory]);
 
   // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
