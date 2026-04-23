@@ -483,6 +483,22 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
         </div>
       )}
 
+      {/* From Explore — only when user arrived via Discover Recreate */}
+      {resolvedDiscoverScene && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+            <span>✨</span> From Explore
+          </h3>
+          <div className={`grid ${gridClass} gap-2`}>
+            <SceneCard
+              scene={resolvedDiscoverScene}
+              selected={selectedSceneIds.has(resolvedDiscoverScene.id)}
+              onToggle={() => toggleScene(resolvedDiscoverScene.id)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Recommended (detected) categories */}
       {isLoadingScenes && unifiedRecommended.length === 0 && (
         <div className="space-y-3">
