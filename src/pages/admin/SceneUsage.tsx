@@ -433,9 +433,9 @@ export default function SceneUsage() {
                         <tr key={r.scene_id} className="border-t hover:bg-muted/20">
                           <td className="px-3 py-2">
                             {r.thumbnail ? (
-                              <img src={getOptimizedUrl(r.thumbnail, { width: 80, quality: 60 })} alt="" className="w-10 h-10 rounded object-cover bg-muted" loading="lazy" />
+                              <img src={getOptimizedUrl(r.thumbnail, { width: 80, quality: 60 })} alt="" className="w-8 h-10 rounded object-cover bg-muted" loading="lazy" />
                             ) : (
-                              <div className="w-10 h-10 rounded bg-muted" />
+                              <div className="w-8 h-10 rounded bg-muted" />
                             )}
                           </td>
                           <td className="px-3 py-2">
@@ -485,9 +485,9 @@ export default function SceneUsage() {
                   return (
                     <li key={r.scene_id} className="flex items-center gap-2 text-sm">
                       {m?.thumbnail ? (
-                        <img src={getOptimizedUrl(m.thumbnail, { width: 80, quality: 60 })} alt="" className="w-7 h-7 rounded object-cover bg-muted" loading="lazy" />
+                        <img src={getOptimizedUrl(m.thumbnail, { width: 80, quality: 60 })} alt="" className="w-7 h-9 rounded object-cover bg-muted" loading="lazy" />
                       ) : (
-                        <div className="w-7 h-7 rounded bg-muted" />
+                        <div className="w-7 h-9 rounded bg-muted" />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="truncate text-xs font-medium">{m?.name ?? r.scene_id}</div>
