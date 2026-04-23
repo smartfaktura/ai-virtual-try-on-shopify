@@ -40,6 +40,7 @@ interface Step2Props {
   hasMultipleCategories?: boolean;
   forcedActiveCategoryId?: string | null;
   onForcedActiveCategoryIdConsumed?: () => void;
+  discoverScene?: { sceneId: string; title: string } | null;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -338,7 +339,7 @@ interface UnifiedCategorySectionProps {
 
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
-function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses'>) {
+function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses, discoverScene }: Pick<Step2Props, 'selectedSceneIds' | 'onSelectionChange' | 'selectedProducts' | 'productAnalyses' | 'discoverScene'>) {
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const priorityCats = useMemo(() => Array.from(relevantCatIds), [relevantCatIds]);
   const { categoryCollections: hookCategoryCollections, isLoading: isLoadingScenes, isLoadingRest } = useProductImageScenes({
@@ -383,15 +384,41 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
     return ids;
   }, [unifiedRecommended, unifiedOther]);
 
-  // Prune stale selections
+  // Resolve discoverScene to a full scene object across all loaded collections
+  const resolvedDiscoverScene = useMemo(() => {
+    if (!discoverScene?.sceneId) return null;
+    for (const c of ACTIVE_CATEGORY_COLLECTIONS) {
+      const found = c.scenes.find(s => s.id === discoverScene.sceneId);
+      if (found) return found;
+    }
+    return null;
+  }, [discoverScene?.sceneId, ACTIVE_CATEGORY_COLLECTIONS]);
+
+  // Auto-add discoverScene once (idempotent via ref)
+  const autoAddedRef = useRef<string | null>(null);
   useEffect(() => {
-    const stale = Array.from(selectedSceneIds).filter(id => !allVisibleIds.has(id));
+    if (!discoverScene?.sceneId) return;
+    if (autoAddedRef.current === discoverScene.sceneId) return;
+    if (selectedSceneIds.has(discoverScene.sceneId)) {
+      autoAddedRef.current = discoverScene.sceneId;
+      return;
+    }
+    const next = new Set(selectedSceneIds);
+    next.add(discoverScene.sceneId);
+    onSelectionChange(next);
+    autoAddedRef.current = discoverScene.sceneId;
+  }, [discoverScene?.sceneId, selectedSceneIds, onSelectionChange]);
+
+  // Prune stale selections (but never prune the discoverScene id)
+  useEffect(() => {
+    const protectedId = discoverScene?.sceneId;
+    const stale = Array.from(selectedSceneIds).filter(id => !allVisibleIds.has(id) && id !== protectedId);
     if (stale.length > 0) {
       const next = new Set(selectedSceneIds);
       stale.forEach(id => next.delete(id));
       onSelectionChange(next);
     }
-  }, [allVisibleIds, selectedSceneIds, onSelectionChange]);
+  }, [allVisibleIds, selectedSceneIds, onSelectionChange, discoverScene?.sceneId]);
 
   useEffect(() => {
     setExpandedCategories(new Set(relevantCatIds));
@@ -453,6 +480,22 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               gridClass={gridClass}
             />
           ))}
+        </div>
+      )}
+
+      {/* From Explore — only when user arrived via Discover Recreate */}
+      {resolvedDiscoverScene && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+            <span>✨</span> From Explore
+          </h3>
+          <div className={`grid ${gridClass} gap-2`}>
+            <SceneCard
+              scene={resolvedDiscoverScene}
+              selected={selectedSceneIds.has(resolvedDiscoverScene.id)}
+              onToggle={() => toggleScene(resolvedDiscoverScene.id)}
+            />
+          </div>
         </div>
       )}
 
@@ -872,7 +915,7 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
 
 
 export function ProductImagesStep2Scenes(props: Step2Props) {
-  const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed } = props;
+  const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed, discoverScene } = props;
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -890,7 +933,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
   }, [forcedActiveCategoryId, isMultiCategory, onForcedActiveCategoryIdConsumed]);
 
   if (!isMultiCategory) {
-    return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} />;
+    return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} discoverScene={discoverScene} />;
   }
 
   const categoryIds = Array.from(categoryGroups.keys());
@@ -981,6 +1024,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
         onSelectionChange={handleChange}
         selectedProducts={activeCategoryProducts}
         productAnalyses={productAnalyses}
+        discoverScene={discoverScene}
       />
     </div>
   );
