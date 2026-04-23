@@ -26,7 +26,7 @@ const STATIC_SCENE_META = new Map<string, SceneMeta>(
   ])
 );
 
-type Window = 30 | 60 | 90;
+type Window = 1 | 7 | 30 | 60 | 90 | 360;
 type SortKey = 'total_uses' | 'unique_users' | 'last_used_at' | 'name';
 type Dir = 'asc' | 'desc';
 const PAGE_SIZE = 50;
@@ -49,6 +49,24 @@ interface SceneMeta {
 }
 
 const TRACKING_START = '2026-04-22';
+
+// Page through the popularity RPC to bypass PostgREST's project-level 1000-row ceiling.
+async function fetchAllScenePopularity(p_days: number, hardCap = 10000): Promise<PopularityRow[]> {
+  const PAGE = 1000;
+  const all: PopularityRow[] = [];
+  let page = 0;
+  while (all.length < hardCap) {
+    const from = page * PAGE;
+    const to = from + PAGE - 1;
+    const res = await supabase.rpc('get_scene_popularity' as any, { p_days }).range(from, to);
+    if (res.error) throw res.error;
+    const chunk = (res.data ?? []) as PopularityRow[];
+    all.push(...chunk);
+    if (chunk.length < PAGE) break;
+    page++;
+  }
+  return all;
+}
 
 async function fetchInChunks<T>(
   ids: string[],
@@ -182,15 +200,12 @@ export default function SceneUsage() {
     setRisersLoading(true);
     setRisersFailed(false);
 
-    // 1) Main popularity — unblocks the table + main KPIs
+    // 1) Main popularity — unblocks the table + main KPIs (paged to bypass 1000-row cap)
     (async () => {
       try {
-        const popRes = await supabase
-          .rpc('get_scene_popularity' as any, { p_days: windowDays })
-          .range(0, 9999);
-        if (popRes.error) throw popRes.error;
+        const all = await fetchAllScenePopularity(windowDays);
         if (cancelled) return;
-        setRows((popRes.data ?? []) as PopularityRow[]);
+        setRows(all);
       } catch (err: any) {
         console.error('[SceneUsage] main popularity failed', err);
         if (!cancelled) {
@@ -370,7 +385,7 @@ export default function SceneUsage() {
     <div className="space-y-6">
       <PageHeader title="Scene & Shot Performance" subtitle={`Tracking accurate from ${TRACKING_START}. Older rows without a canonical scene id are excluded.`}>
         <div className="flex flex-wrap items-center gap-2">
-          {([30, 60, 90] as Window[]).map((d) => (
+          {([1, 7, 30, 60, 90, 360] as Window[]).map((d) => (
             <Button key={d} size="sm" variant={windowDays === d ? 'default' : 'outline'} onClick={() => setWindowDays(d)}>{d}d</Button>
           ))}
           <div className="flex-1" />
@@ -433,7 +448,7 @@ export default function SceneUsage() {
                         <tr key={r.scene_id} className="border-t hover:bg-muted/20">
                           <td className="px-3 py-2">
                             {r.thumbnail ? (
-                              <img src={getOptimizedUrl(r.thumbnail, { width: 80, quality: 60 })} alt="" className="w-8 h-10 rounded object-cover bg-muted" loading="lazy" />
+                              <img src={getOptimizedUrl(r.thumbnail, { width: 80, height: 100, quality: 60, resize: 'contain' })} alt="" className="w-8 h-10 rounded object-contain bg-muted" loading="lazy" />
                             ) : (
                               <div className="w-8 h-10 rounded bg-muted" />
                             )}
@@ -485,7 +500,7 @@ export default function SceneUsage() {
                   return (
                     <li key={r.scene_id} className="flex items-center gap-2 text-sm">
                       {m?.thumbnail ? (
-                        <img src={getOptimizedUrl(m.thumbnail, { width: 80, quality: 60 })} alt="" className="w-7 h-9 rounded object-cover bg-muted" loading="lazy" />
+                        <img src={getOptimizedUrl(m.thumbnail, { width: 56, height: 72, quality: 60, resize: 'contain' })} alt="" className="w-7 h-9 rounded object-contain bg-muted" loading="lazy" />
                       ) : (
                         <div className="w-7 h-9 rounded bg-muted" />
                       )}
