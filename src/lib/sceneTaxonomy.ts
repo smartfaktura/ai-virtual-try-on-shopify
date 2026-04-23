@@ -89,16 +89,18 @@ export const FAMILY_ORDER = [
 
 /** Map onboarding product_categories slugs → category_collection slugs for personalisation. */
 export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
-  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'],
+  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'],
   footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
   shoes: ['shoes', 'sneakers', 'boots', 'high-heels'],
   bags: ['bags-accessories', 'backpacks', 'wallets-cardholders'],
   accessories: ['bags-accessories', 'belts', 'scarves', 'hats-small'],
+  'bags-accessories': ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'],
   jewelry: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
   jewellery: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
   watches: ['watches'],
   eyewear: ['eyewear'],
   beauty: ['beauty-skincare', 'makeup-lipsticks'],
+  'beauty-fragrance': ['beauty-skincare', 'makeup-lipsticks', 'fragrance'],
   skincare: ['beauty-skincare'],
   makeup: ['makeup-lipsticks'],
   fragrance: ['fragrance'],
@@ -108,6 +110,7 @@ export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
   tech: ['tech-devices'],
   electronics: ['tech-devices'],
   food: ['food'],
+  'food-drink': ['food', 'beverages', 'snacks-food'],
   beverages: ['beverages'],
   drinks: ['beverages'],
   wellness: ['supplements-wellness'],
