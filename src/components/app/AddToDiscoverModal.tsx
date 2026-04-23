@@ -119,8 +119,8 @@ async function resolveSceneRefByTitleAndCategory(
       .select('scene_id, category_collection')
       .eq('title', sceneTitle)
       .eq('is_active', true);
-    if (error || !data || data.length === 0) return null;
-    const rows = data as Array<{ scene_id: string; category_collection: string | null }>;
+    if (error || !data || (data as any[]).length === 0) return null;
+    const rows = (data as unknown) as Array<{ scene_id: string; category_collection: string | null }>;
     if (rows.length === 1) return rows[0].scene_id;
 
     const targetCollection = normalizeProductTypeToken(productType);
