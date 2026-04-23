@@ -89,12 +89,16 @@ export default function ProductImages() {
   const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
   const prevProductIdsRef = useRef<string | null>(null);
 
-  // Discover Recreate resolver: prefer ?sceneId=<uuid> (deterministic),
-  // fall back to ?scene=<title> using user's product category to disambiguate.
+  // Discover Recreate resolver. Match priority:
+  //   1. ?sceneId  (UUID — deterministic)
+  //   2. ?sceneCategory (origin category from Discover — deterministic)
+  //   3. Product analysis category (when products selected AND analyses ready)
+  //   4. First candidate (only as last resort with no products selected at all)
   useEffect(() => {
     if (discoverSceneConsumedRef.current) return;
     const sceneIdParam = searchParams.get('sceneId');
     const sceneTitle = searchParams.get('scene');
+    const sceneCategoryParam = searchParams.get('sceneCategory');
     if (!sceneIdParam && !sceneTitle) return;
     if (allScenes.length === 0) return;
 
@@ -103,17 +107,49 @@ export default function ProductImages() {
     if (!match && sceneTitle) {
       const target = sceneTitle.trim().toLowerCase();
       const candidates = allScenes.filter(s => s.title.trim().toLowerCase() === target);
-      if (selectedProductIds.size > 0) {
-        const userCats = new Set(
-          Array.from(selectedProductIds)
-            .map(pid => analyses[pid]?.category)
-            .filter(Boolean) as string[]
-        );
-        match = candidates.find(c => c.categoryCollection && userCats.has(c.categoryCollection)) ?? candidates[0] ?? null;
-      } else if (candidates.length > 0) {
-        // No products yet — wait so we can disambiguate by category
+
+      if (candidates.length === 0) {
+        // No matching title — give up so we don't re-run forever
+        console.warn('[ProductImages] Discover scene title did not resolve:', sceneTitle);
+        discoverSceneConsumedRef.current = true;
         return;
       }
+
+      // 2. URL category hint (highest priority after sceneId)
+      if (sceneCategoryParam) {
+        const hint = sceneCategoryParam.trim().toLowerCase();
+        // Try exact, then trim trailing 's' (custom_scenes uses 'fragrances' but
+        // product_image_scenes uses 'fragrance'), then a contains check.
+        match =
+          candidates.find(c => (c.categoryCollection ?? '').toLowerCase() === hint) ??
+          candidates.find(c => (c.categoryCollection ?? '').toLowerCase() === hint.replace(/s$/, '')) ??
+          candidates.find(c => {
+            const cc = (c.categoryCollection ?? '').toLowerCase();
+            return cc.includes(hint) || hint.includes(cc);
+          }) ??
+          null;
+      }
+
+      // 3. Product analysis category — only when analyses have actually resolved.
+      if (!match && selectedProductIds.size > 0) {
+        const resolvedCats = Array.from(selectedProductIds)
+          .map(pid => analyses[pid]?.category)
+          .filter(Boolean) as string[];
+        if (resolvedCats.length === 0) {
+          // Products selected but analyses not back yet — WAIT. Don't fall through.
+          return;
+        }
+        const userCats = new Set(resolvedCats);
+        match = candidates.find(c => c.categoryCollection && userCats.has(c.categoryCollection)) ?? null;
+      }
+
+      // 4. Last resort — only when no products selected (deep-link case).
+      if (!match && selectedProductIds.size === 0) {
+        match = candidates[0] ?? null;
+      }
+
+      // Still no match and products are selected — wait, hopefully analyses come back.
+      if (!match && selectedProductIds.size > 0) return;
     }
 
     if (match) {
@@ -123,14 +159,17 @@ export default function ProductImages() {
         const next = new URLSearchParams(prev);
         next.delete('scene');
         next.delete('sceneId');
+        next.delete('sceneCategory');
         return next;
       }, { replace: true });
-    } else if (!sceneIdParam && sceneTitle) {
-      // No matching title at all — give up so we don't re-run forever
-      console.warn('[ProductImages] Discover scene title did not resolve:', sceneTitle);
-      discoverSceneConsumedRef.current = true;
     }
   }, [allScenes, selectedProductIds, analyses, searchParams, setSearchParams]);
+
+  // Resolve full scene object for instant "From Explore" rendering in Step 2.
+  const discoverSceneFull = useMemo(() => {
+    if (!discoverScene?.sceneId) return null;
+    return allScenes.find(s => s.id === discoverScene.sceneId) ?? null;
+  }, [discoverScene?.sceneId, allScenes]);
 
   // Load models for Refine step
   // Defer model queries until Refine step
