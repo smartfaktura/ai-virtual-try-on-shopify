@@ -178,7 +178,7 @@ export function DiscoverDetailModal({
 
   const workflowLabel = isPreset && item.data.workflow_name
     ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
-    : isPreset ? 'Freestyle' : 'Scene';
+    : isPreset ? 'Freestyle' : 'Product Visuals';
 
   return createPortal(
     <div
@@ -237,6 +237,13 @@ export function DiscoverDetailModal({
                       onClose();
                       if (isPreset && item.data.workflow_slug) {
                         navigate(`/app/generate/${item.data.workflow_slug}`);
+                      } else if (item.type === 'scene') {
+                        const sceneRef = (item.data as any).scene_ref;
+                        if (sceneRef) {
+                          navigate(`/app/generate/product-images?sceneRef=${sceneRef}&fromDiscover=1`);
+                        } else {
+                          navigate('/app/generate/product-images');
+                        }
                       } else {
                         navigate('/app/freestyle');
                       }
@@ -258,6 +265,21 @@ export function DiscoverDetailModal({
                       )}
                       <div>
                         <p className="text-xs font-medium text-foreground">{(item.data as any).scene_name}</p>
+                        <p className="text-[10px] text-muted-foreground/60">Scene</p>
+                      </div>
+                    </div>
+                  )}
+                  {item.type === 'scene' && !(item.data as any).scene_name && (
+                    <div className="flex items-center gap-2.5">
+                      {(item.data as any).previewUrl && (
+                        <img
+                          src={getOptimizedUrl((item.data as any).previewUrl, { quality: 60 })}
+                          alt={(item.data as any).name}
+                          className="w-10 h-10 rounded-lg object-cover"
+                        />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{(item.data as any).name}</p>
                         <p className="text-[10px] text-muted-foreground/60">Scene</p>
                       </div>
                     </div>

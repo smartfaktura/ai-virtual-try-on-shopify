@@ -26,7 +26,7 @@ interface DiscoverCardProps {
 }
 
 function getGenerationLabel(item: DiscoverItem): string {
-  if (item.type === 'scene') return 'Scene';
+  if (item.type === 'scene') return 'Product Visuals';
   const d = item.data;
   if (d.workflow_name) return d.workflow_name.replace(/\bSet$/i, 'Workflow');
   if (d.scene_name) return `Freestyle · ${d.scene_name}`;
@@ -38,8 +38,8 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
   const isScene = item.type === 'scene';
   const isPreset = item.type === 'preset';
 
-  const sceneThumb = isPreset ? item.data.scene_image_url : null;
-  const sceneName = isPreset ? item.data.scene_name : null;
+  const sceneThumb = isPreset ? item.data.scene_image_url : (isScene ? item.data.previewUrl : null);
+  const sceneName = isPreset ? item.data.scene_name : (isScene ? item.data.name : null);
   const modelThumb = isPreset ? item.data.model_image_url : null;
   const modelName = isPreset ? item.data.model_name : null;
   const productThumb = isPreset ? item.data.product_image_url : null;

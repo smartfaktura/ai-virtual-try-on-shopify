@@ -57,7 +57,7 @@ export function PublicDiscoverDetailModal({
 
   const workflowLabel = isPreset && item.data.workflow_name
     ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
-    : isPreset ? 'Freestyle' : 'Scene';
+    : isPreset ? 'Freestyle' : 'Product Visuals';
 
   return createPortal(
     <div
@@ -99,7 +99,7 @@ export function PublicDiscoverDetailModal({
             </div>
 
             {/* Created with section */}
-            {isPreset && (
+            {(isPreset || item.type === 'scene') && (
               <div className="space-y-3">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
@@ -110,7 +110,22 @@ export function PublicDiscoverDetailModal({
                   </span>
                 </div>
                 <div className="flex flex-col gap-2.5">
-                  {item.data.scene_name && (
+                  {item.type === 'scene' && (
+                    <div className="flex items-center gap-2.5">
+                      {(item.data as any).previewUrl && (
+                        <img
+                          src={getOptimizedUrl((item.data as any).previewUrl, { quality: 60 })}
+                          alt={(item.data as any).name}
+                          className="w-10 h-10 rounded-lg object-cover"
+                        />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{(item.data as any).name}</p>
+                        <p className="text-[10px] text-muted-foreground/60">Scene</p>
+                      </div>
+                    </div>
+                  )}
+                  {isPreset && item.data.scene_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.scene_image_url && (
                          <img
@@ -125,7 +140,7 @@ export function PublicDiscoverDetailModal({
                       </div>
                     </div>
                   )}
-                  {item.data.model_name && (
+                  {isPreset && item.data.model_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.model_image_url && (
                           <img
