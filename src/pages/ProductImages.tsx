@@ -1425,6 +1425,7 @@ export default function ProductImages() {
                 forcedActiveCategoryId={forcedActiveCategoryId}
                 onForcedActiveCategoryIdConsumed={() => setForcedActiveCategoryId(null)}
                 discoverScene={discoverScene}
+                discoverSceneFull={discoverSceneFull}
               />);
             })()}
 
