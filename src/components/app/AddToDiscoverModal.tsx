@@ -307,6 +307,12 @@ export function AddToDiscoverModal({
     setPickedModelName(initialModelName);
     setPickedWorkflowSlug(workflowSlug ?? null);
     setAiSuggestedScene(null);
+    setResolvedSceneRef(null);
+
+    // Seed resolvedSceneRef from the prop sceneId if it's a real product_image_scenes ref.
+    if (sceneId && !sceneId.startsWith('custom-') && !mockTryOnPoses.find(p => p.poseId === sceneId)) {
+      setResolvedSceneRef(sceneId);
+    }
 
     let cancelled = false;
 
