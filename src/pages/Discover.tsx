@@ -453,7 +453,7 @@ export default function Discover() {
   // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
-    
+
     // Prioritize same scene_name for presets
     if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
       const sameScene = allItems.filter((i) =>
@@ -463,14 +463,42 @@ export default function Discover() {
       );
       if (sameScene.length >= 3) return sameScene.slice(0, 9);
     }
-    
-    return allItems
+
+    // Fast-path for recommended scenes: match by scene_ref or scene title
+    const selData = selectedItem.data as any;
+    const selSceneRef = selData.scene_ref as string | undefined;
+    const selSceneTitle = selectedItem.type === 'scene' ? selData.name : null;
+    if (selSceneRef || selSceneTitle) {
+      const sameSceneRef = allItems.filter((i) => {
+        if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
+        const d = i.data as any;
+        if (selSceneRef && d.scene_ref && d.scene_ref === selSceneRef) return true;
+        if (selSceneTitle && i.type === 'preset' && d.scene_name === selSceneTitle) return true;
+        return false;
+      });
+      if (sameSceneRef.length >= 3) return sameSceneRef.slice(0, 9);
+    }
+
+    const scored = allItems
       .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
       .map((i) => ({ item: i, score: scoreSimilarity(selectedItem, i) }))
-      .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 9)
-      .map((x) => x.item);
+      .sort((a, b) => b.score - a.score);
+
+    // Hard floor: only items with score >= 4
+    const strong = scored.filter((x) => x.score >= 4).slice(0, 9).map((x) => x.item);
+    if (strong.length >= 3) return strong;
+
+    // Fallback: same collection only
+    const selColl = getItemCollection(selectedItem);
+    if (selColl) {
+      const sameColl = allItems
+        .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
+        .filter((i) => getItemCollection(i) === selColl)
+        .slice(0, 9);
+      if (sameColl.length >= 1) return sameColl;
+    }
+
+    return strong;
   }, [allItems, selectedItem]);
 
   const handleItemClick = (item: DiscoverItem) => {
