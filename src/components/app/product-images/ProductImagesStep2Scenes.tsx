@@ -457,10 +457,10 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
 
   return (
-    <div className="space-y-6 pb-20 overflow-x-clip max-w-full">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold tracking-tight">Select shots</h2>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6 pb-20 overflow-x-clip max-w-full min-w-0 w-full">
+      <div className="flex items-center justify-between gap-2 flex-wrap min-w-0 max-w-full">
+        <h2 className="text-lg font-semibold tracking-tight truncate min-w-0">Select shots</h2>
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           {selectedSceneIds.size > 0 && (
             <>
               <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} selected</Badge>
@@ -896,11 +896,11 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
   const showLegend = hasEditableBackground || /essential/i.test(label);
 
   return (
-    <div className="pt-3 pl-2">
-      <div className="flex items-center gap-2 mb-1">
+    <div className="pt-3 pl-2 min-w-0 max-w-full">
+      <div className="flex items-center gap-2 mb-1 flex-wrap min-w-0 max-w-full">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
         {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
-        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-border min-w-[20px]" />
         <Button
           variant="ghost"
           size="sm"
