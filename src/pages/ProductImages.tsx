@@ -1361,6 +1361,7 @@ export default function ProductImages() {
                 hasMultipleCategories={hasMultipleCategories}
                 forcedActiveCategoryId={forcedActiveCategoryId}
                 onForcedActiveCategoryIdConsumed={() => setForcedActiveCategoryId(null)}
+                discoverScene={discoverScene}
               />);
             })()}
 
