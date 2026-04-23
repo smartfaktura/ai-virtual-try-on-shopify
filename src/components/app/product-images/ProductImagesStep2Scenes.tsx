@@ -1024,6 +1024,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
         onSelectionChange={handleChange}
         selectedProducts={activeCategoryProducts}
         productAnalyses={productAnalyses}
+        discoverScene={discoverScene}
       />
     </div>
   );
