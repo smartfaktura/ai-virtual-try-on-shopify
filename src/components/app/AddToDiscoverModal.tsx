@@ -188,7 +188,6 @@ export function AddToDiscoverModal({
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
   const [showProduct, setShowProduct] = useState(false);
 
   // Picker state — preselected from props on open
