@@ -126,6 +126,7 @@ export default function PublicDiscover() {
   });
 
   const customScenePoses = useMemo(() => customScenes.map(toTryOnPose), [customScenes]);
+  const { data: recommendedPoses = [] } = useRecommendedDiscoverItems({ mode: 'public' });
 
   // Track views when modal opens (deduplicated per session)
   const viewedItemsRef = useRef<Set<string>>(new Set());
