@@ -54,7 +54,7 @@ const CATEGORY_TABS: { key: string; label: string }[] = [
   ...PRODUCT_CATEGORIES.filter(c => c.id !== 'any').map(c => ({ key: c.id, label: c.label })),
 ];
 
-const RECOMMENDED_CAP = 12;
+const RECOMMENDED_CAP = 18;
 const PAGE_SIZE = 1000;
 const HARD_CAP = 5000;
 
