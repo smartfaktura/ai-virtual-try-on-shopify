@@ -67,10 +67,38 @@ export function AddToDiscoverModal({
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [showModel, setShowModel] = useState(true);
-  const [showScene, setShowScene] = useState(true);
   const [showProduct, setShowProduct] = useState(false);
+
+  // Picker state — preselected from props on open
+  const [pickedSceneName, setPickedSceneName] = useState<string | null>(null);
+  const [pickedModelName, setPickedModelName] = useState<string | null>(null);
+  const [pickedWorkflowSlug, setPickedWorkflowSlug] = useState<string | null>(null);
+  const [aiSuggestedScene, setAiSuggestedScene] = useState<string | null>(null);
+  const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
+  const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
+  const [workflowPopoverOpen, setWorkflowPopoverOpen] = useState(false);
+  const [sceneSearch, setSceneSearch] = useState('');
+  const [modelSearch, setModelSearch] = useState('');
+
   const queryClient = useQueryClient();
+
+  const { scenes: allScenes, scenesByCategory, models: allModels, workflows: allWorkflows } =
+    useDiscoverPickerOptions(open);
+
+  const pickedScene = useMemo<PickerSceneOption | null>(
+    () => allScenes.find(s => s.name === pickedSceneName) ?? null,
+    [allScenes, pickedSceneName]
+  );
+  const pickedModel = useMemo<PickerModelOption | null>(
+    () => allModels.find(m => m.name === pickedModelName) ?? null,
+    [allModels, pickedModelName]
+  );
+  const pickedWorkflow = useMemo<PickerWorkflowOption | null>(
+    () => allWorkflows.find(w => w.slug === pickedWorkflowSlug) ?? null,
+    [allWorkflows, pickedWorkflowSlug]
+  );
+
+  const sceneIsMissing = !pickedSceneName;
 
   const subtypeOptions = getDiscoverSubtypes(category);
   const showSubRow = isMultiSubFamily(category);
@@ -78,32 +106,53 @@ export function AddToDiscoverModal({
   // When the family changes, reset / auto-pick the sub-type.
   useEffect(() => {
     if (!showSubRow) {
-      // Single sub-type families auto-set their only slug.
       setSubcategory(subtypeOptions[0]?.slug ?? null);
     } else if (subcategory && !subtypeOptions.some((s) => s.slug === subcategory)) {
-      // Sub-type doesn't belong to the new family — clear it.
       setSubcategory(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
-  // Auto-fill with AI when modal opens
+  // Resolve initial scene name from props (sceneName direct OR via sceneId on mocks)
+  const initialSceneName = useMemo(() => {
+    if (sceneName) return sceneName;
+    if (sceneId && !sceneId.startsWith('custom-')) {
+      const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
+      if (mock) return mock.name;
+    }
+    return null;
+  }, [sceneName, sceneId]);
+
+  const initialModelName = useMemo(() => {
+    if (modelName) return modelName;
+    if (modelId && !modelId.startsWith('custom-')) {
+      const mock = mockModels.find(m => m.modelId === modelId);
+      if (mock) return mock.name;
+    }
+    return null;
+  }, [modelName, modelId]);
+
+  // Reset & auto-fill when modal opens
   useEffect(() => {
     if (!open) return;
-    // Reset state
     setTitle('');
     setCategory(FAMILIES[0]?.id ?? 'fashion');
     setSubcategory(null);
     setTags([]);
     setTagInput('');
     setAiLoading(true);
-    setShowModel(true);
-    setShowScene(true);
     setShowProduct(false);
+    setPickedSceneName(initialSceneName);
+    setPickedModelName(initialModelName);
+    setPickedWorkflowSlug(workflowSlug ?? null);
+    setAiSuggestedScene(null);
+
+    // If scene is missing, ask AI to suggest one from the full scene list
+    const sceneOptions = !initialSceneName ? allScenes.map(s => s.name) : undefined;
 
     supabase.functions
       .invoke('describe-discover-metadata', {
-        body: { imageUrl, prompt },
+        body: { imageUrl, prompt, sceneOptions },
       })
       .then(({ data, error }) => {
         if (error || !data) {
@@ -111,7 +160,6 @@ export function AddToDiscoverModal({
           return;
         }
         if (data.title) setTitle(data.title);
-        // Accept either {family, subtype} (new) or {category} (legacy fallback).
         const fam: string | undefined = data.family ?? data.category;
         if (fam && DISCOVER_FAMILY_IDS.includes(fam)) {
           setCategory(fam);
@@ -125,7 +173,6 @@ export function AddToDiscoverModal({
             setSubcategory(null);
           }
         } else if (data.subtype) {
-          // No family but a subtype — derive family from it.
           const derived = familyIdForSubtype(data.subtype);
           if (derived) {
             setCategory(derived);
@@ -133,9 +180,18 @@ export function AddToDiscoverModal({
           }
         }
         if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
+        // AI scene suggestion — only apply if scene was missing AND option exists in list
+        if (!initialSceneName && data.suggested_scene_name) {
+          const match = allScenes.find(s => s.name === data.suggested_scene_name);
+          if (match) {
+            setPickedSceneName(match.name);
+            setAiSuggestedScene(match.name);
+          }
+        }
       })
       .catch(() => {})
       .finally(() => setAiLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, imageUrl, prompt]);
 
   if (!open) return null;
