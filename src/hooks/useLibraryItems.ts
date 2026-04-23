@@ -94,6 +94,7 @@ function jobsToRawItems(jobsData: any[], q: string): RawItem[] {
           workflowSlug: job.workflow_slug || undefined,
           productName: (job as any).product_name || undefined,
           productImageUrl: (job as any).product_image_url || undefined,
+          sourceGenerationId: job.id,
         },
       });
     }

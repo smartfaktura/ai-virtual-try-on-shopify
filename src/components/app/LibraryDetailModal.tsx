@@ -538,7 +538,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           modelImageUrl={activeItem.modelImageUrl}
           productName={activeItem.productName}
           productImageUrl={activeItem.productImageUrl}
-          sourceGenerationId={activeItem.id?.split('-').slice(0, 5).join('-')}
+          sourceGenerationId={activeItem.sourceGenerationId}
         />
       )}
       {submitDiscoverOpen && item && (

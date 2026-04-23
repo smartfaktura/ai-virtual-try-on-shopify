@@ -33,6 +33,7 @@ export interface LibraryItem {
   sceneId?: string | null;
   productId?: string | null;
   providerUsed?: string | null;
+  sourceGenerationId?: string;
 }
 
 interface LibraryImageCardProps {
