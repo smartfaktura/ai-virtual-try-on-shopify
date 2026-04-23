@@ -1,63 +1,65 @@
 
 
-## Replace sub-category pill row with a quiet text-link sub-nav
+## Match sub-category row to family pill style — outlined, smaller, coherent
 
-You're right — the second pill row doesn't belong. Two pill rows stacked feels heavy and foreign to the rest of the site (which uses underlines, hairlines, and restraint). The fix is to drop the chip metaphor entirely for level-2 and use a thin **text-link rail** — same pattern Apple, Linear, and Stripe use for nested filters.
+Your screenshot shows the right pattern: **same pill shape as the family row, but smaller and outlined** instead of solid muted fill. This creates a clear weight ladder without introducing a foreign style (text-link rail).
 
-### What changes visually
+### Visual spec
 
 ```text
-Before:  [All] [Bags] [Backpacks] [Belts] [Scarves] …    ← chips, blur fade, redundant "All"
-
-After:    Bags · Backpacks · Belts · Scarves · Hats · Wallets · Eyewear
-                ────────                                              ← thin underline = active
+Row 1 (family):  [All] (●Fashion●) [Footwear] [Bags & Accessories] …    ← solid black active
+Row 2 (sub):     ( All ) ( Clothing ) ( Hoodies ) (●Activewear●) …      ← outlined, smaller, solid black active
 ```
 
-Plain text labels separated by hairline dividers. The active sub-type gets a 1px underline (`underline underline-offset-4 decoration-1 text-foreground`). Inactive = `text-muted-foreground/70 hover:text-foreground`. No chips, no background fills, no fade mask, no border.
+Both rows now speak the same visual language (rounded-full pills), just at different scales — exactly like the screenshot.
 
-### Why this fixes every complaint
+### Sub-pill styling
 
-| Complaint | Fix |
-|---|---|
-| "Blurred transparent effect on the side" | Remove `fade-scroll` mask. Text rail uses simple `overflow-x-auto scrollbar-hide` with no gradient overlay. |
-| "Selected sub-button looks bad" | Replace flat gray `bg-foreground/10` chip with elegant underline — matches the site's underline-driven typography aesthetic (footer links, learn guides). |
-| "Fewer inputs than whole line" feels off-balance | Text rail naturally fills its width without chip sizing constraints; visually subordinate by design, not awkward. |
-| "Redundant info" (All pill) | Drop the All pill. Clicking the family pill itself = All. To clear a sub-type, user clicks the active sub-type again (toggles off) OR clicks the family pill above. Tooltip on first visit not needed — pattern is intuitive. |
-| "Different style from overall website" | Text + underline is the same level-2 nav pattern used elsewhere in the app (Settings tabs, Learn nav). |
+- **Shape**: `rounded-full` (matches family pills)
+- **Size**: `px-4 py-1.5 text-[12px] font-medium tracking-wide` (smaller than family's `px-5 py-2 text-sm`)
+- **Inactive**: `bg-transparent border border-border/60 text-muted-foreground/80 hover:border-foreground/40 hover:text-foreground`
+- **Active**: `bg-foreground text-background border border-foreground shadow-sm` (same solid black as active family pill — keeps the active state strong and recognizable as a peer-level selection)
+- **Gap between pills**: `gap-2` (tighter than the `gap-3` text rail)
+- **No interpunct dividers** (those belonged to the text-link version)
 
-### Interaction details
+### Bring back the "All" pill
 
-- **Click an inactive sub-type** → filters to that sub-type (sets `selectedSubcategory = sub.id`).
-- **Click the active sub-type** → toggles back to `__all__` (shows everything in the family).
-- **Click any family pill above** → resets `selectedSubcategory` to `__all__` (already wired via the existing `useEffect`).
-- Keyboard accessible: `<button>` elements, `aria-pressed` reflects active state.
+With pills (vs text links), an explicit **All** pill reads naturally — same as your screenshot. Clicking it sets `selectedSubcategory = '__all__'`. Drop the toggle-off-by-clicking-active behavior since "All" is now the explicit clear action.
 
-### Spacing & rhythm
+Label is just **"All"** (not "All Fashion") — family context is already obvious from the highlighted family chip above, no redundancy.
 
-The wrapper stays `<div className="space-y-2.5">` so the text rail sits ~10px under the family pills on both `/discover` and `/app/discover`. Container indent reduced from `pl-1` to `pl-0` (text rail aligns flush-left under the family bar — no need to indent text the way you'd indent secondary chips).
+### Scroll arrows
+
+Keep the existing collapse-when-not-needed arrows (they already match the family row's chevrons) — bump icon size from `w-3.5` to `w-4` so they read at the same weight as the family row's arrows.
+
+### Spacing (unchanged)
+
+`<div className="space-y-2.5">` wrapper in `Discover.tsx` and `PublicDiscover.tsx` keeps the ~10px gap between rows — already in place from the prior plan.
 
 ### Files touched
 
 ```text
 EDIT  src/components/app/DiscoverSubCategoryBar.tsx
-        - Drop "All" item from items array
-        - Replace pill button styles with:
-            inactive: 'text-muted-foreground/70 hover:text-foreground'
-            active:   'text-foreground underline underline-offset-4 decoration-1'
-        - Remove fade-scroll class (no gradient mask)
-        - Remove pl-1; add subtle separators (· interpunct between items, muted)
-        - Click active → call onSelectSubcategory('__all__') to toggle off
-        - Smaller scroll arrows kept (only show if overflow), no chevron background
+        - Prepend an "All" item (id '__all__', label 'All')
+        - Click handler: always sets selectedSubcategory = sub.id (no toggle-off)
+        - Remove interpunct <span> separators
+        - Pill className:
+            base:     'rounded-full px-4 py-1.5 text-[12px] font-medium tracking-wide
+                       transition-all duration-200 whitespace-nowrap shrink-0 border'
+            inactive: 'bg-transparent border-border/60 text-muted-foreground/80
+                       hover:border-foreground/40 hover:text-foreground'
+            active:   'bg-foreground text-background border-foreground shadow-sm'
+        - Container: gap-3 → gap-2
+        - Arrow icons: w-3.5 → w-4 to match family row weight
 ```
 
-No changes to `Discover.tsx`, `PublicDiscover.tsx`, `DashboardDiscoverSection.tsx`, taxonomy, or DB — they all already pass the same props. The component swap is fully drop-in.
+No DB, no other components, no taxonomy changes. Drop-in replacement.
 
 ### Validation
 
-1. `/app/discover` → click *Fashion*: under the family bar, a single line of plain text reads `Clothing · Hoodies · Dresses · Jeans · Jackets · Activewear · Swimwear · Lingerie · Streetwear` — no chips, no blur, no "All".
-2. Click *Hoodies* → underlined, grid filters to hoodies.
-3. Click *Hoodies* again → underline gone, grid shows all Fashion (toggled back to family-wide view).
-4. `/discover` looks identical to `/app/discover` (same component, same spacing).
-5. Visually the level-2 rail reads as a quiet refinement — not a competing component.
-6. No "blurred transparent edge" anywhere on the sub-row.
+1. `/app/discover` → click *Fashion*: sub-row reads `(All) (Clothing) (Hoodies) (Dresses) (Jeans) (Jackets) (Activewear) (Swimwear) (Lingerie) (Streetwear)` — outlined pills, same shape as the family row, visibly smaller.
+2. Click *Activewear* → fills solid black (matches active family pill style); grid filters.
+3. Click *All* → returns to family-wide view, *All* pill goes solid.
+4. `/discover` looks identical to `/app/discover`.
+5. Two rows now read as **one coherent pill family at two scales** — no foreign text-link element, no chip vs link mismatch.
 
