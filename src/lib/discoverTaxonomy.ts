@@ -102,6 +102,6 @@ export function itemMatchesDiscoverFilter(
 
   return sub === subFilter.toLowerCase();
   // Items without a subcategory are only shown under the family's __all__ tab.
-  // Admins can backfill via the Auto-classify button to surface them under sub-pills.
+  // Admins can tag them individually in the admin drawer to surface them under sub-pills.
 }
 
