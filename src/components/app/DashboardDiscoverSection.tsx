@@ -104,7 +104,7 @@ export function DashboardDiscoverSection() {
   const filtered = useMemo(() => {
     const items = activeCategory === 'all'
       ? allItems
-      : allItems.filter((item) => itemMatchesProductCategory(item, activeCategory));
+      : allItems.filter((item) => itemMatchesDiscoverFilter(item.data, activeCategory, '__all__'));
     
     // Sort: featured first, then by created_at desc — matching Discover page
     return [...items].sort((a, b) => {
