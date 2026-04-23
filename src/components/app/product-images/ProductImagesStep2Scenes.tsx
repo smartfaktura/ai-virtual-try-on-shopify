@@ -925,7 +925,7 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
 
 
 export function ProductImagesStep2Scenes(props: Step2Props) {
-  const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed, discoverScene } = props;
+  const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed, discoverScene, discoverSceneFull } = props;
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -943,7 +943,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
   }, [forcedActiveCategoryId, isMultiCategory, onForcedActiveCategoryIdConsumed]);
 
   if (!isMultiCategory) {
-    return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} discoverScene={discoverScene} />;
+    return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} discoverScene={discoverScene} discoverSceneFull={discoverSceneFull} />;
   }
 
   const categoryIds = Array.from(categoryGroups.keys());
@@ -1035,6 +1035,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
         selectedProducts={activeCategoryProducts}
         productAnalyses={productAnalyses}
         discoverScene={discoverScene}
+        discoverSceneFull={discoverSceneFull}
       />
     </div>
   );
