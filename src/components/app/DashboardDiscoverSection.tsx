@@ -224,28 +224,34 @@ export function DashboardDiscoverSection() {
       </div>
 
       <DiscoverCategoryBar
-        categories={orderedCategories}
+        categories={orderedCategoriesFiltered}
         selectedCategory={activeCategory}
         onSelectCategory={setSelectedCategory}
         
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {visible.map((item, idx) => (
-          <DiscoverCard
-            key={item.type === 'preset' ? item.data.id : item.data.poseId}
-            item={item}
-            aspectRatioOverride="3/4"
-            eager={idx < 8}
-            fetchPriority={idx === 0 ? 'high' : undefined}
-            onClick={() => setSelectedItem(item)}
-            onRecreate={(e) => {
-              e.stopPropagation();
-              handleUseItem(item);
-            }}
-          />
-        ))}
-      </div>
+      {visible.length === 0 ? (
+        <div className="py-12 text-center text-sm text-muted-foreground">
+          No looks yet in this category — check back soon.
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {visible.map((item, idx) => (
+            <DiscoverCard
+              key={item.type === 'preset' ? item.data.id : item.data.poseId}
+              item={item}
+              aspectRatioOverride="3/4"
+              eager={idx < 8}
+              fetchPriority={idx === 0 ? 'high' : undefined}
+              onClick={() => setSelectedItem(item)}
+              onRecreate={(e) => {
+                e.stopPropagation();
+                handleUseItem(item);
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <DiscoverDetailModal
         item={selectedItem}
