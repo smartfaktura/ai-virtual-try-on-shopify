@@ -73,6 +73,8 @@ export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
   'jewellery-earrings': 'Earrings',
   'high-heels': 'Heels',
   'home-decor': 'Decor',
+  'furniture': 'Furniture',
+  'wallets': 'Wallets',
   'tech-devices': 'Devices',
   'snacks-food': 'Snacks',
   'supplements-wellness': 'Wellness',
