@@ -28,10 +28,12 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
 import { DemoProductPicker } from '@/components/app/product-images/DemoProductPicker';
+import { DiscoverPreselectedCard } from '@/components/app/product-images/DiscoverPreselectedCard';
 import type { DemoProduct } from '@/data/demoProducts';
 
 // Lazy-load step components for faster initial render
-const ProductImagesStep2Scenes = lazy(() => import('@/components/app/product-images/ProductImagesStep2Scenes'));
+const step2Loader = () => import('@/components/app/product-images/ProductImagesStep2Scenes');
+const ProductImagesStep2Scenes = lazy(step2Loader);
 const ProductImagesStep3Refine = lazy(() => import('@/components/app/product-images/ProductImagesStep3Refine'));
 const ProductImagesStep4Review = lazy(() => import('@/components/app/product-images/ProductImagesStep4Review'));
 const ProductImagesStep5Generating = lazy(() => import('@/components/app/product-images/ProductImagesStep5Generating'));
@@ -251,8 +253,40 @@ export default function ProductImages() {
   // Resolve full scene object for instant "From Explore" rendering in Step 2.
   const discoverSceneFull = useMemo(() => {
     if (!discoverScene?.sceneId) return null;
-    return allScenes.find(s => s.id === discoverScene.sceneId) ?? null;
-  }, [discoverScene?.sceneId, allScenes]);
+    const fromAll = allScenes.find(s => s.id === discoverScene.sceneId);
+    if (fromAll) return fromAll;
+    if (injectedScene && injectedScene.id === discoverScene.sceneId) return injectedScene;
+    return null;
+  }, [discoverScene?.sceneId, allScenes, injectedScene]);
+
+  // Preload the Step 2 lazy chunk as soon as we detect a Discover Recreate
+  // landing — eliminates Suspense fallback flash when user clicks Continue.
+  useEffect(() => {
+    const hasDiscoverParam =
+      searchParams.get('sceneRef') ||
+      searchParams.get('sceneId') ||
+      searchParams.get('scene');
+    if (hasDiscoverParam) {
+      step2Loader().catch(() => {});
+    }
+  }, [searchParams]);
+
+  // Auto-add the discoverScene to selection the moment it resolves — runs at
+  // page level so selection happens regardless of Step 2 mount/analysis state.
+  const autoAddedDiscoverRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!discoverScene?.sceneId) return;
+    if (autoAddedDiscoverRef.current === discoverScene.sceneId) return;
+    if (selectedSceneIds.has(discoverScene.sceneId)) {
+      autoAddedDiscoverRef.current = discoverScene.sceneId;
+      return;
+    }
+    const next = new Set(selectedSceneIds);
+    next.add(discoverScene.sceneId);
+    setSelectedSceneIds(next);
+    autoAddedDiscoverRef.current = discoverScene.sceneId;
+  }, [discoverScene?.sceneId, selectedSceneIds]);
+
 
   // Load models for Refine step
   // Defer model queries until Refine step
@@ -1446,6 +1480,14 @@ export default function ProductImages() {
         )}
 
         {step >= 2 && step <= 6 && (
+          <>
+            {step === 2 && discoverSceneFull && (
+              <DiscoverPreselectedCard
+                scene={discoverSceneFull}
+                selectedSceneIds={selectedSceneIds}
+                onSelectionChange={setSelectedSceneIds}
+              />
+            )}
           <Suspense fallback={<div className="space-y-4 py-8"><Skeleton className="h-8 w-48" /><div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div></div>}>
             {step === 2 && (() => {
               const needsAnalysis = selectedProducts.some(p => pendingIds.has(p.id) && !analyses[p.id] && !(p as any).analysis_json);
@@ -1611,6 +1653,7 @@ export default function ProductImages() {
               />
             )}
           </Suspense>
+          </>
         )}
       </div>
 

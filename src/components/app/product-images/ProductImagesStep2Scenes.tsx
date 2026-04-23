@@ -406,20 +406,9 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
     return null;
   }, [discoverScene?.sceneId, discoverSceneFull, ACTIVE_CATEGORY_COLLECTIONS]);
 
-  // Auto-add discoverScene once (idempotent via ref)
-  const autoAddedRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!discoverScene?.sceneId) return;
-    if (autoAddedRef.current === discoverScene.sceneId) return;
-    if (selectedSceneIds.has(discoverScene.sceneId)) {
-      autoAddedRef.current = discoverScene.sceneId;
-      return;
-    }
-    const next = new Set(selectedSceneIds);
-    next.add(discoverScene.sceneId);
-    onSelectionChange(next);
-    autoAddedRef.current = discoverScene.sceneId;
-  }, [discoverScene?.sceneId, selectedSceneIds, onSelectionChange]);
+  // Auto-add of discoverScene now handled at the page level (ProductImages.tsx)
+  // so it happens before this component mounts/analysis completes.
+
 
   // Prune stale selections (but never prune the discoverScene id)
   useEffect(() => {
@@ -495,53 +484,9 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
         </div>
       )}
 
-      {/* From Explore — only when user arrived via Discover Recreate */}
-      {resolvedDiscoverScene && (
-        <div className="pt-3 pl-2 min-w-0 max-w-full">
-          <div className="flex items-center gap-2 mb-1 flex-wrap min-w-0 max-w-full">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">
-              Pre-selected from Explore
-            </p>
-            <div className="h-px flex-1 bg-border min-w-[20px]" />
-            {selectedSceneIds.has(resolvedDiscoverScene.id) && (
-              <span className="text-[10px] h-6 px-2 inline-flex items-center text-muted-foreground shrink-0">
-                1 selected
-              </span>
-            )}
-          </div>
-          <div className={`grid ${gridClass} gap-2`}>
-            <SceneCard
-              scene={resolvedDiscoverScene}
-              selected={selectedSceneIds.has(resolvedDiscoverScene.id)}
-              onToggle={() => toggleScene(resolvedDiscoverScene.id)}
-            />
-            <div className="rounded-xl border-2 border-dashed border-border/70 bg-muted/20 overflow-hidden flex flex-col">
-              <div className="aspect-[3/4] relative flex flex-col items-center justify-center px-4 py-5 text-center gap-3">
-                <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                  <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                <Avatar className="w-9 h-9 border border-primary/20 ring-1 ring-primary/10">
-                  <AvatarImage src={TEAM_MEMBERS[0].avatar} alt={TEAM_MEMBERS[0].name} />
-                  <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[0].name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="space-y-1">
-                  <p className="text-[13px] font-semibold tracking-tight text-foreground leading-snug">
-                    Picked for you
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-snug">
-                    From Explore
-                  </p>
-                </div>
-              </div>
-              <div className="p-1.5 min-h-[44px] flex flex-col items-center justify-center gap-0.5 border-t border-dashed border-border/70">
-                <p className="text-xs text-muted-foreground text-center leading-tight">
-                  Add more shots below
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* "Pre-selected from Explore" card now rendered at the page level
+          (ProductImages.tsx) so it paints instantly on Step 2 entry. */}
+
 
       {/* Recommended (detected) categories */}
       {isLoadingScenes && unifiedRecommended.length === 0 && (
