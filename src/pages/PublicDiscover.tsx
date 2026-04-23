@@ -197,11 +197,16 @@ export default function PublicDiscover() {
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
       if (selectedCategory !== 'all') {
-        if (!itemMatchesProductCategory(item, selectedCategory)) return false;
+        const data = item.data as any;
+        if (!itemMatchesDiscoverFilter(
+          { category: data.category, subcategory: data.subcategory, discover_categories: data.discover_categories },
+          selectedCategory,
+          selectedSubcategory,
+        )) return false;
       }
       return true;
     });
-  }, [allItems, selectedCategory]);
+  }, [allItems, selectedCategory, selectedSubcategory]);
 
   // Sort: featured items first, then newest first
   const sorted = useMemo(() => {
@@ -351,6 +356,14 @@ export default function PublicDiscover() {
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
+        {selectedCategory !== 'all' && isMultiSubFamily(selectedCategory) && (
+          <DiscoverSubCategoryBar
+            familyLabel={CATEGORIES.find((c) => c.id === selectedCategory)?.label ?? ''}
+            subcategories={getDiscoverSubtypes(selectedCategory).map((s) => ({ id: s.slug, label: s.label }))}
+            selectedSubcategory={selectedSubcategory}
+            onSelectSubcategory={setSelectedSubcategory}
+          />
+        )}
 
         {/* Masonry grid */}
         {isLoading ? (

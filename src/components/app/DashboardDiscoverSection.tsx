@@ -6,6 +6,14 @@ import { Button } from '@/components/ui/button';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
+import { DiscoverSubCategoryBar } from '@/components/app/DiscoverSubCategoryBar';
+import {
+  getDiscoverFamilies,
+  getDiscoverSubtypes,
+  isMultiSubFamily,
+  itemMatchesDiscoverFilter,
+  familyIdForSubtype,
+} from '@/lib/discoverTaxonomy';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { useFeaturedItems } from '@/hooks/useFeaturedItems';
 import { useSavedItems } from '@/hooks/useSavedItems';
@@ -15,24 +23,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'beauty', label: 'Beauty' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'sports', label: 'Sports' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home' },
-  { id: 'food', label: 'Food & Drink' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'supplements', label: 'Health' },
+  ...getDiscoverFamilies().map((f) => ({ id: f.id, label: f.label })),
 ] as const;
-
-function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
-  if (item.data.category === productCat) return true;
-  const cats = (item.data as any).discover_categories;
-  return Array.isArray(cats) && cats.includes(productCat);
-}
 
 export function DashboardDiscoverSection() {
   const navigate = useNavigate();
