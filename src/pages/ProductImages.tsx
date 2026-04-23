@@ -65,28 +65,9 @@ export default function ProductImages() {
   const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds } = useProductAnalysis();
   const { allScenes } = useProductImageScenes();
 
-  // Discover Recreate: pre-select scene from ?scene=<Title>
+  // Discover Recreate: pre-select scene from ?sceneId=<uuid> (preferred) or ?scene=<Title>
   const [discoverScene, setDiscoverScene] = useState<{ sceneId: string; title: string } | null>(null);
   const discoverSceneConsumedRef = useRef(false);
-  useEffect(() => {
-    if (discoverSceneConsumedRef.current) return;
-    const sceneTitle = searchParams.get('scene');
-    if (!sceneTitle) return;
-    if (allScenes.length === 0) return; // wait for scenes to load
-    const target = sceneTitle.trim().toLowerCase();
-    const match = allScenes.find(s => s.title.trim().toLowerCase() === target);
-    if (match) {
-      setDiscoverScene({ sceneId: match.id, title: match.title });
-    } else {
-      console.warn('[ProductImages] Discover scene title did not resolve:', sceneTitle);
-    }
-    discoverSceneConsumedRef.current = true;
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.delete('scene');
-      return next;
-    }, { replace: true });
-  }, [allScenes, searchParams, setSearchParams]);
 
   const INITIAL_DETAILS: DetailSettings = {
     aspectRatio: '1:1', quality: 'high', imageCount: '1',
@@ -107,6 +88,49 @@ export default function ProductImages() {
   const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
   const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
   const prevProductIdsRef = useRef<string | null>(null);
+
+  // Discover Recreate resolver: prefer ?sceneId=<uuid> (deterministic),
+  // fall back to ?scene=<title> using user's product category to disambiguate.
+  useEffect(() => {
+    if (discoverSceneConsumedRef.current) return;
+    const sceneIdParam = searchParams.get('sceneId');
+    const sceneTitle = searchParams.get('scene');
+    if (!sceneIdParam && !sceneTitle) return;
+    if (allScenes.length === 0) return;
+
+    let match = sceneIdParam ? allScenes.find(s => s.id === sceneIdParam) : null;
+
+    if (!match && sceneTitle) {
+      const target = sceneTitle.trim().toLowerCase();
+      const candidates = allScenes.filter(s => s.title.trim().toLowerCase() === target);
+      if (selectedProductIds.size > 0) {
+        const userCats = new Set(
+          Array.from(selectedProductIds)
+            .map(pid => analyses[pid]?.category)
+            .filter(Boolean) as string[]
+        );
+        match = candidates.find(c => c.categoryCollection && userCats.has(c.categoryCollection)) ?? candidates[0] ?? null;
+      } else if (candidates.length > 0) {
+        // No products yet — wait so we can disambiguate by category
+        return;
+      }
+    }
+
+    if (match) {
+      setDiscoverScene({ sceneId: match.id, title: match.title });
+      discoverSceneConsumedRef.current = true;
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('scene');
+        next.delete('sceneId');
+        return next;
+      }, { replace: true });
+    } else if (!sceneIdParam && sceneTitle) {
+      // No matching title at all — give up so we don't re-run forever
+      console.warn('[ProductImages] Discover scene title did not resolve:', sceneTitle);
+      discoverSceneConsumedRef.current = true;
+    }
+  }, [allScenes, selectedProductIds, analyses, searchParams, setSearchParams]);
 
   // Load models for Refine step
   // Defer model queries until Refine step
