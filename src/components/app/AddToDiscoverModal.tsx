@@ -524,12 +524,6 @@ export function AddToDiscoverModal({
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border/30 shrink-0">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-foreground">Add to Discover</h3>
-            {aiLoading && (
-              <span className="flex items-center gap-1 text-[10px] text-primary font-medium animate-pulse">
-                <Sparkles className="w-3 h-3" />
-                AI filling...
-              </span>
-            )}
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
