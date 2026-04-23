@@ -9,11 +9,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/brandedToast';
 import { mockModels, mockTryOnPoses } from '@/data/mockData';
+import {
+  getDiscoverFamilies,
+  getDiscoverSubtypes,
+  isMultiSubFamily,
+  DISCOVER_FAMILY_IDS,
+  familyIdForSubtype,
+} from '@/lib/discoverTaxonomy';
 
-const CATEGORIES = [
-  'fashion', 'beauty', 'fragrances', 'jewelry', 'accessories',
-  'home', 'food', 'electronics', 'sports', 'supplements',
-] as const;
+const FAMILIES = getDiscoverFamilies();
 
 interface AddToDiscoverModalProps {
   open: boolean;
@@ -55,7 +59,8 @@ export function AddToDiscoverModal({
   sourceGenerationId,
 }: AddToDiscoverModalProps) {
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<string>('fashion');
+  const [category, setCategory] = useState<string>(FAMILIES[0]?.id ?? 'fashion');
+  const [subcategory, setSubcategory] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
@@ -65,12 +70,28 @@ export function AddToDiscoverModal({
   const [showProduct, setShowProduct] = useState(false);
   const queryClient = useQueryClient();
 
+  const subtypeOptions = getDiscoverSubtypes(category);
+  const showSubRow = isMultiSubFamily(category);
+
+  // When the family changes, reset / auto-pick the sub-type.
+  useEffect(() => {
+    if (!showSubRow) {
+      // Single sub-type families auto-set their only slug.
+      setSubcategory(subtypeOptions[0]?.slug ?? null);
+    } else if (subcategory && !subtypeOptions.some((s) => s.slug === subcategory)) {
+      // Sub-type doesn't belong to the new family — clear it.
+      setSubcategory(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
+
   // Auto-fill with AI when modal opens
   useEffect(() => {
     if (!open) return;
     // Reset state
     setTitle('');
-    setCategory('fashion');
+    setCategory(FAMILIES[0]?.id ?? 'fashion');
+    setSubcategory(null);
     setTags([]);
     setTagInput('');
     setAiLoading(true);
@@ -88,7 +109,27 @@ export function AddToDiscoverModal({
           return;
         }
         if (data.title) setTitle(data.title);
-        if (data.category && CATEGORIES.includes(data.category)) setCategory(data.category);
+        // Accept either {family, subtype} (new) or {category} (legacy fallback).
+        const fam: string | undefined = data.family ?? data.category;
+        if (fam && DISCOVER_FAMILY_IDS.includes(fam)) {
+          setCategory(fam);
+          const subs = getDiscoverSubtypes(fam);
+          const picked: string | undefined = data.subtype;
+          if (picked && subs.some((s) => s.slug === picked)) {
+            setSubcategory(picked);
+          } else if (subs.length === 1) {
+            setSubcategory(subs[0].slug);
+          } else {
+            setSubcategory(null);
+          }
+        } else if (data.subtype) {
+          // No family but a subtype — derive family from it.
+          const derived = familyIdForSubtype(data.subtype);
+          if (derived) {
+            setCategory(derived);
+            setSubcategory(data.subtype);
+          }
+        }
         if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
       })
       .catch(() => {})
@@ -219,6 +260,7 @@ export function AddToDiscoverModal({
       prompt,
       image_url: imageUrl,
       category,
+      subcategory: subcategory ?? null,
       tags,
       aspect_ratio: aspectRatio,
       quality,
@@ -314,25 +356,44 @@ export function AddToDiscoverModal({
             <p className="text-[10px] text-muted-foreground/50 text-right">{title.length}/60</p>
           </div>
 
-          {/* Category */}
-          <div className="space-y-1.5">
+          {/* Category — family + sub-type */}
+          <div className="space-y-2.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</label>
             <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map(cat => (
+              {FAMILIES.map((fam) => (
                 <button
-                  key={cat}
-                  onClick={() => setCategory(cat)}
+                  key={fam.id}
+                  onClick={() => setCategory(fam.id)}
                   className={cn(
-                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 capitalize',
-                    category === cat
+                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
+                    category === fam.id
                       ? 'bg-foreground text-background'
                       : 'bg-muted/40 text-muted-foreground hover:bg-muted/70',
                   )}
                 >
-                  {cat}
+                  {fam.label}
                 </button>
               ))}
             </div>
+
+            {showSubRow && (
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {subtypeOptions.map((s) => (
+                  <button
+                    key={s.slug}
+                    onClick={() => setSubcategory(subcategory === s.slug ? null : s.slug)}
+                    className={cn(
+                      'px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 border',
+                      subcategory === s.slug
+                        ? 'bg-primary/15 text-primary border-primary/30'
+                        : 'bg-transparent text-muted-foreground/80 border-border/40 hover:bg-muted/40 hover:text-foreground',
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Tags */}
