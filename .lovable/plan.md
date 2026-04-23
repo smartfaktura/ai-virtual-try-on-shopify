@@ -1,56 +1,46 @@
 
 
-## Why `/app/admin/scene-performance` is still slow + fix
+## Fix zoomed-in thumbnails on `/app/admin/scene-performance`
 
-### Root causes (verified from code)
+### What broke
 
-**1) Thumbnails are unoptimized in this page (the previous fix only touched the recommended-scenes page)**
+The previous optimization added `width: 80` to the Supabase image transformer for both the main table thumbnails (40×40 square) and the risers rail (28×28 square).
 
-In `src/pages/admin/SceneUsage.tsx`:
-- Main table (line 435): `<img src={r.thumbnail} ... className="w-10 h-10" />`
-- Risers rail (line 487): `<img src={m.thumbnail} ... className="w-7 h-7" />`
+Scene preview images are **4:5 portrait**. When the transformer returns an 80px-wide image, it's 80×100. The CSS container is square (`w-10 h-10` / `w-7 h-7`) with `object-cover`, which then **crops the center of the portrait image** — making thumbnails look zoomed in or like solid color blocks (we're seeing the middle slice of the scene, not the whole composition).
 
-Both render raw Supabase Storage URLs — no `getOptimizedUrl()` call. Each 40×40 px tile downloads the **full ~2 MB original PNG**. With 50 rows visible, that's ~100 MB of thumbnail traffic on initial render alone.
+This is exactly the failure mode documented in the project's `image-optimization-no-crop` memory: width param on non-matching aspect ratios causes a "crop zoom" effect.
 
-**2) Three large RPC payloads load up front**
+### Fix (one file, frontend-only)
 
-The recent change added `.range(0, 9999)` to:
-- `get_scene_popularity(90d)` → ~1,063 rows
-- `get_scene_popularity(7d)` (risers)
-- `get_scene_popularity(14d)` (risers)
+`src/pages/admin/SceneUsage.tsx` — restore the visual preview while keeping the file-size win:
 
-That's 3 large aggregate payloads on first paint. The 90d list is needed for KPI totals, but risers only needs the top 10 — they don't need 1,000+ rows each.
+1. **Switch the table thumbnails to 4:5 containers** that match the source aspect:
+   - Change `w-10 h-10` → `w-8 h-10` (32×40)
+   - Keep `object-cover` (now no cropping because aspect matches)
+   - Keep `getOptimizedUrl(url, { width: 80, quality: 60 })` — 80px width covers retina for a 32px display tile, returns ~10–20 KB
 
-**3) Initial metadata batch is bigger than necessary**
+2. **Same fix for the risers rail**:
+   - Change `w-7 h-7` → `w-7 h-9` (28×36, ~4:5)
+   - Keep optimized URL with `width: 80`
 
-When 50 visible rows hit the lazy-meta effect at once, the in-clause query against `product_image_scenes` plus the riser-meta query both fire near-simultaneously, multiplying the burst.
+3. **Match the empty-state placeholder divs** to the new dimensions so layout stays stable while loading.
 
-### Fix (frontend-only, one file)
+### Why this works
 
-`src/pages/admin/SceneUsage.tsx`:
-
-1. **Optimize both thumbnail renders** — wrap the two `<img src={...}>` calls with `getOptimizedUrl(url, { width: 80, quality: 60 })`. 80 px width covers retina (2×) for the 40 px tiles and 28 px riser tiles. Drops each tile from ~2 MB to ~10–20 KB.
-
-2. **Cap the risers payload** — risers only needs a small set. Replace the two `.range(0, 9999)` risers calls with `.range(0, 499)`. 500 rows is more than enough to compute top-10 risers and cuts the secondary payload by ~50%.
-
-3. **Keep main popularity at `.range(0, 9999)`** — required for accurate "Scenes used" KPI (the very thing we just fixed).
-
-4. **Defer riser metadata until after main meta resolves** — small reorder so the visible-row meta batch isn't competing with the riser meta batch on first paint.
-
-### Why this is safe
-
-- One file changed, frontend-only
-- No DB / RPC / RLS / edge function changes
-- Uses the project's allowed `width:` pattern for fixed thumbnails (per `image-optimization-no-crop` memory)
-- KPI numbers and pagination behavior unchanged
-- CSV export unchanged
+- Source aspect (4:5) now matches container aspect (4:5) → no crop, full scene visible
+- `width: 80` still drops payload from ~2 MB to ~10–20 KB per tile
+- No DB / RPC / RLS changes
+- Doesn't violate the `image-optimization-no-crop` rule because container aspect now matches the requested transform aspect
 - Trivial rollback
 
 ### Validation
 
-1. Reload `/app/admin/scene-performance` → first 50 rows + main KPIs paint quickly
-2. Network panel: thumbnail responses ~10–20 KB instead of ~2 MB
-3. Risers card still shows correct top-10 with thumbnails
-4. "Scenes used" still shows ~1,063 (not truncated)
-5. "Load more" still works in 50-row increments with optimized thumbnails
+1. Reload `/app/admin/scene-performance` → table thumbnails show full scene composition (not a zoomed center crop)
+2. Risers rail thumbnails also show the full preview
+3. Network panel still shows ~10–20 KB per thumbnail (not 2 MB)
+4. KPIs, sort, search, "Load more", CSV — all unchanged
+
+### File
+
+- `src/pages/admin/SceneUsage.tsx` — adjust two `<img>` container classes + matching empty-state divs
 
