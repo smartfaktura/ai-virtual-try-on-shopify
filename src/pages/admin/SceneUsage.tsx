@@ -448,7 +448,7 @@ export default function SceneUsage() {
                         <tr key={r.scene_id} className="border-t hover:bg-muted/20">
                           <td className="px-3 py-2">
                             {r.thumbnail ? (
-                              <img src={getOptimizedUrl(r.thumbnail, { width: 80, quality: 60 })} alt="" className="w-8 h-10 rounded object-cover bg-muted" loading="lazy" />
+                              <img src={getOptimizedUrl(r.thumbnail, { width: 80, height: 100, quality: 60, resize: 'contain' })} alt="" className="w-8 h-10 rounded object-contain bg-muted" loading="lazy" />
                             ) : (
                               <div className="w-8 h-10 rounded bg-muted" />
                             )}
