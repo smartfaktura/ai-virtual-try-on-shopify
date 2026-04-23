@@ -8,6 +8,7 @@ export interface DiscoverPreset {
   prompt: string;
   image_url: string;
   category: string;
+  subcategory: string | null;
   model_name: string | null;
   scene_name: string | null;
   scene_image_url: string | null;
