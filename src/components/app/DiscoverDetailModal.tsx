@@ -69,24 +69,12 @@ export function DiscoverDetailModal({
   const queryClient = useQueryClient();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Shared picker options — composite-key dedupe (name::category::subCategory),
-  // surfaces all variants (e.g. all 9 "Frozen Aura" entries) with captions below.
-  const { models: sharedModelOpts, scenes: sharedSceneOpts } = useDiscoverPickerOptions(!!isAdmin && open);
+  // Shared picker options. Scene library swaps based on the workflow being edited.
+  const { models: sharedModelOpts, scenesForWorkflow } = useDiscoverPickerOptions(!!isAdmin && open);
 
   const allModelOptions = useMemo(
     () => sharedModelOpts.map(m => ({ name: m.name, imageUrl: m.imageUrl })),
     [sharedModelOpts],
-  );
-
-  const allSceneOptions = useMemo(
-    () =>
-      sharedSceneOpts.map(s => ({
-        name: s.name,
-        imageUrl: s.imageUrl,
-        category: s.category,
-        subCategory: s.subCategory ?? null,
-      })),
-    [sharedSceneOpts],
   );
 
   const [editModelName, setEditModelName] = useState('__none__');
