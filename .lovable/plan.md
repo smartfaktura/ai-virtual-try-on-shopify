@@ -1,107 +1,66 @@
 
-## Fix plan: stop horizontal slide on Product Visuals mobile
 
-The sideways movement is still coming from layout width, not from the scene cards alone. The screenshot shows the whole Step 2 page can be dragged beyond the viewport, which means at least one parent row is still wider than 440px.
+## Safety review of the unified-scenes plan
 
-### What I found in code
+Short answer: **the plan is safe in principle, but as written it has 3 risks that need mitigation before we ship.** Here is what's safe, what's risky, and the adjusted plan.
 
-1. `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-   - The main Step 2 picker already has `overflow-x-clip max-w-full`.
-   - But some internal rows can still force width on mobile:
-     - top toolbar: title + selected badge/clear + grid toggle in one row
-     - subgroup header: label + curator hint + divider + Select All in one row
-     - category trigger rows use non-wrapping horizontal layouts
+### What's safe ✅
 
-2. `src/pages/ProductImages.tsx`
-   - The page root wrapper is still just `space-y-6 pb-24`
-   - So even if Step 2 clips itself, any wider child can still expand the full page width
+- **Adding `scene_ref` column to `discover_presets`** — additive, nullable, no impact on existing reads.
+- **New `useAllScenes()` hook** — reads from `product_image_scenes`, which already powers Step 2. Same RLS, same data, no new attack surface.
+- **Resolver priority `?sceneRef` first, legacy fallback second** — pure addition, doesn't break old Discover items, old shareable URLs, or in-flight wizard sessions.
+- **Admin Discover form picker writing `scene_ref`** — admin-only, behind existing `has_role('admin')` RLS.
 
-3. `src/components/app/product-images/ProductContextStrip.tsx`
-   - The strip uses `overflow-x-auto` for product thumbnails
-   - But the container itself does not have strong `min-w-0 / max-w-full` containment, so it can contribute to page-wide overflow on small screens
+### Risks that must be mitigated ⚠️
 
-4. `src/components/app/product-images/ProductImagesStickyBar.tsx`
-   - The sticky bottom bar is likely part of the bleed zone in mobile
-   - It needs explicit width containment so it never becomes wider than the page content
+**Risk 1 — `EditMetadataModal` and `ImageEditModal` swap data sources**
+These modals today read from `custom_scenes` (Discover-curated subset). The plan swaps them to the full `product_image_scenes` library (1500+ rows vs ~200). Two concrete dangers:
+- Any saved metadata that referenced a `custom_scenes.id` (uuid) won't resolve in the new picker (which keys by `scene_id` text). Users could see "Scene: unknown" on existing assets.
+- If the Edit Image "Browse scenes" modal **applies** the picked scene's `prompt_template` to re-edit the image, swapping to `product_image_scenes` changes the prompt domain — some templates require product references the modal doesn't supply.
 
-### Safe implementation
+  → **Mitigation:** before swapping, audit what each modal **does** with the picked scene (display-only label vs. drives a prompt). If it drives a prompt, keep the modal on its current source for now and only unify the **picker UI** in a separate follow-up. If it's display-only, swap is safe.
 
-#### 1) Add page-level horizontal containment
-Edit `src/pages/ProductImages.tsx`
-- Add `overflow-x-clip max-w-full` to the top-level page wrapper
-- Add `min-w-0 max-w-full` to the wizard content container around step content
+**Risk 2 — Backfill ambiguity for `discover_presets.scene_ref`**
+The plan says "unambiguous matches only." For ambiguous titles (Frozen Aura ×9), `scene_ref` stays NULL → those Discover items fall back to legacy resolver → **same wrong-variant bug as today** until admin manually fixes each one.
+  → **Mitigation:** for ambiguous titles, also auto-match using `discover_presets.category` → `product_image_scenes.category_collection` mapping (we already maintain a category map in the codebase). Only leave NULL when even that doesn't disambiguate. Surface NULL rows in the admin Discover list with a "Needs scene link" badge.
 
-This makes the whole Product Visuals page respect the viewport, not just the Step 2 picker.
+**Risk 3 — Live Discover items currently using `?sceneImage` URL matching**
+A few legacy resolver paths in `ProductImages.tsx` match by image URL substring. If we don't carefully order the priority chain, `?sceneRef` lookup failures could fall through to image matching and pick the wrong row again.
+  → **Mitigation:** when `?sceneRef` is present but doesn't resolve to an active scene, **stop**. Show a soft toast ("This Explore scene is no longer available"), don't fall back to URL/title guessing. This is safer than silently picking a wrong scene.
 
-#### 2) Make the Step 2 top toolbar wrap safely on mobile
-Edit `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-- Change the header row from a strict `justify-between` layout to a mobile-safe stacked or wrapped layout
-- Example direction:
-  - mobile: title on first line
-  - controls on second line with `flex-wrap`
-- Ensure the controls group has `min-w-0`
-- Keep `GridSizeToggle` from forcing width
+### Out-of-scope risks (no impact)
 
-This is one of the most likely overflow sources on 440px.
+- Freestyle, presets-library, prompt-only Discover items, Add-to-Discover modal, Catalog Studio, Brand Models, Short Film, Creative Drops, generation queue, RLS on any table, edge functions, Stripe / billing, credit math.
 
-#### 3) Harden all Step 2 rows that can grow too wide
-Edit `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-- Add `min-w-0 max-w-full` to:
-  - From Explore wrapper
-  - category section wrappers
-  - row triggers
-  - expanded category content wrapper
-- Update subgroup header layout so it wraps on mobile:
-  - label + hint can wrap
-  - divider can hide or shrink on mobile
-  - `Select All` can move below/right instead of forcing one line
-- Add `truncate/min-w-0` where labels may stretch
+### Adjusted, safer plan
 
-#### 4) Contain the product context strip
-Edit `src/components/app/product-images/ProductContextStrip.tsx`
-- Add `min-w-0 max-w-full overflow-hidden` to the outer strip
-- Add `min-w-0 flex-1` to the thumbnails lane
-- Keep inner thumbnail scrolling, but prevent it from increasing page width
+Same as before, with these changes:
 
-This keeps horizontal scrolling local to the strip instead of the whole page.
+1. **Phase the modal swap.** Phase 1 ships only: DB column + backfill + Discover handoff + Wizard resolver + admin Discover picker. Phase 2 (separate PR) tackles `EditMetadataModal` / `ImageEditModal` after a per-modal audit.
+2. **Smarter backfill.** Use both title and category mapping; flag remaining NULLs in admin UI.
+3. **Hard stop on `?sceneRef` miss.** No silent fallback to title/image matching. Toast + leave wizard in normal Step 2 state.
+4. **Keep legacy resolver** untouched for Discover items without `scene_ref` (no regression for old links).
 
-#### 5) Contain the sticky bottom action bar
-Edit `src/components/app/product-images/ProductImagesStickyBar.tsx`
-- Add `max-w-full overflow-hidden` to the sticky wrapper and card
-- Ensure the mobile action row can shrink without exceeding viewport
-- If needed, add `min-w-0` to button row and CTA button
-
-This should stop the bottom bar from being the element that widens the page.
-
-### Files to change
+### Files (unchanged from previous plan, minus the modal edits in Phase 1)
 
 ```text
-EDIT  src/pages/ProductImages.tsx
-      - add page-level overflow-x-clip / max-w-full containment
-      - contain wizard content width
+DB migration   ALTER TABLE discover_presets ADD COLUMN scene_ref text + index
+DB data fix    Backfill scene_ref by title + category mapping
+NEW            src/hooks/useAllScenes.ts
+EDIT           src/pages/Discover.tsx              (handoff via ?sceneRef)
+EDIT           src/components/app/DiscoverDetailModal.tsx
+EDIT           src/pages/ProductImages.tsx         (resolver: sceneRef first, hard stop on miss)
+EDIT           src/pages/admin/Discover*.tsx       (scene picker writes scene_ref)
 
-EDIT  src/components/app/product-images/ProductImagesStep2Scenes.tsx
-      - make top toolbar mobile-safe
-      - add min-w-0 / max-w-full to Step 2 wrappers
-      - let subgroup/category headers wrap instead of forcing one row
-      - keep From Explore section contained
-
-EDIT  src/components/app/product-images/ProductContextStrip.tsx
-      - keep thumbnail scroller local, not page-wide
-
-EDIT  src/components/app/product-images/ProductImagesStickyBar.tsx
-      - add max-w-full / overflow-hidden width containment on mobile
+DEFERRED to Phase 2 (after audit):
+   src/components/app/library/EditMetadataModal.tsx
+   src/components/app/library/ImageEditModal.tsx
 ```
 
-### Validation
+### Validation gates before merging Phase 1
 
-1. Open Product Visuals at 440px width on Step 2
-2. Scroll vertically through the page
-3. Confirm the page cannot be dragged left/right beyond the viewport
-4. Confirm the sticky bottom bar stays fully inside the viewport
-5. Confirm From Explore card, category rows, and Select All headers do not push page width
-6. Confirm thumbnail strip can still scroll internally if needed, without moving the whole page
+1. Old Discover items without `scene_ref` still recreate exactly as today.
+2. New `?sceneRef` items land on the correct scene row regardless of product category.
+3. Admin can see and fix any "Needs scene link" rows.
+4. No change to Library, Edit Metadata, Edit Image, Freestyle, or any generation pipeline.
 
-### Note on the build error
-
-The error shown is an R2 credential timeout during dist upload, not a TypeScript/React compile failure. I would treat that as a separate deploy infrastructure retry issue unless a new actual code build error appears after these layout fixes.
