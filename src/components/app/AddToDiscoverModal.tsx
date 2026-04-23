@@ -323,11 +323,14 @@ export function AddToDiscoverModal({
       let resolvedModelName = initialModelName;
       let resolvedWorkflowSlug = workflowSlug ?? null;
 
-      if (sourceGenerationId && (!resolvedSceneName || !resolvedModelName || !resolvedWorkflowSlug)) {
+      let resolvedProductType: string | null = null;
+      let resolvedSceneIdFromJob: string | null = null;
+
+      if (sourceGenerationId) {
         try {
           const { data } = await supabase
             .from('generation_jobs')
-            .select('scene_name, scene_id, scene_image_url, model_name, model_image_url, workflow_slug')
+            .select('scene_name, scene_id, scene_image_url, model_name, model_image_url, workflow_slug, user_products(product_type)')
             .eq('id', sourceGenerationId)
             .maybeSingle();
           if (!cancelled && data) {
@@ -343,11 +346,28 @@ export function AddToDiscoverModal({
               resolvedWorkflowSlug = data.workflow_slug;
               setPickedWorkflowSlug(data.workflow_slug);
             }
+            if ((data as any).scene_id) {
+              resolvedSceneIdFromJob = (data as any).scene_id;
+              setResolvedSceneRef((data as any).scene_id);
+            }
+            const up = (data as any).user_products;
+            const pt = Array.isArray(up) ? up[0]?.product_type : up?.product_type;
+            if (pt) resolvedProductType = pt;
           }
         } catch (err) {
           console.warn('AddToDiscover: generation_jobs lookup failed', err);
         }
         if (cancelled) return;
+      }
+
+      // Title + category resolver — for legacy product-images jobs where scene_id is null
+      // but scene_name exists. Disambiguates collisions by product category.
+      const isProductImagesFlow = (resolvedWorkflowSlug === 'product-images');
+      if (isProductImagesFlow && resolvedSceneName && !resolvedSceneIdFromJob && !resolvedSceneRef) {
+        const ref = await resolveSceneRefByTitleAndCategory(resolvedSceneName, resolvedProductType);
+        if (!cancelled && ref) {
+          setResolvedSceneRef(ref);
+        }
       }
 
       // If scene is STILL missing after DB fallback, ask AI to suggest one
