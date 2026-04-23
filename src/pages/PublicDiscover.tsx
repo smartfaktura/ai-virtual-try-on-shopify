@@ -160,11 +160,11 @@ export default function PublicDiscover() {
   const allItems = useMemo<DiscoverItem[]>(() => {
     const presetItems: DiscoverItem[] = presets.map((p) => ({ type: 'preset', data: p }));
     const presetTitles = new Set(presets.map((p) => p.title));
-    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses]
+    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses, ...recommendedPoses]
       .filter((s) => !presetTitles.has(s.name))
       .map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
-  }, [presets, customScenePoses]);
+  }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
   // Auto-open item from URL param (supports slug, UUID, and scene- prefix)
   useEffect(() => {
