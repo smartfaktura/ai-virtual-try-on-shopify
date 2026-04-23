@@ -56,7 +56,7 @@ export function DiscoverSubCategoryBar({
 
   if (!subcategories.length) return null;
 
-  const items: SubCategoryItem[] = [{ id: '__all__', label: 'All' }, ...subcategories];
+  const items: SubCategoryItem[] = [{ id: '__all__', label: 'Featured' }, ...subcategories];
 
   return (
     <div className="flex items-center">
