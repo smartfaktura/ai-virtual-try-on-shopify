@@ -33,6 +33,9 @@ export function VideoWorkflowCard({ icon: Icon, title, description, bestFor, to,
       {comingSoon && (
         <Badge variant="outline" className="absolute top-4 right-4 text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
       )}
+      {beta && !comingSoon && (
+        <Badge variant="secondary" className="absolute top-4 right-4 text-[10px] font-medium tracking-wide uppercase">Beta</Badge>
+      )}
       <div className={cn(
         "flex h-11 w-11 items-center justify-center rounded-lg",
         comingSoon ? "bg-muted/60 text-muted-foreground" : "bg-primary/10 text-primary"
