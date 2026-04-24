@@ -1,54 +1,66 @@
 
+## Fix the zoomed mini product images in the Product Visuals flow
 
-## Confirmed: zero zoom/crop risk in this plan
+### Confirmed issue
+The problem is most likely the tiny category/product chips in the Product Visuals flow, especially the mini thumbnails next to category labels like **Beverages** and **Shoes**.
 
-Your worry is valid — past zoom regressions were caused by passing `width=` (which triggers Supabase's server-side **cover crop**). This plan does **not** do that.
+### Root cause
+Those mini chips are still using `getOptimizedUrl(..., { width: 40, quality: 40 })`.
 
-### Hard guarantee
+That is the exact risky pattern that previously caused the zoom/crop bug:
+- `width` triggers the image render endpoint in a way that can tighten framing
+- the chip is then displayed inside a tiny square with `object-cover`
+- visually this makes the product look zoomed in
 
-Every edit uses **`quality` only**. Never `width`, never `height`, never `resize`.
+### Primary file to fix
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+  - Category tab mini product thumbnails beside labels like Beverages / Shoes
+  - Current risky code:
+    - `getOptimizedUrl(p.image_url, { width: 40, quality: 40 })`
 
-```tsx
-// ✅ Safe — re-encodes at lower bitrate, same pixels, same framing
-getOptimizedUrl(url, { quality: 60 })
+### Related identical-risk spots to fix in the same pass
+To avoid the same bug reappearing one step later, normalize the same pattern anywhere else in the Product Images flow:
+- `src/components/app/product-images/ProductImagesStep3Details.tsx`
+- `src/components/app/product-images/ProductImagesStep3Props.tsx`
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-// ❌ Causes the zoom-in bug — NEVER used here
-getOptimizedUrl(url, { width: 56 })
-getOptimizedUrl(url, { width: 56, resize: 'cover' })
-```
+These files also contain tiny chips using `width: 40`.
 
-### Why it's mathematically impossible to zoom
+### Implementation
+1. Replace every tiny-chip optimization call in those files from:
+   - `getOptimizedUrl(url, { width: 40, quality: 40 })`
+   to:
+   - `getOptimizedUrl(url, { quality: 40 })`
 
-`quality` is a JPEG/WebP re-encode parameter. It changes file size, not dimensions. The image keeps:
-- Same width × height in pixels
-- Same aspect ratio
-- Same framing / composition
+2. Keep all larger scene cards and already-safe quality-only previews unchanged.
 
-Visual fit on screen is still controlled by the same `object-cover` / `object-contain` CSS on the wrapper — exactly as it renders today.
+3. Re-check the chip CSS after removing `width`:
+   - if the mini product still feels too tight because of `object-cover`, switch only those tiny product chips to `object-contain` inside the same rounded wrapper
+   - keep scene previews as-is unless they show the same issue
 
-### Parameter discipline (per-file)
+### Safety rules
+- Never use `width`, `height`, or `resize` in this fix
+- Only use `quality`
+- Do not touch selection logic, category grouping, or generation flow
+- Do not change full preview, lightbox, download, or result image behavior
 
-| File | Thumb | Quality | width? | height? | resize? |
-|---|---|---|---|---|---|
-| MultiProductProgressBanner | 20px chip | 40 | ❌ | ❌ | ❌ |
-| OutfitSlotCard | 36px locked thumb | 60 | ❌ | ❌ | ❌ |
-| ProductImagesStep3Refine (4 imgs) | 48–96px | 60–70 | ❌ | ❌ | ❌ |
-| ProductImages analyzing chip | 40px | 60 | ❌ | ❌ | ❌ |
-| Generate (5 imgs) | 20–64px | 40–60 | ❌ | ❌ | ❌ |
-| Freestyle recreate badges | 20px | 40 | ❌ | ❌ | ❌ |
-| Perspectives ref tile | 80px | 70 | ❌ | ❌ | ❌ |
+### Expected result
+- Mini thumbnails next to **Beverages** and **Shoes** keep the original framing
+- No zoomed-in or over-cropped product chips
+- Same lightweight loading, but without the crop regression
 
-### Matches established safe pattern
+### QA checklist
+On `/app/generate/product-images`:
+1. Open Step 2 and inspect category chips for:
+   - Beverages
+   - Shoes
+   - Sneakers / Boots if present
+2. Confirm the whole product composition looks normal again
+3. Open later Product Images steps and verify the same for any small product chips
+4. In Network tab, confirm these thumbnail requests use:
+   - `/render/image/...?...quality=40`
+   - and do **not** contain `width=` or `resize=`
 
-Same discipline as the previous (now-deployed) modal pass and `ProductThumbnail.tsx`, `LibraryPickerModal`, `DiscoverDetailModal`, etc. — all quality-only, no crop reports.
-
-### Rollback safety
-
-If any single thumbnail looks off, the fix is a one-line revert on that `<img>` — remove the `getOptimizedUrl(...)` wrapper. No state, no props, no cascading effects.
-
-### What stays full-resolution (untouched)
-
-Lightboxes, full preview viewers, downloads, exports, generation inputs — not changed. Full-res still loads only when the user explicitly opens a large preview or downloads.
-
-Approve and I'll apply the audit exactly as scoped — quality-only, everywhere.
-
+### Summary of planned code changes
+- Targeted revert of the risky thumbnail transform pattern in the Product Images mini-chip UI
+- Normalize all identical 40px chip cases in the same workflow so the bug is fixed consistently, not just in one place
