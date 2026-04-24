@@ -1,46 +1,51 @@
 
 
-## Fix scroll reset when navigating to /app/discover
+## Fix: Add JWT auth to `ai-shot-planner` edge function
 
 ### Root cause
-`AppShell.tsx` line 102-107 resets `#app-main-scroll` to top on route change but **explicitly skips** any path starting with `/app/discover`. That guard was added to preserve feed position when opening a Discover item modal (`/app/discover/:itemId`), but it also blocks reset when the user arrives at Discover from any other page (Library, Products, Dashboard, etc.) — leaving them deep in the feed.
+`supabase/functions/ai-shot-planner/index.ts` accepts requests with no auth check, then calls Lovable AI using `LOVABLE_API_KEY`. Anyone with the function URL can burn paid API quota anonymously.
 
-### Fix (single file, ~5 lines)
+### Fix (one file)
 
-**`src/components/app/AppShell.tsx`** — replace the scroll-reset effect (lines 102-107) with a `previousPathname` ref that compares the *previous* pathname to the new one. Skip reset only when both are inside `/app/discover` (intra-Discover navigation, e.g. opening/closing item modals). Reset on every other transition, including Library → Discover.
+**`supabase/functions/ai-shot-planner/index.ts`** — add JWT verification block immediately after the OPTIONS handler, before any request body parsing or AI call. Use the standard `getClaims()` pattern already used across the codebase (`analyze-product-image`, `studio-chat`, `kling-lip-sync`, etc.).
 
-```tsx
-const prevPathRef = useRef<string>(location.pathname);
-useEffect(() => {
-  const prev = prevPathRef.current;
-  const next = location.pathname;
-  prevPathRef.current = next;
+```typescript
+const authHeader = req.headers.get('Authorization');
+if (!authHeader?.startsWith('Bearer ')) {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
 
-  // Preserve scroll only when navigating within Discover (item modal open/close)
-  const bothInDiscover = prev.startsWith('/app/discover') && next.startsWith('/app/discover');
-  if (bothInDiscover) return;
-
-  const main = document.getElementById('app-main-scroll');
-  if (main) main.scrollTop = 0;
-}, [location.pathname]);
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_ANON_KEY')!,
+);
+const token = authHeader.replace('Bearer ', '');
+const { data: claims, error: authError } = await supabase.auth.getClaims(token);
+if (authError || !claims?.claims) {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+const userId = claims.claims.sub;
 ```
 
-Add `useRef` to the existing react import.
+Add the `createClient` import from `@supabase/supabase-js` if not present. Log `userId` alongside existing console logs for traceability.
 
 ### Why this is safe
-- Infinite scroll in Discover relies on IntersectionObserver inside the page — resetting `scrollTop` to 0 simply makes the sentinel re-trigger normally as the user scrolls down. No data refetch is forced (react-query cache is intact, `staleTime: 10min`).
-- Item modal flow (`/app/discover` → `/app/discover/:itemId` → back) still preserves scroll because both paths start with `/app/discover`.
-- `window.scrollTo` is intentionally not used — inside `/app/*` the scroll container is `<main id="app-main-scroll">`, not `window`. The existing `ScrollToTop` in `App.tsx` handles `window` for non-app routes.
-- Only one effect, one file, no new dependencies.
+- `verify_jwt = false` in `config.toml` stays as-is (matches platform pattern) — auth is enforced in code.
+- Frontend callers using `supabase.functions.invoke('ai-shot-planner', ...)` automatically attach the user's JWT, so no client changes are needed.
+- Pattern is identical to `analyze-product-image` and `studio-chat`, which the Product Images flow already calls successfully.
+- Mark security finding `open_ai_shot_planner` as fixed after deploy.
 
 ### Out of scope
-- No changes to Discover data hooks, masonry layout, or modal logic.
-- No changes to `App.tsx`'s `ScrollToTop` (that handles public routes correctly via `window.scrollTo`).
-- No changes to other app pages.
+- No changes to AI prompt logic, response shape, or any caller code.
+- No changes to other edge functions.
+- The separate `image-proxy` SSRF finding is tracked separately and not addressed here.
 
-### QA
-1. `/app/library` → scroll to bottom → click Explore → lands at top, first batch visible, infinite scroll still works on scroll down.
-2. Same from `/app/products`, `/app/freestyle`, `/app/dashboard`, `/app/workflows`.
-3. Inside Discover: scroll halfway down → click an item → modal opens → close → scroll position preserved.
-4. Browser back/forward between Library and Discover: Discover lands at top (acceptable; matches expected behavior for fresh feed).
+### Result
+Anonymous calls to `ai-shot-planner` return 401. Authenticated app users continue to work unchanged. Paid AI quota is protected.
 
