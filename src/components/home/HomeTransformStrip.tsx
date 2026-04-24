@@ -69,7 +69,25 @@ const EYEWEAR_CARDS: GridCardData[] = [
   { label: 'Beauty Closeup II', src: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014') },
 ];
 
+/* ── All categories collage: one strong shot per category (mobile shows first 9) ── */
+const ALL_CATEGORIES_CARDS: GridCardData[] = [
+  { label: 'Swimwear',   src: PREVIEW('1776523219756-c5vnc7') },
+  { label: 'Fragrance',  src: PREVIEW('1776018015756-3xfquh') },
+  { label: 'Eyewear',    src: PREVIEW('1776102185057-0ulf1m') },
+  { label: 'Beauty',     src: PREVIEW('1776239794347-u8o1yr') },
+  { label: 'Jewelry',    src: PREVIEW('1776241616772-yak1ea') },
+  { label: 'Sneakers',   src: PREVIEW('1776770342811-jr21sq') },
+  { label: 'Bags',       src: PREVIEW('1776239414811-nvmu94') },
+  { label: 'Activewear', src: PREVIEW('1776192305310-dz9fum') },
+  { label: 'Dresses',    src: PREVIEW('1776688399076-0n2cku') },
+  // hidden on mobile
+  { label: 'Watches',    src: PREVIEW('1776247087022-pv2irf') },
+  { label: 'Home Decor', src: PREVIEW('1776588663193-0iekhe') },
+  { label: 'Jackets',    src: PREVIEW('1776690210526-u3dv8r') },
+];
+
 const CATEGORIES = [
+  { id: 'all',       label: '35+ Categories · 1000+ Scenes', cards: ALL_CATEGORIES_CARDS, copy: 'A glimpse across the catalog — every category, one shot each.' },
   { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS,  copy: 'See what your swimwear can become.' },
   { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS, copy: 'See what your fragrance can become.' },
   { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS,   copy: 'See what your eyewear can become.' },
@@ -110,7 +128,7 @@ function GridCard({ card, hideOnMobile }: { card: GridCardData; hideOnMobile: bo
 /* ── Main section ── */
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
-  const [active, setActive] = useState<CategoryId>('swimwear');
+  const [active, setActive] = useState<CategoryId>('all');
 
   const current = CATEGORIES.find((c) => c.id === active)!;
 
@@ -118,25 +136,28 @@ export function HomeTransformStrip() {
     <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-10">
-          <h2 className="text-foreground text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-            From one product photo to every asset you need
+        <div className="text-center max-w-3xl mx-auto mb-8 lg:mb-10">
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            One product photo. Every shot your brand needs.
           </h2>
-          <p className="text-muted-foreground text-lg leading-relaxed">
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+            Whatever you sell — swimwear, fragrance, eyewear, beauty, fashion — VOVV turns one image into 1000+ on-brand shots across 35+ categories.
+          </p>
+          <p className="text-sm text-muted-foreground/80 italic mt-3">
             {current.copy}
           </p>
         </div>
 
         {/* Category pills */}
-        <div className="flex justify-center mb-8 lg:mb-10">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60">
+        <div className="flex justify-center mb-8 lg:mb-10 -mx-6 px-6 overflow-x-auto scrollbar-hide">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60 mx-auto">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => setActive(cat.id)}
                 className={cn(
-                  'px-5 py-2 rounded-full text-sm font-medium transition-colors',
+                  'px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
                   active === cat.id
                     ? 'bg-foreground text-background shadow-sm'
                     : 'text-muted-foreground hover:text-foreground',
