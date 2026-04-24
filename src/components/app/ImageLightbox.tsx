@@ -187,7 +187,7 @@ export function ImageLightbox({
           <div className="flex items-center justify-center gap-3 mt-4">
             {onSelect && (
               <button
-                onClick={() => onSelect(currentIndex)}
+                onClick={handleSelect}
                 className={cn(
                   iconBtnClass,
                   isSelected && 'bg-primary text-primary-foreground hover:bg-primary/80'
@@ -197,27 +197,27 @@ export function ImageLightbox({
               </button>
             )}
             {onDownload && (
-              <button onClick={() => onDownload(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleDownload} className={iconBtnClass}>
                 <Download className="w-4 h-4" />
               </button>
             )}
             {onCopyPrompt && (
-              <button onClick={() => onCopyPrompt(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleCopyPrompt} className={iconBtnClass}>
                 <ClipboardCopy className="w-4 h-4" />
               </button>
             )}
             {onRegenerate && (
-              <button onClick={() => onRegenerate(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleRegenerate} className={iconBtnClass}>
                 <RefreshCw className="w-4 h-4" />
               </button>
             )}
             {onShare && (
-              <button onClick={() => onShare(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleShare} className={iconBtnClass}>
                 <Trophy className="w-4 h-4" />
               </button>
             )}
             {onDelete && (
-              <button onClick={() => onDelete(currentIndex)} className={deleteBtnClass}>
+              <button onClick={handleDelete} className={deleteBtnClass}>
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
@@ -228,7 +228,7 @@ export function ImageLightbox({
             <div className="flex items-center gap-2 mt-5">
               {onSelect && (
                 <button
-                  onClick={() => onSelect(currentIndex)}
+                  onClick={handleSelect}
                   className={cn(
                     'flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium transition-colors backdrop-blur-md',
                     isSelected
@@ -242,7 +242,7 @@ export function ImageLightbox({
               )}
               {onDownload && (
                 <button
-                  onClick={() => onDownload(currentIndex)}
+                  onClick={handleDownload}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                 >
                   <Download className="w-4 h-4" />
@@ -251,7 +251,7 @@ export function ImageLightbox({
               )}
               {onRegenerate && (
                 <button
-                  onClick={() => onRegenerate(currentIndex)}
+                  onClick={handleRegenerate}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -260,7 +260,7 @@ export function ImageLightbox({
               )}
               {onCopyPrompt && (
                 <button
-                  onClick={() => onCopyPrompt(currentIndex)}
+                  onClick={handleCopyPrompt}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                 >
                   <ClipboardCopy className="w-4 h-4" />
@@ -269,7 +269,7 @@ export function ImageLightbox({
               )}
               {onDelete && (
                 <button
-                  onClick={() => onDelete(currentIndex)}
+                  onClick={handleDelete}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors backdrop-blur-md"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -280,7 +280,7 @@ export function ImageLightbox({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => onShare(currentIndex)}
+                      onClick={handleShare}
                       className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                     >
                       <Trophy className="w-4 h-4" />
