@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, CheckCircle } from 'lucide-react';
 import type { Product } from '@/types';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ProductAssignmentModalProps {
   open: boolean;
@@ -46,7 +47,7 @@ export function ProductAssignmentModal({ open, onClose, products, selectedProduc
                 ) : filteredProducts.slice(0, 10).map(product => (
                   <button key={product.id} type="button" onClick={() => onSelectProduct(product)} className="w-full p-3 border border-border rounded-lg hover:bg-muted transition-colors text-left flex items-center gap-3">
                     <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border border-border">
-                      <img src={product.images[0]?.url || '/placeholder.svg'} alt={product.title} className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(product.images[0]?.url, { quality: 60 }) || '/placeholder.svg'} alt={product.title} loading="lazy" className="w-full h-full object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm">{product.title}</p>
@@ -62,7 +63,7 @@ export function ProductAssignmentModal({ open, onClose, products, selectedProduc
               <div className="p-4 border border-primary rounded-lg bg-primary/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border border-border">
-                    <img src={selectedProduct.images[0]?.url || '/placeholder.svg'} alt={selectedProduct.title} className="w-full h-full object-cover" />
+                    <img src={getOptimizedUrl(selectedProduct.images[0]?.url, { quality: 60 }) || '/placeholder.svg'} alt={selectedProduct.title} className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <div className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-primary" /><p className="font-semibold text-sm">{selectedProduct.title}</p></div>

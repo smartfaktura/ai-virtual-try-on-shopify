@@ -42,7 +42,7 @@ export default function UpscaleSettingsPanel({
             {productQueue.map(p => (
               <div key={p.id} className="flex-shrink-0 w-[72px]">
                 <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
-                  <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(p.images[0]?.url, { quality: 60 }) || '/placeholder.svg'} alt={p.title} loading="lazy" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
               </div>
