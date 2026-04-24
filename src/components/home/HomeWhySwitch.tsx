@@ -27,10 +27,10 @@ export function HomeWhySwitch() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-white text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-            Why brands are replacing slow content production
+            Built to replace slow content production
           </h2>
           <p className="text-[#9ca3af] text-lg leading-relaxed">
-            Create new product visuals in minutes instead of waiting on shoots, edits, and endless revisions.
+            Generate new product visuals in minutes — no shoots, no edits, no waiting.
           </p>
         </div>
 

@@ -28,10 +28,10 @@ export function HomeOnBrand() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-            One scene, every product.
+            One scene. Every product.
           </h2>
           <p className="text-[#6b7280] text-lg leading-relaxed">
-            Lock the look once. Every product drops into the same scene.
+            Lock the look once — every product drops into the same scene, on brand.
           </p>
         </div>
 
