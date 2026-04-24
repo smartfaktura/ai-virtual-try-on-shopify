@@ -1,47 +1,54 @@
 
 
-## Reassurance: no crop zoom risk in this audit
+## Confirmed: zero zoom/crop risk in this plan
 
-Your concern is valid — past regressions happened when `width=` was passed to `getOptimizedUrl`, which triggers Supabase's server-side **cover crop** and produces zoomed-in thumbnails. This audit explicitly avoids that.
+Your worry is valid — past zoom regressions were caused by passing `width=` (which triggers Supabase's server-side **cover crop**). This plan does **not** do that.
 
-### Guarantee
-Every single edit in the modal thumbnail audit uses **`quality` only** — never `width`, never `height`, never `resize`.
+### Hard guarantee
+
+Every edit uses **`quality` only**. Never `width`, never `height`, never `resize`.
 
 ```tsx
-// ✅ What we will do (safe — no crop, just compression)
+// ✅ Safe — re-encodes at lower bitrate, same pixels, same framing
 getOptimizedUrl(url, { quality: 60 })
 
-// ❌ What we will NEVER do (causes the zoom-in bug)
+// ❌ Causes the zoom-in bug — NEVER used here
 getOptimizedUrl(url, { width: 56 })
 getOptimizedUrl(url, { width: 56, resize: 'cover' })
 ```
 
-This matches the existing memory rule `mem://style/image-optimization-no-crop` and the established pattern in `ProductThumbnail.tsx`, `LibraryPickerModal`, `DiscoverDetailModal`, etc.
+### Why it's mathematically impossible to zoom
 
-### Why this is mathematically safe
-`quality` only re-encodes the JPEG/WebP at lower bitrate. It does **not** change pixel dimensions, aspect ratio, or framing. The image displayed is the exact same composition — just a smaller file. The `object-cover` / `object-contain` CSS on the wrapper handles the visual fit, identical to today.
+`quality` is a JPEG/WebP re-encode parameter. It changes file size, not dimensions. The image keeps:
+- Same width × height in pixels
+- Same aspect ratio
+- Same framing / composition
 
-### What changes vs. the original audit plan
-**Nothing functional.** Same 10 files, same `getOptimizedUrl` wrapping, same `loading="lazy"` additions. I'm just confirming the parameter discipline:
+Visual fit on screen is still controlled by the same `object-cover` / `object-contain` CSS on the wrapper — exactly as it renders today.
 
-| Thumb | Quality | Width param? |
-|---|---|---|
-| AddToDiscoverModal dropdown rows (20–24px) | 40 | ❌ no |
-| JobDetailModal product thumb (56px) | 60 | ❌ no |
-| ProductAssignmentModal rows (48px) | 60 | ❌ no |
-| ImportProductScenesModal (32–40px) | 60 | ❌ no |
-| PublishModal previews (56px) | 60 | ❌ no |
-| UpscaleSettingsPanel (56px) | 60 | ❌ no |
-| Local-preview modals (blob URLs) | 60–70 | ❌ no (no-op anyway) |
+### Parameter discipline (per-file)
 
-### Visual outcome
-- Same framing as today (no crop, no zoom).
-- ~10–15× smaller payload per thumbnail.
-- Visually indistinguishable at the rendered small sizes.
-- Lightbox / full preview / downloads remain **completely untouched** — full resolution always.
+| File | Thumb | Quality | width? | height? | resize? |
+|---|---|---|---|---|---|
+| MultiProductProgressBanner | 20px chip | 40 | ❌ | ❌ | ❌ |
+| OutfitSlotCard | 36px locked thumb | 60 | ❌ | ❌ | ❌ |
+| ProductImagesStep3Refine (4 imgs) | 48–96px | 60–70 | ❌ | ❌ | ❌ |
+| ProductImages analyzing chip | 40px | 60 | ❌ | ❌ | ❌ |
+| Generate (5 imgs) | 20–64px | 40–60 | ❌ | ❌ | ❌ |
+| Freestyle recreate badges | 20px | 40 | ❌ | ❌ | ❌ |
+| Perspectives ref tile | 80px | 70 | ❌ | ❌ | ❌ |
+
+### Matches established safe pattern
+
+Same discipline as the previous (now-deployed) modal pass and `ProductThumbnail.tsx`, `LibraryPickerModal`, `DiscoverDetailModal`, etc. — all quality-only, no crop reports.
 
 ### Rollback safety
-If anything looks off in a single thumbnail, the fix is one-line: remove the `getOptimizedUrl` wrapper for that specific `<img>`. No cascading effects, no state changes, no data shape changes.
 
-Approve and I'll apply the audit exactly as scoped, with quality-only parameters everywhere.
+If any single thumbnail looks off, the fix is a one-line revert on that `<img>` — remove the `getOptimizedUrl(...)` wrapper. No state, no props, no cascading effects.
+
+### What stays full-resolution (untouched)
+
+Lightboxes, full preview viewers, downloads, exports, generation inputs — not changed. Full-res still loads only when the user explicitly opens a large preview or downloads.
+
+Approve and I'll apply the audit exactly as scoped — quality-only, everywhere.
 
