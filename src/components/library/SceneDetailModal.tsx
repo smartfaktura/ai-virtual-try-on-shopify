@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,7 +61,7 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
           <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/40">
             {/* Skeleton shimmer */}
             {!imgLoaded && (
-              <div className="absolute inset-0 z-[1] animate-pulse bg-foreground/[0.06]" />
+              <Skeleton className="absolute inset-0 z-[1] rounded-none" />
             )}
 
             {/* Tiny low-quality placeholder for instant paint */}
