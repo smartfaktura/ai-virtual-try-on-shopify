@@ -11,9 +11,10 @@ interface VideoWorkflowCardProps {
   to: string;
   disabled?: boolean;
   comingSoon?: boolean;
+  beta?: boolean;
 }
 
-export function VideoWorkflowCard({ icon: Icon, title, description, bestFor, to, disabled, comingSoon }: VideoWorkflowCardProps) {
+export function VideoWorkflowCard({ icon: Icon, title, description, bestFor, to, disabled, comingSoon, beta }: VideoWorkflowCardProps) {
   const navigate = useNavigate();
 
   return (
