@@ -80,36 +80,36 @@ function MarqueeRow({ cards, direction, duration }: {
 /* ── Main component ── */
 export function HomeHero() {
   return (
-    <section className="pt-24 pb-6 lg:pt-28 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
+    <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {/* ── Centered copy ── */}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
-        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-5">
+        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
           One product photo.
           <br />
           <span className="text-[#4a5578]">AI creates the rest.</span>
         </h1>
 
-        <p className="max-w-xl mx-auto text-muted-foreground text-lg leading-relaxed mb-6">
+        <p className="max-w-xl mx-auto text-muted-foreground text-lg leading-relaxed mb-10">
           Turn a single product image into product page visuals, social content, and campaign-ready creative in minutes.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to="/auth"
-            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-[15px] font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/15"
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
           >
             Try it on my product
             <ArrowRight size={16} />
           </Link>
           <a
             href="#examples"
-            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-[15px] font-medium hover:bg-secondary transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
           >
             See examples
           </a>
         </div>
 
-        <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
+        <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8">
           20 free credits · No credit card required
         </p>
       </div>

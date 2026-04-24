@@ -40,7 +40,7 @@ export function HomeFAQ() {
           FAQ
         </p>
         <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-3">
-          Everything you’re wondering about VOVV
+          Everything you're wondering about VOVV
         </h2>
         <p className="text-[#6b7280] text-base sm:text-lg text-center mb-12 leading-relaxed">
           Quick answers before you start creating.

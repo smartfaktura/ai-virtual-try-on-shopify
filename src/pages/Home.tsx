@@ -9,7 +9,6 @@ import { HomeCreateCards } from '@/components/home/HomeCreateCards';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeWhySwitch } from '@/components/home/HomeWhySwitch';
 import { HomeOnBrand } from '@/components/home/HomeOnBrand';
-import { HomePricingTeaser } from '@/components/home/HomePricingTeaser';
 import { HomeFAQ } from '@/components/home/HomeFAQ';
 import { HomeFinalCTA } from '@/components/home/HomeFinalCTA';
 import { LandingFooter } from '@/components/landing/LandingFooter';
@@ -47,7 +46,6 @@ export default function Home() {
       <HomeHowItWorks />
       <HomeWhySwitch />
       <HomeOnBrand />
-      <HomePricingTeaser />
       <HomeFAQ />
       <HomeFinalCTA />
       <LandingFooter />

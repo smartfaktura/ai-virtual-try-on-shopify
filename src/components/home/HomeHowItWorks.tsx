@@ -158,7 +158,7 @@ export function HomeHowItWorks() {
 
         {/* CTA */}
         <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
-          <Button asChild size="lg" className="rounded-full px-10 h-12 text-base">
+          <Button asChild size="lg" className="rounded-full px-10 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
             <Link to="/auth">Start Generating Free</Link>
           </Button>
           <p className="text-xs text-muted-foreground">

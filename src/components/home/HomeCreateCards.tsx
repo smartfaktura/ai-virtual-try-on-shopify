@@ -75,7 +75,7 @@ export function HomeCreateCards() {
             What do you want to create first?
           </h2>
           <p className="text-[#6b7280] text-lg leading-relaxed">
-            Start with the format you need most, then expand into more content from the same product.
+            Pick the format you need most. Reuse the same product image for everything else.
           </p>
         </div>
 
