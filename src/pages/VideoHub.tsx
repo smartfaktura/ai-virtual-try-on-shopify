@@ -231,6 +231,7 @@ export default function VideoHub() {
           description="Plan and generate a premium multi-shot brand film"
           bestFor={['Brand storytelling', 'Multi-shot', 'Campaign films']}
           to="/app/video/short-film"
+          beta
         />
       </div>
 
