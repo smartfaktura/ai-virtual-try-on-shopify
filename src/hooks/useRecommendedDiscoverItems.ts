@@ -51,49 +51,14 @@ export function useRecommendedDiscoverItems(opts: { mode: 'auth' | 'public' } = 
     queryKey: ['recommended-discover-items', opts.mode],
     staleTime: 10 * 60 * 1000,
     queryFn: async (): Promise<RecommendedDiscoverPose[]> => {
-      let scenes: SceneRow[] = [];
-      let recs: RecommendedRow[] = [];
-
-      if (opts.mode === 'public') {
-        // Public path: SECURITY DEFINER RPC bundles the join + active filter
-        const { data, error } = await supabase.rpc('get_public_recommended_scenes');
-        if (error) throw error;
-        const rows = (data as any[]) ?? [];
-        return disambiguateTitles(rows.map(mapRow));
-      }
-
-      // Authenticated path: read both tables (RLS already allows it)
-      const [recRes, sceneRes] = await Promise.all([
-        supabase.from('recommended_scenes').select('id, scene_id, category, created_at'),
-        supabase
-          .from('product_image_scenes')
-          .select('scene_id, title, description, preview_image_url, category_collection')
-          .eq('is_active', true),
-      ]);
-      if (recRes.error) throw recRes.error;
-      if (sceneRes.error) throw sceneRes.error;
-      recs = recRes.data ?? [];
-      scenes = sceneRes.data ?? [];
-
-      const sceneById = new Map<string, SceneRow>();
-      for (const s of scenes) sceneById.set(s.scene_id, s);
-
-      // Dedupe by scene_id, keep newest recommended_at
-      const newestRec = new Map<string, RecommendedRow>();
-      for (const r of recs) {
-        const existing = newestRec.get(r.scene_id);
-        if (!existing || new Date(r.created_at) > new Date(existing.created_at)) {
-          newestRec.set(r.scene_id, r);
-        }
-      }
-
-      const out: RecommendedDiscoverPose[] = [];
-      for (const [sceneId, rec] of newestRec) {
-        const scene = sceneById.get(sceneId);
-        if (!scene || !scene.preview_image_url) continue;
-        out.push(buildPose(scene, rec.created_at));
-      }
-      return disambiguateTitles(out);
+      // Both auth and public paths use the same SECURITY DEFINER RPC.
+      // This avoids the silent 1000-row PostgREST cap that was truncating
+      // the authenticated `product_image_scenes` read and dropping recommended
+      // scenes whose IDs sat past the first 1000 active rows.
+      const { data, error } = await supabase.rpc('get_public_recommended_scenes');
+      if (error) throw error;
+      const rows = (data as any[]) ?? [];
+      return disambiguateTitles(rows.map(mapRow));
     },
   });
 }
