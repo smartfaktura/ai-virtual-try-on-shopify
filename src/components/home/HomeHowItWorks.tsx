@@ -124,7 +124,7 @@ export function HomeHowItWorks() {
             How it works
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            From one product photo to a full shoot
+            From one photo to a full shoot
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
             Three steps. No studio, no models, no setup.
@@ -158,7 +158,7 @@ export function HomeHowItWorks() {
 
         {/* CTA */}
         <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
-          <Button asChild size="lg" className="rounded-full px-10 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
+          <Button asChild size="lg" className="rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
             <Link to="/auth">Start Generating Free</Link>
           </Button>
           <p className="text-xs text-muted-foreground">

@@ -39,18 +39,18 @@ const SWIMWEAR_CARDS: GridCardData[] = [
 /* ── Fragrance: 12 cards (mobile shows first 9; only desktop-hidden tiles may reuse) ── */
 const FRAGRANCE_CARDS: GridCardData[] = [
   { label: 'Original',                src: originalFragrance, isOriginal: true },
-  { label: 'Volcanic Sunset',         src: PREVIEW('1776018021309-gfgfci') },
+  { label: 'Volcanic Sunset',         src: PREVIEW('repeated-shadow-grid-fragrance-1776013389735') },
   { label: 'Dynamic Water Splash',    src: PREVIEW('1776018039712-1hifzr') },
   { label: 'Motion Blur Float',       src: PREVIEW('motion-blur-float-fragrance-1776013400244') },
   { label: 'Frozen Aura',             src: PREVIEW('1776018038709-gmt0eg') },
-  { label: 'Natural Light Backdrop',  src: PREVIEW('1776018032748-kg4bn6') },
+  { label: 'Natural Light Backdrop',  src: PREVIEW('1776018015756-3xfquh') },
   { label: 'Earthy Driftwood',        src: PREVIEW('near-face-hold-fragrance-1776013185169') },
-  { label: 'Near Face Hold',          src: PREVIEW('1776018015756-3xfquh') },
-  { label: 'Dark Elegance',           src: PREVIEW('1775132826887-gjbnyl') },
+  { label: 'Near Face Hold',          src: PREVIEW('1776018027926-ua03bd') },
+  { label: 'Dark Elegance',           src: PREVIEW('1776018020221-aehe8n') },
   // hidden on mobile (visible from sm: up)
-  { label: 'Aquatic Reflection',      src: PREVIEW('1776018027926-ua03bd') },
-  { label: 'Red Gradient Embrace',    src: PREVIEW('1776018021309-gfgfci') },
-  { label: 'Earthy Glow Stage',       src: PREVIEW('1776018032748-kg4bn6') },
+  { label: 'Aquatic Reflection',      src: PREVIEW('1776018039712-1hifzr') },
+  { label: 'Red Gradient Embrace',    src: PREVIEW('1776018038709-gmt0eg') },
+  { label: 'Earthy Glow Stage',       src: PREVIEW('1776018027926-ua03bd') },
 ];
 
 /* ── Eyewear: 12 cards (mobile shows first 9) ── */

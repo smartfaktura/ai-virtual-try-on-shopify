@@ -26,10 +26,13 @@ export function HomeWhySwitch() {
     <section className="py-16 lg:py-32 bg-[#1a1a2e]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
-          <h2 className="text-white text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-            Built to replace slow content production
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+            Why VOVV
+          </p>
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            Replace slow content production
           </h2>
-          <p className="text-[#9ca3af] text-lg leading-relaxed">
+          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed">
             Generate new product visuals in minutes — no shoots, no edits, no waiting.
           </p>
         </div>
