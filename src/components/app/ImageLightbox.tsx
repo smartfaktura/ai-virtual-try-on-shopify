@@ -146,15 +146,40 @@ export function ImageLightbox({
         'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200 overflow-hidden pt-14',
         isMobile ? 'max-w-[94vw] max-h-[90vh] px-1' : 'max-w-[90vw] max-h-[85vh]'
       )}>
-        <img
-          key={currentIndex}
-          src={currentImage}
-          alt={`Generated image ${currentIndex + 1}`}
+        <div
           className={cn(
-            'max-w-full w-auto h-auto object-contain rounded-xl shadow-2xl shadow-black/40',
-            isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]'
+            'relative flex items-center justify-center rounded-xl overflow-hidden shadow-2xl shadow-black/40',
+            isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
           )}
-        />
+          style={{ minHeight: isMobile ? '40vh' : '50vh' }}
+        >
+          {/* Previous slide stays mounted underneath until the next one decodes */}
+          {prevSrcRef.current && prevSrcRef.current !== currentImage && (
+            <img
+              src={prevSrcRef.current}
+              alt=""
+              aria-hidden
+              className={cn(
+                'absolute inset-0 m-auto max-w-full w-auto h-auto object-contain rounded-xl',
+                isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
+              )}
+            />
+          )}
+          <img
+            key={currentImage}
+            src={currentImage}
+            alt={`Generated image ${currentIndex + 1}`}
+            decoding="async"
+            // @ts-expect-error fetchpriority is a valid HTML attribute
+            fetchpriority="high"
+            onLoad={() => setLoadedSrc(currentImage)}
+            className={cn(
+              'relative max-w-full w-auto h-auto object-contain rounded-xl transition-opacity duration-200',
+              isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
+              loadedSrc === currentImage ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+        </div>
 
         {/* Action bar */}
         {isMobile ? (
