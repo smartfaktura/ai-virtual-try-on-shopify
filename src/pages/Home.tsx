@@ -12,7 +12,7 @@ import { HomeOnBrand } from '@/components/home/HomeOnBrand';
 import { HomePricingTeaser } from '@/components/home/HomePricingTeaser';
 import { HomeFAQ } from '@/components/home/HomeFAQ';
 import { HomeFinalCTA } from '@/components/home/HomeFinalCTA';
-import { HomeFooter } from '@/components/home/HomeFooter';
+import { LandingFooter } from '@/components/landing/LandingFooter';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -51,7 +51,7 @@ export default function Home() {
       <HomePricingTeaser />
       <HomeFAQ />
       <HomeFinalCTA />
-      <HomeFooter />
+      <LandingFooter />
     </div>
   );
 }
