@@ -164,8 +164,7 @@ export function HomeTransformStrip() {
         link.rel = 'preload';
         link.as = 'image';
         link.href = url;
-        // @ts-expect-error fetchPriority is valid on HTMLLinkElement
-        link.fetchPriority = 'low';
+        link.setAttribute('fetchpriority', 'low');
         head.appendChild(link);
         created.push(link);
       });
