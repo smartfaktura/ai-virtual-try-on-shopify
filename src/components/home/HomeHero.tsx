@@ -2,12 +2,13 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import originalDress from '@/assets/home-hero-original-dress.jpg';
 
 /* ── Dresses category showcase: 1 original + 11 dress scene previews ── */
 const SUPABASE_PUBLIC =
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
 
-const ORIGINAL_DRESS = `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/products/1776686889528-b8ysdh.png`;
+const ORIGINAL_DRESS = originalDress;
 const PREVIEW = (id: string) =>
   `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
@@ -34,36 +35,21 @@ type HeroCard = { label: string; src: string; isOriginal?: boolean };
 /* ── Marquee card ── */
 function MarqueeCard({ label, src, isOriginal }: HeroCard) {
   return (
-    <div
-      className={cn(
-        'relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04]',
-        isOriginal && 'ring-1 ring-foreground/15 bg-[#FAFAF8]',
-      )}
-    >
+    <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(src, { width: 420, quality: isOriginal ? 70 : 55 })}
+        src={isOriginal ? src : getOptimizedUrl(src, { quality: 60 })}
         alt={label}
         loading="lazy"
-        className={cn(
-          'w-full h-full',
-          isOriginal ? 'object-contain p-3' : 'object-cover',
-        )}
+        className="w-full h-full object-cover"
       />
-      <div
-        className={cn(
-          'absolute bottom-0 inset-x-0 p-2.5',
-          isOriginal
-            ? 'bg-gradient-to-t from-white/95 to-transparent'
-            : 'bg-gradient-to-t from-black/50 to-transparent',
-        )}
-      >
-        <span
-          className={cn(
-            'text-[10px] sm:text-[11px] font-medium tracking-wide',
-            isOriginal ? 'text-foreground/80' : 'text-white/90',
-          )}
-        >
-          {isOriginal ? '↑ Original photo' : label}
+      {isOriginal && (
+        <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
+          Original
+        </span>
+      )}
+      <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
+        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">
+          {label}
         </span>
       </div>
     </div>
