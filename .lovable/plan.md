@@ -1,56 +1,76 @@
-## Goal
+# Fix per-card image loading skeletons on `/product-visual-library`
 
-Improve `/home` "Built for every category." section:
+## The actual problem (from the screenshot)
 
-1. Add **4 new pills** — Jackets, Footwear (sneakers), Bags, Jewelry — using preview images from the same scenes shown in `/app/generate/product-images` Step 2 for those categories. Total = 7 pills.
-2. Add a clear **"Preview all categories"** CTA button inside the "All categories" popover and a secondary **"Browse the visual library"** button below the grid — both link to `/product-visual-library`.
-3. Add proper **`<Skeleton>`-based loading states** per image card (shared in-app primitive) so each tile shimmers until the image paints — not the current static placeholder icon.
-4. Make the **mobile pill row** look good with 7+ pills: convert to a full-bleed horizontal scroll rail with edge fades, individual rounded pills (no contained chip group at this width), and the "All" pill at the end.
+The library data fetch **already** shows skeletons (top-level `isLoading` block in `ProductVisualLibrary.tsx`). What is missing — and what the screenshot is showing — is **per-image skeletons after the data has loaded**. Once the scene list arrives, every card renders an empty grey tile with a tiny `ImageIcon` placeholder while each `<img>` slowly downloads. That is why the cards look "empty / broken" with just a small icon.
 
-## Mobile pill design
+In `/app` (Freestyle scene catalog), every card uses `<ShimmerImage>` (`src/components/ui/shimmer-image.tsx`), which renders an animated shimmer gradient over the whole card until its specific image fires `onLoad`, then crossfades the image in. The library page is the only place still using a plain `<img>` with a static `ImageIcon`, which is why it looks worse.
 
-```text
-─────────────────────────────────────────
-[Swimwear][Fragrance][Eyewear][Jackets]→
-                                  fade →
-─────────────────────────────────────────
+## Fix
+
+Make `SceneCard` use the same `ShimmerImage` primitive as `/app/freestyle`, so each card shimmers until its image loads — exactly like the in-app catalog.
+
+### `src/components/library/SceneCard.tsx`
+
+Replace the `<img>` + `ImageIcon` placeholder with `ShimmerImage`:
+
+```tsx
+import { ImageIcon } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { PublicScene } from '@/hooks/usePublicSceneLibrary';
+
+export function SceneCard({ scene, onClick, eager = false }) {
+  const previewUrl = scene.preview_image_url
+    ? getOptimizedUrl(scene.preview_image_url, { quality: 65 })
+    : null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(scene)}
+      className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted/40 ..."
+    >
+      {previewUrl ? (
+        <ShimmerImage
+          src={previewUrl}
+          alt={scene.title}
+          aspectRatio="3/4"
+          loading={eager ? 'eager' : 'lazy'}
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          wrapperClassName="absolute inset-0"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center text-foreground/15">
+          <ImageIcon className="h-8 w-8" />
+        </div>
+      )}
+
+      {/* Bottom gradient + title */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-black/55 via-black/15 to-transparent p-3 pt-10">
+        <span className="line-clamp-1 text-sm font-semibold text-white">
+          {scene.title}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+export function SceneCardSkeleton() {
+  return <Skeleton className="aspect-[3/4] w-full rounded-2xl" />;
+}
 ```
 
-- Individual rounded pills with `bg-muted/60` + active = `bg-foreground text-background`.
-- Soft gradient fades on left/right edges hint at scrollability.
-- Hidden scrollbar, smooth horizontal scroll.
-- "All" pill at the end opens the popover.
+Net effect:
+- Initial data fetch → existing `SceneCardSkeleton` grid (unchanged).
+- After data loads → each card now shimmers (same animation as `/app`) until its own image arrives, then crossfades in over 300ms.
+- Cached images skip the shimmer instantly (handled inside `ShimmerImage`).
+- Modal already uses the proper Skeleton overlay (no change needed).
 
-Desktop keeps the existing centered chip-group look (the contained pill row works well at lg where all 7+1 fit).
+## Files to edit
 
-## Image source mapping
+- `src/components/library/SceneCard.tsx` — swap plain `<img>` for `ShimmerImage`.
 
-Pulled live from `product_image_scenes` table (same images used in Step 2 of Product Images wizard) for each new category:
-
-| Pill | Source `category_collection` | # tiles |
-|---|---|---|
-| Jackets | `jackets` | 12 |
-| Footwear | `sneakers` | 12 |
-| Bags | `bags-accessories` | 12 |
-| Jewelry | `jewellery-necklaces` + `jewellery-earrings` mix | 12 |
-
-Scene IDs are hardcoded into the existing `PREVIEW(id)` helper that resolves to the public Supabase storage URL (`product-uploads/.../scene-previews/{id}.jpg`). Same pattern as today's Swimwear/Fragrance/Eyewear arrays.
-
-## Skeleton loading
-
-Each `GridCard` gets local `loaded` state. Until `<img onLoad>` fires, an absolute `<Skeleton className="absolute inset-0 rounded-2xl" />` overlays the tile (matching the in-app `<Skeleton>` primitive used everywhere else). Image fades in with `transition-opacity` once loaded. State resets on `card.src` change (so category switches re-trigger the skeleton).
-
-## CTA placement
-
-- **Inside the "All categories" popover** (mobile + desktop): below the grid of 35+ category names, add a primary `Preview all categories →` button linking to `/product-visual-library`.
-- **Below the main grid**: keep existing "Try it on my product" primary CTA, add a secondary outline `Browse the visual library` button next to it (stacked on mobile, inline on sm+).
-
-## Files to change
-
-- `src/components/home/HomeTransformStrip.tsx` — only file touched. Adds 4 new card arrays, expands `CATEGORIES`, adds skeleton state to `GridCard`, splits the pill bar into mobile-scrollable + desktop-contained variants, extracts the popover body into an `AllCategoriesPanel` component containing the new "Preview all categories" button, adds the secondary library CTA below the grid.
-
-## Out of scope
-
-- No data/API changes (images come from already-public scene previews).
-- `/product-visual-library` page itself is unchanged.
-- Hero, FAQ, other home sections untouched.
+No other files need changes.
