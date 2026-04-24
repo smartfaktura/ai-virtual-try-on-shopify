@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Trophy } from 'lucide-react';
 
@@ -50,6 +50,22 @@ export function ImageLightbox({
     const newIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
     onNavigate(newIndex);
   }, [currentIndex, images.length, onNavigate]);
+
+  // Per-action handlers — memoized so the action-bar buttons don't churn
+  // closures on every parent render.
+  const handleSelect = useCallback(() => onSelect?.(currentIndex), [onSelect, currentIndex]);
+  const handleDownload = useCallback(() => onDownload?.(currentIndex), [onDownload, currentIndex]);
+  const handleRegenerate = useCallback(() => onRegenerate?.(currentIndex), [onRegenerate, currentIndex]);
+  const handleCopyPrompt = useCallback(() => onCopyPrompt?.(currentIndex), [onCopyPrompt, currentIndex]);
+  const handleDelete = useCallback(() => onDelete?.(currentIndex), [onDelete, currentIndex]);
+  const handleShare = useCallback(() => onShare?.(currentIndex), [onShare, currentIndex]);
+
+  // Track image load so we can crossfade between slides instead of blanking.
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const prevSrcRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (currentImage && currentImage === loadedSrc) prevSrcRef.current = currentImage;
+  }, [currentImage, loadedSrc]);
 
   useEffect(() => {
     if (!open) return;
