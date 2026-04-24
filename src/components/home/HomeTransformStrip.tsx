@@ -210,7 +210,7 @@ export function HomeTransformStrip() {
           )}
         >
           {current.cards.map((card, i) => (
-            <GridCard key={`${current.id}-${card.label}-${i}`} card={card} hideOnMobile={i >= 9} />
+            <GridCard key={`${current.id}-${card.label}-${i}`} card={card} hideOnMobile={i >= 9} eager={i < 6} />
           ))}
         </div>
 
