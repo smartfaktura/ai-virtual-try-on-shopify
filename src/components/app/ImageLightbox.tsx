@@ -68,6 +68,23 @@ export function ImageLightbox({
     if (currentImage && currentImage === loadedSrc) prevSrcRef.current = currentImage;
   }, [currentImage, loadedSrc]);
 
+  // Preload neighboring full-res images so arrow nav is near-instant.
+  useEffect(() => {
+    if (!open || images.length <= 1) return;
+    const nextIdx = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
+    const prevIdx = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
+    [images[nextIdx], images[prevIdx]].forEach((src) => {
+      if (!src) return;
+      const img = new Image();
+      img.src = src;
+    });
+  }, [open, currentIndex, images]);
+
+  // Low-res placeholder URL (cached from results grid). Only render when it
+  // differs from the original — getOptimizedUrl no-ops on non-Supabase URLs.
+  const placeholderSrc = getOptimizedUrl(currentImage, { quality: 60 });
+  const showPlaceholder = !!placeholderSrc && placeholderSrc !== currentImage && loadedSrc !== currentImage;
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
