@@ -102,7 +102,7 @@ export function HomeCreateCards() {
 
         {/* Single CTA */}
         <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
-          <Button asChild size="lg" className="rounded-full px-8 text-base">
+          <Button asChild size="lg" className="rounded-full h-[3.25rem] px-8 text-base font-semibold shadow-lg shadow-primary/25">
             <Link to="/auth">
               Start creating free
               <ArrowRight className="ml-2 h-4 w-4" />
