@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import originalDress from '@/assets/home-hero-original-dress.jpg';
 
