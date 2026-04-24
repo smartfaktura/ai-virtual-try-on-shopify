@@ -10,11 +10,14 @@ export function HomeFinalCTA() {
       </div>
 
       <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+          Get started
+        </p>
         <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
           Try it on your product
         </h2>
-        <p className="text-[#9ca3af] text-lg leading-relaxed mb-10">
-          Upload one photo. See what VOVV creates for your brand in minutes.
+        <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-10">
+          Upload one photo. See what VOVV creates for your brand.
         </p>
 
         <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
