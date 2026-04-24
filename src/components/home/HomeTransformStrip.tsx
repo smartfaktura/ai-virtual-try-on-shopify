@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown, ImageIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { useScrollReveal } from '@/hooks/useScrollReveal';
@@ -90,23 +90,41 @@ const ALL_CATEGORY_NAMES = [
 type CategoryId = typeof CATEGORIES[number]['id'];
 
 /* ── Grid card ── */
-function GridCard({ card, hideOnMobile }: { card: GridCardData; hideOnMobile: boolean }) {
+function GridCard({
+  card,
+  hideOnMobile,
+  eager,
+}: {
+  card: GridCardData;
+  hideOnMobile: boolean;
+  eager?: boolean;
+}) {
   return (
     <div
       className={cn(
-        'relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30',
+        'relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-[#efece8]',
         hideOnMobile && 'hidden sm:block',
       )}
     >
+      {/* Soft placeholder behind the image */}
+      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
+        <ImageIcon size={22} strokeWidth={1.25} />
+      </div>
       <img
         src={getOptimizedUrl(card.src, { quality: 60 })}
         alt={card.label}
-        loading="lazy"
+        loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className="absolute inset-0 w-full h-full object-cover"
+        // @ts-expect-error fetchpriority is valid HTML attr
+        fetchpriority={eager ? 'high' : 'auto'}
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = 'none';
+        }}
+        className="relative z-[1] w-full h-full object-cover"
       />
       {card.isOriginal && (
-        <span className="absolute top-2 right-2 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
+        <span className="absolute top-2 right-2 z-[2] text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
           Original
         </span>
       )}
