@@ -259,7 +259,17 @@ export default function VideoHub() {
 
       {/* In Progress + Completed Videos */}
       {(() => {
-        const processingVideos = history.filter(v => v.status === 'processing' || v.status === 'queued');
+        // Build a set of kling_task_ids that already have a completed row,
+        // so a stale "processing" duplicate can never appear in the In Progress strip.
+        const completedTaskIds = new Set(
+          history
+            .filter(v => v.status === 'complete' && v.kling_task_id)
+            .map(v => v.kling_task_id as string),
+        );
+        const processingVideos = history.filter(v =>
+          (v.status === 'processing' || v.status === 'queued') &&
+          !(v.kling_task_id && completedTaskIds.has(v.kling_task_id))
+        );
         const completedVideos = history.filter(v => v.status !== 'processing' && v.status !== 'queued');
 
         return (

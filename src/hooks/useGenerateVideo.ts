@@ -156,8 +156,15 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           return;
         }
 
-        if (data.status === 'succeed' && data.video_url) return;
-        if (data.status === 'failed') return;
+        if (data.status === 'succeed' && data.video_url) {
+          // Edge function may need a moment to persist the row update — refresh shortly after.
+          if (!cancelled) setTimeout(() => silentRefreshHistory(), 1500);
+          return;
+        }
+        if (data.status === 'failed') {
+          if (!cancelled) setTimeout(() => silentRefreshHistory(), 1500);
+          return;
+        }
         if (!cancelled) setTimeout(poll, 10000);
       } catch (err) {
         console.warn('[useGenerateVideo] Status poll exception:', err);
@@ -344,15 +351,21 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     fetchHistory().then(() => recoverStuckVideos());
   }, [fetchHistory, recoverStuckVideos]);
 
-  // Auto-refresh history silently while any video is still processing
+  // Auto-refresh history silently while any video is still processing.
+  // Also fires a watchdog `recoverStuckVideos` for rows stuck > 6 minutes.
   useEffect(() => {
-    const hasProcessing = history.some(v => v.status === 'processing' || v.status === 'queued');
-    if (!hasProcessing) return;
+    const processing = history.filter(v => v.status === 'processing' || v.status === 'queued');
+    if (processing.length === 0) return;
+
     const interval = setInterval(() => {
       silentRefreshHistory();
-    }, 8000);
+      // Watchdog: if any processing row is older than 6 minutes, ask backend to reconcile.
+      const sixMinAgo = Date.now() - 6 * 60 * 1000;
+      const hasStuck = processing.some(v => new Date(v.created_at).getTime() < sixMinAgo);
+      if (hasStuck) recoverStuckVideos();
+    }, 4000);
     return () => clearInterval(interval);
-  }, [history, silentRefreshHistory]);
+  }, [history, silentRefreshHistory, recoverStuckVideos]);
 
   // Silent refresh history on window focus (no flash)
   useEffect(() => {
