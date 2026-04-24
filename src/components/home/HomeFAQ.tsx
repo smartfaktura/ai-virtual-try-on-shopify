@@ -34,29 +34,31 @@ const faqs = [
 
 export function HomeFAQ() {
   return (
-    <section className="py-16 lg:py-32 bg-[#f5f5f3]" id="faq">
+    <section className="py-16 lg:py-32 bg-[#FAFAF8]" id="faq">
       <div className="max-w-2xl mx-auto px-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 text-center">
-          FAQ
-        </p>
-        <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-center mb-4">
-          Common questions
-        </h2>
-        <p className="text-muted-foreground text-base sm:text-lg text-center mb-12 leading-relaxed">
-          Quick answers before you start creating.
-        </p>
+        <div className="text-center mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            FAQ
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            Common questions
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+            Quick answers before you start creating.
+          </p>
+        </div>
 
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((faq, i) => (
             <AccordionItem
               key={i}
               value={`faq-${i}`}
-              className="bg-white rounded-2xl border border-[#f0efed] px-6 shadow-sm data-[state=open]:shadow-md transition-shadow"
+              className="bg-white rounded-2xl border border-border/60 px-6 shadow-sm shadow-foreground/[0.04] data-[state=open]:shadow-md transition-shadow"
             >
-              <AccordionTrigger className="text-[#1a1a2e] text-base sm:text-[17px] font-semibold py-6 hover:no-underline text-left">
+              <AccordionTrigger className="text-foreground text-base sm:text-[17px] font-semibold py-6 hover:no-underline text-left">
                 {faq.q}
               </AccordionTrigger>
-              <AccordionContent className="text-foreground/70 text-[15px] sm:text-base leading-relaxed pb-6">
+              <AccordionContent className="text-muted-foreground text-[15px] sm:text-base leading-relaxed pb-6">
                 {faq.a}
               </AccordionContent>
             </AccordionItem>
