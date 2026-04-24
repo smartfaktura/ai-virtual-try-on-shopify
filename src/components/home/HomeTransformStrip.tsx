@@ -128,7 +128,7 @@ function GridCard({ card, hideOnMobile }: { card: GridCardData; hideOnMobile: bo
 /* ── Main section ── */
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
-  const [active, setActive] = useState<CategoryId>('swimwear');
+  const [active, setActive] = useState<CategoryId>('all');
 
   const current = CATEGORIES.find((c) => c.id === active)!;
 
@@ -136,11 +136,14 @@ export function HomeTransformStrip() {
     <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-10">
-          <h2 className="text-foreground text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-            From one product photo to every asset you need
+        <div className="text-center max-w-3xl mx-auto mb-8 lg:mb-10">
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            One product photo. Every shot your brand needs.
           </h2>
-          <p className="text-muted-foreground text-lg leading-relaxed">
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+            Whatever you sell — swimwear, fragrance, eyewear, beauty, fashion — VOVV turns one image into 1000+ on-brand shots across 35+ categories.
+          </p>
+          <p className="text-sm text-muted-foreground/80 italic mt-3">
             {current.copy}
           </p>
         </div>
