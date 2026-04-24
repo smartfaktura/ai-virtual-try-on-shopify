@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronDown, ImageIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -36,7 +36,7 @@ const SWIMWEAR_CARDS: GridCardData[] = [
   { label: 'Sunstone Wall',         src: PREVIEW('1776574255634-kmhz9g') },
 ];
 
-/* ── Fragrance: 12 cards (mobile shows first 9) ── */
+/* ── Fragrance: 12 cards (mobile shows first 9; only desktop-hidden tiles may reuse) ── */
 const FRAGRANCE_CARDS: GridCardData[] = [
   { label: 'Original',                src: originalFragrance, isOriginal: true },
   { label: 'Volcanic Sunset',         src: PREVIEW('1776018021309-gfgfci') },
@@ -44,13 +44,13 @@ const FRAGRANCE_CARDS: GridCardData[] = [
   { label: 'Motion Blur Float',       src: PREVIEW('motion-blur-float-fragrance-1776013400244') },
   { label: 'Frozen Aura',             src: PREVIEW('1776018038709-gmt0eg') },
   { label: 'Natural Light Backdrop',  src: PREVIEW('1776018032748-kg4bn6') },
-  { label: 'Earthy Driftwood',        src: PREVIEW('1776018021309-gfgfci') },
-  { label: 'Near Face Hold',          src: PREVIEW('near-face-hold-fragrance-1776013185169') },
-  { label: 'Dark Elegance',           src: PREVIEW('1776018015756-3xfquh') },
-  // hidden on mobile
-  { label: 'Aquatic Reflection',      src: PREVIEW('1775132826887-gjbnyl') },
-  { label: 'Red Gradient Embrace',    src: PREVIEW('1776018027926-ua03bd') },
-  { label: 'Earthy Glow Stage',       src: PREVIEW('1775135707468-egh405') },
+  { label: 'Earthy Driftwood',        src: PREVIEW('near-face-hold-fragrance-1776013185169') },
+  { label: 'Near Face Hold',          src: PREVIEW('1776018015756-3xfquh') },
+  { label: 'Dark Elegance',           src: PREVIEW('1775132826887-gjbnyl') },
+  // hidden on mobile (visible from sm: up)
+  { label: 'Aquatic Reflection',      src: PREVIEW('1776018027926-ua03bd') },
+  { label: 'Red Gradient Embrace',    src: PREVIEW('1776018021309-gfgfci') },
+  { label: 'Earthy Glow Stage',       src: PREVIEW('1776018032748-kg4bn6') },
 ];
 
 /* ── Eyewear: 12 cards (mobile shows first 9) ── */
