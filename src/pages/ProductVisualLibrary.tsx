@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Sparkles, ArrowRight } from 'lucide-react';
 import { PageLayout } from '@/components/landing/PageLayout';
@@ -12,7 +12,6 @@ import {
   type FamilyGroup,
   type PublicScene,
 } from '@/hooks/usePublicSceneLibrary';
-import { CategoryOverviewCard } from '@/components/library/CategoryOverviewCard';
 import { LibrarySidebarNav } from '@/components/library/LibrarySidebarNav';
 import { SceneCard, SceneCardSkeleton } from '@/components/library/SceneCard';
 import { SceneDetailModal } from '@/components/library/SceneDetailModal';
@@ -66,9 +65,18 @@ export default function ProductVisualLibrary() {
       .filter((f) => f.totalCount > 0);
   }, [families, search]);
 
+  const isSearching = search.trim().length > 0;
+
+  // The single family currently rendered (or null when searching, where we render all matches).
+  const activeFamily = useMemo<FamilyGroup | null>(() => {
+    if (isSearching) return null;
+    if (!activeFamilySlug) return filteredFamilies[0] ?? null;
+    return filteredFamilies.find((f) => f.slug === activeFamilySlug) ?? filteredFamilies[0] ?? null;
+  }, [filteredFamilies, activeFamilySlug, isSearching]);
+
   const handleSelectFamily = (slug: string) => {
     setActiveFamilySlug(slug);
-    const el = document.getElementById(`cat-${slug}`);
+    const el = document.getElementById('catalog-grid');
     if (el) {
       const top = el.getBoundingClientRect().top + window.scrollY - 96;
       window.scrollTo({ top, behavior: 'smooth' });
@@ -76,7 +84,7 @@ export default function ProductVisualLibrary() {
   };
 
   const scrollToCatalog = () => {
-    const el = document.getElementById('categories');
+    const el = document.getElementById('catalog');
     if (el) {
       const top = el.getBoundingClientRect().top + window.scrollY - 80;
       window.scrollTo({ top, behavior: 'smooth' });
@@ -89,13 +97,17 @@ export default function ProductVisualLibrary() {
   };
 
   const ctaLabel = user ? 'Create Product Visuals' : 'Create Free Visuals';
-  const totalLabel = totalScenes > 0 ? `${totalScenes}+` : '1,000+';
+
+  const handleSceneClick = (s: PublicScene, familyLabel: string) => {
+    setSelectedScene(s);
+    setSelectedFamilyLabel(familyLabel);
+  };
 
   return (
     <PageLayout>
       <SEOHead
         title="AI Product Visual Library for Ecommerce Brands | VOVV.AI"
-        description="Browse 1,000+ AI product visual ideas across fashion, footwear, beauty, jewelry, food, home, tech, accessories, and more. Upload one product photo and create brand-ready visuals with VOVV.AI."
+        description="Browse AI product visual ideas across fashion, footwear, beauty, jewelry, food, home, tech, accessories and more. Upload one product photo and create brand-ready visuals with VOVV.AI."
         canonical={`${SITE_URL}/product-visual-library`}
       />
 
@@ -115,36 +127,29 @@ export default function ProductVisualLibrary() {
         }}
       />
 
-      {/* HERO */}
-      <section id="top" className="relative overflow-hidden bg-[#f6f3ee]">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:py-32">
+      {/* HERO — slim */}
+      <section id="top" className="relative overflow-hidden bg-[#FAFAF8]">
+        <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/65">
-              <Sparkles className="h-3 w-3" />
+            <h1 className="text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem] leading-[1.05]">
               AI Product Visual Library
-            </div>
-            <h1 className="text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Explore AI Product Visuals for Every Category
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-foreground/65 sm:text-lg">
-              Browse {totalLabel} ready-to-create visual ideas across fashion, beauty, footwear,
-              jewelry, food, home, tech, accessories, and more. Choose a visual direction,
-              upload your product, and create brand-ready ecommerce visuals in minutes.
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-foreground/65 sm:text-lg">
+              Browse {totalScenes > 0 ? `${totalScenes}+` : '1,600+'} visual directions across every
+              ecommerce category. Pick one and create it with your product photo.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
-                size="lg"
                 onClick={handlePrimaryCta}
-                className="rounded-full bg-foreground px-7 font-semibold text-background hover:bg-foreground/90"
+                className="h-[3.25rem] rounded-full bg-foreground px-8 text-base font-semibold text-background hover:bg-foreground/90"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 {ctaLabel}
               </Button>
               <Button
-                size="lg"
                 variant="ghost"
                 onClick={scrollToCatalog}
-                className="rounded-full px-6 font-medium text-foreground/75 hover:bg-foreground/[0.05] hover:text-foreground"
+                className="h-[3.25rem] rounded-full px-7 text-base font-semibold text-foreground/75 hover:bg-foreground/[0.05] hover:text-foreground"
               >
                 Browse Categories
                 <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -154,75 +159,33 @@ export default function ProductVisualLibrary() {
         </div>
       </section>
 
-      {/* CATEGORY OVERVIEW */}
-      <section id="categories" className="bg-background py-20 sm:py-28">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Built for every kind of ecommerce product
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-foreground/60">
-              From apparel and sneakers to fragrance, jewelry, food, home decor, tech, and
-              accessories, VOVV.AI helps brands create visuals that match their product category
-              and selling channel.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-72 animate-pulse rounded-3xl bg-[#efece8]"
-                  />
-                ))
-              : families.map((family) => (
-                  <CategoryOverviewCard
-                    key={family.slug}
-                    family={family}
-                    onClick={() => handleSelectFamily(family.slug)}
-                  />
-                ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ACTIVE CATALOG */}
-      <section id="catalog" className="bg-[#f6f3ee] py-20 sm:py-24">
+      {/* CATALOG */}
+      <section id="catalog" className="bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Browse product visual ideas
-            </h2>
-            <p className="mt-3 text-base text-foreground/60">
-              Choose a visual direction and create it with your own product photo.
-            </p>
-          </div>
-
           {/* Search */}
-          <div className="mx-auto mt-8 max-w-xl">
+          <div className="mx-auto mb-10 max-w-xl">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search visuals or categories…"
-                className="h-12 rounded-full border-foreground/10 bg-background pl-11 pr-4 text-sm focus-visible:ring-foreground/20"
+                className="h-12 rounded-full border-foreground/10 bg-muted/30 pl-11 pr-4 text-sm focus-visible:ring-foreground/20"
               />
             </div>
           </div>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[14rem_1fr]">
+          <div id="catalog-grid" className="grid gap-10 lg:grid-cols-[14rem_1fr] scroll-mt-24">
             <LibrarySidebarNav
               families={filteredFamilies}
               activeFamilySlug={activeFamilySlug}
               onSelectFamily={handleSelectFamily}
             />
 
-            <div className="min-w-0 space-y-16">
+            <div className="min-w-0">
               {isLoading && (
                 <div>
-                  <div className="mb-4 h-7 w-48 animate-pulse rounded bg-foreground/10" />
+                  <div className="mb-6 h-7 w-48 animate-pulse rounded bg-foreground/10" />
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {Array.from({ length: 10 }).map((_, i) => (
                       <SceneCardSkeleton key={i} />
@@ -232,70 +195,58 @@ export default function ProductVisualLibrary() {
               )}
 
               {!isLoading && filteredFamilies.length === 0 && (
-                <div className="rounded-3xl bg-background p-12 text-center">
+                <div className="rounded-3xl bg-muted/30 p-12 text-center">
                   <p className="text-sm text-foreground/60">
                     No visuals match "{search}". Try a different search.
                   </p>
                 </div>
               )}
 
-              {!isLoading &&
-                filteredFamilies.map((family, fi) => (
-                  <FamilySection
-                    key={family.slug}
-                    family={family}
-                    eager={fi < 2}
-                    onSceneClick={(s) => {
-                      setSelectedScene(s);
-                      setSelectedFamilyLabel(family.label);
-                    }}
-                  />
-                ))}
+              {/* Default: render only the active family */}
+              {!isLoading && !isSearching && activeFamily && (
+                <FamilySection
+                  family={activeFamily}
+                  onSceneClick={(s) => handleSceneClick(s, activeFamily.label)}
+                />
+              )}
+
+              {/* Search mode: render all matching families flat */}
+              {!isLoading && isSearching && filteredFamilies.length > 0 && (
+                <div className="space-y-14">
+                  {filteredFamilies.map((family) => (
+                    <FamilySection
+                      key={family.slug}
+                      family={family}
+                      onSceneClick={(s) => handleSceneClick(s, family.label)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* SEO COPY */}
-      <section className="bg-background py-20 sm:py-24">
+      <section className="bg-[#FAFAF8] py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div className="grid gap-10 sm:grid-cols-2">
             <div>
-              <h3 className="text-xl font-semibold text-foreground">
+              <h3 className="text-lg font-semibold text-foreground">
                 AI product visuals for ecommerce brands
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                VOVV.AI helps ecommerce brands turn a single product photo into a full library of
-                brand-ready visuals. Skip expensive studio sessions and ship campaigns in hours,
-                not weeks.
+                Turn one product photo into a full library of brand-ready visuals. Skip studio
+                sessions and ship campaigns in hours, not weeks.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-foreground">
-                Create product visuals by category
+              <h3 className="text-lg font-semibold text-foreground">
+                Tuned to your product category
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                Each visual direction is tuned to its product category — apparel scenes know how
-                to drape on a model, fragrance scenes know how to catch glass refractions, and
-                footwear scenes know how to anchor a hero shot.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-foreground">
-                From one product photo to campaign-ready visuals
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                Upload your product, pick a visual direction, and VOVV.AI generates a polished
-                image you can drop straight onto a product page, social post, ad, or editorial.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-foreground">
-                Visuals for fashion, beauty, footwear, jewelry, food, home, tech, and more
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                Whether you sell sneakers, skincare, perfume, rings, snacks, decor, or devices —
-                VOVV.AI has visual directions tuned to your category and selling channel.
+                Each visual direction is built for its category — apparel knows how to drape,
+                fragrance knows how to catch glass, footwear knows how to anchor a hero shot.
               </p>
             </div>
           </div>
@@ -311,93 +262,57 @@ export default function ProductVisualLibrary() {
   );
 }
 
-// ── Family section with progressive mounting ──
+// ── Family section: clean, single-level header + sub-category rows ──
 
 interface FamilySectionProps {
   family: FamilyGroup;
-  eager: boolean;
   onSceneClick: (s: PublicScene) => void;
 }
 
-function FamilySection({ family, eager, onSceneClick }: FamilySectionProps) {
-  const ref = useRef<HTMLElement | null>(null);
-  const [mounted, setMounted] = useState(eager);
-
-  useEffect(() => {
-    if (mounted) return;
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setMounted(true);
-            io.disconnect();
-          }
-        }
-      },
-      { rootMargin: '600px 0px' },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [mounted]);
-
+function FamilySection({ family, onSceneClick }: FamilySectionProps) {
   return (
-    <section ref={ref} id={`cat-${family.slug}`} className="scroll-mt-24">
-      <div className="mb-6 flex items-baseline justify-between gap-4">
-        <h3 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+    <section className="scroll-mt-24">
+      {/* Compact eyebrow header */}
+      <div className="mb-6 flex items-baseline gap-2">
+        <h3 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           {family.label}
         </h3>
-        <span className="shrink-0 text-xs text-foreground/45 tabular-nums">
-          {family.totalCount} visuals
+        <span className="text-sm text-foreground/45 tabular-nums">
+          · {family.totalCount} ideas
         </span>
       </div>
 
-      {!mounted ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <SceneCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-10">
-          {family.collections.map((collection) => (
-            <div key={collection.slug} className="space-y-4">
-              {/* Show collection label only when family has more than one collection */}
-              {family.collections.length > 1 && (
-                <div className="flex items-baseline justify-between">
-                  <h4 className="text-sm font-semibold uppercase tracking-[0.14em] text-foreground/55">
-                    {collection.label}
-                  </h4>
-                  <span className="text-[11px] text-foreground/40 tabular-nums">
-                    {collection.totalCount}
-                  </span>
-                </div>
-              )}
+      <div className="space-y-10">
+        {family.collections.map((collection) => (
+          <div key={collection.slug} className="space-y-5">
+            {collection.subGroups.map((sub) => {
+              const isOnlyGeneral =
+                collection.subGroups.length === 1 && sub.label === 'General';
+              const rowLabel = isOnlyGeneral
+                ? collection.label
+                : `${collection.label} · ${sub.label}`;
 
-              {collection.subGroups.map((sub) => (
-                <div key={sub.label} className="space-y-3">
-                  {sub.label && sub.label !== 'General' && (
-                    <p className="text-xs font-medium uppercase tracking-[0.14em] text-foreground/45">
-                      {sub.label}
-                    </p>
-                  )}
+              return (
+                <div key={`${collection.slug}-${sub.label}`} className="space-y-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/55">
+                    {rowLabel}
+                  </p>
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {sub.scenes.map((scene, i) => (
                       <SceneCard
                         key={scene.scene_id}
                         scene={scene}
-                        eager={eager && i < 5}
+                        eager={i < 5}
                         onClick={onSceneClick}
                       />
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
