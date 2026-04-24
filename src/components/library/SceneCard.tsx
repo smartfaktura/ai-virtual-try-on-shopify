@@ -1,5 +1,6 @@
 import { ImageIcon } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { PublicScene } from '@/hooks/usePublicSceneLibrary';
 
 interface SceneCardProps {
@@ -49,7 +50,5 @@ export function SceneCard({ scene, onClick, eager = false }: SceneCardProps) {
 }
 
 export function SceneCardSkeleton() {
-  return (
-    <div className="aspect-[3/4] w-full animate-pulse rounded-2xl bg-muted/40" />
-  );
+  return <Skeleton className="aspect-[3/4] w-full rounded-2xl" />;
 }

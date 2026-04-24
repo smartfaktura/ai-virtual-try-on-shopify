@@ -1,46 +1,74 @@
-## /product-visual-library polish
+## Goal
 
-### 1. Pills alignment + scroll arrows (`ProductVisualLibrary.tsx` `FamilySection`)
+Two fixes on `/product-visual-library`:
 
-Current bug: pill row has `-mx-4 sm:-mx-6` so it bleeds outside the content column and starts to the LEFT of the image grid. Fix:
+1. **Mobile experience** — currently it stacks two horizontal pill rails (top-level categories from `LibrarySidebarNav` + sub-collection pills inside `FamilySection`), which is cramped, looks misaligned, and forces horizontal scrolling on every level. Replace this with the same drawer-based pattern used in the in-app Freestyle Scene Catalog (`src/components/app/freestyle/SceneCatalogModal.tsx` + `SceneCatalogSidebar.tsx`): a single "Filters" button on mobile that opens a left Sheet containing the full Categories list with expandable sub-collections.
 
-- Drop the negative margins; pills row sits flush in the same column as the grid (so "Clothing & Apparel" lines up exactly with the first image)
-- Wrap the pill row in a relative container with a horizontally scrollable `<div ref={scrollRef}>`
-- On `lg:` add two ghost arrow buttons (`ChevronLeft` / `ChevronRight`) absolutely positioned at the row's edges with white-to-transparent fade gradients. Click → `scrollRef.current.scrollBy({ left: ±240, behavior: 'smooth' })`
-- Show/hide arrows based on `canScrollLeft` / `canScrollRight` state, updated on scroll + resize
-- Hide arrows on mobile (touch swipe is natural)
-- Keep `pb-2` for scrollbar room; keep webkit-scrollbar:hidden
+2. **Loading skeletons** — the page currently uses bespoke pulsing divs (`bg-foreground/[0.06]`, `bg-muted/40`). Replace with the shared `<Skeleton>` primitive from `src/components/ui/skeleton`, matching the in-app rhythm (e.g. `Skeleton className="aspect-[4/5] w-full rounded-xl"` for cards, `Skeleton h-9 rounded-full` for pills, `Skeleton h-10 rounded-xl` for sidebar rows).
 
-### 2. Tighter hero → pills spacing (`ProductVisualLibrary.tsx`)
+## Mobile design (mirrors Freestyle scene catalog)
 
-- Hero section: `py-10 sm:py-14` → `pt-10 sm:pt-14 pb-6 sm:pb-8`
-- Catalog section: `py-10 sm:py-14` → `pt-2 sm:pt-4 pb-10 sm:pb-14`
+```text
+┌──────────────────────────────────────────┐
+│ AI Product Visual Library                │  hero (unchanged)
+│ Browse 1,613+ visual directions...       │
+├──────────────────────────────────────────┤
+│ [⚙ Filters: Fashion · Creative Shots] [⨯]│  sticky bar — opens drawer
+├──────────────────────────────────────────┤
+│ Fashion · Creative Shots                 │  current selection eyebrow
+│ ┌──┬──┬──┐                               │
+│ │  │  │  │                               │  2-col scene grid
+│ ├──┼──┼──┤                               │
+└──────────────────────────────────────────┘
 
-This collapses the dead air between the H1 block and the first row of categories, while keeping the catalog's bottom padding intact.
+Drawer (Sheet, side="left", w-[85vw] max-w-[320px]):
+  QUICK
+    All categories            1,613
+  CATEGORIES
+    ▸ Fashion & Apparel        425
+        ▾ (expanded when active)
+          Creative Shots       210
+          On-Model              80
+          ...
+    ▸ Footwear                 312
+    ▸ Beauty                   ...
+```
 
-### 3. Better loading skeletons
+Desktop (≥lg) keeps the existing sticky left rail + horizontal sub-collection pills with arrows (no change there).
 
-**Initial page load** (`ProductVisualLibrary.tsx`):
-- Replace the bare `h-9 w-64 ... rounded-full` skeleton with a row of 6 pulsing pill skeletons (matching the actual pill row layout) + the existing card skeleton grid expanded to 15 cards (3 rows on desktop) for a richer first paint
-- Sidebar already renders from data; add a graceful loading state for the sidebar nav too: 8 pulsing rows when `isLoading && families.length === 0`
+## Files to change
 
-**Family switch / pill switch**: `FamilySection` already shows skeletons via the lazy-load sentinel, but it briefly shows zero cards before first slice renders. Use a short transition: keep the previous content visible until the new family's first 30 cards have at least started loading (already mostly handled by React's render).
+### `src/pages/ProductVisualLibrary.tsx`
+- Add mobile state `mobileFiltersOpen` and a single sub-collection state lifted up so the drawer can drive both the family and the active sub-collection. Actually simpler: keep sub-collection state inside `FamilySection` but pass a callback from page → drawer that selects family + sub.
+- On mobile (`<lg`), hide the existing in-grid sub-collection pills row; show instead a sticky "Filters" trigger bar above the grid with the current selection chip + clear (×) button.
+- Render a `<Sheet side="left">` containing a single combined nav: top-level categories with their sub-collections nested under the active one (same visual as `SceneCatalogSidebar` `mobileMode`).
+- Replace the bespoke loading block with `<Skeleton>`-based grid: 12 × `Skeleton aspect-[4/5] rounded-xl`, plus one row of pill `Skeleton h-9 w-24 rounded-full` placeholders for the trigger bar area.
+- Reduce hero bottom padding spacing only if needed to keep current tight rhythm; otherwise leave hero untouched.
 
-### 4. Modal image loading skeleton + optimization (`SceneDetailModal.tsx`)
+### `src/components/library/LibrarySidebarNav.tsx`
+- Remove the mobile horizontal pill row entirely (the new drawer replaces it).
+- Keep the desktop sticky aside as-is, but swap the bespoke skeleton bars for `<Skeleton className="h-10 w-full rounded-xl" />`.
 
-Currently the modal renders an `<img>` and shows only a static placeholder icon while it loads. Improve:
+### New `src/components/library/LibraryMobileFilters.tsx`
+- Self-contained Sheet content rendering Quick ("All categories") + each `FamilyGroup` as an accordion row. Tapping a family with multiple `collections` expands inline; tapping a collection selects it and closes the drawer. Tapping a family with only one collection (or "All" within it) selects family + clears collection.
+- Visual rhythm mirrors `SceneCatalogSidebar` (rounded pills, `bg-primary/10 text-primary` for active, count on right).
 
-- Track `imgLoaded` state via `onLoad` handler
-- Show an animated `bg-muted/40 animate-pulse` skeleton overlay while `!imgLoaded`
-- Image already uses `getOptimizedUrl(url, { quality: 75 })` — keep that, but add `srcSet` for retina (`?quality=75&width=...` is not used here per memory `image-optimization-no-crop` to avoid crop, so we keep quality-only). Already good.
-- Reset `imgLoaded` when `scene.scene_id` changes (use `useEffect` keyed on scene id)
-- Hide the static `ImageIcon` once loaded
+### `src/components/library/SceneCard.tsx`
+- Replace the bespoke `SceneCardSkeleton` (`animate-pulse rounded-2xl bg-muted/40`) with `<Skeleton className="aspect-[3/4] w-full rounded-2xl" />` from `@/components/ui/skeleton`.
 
-Also: the modal currently has `overflow-hidden` AND `overflow-y-auto` on the same `DialogContent` — remove the redundant `overflow-hidden` to avoid clipping the scroll on tall content.
+### `src/components/library/SceneDetailModal.tsx`
+- Replace the manual `animate-pulse bg-foreground/[0.06]` overlay with `<Skeleton className="absolute inset-0" />` for the hero loading state. Keep the blurred placeholder `<img>` and `onLoad` fade behaviour as-is.
 
-### Files
-- `src/pages/ProductVisualLibrary.tsx` — hero/catalog padding, pills row alignment + arrows, richer loading skeletons, sidebar skeleton
-- `src/components/library/SceneDetailModal.tsx` — image skeleton + load state
-- `src/components/library/LibrarySidebarNav.tsx` — accept optional `isLoading` to render skeleton rows
+## Behavioural details
 
-No new dependencies. No data hook changes.
+- The drawer's "active selection" chip in the trigger bar shows: `Family · SubCollection` (or `Family · All` when no sub picked, or just `All categories` initially).
+- The clear (×) button on the trigger bar resets to the first family + null sub-collection (same as today's "All" pill behaviour).
+- On family change from the drawer, the page scrolls to `#catalog-grid` (current behaviour preserved).
+- Sub-collection pill row inside `FamilySection` stays for desktop only — wrap its `<div className="relative mb-8">` with `hidden lg:block`. Mobile users get the drawer instead.
+- Infinite scroll, pagination (`PAGE_SIZE = 30`), and sentinel logic remain unchanged.
+
+## Out of scope
+
+- No data/query changes.
+- No hero copy or CTA changes.
+- Desktop layout unchanged apart from the skeleton primitive swap.
