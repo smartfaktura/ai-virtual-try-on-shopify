@@ -1,26 +1,31 @@
 
 
-## Align search bar + Select All on Product Images Step 1
+## Add BETA label to Short Film card
 
-### Issue
-On `/app/generate/product-images` Step 1 (Products), the search `Input` uses default `h-9` with `rounded-lg` corners, while nearby buttons use `rounded-full` (platform default for `Button`). They don't match — different radius, different height.
+### Change
+Add an optional `beta` prop to `VideoWorkflowCard`, then enable it on the Short Film card in `VideoHub`. Same top-right badge slot as `Coming Soon`, but styled as a subtle accent so it reads as "live but new" rather than "unavailable."
 
-### Fix (one file)
+### Files
 
-**`src/components/app/product-images/ProductImagesStep1Products.tsx`**
+**`src/components/app/video/VideoWorkflowCard.tsx`**
+- Add `beta?: boolean` prop.
+- Render a `Badge` in the same top-right position when `beta` is true and `comingSoon` is false:
+  ```tsx
+  {beta && !comingSoon && (
+    <Badge variant="secondary" className="absolute top-4 right-4 text-[10px] font-medium tracking-wide uppercase">
+      Beta
+    </Badge>
+  )}
+  ```
+- No layout or interaction changes — card stays clickable.
 
-- Search `Input`: `h-9 text-sm` → `h-10 rounded-full text-sm` (matches the platform pattern already used in `ProductMultiSelect.tsx`: `pl-9 h-10 rounded-full text-sm`).
-- Type filter `SelectTrigger`: `text-sm` → `h-10 rounded-full text-sm` so all three controls share the same height + radius.
-- "Clear" ghost button: bump from `h-7` → `h-8` (use `size="sm"` default) so the selected-count chip row reads consistently. Keep `Badge` as-is.
-- Search icon stays `absolute left-3 top-1/2 -translate-y-1/2` — already vertically centered, no change needed.
-
-That's it. No new components, no token changes, no logic touched. Reuses the exact pattern already shipped in `ProductMultiSelect`.
+**`src/pages/VideoHub.tsx`**
+- Pass `beta` on the Short Film `<VideoWorkflowCard>` (line 228-234).
 
 ### Out of scope
-- No changes to `Input` / `Button` / `Select` base components.
-- No changes to grid, filtering, selection, or modal logic.
-- No changes to other steps or other pages.
+- No changes to the Short Film page header itself, sidebar, or other workflow cards.
+- No copy or routing changes.
 
-### Expected result
-Search bar, type filter, and any adjacent buttons all render at `h-10` with `rounded-full` — matching the rest of VOVV.AI's input/button language. Search and Select All functionality unchanged.
+### Result
+Short Film card displays a small uppercase "BETA" pill in the top-right corner, matching the visual rhythm of the existing "Coming Soon" badge while remaining fully clickable.
 
