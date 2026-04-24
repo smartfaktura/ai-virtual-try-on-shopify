@@ -2,6 +2,7 @@ import { Star, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { getDiscoverItemAspectRatio } from '@/lib/discoverAspect';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import type { TryOnPose } from '@/types';
 
@@ -61,13 +62,15 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
           />
         </div>
       ) : (
-        <ShimmerImage
-          src={getOptimizedUrl(imageUrl, { quality: 60 })}
-          alt={isScene ? item.data.name : item.data.title}
-          className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
-          loading={eager ? 'eager' : 'lazy'}
-          fetchPriority={fetchPriority}
-        />
+        <div className="w-full overflow-hidden" style={{ aspectRatio: getDiscoverItemAspectRatio(item) }}>
+          <ShimmerImage
+            src={getOptimizedUrl(imageUrl, { quality: 60 })}
+            alt={isScene ? item.data.name : item.data.title}
+            className="w-full h-full object-cover block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
+            loading={eager ? 'eager' : 'lazy'}
+            fetchPriority={fetchPriority}
+          />
+        </div>
       )}
 
 

@@ -27,6 +27,7 @@ import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
 import { getItemSlug } from '@/lib/slugUtils';
+import { MasonrySkeletonGrid } from '@/components/app/MasonrySkeletonGrid';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
@@ -412,11 +413,7 @@ export default function PublicDiscover() {
 
         {/* Masonry grid */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
-              <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 animate-shimmer bg-[length:200%_100%]" />
-            </div>
-          </div>
+          <MasonrySkeletonGrid columnCount={columnCount} />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
