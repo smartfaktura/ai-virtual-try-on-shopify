@@ -54,8 +54,13 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   const hasMultiple = items && items.length > 1;
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-  // Reset index when modal opens with new items
-  useEffect(() => { setCurrentIndex(initialIndex); }, [initialIndex, open]);
+  // Reset index ONLY when the modal transitions to open with a new initialIndex.
+  // Dropping `open` from deps prevents background-refetches from snapping the
+  // visible image back to the initial one while the user is browsing.
+  useEffect(() => {
+    if (open) setCurrentIndex(initialIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialIndex]);
 
   // Re-sync currentIndex whenever the parent's selected item.id changes
   // (e.g. user clicks a different thumbnail, or react-query refetches and shifts the list).
