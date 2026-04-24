@@ -1,41 +1,70 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
+/* ── Dresses category showcase: 1 original + 11 dress scene previews ── */
+const SUPABASE_PUBLIC =
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
 
-/* ── Hero images for the marquee ── */
+const ORIGINAL_DRESS = `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/products/1776686889528-b8ysdh.png`;
+const PREVIEW = (id: string) =>
+  `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
+
 const heroImages = [
-  { label: 'Product page', src: h('hero-croptop-studio-lookbook.png') },
-  { label: 'Social content', src: h('hero-croptop-cafe-lifestyle.png') },
-  { label: 'Creator style', src: h('hero-croptop-studio-dark.png') },
-  { label: 'Editorial', src: h('hero-croptop-golden-hour.png') },
-  { label: 'Campaign', src: h('hero-croptop-pilates-studio.png') },
-  { label: 'Lifestyle', src: h('hero-croptop-studio-lounge.png') },
-  { label: 'Lookbook', src: h('hero-croptop-basketball-court.png') },
-  { label: 'Ad creative', src: h('hero-ring-golden-light.png') },
-  { label: 'Flat lay', src: h('hero-ring-hand.png') },
-  { label: 'Video', src: h('hero-croptop-urban-edge.png') },
-  { label: 'Product page', src: h('hero-hp-desert.png') },
-  { label: 'Social content', src: h('hero-ring-eucalyptus.png') },
+  { label: 'Original',         src: ORIGINAL_DRESS,                       isOriginal: true },
+  { label: 'Editorial',        src: PREVIEW('1776689318257-yahkye') }, // Flash Night Fashion Campaign
+  { label: 'Studio',           src: PREVIEW('1776688965090-edaogg') }, // On-Model Front
+  { label: 'Lifestyle',        src: PREVIEW('1776840733386-n4bc6x') }, // Greenhouse Elegance
+  { label: 'Lookbook',         src: PREVIEW('1776689316419-90khdg') }, // Desert Tailored Walk
+  { label: 'Campaign',         src: PREVIEW('1776688403670-i0t3r6') }, // Golden Coast Dress
+  { label: 'Outdoor Portrait', src: PREVIEW('1776689319922-8yiolc') }, // Old Money Outdoor Portrait
+  { label: 'Flash Glamour',    src: PREVIEW('1776689317300-luvmhd') }, // Flash Glamour Portrait
+  { label: 'Architectural',    src: PREVIEW('1776688413055-z73arv') }, // Quiet Luxury Museum Staircase
+  { label: 'Mirror Selfie',    src: PREVIEW('1776689320622-0lnst1') }, // Power Mirror Statement Selfie
+  { label: 'Studio Look',      src: PREVIEW('1776688404914-wwy92r') }, // Mini Dress Studio Look
+  { label: 'Side Lean Pose',   src: PREVIEW('1776689321496-nclkyc') }, // Side Lean Attitude Pose
 ];
 
 const row1 = heroImages.slice(0, 6);
 const row2 = heroImages.slice(6).concat(heroImages.slice(0, 2));
 
+type HeroCard = { label: string; src: string; isOriginal?: boolean };
+
 /* ── Marquee card ── */
-function MarqueeCard({ label, src }: { label: string; src: string }) {
+function MarqueeCard({ label, src, isOriginal }: HeroCard) {
   return (
-    <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04]">
+    <div
+      className={cn(
+        'relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04]',
+        isOriginal && 'ring-1 ring-foreground/15 bg-[#FAFAF8]',
+      )}
+    >
       <img
-        src={getOptimizedUrl(src, { width: 420, quality: 55 })}
+        src={getOptimizedUrl(src, { width: 420, quality: isOriginal ? 70 : 55 })}
         alt={label}
         loading="lazy"
-        className="w-full h-full object-cover"
+        className={cn(
+          'w-full h-full',
+          isOriginal ? 'object-contain p-3' : 'object-cover',
+        )}
       />
-      <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
-        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">{label}</span>
+      <div
+        className={cn(
+          'absolute bottom-0 inset-x-0 p-2.5',
+          isOriginal
+            ? 'bg-gradient-to-t from-white/95 to-transparent'
+            : 'bg-gradient-to-t from-black/50 to-transparent',
+        )}
+      >
+        <span
+          className={cn(
+            'text-[10px] sm:text-[11px] font-medium tracking-wide',
+            isOriginal ? 'text-foreground/80' : 'text-white/90',
+          )}
+        >
+          {isOriginal ? '↑ Original photo' : label}
+        </span>
       </div>
     </div>
   );
@@ -43,7 +72,7 @@ function MarqueeCard({ label, src }: { label: string; src: string }) {
 
 /* ── Marquee row ── */
 function MarqueeRow({ cards, direction, duration }: {
-  cards: { label: string; src: string }[];
+  cards: HeroCard[];
   direction: 'left' | 'right';
   duration: string;
 }) {
@@ -55,7 +84,7 @@ function MarqueeRow({ cards, direction, duration }: {
         style={{ animationDuration: duration }}
       >
         {doubled.map((card, i) => (
-          <MarqueeCard key={`${card.label}-${i}`} label={card.label} src={card.src} />
+          <MarqueeCard key={`${card.label}-${i}`} {...card} />
         ))}
       </div>
     </div>
