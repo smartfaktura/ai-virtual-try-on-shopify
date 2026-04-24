@@ -14,9 +14,7 @@ const OneImageToVisualLibrarySection = lazy(() => import('@/components/landing/O
 const VideoShowcaseSection = lazy(() => import('@/components/landing/VideoShowcaseSection').then(m => ({ default: m.VideoShowcaseSection })));
 const ModelShowcaseSection = lazy(() => import('@/components/landing/ModelShowcaseSection').then(m => ({ default: m.ModelShowcaseSection })));
 const EnvironmentShowcaseSection = lazy(() => import('@/components/landing/EnvironmentShowcaseSection').then(m => ({ default: m.EnvironmentShowcaseSection })));
-const CreativeDropsSection = lazy(() => import('@/components/landing/CreativeDropsSection').then(m => ({ default: m.CreativeDropsSection })));
 
-const LandingPricing = lazy(() => import('@/components/landing/LandingPricing').then(m => ({ default: m.LandingPricing })));
 const LandingFAQ = lazy(() => import('@/components/landing/LandingFAQ').then(m => ({ default: m.LandingFAQ })));
 const FinalCTA = lazy(() => import('@/components/landing/FinalCTA').then(m => ({ default: m.FinalCTA })));
 const LandingFooter = lazy(() => import('@/components/landing/LandingFooter').then(m => ({ default: m.LandingFooter })));
@@ -64,8 +62,6 @@ export default function Landing() {
         <Suspense fallback={null}><VideoShowcaseSection /></Suspense>
         <Suspense fallback={null}><ModelShowcaseSection /></Suspense>
         <Suspense fallback={null}><EnvironmentShowcaseSection /></Suspense>
-        <Suspense fallback={null}><CreativeDropsSection /></Suspense>
-        <Suspense fallback={null}><LandingPricing /></Suspense>
         <Suspense fallback={null}><LandingFAQ /></Suspense>
         <Suspense fallback={null}><FinalCTA /></Suspense>
       </main>
