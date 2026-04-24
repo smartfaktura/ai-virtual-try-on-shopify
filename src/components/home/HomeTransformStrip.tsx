@@ -1,186 +1,53 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
-const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
+import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { Button } from '@/components/ui/button';
 
-interface CategoryData {
-  label: string;
-  original: string;
-  cards: { label: string; image: string }[];
-}
+/* ── Swimwear category showcase: 1 original + 9 scene previews ── */
+const SUPABASE_PUBLIC =
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
 
-const CATEGORIES: CategoryData[] = [
-  {
-    label: 'Fashion & Accessories',
-    original: h('hero-product-croptop.jpg'),
-    cards: [
-      { label: 'Product page', image: h('hero-croptop-studio-lookbook.png') },
-      { label: 'Social Media', image: h('hero-croptop-cafe-lifestyle.png') },
-      { label: 'Editorial', image: h('hero-croptop-studio-dark.png') },
-      { label: 'Ad Creative', image: h('hero-croptop-golden-hour.png') },
-      { label: 'UGC Style', image: h('hero-croptop-pilates-studio.png') },
-      { label: 'Flat Lay', image: h('hero-croptop-basketball-court.png') },
-      { label: 'Lookbook', image: h('hero-croptop-studio-lounge.png') },
-      { label: 'Video', image: h('hero-croptop-urban-edge.png') },
-      { label: 'Lifestyle', image: h('hero-croptop-golden-hour.png') },
-    ],
-  },
-  {
-    label: 'Jewelry',
-    original: h('hero-ring-fabric.png'),
-    cards: [
-      { label: 'Product page', image: h('hero-ring-hand.png') },
-      { label: 'Social Media', image: h('hero-ring-golden-light.png') },
-      { label: 'Editorial', image: h('hero-ring-portrait.png') },
-      { label: 'Ad Creative', image: h('hero-ring-ugc.png') },
-      { label: 'UGC Style', image: h('hero-ring-concrete.png') },
-      { label: 'Flat Lay', image: h('hero-ring-floating.png') },
-      { label: 'Lookbook', image: h('hero-ring-eucalyptus.png') },
-      { label: 'Close-up', image: h('hero-ring-fabric.png') },
-      { label: 'Lifestyle', image: h('hero-ring-hand.png') },
-    ],
-  },
-  {
-    label: 'Beauty & Skincare',
-    original: h('hero-hp-desert.png'),
-    cards: [
-      { label: 'Product page', image: h('hero-hp-elevator.png') },
-      { label: 'Social Media', image: h('hero-hp-linen.png') },
-      { label: 'Editorial', image: h('hero-hp-studio-seated.png') },
-      { label: 'Ad Creative', image: h('hero-hp-desert.png') },
-      { label: 'UGC Style', image: h('hero-hp-elevator.png') },
-      { label: 'Flat Lay', image: h('hero-hp-linen.png') },
-      { label: 'Lookbook', image: h('hero-hp-studio-seated.png') },
-      { label: 'Video', image: h('hero-hp-desert.png') },
-      { label: 'Lifestyle', image: h('hero-hp-elevator.png') },
-    ],
-  },
-  {
-    label: 'Home & Lifestyle',
-    original: h('hero-croptop-studio-lookbook.png'),
-    cards: [
-      { label: 'Product page', image: h('hero-croptop-studio-dark.png') },
-      { label: 'Social Media', image: h('hero-ring-golden-light.png') },
-      { label: 'Editorial', image: h('hero-hp-studio-seated.png') },
-      { label: 'Ad Creative', image: h('hero-croptop-golden-hour.png') },
-      { label: 'UGC Style', image: h('hero-ring-concrete.png') },
-      { label: 'Flat Lay', image: h('hero-ring-floating.png') },
-      { label: 'Lookbook', image: h('hero-hp-linen.png') },
-      { label: 'Video', image: h('hero-croptop-urban-edge.png') },
-      { label: 'Lifestyle', image: h('hero-hp-desert.png') },
-    ],
-  },
+const PREVIEW = (id: string) =>
+  `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
+
+type GridCardData = { label: string; src: string; isOriginal?: boolean };
+
+const SWIMWEAR_CARDS: GridCardData[] = [
+  { label: 'Original',              src: PREVIEW('1776523219756-c5vnc7'), isOriginal: true }, // Ghost Mannequin Shot — Swimwear
+  { label: 'Architectural Stair',   src: PREVIEW('1776522769405-3v1gs0') },
+  { label: 'Sunbathing Editorial',  src: PREVIEW('1776524131703-gvh4bb') },
+  { label: 'Golden Horizon',        src: PREVIEW('1776574228066-oyklfz') },
+  { label: 'Textured Bikini Back',  src: PREVIEW('1776574265735-cvu5sc') },
+  { label: 'Coastal Camera',        src: PREVIEW('1776524128011-dcnlpo') },
+  { label: 'Yacht Bow Editorial',   src: PREVIEW('1776524132929-q8upyp') },
+  { label: 'Rocky Coast Editorial', src: PREVIEW('1776524128888-371hoo') },
+  { label: 'Minimal Horizon',       src: PREVIEW('1776574730668-ltg55f') },
+  { label: 'Cliffside Beach Walk',  src: PREVIEW('1776574208384-fmg2u3') },
 ];
 
-/* ── Image card ── */
-function ImageCard({ label, src }: { label: string; src: string }) {
-  const [loaded, setLoaded] = useState(false);
-
+/* ── Grid card ── */
+function GridCard({ label, src, isOriginal }: GridCardData) {
   return (
-    <div className="relative flex-shrink-0 w-[140px] sm:w-[200px] lg:w-[240px] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.06]">
-      <div className="aspect-[4/5] relative">
-        {!loaded && (
-          <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
-        )}
-        <img
-          src={getOptimizedUrl(src, { width: 400, quality: 75 })}
-          alt={label}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        />
-      </div>
-      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/50 to-transparent z-10">
-        <span className="text-[11px] font-medium tracking-wide text-white/90">{label}</span>
-      </div>
-    </div>
-  );
-}
-
-/* ── Marquee row ── */
-function MarqueeRow({
-  cards,
-  direction,
-  duration,
-  fadeKey,
-}: {
-  cards: { label: string; image: string }[];
-  direction: 'left' | 'right';
-  duration: string;
-  fadeKey: string;
-}) {
-  const doubled = [...cards, ...cards];
-  return (
-    <div className="overflow-hidden w-full group/marquee">
-      <div
-        key={fadeKey}
-        className={`flex gap-3 lg:gap-4 w-max ${
-          direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'
-        } group-hover/marquee:[animation-play-state:paused]`}
-        style={{ animationDuration: duration, animationTimingFunction: 'linear', animationIterationCount: 'infinite' }}
-      >
-        {doubled.map((card, i) => (
-          <ImageCard key={`${card.label}-${i}`} label={card.label} src={card.image} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── Segmented control ── */
-function CategorySegmentedControl({
-  categories,
-  activeIdx,
-  onChange,
-}: {
-  categories: CategoryData[];
-  activeIdx: number;
-  onChange: (idx: number) => void;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
-
-  useEffect(() => {
-    const btn = buttonRefs.current[activeIdx];
-    const container = containerRef.current;
-    if (btn && container) {
-      const cRect = container.getBoundingClientRect();
-      const bRect = btn.getBoundingClientRect();
-      setIndicator({ left: bRect.left - cRect.left, width: bRect.width });
-    }
-  }, [activeIdx]);
-
-  return (
-    <div
-      ref={containerRef}
-      className="relative inline-flex items-center bg-muted/40 rounded-full p-1 overflow-x-auto scrollbar-hide max-w-full"
-    >
-      {/* sliding indicator */}
-      <div
-        className="absolute top-1 bottom-1 rounded-full bg-background shadow-sm transition-all duration-300 ease-out"
-        style={{ left: indicator.left, width: indicator.width }}
+    <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
+      <img
+        src={getOptimizedUrl(src, { quality: 60 })}
+        alt={label}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-cover"
       />
-      {categories.map((cat, idx) => (
-        <button
-          key={cat.label}
-          ref={(el) => { buttonRefs.current[idx] = el; }}
-          onClick={() => onChange(idx)}
-          className={`relative z-10 whitespace-nowrap rounded-full px-4 sm:px-5 py-2 text-sm font-medium transition-colors duration-200 ${
-            idx === activeIdx
-              ? 'text-foreground'
-              : 'text-muted-foreground hover:text-foreground/70'
-          }`}
-        >
-          {cat.label}
-        </button>
-      ))}
+      {isOriginal && (
+        <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
+          Original
+        </span>
+      )}
+      <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
+        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">
+          {label}
+        </span>
+      </div>
     </div>
   );
 }
@@ -188,115 +55,30 @@ function CategorySegmentedControl({
 /* ── Main section ── */
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [fadeIn, setFadeIn] = useState(true);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-  const active = CATEGORIES[activeIdx];
-
-  const switchCategory = useCallback(
-    (idx: number) => {
-      if (idx === activeIdx) return;
-      setFadeIn(false);
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        setActiveIdx(idx);
-        setFadeIn(true);
-      }, 200);
-    },
-    [activeIdx],
-  );
-
-  useEffect(() => () => clearTimeout(timeoutRef.current), []);
-
-  const row1 = active.cards.slice(0, 5);
-  const row2 = active.cards.slice(4);
 
   return (
     <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-10">
+        <div className="text-center max-w-2xl mx-auto mb-10 lg:mb-14">
           <h2 className="text-foreground text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
             From one product photo to every asset you need
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Select a category to preview the kind of visuals you can create.
+            One swimwear shot becomes a full editorial set — campaigns, lookbooks, lifestyle.
           </p>
         </div>
 
-        {/* Category segmented control */}
-        <div className="flex justify-center mb-10 lg:mb-14">
-          <CategorySegmentedControl
-            categories={CATEGORIES}
-            activeIdx={activeIdx}
-            onChange={switchCategory}
-          />
-        </div>
-
-        {/* Strip */}
+        {/* Grid */}
         <div
           ref={ref}
-          className={`flex flex-col sm:flex-row items-center gap-4 lg:gap-6 transition-all duration-700 ${
+          className={`grid grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4 transition-all duration-700 ${
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           }`}
         >
-          {/* Mobile: original card above marquee */}
-          <div className={`flex sm:hidden items-center justify-center gap-3 mb-4 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
-            <div
-              className="relative w-16 rounded-xl overflow-hidden shadow-lg"
-              style={{ aspectRatio: '4/5' }}
-            >
-              <img
-                src={getOptimizedUrl(active.original, { width: 200, quality: 75 })}
-                alt="Original product"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute bottom-0 inset-x-0 p-1 bg-gradient-to-t from-black/50 to-transparent">
-                <span className="text-[7px] font-semibold tracking-widest uppercase text-white/90">Original</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <span className="text-xs font-medium">Your photo</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </div>
-          </div>
-
-          {/* Desktop: original card on left */}
-          <div className="hidden sm:block shrink-0">
-            <div
-              className={`relative w-24 lg:w-32 rounded-2xl overflow-hidden shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
-              style={{ aspectRatio: '4/5' }}
-            >
-              <img
-                src={getOptimizedUrl(active.original, { width: 300, quality: 75 })}
-                alt="Original product"
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/50 to-transparent z-10">
-                <span className="text-[9px] font-semibold tracking-widest uppercase text-white/90">
-                  Original
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Arrow */}
-          <div className="hidden sm:flex flex-col items-center gap-1 shrink-0">
-            <div className="w-8 lg:w-12 h-px bg-border" />
-            <svg width="8" height="8" viewBox="0 0 8 8" className="text-border">
-              <path d="M0 0 L8 4 L0 8 Z" fill="currentColor" />
-            </svg>
-          </div>
-
-          {/* Marquee rows */}
-          <div
-            className={`flex-1 flex flex-col gap-3 sm:gap-4 min-w-0 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <MarqueeRow cards={row1} direction="left" duration="32s" fadeKey={`r1-${activeIdx}`} />
-            <MarqueeRow cards={row2} direction="right" duration="38s" fadeKey={`r2-${activeIdx}`} />
-          </div>
+          {SWIMWEAR_CARDS.map((card) => (
+            <GridCard key={card.label} {...card} />
+          ))}
         </div>
 
         {/* CTA */}
