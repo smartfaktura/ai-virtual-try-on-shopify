@@ -20,22 +20,25 @@ export function BrandLoaderProgressGlyph({ fullScreen, label, hints, className }
 
   const content = (
     <div className={cn('flex flex-col items-center gap-5', className)}>
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-2.5">
         <span
-          className="text-base font-semibold text-foreground animate-glyph-breathe leading-none"
+          className="text-[15px] font-medium tracking-[0.18em] text-foreground animate-glyph-breathe leading-none"
           aria-hidden
         >
-          VOVV
+          VOVV.AI
         </span>
-        <div className="relative h-px w-16 overflow-hidden bg-border/60" aria-hidden>
+        <div
+          className="relative h-px w-20 overflow-hidden bg-gradient-to-r from-transparent via-border to-transparent"
+          aria-hidden
+        >
           <div
-            className="absolute top-0 left-0 h-px w-[30%] bg-primary animate-glyph-sweep"
+            className="absolute top-0 left-0 h-px w-[40%] bg-gradient-to-r from-transparent via-primary to-transparent animate-glyph-sweep"
           />
         </div>
       </div>
 
       {activeHints.length > 0 && (
-        <div className="h-4 overflow-hidden text-xs text-muted-foreground tracking-wide">
+        <div className="h-4 overflow-hidden text-[11px] uppercase tracking-[0.14em] text-muted-foreground/80">
           <p key={hintIdx} className="animate-fade-in">
             {activeHints[hintIdx]}
           </p>
