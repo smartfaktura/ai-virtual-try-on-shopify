@@ -122,7 +122,7 @@ function GridCard({ card, hideOnMobile }: { card: GridCardData; hideOnMobile: bo
 /* ── Main section ── */
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
-  const [active, setActive] = useState<CategoryId>('all');
+  const [active, setActive] = useState<CategoryId>('swimwear');
 
   const current = CATEGORIES.find((c) => c.id === active)!;
 
@@ -157,6 +157,33 @@ export function HomeTransformStrip() {
                 {cat.label}
               </button>
             ))}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1.5"
+                >
+                  All categories
+                  <ChevronDown size={14} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="center"
+                sideOffset={10}
+                className="w-[min(92vw,560px)] p-5 rounded-2xl"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                  35+ Categories
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                  {ALL_CATEGORY_NAMES.map((name) => (
+                    <span key={name} className="text-sm text-foreground/80">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
