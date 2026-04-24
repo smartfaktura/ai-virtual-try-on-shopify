@@ -1,46 +1,64 @@
 
 
-## Fix Clean Studio Light nude output — prompt-only, no locks
+## Safety review: is the masonry stabilization plan safe?
 
-### What changes
+Yes — the plan is performance-first and does not change any behavior that the modal, recreate flow, save, admin tools, or routing depend on. Here's the audit.
 
-Update only the `prompt_template` for `scene_id='clean-studio-light'` in `product_image_scenes` (one SQL UPDATE). No code changes, no wardrobe lock, no fallback rewrites in `productImagePromptBuilder.ts`. Nothing else is touched, so swimwear / lingerie / hand-only / jewelry / fragrance / beauty / close-up scenes are completely unaffected.
+### What the plan touches vs. what it leaves alone
 
-### What's wrong with the current template
+| Area | Touched? | Risk |
+|---|---|---|
+| `DiscoverCard` masonry image wrapper (add `aspect-ratio` div) | Yes — visual only | None. Same DOM tree as the existing `aspectRatioOverride` branch already used by Dashboard. |
+| Loading skeleton in `Discover.tsx` / `PublicDiscover.tsx` | Yes — replace centered loader with ratio-aware masonry skeleton | None. Skeleton is pre-data UI; never renders alongside cards. |
+| Progressive render (`visibleCount` + sentinel) in `Discover.tsx` | Yes — already exists in PublicDiscover, mirror it | None. Items append; existing tiles never move. |
+| `DashboardDiscoverSection` eager count 8 → 4 | Yes — one-line | None. Below-the-fold tiles still load lazily. |
+| New helper `src/lib/discoverAspect.ts` | New file | None. Pure function. |
+| Modal open / detail view / `DiscoverDetail` route | **Not touched** | Card `onClick` handler unchanged. |
+| Recreate flow, save, admin pin/feature, hide scene | **Not touched** | All handlers and props pass through. |
+| `useDiscoverPresets`, `useRecommendedDiscoverItems`, `useFeaturedItems`, `useSavedItems`, `useHiddenScenes` | **Not touched** | Same data, same shape, same cache keys. |
+| Stable column assignment (`i % columnCount`) | **Not touched** | Order preserved across appends. |
+| URL slug routing, deep links | **Not touched** | |
+| DB / RLS / taxonomy / categories | **Not touched** | |
 
-The current `clean-studio-light` template describes:
-- "torso angled backward, supported by arms behind"
-- "one leg bent upward, second leg extended forward/down"
-- "skin: smooth, slightly luminous"
-- "skin tones slightly warm to contrast cool environment"
+### Why the modal cannot break
 
-It never mentions the product, never says "wearing", and has no `[PRODUCT]` / `{{personDirective}}` / `{{outfitDirective}}` token. The image model reads it as a bare-skin body study on a grey cube.
+`DiscoverCard`'s `onClick={onClick}` and the `onRecreate` / `onToggleSave` / `onToggleFeatured` handlers stay exactly as today. The only change inside the card is wrapping `<ShimmerImage>` in a `<div style={{ aspectRatio }}>` — which is the same wrapper pattern already used when `aspectRatioOverride` is provided (Dashboard uses it in production right now). Click events bubble identically.
 
-### The new template (prompt-only fix)
+### Why progressive render cannot hide items
 
-Rewrite so the scene:
-- Opens with `[PRODUCT]` as the hero piece (also gives the auto-injector its preferred anchor).
-- Inserts `{{personDirective}}` and `{{outfitDirective}}` near the top so wardrobe styling is woven in naturally.
-- Replaces "torso angled backward… one leg bent upward… second leg extended…" with pose language that explicitly references the styled outfit and footwear (e.g. "model wearing the full outfit reclining on the cube, one leg bent, the other extended, garments and footwear clearly visible and correctly fitted").
-- Removes "skin: smooth, slightly luminous" and "skin tones slightly warm to contrast cool environment" from the materials block — these are the lines actively pushing the model toward bare skin. Replace with "fabric texture, garment fit and styling clearly readable".
-- Keeps every other line — studio, transparent cube, lighting, lens, color palette, depth of field, mood — exactly as-is so the visual identity of the scene is preserved.
+- `visibleCount` starts at 24 and only ever **increases** via the IntersectionObserver sentinel.
+- It resets to 24 only when `selectedCategory` / `selectedSubcategory` / `similarTo` change — i.e. an actual user filter change, identical to PublicDiscover today.
+- Filtering, sorting, dedup, recommended-merge logic all run before slicing, so no item is ever excluded — only deferred.
 
-### Files
+### Why aspect-ratio reservation cannot crash a card
+
+- Presets always have `aspect_ratio` populated in the DB (`"3:4"`, `"4:5"`, `"1:1"`, etc.).
+- The helper `getDiscoverItemAspectRatio` falls back to `"4 / 5"` if the value is missing or malformed, so a bad row still renders a valid box.
+- If the image fails to load, `ShimmerImage` already handles `onError` and the reserved box just stays empty — same as today, minus the jumping.
+
+### Performance wins (not just stability)
+
+- First paint shows masonry-shaped skeleton with same vertical rhythm — no "snap" when data arrives.
+- Only 24 cards render initially → fewer image requests, faster TTI.
+- Dashboard drops from 8 eager fetches to 4 → less bandwidth contention on the LCP.
+- React-query cache (`staleTime: 10min`) already in place → tab switches stay instant.
+
+### Files (final, unchanged from prior plan)
 
 ```text
-(SQL UPDATE)   product_image_scenes.prompt_template
-               WHERE scene_id = 'clean-studio-light'
+src/lib/discoverAspect.ts                         (new, ~30 lines)
+src/components/app/DiscoverCard.tsx               wrap masonry image in aspect-ratio box
+src/pages/Discover.tsx                            ratio-aware skeleton + progressive render
+src/pages/PublicDiscover.tsx                      ratio-aware skeleton (rest already correct)
+src/components/app/DashboardDiscoverSection.tsx   eager 8 → 4
 ```
 
-No code edits. No changes to `productImagePromptBuilder.ts`. No changes to other scenes.
+### Out of scope (explicitly)
+- No modal / detail / lightbox changes.
+- No data hook changes.
+- No DB / RLS / taxonomy changes.
+- No new dependencies.
 
-### Out of scope
-- No wardrobe lock / hardening logic in the builder.
-- No edits to swimwear, lingerie, hand-focus, jewelry, fragrance, beauty, eyewear or any close-up template.
-- No taxonomy, RLS, UI, or model changes.
-
-### Expected result
-- Clean Studio Light keeps the same minimal grey-cube editorial look.
-- Model is fully dressed in the product (leggings, hoodies, denim, activewear, etc.).
-- Zero risk of regressions on any other scene because nothing else is touched.
+### Verdict
+Safe. Performance-first. Modal opening, recreate, save, admin tools, routing, and data flow all remain byte-identical. The only observable changes are: skeleton looks like the grid, tiles reserve their box before images load, and Discover loads in batches of 24 like PublicDiscover already does.
 
