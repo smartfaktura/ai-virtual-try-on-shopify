@@ -183,11 +183,23 @@ export function ImageLightbox({
               )}
             />
           )}
+          {/* Instant low-res placeholder (cached) — fades out once full-res decodes */}
+          {showPlaceholder && (
+            <img
+              src={placeholderSrc}
+              alt=""
+              aria-hidden
+              className={cn(
+                'absolute inset-0 m-auto max-w-full w-auto h-auto object-contain rounded-xl',
+                isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
+              )}
+            />
+          )}
           <img
-            key={currentImage}
             src={currentImage}
             alt={`Generated image ${currentIndex + 1}`}
             decoding="async"
+            loading="eager"
             // @ts-expect-error fetchpriority is a valid HTML attribute
             fetchpriority="high"
             onLoad={() => setLoadedSrc(currentImage)}
