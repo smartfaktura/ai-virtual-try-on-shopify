@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Check, User, ImageIcon, TreePine, Building2, Sofa, Store } from 'lucide-react';
 
 interface CatalogPoseCardProps {
@@ -55,7 +56,7 @@ export function CatalogPoseCard({
       <div className="aspect-[4/5] overflow-hidden">
         {hasImage ? (
           <img
-            src={previewUrl}
+            src={getOptimizedUrl(previewUrl, { quality: 60 })}
             alt={name}
             loading="lazy"
             decoding="async"
