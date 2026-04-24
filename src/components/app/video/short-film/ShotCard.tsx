@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const SCENE_TYPE_OPTIONS = [
   { value: 'product_hero', label: 'Product Hero' },
@@ -208,7 +209,7 @@ export function ShotCard({
                     {availableReferences.map(ref => (
                       <SelectItem key={ref.id} value={ref.id}>
                         <span className="flex items-center gap-1.5">
-                          <img src={ref.url} className="h-4 w-4 rounded object-cover" alt="" />
+                          <img src={getOptimizedUrl(ref.url, { quality: 50 })} loading="lazy" className="h-4 w-4 rounded object-cover" alt="" />
                           {ref.name || ref.role}
                         </span>
                       </SelectItem>
