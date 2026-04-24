@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, Clipb
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ImageLightboxProps {
   images: string[];
@@ -66,6 +67,23 @@ export function ImageLightbox({
   useEffect(() => {
     if (currentImage && currentImage === loadedSrc) prevSrcRef.current = currentImage;
   }, [currentImage, loadedSrc]);
+
+  // Preload neighboring full-res images so arrow nav is near-instant.
+  useEffect(() => {
+    if (!open || images.length <= 1) return;
+    const nextIdx = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
+    const prevIdx = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
+    [images[nextIdx], images[prevIdx]].forEach((src) => {
+      if (!src) return;
+      const img = new Image();
+      img.src = src;
+    });
+  }, [open, currentIndex, images]);
+
+  // Low-res placeholder URL (cached from results grid). Only render when it
+  // differs from the original — getOptimizedUrl no-ops on non-Supabase URLs.
+  const placeholderSrc = getOptimizedUrl(currentImage, { quality: 60 });
+  const showPlaceholder = !!placeholderSrc && placeholderSrc !== currentImage && loadedSrc !== currentImage;
 
   useEffect(() => {
     if (!open) return;
@@ -165,11 +183,23 @@ export function ImageLightbox({
               )}
             />
           )}
+          {/* Instant low-res placeholder (cached) — fades out once full-res decodes */}
+          {showPlaceholder && (
+            <img
+              src={placeholderSrc}
+              alt=""
+              aria-hidden
+              className={cn(
+                'absolute inset-0 m-auto max-w-full w-auto h-auto object-contain rounded-xl',
+                isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
+              )}
+            />
+          )}
           <img
-            key={currentImage}
             src={currentImage}
             alt={`Generated image ${currentIndex + 1}`}
             decoding="async"
+            loading="eager"
             // @ts-expect-error fetchpriority is a valid HTML attribute
             fetchpriority="high"
             onLoad={() => setLoadedSrc(currentImage)}
