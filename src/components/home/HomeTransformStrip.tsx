@@ -7,6 +7,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import originalFragrance from '@/assets/home-hero-original-fragrance.jpg';
+import originalEyewear from '@/assets/home-hero-original-eyewear.png';
 
 /* ── Scene preview helper (Supabase public bucket) ── */
 const SUPABASE_PUBLIC =
@@ -51,9 +52,27 @@ const FRAGRANCE_CARDS: GridCardData[] = [
   { label: 'Frozen Aura II',          src: PREVIEW('1776835749003-43ooe1') },
 ];
 
+/* ── Eyewear: 12 cards (mobile shows first 9) ── */
+const EYEWEAR_CARDS: GridCardData[] = [
+  { label: 'Original',          src: originalEyewear, isOriginal: true },
+  { label: 'Candy Flash',       src: PREVIEW('1776102176417-iih747') },
+  { label: 'Stair Selfie',      src: PREVIEW('concrete-stair-selfie-eyewear-1776149876284') },
+  { label: 'Beauty Closeup',    src: PREVIEW('beauty-closeup-oversized-eyewear-1776150210659') },
+  { label: 'Golden Hour',       src: PREVIEW('1776102185057-0ulf1m') },
+  { label: 'Office Flash',      src: PREVIEW('editorial-office-flash-eyewear-1776150153576') },
+  { label: 'Lounge Selfie',     src: PREVIEW('1776102190563-dioke2') },
+  { label: 'Bench Side',        src: PREVIEW('1776102172131-vq969w') },
+  { label: 'Sunset Drive',      src: PREVIEW('1776102204479-9rlc0n') },
+  // hidden on mobile
+  { label: 'Dessert Table',     src: PREVIEW('1776102181320-jisnae') },
+  { label: 'Flash Candy',       src: PREVIEW('1776102183733-g1twvv') },
+  { label: 'Beauty Closeup II', src: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014') },
+];
+
 const CATEGORIES = [
   { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS,  copy: 'See what your swimwear can become.' },
   { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS, copy: 'See what your fragrance can become.' },
+  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS,   copy: 'See what your eyewear can become.' },
 ] as const;
 
 type CategoryId = typeof CATEGORIES[number]['id'];
