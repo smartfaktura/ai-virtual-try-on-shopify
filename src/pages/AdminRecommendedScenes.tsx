@@ -531,6 +531,16 @@ export default function AdminRecommendedScenes() {
                     >
                       <X className="w-3 h-3" />
                     </button>
+                    <a
+                      href={`/app/discover/scene-${scene.scene_id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-6 h-6 rounded-full bg-background/95 border border-border flex items-center justify-center text-[10px]"
+                      aria-label="View on Explore"
+                      title="View on Explore"
+                    >
+                      ↗
+                    </a>
                   </div>
                 </div>
               ))}
