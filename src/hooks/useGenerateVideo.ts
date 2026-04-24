@@ -156,8 +156,15 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           return;
         }
 
-        if (data.status === 'succeed' && data.video_url) return;
-        if (data.status === 'failed') return;
+        if (data.status === 'succeed' && data.video_url) {
+          // Edge function may need a moment to persist the row update — refresh shortly after.
+          if (!cancelled) setTimeout(() => silentRefreshHistory(), 1500);
+          return;
+        }
+        if (data.status === 'failed') {
+          if (!cancelled) setTimeout(() => silentRefreshHistory(), 1500);
+          return;
+        }
         if (!cancelled) setTimeout(poll, 10000);
       } catch (err) {
         console.warn('[useGenerateVideo] Status poll exception:', err);
