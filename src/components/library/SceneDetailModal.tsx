@@ -1,8 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ImageIcon, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useAuth } from '@/contexts/AuthContext';
 import type { PublicScene } from '@/hooks/usePublicSceneLibrary';
@@ -18,12 +19,22 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
   const navigate = useNavigate();
   const { user } = useAuth();
   const open = !!scene;
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Reset image load state whenever the scene changes.
+  useEffect(() => {
+    setImgLoaded(false);
+  }, [scene?.scene_id]);
 
   if (!scene) return null;
 
   const subLabel = getCollectionLabel(scene.category_collection);
   const heroUrl = scene.preview_image_url
     ? getOptimizedUrl(scene.preview_image_url, { quality: 75 })
+    : null;
+  // Smaller, cheap-to-fetch placeholder we render first for instant paint.
+  const placeholderUrl = scene.preview_image_url
+    ? getOptimizedUrl(scene.preview_image_url, { quality: 20 })
     : null;
 
   const handleCta = () => {
@@ -42,24 +53,40 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl border-none bg-background p-0 sm:rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl border-none bg-background p-0 sm:rounded-3xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="sr-only">{scene.title}</DialogTitle>
         <div className="grid gap-0 md:grid-cols-[5fr_6fr]">
           {/* Hero */}
-          <div className="relative aspect-[4/5] w-full bg-muted/40">
-            <div className="absolute inset-0 flex items-center justify-center text-foreground/15">
-              <ImageIcon className="h-10 w-10" />
-            </div>
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/40">
+            {/* Skeleton shimmer */}
+            {!imgLoaded && (
+              <div className="absolute inset-0 z-[1] animate-pulse bg-foreground/[0.06]" />
+            )}
+
+            {/* Tiny low-quality placeholder for instant paint */}
+            {placeholderUrl && (
+              <img
+                src={placeholderUrl}
+                alt=""
+                aria-hidden
+                className={`absolute inset-0 z-[2] h-full w-full object-cover blur-md scale-110 transition-opacity duration-300 ${
+                  imgLoaded ? 'opacity-0' : 'opacity-80'
+                }`}
+              />
+            )}
+
+            {/* Full quality hero */}
             {heroUrl && (
               <img
                 src={heroUrl}
                 alt={scene.title}
                 loading="eager"
                 decoding="async"
-                className="relative z-[1] h-full w-full object-cover animate-in fade-in duration-300"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                }}
+                onLoad={() => setImgLoaded(true)}
+                onError={() => setImgLoaded(true)}
+                className={`relative z-[3] h-full w-full object-cover transition-opacity duration-500 ${
+                  imgLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
               />
             )}
           </div>
