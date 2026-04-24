@@ -831,7 +831,10 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
 
             {/* Primary CTA */}
             <Button
+              disabled={isRecreating}
               onClick={() => {
+                if (isRecreating) return;
+                setIsRecreating(true);
                 const d = item.data as any;
                 const wSlug = d.workflow_slug;
                 // Scene-type items always belong to product-images
@@ -895,7 +898,7 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
               className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               Recreate this
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {isRecreating ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
 
             {/* Secondary actions */}
