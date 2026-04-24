@@ -981,7 +981,9 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
               {/* Mini product thumbnails */}
               <div className="flex -space-x-1.5">
                 {catProducts.slice(0, 3).map(p => (
-                  <img key={p.id} src={getOptimizedUrl(p.image_url, { quality: 40 })} alt={p.title} className="w-6 h-6 sm:w-7 sm:h-7 rounded-md object-contain bg-white flex-shrink-0 border-2 border-background" />
+                  <div key={p.id} className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-white flex-shrink-0 border-2 border-background flex items-center justify-center p-0.5 overflow-hidden">
+                    <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt={p.title} className="max-w-full max-h-full object-contain" loading="lazy" />
+                  </div>
                 ))}
                 {catProducts.length > 3 && (
                   <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground border-2 border-background">
