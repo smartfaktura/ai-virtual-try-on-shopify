@@ -139,6 +139,43 @@ export function HomeTransformStrip() {
 
   const current = CATEGORIES.find((c) => c.id === active)!;
 
+  // Warm browser cache for every category's tile so pill-switching is instant.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const head = document.head;
+    const created: HTMLLinkElement[] = [];
+
+    // preconnect to Supabase storage origin
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = 'https://azwiljtrbtaupofwmpzb.supabase.co';
+    preconnect.crossOrigin = '';
+    head.appendChild(preconnect);
+    created.push(preconnect);
+
+    // preload every tile (low priority so it doesn't fight critical assets)
+    const seen = new Set<string>();
+    CATEGORIES.forEach((cat) => {
+      cat.cards.forEach((card) => {
+        const url = getOptimizedUrl(card.src, { quality: 60 });
+        if (!url || seen.has(url) || url.startsWith('data:')) return;
+        seen.add(url);
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = url;
+        // @ts-expect-error fetchPriority is valid on HTMLLinkElement
+        link.fetchPriority = 'low';
+        head.appendChild(link);
+        created.push(link);
+      });
+    });
+
+    return () => {
+      created.forEach((el) => el.parentNode?.removeChild(el));
+    };
+  }, []);
+
   return (
     <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
@@ -210,7 +247,7 @@ export function HomeTransformStrip() {
           )}
         >
           {current.cards.map((card, i) => (
-            <GridCard key={`${current.id}-${card.label}-${i}`} card={card} hideOnMobile={i >= 9} eager={i < 6} />
+            <GridCard key={`${current.id}-${card.label}-${i}`} card={card} hideOnMobile={i >= 9} eager={i < 9} />
           ))}
         </div>
 
