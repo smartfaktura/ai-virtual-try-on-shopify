@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import originalFragrance from '@/assets/home-hero-original-fragrance.jpg';
 import originalEyewear from '@/assets/home-hero-original-eyewear.png';
@@ -30,13 +31,12 @@ const SWIMWEAR_CARDS: GridCardData[] = [
   { label: 'Yacht Bow Editorial',   src: PREVIEW('1776524132929-q8upyp') },
   { label: 'Rocky Coast Editorial', src: PREVIEW('1776524128888-371hoo') },
   { label: 'Minimal Horizon',       src: PREVIEW('1776574730668-ltg55f') },
-  // hidden on mobile
   { label: 'Cliffside Beach Walk',  src: PREVIEW('1776574208384-fmg2u3') },
   { label: 'Shoreline Adjust',      src: PREVIEW('1776574249450-gizx6h') },
   { label: 'Sunstone Wall',         src: PREVIEW('1776574255634-kmhz9g') },
 ];
 
-/* ── Fragrance: 12 cards (mobile shows first 9; only desktop-hidden tiles may reuse) ── */
+/* ── Fragrance ── */
 const FRAGRANCE_CARDS: GridCardData[] = [
   { label: 'Original',                src: originalFragrance, isOriginal: true },
   { label: 'Volcanic Sunset',         src: PREVIEW('repeated-shadow-grid-fragrance-1776013389735') },
@@ -47,13 +47,12 @@ const FRAGRANCE_CARDS: GridCardData[] = [
   { label: 'Earthy Driftwood',        src: PREVIEW('near-face-hold-fragrance-1776013185169') },
   { label: 'Near Face Hold',          src: PREVIEW('1776018027926-ua03bd') },
   { label: 'Dark Elegance',           src: PREVIEW('1776018020221-aehe8n') },
-  // hidden on mobile (visible from sm: up)
   { label: 'Aquatic Reflection',      src: PREVIEW('1776018039712-1hifzr') },
   { label: 'Red Gradient Embrace',    src: PREVIEW('1776018038709-gmt0eg') },
   { label: 'Earthy Glow Stage',       src: PREVIEW('1776018027926-ua03bd') },
 ];
 
-/* ── Eyewear: 12 cards (mobile shows first 9) ── */
+/* ── Eyewear ── */
 const EYEWEAR_CARDS: GridCardData[] = [
   { label: 'Original',          src: originalEyewear, isOriginal: true },
   { label: 'Candy Flash',       src: PREVIEW('1776102176417-iih747') },
@@ -64,16 +63,83 @@ const EYEWEAR_CARDS: GridCardData[] = [
   { label: 'Lounge Selfie',     src: PREVIEW('1776102190563-dioke2') },
   { label: 'Bench Side',        src: PREVIEW('1776102172131-vq969w') },
   { label: 'Sunset Drive',      src: PREVIEW('1776102204479-9rlc0n') },
-  // hidden on mobile
   { label: 'Dessert Table',     src: PREVIEW('1776102181320-jisnae') },
   { label: 'Flash Candy',       src: PREVIEW('1776102183733-g1twvv') },
   { label: 'Beauty Closeup II', src: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014') },
+];
+
+/* ── Jackets (from /app/generate/product-images Step 2 · jackets) ── */
+const JACKETS_CARDS: GridCardData[] = [
+  { label: 'Streetwear Side Profile',  src: PREVIEW('streetwear-editorial-side-profile-jackets') },
+  { label: 'Old Money Outdoor',        src: PREVIEW('apparel-oldmoney-outdoor-portrait-jackets') },
+  { label: 'On-Model Editorial',       src: PREVIEW('on-model-editorial-garments-jackets') },
+  { label: 'Studio Fisheye',           src: PREVIEW('apparel-studio-fisheye-streetwear-jackets') },
+  { label: 'Sunlit Tailored Chair',    src: PREVIEW('sunlit-tailored-chair-pose-jackets') },
+  { label: 'Paris Curb Side',          src: PREVIEW('paris-curb-side-pose-jackets') },
+  { label: 'Soft Volume Lean',         src: PREVIEW('soft-volume-lean-jackets') },
+  { label: 'Super Editorial Campaign', src: PREVIEW('apparel-super-editorial-campaign-jackets') },
+  { label: 'Night Flash Campaign',     src: PREVIEW('apparel-night-flash-campaign-jackets') },
+  { label: 'Window Salon Editorial',   src: PREVIEW('window-salon-editorial-jackets') },
+  { label: 'Desert Tailored Walk',     src: PREVIEW('desert-tailored-walk-jackets') },
+  { label: 'Luxury Door Statement',    src: PREVIEW('luxury-door-statement-jackets') },
+];
+
+/* ── Footwear (sneakers from /app/generate/product-images Step 2) ── */
+const FOOTWEAR_CARDS: GridCardData[] = [
+  { label: 'Pair Display',             src: PREVIEW('pair-display-shoes-sneakers') },
+  { label: 'In-Hand Studio',           src: PREVIEW('in-hand-studio-shoes-sneakers') },
+  { label: 'Geometric Grid Minimal',   src: PREVIEW('geometric-grid-minimal') },
+  { label: 'Casual Lace Moment',       src: PREVIEW('casual-lace-moment') },
+  { label: 'Hard Shadow',              src: PREVIEW('hard-shadow-shoes-sneakers') },
+  { label: 'Studio Flex Pull',         src: PREVIEW('studio-flex-pull') },
+  { label: 'Cafe Sneaker Moment',      src: PREVIEW('cafe-sneaker-moment') },
+  { label: 'Sculpt Balance Edge',      src: PREVIEW('sculpt-balance-edge') },
+  { label: 'Paris Side Pause',         src: PREVIEW('paris-side-pause') },
+  { label: 'Dynamic Motion Drift',     src: PREVIEW('dynamic-motion-drift') },
+  { label: 'City Step Detail',         src: PREVIEW('city-step-detail') },
+  { label: 'Effortless City Walk',     src: PREVIEW('effortless-city-walk') },
+];
+
+/* ── Bags (bags-accessories) ── */
+const BAGS_CARDS: GridCardData[] = [
+  { label: 'Sculptural Studio Hero',     src: PREVIEW('1776239449949-ygljai') },
+  { label: 'On-Shoulder Editorial',      src: PREVIEW('1776239446567-7mvigz') },
+  { label: 'Reclined Studio Editorial',  src: PREVIEW('1776749544620-sn4eh1') },
+  { label: 'Architectural On-Body',      src: PREVIEW('1776239415973-p3m8bq') },
+  { label: 'Closebody Portrait',         src: PREVIEW('1776239422417-a959mo') },
+  { label: 'Couch Luxury Still',         src: PREVIEW('1776239439946-komlla') },
+  { label: 'Car Interior Still',         src: PREVIEW('1776239461462-cykje2') },
+  { label: 'Display Dome Editorial',     src: PREVIEW('1776239425806-v6xegn') },
+  { label: 'Retro Car Editorial',        src: PREVIEW('1776749545971-gv6zst') },
+  { label: 'Mirror Selfie Luxury',       src: PREVIEW('1776239438796-99x31m') },
+  { label: 'Lakeside Soft Minimalism',   src: PREVIEW('1776749534061-yvcf06') },
+  { label: 'Sunshadow Outdoor',          src: PREVIEW('1776239457021-4ankwt') },
+];
+
+/* ── Jewelry (necklaces + earrings mix for variety) ── */
+const JEWELRY_CARDS: GridCardData[] = [
+  { label: 'Necklace Editorial',         src: PREVIEW('necklace-editorial-neck-portrait') },
+  { label: 'Seated Editorial Studio',    src: PREVIEW('necklace-seated-editorial-studio') },
+  { label: 'Shadow Face Editorial',      src: PREVIEW('necklace-shadow-face-editorial') },
+  { label: 'Layered Editorial',          src: PREVIEW('necklace-layered-editorial-studio') },
+  { label: 'Collarbone Closeup',         src: PREVIEW('necklace-collarbone-closeup') },
+  { label: 'Earring Touch Portrait',     src: PREVIEW('earring-touch-portrait') },
+  { label: 'Sunlit Ear Study',           src: PREVIEW('sunlit-ear-study') },
+  { label: 'Sky Bloom Profile',          src: PREVIEW('sky-bloom-profile') },
+  { label: 'Mirror Self Portrait',       src: PREVIEW('necklace-mirror-self-portrait') },
+  { label: 'Aesthetic Color Portrait',   src: PREVIEW('necklace-aesthetic-color-portrait') },
+  { label: 'Sunlit Campaign Glow',       src: PREVIEW('necklace-sunlit-campaign-glow') },
+  { label: 'Sunlit Skin Closeup',        src: PREVIEW('sunlit-skin-closeup') },
 ];
 
 const CATEGORIES = [
   { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS },
   { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS },
   { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS },
+  { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS },
+  { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS },
+  { id: 'bags',      label: 'Bags',      cards: BAGS_CARDS },
+  { id: 'jewelry',   label: 'Jewelry',   cards: JEWELRY_CARDS },
 ] as const;
 
 const ALL_CATEGORY_NAMES = [
@@ -89,7 +155,7 @@ const ALL_CATEGORY_NAMES = [
 
 type CategoryId = typeof CATEGORIES[number]['id'];
 
-/* ── Grid card ── */
+/* ── Grid card with shimmer skeleton until image paints ── */
 function GridCard({
   card,
   hideOnMobile,
@@ -99,6 +165,13 @@ function GridCard({
   hideOnMobile: boolean;
   eager?: boolean;
 }) {
+  const [loaded, setLoaded] = useState(false);
+
+  // Reset load state when src changes (category switch).
+  useEffect(() => {
+    setLoaded(false);
+  }, [card.src]);
+
   return (
     <div
       className={cn(
@@ -106,8 +179,12 @@ function GridCard({
         hideOnMobile && 'hidden sm:block',
       )}
     >
-      {/* Soft placeholder behind the image */}
-      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
+      {/* Shimmer skeleton until image paints */}
+      {!loaded && (
+        <Skeleton className="absolute inset-0 z-[1] rounded-2xl" />
+      )}
+      {/* Subtle placeholder icon under the skeleton */}
+      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
         <ImageIcon size={22} strokeWidth={1.25} />
       </div>
       <img
@@ -118,13 +195,18 @@ function GridCard({
         // @ts-expect-error fetchpriority is valid HTML attr
         fetchpriority={eager ? 'high' : 'auto'}
         referrerPolicy="no-referrer"
+        onLoad={() => setLoaded(true)}
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = 'none';
+          setLoaded(true);
         }}
-        className="relative z-[1] w-full h-full object-cover"
+        className={cn(
+          'relative z-[2] w-full h-full object-cover transition-opacity duration-500',
+          loaded ? 'opacity-100' : 'opacity-0',
+        )}
       />
       {card.isOriginal && (
-        <span className="absolute top-2 right-2 z-[2] text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
+        <span className="absolute top-2 right-2 z-[3] text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
           Original
         </span>
       )}
@@ -189,51 +271,86 @@ export function HomeTransformStrip() {
         </div>
 
         {/* Category pills */}
-        <div className="flex justify-center mb-8 lg:mb-10 -mx-6 px-6 overflow-x-auto scrollbar-hide">
-          <div className="inline-flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-full bg-muted/60 border border-border/60 mx-auto">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setActive(cat.id)}
-                className={cn(
-                  'px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
-                  active === cat.id
-                    ? 'bg-foreground text-background shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {cat.label}
-              </button>
-            ))}
-            <Popover>
-              <PopoverTrigger asChild>
+        <div className="mb-8 lg:mb-10">
+          {/* Mobile: full-bleed scrollable rail with edge fades */}
+          <div className="lg:hidden relative -mx-6">
+            <div className="flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {CATEGORIES.map((cat) => (
                 <button
+                  key={cat.id}
                   type="button"
-                  className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1 sm:gap-1.5"
+                  onClick={() => setActive(cat.id)}
+                  className={cn(
+                    'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
+                    active === cat.id
+                      ? 'bg-foreground text-background border-foreground shadow-sm'
+                      : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
+                  )}
                 >
-                  <span className="sm:hidden">All</span>
-                  <span className="hidden sm:inline">All categories</span>
-                  <ChevronDown size={14} />
+                  {cat.label}
                 </button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="center"
-                sideOffset={10}
-                className="w-[min(92vw,560px)] p-5 rounded-2xl"
-              >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
-                  35+ Categories
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
-                  {ALL_CATEGORY_NAMES.map((name) => (
-                    <span key={name} className="text-sm text-foreground/80">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+              ))}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1.5 bg-muted/60 border border-border/60"
+                  >
+                    All
+                    <ChevronDown size={14} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  sideOffset={10}
+                  className="w-[min(92vw,420px)] p-5 rounded-2xl"
+                >
+                  <AllCategoriesPanel />
+                </PopoverContent>
+              </Popover>
+            </div>
+            {/* Edge fades hint scrollability */}
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
+          </div>
+
+          {/* Desktop: centered chip group */}
+          <div className="hidden lg:flex justify-center">
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActive(cat.id)}
+                  className={cn(
+                    'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap',
+                    active === cat.id
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {cat.label}
+                </button>
+              ))}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="px-5 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1.5"
+                  >
+                    All categories
+                    <ChevronDown size={14} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="center"
+                  sideOffset={10}
+                  className="w-[min(92vw,560px)] p-5 rounded-2xl"
+                >
+                  <AllCategoriesPanel />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
 
@@ -255,14 +372,45 @@ export function HomeTransformStrip() {
           <p className="text-sm text-foreground/70 tracking-wide">
             35+ categories · 1000+ scenes · one upload
           </p>
-          <Button asChild size="lg" className="rounded-full px-8 text-base">
-            <Link to="/auth">
-              Try it on my product
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <Button asChild size="lg" className="rounded-full px-8 text-base">
+              <Link to="/auth">
+                Try it on my product
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="rounded-full px-8 text-base">
+              <Link to="/product-visual-library">
+                Browse the visual library
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/* ── All categories popover panel (shared mobile + desktop) ── */
+function AllCategoriesPanel() {
+  return (
+    <>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+        35+ Categories
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mb-4">
+        {ALL_CATEGORY_NAMES.map((name) => (
+          <span key={name} className="text-sm text-foreground/80">
+            {name}
+          </span>
+        ))}
+      </div>
+      <Button asChild className="w-full rounded-full" size="sm">
+        <Link to="/product-visual-library">
+          Preview all categories
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+    </>
   );
 }

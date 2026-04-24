@@ -1,74 +1,56 @@
 ## Goal
 
-Two fixes on `/product-visual-library`:
+Improve `/home` "Built for every category." section:
 
-1. **Mobile experience** — currently it stacks two horizontal pill rails (top-level categories from `LibrarySidebarNav` + sub-collection pills inside `FamilySection`), which is cramped, looks misaligned, and forces horizontal scrolling on every level. Replace this with the same drawer-based pattern used in the in-app Freestyle Scene Catalog (`src/components/app/freestyle/SceneCatalogModal.tsx` + `SceneCatalogSidebar.tsx`): a single "Filters" button on mobile that opens a left Sheet containing the full Categories list with expandable sub-collections.
+1. Add **4 new pills** — Jackets, Footwear (sneakers), Bags, Jewelry — using preview images from the same scenes shown in `/app/generate/product-images` Step 2 for those categories. Total = 7 pills.
+2. Add a clear **"Preview all categories"** CTA button inside the "All categories" popover and a secondary **"Browse the visual library"** button below the grid — both link to `/product-visual-library`.
+3. Add proper **`<Skeleton>`-based loading states** per image card (shared in-app primitive) so each tile shimmers until the image paints — not the current static placeholder icon.
+4. Make the **mobile pill row** look good with 7+ pills: convert to a full-bleed horizontal scroll rail with edge fades, individual rounded pills (no contained chip group at this width), and the "All" pill at the end.
 
-2. **Loading skeletons** — the page currently uses bespoke pulsing divs (`bg-foreground/[0.06]`, `bg-muted/40`). Replace with the shared `<Skeleton>` primitive from `src/components/ui/skeleton`, matching the in-app rhythm (e.g. `Skeleton className="aspect-[4/5] w-full rounded-xl"` for cards, `Skeleton h-9 rounded-full` for pills, `Skeleton h-10 rounded-xl` for sidebar rows).
-
-## Mobile design (mirrors Freestyle scene catalog)
+## Mobile pill design
 
 ```text
-┌──────────────────────────────────────────┐
-│ AI Product Visual Library                │  hero (unchanged)
-│ Browse 1,613+ visual directions...       │
-├──────────────────────────────────────────┤
-│ [⚙ Filters: Fashion · Creative Shots] [⨯]│  sticky bar — opens drawer
-├──────────────────────────────────────────┤
-│ Fashion · Creative Shots                 │  current selection eyebrow
-│ ┌──┬──┬──┐                               │
-│ │  │  │  │                               │  2-col scene grid
-│ ├──┼──┼──┤                               │
-└──────────────────────────────────────────┘
-
-Drawer (Sheet, side="left", w-[85vw] max-w-[320px]):
-  QUICK
-    All categories            1,613
-  CATEGORIES
-    ▸ Fashion & Apparel        425
-        ▾ (expanded when active)
-          Creative Shots       210
-          On-Model              80
-          ...
-    ▸ Footwear                 312
-    ▸ Beauty                   ...
+─────────────────────────────────────────
+[Swimwear][Fragrance][Eyewear][Jackets]→
+                                  fade →
+─────────────────────────────────────────
 ```
 
-Desktop (≥lg) keeps the existing sticky left rail + horizontal sub-collection pills with arrows (no change there).
+- Individual rounded pills with `bg-muted/60` + active = `bg-foreground text-background`.
+- Soft gradient fades on left/right edges hint at scrollability.
+- Hidden scrollbar, smooth horizontal scroll.
+- "All" pill at the end opens the popover.
+
+Desktop keeps the existing centered chip-group look (the contained pill row works well at lg where all 7+1 fit).
+
+## Image source mapping
+
+Pulled live from `product_image_scenes` table (same images used in Step 2 of Product Images wizard) for each new category:
+
+| Pill | Source `category_collection` | # tiles |
+|---|---|---|
+| Jackets | `jackets` | 12 |
+| Footwear | `sneakers` | 12 |
+| Bags | `bags-accessories` | 12 |
+| Jewelry | `jewellery-necklaces` + `jewellery-earrings` mix | 12 |
+
+Scene IDs are hardcoded into the existing `PREVIEW(id)` helper that resolves to the public Supabase storage URL (`product-uploads/.../scene-previews/{id}.jpg`). Same pattern as today's Swimwear/Fragrance/Eyewear arrays.
+
+## Skeleton loading
+
+Each `GridCard` gets local `loaded` state. Until `<img onLoad>` fires, an absolute `<Skeleton className="absolute inset-0 rounded-2xl" />` overlays the tile (matching the in-app `<Skeleton>` primitive used everywhere else). Image fades in with `transition-opacity` once loaded. State resets on `card.src` change (so category switches re-trigger the skeleton).
+
+## CTA placement
+
+- **Inside the "All categories" popover** (mobile + desktop): below the grid of 35+ category names, add a primary `Preview all categories →` button linking to `/product-visual-library`.
+- **Below the main grid**: keep existing "Try it on my product" primary CTA, add a secondary outline `Browse the visual library` button next to it (stacked on mobile, inline on sm+).
 
 ## Files to change
 
-### `src/pages/ProductVisualLibrary.tsx`
-- Add mobile state `mobileFiltersOpen` and a single sub-collection state lifted up so the drawer can drive both the family and the active sub-collection. Actually simpler: keep sub-collection state inside `FamilySection` but pass a callback from page → drawer that selects family + sub.
-- On mobile (`<lg`), hide the existing in-grid sub-collection pills row; show instead a sticky "Filters" trigger bar above the grid with the current selection chip + clear (×) button.
-- Render a `<Sheet side="left">` containing a single combined nav: top-level categories with their sub-collections nested under the active one (same visual as `SceneCatalogSidebar` `mobileMode`).
-- Replace the bespoke loading block with `<Skeleton>`-based grid: 12 × `Skeleton aspect-[4/5] rounded-xl`, plus one row of pill `Skeleton h-9 w-24 rounded-full` placeholders for the trigger bar area.
-- Reduce hero bottom padding spacing only if needed to keep current tight rhythm; otherwise leave hero untouched.
-
-### `src/components/library/LibrarySidebarNav.tsx`
-- Remove the mobile horizontal pill row entirely (the new drawer replaces it).
-- Keep the desktop sticky aside as-is, but swap the bespoke skeleton bars for `<Skeleton className="h-10 w-full rounded-xl" />`.
-
-### New `src/components/library/LibraryMobileFilters.tsx`
-- Self-contained Sheet content rendering Quick ("All categories") + each `FamilyGroup` as an accordion row. Tapping a family with multiple `collections` expands inline; tapping a collection selects it and closes the drawer. Tapping a family with only one collection (or "All" within it) selects family + clears collection.
-- Visual rhythm mirrors `SceneCatalogSidebar` (rounded pills, `bg-primary/10 text-primary` for active, count on right).
-
-### `src/components/library/SceneCard.tsx`
-- Replace the bespoke `SceneCardSkeleton` (`animate-pulse rounded-2xl bg-muted/40`) with `<Skeleton className="aspect-[3/4] w-full rounded-2xl" />` from `@/components/ui/skeleton`.
-
-### `src/components/library/SceneDetailModal.tsx`
-- Replace the manual `animate-pulse bg-foreground/[0.06]` overlay with `<Skeleton className="absolute inset-0" />` for the hero loading state. Keep the blurred placeholder `<img>` and `onLoad` fade behaviour as-is.
-
-## Behavioural details
-
-- The drawer's "active selection" chip in the trigger bar shows: `Family · SubCollection` (or `Family · All` when no sub picked, or just `All categories` initially).
-- The clear (×) button on the trigger bar resets to the first family + null sub-collection (same as today's "All" pill behaviour).
-- On family change from the drawer, the page scrolls to `#catalog-grid` (current behaviour preserved).
-- Sub-collection pill row inside `FamilySection` stays for desktop only — wrap its `<div className="relative mb-8">` with `hidden lg:block`. Mobile users get the drawer instead.
-- Infinite scroll, pagination (`PAGE_SIZE = 30`), and sentinel logic remain unchanged.
+- `src/components/home/HomeTransformStrip.tsx` — only file touched. Adds 4 new card arrays, expands `CATEGORIES`, adds skeleton state to `GridCard`, splits the pill bar into mobile-scrollable + desktop-contained variants, extracts the popover body into an `AllCategoriesPanel` component containing the new "Preview all categories" button, adds the secondary library CTA below the grid.
 
 ## Out of scope
 
-- No data/query changes.
-- No hero copy or CTA changes.
-- Desktop layout unchanged apart from the skeleton primitive swap.
+- No data/API changes (images come from already-public scene previews).
+- `/product-visual-library` page itself is unchanged.
+- Hero, FAQ, other home sections untouched.
