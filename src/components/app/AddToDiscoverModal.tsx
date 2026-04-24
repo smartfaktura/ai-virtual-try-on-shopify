@@ -12,6 +12,7 @@ import { toast } from '@/lib/brandedToast';
 import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useDiscoverPickerOptions, type PickerSceneOption, type PickerModelOption, type PickerWorkflowOption } from '@/hooks/useDiscoverPickerOptions';
 import { SceneBrowserModal } from '@/components/app/SceneBrowserModal';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   getDiscoverFamilies,
   getDiscoverSubtypes,
@@ -711,7 +712,7 @@ export function AddToDiscoverModal({
                         <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
                           <span className={cn('truncate flex items-center gap-2', !pickedScene && 'text-muted-foreground/60')}>
                             {pickedScene?.imageUrl && (
-                              <img src={pickedScene.imageUrl} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                              <img src={getOptimizedUrl(pickedScene.imageUrl, { quality: 40 })} alt="" loading="lazy" className="w-5 h-5 rounded object-cover shrink-0" />
                             )}
                             <span className="truncate">{pickedSceneName ?? '— No scene —'}</span>
                             {aiSuggestedScene && pickedSceneName === aiSuggestedScene && (
@@ -762,7 +763,7 @@ export function AddToDiscoverModal({
                                   )}
                                 >
                                   {s.imageUrl && (
-                                    <img src={s.imageUrl} alt="" className="w-6 h-6 rounded object-cover shrink-0" />
+                                    <img src={getOptimizedUrl(s.imageUrl, { quality: 40 })} alt="" loading="lazy" className="w-6 h-6 rounded object-cover shrink-0" />
                                   )}
                                   <span className="truncate">{s.name}</span>
                                   {s.subCategory && (
@@ -806,7 +807,7 @@ export function AddToDiscoverModal({
                       <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/40 transition-colors text-xs">
                         <span className={cn('truncate flex items-center gap-2', !pickedModel && 'text-muted-foreground/60')}>
                           {pickedModel?.imageUrl && (
-                            <img src={pickedModel.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" />
+                            <img src={getOptimizedUrl(pickedModel.imageUrl, { quality: 40 })} alt="" loading="lazy" className="w-5 h-5 rounded-full object-cover shrink-0" />
                           )}
                           <span className="truncate">{pickedModelName ?? '— No model —'}</span>
                         </span>
@@ -839,7 +840,7 @@ export function AddToDiscoverModal({
                             )}
                           >
                             {m.imageUrl && (
-                              <img src={m.imageUrl} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                              <img src={getOptimizedUrl(m.imageUrl, { quality: 40 })} alt="" loading="lazy" className="w-6 h-6 rounded-full object-cover shrink-0" />
                             )}
                             <span className="truncate">{m.name}</span>
                           </button>
@@ -853,7 +854,7 @@ export function AddToDiscoverModal({
                   <div className="flex items-center justify-between pt-1 border-t border-border/30">
                     <div className="flex items-center gap-2">
                       {productImageUrl && (
-                        <img src={productImageUrl} alt="" className="w-6 h-6 rounded object-cover" />
+                        <img src={getOptimizedUrl(productImageUrl, { quality: 40 })} alt="" loading="lazy" className="w-6 h-6 rounded object-cover" />
                       )}
                       <span className="text-xs text-foreground/80 truncate">Show product: {productName}</span>
                     </div>

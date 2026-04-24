@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle } from 'lucide-react';
 import type { Product, ProductImage } from '@/types';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 type PublishMode = 'add' | 'replace';
 
@@ -62,7 +63,7 @@ export function PublishModal({
           {product && (
             <div className="p-4 rounded-lg border-2 border-primary bg-primary/5 flex items-center gap-4">
               <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-                <img src={product.images[0]?.url || '/placeholder.svg'} alt={product.title} className="w-full h-full object-cover" />
+                <img src={getOptimizedUrl(product.images[0]?.url, { quality: 60 }) || '/placeholder.svg'} alt={product.title} className="w-full h-full object-cover" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Downloading for</p>
@@ -80,7 +81,7 @@ export function PublishModal({
             <div className="flex gap-2 flex-wrap">
               {selectedImages.slice(0, 6).map((img, idx) => (
                 <div key={idx} className="w-14 h-14 rounded-lg overflow-hidden border border-border">
-                  <img src={img} alt={`Selected ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(img, { quality: 60 })} alt={`Selected ${idx + 1}`} loading="lazy" className="w-full h-full object-cover" />
                 </div>
               ))}
               {selectedImages.length > 6 && (

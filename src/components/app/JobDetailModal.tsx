@@ -101,7 +101,7 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
               <h3 className="font-semibold">Product</h3>
               <div className="flex items-center gap-3">
                 <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-                  <img src={job.productSnapshot.images[0]?.url || '/placeholder.svg'} alt={job.productSnapshot.title} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(job.productSnapshot.images[0]?.url, { quality: 60 }) || '/placeholder.svg'} alt={job.productSnapshot.title} loading="lazy" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <p className="font-semibold">{job.productSnapshot.title}</p>

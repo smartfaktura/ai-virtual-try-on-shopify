@@ -12,6 +12,7 @@ import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScen
 import { useAddCustomScene } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
 import { toast } from '@/lib/brandedToast';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface Props {
   open: boolean;
@@ -179,7 +180,7 @@ export default function ImportProductScenesModal({ open, onOpenChange }: Props) 
                   >
                     <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggle(s.id)} />
                     {s.preview_image_url ? (
-                      <img src={s.preview_image_url} alt="" className="w-10 h-10 rounded object-cover bg-muted shrink-0" />
+                      <img src={getOptimizedUrl(s.preview_image_url, { quality: 60 })} alt="" loading="lazy" className="w-10 h-10 rounded object-cover bg-muted shrink-0" />
                     ) : (
                       <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
                         <Import className="w-4 h-4 text-muted-foreground" />
@@ -218,7 +219,7 @@ export default function ImportProductScenesModal({ open, onOpenChange }: Props) 
                 <div key={idx} className="border rounded-lg p-3 space-y-3 bg-card">
                   <div className="flex items-center gap-2">
                     {c.image_url ? (
-                      <img src={c.image_url} alt="" className="w-8 h-8 rounded object-cover bg-muted shrink-0" />
+                      <img src={getOptimizedUrl(c.image_url, { quality: 60 })} alt="" loading="lazy" className="w-8 h-8 rounded object-cover bg-muted shrink-0" />
                     ) : (
                       <div className="w-8 h-8 rounded bg-muted shrink-0" />
                     )}
