@@ -39,18 +39,18 @@ const SWIMWEAR_CARDS: GridCardData[] = [
 /* ── Fragrance: 12 cards (mobile shows first 9) ── */
 const FRAGRANCE_CARDS: GridCardData[] = [
   { label: 'Original',                src: originalFragrance, isOriginal: true },
-  { label: 'Volcanic Sunset',         src: PREVIEW('1776847680436-3svy5f') },
-  { label: 'Dynamic Water Splash',    src: PREVIEW('1776018020221-aehe8n') },
+  { label: 'Volcanic Sunset',         src: PREVIEW('1775132683871-rw4rg7') },
+  { label: 'Dynamic Water Splash',    src: PREVIEW('1775132044712-m8fods') },
   { label: 'Motion Blur Float',       src: PREVIEW('motion-blur-float-fragrance-1776013400244') },
-  { label: 'Frozen Aura',             src: PREVIEW('1776018027926-ua03bd') },
+  { label: 'Frozen Aura',             src: PREVIEW('1775136513431-i3rxtr') },
   { label: 'Natural Light Backdrop',  src: PREVIEW('1776018032748-kg4bn6') },
-  { label: 'Earthy Botanicals',       src: PREVIEW('1776018021309-gfgfci') },
+  { label: 'Earthy Driftwood',        src: PREVIEW('1775136074748-fdv974') },
   { label: 'Near Face Hold',          src: PREVIEW('near-face-hold-fragrance-1776013185169') },
   { label: 'Dark Elegance',           src: PREVIEW('1776018015756-3xfquh') },
   // hidden on mobile
-  { label: 'Warm Neutral Studio',     src: PREVIEW('1776018040785-dq78y5') },
-  { label: 'Volcanic Sunset II',      src: PREVIEW('1776843791659-3oq68h') },
-  { label: 'Frozen Aura II',          src: PREVIEW('1776835749003-43ooe1') },
+  { label: 'Aquatic Reflection',      src: PREVIEW('1775132826887-gjbnyl') },
+  { label: 'Red Gradient Embrace',    src: PREVIEW('1775132089419-eqo26l') },
+  { label: 'Earthy Glow Stage',       src: PREVIEW('1775135707468-egh405') },
 ];
 
 /* ── Eyewear: 12 cards (mobile shows first 9) ── */
@@ -106,15 +106,10 @@ function GridCard({ card, hideOnMobile }: { card: GridCardData; hideOnMobile: bo
         className="absolute inset-0 w-full h-full object-cover"
       />
       {card.isOriginal && (
-        <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
+        <span className="absolute top-2 right-2 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
           Original
         </span>
       )}
-      <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
-        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">
-          {card.label}
-        </span>
-      </div>
     </div>
   );
 }
@@ -141,14 +136,14 @@ export function HomeTransformStrip() {
 
         {/* Category pills */}
         <div className="flex justify-center mb-8 lg:mb-10 -mx-6 px-6 overflow-x-auto scrollbar-hide">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60 mx-auto">
+          <div className="inline-flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-full bg-muted/60 border border-border/60 mx-auto">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => setActive(cat.id)}
                 className={cn(
-                  'px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
+                  'px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
                   active === cat.id
                     ? 'bg-foreground text-background shadow-sm'
                     : 'text-muted-foreground hover:text-foreground',
@@ -161,9 +156,10 @@ export function HomeTransformStrip() {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1.5"
+                  className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1 sm:gap-1.5"
                 >
-                  All categories
+                  <span className="sm:hidden">All</span>
+                  <span className="hidden sm:inline">All categories</span>
                   <ChevronDown size={14} />
                 </button>
               </PopoverTrigger>

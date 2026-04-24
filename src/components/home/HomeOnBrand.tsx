@@ -15,7 +15,7 @@ const settings = [
 // Same scene ("Amber Glow Studio") rendered with 4 different products
 const consistentSet = [
   { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/2026-04-02_8de3c91b-4553-4517-971f-a06e4ace4fb4.jpg`, label: 'Obsidian Veil Fragrance' },
-  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/91418be3-6c16-4573-b97b-8c757b37a792.png`, label: 'Radiant Glow Perfume' },
+  { src: `${SUPABASE_PUBLIC}/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776835737956-an8971.jpg`, label: 'Amber Studio Frost' },
   { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/702a108f-1262-428c-a921-c7525aaf19bd.png`, label: 'Bleu de Chanel' },
   { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/2026-04-02_aac4c8f5-2c3f-4065-964a-383453499f36.jpg`, label: 'Suede Shoulder Bag' },
 ];
