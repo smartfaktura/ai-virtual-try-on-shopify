@@ -1,46 +1,33 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowDown, Search, Upload } from 'lucide-react';
+import { ArrowRight, ArrowDown, Search, Upload, ImageIcon } from 'lucide-react';
 
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { Button } from '@/components/ui/button';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-import originalFragrance from '@/assets/home-hero-original-fragrance.jpg';
 
-const SUPABASE_PUBLIC =
-  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
-const PREVIEW = (id: string) =>
-  `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
-
-const STEP2_THUMBS = [
-  PREVIEW('1776688965090-edaogg'),
-  PREVIEW('1776689318257-yahkye'),
-  PREVIEW('1776843776495-iyiigl'),
-  PREVIEW('1776524131703-gvh4bb'),
-];
-
-const STEP3_THUMBS = [
-  PREVIEW('1776524132929-q8upyp'),
-  PREVIEW('1776574228066-oyklfz'),
-  PREVIEW('1776524128011-dcnlpo'),
-];
+/* ── Reusable wireframe image placeholder ── */
+function ImagePlaceholder({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`relative rounded-xl bg-muted/50 border border-border/40 flex items-center justify-center ${className}`}
+    >
+      <ImageIcon size={20} className="text-muted-foreground/40" strokeWidth={1.5} />
+    </div>
+  );
+}
 
 /* ── Step 1: Upload ── */
 function StepUpload() {
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-6 flex items-center justify-center">
-      <div className="relative w-[78%] aspect-square rounded-2xl bg-muted/40 border border-dashed border-border overflow-hidden">
-        <img
-          src={getOptimizedUrl(originalFragrance, { quality: 50 })}
-          alt=""
-          aria-hidden
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover opacity-25 grayscale"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 rounded-2xl bg-white/90 border border-border flex items-center justify-center shadow-sm">
-            <Upload size={20} className="text-muted-foreground" />
-          </div>
+      <div className="relative w-[78%] aspect-square rounded-2xl bg-muted/50 border-2 border-dashed border-border/70 flex items-center justify-center">
+        {/* Generic bottle silhouette */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="w-3 h-4 rounded-sm bg-foreground/15" />
+          <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl bg-foreground/10" />
+        </div>
+        {/* Upload badge */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-11 h-11 rounded-full bg-white border border-border shadow-sm flex items-center justify-center">
+          <Upload size={18} className="text-muted-foreground" strokeWidth={1.75} />
         </div>
       </div>
     </div>
@@ -52,7 +39,7 @@ function StepChoose() {
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-5 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground bg-muted px-2.5 py-1 rounded-full">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground bg-muted px-2.5 py-1 rounded-full whitespace-nowrap">
           1000+ shots
         </span>
         <div className="flex-1 h-7 rounded-full bg-muted/60 border border-border/50 flex items-center px-3 gap-2">
@@ -61,21 +48,10 @@ function StepChoose() {
         </div>
       </div>
       <div className="flex-1 grid grid-cols-2 gap-3">
-        {STEP2_THUMBS.map((src, i) => (
-          <div
-            key={i}
-            className="relative rounded-xl overflow-hidden bg-muted/30 border border-border/40"
-          >
-            <img
-              src={getOptimizedUrl(src, { quality: 45 })}
-              alt=""
-              aria-hidden
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 w-full h-full object-cover opacity-60"
-            />
-          </div>
-        ))}
+        <ImagePlaceholder />
+        <ImagePlaceholder />
+        <ImagePlaceholder />
+        <ImagePlaceholder />
       </div>
     </div>
   );
@@ -85,21 +61,12 @@ function StepChoose() {
 function StepGenerate() {
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-5 sm:p-6 flex flex-col gap-3 justify-center">
-      {STEP3_THUMBS.map((src, i) => (
+      {[0, 1, 2].map((i) => (
         <div
           key={i}
           className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/50 p-2.5"
         >
-          <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-muted/30 shrink-0">
-            <img
-              src={getOptimizedUrl(src, { quality: 45 })}
-              alt=""
-              aria-hidden
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </div>
+          <ImagePlaceholder className="w-14 h-14 shrink-0" />
           <div className="flex-1 space-y-2">
             <div className="h-2 w-3/4 rounded-full bg-border/70" />
             <div className="h-1.5 w-1/2 rounded-full bg-border/40" />
