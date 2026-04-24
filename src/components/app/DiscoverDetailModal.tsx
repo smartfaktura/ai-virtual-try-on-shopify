@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Input } from '@/components/ui/input';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
+import { ArrowRight, Heart, Search, X, Eye, Star, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -93,6 +93,9 @@ export function DiscoverDetailModal({
   const [productSearch, setProductSearch] = useState('');
   const [productPopoverOpen, setProductPopoverOpen] = useState(false);
   const [sceneDialogOpen, setSceneDialogOpen] = useState(false);
+  const [isRecreating, setIsRecreating] = useState(false);
+  // Reset spinner when modal closes (component stays mounted in some flows)
+  useEffect(() => { if (!open) setIsRecreating(false); }, [open]);
   const [sceneSearch, setSceneSearch] = useState('');
   const [editSceneDisplayName, setEditSceneDisplayName] = useState('');
   const [editSceneCategory, setEditSceneCategory] = useState('lifestyle');
@@ -828,7 +831,10 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
 
             {/* Primary CTA */}
             <Button
+              disabled={isRecreating}
               onClick={() => {
+                if (isRecreating) return;
+                setIsRecreating(true);
                 const d = item.data as any;
                 const wSlug = d.workflow_slug;
                 // Scene-type items always belong to product-images
@@ -892,7 +898,7 @@ if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
               className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               Recreate this
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {isRecreating ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
 
             {/* Secondary actions */}

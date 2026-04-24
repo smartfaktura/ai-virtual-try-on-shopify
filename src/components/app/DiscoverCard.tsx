@@ -1,4 +1,5 @@
-import { Star, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { Star, ArrowRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -35,6 +36,13 @@ function getGenerationLabel(item: DiscoverItem): string {
 }
 
 export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels, hidePrompt, aspectRatioOverride, eager, fetchPriority }: DiscoverCardProps) {
+  const [isRecreating, setIsRecreating] = useState(false);
+  const handleRecreateClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isRecreating || !onRecreate) return;
+    setIsRecreating(true);
+    onRecreate(e);
+  };
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
   const isPreset = item.type === 'preset';
@@ -118,10 +126,14 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
         {/* Recreate CTA */}
         {onRecreate ? (
           <button
-            onClick={(e) => { e.stopPropagation(); onRecreate(e); }}
-            className="self-center px-4 py-1.5 rounded-full bg-white/95 text-black text-xs font-semibold hover:bg-white transition-colors flex items-center gap-1.5 shadow-lg"
+            onClick={handleRecreateClick}
+            disabled={isRecreating}
+            className={cn(
+              'self-center px-4 py-1.5 rounded-full bg-white/95 text-black text-xs font-semibold hover:bg-white transition-colors flex items-center gap-1.5 shadow-lg',
+              isRecreating && 'opacity-80 cursor-wait'
+            )}
           >
-            Recreate this <ArrowRight className="w-3 h-3" />
+            Recreate this {isRecreating ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRight className="w-3 h-3" />}
           </button>
         ) : !hidePrompt ? (
           <div className="text-center">
@@ -144,10 +156,14 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
       {/* Mobile-only recreate button (touch devices) */}
       {onRecreate && (
         <button
-          onClick={(e) => { e.stopPropagation(); onRecreate(e); }}
-          className="absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/80 backdrop-blur-sm text-white text-xs font-semibold shadow-lg border border-white/10"
+          onClick={handleRecreateClick}
+          disabled={isRecreating}
+          className={cn(
+            'absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/80 backdrop-blur-sm text-white text-xs font-semibold shadow-lg border border-white/10',
+            isRecreating && 'opacity-80 cursor-wait'
+          )}
         >
-          Recreate <ArrowRight className="w-3 h-3" />
+          Recreate {isRecreating ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRight className="w-3 h-3" />}
         </button>
       )}
 
