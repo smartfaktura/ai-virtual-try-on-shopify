@@ -53,10 +53,10 @@ export function HomeFAQ() {
               value={`faq-${i}`}
               className="bg-white rounded-2xl border border-[#f0efed] px-6 shadow-sm data-[state=open]:shadow-md transition-shadow"
             >
-              <AccordionTrigger className="text-[#1a1a2e] text-[15px] font-medium py-5 hover:no-underline text-left">
+              <AccordionTrigger className="text-[#1a1a2e] text-base sm:text-[17px] font-semibold py-6 hover:no-underline text-left">
                 {faq.q}
               </AccordionTrigger>
-              <AccordionContent className="text-[#6b7280] text-sm leading-relaxed pb-5">
+              <AccordionContent className="text-foreground/70 text-[15px] sm:text-base leading-relaxed pb-6">
                 {faq.a}
               </AccordionContent>
             </AccordionItem>
