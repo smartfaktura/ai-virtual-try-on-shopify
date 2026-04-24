@@ -13,6 +13,8 @@ const ORIGINAL_DRESS = originalDress;
 const PREVIEW = (id: string) =>
   `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
+type HeroCard = { label: string; src: string; isOriginal?: boolean; isVideo?: boolean };
+
 const heroImages: HeroCard[] = [
   { label: 'Original',         src: ORIGINAL_DRESS,                       isOriginal: true },
   { label: 'Video',            src: productVideoLoop,                     isVideo: true },
@@ -31,8 +33,6 @@ const heroImages: HeroCard[] = [
 
 const row1 = heroImages.slice(0, 6);
 const row2 = heroImages.slice(6).concat(heroImages.slice(0, 2));
-
-type HeroCard = { label: string; src: string; isOriginal?: boolean; isVideo?: boolean };
 
 /* ── Marquee card ── */
 function MarqueeCard({ label, src, isOriginal, isVideo }: HeroCard) {
