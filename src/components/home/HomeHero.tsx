@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import originalDress from '@/assets/home-hero-original-dress.jpg';
+import productVideoLoop from '@/assets/home-create-product-videos.mp4';
 
 /* ── Dresses category showcase: 1 original + 11 dress scene previews ── */
 const SUPABASE_PUBLIC =
