@@ -57,6 +57,7 @@ export default function Landing() {
       <main>
         <HeroSection />
         <Suspense fallback={null}><ProductCategoryShowcase /></Suspense>
+        <Suspense fallback={null}><OneImageToVisualLibrarySection /></Suspense>
         <Suspense fallback={null}><StudioTeamSection /></Suspense>
         <Suspense fallback={null}><HowItWorks /></Suspense>
         <Suspense fallback={null}><FreestyleShowcaseSection /></Suspense>
