@@ -69,7 +69,25 @@ const EYEWEAR_CARDS: GridCardData[] = [
   { label: 'Beauty Closeup II', src: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014') },
 ];
 
+/* ── All categories collage: one strong shot per category (mobile shows first 9) ── */
+const ALL_CATEGORIES_CARDS: GridCardData[] = [
+  { label: 'Swimwear',   src: PREVIEW('1776523219756-c5vnc7') },
+  { label: 'Fragrance',  src: PREVIEW('1776018015756-3xfquh') },
+  { label: 'Eyewear',    src: PREVIEW('1776102185057-0ulf1m') },
+  { label: 'Beauty',     src: PREVIEW('1776239794347-u8o1yr') },
+  { label: 'Jewelry',    src: PREVIEW('1776241616772-yak1ea') },
+  { label: 'Sneakers',   src: PREVIEW('1776770342811-jr21sq') },
+  { label: 'Bags',       src: PREVIEW('1776239414811-nvmu94') },
+  { label: 'Activewear', src: PREVIEW('1776192305310-dz9fum') },
+  { label: 'Dresses',    src: PREVIEW('1776688399076-0n2cku') },
+  // hidden on mobile
+  { label: 'Watches',    src: PREVIEW('1776247087022-pv2irf') },
+  { label: 'Home Decor', src: PREVIEW('1776588663193-0iekhe') },
+  { label: 'Jackets',    src: PREVIEW('1776690210526-u3dv8r') },
+];
+
 const CATEGORIES = [
+  { id: 'all',       label: '35+ Categories · 1000+ Scenes', cards: ALL_CATEGORIES_CARDS, copy: 'A glimpse across the catalog — every category, one shot each.' },
   { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS,  copy: 'See what your swimwear can become.' },
   { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS, copy: 'See what your fragrance can become.' },
   { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS,   copy: 'See what your eyewear can become.' },
