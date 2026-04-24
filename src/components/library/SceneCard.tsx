@@ -1,5 +1,6 @@
 import { ImageIcon } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PublicScene } from '@/hooks/usePublicSceneLibrary';
 
@@ -20,23 +21,20 @@ export function SceneCard({ scene, onClick, eager = false }: SceneCardProps) {
       onClick={() => onClick(scene)}
       className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted/40 text-left transition-transform duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
     >
-      {/* Placeholder */}
-      <div className="absolute inset-0 flex items-center justify-center text-foreground/15">
-        <ImageIcon className="h-8 w-8" />
-      </div>
-
-      {previewUrl && (
-        <img
+      {previewUrl ? (
+        <ShimmerImage
           src={previewUrl}
           alt={scene.title}
+          aspectRatio="3/4"
           loading={eager ? 'eager' : 'lazy'}
-          decoding="async"
           referrerPolicy="no-referrer"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.display = 'none';
-          }}
-          className="relative z-[1] h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          wrapperClassName="absolute inset-0"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center text-foreground/15">
+          <ImageIcon className="h-8 w-8" />
+        </div>
       )}
 
       {/* Bottom gradient + title only */}
