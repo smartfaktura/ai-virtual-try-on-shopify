@@ -582,7 +582,7 @@ export default function Discover() {
   return (
     <PageHeader
       title="Explore"
-      subtitle="Every result here was created by AI — yours can be next"
+      subtitle="Discover product visuals created across different categories"
     >
       {isAdmin && adminPendingCount > 0 && (
         <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium w-fit">
