@@ -87,10 +87,10 @@ const ALL_CATEGORIES_CARDS: GridCardData[] = [
 ];
 
 const CATEGORIES = [
-  { id: 'all',       label: '35+ Categories · 1000+ Scenes', cards: ALL_CATEGORIES_CARDS, copy: 'A glimpse across the catalog — every category, one shot each.' },
-  { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS,  copy: 'See what your swimwear can become.' },
-  { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS, copy: 'See what your fragrance can become.' },
-  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS,   copy: 'See what your eyewear can become.' },
+  { id: 'all',       label: 'All categories', cards: ALL_CATEGORIES_CARDS },
+  { id: 'swimwear',  label: 'Swimwear',       cards: SWIMWEAR_CARDS },
+  { id: 'fragrance', label: 'Fragrance',      cards: FRAGRANCE_CARDS },
+  { id: 'eyewear',   label: 'Eyewear',        cards: EYEWEAR_CARDS },
 ] as const;
 
 type CategoryId = typeof CATEGORIES[number]['id'];
@@ -136,16 +136,13 @@ export function HomeTransformStrip() {
     <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading */}
-        <div className="text-center max-w-3xl mx-auto mb-8 lg:mb-10">
-          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            One product photo. Every shot your brand needs.
+        <div className="text-center max-w-2xl mx-auto mb-10 lg:mb-12">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            One photo · Every shot
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
+            Built for every category.
           </h2>
-          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Whatever you sell — swimwear, fragrance, eyewear, beauty, fashion — VOVV turns one image into 1000+ on-brand shots across 35+ categories.
-          </p>
-          <p className="text-sm text-muted-foreground/80 italic mt-3">
-            {current.copy}
-          </p>
         </div>
 
         {/* Category pills */}
@@ -183,7 +180,10 @@ export function HomeTransformStrip() {
         </div>
 
         {/* CTA */}
-        <div className="flex justify-center mt-10 lg:mt-14">
+        <div className="flex flex-col items-center gap-4 mt-10 lg:mt-14">
+          <p className="text-xs text-muted-foreground tracking-wide">
+            35+ categories · 1000+ scenes · one upload
+          </p>
           <Button asChild size="lg" className="rounded-full px-8 text-base">
             <Link to="/auth">
               Try it on my product
