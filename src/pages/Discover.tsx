@@ -462,6 +462,33 @@ export default function Discover() {
     });
   }, [filtered, featuredMap, userPrefs, selectedCategory]);
 
+  // Progressive rendering: render in batches so the grid lands calmly.
+  const INITIAL_RENDER_COUNT = 24;
+  const LOAD_MORE_COUNT = 20;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count only on real filter changes (not when data merges in).
+  useEffect(() => {
+    setVisibleCount(INITIAL_RENDER_COUNT);
+  }, [selectedCategory, selectedSubcategory, similarTo]);
+
+  // IntersectionObserver to append more items as the user scrolls.
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, sorted.length));
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [sorted.length]);
+
   // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
@@ -638,7 +665,7 @@ export default function Discover() {
 
       {/* Masonry grid */}
       {isLoading ? (
-        <DiscoverLoadingState />
+        <MasonrySkeletonGrid columnCount={columnCount} />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
@@ -678,29 +705,36 @@ export default function Discover() {
           sorted.forEach((item, i) => {
             columns[i % columnCount].push(item);
           });
+          const itemsPerCol = Math.ceil(visibleCount / columnCount);
+          const visibleColumns = columns.map((col) => col.slice(0, itemsPerCol));
           return (
-            <div className="flex gap-1">
-              {columns.map((col, colIdx) => (
-                <div key={colIdx} className="flex-1 flex flex-col gap-1">
-                  {col.map((item) => {
-                    const itemId = getItemId(item);
-                    return (
-                      <DiscoverCard
-                        key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-                        item={item}
-                        onClick={() => handleItemClick(item)}
-                        onRecreate={() => handleUseItem(item)}
-                        isSaved={isSaved(item.type, itemId)}
-                        onToggleSave={() => handleToggleSave(item)}
-                        isFeatured={isFeatured(item.type, itemId)}
-                        isAdmin={isAdmin}
-                        onToggleFeatured={() => handleToggleFeatured(item)}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="flex gap-1">
+                {visibleColumns.map((col, colIdx) => (
+                  <div key={colIdx} className="flex-1 flex flex-col gap-1">
+                    {col.map((item) => {
+                      const itemId = getItemId(item);
+                      return (
+                        <DiscoverCard
+                          key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                          item={item}
+                          onClick={() => handleItemClick(item)}
+                          onRecreate={() => handleUseItem(item)}
+                          isSaved={isSaved(item.type, itemId)}
+                          onToggleSave={() => handleToggleSave(item)}
+                          isFeatured={isFeatured(item.type, itemId)}
+                          isAdmin={isAdmin}
+                          onToggleFeatured={() => handleToggleFeatured(item)}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              {visibleCount < sorted.length && (
+                <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
+              )}
+            </>
           );
         })()
       )}
