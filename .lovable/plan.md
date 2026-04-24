@@ -1,95 +1,57 @@
 
 
-## Fix the category chip thumbnails so they fully fill the mini placeholder
+## Safety guarantee: no zoom regression in modal optimization pass
 
-### Confirmed issue
-The Step 2 category chips beside “Beverages” and “Shoes” are no longer zoomed, but they now look too small inside the thumbnail slot because the current chip uses:
-- `object-contain`
-- `bg-white`
-- inner padding
-- a thick `border-background` outline
+### Your concern
+Last time the zoom bug appeared because I added `width: 40` to `getOptimizedUrl(...)`. You want a hard guarantee that won't happen again in this modal audit pass.
 
-That combination preserves the whole product, but visually creates empty white space and makes the thumbnail feel like it’s floating inside a box.
+### Why this pass is safe
+The zoom bug has one and only one cause in this codebase:
 
-### Root cause
-In `src/components/app/product-images/ProductImagesStep2Scenes.tsx`, the category chip currently renders like this:
+> Passing `width`, `height`, or `resize` to `getOptimizedUrl` triggers the Supabase render endpoint to crop/zoom the image.
 
-```tsx
-<div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-white flex-shrink-0 border-2 border-background flex items-center justify-center p-0.5 overflow-hidden">
-  <img
-    src={getOptimizedUrl(p.image_url, { quality: 40 })}
-    className="max-w-full max-h-full object-contain"
-    loading="lazy"
-  />
-</div>
-```
+This is documented in core memory (`image-optimization-no-crop`).
 
-This is why the gaps appear:
-- `object-contain` shrinks to fit
-- `p-0.5` adds more empty room
-- `bg-white` makes transparent edges highly visible
-- `border-2 border-background` makes the chip feel even smaller
-
-### Fix
-Update only the Step 2 category chip thumbnails to behave like true filled mini covers:
-
-1. Keep **quality-only** optimization:
-   - `getOptimizedUrl(p.image_url, { quality: 40 })`
-   - never add `width`, `height`, or `resize`
-
-2. Change the chip wrapper to a tighter full-bleed thumbnail:
-   - remove inner padding
-   - replace the thick white outline with a subtle standard border
-   - keep the same compact square sizing and rounded corners
-
-3. Change the image fit behavior from:
-   - `max-w-full max-h-full object-contain`
-   to:
-   - `w-full h-full object-cover object-center`
-
-### Target code shape
-In `src/components/app/product-images/ProductImagesStep2Scenes.tsx`, the chip should move toward this pattern:
+### Hard rule for this pass
+Every change will use **quality only**:
 
 ```tsx
-<div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md overflow-hidden flex-shrink-0 border border-border/40 bg-muted/20">
-  <img
-    src={getOptimizedUrl(p.image_url, { quality: 40 })}
-    alt={p.title}
-    className="w-full h-full object-cover object-center"
-    loading="lazy"
-  />
-</div>
+getOptimizedUrl(url, { quality: 60 })   // ✅ safe
+getOptimizedUrl(url, { quality: 70 })   // ✅ safe
 ```
 
-### Why this solves it
-- `object-cover` makes the thumbnail fill the full square
-- removing padding eliminates the internal empty margin
-- reducing/removing the thick white border stops the “tiny image inside a larger card” look
-- keeping quality-only optimization avoids the original server-side crop/zoom regression
+Forbidden in this pass:
+```tsx
+getOptimizedUrl(url, { width: ... })    // ❌ never
+getOptimizedUrl(url, { height: ... })   // ❌ never
+getOptimizedUrl(url, { resize: ... })   // ❌ never
+```
 
-### Scope
-Only touch:
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+### Why quality-only cannot zoom
+Looking at `src/lib/imageOptimization.ts`: the function only appends `?quality=N` to the URL when no width/height/resize is passed. The Supabase render endpoint with quality-only re-encodes the same pixels at lower JPEG quality — **same dimensions, same framing, same crop**. It is mathematically impossible to zoom.
 
-Do not touch:
-- scene cards
-- Step 3 chips
-- selection logic
-- category grouping
-- generation flow
-- large previews / lightboxes
+### Self-check before each edit
+For every one of the 8 thumbnails, I will:
+1. Confirm the new call contains only `{ quality: N }` — no other keys
+2. Leave all CSS (`object-cover`, `object-contain`, sizing) exactly as-is
+3. Not touch any wrapper div, aspect ratio, or container
 
-### Expected result
-- Beverages and Shoes thumbnails fully fill their mini placeholder
-- no visible white empty space inside the image area
-- consistent sizing across categories
-- still compact and premium-looking
+### Files (unchanged from prior plan)
+- `AddModelModal.tsx` — line 151
+- `AddSceneModal.tsx` — line 127
+- `GenerateModelModal.tsx` — line 138
+- `TryOnConfirmModal.tsx` — line 71
+- `StartWorkflowModal.tsx` — lines 285, 340
+- `AddToDiscoverModal.tsx` — line 540
+- `freestyle/FreestylePromptPanel.tsx` — line 274
 
-### QA
-On `/app/generate/product-images` Step 2:
-1. Check the mini chips beside “Beverages” and “Shoes”
-2. Confirm the image fills the whole square
-3. Confirm there is no white gap inside the thumbnail area
-4. Confirm the chip still looks aligned and clean inside the category card
-5. In Network tab, verify the image URL still has `?quality=40` and does not include `width=`, `height=`, or `resize=`
+Plus add `loading="lazy"` where missing on these same elements.
+
+### QA after the change
+Open each modal and visually compare with current state:
+- Framing identical (no zoom, no crop shift)
+- Visual quality unchanged at small sizes
+- Network tab: requests contain `?quality=...` and **never** `width=`, `height=`, or `resize=`
+
+If any thumbnail looks even slightly different in framing — revert that single line. Quality-only is reversible and isolated per call.
 
