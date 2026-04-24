@@ -10,6 +10,7 @@ const StudioTeamSection = lazy(() => import('@/components/landing/StudioTeamSect
 const HowItWorks = lazy(() => import('@/components/landing/HowItWorks').then(m => ({ default: m.HowItWorks })));
 const FreestyleShowcaseSection = lazy(() => import('@/components/landing/FreestyleShowcaseSection').then(m => ({ default: m.FreestyleShowcaseSection })));
 const ProductCategoryShowcase = lazy(() => import('@/components/landing/ProductCategoryShowcase').then(m => ({ default: m.ProductCategoryShowcase })));
+const OneImageToVisualLibrarySection = lazy(() => import('@/components/landing/OneImageToVisualLibrarySection').then(m => ({ default: m.OneImageToVisualLibrarySection })));
 const VideoShowcaseSection = lazy(() => import('@/components/landing/VideoShowcaseSection').then(m => ({ default: m.VideoShowcaseSection })));
 const ModelShowcaseSection = lazy(() => import('@/components/landing/ModelShowcaseSection').then(m => ({ default: m.ModelShowcaseSection })));
 const EnvironmentShowcaseSection = lazy(() => import('@/components/landing/EnvironmentShowcaseSection').then(m => ({ default: m.EnvironmentShowcaseSection })));
@@ -56,6 +57,7 @@ export default function Landing() {
       <main>
         <HeroSection />
         <Suspense fallback={null}><ProductCategoryShowcase /></Suspense>
+        <Suspense fallback={null}><OneImageToVisualLibrarySection /></Suspense>
         <Suspense fallback={null}><StudioTeamSection /></Suspense>
         <Suspense fallback={null}><HowItWorks /></Suspense>
         <Suspense fallback={null}><FreestyleShowcaseSection /></Suspense>
