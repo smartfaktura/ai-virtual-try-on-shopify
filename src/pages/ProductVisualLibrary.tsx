@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SITE_URL } from '@/lib/constants';
 import {
   usePublicSceneLibrary,
@@ -10,6 +11,7 @@ import {
   type PublicScene,
 } from '@/hooks/usePublicSceneLibrary';
 import { LibrarySidebarNav } from '@/components/library/LibrarySidebarNav';
+import { LibraryMobileFilters } from '@/components/library/LibraryMobileFilters';
 import { SceneCard, SceneCardSkeleton } from '@/components/library/SceneCard';
 import { SceneDetailModal } from '@/components/library/SceneDetailModal';
 
@@ -17,8 +19,10 @@ export default function ProductVisualLibrary() {
   const { families, totalScenes, isLoading } = usePublicSceneLibrary();
 
   const [activeFamilySlug, setActiveFamilySlug] = useState<string | null>(null);
+  const [activeCollectionSlug, setActiveCollectionSlug] = useState<string | null>(null);
   const [selectedScene, setSelectedScene] = useState<PublicScene | null>(null);
   const [selectedFamilyLabel, setSelectedFamilyLabel] = useState<string | undefined>();
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Set first family as active when data loads.
   useEffect(() => {
@@ -32,8 +36,12 @@ export default function ProductVisualLibrary() {
     return families.find((f) => f.slug === activeFamilySlug) ?? families[0] ?? null;
   }, [families, activeFamilySlug]);
 
-  const handleSelectFamily = (slug: string) => {
-    setActiveFamilySlug(slug);
+  const activeCollectionLabel = useMemo(() => {
+    if (!activeFamily || !activeCollectionSlug) return null;
+    return activeFamily.collections.find((c) => c.slug === activeCollectionSlug)?.label ?? null;
+  }, [activeFamily, activeCollectionSlug]);
+
+  const scrollToGrid = () => {
     const el = document.getElementById('catalog-grid');
     if (el) {
       const top = el.getBoundingClientRect().top + window.scrollY - 96;
@@ -41,10 +49,28 @@ export default function ProductVisualLibrary() {
     }
   };
 
+  const handleSelectFamily = (slug: string) => {
+    setActiveFamilySlug(slug);
+    setActiveCollectionSlug(null);
+    scrollToGrid();
+  };
+
+  const handleMobileSelect = (familySlug: string | null, collectionSlug: string | null) => {
+    if (familySlug) setActiveFamilySlug(familySlug);
+    setActiveCollectionSlug(collectionSlug);
+    scrollToGrid();
+  };
+
   const handleSceneClick = (s: PublicScene, familyLabel: string) => {
     setSelectedScene(s);
     setSelectedFamilyLabel(familyLabel);
   };
+
+  const triggerLabel = activeFamily
+    ? activeCollectionLabel
+      ? `${activeFamily.label} · ${activeCollectionLabel}`
+      : activeFamily.label
+    : 'All categories';
 
   return (
     <PageLayout>
@@ -94,23 +120,58 @@ export default function ProductVisualLibrary() {
             />
 
             <div className="min-w-0">
+              {/* Mobile filters trigger bar */}
+              <div className="lg:hidden mb-5">
+                {isLoading ? (
+                  <Skeleton className="h-11 w-full rounded-full" />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMobileFiltersOpen(true)}
+                      className="flex flex-1 items-center gap-2 rounded-full border border-foreground/10 bg-background px-4 py-2.5 text-sm font-medium text-foreground/80 shadow-sm transition-colors hover:bg-foreground/[0.04] active:bg-foreground/[0.06]"
+                    >
+                      <SlidersHorizontal className="h-4 w-4 opacity-70 shrink-0" />
+                      <span className="truncate flex-1 text-left">{triggerLabel}</span>
+                      {activeFamily && (
+                        <span className="tabular-nums text-xs text-foreground/45 shrink-0">
+                          {activeCollectionSlug
+                            ? activeFamily.collections.find((c) => c.slug === activeCollectionSlug)?.totalCount
+                            : activeFamily.totalCount}
+                        </span>
+                      )}
+                    </button>
+                    {activeCollectionSlug && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveCollectionSlug(null)}
+                        aria-label="Clear sub-category"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/10 bg-background text-foreground/60 shadow-sm transition-colors hover:bg-foreground/[0.04]"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {isLoading && (
                 <div className="space-y-6">
-                  {/* Pill row skeleton */}
-                  <div className="flex gap-2 overflow-hidden">
+                  {/* Pill row skeleton (desktop only — mobile shows trigger skeleton above) */}
+                  <div className="hidden lg:flex gap-2 overflow-hidden">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div
+                      <Skeleton
                         key={i}
-                        className="h-9 shrink-0 animate-pulse rounded-full bg-foreground/[0.06]"
-                        style={{ width: `${90 + (i % 3) * 30}px`, animationDelay: `${i * 60}ms` }}
+                        className="h-9 shrink-0 rounded-full"
+                        style={{ width: `${90 + (i % 3) * 30}px` }}
                       />
                     ))}
                   </div>
                   {/* Eyebrow skeleton */}
-                  <div className="h-3 w-40 animate-pulse rounded bg-foreground/[0.06]" />
+                  <Skeleton className="h-3 w-40 rounded" />
                   {/* Card grid skeleton */}
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    {Array.from({ length: 15 }).map((_, i) => (
+                    {Array.from({ length: 12 }).map((_, i) => (
                       <SceneCardSkeleton key={i} />
                     ))}
                   </div>
@@ -121,6 +182,8 @@ export default function ProductVisualLibrary() {
                 <FamilySection
                   key={activeFamily.slug}
                   family={activeFamily}
+                  activeCollectionSlug={activeCollectionSlug}
+                  onChangeCollection={setActiveCollectionSlug}
                   onSceneClick={(s) => handleSceneClick(s, activeFamily.label)}
                 />
               )}
@@ -155,6 +218,16 @@ export default function ProductVisualLibrary() {
         </div>
       </section>
 
+      <LibraryMobileFilters
+        open={mobileFiltersOpen}
+        onOpenChange={setMobileFiltersOpen}
+        families={families}
+        totalScenes={totalScenes}
+        activeFamilySlug={activeFamilySlug}
+        activeCollectionSlug={activeCollectionSlug}
+        onSelect={handleMobileSelect}
+      />
+
       <SceneDetailModal
         scene={selectedScene}
         familyLabel={selectedFamilyLabel}
@@ -168,31 +241,26 @@ export default function ProductVisualLibrary() {
 
 interface FamilySectionProps {
   family: FamilyGroup;
+  activeCollectionSlug: string | null;
+  onChangeCollection: (slug: string | null) => void;
   onSceneClick: (s: PublicScene) => void;
 }
 
 const PAGE_SIZE = 30;
 
-function FamilySection({ family, onSceneClick }: FamilySectionProps) {
-  const [activeCollectionSlug, setActiveCollectionSlug] = useState<string | null>(null);
+function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSceneClick }: FamilySectionProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // Pills horizontal scroller
+  // Pills horizontal scroller (desktop only)
   const pillsScrollRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // Reset whenever family changes (parent re-mounts via key, but be safe).
-  useEffect(() => {
-    setActiveCollectionSlug(null);
-    setVisibleCount(PAGE_SIZE);
-  }, [family.slug]);
-
   // Reset visible window when filter changes.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [activeCollectionSlug]);
+  }, [activeCollectionSlug, family.slug]);
 
   // Pills overflow detection (desktop arrows).
   useEffect(() => {
@@ -277,15 +345,15 @@ function FamilySection({ family, onSceneClick }: FamilySectionProps) {
 
   return (
     <section className="scroll-mt-24">
-      {/* Sub-category pills — flush with grid */}
+      {/* Sub-category pills — desktop only (mobile uses drawer) */}
       {showPills && (
-        <div className="relative mb-8">
+        <div className="relative mb-8 hidden lg:block">
           <div
             ref={pillsScrollRef}
             className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             <button
-              onClick={() => setActiveCollectionSlug(null)}
+              onClick={() => onChangeCollection(null)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 activeCollectionSlug === null
                   ? 'bg-foreground text-background'
@@ -300,7 +368,7 @@ function FamilySection({ family, onSceneClick }: FamilySectionProps) {
               return (
                 <button
                   key={c.slug}
-                  onClick={() => setActiveCollectionSlug(c.slug)}
+                  onClick={() => onChangeCollection(c.slug)}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                     active
                       ? 'bg-foreground text-background'
