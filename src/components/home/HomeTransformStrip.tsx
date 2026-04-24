@@ -180,7 +180,10 @@ export function HomeTransformStrip() {
         </div>
 
         {/* CTA */}
-        <div className="flex justify-center mt-10 lg:mt-14">
+        <div className="flex flex-col items-center gap-4 mt-10 lg:mt-14">
+          <p className="text-xs text-muted-foreground tracking-wide">
+            35+ categories · 1000+ scenes · one upload
+          </p>
           <Button asChild size="lg" className="rounded-full px-8 text-base">
             <Link to="/auth">
               Try it on my product
