@@ -71,6 +71,20 @@ export default function AppHelp() {
             <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           </a>
 
+          <a
+            href="https://discord.gg/ZgnSJqUyV"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4 py-5 border-b border-border/60 -mx-2 px-2 rounded-lg hover:bg-muted/40 transition-colors"
+          >
+            <DiscordIcon className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
+            <div className="flex-1">
+              <div className="text-[15px] text-foreground">Join our Discord</div>
+              <div className="text-[13px] text-muted-foreground mt-0.5">Chat with the team & other creators</div>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </a>
+
           <Link
             to="/app/learn"
             className="group flex items-center gap-4 py-5 border-b border-border/60 -mx-2 px-2 rounded-lg hover:bg-muted/40 transition-colors"
