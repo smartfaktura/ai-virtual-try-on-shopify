@@ -1,53 +1,66 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import productVideoLoop from '@/assets/home-create-product-videos.mp4';
 
 const SUPABASE_PUBLIC =
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
 const PREVIEW = (id: string) =>
   `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
-const cards = [
+type CardData =
+  | { title: string; text: string; cta: string; type: 'image'; image: string }
+  | { title: string; text: string; cta: string; type: 'video'; video: string };
+
+const cards: CardData[] = [
   {
     title: 'Product page images',
     text: 'Clean, high-converting visuals for Shopify, Amazon, and product pages.',
     cta: 'Explore product images',
-    image: PREVIEW('1776688965090-edaogg'), // On-Model Front (dress studio)
-    type: 'image' as const,
+    image: PREVIEW('1776688965090-edaogg'),
+    type: 'image',
   },
   {
     title: 'Social & ad creatives',
     text: 'Campaign-ready visuals for Instagram, Meta ads, launches, and promotions.',
     cta: 'Explore ad creatives',
-    image: PREVIEW('1776689318257-yahkye'), // Flash Night Fashion Campaign
-    type: 'image' as const,
+    image: PREVIEW('1776689318257-yahkye'),
+    type: 'image',
   },
   {
     title: 'Product videos',
     text: 'Short motion content for reels, ads, and product storytelling.',
     cta: 'Explore videos',
-    image: PREVIEW('1776843776495-iyiigl'), // Earthy Botanicals (rich, premium)
-    type: 'video' as const,
+    video: productVideoLoop,
+    type: 'video',
   },
 ];
 
-function CardVisual({ image, type, alt }: { image: string; type: 'image' | 'video'; alt: string }) {
+function CardVisual({ card }: { card: CardData }) {
+  if (card.type === 'video') {
+    return (
+      <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
+        <video
+          src={card.video}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
   return (
     <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
       <img
-        src={getOptimizedUrl(image, { quality: 60 })}
-        alt={alt}
+        src={getOptimizedUrl(card.image, { quality: 60 })}
+        alt={card.title}
         loading="lazy"
         decoding="async"
         className="absolute inset-0 w-full h-full object-cover"
       />
-      {type === 'video' && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-white/90 shadow-lg flex items-center justify-center backdrop-blur-sm">
-            <Play size={22} className="text-[#1a1a2e] ml-0.5" fill="currentColor" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -76,7 +89,7 @@ export function HomeCreateCards() {
               }`}
               style={{ transitionDelay: `${i * 150}ms` }}
             >
-              <CardVisual image={card.image} type={card.type} alt={card.title} />
+              <CardVisual card={card} />
               <div className="p-6 lg:p-8">
                 <h3 className="text-[#1a1a2e] text-xl font-semibold mb-2">{card.title}</h3>
                 <p className="text-[#6b7280] text-sm leading-relaxed mb-5">{card.text}</p>
