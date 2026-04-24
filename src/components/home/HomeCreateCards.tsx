@@ -89,7 +89,7 @@ export function HomeCreateCards() {
               }`}
               style={{ transitionDelay: `${i * 150}ms` }}
             >
-              <CardVisual image={card.image} type={card.type} alt={card.title} />
+              <CardVisual card={card} />
               <div className="p-6 lg:p-8">
                 <h3 className="text-[#1a1a2e] text-xl font-semibold mb-2">{card.title}</h3>
                 <p className="text-[#6b7280] text-sm leading-relaxed mb-5">{card.text}</p>
