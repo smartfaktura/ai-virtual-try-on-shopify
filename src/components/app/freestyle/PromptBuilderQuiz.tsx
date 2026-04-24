@@ -82,11 +82,22 @@ const INTERACTION_ICON_MAP: Record<InteractionType, React.ReactNode> = {
 };
 
 // ——— Option Card ———
-function OptionCard({ value, label, description, icon, selected, onClick, isMobile }: {
-  value: string; label: string; description: string; icon: React.ReactNode; selected: boolean; onClick: (v: any) => void; isMobile?: boolean;
-}) {
+interface OptionCardProps {
+  value: string;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  selected: boolean;
+  onClick: (v: any) => void;
+  isMobile?: boolean;
+}
+const OptionCard = React.forwardRef<HTMLButtonElement, OptionCardProps>(function OptionCard(
+  { value, label, description, icon, selected, onClick, isMobile },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       onClick={() => onClick(value)}
       className={cn(
         'relative rounded-xl border-2 transition-all duration-200 cursor-pointer',
@@ -125,7 +136,7 @@ function OptionCard({ value, label, description, icon, selected, onClick, isMobi
       )}
     </button>
   );
-}
+});
 
 // ——— Section Label Pill ———
 function SectionPill({ children }: { children: React.ReactNode }) {

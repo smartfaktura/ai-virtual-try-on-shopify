@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/lib/brandedToast';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { cn } from '@/lib/utils';
+import { getDiscoverItemAspectRatio } from '@/lib/discoverAspect';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -110,6 +111,8 @@ export function DiscoverDetailModal({
       const { data } = await supabase.from('workflows').select('id, name, slug').order('sort_order');
       return data ?? [];
     },
+    enabled: !!isAdmin && open,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: myProducts } = useQuery({
@@ -118,7 +121,8 @@ export function DiscoverDetailModal({
       const { data } = await supabase.from('user_products').select('id, title, image_url').order('created_at', { ascending: false });
       return data ?? [];
     },
-    enabled: !!isAdmin,
+    enabled: !!isAdmin && open,
+    staleTime: 5 * 60 * 1000,
   });
 
   const itemId = item?.type === 'preset' ? item.data.id : item?.type === 'scene' ? item.data.poseId : null;
@@ -194,12 +198,20 @@ export function DiscoverDetailModal({
       >
         {/* Left — Image showcase */}
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12" onClick={onClose}>
-          <ShimmerImage
-            src={imageUrl}
-            alt={title}
-            wrapperClassName="flex items-center justify-center"
-            className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
-          />
+          {(() => {
+            const ar = getDiscoverItemAspectRatio(item);
+            return (
+              <ShimmerImage
+                src={imageUrl}
+                alt={title}
+                aspectRatio={ar}
+                wrapperClassName="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] flex items-center justify-center"
+                wrapperStyle={{ aspectRatio: ar, width: 'auto', height: 'auto' }}
+                className="w-full h-full object-contain rounded-lg shadow-2xl"
+                fetchPriority="high"
+              />
+            );
+          })()}
         </div>
 
         {/* Right — Controls panel */}

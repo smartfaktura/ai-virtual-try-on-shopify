@@ -129,17 +129,21 @@ export default function PublicDiscover() {
   const customScenePoses = useMemo(() => customScenes.map(toTryOnPose), [customScenes]);
   const { data: recommendedPoses = [] } = useRecommendedDiscoverItems({ mode: 'public' });
 
-  // Track views when modal opens (deduplicated per session)
+  // Track views when modal opens (deduplicated per session, debounced 250 ms).
   const viewedItemsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!selectedItem || !user) return;
     const key = `${selectedItem.type}:${getItemId(selectedItem)}`;
     if (viewedItemsRef.current.has(key)) return;
-    viewedItemsRef.current.add(key);
-    supabase.from('discover_item_views').insert({
-      item_type: selectedItem.type,
-      item_id: getItemId(selectedItem),
-    }).then();
+    const t = setTimeout(() => {
+      if (viewedItemsRef.current.has(key)) return;
+      viewedItemsRef.current.add(key);
+      supabase.from('discover_item_views').insert({
+        item_type: selectedItem.type,
+        item_id: getItemId(selectedItem),
+      }).then();
+    }, 250);
+    return () => clearTimeout(t);
   }, [selectedItem, user]);
 
   // Fetch view count for selected item
@@ -155,6 +159,7 @@ export default function PublicDiscover() {
       return count ?? 0;
     },
     enabled: !!selectedItem && !!user,
+    staleTime: 60_000,
   });
 
   // Build unified feed — deduplicate scenes that have been promoted to presets

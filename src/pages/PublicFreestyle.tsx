@@ -130,17 +130,21 @@ export default function PublicFreestyle() {
     [allPresets]
   );
 
-  // Track views
+  // Track views (debounced 250 ms to absorb rapid arrow-key navigation).
   const viewedItemsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!selectedItem || !user || selectedItem.type !== 'preset') return;
     const key = `preset:${getItemId(selectedItem)}`;
     if (viewedItemsRef.current.has(key)) return;
-    viewedItemsRef.current.add(key);
-    supabase.from('discover_item_views').insert({
-      item_type: 'preset',
-      item_id: getItemId(selectedItem),
-    }).then();
+    const t = setTimeout(() => {
+      if (viewedItemsRef.current.has(key)) return;
+      viewedItemsRef.current.add(key);
+      supabase.from('discover_item_views').insert({
+        item_type: 'preset',
+        item_id: getItemId(selectedItem),
+      }).then();
+    }, 250);
+    return () => clearTimeout(t);
   }, [selectedItem, user]);
 
   const { data: viewCount } = useQuery({
@@ -155,6 +159,7 @@ export default function PublicFreestyle() {
       return count ?? 0;
     },
     enabled: !!selectedItem && selectedItem.type === 'preset' && !!user,
+    staleTime: 60_000,
   });
 
   // Build items list

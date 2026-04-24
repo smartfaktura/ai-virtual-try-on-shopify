@@ -272,17 +272,22 @@ export default function Discover() {
     return () => { cancelled = true; };
   }, []);
 
-  // Track views when modal opens (deduplicated per session)
+  // Track views when modal opens (deduplicated per session, debounced 250 ms
+  // so rapid arrow-key navigation doesn't hammer the table).
   const viewedItemsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!selectedItem) return;
     const key = `${selectedItem.type}:${getItemId(selectedItem)}`;
     if (viewedItemsRef.current.has(key)) return;
-    viewedItemsRef.current.add(key);
-    supabase.from('discover_item_views').insert({
-      item_type: selectedItem.type,
-      item_id: getItemId(selectedItem),
-    }).then();
+    const t = setTimeout(() => {
+      if (viewedItemsRef.current.has(key)) return;
+      viewedItemsRef.current.add(key);
+      supabase.from('discover_item_views').insert({
+        item_type: selectedItem.type,
+        item_id: getItemId(selectedItem),
+      }).then();
+    }, 250);
+    return () => clearTimeout(t);
   }, [selectedItem]);
 
   // Fetch view count for selected item
@@ -298,6 +303,7 @@ export default function Discover() {
       return count ?? 0;
     },
     enabled: !!selectedItem,
+    staleTime: 60_000,
   });
 
   const savedCount = savedItems.length;

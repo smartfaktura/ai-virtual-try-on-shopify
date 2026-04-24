@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Trophy } from 'lucide-react';
 
@@ -50,6 +50,22 @@ export function ImageLightbox({
     const newIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
     onNavigate(newIndex);
   }, [currentIndex, images.length, onNavigate]);
+
+  // Per-action handlers — memoized so the action-bar buttons don't churn
+  // closures on every parent render.
+  const handleSelect = useCallback(() => onSelect?.(currentIndex), [onSelect, currentIndex]);
+  const handleDownload = useCallback(() => onDownload?.(currentIndex), [onDownload, currentIndex]);
+  const handleRegenerate = useCallback(() => onRegenerate?.(currentIndex), [onRegenerate, currentIndex]);
+  const handleCopyPrompt = useCallback(() => onCopyPrompt?.(currentIndex), [onCopyPrompt, currentIndex]);
+  const handleDelete = useCallback(() => onDelete?.(currentIndex), [onDelete, currentIndex]);
+  const handleShare = useCallback(() => onShare?.(currentIndex), [onShare, currentIndex]);
+
+  // Track image load so we can crossfade between slides instead of blanking.
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const prevSrcRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (currentImage && currentImage === loadedSrc) prevSrcRef.current = currentImage;
+  }, [currentImage, loadedSrc]);
 
   useEffect(() => {
     if (!open) return;
@@ -130,15 +146,40 @@ export function ImageLightbox({
         'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200 overflow-hidden pt-14',
         isMobile ? 'max-w-[94vw] max-h-[90vh] px-1' : 'max-w-[90vw] max-h-[85vh]'
       )}>
-        <img
-          key={currentIndex}
-          src={currentImage}
-          alt={`Generated image ${currentIndex + 1}`}
+        <div
           className={cn(
-            'max-w-full w-auto h-auto object-contain rounded-xl shadow-2xl shadow-black/40',
-            isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]'
+            'relative flex items-center justify-center rounded-xl overflow-hidden shadow-2xl shadow-black/40',
+            isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
           )}
-        />
+          style={{ minHeight: isMobile ? '40vh' : '50vh' }}
+        >
+          {/* Previous slide stays mounted underneath until the next one decodes */}
+          {prevSrcRef.current && prevSrcRef.current !== currentImage && (
+            <img
+              src={prevSrcRef.current}
+              alt=""
+              aria-hidden
+              className={cn(
+                'absolute inset-0 m-auto max-w-full w-auto h-auto object-contain rounded-xl',
+                isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
+              )}
+            />
+          )}
+          <img
+            key={currentImage}
+            src={currentImage}
+            alt={`Generated image ${currentIndex + 1}`}
+            decoding="async"
+            // @ts-expect-error fetchpriority is a valid HTML attribute
+            fetchpriority="high"
+            onLoad={() => setLoadedSrc(currentImage)}
+            className={cn(
+              'relative max-w-full w-auto h-auto object-contain rounded-xl transition-opacity duration-200',
+              isMobile ? 'max-h-[60vh]' : 'max-h-[75vh]',
+              loadedSrc === currentImage ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+        </div>
 
         {/* Action bar */}
         {isMobile ? (
@@ -146,7 +187,7 @@ export function ImageLightbox({
           <div className="flex items-center justify-center gap-3 mt-4">
             {onSelect && (
               <button
-                onClick={() => onSelect(currentIndex)}
+                onClick={handleSelect}
                 className={cn(
                   iconBtnClass,
                   isSelected && 'bg-primary text-primary-foreground hover:bg-primary/80'
@@ -156,27 +197,27 @@ export function ImageLightbox({
               </button>
             )}
             {onDownload && (
-              <button onClick={() => onDownload(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleDownload} className={iconBtnClass}>
                 <Download className="w-4 h-4" />
               </button>
             )}
             {onCopyPrompt && (
-              <button onClick={() => onCopyPrompt(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleCopyPrompt} className={iconBtnClass}>
                 <ClipboardCopy className="w-4 h-4" />
               </button>
             )}
             {onRegenerate && (
-              <button onClick={() => onRegenerate(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleRegenerate} className={iconBtnClass}>
                 <RefreshCw className="w-4 h-4" />
               </button>
             )}
             {onShare && (
-              <button onClick={() => onShare(currentIndex)} className={iconBtnClass}>
+              <button onClick={handleShare} className={iconBtnClass}>
                 <Trophy className="w-4 h-4" />
               </button>
             )}
             {onDelete && (
-              <button onClick={() => onDelete(currentIndex)} className={deleteBtnClass}>
+              <button onClick={handleDelete} className={deleteBtnClass}>
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
@@ -187,7 +228,7 @@ export function ImageLightbox({
             <div className="flex items-center gap-2 mt-5">
               {onSelect && (
                 <button
-                  onClick={() => onSelect(currentIndex)}
+                  onClick={handleSelect}
                   className={cn(
                     'flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium transition-colors backdrop-blur-md',
                     isSelected
@@ -201,7 +242,7 @@ export function ImageLightbox({
               )}
               {onDownload && (
                 <button
-                  onClick={() => onDownload(currentIndex)}
+                  onClick={handleDownload}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                 >
                   <Download className="w-4 h-4" />
@@ -210,7 +251,7 @@ export function ImageLightbox({
               )}
               {onRegenerate && (
                 <button
-                  onClick={() => onRegenerate(currentIndex)}
+                  onClick={handleRegenerate}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -219,7 +260,7 @@ export function ImageLightbox({
               )}
               {onCopyPrompt && (
                 <button
-                  onClick={() => onCopyPrompt(currentIndex)}
+                  onClick={handleCopyPrompt}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                 >
                   <ClipboardCopy className="w-4 h-4" />
@@ -228,7 +269,7 @@ export function ImageLightbox({
               )}
               {onDelete && (
                 <button
-                  onClick={() => onDelete(currentIndex)}
+                  onClick={handleDelete}
                   className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors backdrop-blur-md"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -239,7 +280,7 @@ export function ImageLightbox({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => onShare(currentIndex)}
+                      onClick={handleShare}
                       className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
                     >
                       <Trophy className="w-4 h-4" />
