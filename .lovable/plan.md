@@ -1,51 +1,95 @@
 
 
-## Fix: mini chip thumbnails have gaps — fill the placeholder properly
+## Fix the category chip thumbnails so they fully fill the mini placeholder
 
-### What I see
-After the last fix, the **Beverages** and **Shoes** category chips now show the full product (no zoom), but the product sits inside a larger square with empty white gaps around it. The thumbnail isn't filling its container.
+### Confirmed issue
+The Step 2 category chips beside “Beverages” and “Shoes” are no longer zoomed, but they now look too small inside the thumbnail slot because the current chip uses:
+- `object-contain`
+- `bg-white`
+- inner padding
+- a thick `border-background` outline
+
+That combination preserves the whole product, but visually creates empty white space and makes the thumbnail feel like it’s floating inside a box.
 
 ### Root cause
-In the last pass I changed the chip image to `object-contain bg-white` to kill the zoom. `object-contain` preserves aspect ratio by **shrinking the image to fit**, which leaves transparent/white gaps when the source image is taller or wider than the square slot — exactly what's visible now.
+In `src/components/app/product-images/ProductImagesStep2Scenes.tsx`, the category chip currently renders like this:
 
-What I want instead: the chip wrapper should be **tight to the product** with minimal padding, so it reads as a clean product mark, not a small image floating in a big white box.
-
-### Fix in `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-
-For the category chip thumbnails (the ~28–32px squares next to "Beverages" / "Shoes"):
-
-1. **Keep** `object-contain` + `bg-white` (these are what prevent the zoom — non-negotiable).
-2. **Tighten the wrapper**:
-   - Reduce wrapper size slightly so the product visually fills more of the chip.
-   - Add small inner padding (`p-0.5`) so the product breathes but doesn't float.
-   - Round corners match (`rounded-md`).
-3. **Center the image** with `flex items-center justify-center` on the wrapper so the contained image is perfectly centered, no top/bottom drift.
-
-Resulting pattern (chip only):
 ```tsx
-<div className="w-7 h-7 rounded-md bg-white border border-border/40 flex items-center justify-center p-0.5 overflow-hidden">
+<div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-white flex-shrink-0 border-2 border-background flex items-center justify-center p-0.5 overflow-hidden">
   <img
     src={getOptimizedUrl(p.image_url, { quality: 40 })}
     className="max-w-full max-h-full object-contain"
     loading="lazy"
-    alt={p.title}
   />
 </div>
 ```
 
-### Safety rules (unchanged)
-- Quality-only optimization. **Never** `width`, `height`, or `resize`.
-- Only the **category chip** in Step 2 is touched. Scene cards, product grids, Step 3 chips — untouched.
-- No selection logic, category grouping, or generation flow changes.
+This is why the gaps appear:
+- `object-contain` shrinks to fit
+- `p-0.5` adds more empty room
+- `bg-white` makes transparent edges highly visible
+- `border-2 border-background` makes the chip feel even smaller
+
+### Fix
+Update only the Step 2 category chip thumbnails to behave like true filled mini covers:
+
+1. Keep **quality-only** optimization:
+   - `getOptimizedUrl(p.image_url, { quality: 40 })`
+   - never add `width`, `height`, or `resize`
+
+2. Change the chip wrapper to a tighter full-bleed thumbnail:
+   - remove inner padding
+   - replace the thick white outline with a subtle standard border
+   - keep the same compact square sizing and rounded corners
+
+3. Change the image fit behavior from:
+   - `max-w-full max-h-full object-contain`
+   to:
+   - `w-full h-full object-cover object-center`
+
+### Target code shape
+In `src/components/app/product-images/ProductImagesStep2Scenes.tsx`, the chip should move toward this pattern:
+
+```tsx
+<div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md overflow-hidden flex-shrink-0 border border-border/40 bg-muted/20">
+  <img
+    src={getOptimizedUrl(p.image_url, { quality: 40 })}
+    alt={p.title}
+    className="w-full h-full object-cover object-center"
+    loading="lazy"
+  />
+</div>
+```
+
+### Why this solves it
+- `object-cover` makes the thumbnail fill the full square
+- removing padding eliminates the internal empty margin
+- reducing/removing the thick white border stops the “tiny image inside a larger card” look
+- keeping quality-only optimization avoids the original server-side crop/zoom regression
+
+### Scope
+Only touch:
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
+
+Do not touch:
+- scene cards
+- Step 3 chips
+- selection logic
+- category grouping
+- generation flow
+- large previews / lightboxes
 
 ### Expected result
-- Beverages / Shoes chips show the product **centered and filling the chip** with only a tiny breathing margin.
-- No zoom/crop.
-- No empty gaps.
+- Beverages and Shoes thumbnails fully fill their mini placeholder
+- no visible white empty space inside the image area
+- consistent sizing across categories
+- still compact and premium-looking
 
 ### QA
 On `/app/generate/product-images` Step 2:
-1. Beverages chip → can fills the square cleanly.
-2. Shoes chip → shoe fills the square cleanly.
-3. Network tab → request URL contains `?quality=40`, no `width=`, no `resize=`.
+1. Check the mini chips beside “Beverages” and “Shoes”
+2. Confirm the image fills the whole square
+3. Confirm there is no white gap inside the thumbnail area
+4. Confirm the chip still looks aligned and clean inside the category card
+5. In Network tab, verify the image URL still has `?quality=40` and does not include `width=`, `height=`, or `resize=`
 
