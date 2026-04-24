@@ -2511,7 +2511,7 @@ export function ProductImagesStep3Refine({
                           return (preview.length > 0 ? preview : [null, null, null]).map((m, i) => (
                             <div key={i} className="w-6 h-6 rounded-full border-2 border-card overflow-hidden bg-muted flex-shrink-0">
                               {m?.previewUrl ? (
-                                <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
+                                <img src={getOptimizedUrl(m.previewUrl, { quality: 50 })} alt="" loading="lazy" className="w-full h-full object-cover" />
                               ) : (
                                 <div className={cn('w-full h-full', i === 0 ? 'bg-primary/20' : i === 1 ? 'bg-primary/15' : 'bg-primary/10')} />
                               )}
