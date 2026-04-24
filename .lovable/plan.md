@@ -1,36 +1,30 @@
-## Problem
-The current "How it works" section mixes two visual languages:
-- Step 1 looks broken (faint grayscale image + tiny floating upload icon).
-- Steps 2 & 3 use real high-resolution lifestyle photos (women in dresses, fragrance bottles, swimwear models) which clash with the wireframe-mock aesthetic the section is supposed to convey.
-- The reference mock (uploaded earlier) is a clean, neutral wireframe — not a showcase of real outputs.
+## Goal
+Reorder pills so "All categories" sits **last**, change Swimwear back to default, and instead of swapping the grid, the "All categories" pill opens a clean popover/dropdown listing all 35 category names — no images, no copy.
 
-## Fix — rewrite all 3 step visuals as consistent neutral wireframes
+## Changes — `src/components/home/HomeTransformStrip.tsx`
 
-Edit `src/components/home/HomeHowItWorks.tsx`. Drop the `PREVIEW`/Supabase image imports and the `getOptimizedUrl` import. All visuals become CSS-only wireframes.
+### 1. Reorder + remove `'all'` from grid switching
+- Reorder `CATEGORIES` to: `swimwear`, `fragrance`, `eyewear`. Drop the `'all'` entry entirely from this array (and drop `ALL_CATEGORIES_CARDS`).
+- Default `active` back to `'swimwear'`.
 
-### Step 1 — Upload
-Card containing a single rounded "product placeholder" tile that fills ~70% of the card:
-- Soft neutral background (`bg-muted/50`)
-- Generic product silhouette: a rounded-rect bottle shape rendered as a centered SVG/div in a slightly darker neutral (`bg-foreground/10`)
-- Dashed border around the tile (`border-2 border-dashed border-border`)
-- A small white circular badge with the `Upload` icon overlaid bottom-center on the tile
+### 2. Add an "All categories" pill at the end (popover trigger)
+- Use existing `Popover` (`@/components/ui/popover`) — already in the design system.
+- Render after the 3 category buttons, inside the same pill bar:
+  ```
+  <PopoverTrigger asChild>
+    <button class="px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1.5">
+      All categories <ChevronDown size={14} />
+    </button>
+  </PopoverTrigger>
+  ```
+- `PopoverContent`: width ~`w-[min(92vw,560px)]`, padding 5, white card. Inside:
+  - Tiny eyebrow `35+ CATEGORIES`
+  - 3-column responsive grid (`grid-cols-2 sm:grid-cols-3`) of category names rendered as small muted text rows (no images, no clicks — just an informational list).
+  - Hardcode the list (35 entries) in a `ALL_CATEGORY_NAMES` const, formatted from the DB list with title-case + nicer labels (e.g. `bags-accessories` → `Bags & Accessories`, `jewellery-rings` → `Rings`, `hats-small` → `Hats`, `tech-devices` → `Tech`, `snacks-food` → `Snacks`, `wallets-cardholders` → `Cardholders`, `makeup-lipsticks` → `Makeup`, `supplements-wellness` → `Wellness`, `home-decor` → `Home Decor`, `high-heels` → `Heels`, `beauty-skincare` → `Skincare`).
 
-### Step 2 — Choose shots
-- Top row: small `1000+ SHOTS` chip (existing) + faux search bar (existing)
-- 2×2 grid of **wireframe thumbnails** — each is a `bg-muted/40` rounded tile containing a centered generic "image" glyph (small mountain + sun SVG icon in `text-muted-foreground/40`), exactly like the reference mock
-- No real photos
-
-### Step 3 — Generate
-- 3 stacked rows, each with a small wireframe thumbnail (same `bg-muted/40` + image glyph) on the left and 2 grey text bars on the right
-- No real photos
-
-### Shared "ImagePlaceholder" sub-component
-Create one small inline component returning the neutral tile + image glyph; reuse in steps 2 & 3.
-
-### Other tweaks
-- Cards: keep `aspect-[4/5]` / rounded-3xl / white bg / soft border — already good
-- Remove `STEP1_ORIGINAL`, `STEP2_THUMBS`, `STEP3_THUMBS`, `PREVIEW`, `SUPABASE_PUBLIC`, `getOptimizedUrl`, `originalFragrance` import
-- Keep header, arrows, CTA exactly as they are
+### 3. Cleanup
+- Remove `ALL_CATEGORIES_CARDS` array and any references.
+- Keep small caption `35+ categories · 1000+ scenes · one upload` above the CTA as-is.
 
 ## Files
-- edit `src/components/home/HomeHowItWorks.tsx`
+- edit `src/components/home/HomeTransformStrip.tsx`
