@@ -1,83 +1,55 @@
-## Add loading state to "Recreate this" buttons on /discover
+## Safe fix: Lightbox flash on open and on arrow navigation
 
-### Confirmed bug
-You're right — there is **no loading affordance** anywhere on the Recreate flow. When the user clicks "Recreate this", the button just calls `navigate(...)` synchronously and the user stares at an unchanged button until the next page (`/app/generate/product-images`, `/app/freestyle`, etc.) finishes lazy-loading + fetching wizard data. That gap can be 0.5–2s and feels broken.
+### What's happening today
+In `src/components/app/ImageLightbox.tsx`:
+- The full-resolution image is the only thing rendered. While it downloads, `opacity-0` shows a blank dark area, then it pops in (the "flash").
+- `key={currentImage}` on the `<img>` forces a full unmount/remount on each navigation, so the browser cannot reuse any decoded data.
+- The "previous slide stays mounted" logic only works after the first successful load; on the very first open (and after cache-miss arrow nav) there is nothing underneath, so the user sees a blank frame.
+- Adjacent slides are not preloaded, so every arrow press starts a fresh network request.
 
-Buttons affected (all have zero loading state today):
-| File | Line | Button |
-|---|---|---|
-| `src/components/app/DiscoverCard.tsx` | 120 | Desktop hover "Recreate this" pill |
-| `src/components/app/DiscoverCard.tsx` | 146 | Mobile bottom-right "Recreate" pill |
-| `src/components/app/DiscoverDetailModal.tsx` | ~860 | Modal primary "Recreate this" CTA |
-| `src/components/app/PublicDiscoverDetailModal.tsx` | ~179 | Public modal "Recreate This" CTA |
+### Fix (single file, fully isolated)
+Edit only `src/components/app/ImageLightbox.tsx`. No prop, signature, or behavioral changes — pure visual smoothing.
 
-### Fix — local transient loading state per button
+1. **Add an instant low-res placeholder layer** behind the full-res image, using `getOptimizedUrl(currentImage, { quality: 60 })`.
+   - This URL is already in the browser cache from the results grid (which uses the same call), so it appears instantly with zero network cost.
+   - Strictly **quality-only** per `mem://style/image-optimization-no-crop` — never `width`, `height`, or `resize`. No zoom regression possible.
+   - Same `object-contain` and same max-height classes → identical framing.
+   - Wrapped in a guard: if `getOptimizedUrl` returns the original URL unchanged (non-Supabase URL, blob, data URI), we simply skip rendering the placeholder layer to avoid double-loading the full-res file.
 
-Each button gets a tiny local `isNavigating` state. On click:
-1. Set `isNavigating = true`
-2. Show inline spinner + dim/disable the button (pointer-events off, but stays visible)
-3. Call the existing `onRecreate` / navigate handler
-4. State auto-resets when the component unmounts on route change (no timer needed — the new page replaces this one)
+2. **Remove `key={currentImage}`** from the full-res `<img>`.
+   - Lets React reuse the element and lets the browser swap `src` in place instead of re-mounting.
+   - `onLoad` + `loadedSrc` state already handles the crossfade correctly without the key.
 
-For the **DiscoverCard buttons**, both the desktop and mobile "Recreate" buttons share one local state since only one is visible at a time per breakpoint.
+3. **Initialize `prevSrcRef` on first open** so the very first slide also has something underneath while loading (will be the low-res placeholder of the same image — clean fade, no blank).
 
-For the **modals**, state lives on the existing `Recreate this` `<Button>` — swap the `ArrowRight` icon for a `Loader2` spinner while loading and disable the button to prevent double clicks.
+4. **Preload neighbors** via a small `useEffect` that creates two `new Image()` objects for `images[currentIndex - 1]` and `images[currentIndex + 1]` (with wrap-around). Browser caches them; arrow nav becomes near-instant. No DOM, no layout, no state.
 
-### Visual pattern (consistent across all 4 buttons)
+5. **Add `loading="eager"`** to the full-res `<img>` (it's the focal element) and keep `decoding="async"` and `fetchpriority="high"` as today.
 
-Idle:
-```
-[ Recreate this  → ]
-```
+### What is explicitly NOT changed
+- No changes to `onNavigate`, `onSelect`, `onDownload`, `onRegenerate`, `onDelete`, `onCopyPrompt`, `onShare`, or any callback signature.
+- No changes to keyboard handlers, body-scroll lock, portal mount, or close behavior.
+- No changes to the action bar, mobile/desktop layouts, counter, or arrow buttons.
+- No changes to any caller of `ImageLightbox` (Results, Library, Discover, etc.).
+- No CSS sizing, `object-contain`, `max-h-*`, or aspect logic touched.
+- No image transformation params beyond `quality` — guarantees no zoom/crop regression.
 
-Loading:
-```
-[ Recreate this  ⟳ ]   (spinning, disabled, slightly dimmed)
-```
+### Safety guarantees
+- `getOptimizedUrl` safely no-ops on non-Supabase URLs → never breaks external/blob/data sources.
+- If the placeholder fails to load, the full-res image still loads exactly as today (placeholder is purely additive, behind it).
+- If `onLoad` never fires (slow network), the existing crossfade fallback (previous slide layer) still applies.
+- Removing `key` is safe because the `<img>` has no internal state and React diffs `src` correctly.
+- Preloading uses `new Image()` which is fire-and-forget; failures are silently ignored by the browser and don't affect rendering.
 
-Implementation snippet (illustrative, applied to each button):
-```tsx
-const [isNavigating, setIsNavigating] = useState(false);
-
-<button
-  disabled={isNavigating}
-  onClick={(e) => {
-    e.stopPropagation();
-    setIsNavigating(true);
-    onRecreate(e);
-  }}
-  className={cn(
-    "...existing classes...",
-    isNavigating && "opacity-80 cursor-wait"
-  )}
->
-  Recreate this
-  {isNavigating
-    ? <Loader2 className="w-3 h-3 animate-spin" />
-    : <ArrowRight className="w-3 h-3" />}
-</button>
-```
-
-### Why this approach (not a global loader)
-- Zero risk of getting stuck on (state lives only on the unmounting card/modal — route change destroys it automatically)
-- Doesn't require touching navigation, query cache, or wizard pages
-- Doesn't alter framing/sizing/aesthetics — same pill, only icon swap + faint dim
-- Works identically on desktop hover pill, mobile bottom-right pill, and modal CTA
-
-### Files to edit (4 buttons across 3 files — modal already shares one component)
-- `src/components/app/DiscoverCard.tsx` — add `isNavigating` state + apply to both Recreate buttons (desktop + mobile)
-- `src/components/app/DiscoverDetailModal.tsx` — add state + apply to "Recreate this" CTA at line ~860
-- `src/components/app/PublicDiscoverDetailModal.tsx` — add state + apply to "Recreate This" CTA at line ~179
-
-### Out of scope (intentionally not changed)
-- Navigation logic in `handleUseItem` (Discover.tsx, PublicFreestyle.tsx, DashboardDiscoverSection.tsx) — unchanged
-- Wizard page mount/data fetching — unchanged
-- No global route-transition spinner (out of scope; would be a larger UX decision)
+### Expected result
+- Opening the lightbox: instant low-res preview (from cache), full-res crossfades in within ~100–400ms — no blank flash.
+- Arrow navigation: previous slide stays visible, low-res of next slide appears instantly, full-res crossfades in. After one nav step, neighbors are preloaded so subsequent arrows are near-instant.
+- Network tab: one extra `?quality=60` request per slide only if not already cached (usually it is).
+- Functionality: identical to today.
 
 ### QA
-1. `/app/discover` → hover any card → click "Recreate this" → spinner appears instantly, button disabled, then product-images wizard loads
-2. `/app/discover` on mobile/touch → tap bottom-right "Recreate" pill → same spinner behavior
-3. `/app/discover` → click a card → click modal "Recreate this" CTA → spinner shows in CTA until wizard mounts
-4. Public `/discover` (logged out) → modal "Recreate This" → spinner shows briefly before /auth route mounts
-5. No double-navigation possible (button disabled while loading)
-6. Spinner never gets stuck (component unmounts on route change)
+1. Open Product Visuals → Step 6 → click any image → no blank flash on open.
+2. Press arrow keys / click chevrons → smooth crossfade, no blank frame between slides.
+3. Confirm framing is pixel-identical (no zoom shift) on both the placeholder and full-res layers.
+4. Test with a non-Supabase URL (e.g., open an external image lightbox) → still works, no placeholder, no errors.
+5. Confirm Select / Download / Regenerate / Delete / Copy Prompt / Share all still work and target the correct index.

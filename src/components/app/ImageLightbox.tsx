@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, Clipb
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ImageLightboxProps {
   images: string[];
