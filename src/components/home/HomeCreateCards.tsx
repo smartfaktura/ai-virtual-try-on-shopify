@@ -68,7 +68,7 @@ export function HomeCreateCards() {
   const { ref, visible } = useScrollReveal();
 
   return (
-    <section className="py-16 lg:py-32 bg-[#FAFAF8]">
+    <section className="py-16 lg:py-32">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
@@ -86,15 +86,15 @@ export function HomeCreateCards() {
           {cards.map((card, i) => (
             <div
               key={card.title}
-              className={`group bg-white rounded-3xl shadow-sm shadow-foreground/[0.04] border border-border/60 overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-md ${
+              className={`group bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-700 hover:-translate-y-1 hover:shadow-md ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${i * 150}ms` }}
             >
               <CardVisual card={card} />
               <div className="p-6 lg:p-8">
-                <h3 className="text-foreground text-xl font-semibold mb-2">{card.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{card.text}</p>
+                <h3 className="text-[#1a1a2e] text-xl font-semibold mb-2">{card.title}</h3>
+                <p className="text-[#6b7280] text-sm leading-relaxed">{card.text}</p>
               </div>
             </div>
           ))}
