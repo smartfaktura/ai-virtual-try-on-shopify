@@ -271,20 +271,15 @@ export default function ProductImages() {
     }
   }, [searchParams]);
 
-  // Auto-add the discoverScene to selection the moment it resolves — runs at
-  // page level so selection happens regardless of Step 2 mount/analysis state.
-  const autoAddedDiscoverRef = useRef<string | null>(null);
+  // Auto-add the discoverScene to selection whenever it resolves or is missing.
+  // Idempotent via .has() check — if any other effect clears the Set later
+  // (e.g. product-change reset), the next render re-adds it automatically.
   useEffect(() => {
     if (!discoverScene?.sceneId) return;
-    if (autoAddedDiscoverRef.current === discoverScene.sceneId) return;
-    if (selectedSceneIds.has(discoverScene.sceneId)) {
-      autoAddedDiscoverRef.current = discoverScene.sceneId;
-      return;
-    }
+    if (selectedSceneIds.has(discoverScene.sceneId)) return;
     const next = new Set(selectedSceneIds);
     next.add(discoverScene.sceneId);
     setSelectedSceneIds(next);
-    autoAddedDiscoverRef.current = discoverScene.sceneId;
   }, [discoverScene?.sceneId, selectedSceneIds]);
 
 
@@ -635,7 +630,11 @@ export default function ProductImages() {
   useEffect(() => {
     const key = Array.from(selectedProductIds).sort().join(',');
     if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
-      setSelectedSceneIds(new Set());
+      // Preserve the Discover-pinned scene through product changes so the
+      // "Recreate" intent survives picking/swapping a product on Step 1.
+      const nextScenes = new Set<string>();
+      if (discoverScene?.sceneId) nextScenes.add(discoverScene.sceneId);
+      setSelectedSceneIds(nextScenes);
       setPerCategoryScenes(new Map());
       setSceneExtraRefs({});
       setDetails(INITIAL_DETAILS);
