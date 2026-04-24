@@ -11,9 +11,10 @@ interface VideoWorkflowCardProps {
   to: string;
   disabled?: boolean;
   comingSoon?: boolean;
+  beta?: boolean;
 }
 
-export function VideoWorkflowCard({ icon: Icon, title, description, bestFor, to, disabled, comingSoon }: VideoWorkflowCardProps) {
+export function VideoWorkflowCard({ icon: Icon, title, description, bestFor, to, disabled, comingSoon, beta }: VideoWorkflowCardProps) {
   const navigate = useNavigate();
 
   return (
@@ -31,6 +32,9 @@ export function VideoWorkflowCard({ icon: Icon, title, description, bestFor, to,
     >
       {comingSoon && (
         <Badge variant="outline" className="absolute top-4 right-4 text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
+      )}
+      {beta && !comingSoon && (
+        <Badge variant="secondary" className="absolute top-4 right-4 text-[10px] font-medium tracking-wide uppercase">Beta</Badge>
       )}
       <div className={cn(
         "flex h-11 w-11 items-center justify-center rounded-lg",
