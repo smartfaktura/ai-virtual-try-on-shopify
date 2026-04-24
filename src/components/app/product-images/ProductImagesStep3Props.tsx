@@ -82,7 +82,7 @@ export function ProductImagesStep3Props({ allProducts, heroProductIds, propProdu
                 return (
                   <span key={id} className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary rounded-md pl-0.5 pr-1.5 py-0.5 font-medium">
                     <div className="w-5 h-5 rounded overflow-hidden bg-white flex-shrink-0 p-0.5">
-                      <ShimmerImage src={getOptimizedUrl(p.image_url, { width: 40, quality: 40 })} alt={p.title} className="w-full h-full object-contain" />
+                      <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 40 })} alt={p.title} className="w-full h-full object-contain" />
                     </div>
                     {p.title.length > 16 ? p.title.slice(0, 14) + '…' : p.title}
                     <button onClick={() => toggleProp(id)} className="hover:text-destructive transition-colors ml-0.5">
