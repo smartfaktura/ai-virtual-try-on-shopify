@@ -1,65 +1,53 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { ArrowRight, Play } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const SUPABASE_PUBLIC =
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
+const PREVIEW = (id: string) =>
+  `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 const cards = [
   {
     title: 'Product page images',
     text: 'Clean, high-converting visuals for Shopify, Amazon, and product pages.',
     cta: 'Explore product images',
-    gradient: 'from-amber-50 to-orange-50',
-    innerType: 'product' as const,
+    image: PREVIEW('1776688965090-edaogg'), // On-Model Front (dress studio)
+    type: 'image' as const,
   },
   {
     title: 'Social & ad creatives',
     text: 'Campaign-ready visuals for Instagram, Meta ads, launches, and promotions.',
     cta: 'Explore ad creatives',
-    gradient: 'from-rose-50 to-pink-50',
-    innerType: 'social' as const,
+    image: PREVIEW('1776689318257-yahkye'), // Flash Night Fashion Campaign
+    type: 'image' as const,
   },
   {
     title: 'Product videos',
     text: 'Short motion content for reels, ads, and product storytelling.',
     cta: 'Explore videos',
-    gradient: 'from-sky-50 to-blue-50',
-    innerType: 'video' as const,
+    image: PREVIEW('1776843776495-iyiigl'), // Earthy Botanicals (rich, premium)
+    type: 'video' as const,
   },
 ];
 
-function CardVisual({ type, gradient }: { type: 'product' | 'social' | 'video'; gradient: string }) {
-  if (type === 'product') {
-    return (
-      <div className={`h-80 sm:h-96 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
-        <div className="w-44 h-56 sm:w-48 sm:h-60 rounded-2xl bg-white/80 shadow-lg shadow-black/5 border border-white flex items-center justify-center">
-          <div className="w-16 h-28 sm:w-18 sm:h-32 rounded-xl bg-gradient-to-b from-[#e8e3dd] to-[#d4cfc8] shadow-inner opacity-70" />
-        </div>
-        <div className="absolute -bottom-3 -right-3 w-28 h-36 rounded-xl bg-white/60 backdrop-blur border border-white/40 shadow-md rotate-6" />
-      </div>
-    );
-  }
-  if (type === 'social') {
-    return (
-      <div className={`h-80 sm:h-96 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
-        <div className="w-48 h-48 sm:w-52 sm:h-52 rounded-2xl bg-white/70 shadow-lg shadow-black/5 border border-white/60 flex flex-col items-center justify-center gap-3 p-4">
-          <div className="w-14 h-20 rounded-lg bg-gradient-to-b from-rose-200/60 to-rose-100/40 shadow-inner" />
-          <div className="space-y-1.5 w-full">
-            <div className="h-2 w-3/4 mx-auto rounded-full bg-[#1a1a2e]/10" />
-            <div className="h-2 w-1/2 mx-auto rounded-full bg-[#1a1a2e]/6" />
+function CardVisual({ image, type, alt }: { image: string; type: 'image' | 'video'; alt: string }) {
+  return (
+    <div className="relative h-80 sm:h-96 overflow-hidden bg-muted/30">
+      <img
+        src={getOptimizedUrl(image, { quality: 60 })}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      {type === 'video' && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-white/90 shadow-lg flex items-center justify-center backdrop-blur-sm">
+            <Play size={22} className="text-[#1a1a2e] ml-0.5" fill="currentColor" />
           </div>
         </div>
-        <div className="absolute top-8 -left-2 w-24 h-32 rounded-xl bg-white/40 backdrop-blur border border-white/30 shadow-sm -rotate-6" />
-      </div>
-    );
-  }
-  return (
-    <div className={`h-80 sm:h-96 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
-      <div className="w-56 h-36 sm:w-64 sm:h-40 rounded-2xl bg-white/70 shadow-lg shadow-black/5 border border-white/60 flex items-center justify-center relative">
-        <div className="w-14 h-14 rounded-full bg-white/90 shadow-md flex items-center justify-center">
-          <Play size={20} className="text-[#475569] ml-0.5" fill="currentColor" />
-        </div>
-        <div className="absolute bottom-3 left-4 right-4 h-1 rounded-full bg-[#1a1a2e]/10">
-          <div className="h-full w-1/3 rounded-full bg-[#475569]/40" />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -88,7 +76,7 @@ export function HomeCreateCards() {
               }`}
               style={{ transitionDelay: `${i * 150}ms` }}
             >
-              <CardVisual type={card.innerType} gradient={card.gradient} />
+              <CardVisual image={card.image} type={card.type} alt={card.title} />
               <div className="p-6 lg:p-8">
                 <h3 className="text-[#1a1a2e] text-xl font-semibold mb-2">{card.title}</h3>
                 <p className="text-[#6b7280] text-sm leading-relaxed mb-5">{card.text}</p>
