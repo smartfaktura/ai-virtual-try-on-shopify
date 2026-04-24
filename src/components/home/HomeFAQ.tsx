@@ -39,10 +39,10 @@ export function HomeFAQ() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 text-center">
           FAQ
         </p>
-        <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-3">
-          Everything you're wondering about VOVV
+        <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-center mb-4">
+          Common questions
         </h2>
-        <p className="text-[#6b7280] text-base sm:text-lg text-center mb-12 leading-relaxed">
+        <p className="text-muted-foreground text-base sm:text-lg text-center mb-12 leading-relaxed">
           Quick answers before you start creating.
         </p>
 
