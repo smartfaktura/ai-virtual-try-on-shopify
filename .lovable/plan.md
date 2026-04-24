@@ -1,55 +1,83 @@
+## Add loading state to "Recreate this" buttons on /discover
 
+### Confirmed bug
+You're right — there is **no loading affordance** anywhere on the Recreate flow. When the user clicks "Recreate this", the button just calls `navigate(...)` synchronously and the user stares at an unchanged button until the next page (`/app/generate/product-images`, `/app/freestyle`, etc.) finishes lazy-loading + fetching wizard data. That gap can be 0.5–2s and feels broken.
 
-## Modal & overlay thumbnail audit — final pass
+Buttons affected (all have zero loading state today):
+| File | Line | Button |
+|---|---|---|
+| `src/components/app/DiscoverCard.tsx` | 120 | Desktop hover "Recreate this" pill |
+| `src/components/app/DiscoverCard.tsx` | 146 | Mobile bottom-right "Recreate" pill |
+| `src/components/app/DiscoverDetailModal.tsx` | ~860 | Modal primary "Recreate this" CTA |
+| `src/components/app/PublicDiscoverDetailModal.tsx` | ~179 | Public modal "Recreate This" CTA |
 
-### Audit result
-After previous passes, only **2 genuine remaining unoptimized small thumbnails** exist in modal/overlay/dropdown contexts. Everything else is already correct.
+### Fix — local transient loading state per button
 
-| File | Line | Element | Size | Container | Current |
-|---|---|---|---|---|---|
-| `src/components/app/video/short-film/ShotCard.tsx` | 211 | reference thumb in dropdown item | 16×16 px (`h-4 w-4`) | `<SelectContent>` (Radix overlay) | `<img src={ref.url}>` raw |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | 2514 | model avatar in stacked preview | 24×24 px (`w-6 h-6`) | Refine step card (sub-modal-like) | `<img src={m.previewUrl}>` raw |
+Each button gets a tiny local `isNavigating` state. On click:
+1. Set `isNavigating = true`
+2. Show inline spinner + dim/disable the button (pointer-events off, but stays visible)
+3. Call the existing `onRecreate` / navigate handler
+4. State auto-resets when the component unmounts on route change (no timer needed — the new page replaces this one)
 
-### Intentionally NOT touched
+For the **DiscoverCard buttons**, both the desktop and mobile "Recreate" buttons share one local state since only one is visible at a time per breakpoint.
 
-**Local blob URLs** — `getOptimizedUrl` no-ops on these, but they are pre-upload previews so wrapping adds zero value:
-- `ManualProductTab.tsx` lines 688, 1059, 1072 — local `previewUrl` from FileReader
-- `StoreImportTab.tsx` line 592 — local upload preview
-- `UploadSourceCard.tsx` line 116 — `scratchUpload.previewUrl` (local blob)
+For the **modals**, state lives on the existing `Recreate this` `<Button>` — swap the `ArrowRight` icon for a `Loader2` spinner while loading and disable the button to prevent double clicks.
 
-**Already optimized** (verified): `AddModelModal`, `AddSceneModal`, `GenerateModelModal`, `TryOnConfirmModal`, `StartWorkflowModal`, `AddToDiscoverModal`, `FreestylePromptPanel`, `CatalogPoseCard`, `CatalogStepProps`, `ModelCatalogModal`, `SceneCatalogModal`, `ProductCatalogModal`, `LibraryPickerModal`, `DiscoverDetailModal` chips, `PublicDiscoverDetailModal` chips, `CreativeDropWizard`, `ShopifyImportTab`, `ReferenceUploadPanel`, all of `ProductImages.tsx`.
+### Visual pattern (consistent across all 4 buttons)
 
-**Full-resolution by design** (do not touch): `DiscoverDetailModal` hero, `LibraryDetailModal` hero, `PublicDiscoverDetailModal` hero, `VideoDetailModal` poster, image lightboxes.
+Idle:
+```
+[ Recreate this  → ]
+```
 
-### Fix (only 2 lines)
+Loading:
+```
+[ Recreate this  ⟳ ]   (spinning, disabled, slightly dimmed)
+```
 
-**1. `src/components/app/video/short-film/ShotCard.tsx`** (line 211)
-- Add `getOptimizedUrl` import
-- Wrap: `src={getOptimizedUrl(ref.url, { quality: 50 })}`
-- Add `loading="lazy"`
+Implementation snippet (illustrative, applied to each button):
+```tsx
+const [isNavigating, setIsNavigating] = useState(false);
 
-**2. `src/components/app/product-images/ProductImagesStep3Refine.tsx`** (line 2514)
-- Confirm `getOptimizedUrl` import already present (file uses it elsewhere)
-- Wrap: `src={getOptimizedUrl(m.previewUrl, { quality: 50 })}`
-- Add `loading="lazy"`
+<button
+  disabled={isNavigating}
+  onClick={(e) => {
+    e.stopPropagation();
+    setIsNavigating(true);
+    onRecreate(e);
+  }}
+  className={cn(
+    "...existing classes...",
+    isNavigating && "opacity-80 cursor-wait"
+  )}
+>
+  Recreate this
+  {isNavigating
+    ? <Loader2 className="w-3 h-3 animate-spin" />
+    : <ArrowRight className="w-3 h-3" />}
+</button>
+```
 
-### Hard safety guarantee — no zoom regression
-Per `mem://style/image-optimization-no-crop`:
-- ✅ **Quality only** — `{ quality: 50 }` (these are 16–24 px so quality 50 is plenty)
-- ❌ **Never** `width`, `height`, or `resize`
-- ✅ All CSS (`object-cover`, sizing, rounding) untouched
-- ✅ All wrappers, selection, and dropdown logic untouched
-- ✅ `getOptimizedUrl` safely no-ops on non-Supabase URLs
+### Why this approach (not a global loader)
+- Zero risk of getting stuck on (state lives only on the unmounting card/modal — route change destroys it automatically)
+- Doesn't require touching navigation, query cache, or wizard pages
+- Doesn't alter framing/sizing/aesthetics — same pill, only icon swap + faint dim
+- Works identically on desktop hover pill, mobile bottom-right pill, and modal CTA
 
-### Expected result
-- Two more tiny thumbnails stop loading full-resolution originals
-- Visual framing identical (no zoom/crop risk)
-- Network: requests gain `?quality=50`, no `width=`/`height=`/`resize=`
-- Dropdown/select behavior, model selection, and short-film flow unaffected
+### Files to edit (4 buttons across 3 files — modal already shares one component)
+- `src/components/app/DiscoverCard.tsx` — add `isNavigating` state + apply to both Recreate buttons (desktop + mobile)
+- `src/components/app/DiscoverDetailModal.tsx` — add state + apply to "Recreate this" CTA at line ~860
+- `src/components/app/PublicDiscoverDetailModal.tsx` — add state + apply to "Recreate This" CTA at line ~179
+
+### Out of scope (intentionally not changed)
+- Navigation logic in `handleUseItem` (Discover.tsx, PublicFreestyle.tsx, DashboardDiscoverSection.tsx) — unchanged
+- Wizard page mount/data fetching — unchanged
+- No global route-transition spinner (out of scope; would be a larger UX decision)
 
 ### QA
-1. Open Short Film → a shot card → "Scene Reference" dropdown → tiny thumbs render identically, network shows `?quality=50`
-2. Open Product Visuals → Step 3 (Refine) → "Choose model" stacked avatars render identically, network shows `?quality=50`
-3. Confirm no zoom/crop shift anywhere
-4. Confirm full lightboxes / large previews still load originals
-
+1. `/app/discover` → hover any card → click "Recreate this" → spinner appears instantly, button disabled, then product-images wizard loads
+2. `/app/discover` on mobile/touch → tap bottom-right "Recreate" pill → same spinner behavior
+3. `/app/discover` → click a card → click modal "Recreate this" CTA → spinner shows in CTA until wizard mounts
+4. Public `/discover` (logged out) → modal "Recreate This" → spinner shows briefly before /auth route mounts
+5. No double-navigation possible (button disabled while loading)
+6. Spinner never gets stuck (component unmounts on route change)
