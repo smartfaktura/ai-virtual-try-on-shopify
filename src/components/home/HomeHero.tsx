@@ -13,8 +13,9 @@ const ORIGINAL_DRESS = originalDress;
 const PREVIEW = (id: string) =>
   `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
-const heroImages = [
+const heroImages: HeroCard[] = [
   { label: 'Original',         src: ORIGINAL_DRESS,                       isOriginal: true },
+  { label: 'Video',            src: productVideoLoop,                     isVideo: true },
   { label: 'Editorial',        src: PREVIEW('1776689318257-yahkye') }, // Flash Night Fashion Campaign
   { label: 'Studio',           src: PREVIEW('1776688965090-edaogg') }, // On-Model Front
   { label: 'Lifestyle',        src: PREVIEW('1776840733386-n4bc6x') }, // Greenhouse Elegance
@@ -31,21 +32,33 @@ const heroImages = [
 const row1 = heroImages.slice(0, 6);
 const row2 = heroImages.slice(6).concat(heroImages.slice(0, 2));
 
-type HeroCard = { label: string; src: string; isOriginal?: boolean };
+type HeroCard = { label: string; src: string; isOriginal?: boolean; isVideo?: boolean };
 
 /* ── Marquee card ── */
-function MarqueeCard({ label, src, isOriginal }: HeroCard) {
+function MarqueeCard({ label, src, isOriginal, isVideo }: HeroCard) {
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
-      <img
-        src={isOriginal ? src : getOptimizedUrl(src, { quality: 60 })}
-        alt={label}
-        loading="lazy"
-        className="w-full h-full object-cover"
-      />
-      {isOriginal && (
+      {isVideo ? (
+        <video
+          src={src}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <img
+          src={isOriginal ? src : getOptimizedUrl(src, { quality: 60 })}
+          alt={label}
+          loading="lazy"
+          className="w-full h-full object-cover"
+        />
+      )}
+      {(isOriginal || isVideo) && (
         <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
-          Original
+          {isVideo ? 'Video' : 'Original'}
         </span>
       )}
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
