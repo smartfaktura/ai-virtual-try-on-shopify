@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Check, User, ImageIcon, TreePine, Building2, Sofa, Store } from 'lucide-react';
 
 interface CatalogPoseCardProps {
