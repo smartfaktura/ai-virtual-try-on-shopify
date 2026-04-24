@@ -1,5 +1,11 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { Check } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const SUPABASE_PUBLIC =
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
+const PREVIEW = (id: string) =>
+  `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 const settings = [
   'Tone · Clean & editorial',
@@ -13,6 +19,14 @@ const points = [
   'Consistent backgrounds and tone',
   'Repeatable output across products',
   'Easier approvals for teams and brands',
+];
+
+// 4 fragrance variants — same brand-direction feel, different scene moments
+const consistentSet = [
+  { src: PREVIEW('1776847150435-bnn7qq'), label: 'Natural Light' },
+  { src: PREVIEW('1776847155437-m5m0nq'), label: 'Warm Studio' },
+  { src: PREVIEW('1776843776495-iyiigl'), label: 'Botanical Plinth' },
+  { src: PREVIEW('1776843792736-sgvazd'), label: 'Neutral Tone' },
 ];
 
 export function HomeOnBrand() {
@@ -36,7 +50,7 @@ export function HomeOnBrand() {
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          {/* Left — Brand settings panel mock */}
+          {/* Left — Brand settings panel */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#f0efed] p-6 sm:p-8">
             <p className="text-[13px] font-medium text-[#475569] uppercase tracking-wide mb-5">
               Visual direction
@@ -65,18 +79,18 @@ export function HomeOnBrand() {
 
           {/* Right — Consistent output grid */}
           <div className="grid grid-cols-2 gap-3">
-            {[
-              'from-amber-50 to-orange-50',
-              'from-amber-50 to-yellow-50',
-              'from-amber-50/80 to-orange-50/80',
-              'from-yellow-50 to-amber-50',
-            ].map((c, i) => (
+            {consistentSet.map((item, i) => (
               <div
                 key={i}
-                className={`aspect-square rounded-2xl bg-gradient-to-br ${c} shadow-sm border border-white/60 flex items-center justify-center relative overflow-hidden`}
+                className="aspect-square rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
               >
-                <div className="w-16 h-24 sm:w-18 sm:h-28 rounded-xl bg-gradient-to-b from-[#d4cfc8]/50 to-[#c4bfb7]/40 shadow-inner" />
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-100/10 to-transparent pointer-events-none" />
+                <img
+                  src={getOptimizedUrl(item.src, { quality: 60 })}
+                  alt={item.label}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
               </div>
             ))}
           </div>

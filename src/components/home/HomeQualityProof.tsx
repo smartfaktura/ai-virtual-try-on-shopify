@@ -1,41 +1,42 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { ZoomIn } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const SUPABASE_PUBLIC =
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
+const PREVIEW = (id: string) =>
+  `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 const proofs = [
   {
     label: 'Original',
     sublabel: 'Uploaded product',
-    color: 'from-[#e8e3dd] to-[#d8d3cb]',
+    src: PREVIEW('1776523219756-c5vnc7'), // Ghost Mannequin Swimwear
     span: 'col-span-1 row-span-2',
-    shape: 'w-20 h-32 rounded-2xl',
   },
   {
     label: 'Generated',
     sublabel: 'Product page ready',
-    color: 'from-amber-100 to-orange-50',
+    src: PREVIEW('1776524131703-gvh4bb'), // Sunbathing Editorial
     span: 'col-span-1 row-span-1',
-    shape: 'w-16 h-22 rounded-xl',
   },
   {
     label: 'Detail crop',
     sublabel: 'Texture & quality',
-    color: 'from-stone-200/60 to-neutral-100/40',
+    src: PREVIEW('1776574265735-cvu5sc'), // Textured Bikini Back
     span: 'col-span-1 row-span-1',
-    shape: 'w-24 h-16 rounded-lg',
   },
   {
     label: 'Ad use',
     sublabel: 'Campaign placement',
-    color: 'from-rose-100 to-pink-50',
+    src: PREVIEW('1776524132929-q8upyp'), // Yacht Bow Editorial
     span: 'col-span-1 row-span-1',
-    shape: 'w-16 h-16 rounded-xl',
   },
   {
     label: 'Product page use',
     sublabel: 'Storefront ready',
-    color: 'from-sky-100 to-blue-50',
+    src: PREVIEW('1776574228066-oyklfz'), // Golden Horizon
     span: 'col-span-1 row-span-1',
-    shape: 'w-16 h-22 rounded-xl',
   },
 ];
 
@@ -63,20 +64,26 @@ export function HomeQualityProof() {
           {proofs.map((p, i) => (
             <div
               key={p.label}
-              className={`${p.span} rounded-2xl bg-gradient-to-br ${p.color} shadow-sm border border-white/50 relative overflow-hidden group min-h-[260px] flex items-center justify-center`}
+              className={`${p.span} rounded-2xl overflow-hidden shadow-sm border border-white/50 relative group min-h-[260px] bg-muted/30`}
               style={{ transitionDelay: `${i * 100}ms` }}
             >
-              <div className={`${p.shape} bg-gradient-to-b from-white/40 to-white/20 shadow-inner`} />
+              <img
+                src={getOptimizedUrl(p.src, { quality: 60 })}
+                alt={p.label}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
 
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
-                <ZoomIn size={22} className="text-[#475569] opacity-0 group-hover:opacity-60 transition-opacity" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center">
+                <ZoomIn size={26} className="text-white opacity-0 group-hover:opacity-90 transition-opacity drop-shadow" />
               </div>
 
               <div className="absolute bottom-4 left-4 z-10">
-                <span className="block text-xs font-medium text-[#475569] bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <span className="block text-xs font-medium text-[#475569] bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md">
                   {p.label}
                 </span>
-                <span className="block text-[11px] text-[#9ca3af] mt-1 ml-0.5">{p.sublabel}</span>
+                <span className="block text-[11px] text-white mt-1 ml-0.5 drop-shadow">{p.sublabel}</span>
               </div>
             </div>
           ))}
