@@ -1,75 +1,99 @@
 
+## Fix missing recommended hoodies / jeans / activewear / lingerie in `/app/discover`
 
-## Real diagnosis: Discover IS already merging recommended scenes — but they may be filtered out by `useHiddenScenes`
+### Real root cause
 
-### What I checked
+The previous merge fix was necessary, but it is not the main reason you still see only 4 hoodies.
 
-1. **DB**: `recommended_scenes` has 12 perfectly tagged rows for `hoodies`, `jeans`, `lingerie`, `activewear` each. Their joined `product_image_scenes.category_collection` matches (`hoodies`, `jeans`, …). ✅
-2. **Hook**: `useRecommendedDiscoverItems` produces poses with `category: 'fashion'` and `subcategory: 'hoodies' | 'jeans' | 'lingerie' | 'activewear'`. ✅
-3. **Discover page** (`src/pages/Discover.tsx` line 310): merges recommended poses into `allItems` and `itemMatchesDiscoverFilter` correctly accepts them under the right sub-pill. ✅
-4. **Filter logic** (`src/lib/discoverTaxonomy.ts`): given `category='fashion'`, `subcategory='hoodies'` and active sub-pill `hoodies`, the function returns `true`. ✅
+`useRecommendedDiscoverItems` has two code paths:
 
-So the merge already works. The 12 hoodies/jeans/lingerie/activewear scenes from the admin Recommended Scenes panel **already appear** under the matching sub-pills of `/app/discover`.
+- `/discover` uses the public RPC `get_public_recommended_scenes()` — this returns the joined recommended rows correctly
+- `/app/discover` uses the authenticated path:
+  ```ts
+  supabase
+    .from('product_image_scenes')
+    .select('scene_id, title, description, preview_image_url, category_collection')
+    .eq('is_active', true)
+  ```
+  That query is silently capped by the backend’s default row limit of 1000
 
-### The actual two bugs
+Your active `product_image_scenes` table has **1613 active rows**, so the auth path only sees the first 1000 scenes. Many recommended scene IDs are outside that first batch, so they never get mapped into `recommendedPoses`.
 
-**Bug A — `filterVisible` strips recommended scenes when admin has hidden ANY scene with that title.**  
-Line 310 wraps `mockTryOnPoses` in `filterVisible(...)` but the same pipeline also includes `recommendedPoses`. `useHiddenScenes` matches by `pose.name` — if any recommended scene shares a name with a previously hidden one (e.g. "Track Field" already exists as both a preset and a recommended scene per my DB check), it gets dropped. This is the most likely cause for "missing" items.
+That exactly matches the symptom:
+- hoodies recommended total in DB: **19**
+- jeans: **12**
+- activewear: **18**
+- lingerie: **12**
+- but if you only look at the first 1000 active scenes, only a small subset is reachable
 
-**Bug B — Title-dedupe drops recommended scenes when a preset shares the title.**  
-Line 311: `filter((s) => !presetTitles.has(s.name))`. My DB check found 7 recommended scenes whose titles already exist as presets (e.g. *Urban Concrete*, *Track Field*, *Hoop Dream Sky*, *Court Lines Golden*). Those 7 recommended tiles never reach the grid — only the older preset version shows, and it lives under whatever subcategory the preset has (often NULL → only visible under "All").
+So `/app/discover` is incomplete because the hook is truncating the source scene table before it joins to `recommended_scenes`.
 
-### Fix plan (small, surgical)
+### What to change
 
-**1. `src/pages/Discover.tsx` line 310** — apply `filterVisible` only to `mockTryOnPoses`, not to `recommendedPoses`:
+#### 1. Fix `useRecommendedDiscoverItems` authenticated mode
+Update `src/hooks/useRecommendedDiscoverItems.ts` so the auth path no longer does a single uncapped `product_image_scenes` read.
 
-```ts
-const sceneItems: DiscoverItem[] = [
-  ...filterVisible(mockTryOnPoses),
-  ...customScenePoses,
-  ...recommendedPoses,        // not run through filterVisible
-]
-```
+Best fix:
+- use the same server-side RPC pattern for both auth and public
+- or page through `product_image_scenes` until all active rows are collected before building `sceneById`
 
-Recommended scenes are admin-curated and already gated by the admin panel; double-filtering through hidden-scenes is what removes them.
+Preferred implementation:
+- add one shared helper/RPC-backed fetch for recommended scenes
+- keep the existing `disambiguateTitles()` and `buildPose()` logic unchanged
 
-**2. `src/pages/Discover.tsx` line 311** — replace title-only dedupe with a key that distinguishes recommended vs preset, and prefer the recommended (better tagged) version when titles collide:
+Result:
+- `/app/discover` and `/discover` will resolve the same full recommended scene set
+- no missing hoodies/jeans/lingerie/activewear due to row truncation
 
-```ts
-const recTitles = new Set(recommendedPoses.map(r => r.name));
-const presetItems: DiscoverItem[] = presets
-  // drop a preset if a same-titled recommended scene exists with a real subcategory
-  .filter(p => !recTitles.has(p.title) || p.subcategory)
-  .map(p => ({ type: 'preset', data: p }));
-const sceneItems: DiscoverItem[] = [
-  ...filterVisible(mockTryOnPoses),
-  ...customScenePoses,
-  ...recommendedPoses,
-].map(s => ({ type: 'scene', data: s }));
-```
+#### 2. Preserve the earlier Discover merge fix
+Keep the already approved logic in:
+- `src/pages/Discover.tsx`
+- `src/pages/PublicDiscover.tsx`
 
-Net effect: when both versions exist, the better-tagged one wins; nothing is silently lost.
+That logic is still needed because:
+- hidden-scene filtering should not remove recommended scenes
+- same-title presets should not shadow better-tagged recommended scenes
 
-**3. Same fix in `src/pages/PublicDiscover.tsx`** (it has the same merge pattern).
+The row-limit fix and the merge fix solve different layers of the problem.
 
-**4. Verify in admin Recommended Scenes** that the user can see exactly what the public sees: add a "View on Explore" link next to each scene that opens `/app/discover/scene-{scene_id}` so the user can confirm visibility instantly.
+#### 3. Optional hardening: make the hook deterministic
+While touching the hook, also make the authenticated and public branches return the same shape from the same source of truth so this cannot drift again.
 
-### Out of scope
-
-- No DB writes, no migration, no new tables.
-- No taxonomy or RLS changes.
-- No backfill of `discover_presets` (the recommended_scenes table is already correctly tagged — that's the source of truth for sub-pills).
-- No keyword auto-classifier (the previously declined plan).
+Good pattern:
+- one backend query returns only:
+  - `scene_id`
+  - `title`
+  - `description`
+  - `preview_image_url`
+  - `category_collection`
+  - `created_at`
+- frontend only maps rows into `RecommendedDiscoverPose`
 
 ### Files to edit
 
 ```text
-src/pages/Discover.tsx           — exclude recommendedPoses from filterVisible; smarter title dedupe
-src/pages/PublicDiscover.tsx     — same merge fix
-src/pages/admin/RecommendedScenesAdmin.tsx (or equivalent) — add "View on Explore" link per row
+src/hooks/useRecommendedDiscoverItems.ts   — remove 1000-row auth truncation
+src/pages/Discover.tsx                     — keep current recommended-scene merge behavior
+src/pages/PublicDiscover.tsx               — keep current recommended-scene merge behavior
 ```
 
 ### Expected result
 
-After this change, every hoodies / jeans / lingerie / activewear / dresses / jackets / streetwear / swimwear scene visible in `/app/admin/recommended-scenes` will also appear under its matching sub-pill in `/app/discover` and `/discover` — including the 7 currently shadowed by same-titled presets.
+After this fix:
 
+- `/app/discover` Fashion → Hoodies will show the full recommended hoodie set, not just 4
+- same for Jeans, Activewear, and Lingerie
+- `/app/discover` and `/discover` will stay in sync
+- recommended scenes added in admin will reliably appear in the correct sub-pill even when total active scene count grows past 1000
+
+### Out of scope
+
+- no taxonomy changes
+- no RLS changes
+- no preset backfill
+- no loading/performance optimization yet
+- no UI redesign
+
+### Technical note
+
+The bug is not that the subcategory tags are missing. The tags are already correct in the recommended scene source. The loss happens because the authenticated hook builds its lookup map from an incomplete `product_image_scenes` result set.
