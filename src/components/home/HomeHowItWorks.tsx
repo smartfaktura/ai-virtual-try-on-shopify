@@ -124,7 +124,7 @@ export function HomeHowItWorks() {
             How it works
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            From one product photo to a full shoot
+            From one photo to a full shoot
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
             Three steps. No studio, no models, no setup.
