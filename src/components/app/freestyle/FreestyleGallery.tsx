@@ -462,7 +462,7 @@ const ImageCard = forwardRef<HTMLDivElement, ImageCardProps>(function ImageCard(
           'w-auto h-auto max-w-full max-h-[50vh] sm:max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
-          loading="eager"
+          loading={idx < 8 ? 'eager' : 'lazy'}
           decoding="async"
           onLoad={() => setLoaded(true)}
         />
@@ -498,7 +498,7 @@ const ImageCard = forwardRef<HTMLDivElement, ImageCardProps>(function ImageCard(
           'w-full h-full object-cover transition-opacity duration-700 ease-out',
           loaded ? 'opacity-100' : 'opacity-0',
         )}
-        loading="eager"
+        loading={idx < 8 ? 'eager' : 'lazy'}
         decoding="async"
         onLoad={() => setLoaded(true)}
       />
