@@ -28,12 +28,12 @@ export function HomeFinalCTA() {
             Start free
             <ArrowRight size={16} />
           </Link>
-          <a
-            href="#examples"
+          <Link
+            to="/discover"
             className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"
           >
             See real examples
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -1,69 +1,26 @@
-## Goal
+## Changes to `/home`
 
-Make `/product-visual-library` a clean, fast browse page: left-aligned slim hero, no search, no CTAs, sub-category pills inside each family, lazy/progressive rendering instead of dumping every collection at once. Also remove the "Explore Visuals" item from the landing nav.
+Small polish pass — typography sizing, a CTA link fix, and two hero tweaks.
 
----
+### 1. Hero — video card cleanup (`HomeHero.tsx`)
+- Remove the `VIDEO` badge: only show the "Original" pill when `isOriginal`, never for video
+- Keep the video tile in **row 1 only**: `row2 = heroImages.slice(6).concat(heroImages.slice(0, 2)).filter(c => !c.isVideo)` so the video never appears in the second marquee
 
-## 1. Hero — slim, left-aligned, no CTAs (`ProductVisualLibrary.tsx`)
+### 2. TransformStrip — caption sizing (`HomeTransformStrip.tsx`)
+- Line 255: bump `"35+ categories · 1000+ scenes · one upload"` from `text-xs` → `text-sm`, slightly stronger color (`text-foreground/70`)
 
-Replace the centered hero block with a tight left-aligned header that matches the sidebar's left edge:
+### 3. FAQ readability (`HomeFAQ.tsx`)
+- Question (`AccordionTrigger`): `text-[15px]` → `text-base sm:text-[17px]`, `font-medium` → `font-semibold`, `py-5` → `py-6`
+- Answer (`AccordionContent`): `text-sm` → `text-[15px] sm:text-base`, soften color from `#6b7280` → `text-foreground/70`, `pb-5` → `pb-6`
 
-- Container: `mx-auto max-w-7xl px-4 sm:px-6` (same as catalog) — title aligns with sidebar
-- Padding: `py-10 sm:py-14` (tighter than current `py-16 sm:py-20`)
-- Title: `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight` left-aligned
-- Subtitle: `mt-3 max-w-2xl text-base text-foreground/65` (single tight gap, no `mt-5/8`)
-- Remove both buttons (Create Free Visuals, Browse Categories) and the `handlePrimaryCta` / `scrollToCatalog` helpers
-- Drop the unused `useAuth`, `useNavigate`, `Sparkles`, `ArrowRight`, `Button`, `CREATE_PATH` imports
+### 4. Final CTA — fix secondary link (`HomeFinalCTA.tsx`)
+- Replace the `<a href="#examples">See real examples</a>` with a `<Link to="/discover">` so it routes to the public Explore page instead of an in-page anchor that no longer matches user intent
+- Keep button styling identical
 
-## 2. Catalog — remove search bar
+### Files
+- `src/components/home/HomeHero.tsx`
+- `src/components/home/HomeTransformStrip.tsx`
+- `src/components/home/HomeFAQ.tsx`
+- `src/components/home/HomeFinalCTA.tsx`
 
-- Delete the entire search `<Input>` block + the `<Search>` icon
-- Delete `search` state and `filteredFamilies` memo (use `families` directly)
-- Delete `isSearching` branch — there's only one render path now (active family)
-- Remove `Search`, `Input` imports; remove the empty-search "no results" copy
-
-## 3. Sub-category pills inside each family (`FamilySection`)
-
-Today every collection's sub-groups stack vertically — that's why the page renders 425 cards at once for Fashion & Apparel.
-
-New behaviour:
-
-- Above the grid, render a horizontal scrollable pill row of every collection in the active family (e.g. for Fashion: `Clothing & Apparel · Dresses · Hoodies · Jeans · Jackets · Activewear · Swimwear · Lingerie · Streetwear`)
-- Add an "All" pill at the start (default selected)
-- Pills use the same style language as the existing mobile family pills (`rounded-full px-4 py-2`, active = `bg-foreground text-background`)
-- Selecting a pill filters the rendered collections to just that one
-- Sub-category eyebrow rows (`Collection · Sub-category`) stay as-is inside the filtered view
-- Remove the redundant "Fashion & Apparel · 425 ideas" header (sidebar already shows this) — keep only the pills
-
-State: `activeCollectionSlug: string | null` (null = "All"), reset to `null` whenever `activeFamilySlug` changes.
-
-## 4. Progressive rendering — lazy load scenes as you scroll
-
-The active family currently renders every scene up-front (Fashion = 425 images requested at once). Add a simple paginated reveal:
-
-- Inside `FamilySection`, keep a `visibleCount` state (default 30)
-- Flatten the (filtered) collections → sub-groups → scenes into an ordered list, slice to `visibleCount`, then re-group for rendering
-- An invisible sentinel `<div ref>` after the grid uses `IntersectionObserver` to bump `visibleCount` by 30 when it enters the viewport
-- Reset `visibleCount` to 30 whenever `family.slug` or `activeCollectionSlug` changes
-- Show a small `<SceneCardSkeleton>` row at the bottom while more remain
-
-This means initial paint shows ~30 cards, more load only as you scroll, and switching pills resets the window — no more giant up-front render.
-
-## 5. Remove "Explore Visuals" from landing nav (`LandingNav.tsx`)
-
-Delete the `{ label: 'Explore Visuals', href: '/product-visual-library', isRoute: true }` entry from the `links` array. The page stays reachable via direct URL and footer.
-
----
-
-## Files
-
-- `src/pages/ProductVisualLibrary.tsx` — hero rewrite, search removal, FamilySection rewrite (pills + lazy)
-- `src/components/landing/LandingNav.tsx` — drop one nav entry
-
-No changes to data hook, sidebar nav, scene card, or modal.
-
----
-
-## Out of scope
-
-Changing how the data is fetched (already paginated client-side from a single query), modal contents, sidebar styling, footer links.
+No other sections need changes — heading scale, eyebrows, section padding, and primary CTA shape are already unified across `/home` from the previous pass.

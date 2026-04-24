@@ -32,7 +32,11 @@ const heroImages: HeroCard[] = [
 ];
 
 const row1 = heroImages.slice(0, 6);
-const row2 = heroImages.slice(6).concat(heroImages.slice(0, 2));
+// Row 2 starts after row 1 and excludes the video so it never repeats.
+const row2 = heroImages
+  .slice(6)
+  .concat(heroImages.slice(0, 2))
+  .filter((c) => !c.isVideo);
 
 /* ── Marquee card ── */
 function MarqueeCard({ label, src, isOriginal, isVideo }: HeroCard) {
@@ -56,9 +60,9 @@ function MarqueeCard({ label, src, isOriginal, isVideo }: HeroCard) {
           className="w-full h-full object-cover"
         />
       )}
-      {(isOriginal || isVideo) && (
+      {isOriginal && (
         <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
-          {isVideo ? 'Video' : 'Original'}
+          Original
         </span>
       )}
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">

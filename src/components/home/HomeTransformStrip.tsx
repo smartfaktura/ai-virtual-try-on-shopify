@@ -252,7 +252,7 @@ export function HomeTransformStrip() {
 
         {/* CTA */}
         <div className="flex flex-col items-center gap-4 mt-10 lg:mt-14">
-          <p className="text-xs text-muted-foreground tracking-wide">
+          <p className="text-sm text-foreground/70 tracking-wide">
             35+ categories · 1000+ scenes · one upload
           </p>
           <Button asChild size="lg" className="rounded-full px-8 text-base">
