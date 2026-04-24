@@ -1,96 +1,69 @@
 ## Goal
 
-Make `/home` feel like one consistent page: same heading scale, same eyebrow style, same section rhythm, same CTA treatment across every section. Plus three small content edits (image swaps, hero Video card).
+Make `/product-visual-library` a clean, fast browse page: left-aligned slim hero, no search, no CTAs, sub-category pills inside each family, lazy/progressive rendering instead of dumping every collection at once. Also remove the "Explore Visuals" item from the landing nav.
 
 ---
 
-## 1. Typography & spacing audit — what's inconsistent today
+## 1. Hero — slim, left-aligned, no CTAs (`ProductVisualLibrary.tsx`)
 
-Current mismatches across sections:
+Replace the centered hero block with a tight left-aligned header that matches the sidebar's left edge:
 
-| Section | Heading size | Eyebrow | Subtitle color | Section padding |
-|---|---|---|---|---|
-| Hero | `text-[2.75rem] sm:text-5xl lg:text-[3.5rem]` | none | `text-muted-foreground` | `pt-28 pb-6 lg:pt-36 lg:pb-10` |
-| TransformStrip | `text-3xl sm:text-4xl lg:text-5xl` | ✅ uppercase eyebrow | `text-muted-foreground` | `py-16 lg:py-32` |
-| CreateCards | `text-3xl sm:text-4xl` (no `lg:`) | ❌ missing | `text-[#6b7280]` (hardcoded) | `py-16 lg:py-32` |
-| HowItWorks | `text-3xl sm:text-4xl lg:text-5xl` | ✅ eyebrow | `text-muted-foreground` | `py-16 lg:py-32` |
-| WhySwitch | `text-3xl sm:text-4xl` (no `lg:`) | ❌ missing | `text-[#9ca3af]` (hardcoded) | `py-16 lg:py-32` |
-| OnBrand | `text-3xl sm:text-4xl` (no `lg:`) | ❌ missing | `text-[#6b7280]` (hardcoded) | `py-16 lg:py-32` |
-| FAQ | `text-3xl sm:text-4xl` (no `lg:`) | ✅ eyebrow ("FAQ") | `text-[#6b7280]` | `py-16 lg:py-32` |
-| FinalCTA | `text-3xl sm:text-4xl lg:text-5xl` | ❌ missing | `text-[#9ca3af]` | `py-16 lg:py-32` |
+- Container: `mx-auto max-w-7xl px-4 sm:px-6` (same as catalog) — title aligns with sidebar
+- Padding: `py-10 sm:py-14` (tighter than current `py-16 sm:py-20`)
+- Title: `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight` left-aligned
+- Subtitle: `mt-3 max-w-2xl text-base text-foreground/65` (single tight gap, no `mt-5/8`)
+- Remove both buttons (Create Free Visuals, Browse Categories) and the `handlePrimaryCta` / `scrollToCatalog` helpers
+- Drop the unused `useAuth`, `useNavigate`, `Sparkles`, `ArrowRight`, `Button`, `CREATE_PATH` imports
 
-CTA buttons: hero, transform-strip, create-cards, how-it-works, final-CTA all use slightly different paddings/weights (`px-8` vs `px-10`, with/without `h-[3.25rem]`, with/without `font-semibold`).
+## 2. Catalog — remove search bar
 
----
+- Delete the entire search `<Input>` block + the `<Search>` icon
+- Delete `search` state and `filteredFamilies` memo (use `families` directly)
+- Delete `isSearching` branch — there's only one render path now (active family)
+- Remove `Search`, `Input` imports; remove the empty-search "no results" copy
 
-## 2. Unification plan
+## 3. Sub-category pills inside each family (`FamilySection`)
 
-**Heading scale (every H2):** `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight`
-**Eyebrow (every section, above H2):** `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4`
-**Subtitle:** `text-base sm:text-lg leading-relaxed` + per-section color token (white sections use `text-muted-foreground`, dark sections keep `text-[#9ca3af]`)
-**Header block bottom margin:** `mb-12 lg:mb-16` everywhere
-**Section padding:** keep `py-16 lg:py-32` everywhere (already consistent)
-**Primary CTA:** `h-[3.25rem] px-8 rounded-full text-base font-semibold shadow-lg shadow-primary/25` everywhere
+Today every collection's sub-groups stack vertically — that's why the page renders 425 cards at once for Fashion & Apparel.
 
-### Per-section copy/eyebrow additions
+New behaviour:
 
-- **CreateCards** — eyebrow `What you can create` · keep H2 "What do you want to create first?"
-- **WhySwitch** — eyebrow `Why VOVV` · keep H2
-- **OnBrand** — eyebrow `Brand consistency` · keep H2
-- **FinalCTA** — eyebrow `Get started` · keep H2
+- Above the grid, render a horizontal scrollable pill row of every collection in the active family (e.g. for Fashion: `Clothing & Apparel · Dresses · Hoodies · Jeans · Jackets · Activewear · Swimwear · Lingerie · Streetwear`)
+- Add an "All" pill at the start (default selected)
+- Pills use the same style language as the existing mobile family pills (`rounded-full px-4 py-2`, active = `bg-foreground text-background`)
+- Selecting a pill filters the rendered collections to just that one
+- Sub-category eyebrow rows (`Collection · Sub-category`) stay as-is inside the filtered view
+- Remove the redundant "Fashion & Apparel · 425 ideas" header (sidebar already shows this) — keep only the pills
 
-### Title polish (light pass for cohesion)
+State: `activeCollectionSlug: string | null` (null = "All"), reset to `null` whenever `activeFamilySlug` changes.
 
-- HowItWorks H2: "From one photo to a full shoot" (drop "product")
-- WhySwitch H2: "Replace slow content production"
-- FAQ H2: "Common questions"
-- FinalCTA subtitle: "Upload one photo. See what VOVV creates for your brand."
+## 4. Progressive rendering — lazy load scenes as you scroll
 
----
+The active family currently renders every scene up-front (Fashion = 425 images requested at once). Add a simple paginated reveal:
 
-## 3. Three fragrance image swaps (HomeTransformStrip.tsx)
+- Inside `FamilySection`, keep a `visibleCount` state (default 30)
+- Flatten the (filtered) collections → sub-groups → scenes into an ordered list, slice to `visibleCount`, then re-group for rendering
+- An invisible sentinel `<div ref>` after the grid uses `IntersectionObserver` to bump `visibleCount` by 30 when it enters the viewport
+- Reset `visibleCount` to 30 whenever `family.slug` or `activeCollectionSlug` changes
+- Show a small `<SceneCardSkeleton>` row at the bottom while more remain
 
-Map old IDs → new IDs in `FRAGRANCE_CARDS`:
+This means initial paint shows ~30 cards, more load only as you scroll, and switching pills resets the window — no more giant up-front render.
 
-| Card label | Old ID | New ID |
-|---|---|---|
-| Dark Elegance | `1775132826887-gjbnyl` | `1776018020221-aehe8n` |
-| Volcanic Sunset | `1776018021309-gfgfci` | `repeated-shadow-grid-fragrance-1776013389735` |
-| Natural Light Backdrop | `1776018032748-kg4bn6` | `1776018015756-3xfquh` |
+## 5. Remove "Explore Visuals" from landing nav (`LandingNav.tsx`)
 
-Note: the new `1776018015756-3xfquh` ID is already used by the "Near Face Hold" card, and the desktop-only "Red Gradient Embrace" / "Earthy Glow Stage" tiles still reference the old IDs. To keep the grid duplicate-free, the desktop-only duplicates will be replaced with two unused fragrance IDs already present in the file (`1776018027926-ua03bd`, `near-face-hold-fragrance-1776013185169` rebalanced) so no tile repeats.
+Delete the `{ label: 'Explore Visuals', href: '/product-visual-library', isRoute: true }` entry from the `links` array. The page stays reachable via direct URL and footer.
 
 ---
 
-## 4. Add a Video card to hero row 1 (HomeHero.tsx)
+## Files
 
-Add a new card after "Original" using the existing `productVideoLoop` MP4 (`@/assets/home-create-product-videos.mp4`):
+- `src/pages/ProductVisualLibrary.tsx` — hero rewrite, search removal, FamilySection rewrite (pills + lazy)
+- `src/components/landing/LandingNav.tsx` — drop one nav entry
 
-- Card type extended: `{ label, src, isOriginal?, isVideo? }`
-- `MarqueeCard` renders `<video autoPlay loop muted playsInline>` when `isVideo`
-- Label: `Video` with a small subtle "VIDEO" pill (matches "Original" pill style)
-- Inserted at row1 position 1 so it appears in the first row
-- `row2` slice indices adjusted so no card is lost
-
-Result: hero row 1 becomes `Original · Video · Editorial · Studio · Lifestyle · Lookbook`.
-
----
-
-## Files to edit
-
-- `src/components/home/HomeHero.tsx` — add Video card + video support in `MarqueeCard`
-- `src/components/home/HomeTransformStrip.tsx` — swap 3 fragrance IDs + dedupe
-- `src/components/home/HomeCreateCards.tsx` — add eyebrow, unify H2 scale, unify CTA
-- `src/components/home/HomeWhySwitch.tsx` — add eyebrow, unify H2 scale, polish copy
-- `src/components/home/HomeOnBrand.tsx` — add eyebrow, unify H2 scale
-- `src/components/home/HomeHowItWorks.tsx` — polish H2, unify CTA padding
-- `src/components/home/HomeFAQ.tsx` — unify H2 scale, shorten title
-- `src/components/home/HomeFinalCTA.tsx` — add eyebrow, unify CTA, polish subtitle
-
-No new files, no DB or routing changes.
+No changes to data hook, sidebar nav, scene card, or modal.
 
 ---
 
 ## Out of scope
 
-Visual content of cards (photography itself), hero copy, navigation, footer.
+Changing how the data is fetched (already paginated client-side from a single query), modal contents, sidebar styling, footer links.
