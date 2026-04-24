@@ -5,18 +5,19 @@ const SUPABASE_PUBLIC =
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public';
 
 const settings = [
-  'Scene · Mid-century lounge',
-  'Lighting · Soft warm daylight',
-  'Palette · Olive, cream, walnut',
-  'Composition · Editorial wide',
-  'Mood · Quiet luxury',
+  'Scene · Amber Glow Studio',
+  'Lighting · Warm directional spotlight',
+  'Palette · Amber, charcoal, cream',
+  'Composition · Centered hero',
+  'Mood · Editorial luxury',
 ];
 
+// Same scene ("Amber Glow Studio") rendered with 4 different products
 const consistentSet = [
-  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/46ac001d-4973-4d6d-a2a9-6df9f42ec685.png`, label: 'Minimalist Elegance' },
-  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/45ce1281-da04-429e-b661-34877e664516.jpg`, label: 'Sculptural Serenity' },
-  { src: `${SUPABASE_PUBLIC}/tryon-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5f0fd146-fc8d-43a4-a30e-1abbe67f4512.png`, label: 'Olive Set' },
-  { src: `${SUPABASE_PUBLIC}/tryon-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/cd8b0f5c-4d27-4291-886b-5347b5a3417f.png`, label: 'Effortless Elegance' },
+  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/2026-04-02_8de3c91b-4553-4517-971f-a06e4ace4fb4.jpg`, label: 'Obsidian Veil Fragrance' },
+  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/91418be3-6c16-4573-b97b-8c757b37a792.png`, label: 'Radiant Glow Perfume' },
+  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/702a108f-1262-428c-a921-c7525aaf19bd.png`, label: 'Bleu de Chanel' },
+  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/2026-04-02_aac4c8f5-2c3f-4065-964a-383453499f36.jpg`, label: 'Suede Shoulder Bag' },
 ];
 
 export function HomeOnBrand() {

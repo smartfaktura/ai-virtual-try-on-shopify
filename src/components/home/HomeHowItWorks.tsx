@@ -139,10 +139,10 @@ export function HomeHowItWorks() {
             How it works
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            Create visuals in minutes
+            From one product photo to a full shoot
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Upload one product image, choose from 1000+ ready-made shots, and generate brand-ready visuals fast.
+            Three steps. No studio, no models, no setup.
           </p>
         </div>
 
@@ -177,7 +177,7 @@ export function HomeHowItWorks() {
             <Link to="/auth">Start Generating Free</Link>
           </Button>
           <p className="text-xs text-muted-foreground">
-            No studio. No models. No complex setup.
+            Free to start · No card required
           </p>
         </div>
       </div>
