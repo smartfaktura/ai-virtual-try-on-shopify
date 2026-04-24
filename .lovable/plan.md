@@ -1,57 +1,58 @@
 
 
-## Safety guarantee: no zoom regression in modal optimization pass
+## Modal thumbnail audit — remaining unoptimized small images
 
-### Your concern
-Last time the zoom bug appeared because I added `width: 40` to `getOptimizedUrl(...)`. You want a hard guarantee that won't happen again in this modal audit pass.
+### Audit result
+After the previous pass, almost all modals are correctly using `getOptimizedUrl(..., { quality: N })`. Two genuine remaining cases were found, both small grid thumbnails in the Catalog Studio wizard:
 
-### Why this pass is safe
-The zoom bug has one and only one cause in this codebase:
+| File | Line | Element | Grid context | Current |
+|---|---|---|---|---|
+| `src/components/app/catalog/CatalogPoseCard.tsx` | 58 | pose/background grid card | 4–8 col grid in Catalog steps | `<img src={previewUrl}>` (raw) |
+| `src/components/app/catalog/CatalogStepProps.tsx` | 135 | product chip in props selector | grid in Catalog props modal | `<ShimmerImage src={p.image_url}>` (raw) |
 
-> Passing `width`, `height`, or `resize` to `getOptimizedUrl` triggers the Supabase render endpoint to crop/zoom the image.
+Everything else (`SubmitToDiscoverModal`, `LibraryPickerModal`, `DiscoverDetailModal` chips, `CatalogStepReviewV2`, `CreativeDropWizard`, `PublicDiscoverDetailModal` related items, etc.) is already optimized.
 
-This is documented in core memory (`image-optimization-no-crop`).
+### Intentionally NOT touched (full-resolution by design)
+These are large hero/lightbox images where the user explicitly opens a full preview — must stay original:
+- `DiscoverDetailModal.tsx` line 205 — hero
+- `LibraryDetailModal.tsx` line 207 — hero
+- `PublicDiscoverDetailModal.tsx` line 78 — hero
+- `VideoDetailModal.tsx` line 195 — large video poster
+- `UpgradeValueDrawer.tsx` line 94 — `AvatarImage` (already small)
+- `DemoProductPicker.tsx` line 47 — local bundled asset, `getOptimizedUrl` would be a no-op
 
-### Hard rule for this pass
-Every change will use **quality only**:
+### Fix (only 2 lines)
 
-```tsx
-getOptimizedUrl(url, { quality: 60 })   // ✅ safe
-getOptimizedUrl(url, { quality: 70 })   // ✅ safe
-```
+**1. `src/components/app/catalog/CatalogPoseCard.tsx`** (line ~58)
+- Add `getOptimizedUrl` import
+- Wrap: `src={getOptimizedUrl(previewUrl, { quality: 60 })}`
+- `loading="lazy"` already present ✅
 
-Forbidden in this pass:
-```tsx
-getOptimizedUrl(url, { width: ... })    // ❌ never
-getOptimizedUrl(url, { height: ... })   // ❌ never
-getOptimizedUrl(url, { resize: ... })   // ❌ never
-```
+**2. `src/components/app/catalog/CatalogStepProps.tsx`** (line ~135)
+- Add `getOptimizedUrl` import
+- Wrap: `src={getOptimizedUrl(p.image_url, { quality: 60 })}`
 
-### Why quality-only cannot zoom
-Looking at `src/lib/imageOptimization.ts`: the function only appends `?quality=N` to the URL when no width/height/resize is passed. The Supabase render endpoint with quality-only re-encodes the same pixels at lower JPEG quality — **same dimensions, same framing, same crop**. It is mathematically impossible to zoom.
+### Hard safety guarantee — same as previous pass
+Per `mem://style/image-optimization-no-crop`:
+- ✅ **Quality only** — `{ quality: 60 }`
+- ❌ **Never** `width`, `height`, or `resize` (these trigger Supabase server-side crop/zoom)
+- ✅ All CSS (`object-cover`, `object-contain`, sizing) untouched
+- ✅ All wrappers, aspect ratios, selection logic untouched
+- ✅ `getOptimizedUrl` safely no-ops on non-Supabase URLs (data URIs, blob URLs, local assets)
 
-### Self-check before each edit
-For every one of the 8 thumbnails, I will:
-1. Confirm the new call contains only `{ quality: N }` — no other keys
-2. Leave all CSS (`object-cover`, `object-contain`, sizing) exactly as-is
-3. Not touch any wrapper div, aspect ratio, or container
+### Lazy-loading
+- `CatalogPoseCard` already has `loading="lazy"` ✅
+- `ShimmerImage` in `CatalogStepProps` — `ShimmerImage` already lazy-loads internally; no change needed
 
-### Files (unchanged from prior plan)
-- `AddModelModal.tsx` — line 151
-- `AddSceneModal.tsx` — line 127
-- `GenerateModelModal.tsx` — line 138
-- `TryOnConfirmModal.tsx` — line 71
-- `StartWorkflowModal.tsx` — lines 285, 340
-- `AddToDiscoverModal.tsx` — line 540
-- `freestyle/FreestylePromptPanel.tsx` — line 274
+### Expected result
+- Two more modal/wizard grids stop loading full-resolution originals
+- Visual framing identical (no zoom/crop risk)
+- Network: requests gain `?quality=60`, no `width=`/`height=`/`resize=`
+- Selection, generation, and lightbox flows unaffected
 
-Plus add `loading="lazy"` where missing on these same elements.
-
-### QA after the change
-Open each modal and visually compare with current state:
-- Framing identical (no zoom, no crop shift)
-- Visual quality unchanged at small sizes
-- Network tab: requests contain `?quality=...` and **never** `width=`, `height=`, or `resize=`
-
-If any thumbnail looks even slightly different in framing — revert that single line. Quality-only is reversible and isolated per call.
+### QA
+1. Open Catalog Studio → Backgrounds step → grid thumbnails look identical, network shows `?quality=60`
+2. Open Catalog Studio → Props step → product chips look identical, network shows `?quality=60`
+3. Confirm no zoom/crop shift on any thumbnail
+4. Confirm full lightbox previews (Discover, Library, Public Discover) still load originals
 
