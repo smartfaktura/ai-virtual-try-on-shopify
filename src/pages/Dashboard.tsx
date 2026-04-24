@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+import { CommunityBanner } from '@/components/app/CommunityBanner';
 import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 import { LazyVideo } from '@/components/ui/LazyVideo';
@@ -272,6 +273,8 @@ export default function Dashboard() {
         <div style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
           <RecentCreationsGallery />
         </div>
+
+        <CommunityBanner />
 
         <FeedbackBanner />
 
