@@ -135,7 +135,7 @@ export function GenerateModelModal({ open, onOpenChange, userPlan }: GenerateMod
             >
               {previewUrl ? (
                 <div className="relative">
-                  <img src={previewUrl} alt="Reference" className="w-24 h-24 mx-auto rounded-lg object-cover" />
+                  <img src={getOptimizedUrl(previewUrl, { quality: 65 })} alt="Reference" loading="lazy" className="w-24 h-24 mx-auto rounded-lg object-cover" />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

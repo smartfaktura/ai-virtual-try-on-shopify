@@ -537,8 +537,9 @@ export function AddToDiscoverModal({
             {/* LEFT — Preview + Title + Tags */}
             <div className="space-y-4">
               <img
-                src={imageUrl}
+                src={getOptimizedUrl(imageUrl, { quality: 70 })}
                 alt="Preview"
+                loading="lazy"
                 className="w-full max-h-72 object-cover rounded-xl border border-border/30"
               />
 

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { poseCategoryLabels } from '@/data/mockData';
 import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 type SceneType = 'on-model' | 'product';
 
@@ -124,7 +125,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
         <div className="p-5 space-y-4">
           {/* Preview + fields */}
           <div className="flex gap-4">
-            <img src={imageUrl} alt="Scene preview" className="w-28 h-28 rounded-xl object-cover border border-border/30" />
+            <img src={getOptimizedUrl(imageUrl, { quality: 70 })} alt="Scene preview" loading="lazy" className="w-28 h-28 rounded-xl object-cover border border-border/30" />
             <div className="flex-1 space-y-3">
               {isAnalyzing ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">

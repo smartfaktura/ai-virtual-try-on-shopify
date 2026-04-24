@@ -68,7 +68,7 @@ export function TryOnConfirmModal({
               <p className="text-xs font-semibold">Source</p>
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  <img src={displaySourceImage} alt={product.title} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(displaySourceImage, { quality: 60 })} alt={product.title} loading="lazy" className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold truncate">{product.title}</p>
