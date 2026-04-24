@@ -7,6 +7,7 @@ import { toast } from '@/lib/brandedToast';
 import { useAddCustomModel } from '@/hooks/useCustomModels';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const GENDERS = ['female', 'male'];
 const BODY_TYPES = ['slim', 'athletic', 'average', 'plus-size'];
@@ -148,7 +149,7 @@ export function AddModelModal({ open, onClose, imageUrl: externalImageUrl }: Add
         <div className="p-5 space-y-4">
           <div className="flex gap-4">
             {imageUrl ? (
-              <img src={imageUrl} alt="Model preview" className="w-28 h-36 rounded-xl object-cover border border-border/30" />
+              <img src={getOptimizedUrl(imageUrl, { quality: 70 })} alt="Model preview" loading="lazy" className="w-28 h-36 rounded-xl object-cover border border-border/30" />
             ) : (
               <label className="w-28 h-36 rounded-xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/30 transition-colors text-muted-foreground text-xs gap-1">
                 {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>

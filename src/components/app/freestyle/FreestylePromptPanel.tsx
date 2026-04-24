@@ -8,6 +8,7 @@ import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSe
 
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import { ImageRoleSelector, type ImageRole, type EditIntent } from './ImageRoleSelector';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PromptBuilderQuiz } from './PromptBuilderQuiz';
 import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
@@ -271,7 +272,7 @@ export function FreestylePromptPanel({
   }, [onFileDrop]);
   const uploadButton = sourceImagePreview ? (
     <div className="relative w-9 h-9 flex-shrink-0">
-      <img src={sourceImagePreview} alt="Attached" className="w-9 h-9 rounded-lg object-cover ring-1 ring-border" />
+      <img src={getOptimizedUrl(sourceImagePreview, { quality: 60 })} alt="Attached" loading="lazy" className="w-9 h-9 rounded-lg object-cover ring-1 ring-border" />
       <button
         onClick={onRemoveImage}
         className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"

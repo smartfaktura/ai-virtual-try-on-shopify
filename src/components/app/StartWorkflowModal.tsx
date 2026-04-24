@@ -282,8 +282,9 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
                   </div>
                 ) : (
                   <img
-                    src={selectedWorkflow.sampleImage}
+                    src={getOptimizedUrl(selectedWorkflow.sampleImage, { quality: 60 })}
                     alt={selectedWorkflow.sampleName}
+                    loading="lazy"
                     className="w-10 h-10 rounded-md object-cover bg-muted"
                   />
                 )}
@@ -337,8 +338,9 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
               className="w-full flex items-center gap-4 p-4 rounded-xl border border-dashed border-border bg-card hover:bg-muted hover:border-primary/30 transition-all duration-200 text-left group"
             >
               <img
-                src={selectedWorkflow.sampleImage}
+                src={getOptimizedUrl(selectedWorkflow.sampleImage, { quality: 60 })}
                 alt={selectedWorkflow.sampleName}
+                loading="lazy"
                 className="w-10 h-10 rounded-lg object-cover bg-muted shrink-0"
               />
               <div className="flex-1">
