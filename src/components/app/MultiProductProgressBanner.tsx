@@ -150,7 +150,7 @@ export function MultiProductProgressBanner({
                 }`}
               >
                 {thumb ? (
-                  <img src={thumb} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                  <img src={getOptimizedUrl(thumb, { quality: 40 })} alt="" loading="lazy" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-5 h-5 rounded-full bg-muted flex-shrink-0" />
                 )}
