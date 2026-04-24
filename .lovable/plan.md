@@ -1,32 +1,38 @@
-## Add Discord community link across the app
+## Add Community section to Dashboard
 
-Invite URL: `https://discord.gg/ZgnSJqUyV` (note: this looks short — please verify it's a working invite before going live)
+A new banner inviting users to join Discord and follow socials, placed directly above the existing "Help us improve VOVV.AI" feedback banner. Visual style matches the FeedbackBanner so the two read as a paired set.
 
-### 1. Public marketing — `LandingFooter.tsx`
-Add a Discord icon as a 4th social icon (after TikTok), same styling as the existing Instagram/Facebook/TikTok icons. Use a custom inline SVG (lucide-react has no Discord icon).
+### New file: `src/components/app/CommunityBanner.tsx`
 
-### 2. Public marketing — `HomeFooter.tsx`
-Add a "Join our Discord" link to the **Support** column links list:
-```ts
-{ label: 'Discord community', to: 'https://discord.gg/ZgnSJqUyV' }
-```
-Adjust the link renderer to use `<a target="_blank">` when `to` starts with `http`, otherwise keep `<Link>`.
+A self-contained component, no props, no state, no data fetching — so there's nothing to crash. Layout mirrors `UnifiedFeedbackBanner`'s collapsed state exactly:
 
-### 3. In-app — `AppHelp.tsx` (`/app/help`)
-Two additions:
-- **Quiet helper row**: insert a new row between "Browse FAQs" and "Tutorials & guides" with a Discord SVG icon, title "Join our Discord", subtitle "Chat with the team & other creators", external link with `ArrowUpRight`.
-- **Footer social row**: add `{ label: 'Discord', href: 'https://discord.gg/ZgnSJqUyV' }` to the `socialLinks` array.
+- Outer card: `rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6` (identical to FeedbackBanner)
+- Left: heading **"Join the community"** + subtitle **"Get early features, tips, and connect with other creators."**
+- Right: a wrapping row of 4 pill buttons:
+  - **Discord** — primary-filled pill (bg-primary, text-primary-foreground), with `ArrowUpRight` to signal external
+  - **Instagram** — outlined ghost pill
+  - **TikTok** — outlined ghost pill (custom inline SVG, since lucide has no TikTok icon)
+  - **Facebook** — outlined ghost pill
+- All links: `target="_blank" rel="noopener noreferrer"` with `aria-label`
+- Pills wrap to next line on narrow screens; on mobile the whole layout stacks (heading on top, pills below)
 
-### 4. In-app — `AppShell.tsx` user menu
-Add a new menu item "Join Discord" between **Bug Bounty** and **Earn Credits**, opening the invite in a new tab (use an `<a target="_blank" rel="noopener noreferrer">` styled like the existing `<button>` rows). Use a Discord SVG icon (~16px) inline.
+### URLs used
+- Discord: `https://discord.gg/ZgnSJqUyV`
+- Instagram: `https://instagram.com/vovv.ai`
+- TikTok: `https://tiktok.com/@vovv.ai`
+- Facebook: `https://facebook.com/vovvaistudio`
 
-### Technical notes
-- Discord SVG path will be reused via a tiny inline component or duplicated (matching how the TikTok SVG is currently inlined in `LandingFooter.tsx`).
-- All external links: `target="_blank" rel="noopener noreferrer"` and `aria-label="Discord"` where icon-only.
-- No new dependencies, no schema changes, no env changes.
+### Edit: `src/pages/Dashboard.tsx`
+- Add import: `import { CommunityBanner } from '@/components/app/CommunityBanner';`
+- Render `<CommunityBanner />` immediately above `<FeedbackBanner />` (line 276)
 
-### Files touched
-- `src/components/landing/LandingFooter.tsx`
-- `src/components/home/HomeFooter.tsx`
-- `src/pages/AppHelp.tsx`
-- `src/components/app/AppShell.tsx`
+### Why this won't crash
+- No external data, no auth checks, no async, no context dependencies
+- Only uses already-installed deps: `lucide-react` (Instagram, Facebook, ArrowUpRight) + `@/lib/utils` cn
+- TikTok and Discord icons inlined as SVG (same approach already used in `LandingFooter.tsx` and the user menu)
+- Uses only existing semantic Tailwind tokens (primary, foreground, muted-foreground, border, background) — fully theme-safe
+
+### Style compliance
+- All colors via design tokens (no hardcoded hex / rgb)
+- Spacing, border radius, font sizes, and primary accent identical to surrounding dashboard cards
+- Pill button shape (`rounded-full`, h-9, gap-1.5) matches the FeedbackBanner CTA and the dashboard quick-action chips
