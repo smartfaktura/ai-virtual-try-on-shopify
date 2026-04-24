@@ -1,56 +1,75 @@
 
 
-## Fix: Pre-selected Explore scene gets unchecked after picking a product
+## Real diagnosis: Discover IS already merging recommended scenes — but they may be filtered out by `useHiddenScenes`
 
-### Root cause
+### What I checked
 
-`src/pages/ProductImages.tsx` has two effects fighting each other:
+1. **DB**: `recommended_scenes` has 12 perfectly tagged rows for `hoodies`, `jeans`, `lingerie`, `activewear` each. Their joined `product_image_scenes.category_collection` matches (`hoodies`, `jeans`, …). ✅
+2. **Hook**: `useRecommendedDiscoverItems` produces poses with `category: 'fashion'` and `subcategory: 'hoodies' | 'jeans' | 'lingerie' | 'activewear'`. ✅
+3. **Discover page** (`src/pages/Discover.tsx` line 310): merges recommended poses into `allItems` and `itemMatchesDiscoverFilter` correctly accepts them under the right sub-pill. ✅
+4. **Filter logic** (`src/lib/discoverTaxonomy.ts`): given `category='fashion'`, `subcategory='hoodies'` and active sub-pill `hoodies`, the function returns `true`. ✅
 
-1. **Line 277-288** — auto-adds the Discover scene to `selectedSceneIds` the moment it resolves, and records it in `autoAddedDiscoverRef` so it doesn't re-run.
-2. **Line 634-645** — whenever `selectedProductIds` changes, **wipes** `selectedSceneIds` to an empty Set.
+So the merge already works. The 12 hoodies/jeans/lingerie/activewear scenes from the admin Recommended Scenes panel **already appear** under the matching sub-pills of `/app/discover`.
 
-Recreate flow timing:
-- Land on `/app/generate/product-images?sceneRef=…` → scene resolves → auto-added ✅
-- User picks a product on Step 1 → `selectedProductIds` changes → reset effect clears the Set ❌
-- `autoAddedDiscoverRef` is already set, so the auto-add effect never re-runs → Step 2 shows the pinned card **unchecked**.
+### The actual two bugs
 
-### Fix
+**Bug A — `filterVisible` strips recommended scenes when admin has hidden ANY scene with that title.**  
+Line 310 wraps `mockTryOnPoses` in `filterVisible(...)` but the same pipeline also includes `recommendedPoses`. `useHiddenScenes` matches by `pose.name` — if any recommended scene shares a name with a previously hidden one (e.g. "Track Field" already exists as both a preset and a recommended scene per my DB check), it gets dropped. This is the most likely cause for "missing" items.
 
-**File: `src/pages/ProductImages.tsx`**
+**Bug B — Title-dedupe drops recommended scenes when a preset shares the title.**  
+Line 311: `filter((s) => !presetTitles.has(s.name))`. My DB check found 7 recommended scenes whose titles already exist as presets (e.g. *Urban Concrete*, *Track Field*, *Hoop Dream Sky*, *Court Lines Golden*). Those 7 recommended tiles never reach the grid — only the older preset version shows, and it lives under whatever subcategory the preset has (often NULL → only visible under "All").
 
-**Change 1 — preserve the Discover scene through the product-change reset (line 634-645).**  
-When wiping `selectedSceneIds` because products changed, if a `discoverScene` exists, seed the new Set with it instead of starting empty:
+### Fix plan (small, surgical)
+
+**1. `src/pages/Discover.tsx` line 310** — apply `filterVisible` only to `mockTryOnPoses`, not to `recommendedPoses`:
 
 ```ts
-const next = new Set<string>();
-if (discoverScene?.sceneId) next.add(discoverScene.sceneId);
-setSelectedSceneIds(next);
+const sceneItems: DiscoverItem[] = [
+  ...filterVisible(mockTryOnPoses),
+  ...customScenePoses,
+  ...recommendedPoses,        // not run through filterVisible
+]
 ```
 
-Same idea for `perCategoryScenes` — if the discover scene belongs to a known category, seed that category's set with it; otherwise just leave the Map empty (the pinned card renders independently of category buckets).
+Recommended scenes are admin-curated and already gated by the admin panel; double-filtering through hidden-scenes is what removes them.
 
-**Change 2 — make the auto-add effect re-runnable (line 274-288).**  
-Drop the `autoAddedDiscoverRef` early-return guard. Replace it with an idempotent check: if the scene id is already in `selectedSceneIds`, do nothing; otherwise add it. This way if some other code path clears the Set later, the next render re-adds the scene. Idempotency comes from the `has` check, so no infinite loop.
+**2. `src/pages/Discover.tsx` line 311** — replace title-only dedupe with a key that distinguishes recommended vs preset, and prefer the recommended (better tagged) version when titles collide:
 
-**Change 3 — also seed on the analyze-products path.**  
-The "Trigger product analysis when moving from step 1 to step 2" effect (line 668+) is where category buckets get rebuilt. Audit it to ensure that when it writes default per-category selections, it does NOT remove `discoverScene.sceneId` from `selectedSceneIds`. If it currently overwrites the Set, merge instead.
+```ts
+const recTitles = new Set(recommendedPoses.map(r => r.name));
+const presetItems: DiscoverItem[] = presets
+  // drop a preset if a same-titled recommended scene exists with a real subcategory
+  .filter(p => !recTitles.has(p.title) || p.subcategory)
+  .map(p => ({ type: 'preset', data: p }));
+const sceneItems: DiscoverItem[] = [
+  ...filterVisible(mockTryOnPoses),
+  ...customScenePoses,
+  ...recommendedPoses,
+].map(s => ({ type: 'scene', data: s }));
+```
 
-### Result
+Net effect: when both versions exist, the better-tagged one wins; nothing is silently lost.
 
-- Click Recreate on Explore tile → land on Step 1 with scene already queued internally.
-- Pick a product → product-change reset preserves the Discover scene (no longer wiped).
-- Continue → Step 2 shows the pinned "Pre-selected from Explore" card with the **checkbox checked by default**, exactly as the user intends ("recreate this").
-- User can still uncheck it or add more shots.
+**3. Same fix in `src/pages/PublicDiscover.tsx`** (it has the same merge pattern).
+
+**4. Verify in admin Recommended Scenes** that the user can see exactly what the public sees: add a "View on Explore" link next to each scene that opens `/app/discover/scene-{scene_id}` so the user can confirm visibility instantly.
+
+### Out of scope
+
+- No DB writes, no migration, no new tables.
+- No taxonomy or RLS changes.
+- No backfill of `discover_presets` (the recommended_scenes table is already correctly tagged — that's the source of truth for sub-pills).
+- No keyword auto-classifier (the previously declined plan).
 
 ### Files to edit
 
 ```text
-src/pages/ProductImages.tsx
+src/pages/Discover.tsx           — exclude recommendedPoses from filterVisible; smarter title dedupe
+src/pages/PublicDiscover.tsx     — same merge fix
+src/pages/admin/RecommendedScenesAdmin.tsx (or equivalent) — add "View on Explore" link per row
 ```
 
-### Out of scope
+### Expected result
 
-- No DB/RPC/RLS changes
-- No changes to `DiscoverPreselectedCard`, the resolver, or routing
-- No Step 2 grid rendering changes — only the seeded selection state
+After this change, every hoodies / jeans / lingerie / activewear / dresses / jackets / streetwear / swimwear scene visible in `/app/admin/recommended-scenes` will also appear under its matching sub-pill in `/app/discover` and `/discover` — including the 7 currently shadowed by same-titled presets.
 
