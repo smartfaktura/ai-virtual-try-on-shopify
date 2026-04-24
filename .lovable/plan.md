@@ -1,66 +1,51 @@
 
-## Fix the zoomed mini product images in the Product Visuals flow
 
-### Confirmed issue
-The problem is most likely the tiny category/product chips in the Product Visuals flow, especially the mini thumbnails next to category labels like **Beverages** and **Shoes**.
+## Fix: mini chip thumbnails have gaps — fill the placeholder properly
+
+### What I see
+After the last fix, the **Beverages** and **Shoes** category chips now show the full product (no zoom), but the product sits inside a larger square with empty white gaps around it. The thumbnail isn't filling its container.
 
 ### Root cause
-Those mini chips are still using `getOptimizedUrl(..., { width: 40, quality: 40 })`.
+In the last pass I changed the chip image to `object-contain bg-white` to kill the zoom. `object-contain` preserves aspect ratio by **shrinking the image to fit**, which leaves transparent/white gaps when the source image is taller or wider than the square slot — exactly what's visible now.
 
-That is the exact risky pattern that previously caused the zoom/crop bug:
-- `width` triggers the image render endpoint in a way that can tighten framing
-- the chip is then displayed inside a tiny square with `object-cover`
-- visually this makes the product look zoomed in
+What I want instead: the chip wrapper should be **tight to the product** with minimal padding, so it reads as a clean product mark, not a small image floating in a big white box.
 
-### Primary file to fix
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-  - Category tab mini product thumbnails beside labels like Beverages / Shoes
-  - Current risky code:
-    - `getOptimizedUrl(p.image_url, { width: 40, quality: 40 })`
+### Fix in `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-### Related identical-risk spots to fix in the same pass
-To avoid the same bug reappearing one step later, normalize the same pattern anywhere else in the Product Images flow:
-- `src/components/app/product-images/ProductImagesStep3Details.tsx`
-- `src/components/app/product-images/ProductImagesStep3Props.tsx`
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+For the category chip thumbnails (the ~28–32px squares next to "Beverages" / "Shoes"):
 
-These files also contain tiny chips using `width: 40`.
+1. **Keep** `object-contain` + `bg-white` (these are what prevent the zoom — non-negotiable).
+2. **Tighten the wrapper**:
+   - Reduce wrapper size slightly so the product visually fills more of the chip.
+   - Add small inner padding (`p-0.5`) so the product breathes but doesn't float.
+   - Round corners match (`rounded-md`).
+3. **Center the image** with `flex items-center justify-center` on the wrapper so the contained image is perfectly centered, no top/bottom drift.
 
-### Implementation
-1. Replace every tiny-chip optimization call in those files from:
-   - `getOptimizedUrl(url, { width: 40, quality: 40 })`
-   to:
-   - `getOptimizedUrl(url, { quality: 40 })`
+Resulting pattern (chip only):
+```tsx
+<div className="w-7 h-7 rounded-md bg-white border border-border/40 flex items-center justify-center p-0.5 overflow-hidden">
+  <img
+    src={getOptimizedUrl(p.image_url, { quality: 40 })}
+    className="max-w-full max-h-full object-contain"
+    loading="lazy"
+    alt={p.title}
+  />
+</div>
+```
 
-2. Keep all larger scene cards and already-safe quality-only previews unchanged.
-
-3. Re-check the chip CSS after removing `width`:
-   - if the mini product still feels too tight because of `object-cover`, switch only those tiny product chips to `object-contain` inside the same rounded wrapper
-   - keep scene previews as-is unless they show the same issue
-
-### Safety rules
-- Never use `width`, `height`, or `resize` in this fix
-- Only use `quality`
-- Do not touch selection logic, category grouping, or generation flow
-- Do not change full preview, lightbox, download, or result image behavior
+### Safety rules (unchanged)
+- Quality-only optimization. **Never** `width`, `height`, or `resize`.
+- Only the **category chip** in Step 2 is touched. Scene cards, product grids, Step 3 chips — untouched.
+- No selection logic, category grouping, or generation flow changes.
 
 ### Expected result
-- Mini thumbnails next to **Beverages** and **Shoes** keep the original framing
-- No zoomed-in or over-cropped product chips
-- Same lightweight loading, but without the crop regression
+- Beverages / Shoes chips show the product **centered and filling the chip** with only a tiny breathing margin.
+- No zoom/crop.
+- No empty gaps.
 
-### QA checklist
-On `/app/generate/product-images`:
-1. Open Step 2 and inspect category chips for:
-   - Beverages
-   - Shoes
-   - Sneakers / Boots if present
-2. Confirm the whole product composition looks normal again
-3. Open later Product Images steps and verify the same for any small product chips
-4. In Network tab, confirm these thumbnail requests use:
-   - `/render/image/...?...quality=40`
-   - and do **not** contain `width=` or `resize=`
+### QA
+On `/app/generate/product-images` Step 2:
+1. Beverages chip → can fills the square cleanly.
+2. Shoes chip → shoe fills the square cleanly.
+3. Network tab → request URL contains `?quality=40`, no `width=`, no `resize=`.
 
-### Summary of planned code changes
-- Targeted revert of the risky thumbnail transform pattern in the Product Images mini-chip UI
-- Normalize all identical 40px chip cases in the same workflow so the bug is fixed consistently, not just in one place
