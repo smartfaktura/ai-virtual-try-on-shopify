@@ -23,6 +23,7 @@ const columns = [
       { label: 'Help center', to: '/help' },
       { label: 'Contact', to: '/contact' },
       { label: 'Status', to: '/status' },
+      { label: 'Discord community', to: 'https://discord.gg/ZgnSJqUyV' },
     ],
   },
   {
@@ -54,16 +55,30 @@ export function HomeFooter() {
             <div key={col.title}>
               <p className="text-[#1a1a2e] text-[13px] font-semibold mb-4">{col.title}</p>
               <ul className="space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      to={link.to}
-                      className="text-[#6b7280] text-[13px] hover:text-[#1a1a2e] transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                {col.links.map((link) => {
+                  const isExternal = link.to.startsWith('http');
+                  return (
+                    <li key={link.label}>
+                      {isExternal ? (
+                        <a
+                          href={link.to}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#6b7280] text-[13px] hover:text-[#1a1a2e] transition-colors"
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          to={link.to}
+                          className="text-[#6b7280] text-[13px] hover:text-[#1a1a2e] transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
