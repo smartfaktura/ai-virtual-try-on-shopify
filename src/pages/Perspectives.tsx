@@ -957,7 +957,7 @@ export default function Perspectives() {
                     <div className="mt-2 animate-in slide-in-from-top-2 duration-200">
                       {referenceImages[i] ? (
                         <div className="flex items-center gap-4 p-4 rounded-xl border border-primary/30 bg-primary/5">
-                          <img src={referenceImages[i]} alt="Reference" className="w-20 h-20 rounded-xl object-cover border border-border" />
+                          <img src={getOptimizedUrl(referenceImages[i], { quality: 70 })} alt="Reference" loading="lazy" className="w-20 h-20 rounded-xl object-cover border border-border" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground">Reference uploaded ✓</p>
                             <p className="text-xs text-muted-foreground mt-0.5">This will improve angle accuracy</p>

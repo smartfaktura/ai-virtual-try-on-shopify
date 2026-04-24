@@ -2333,7 +2333,7 @@ export default function Generate() {
                   {recreateSource.modelName && (
                     <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
                       {recreateSource.modelImageUrl && (
-                        <img src={recreateSource.modelImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                        <img src={getOptimizedUrl(recreateSource.modelImageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover" />
                       )}
                       {recreateSource.modelName}
                     </Badge>
@@ -2341,7 +2341,7 @@ export default function Generate() {
                   {recreateSource.sceneName && (
                     <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
                       {recreateSource.sceneImageUrl && (
-                        <img src={recreateSource.sceneImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                        <img src={getOptimizedUrl(recreateSource.sceneImageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover" />
                       )}
                       {recreateSource.sceneName}
                     </Badge>
@@ -4004,7 +4004,7 @@ export default function Generate() {
                           return (
                             <div key={img.id} onClick={() => toggleSourceImage(img.id)}
                               className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${isSelected ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-border hover:ring-primary'}`}>
-                              <img src={img.url} alt="" className="w-16 h-16 object-cover" />
+                              <img src={getOptimizedUrl(img.url, { quality: 60 })} alt="" loading="lazy" className="w-16 h-16 object-cover" />
                               {isSelected && (
                                 <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                                   <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
@@ -4368,10 +4368,10 @@ export default function Generate() {
                 return (
                   <div className="relative w-20 h-20">
                     <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle">
-                      <img src={modelImg} alt="" className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(modelImg, { quality: 60 })} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full overflow-hidden border-2 border-background ring-2 ring-primary/20 animate-pulse-subtle">
-                      <img src={productImg} alt="" className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(productImg, { quality: 60 })} alt="" className="w-full h-full object-cover" />
                     </div>
                   </div>
                 );
@@ -4391,7 +4391,7 @@ export default function Generate() {
               if (productImg) {
                 return (
                   <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle">
-                    <img src={productImg} alt="" className="w-full h-full object-cover" />
+                    <img src={getOptimizedUrl(productImg, { quality: 60 })} alt="" className="w-full h-full object-cover" />
                   </div>
                 );
               }

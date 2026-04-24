@@ -962,7 +962,7 @@ export default function Freestyle() {
                     {recreateSource.modelName && (
                       <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
                         {recreateSource.modelImageUrl && (
-                          <img src={recreateSource.modelImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                          <img src={getOptimizedUrl(recreateSource.modelImageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover" />
                         )}
                         {recreateSource.modelName}
                       </Badge>
@@ -970,7 +970,7 @@ export default function Freestyle() {
                     {recreateSource.sceneName && (
                       <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
                         {recreateSource.sceneImageUrl && (
-                          <img src={recreateSource.sceneImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                          <img src={getOptimizedUrl(recreateSource.sceneImageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover" />
                         )}
                         {recreateSource.sceneName}
                       </Badge>

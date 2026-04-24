@@ -8,6 +8,7 @@ import { Lock, X, Plus } from 'lucide-react';
 import type { OutfitPiece } from '@/components/app/product-images/types';
 import { OUTFIT_COLORS, type GarmentTypeOption } from '@/lib/outfitVocabulary';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface OutfitSlotCardProps {
   label: string;                 // "TOP", "BOTTOM", "SHOES"…
@@ -38,7 +39,7 @@ export function OutfitSlotCard({
           <Lock className="h-3.5 w-3.5 text-primary shrink-0" />
           <span className="text-[10px] font-semibold tracking-wider uppercase text-primary">{label}</span>
           {productThumb && (
-            <img src={productThumb} alt={productName || ''} className="h-9 w-9 rounded-md object-cover border" />
+            <img src={getOptimizedUrl(productThumb, { quality: 60 })} alt={productName || ''} className="h-9 w-9 rounded-md object-cover border" />
           )}
           <span className="text-xs text-muted-foreground truncate">
             Filled by your {productName || 'product'}

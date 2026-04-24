@@ -1502,7 +1502,7 @@ export default function ProductImages() {
                           return (
                             <div key={p.id} className="relative w-10 h-10 rounded-lg bg-muted/30 border border-border/40 overflow-hidden flex-shrink-0">
                               {p.image_url && (
-                                <img src={p.image_url} alt="" className={`w-full h-full object-cover transition-opacity ${done ? 'opacity-100' : 'opacity-50'}`} />
+                                <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt="" loading="lazy" className={`w-full h-full object-cover transition-opacity ${done ? 'opacity-100' : 'opacity-50'}`} />
                               )}
                               {done ? (
                                 <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
