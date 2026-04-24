@@ -149,15 +149,15 @@ export function HomeTransformStrip() {
         </div>
 
         {/* Category pills */}
-        <div className="flex justify-center mb-8 lg:mb-10">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60">
+        <div className="flex justify-center mb-8 lg:mb-10 -mx-6 px-6 overflow-x-auto scrollbar-hide">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60 mx-auto">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => setActive(cat.id)}
                 className={cn(
-                  'px-5 py-2 rounded-full text-sm font-medium transition-colors',
+                  'px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
                   active === cat.id
                     ? 'bg-foreground text-background shadow-sm'
                     : 'text-muted-foreground hover:text-foreground',
