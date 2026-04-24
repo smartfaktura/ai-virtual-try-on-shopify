@@ -5,7 +5,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { HomeHero } from '@/components/home/HomeHero';
 import { HomeTransformStrip } from '@/components/home/HomeTransformStrip';
 import { HomeCreateCards } from '@/components/home/HomeCreateCards';
-import { HomeCategoryExamples } from '@/components/home/HomeCategoryExamples';
+import { HomeTrustBlock } from '@/components/home/HomeTrustBlock';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeWhySwitch } from '@/components/home/HomeWhySwitch';
 import { HomeOnBrand } from '@/components/home/HomeOnBrand';
@@ -44,7 +44,7 @@ export default function Home() {
       <HomeHero />
       <HomeTransformStrip />
       <HomeCreateCards />
-      <HomeCategoryExamples />
+      <HomeTrustBlock />
       <HomeHowItWorks />
       <HomeWhySwitch />
       <HomeOnBrand />
