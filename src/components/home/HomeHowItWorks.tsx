@@ -4,63 +4,46 @@ import { ArrowRight, ArrowDown, Search, Upload, ImageIcon } from 'lucide-react';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { Button } from '@/components/ui/button';
 
-/* ── Reusable wireframe image placeholder with subtle pulse ── */
-function ImagePlaceholder({
-  className = '',
-  delay = 0,
-}: {
-  className?: string;
-  delay?: number;
-}) {
+/* ── Reusable wireframe image placeholder ── */
+function ImagePlaceholder({ className = '' }: { className?: string }) {
   return (
     <div
       className={`relative rounded-xl bg-muted/50 border border-border/40 flex items-center justify-center overflow-hidden ${className}`}
     >
-      {/* Soft sweeping highlight */}
-      <div
-        className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-[shimmer_3.5s_ease-in-out_infinite]"
-        style={{ animationDelay: `${delay}ms` }}
-      />
       <ImageIcon
         size={20}
-        className="text-muted-foreground/50 relative z-10"
+        className="text-muted-foreground/50"
         strokeWidth={1.5}
       />
     </div>
   );
 }
 
-/* ── Step 1: Upload — bottle silhouette with pulsing upload badge ── */
+/* ── Step 1: Upload — clean upload card ── */
 function StepUpload() {
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-6 flex items-center justify-center">
-      <div className="relative w-[78%] aspect-square rounded-2xl bg-muted/50 border-2 border-dashed border-border/70 flex items-center justify-center overflow-hidden">
-        {/* Subtle bg shimmer */}
-        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-[shimmer_4s_ease-in-out_infinite]" />
-
-        {/* Generic bottle silhouette — gentle float */}
-        <div className="flex flex-col items-center gap-1.5 animate-[float_4s_ease-in-out_infinite] relative z-10">
-          <div className="w-3 h-4 rounded-sm bg-foreground/15" />
-          <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl bg-foreground/10" />
+      <div className="relative w-[82%] aspect-square rounded-2xl bg-muted/40 border-2 border-dashed border-border/70 flex flex-col items-center justify-center gap-4 px-6">
+        <div className="w-14 h-14 rounded-full bg-white border border-border shadow-sm flex items-center justify-center animate-[float_3s_ease-in-out_infinite]">
+          <Upload
+            size={22}
+            className="text-foreground/70"
+            strokeWidth={1.75}
+          />
         </div>
-
-        {/* Upload badge — soft pulse ring */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
-          <span className="absolute inset-0 rounded-full bg-foreground/20 animate-ping opacity-60" />
-          <div className="relative w-11 h-11 rounded-full bg-white border border-border shadow-sm flex items-center justify-center">
-            <Upload
-              size={18}
-              className="text-foreground/70 animate-[bounce-soft_2.4s_ease-in-out_infinite]"
-              strokeWidth={1.75}
-            />
-          </div>
+        <div className="flex flex-col items-center gap-2 w-full">
+          <div className="h-2 w-3/4 rounded-full bg-border/70" />
+          <div className="h-1.5 w-1/2 rounded-full bg-border/40" />
         </div>
+        <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-white border border-border/60 px-2.5 py-1 rounded-full">
+          PNG · JPG
+        </span>
       </div>
     </div>
   );
 }
 
-/* ── Step 2: Choose shots — grid with one tile highlighted in rotation ── */
+/* ── Step 2: Choose shots — calm rotating highlight on one tile ── */
 function StepChoose() {
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-5 sm:p-6 flex flex-col gap-4">
@@ -70,37 +53,37 @@ function StepChoose() {
         </span>
         <div className="flex-1 h-7 rounded-full bg-muted/60 border border-border/50 flex items-center px-3 gap-2 overflow-hidden">
           <Search size={12} className="text-muted-foreground/70 shrink-0" />
-          <div className="h-1.5 rounded-full bg-border/70 animate-[search-grow_3.5s_ease-in-out_infinite]" />
+          <div className="h-1.5 w-16 rounded-full bg-border/60" />
         </div>
       </div>
       <div className="flex-1 grid grid-cols-2 gap-3 relative">
-        <ImagePlaceholder delay={0} />
-        <ImagePlaceholder delay={400} />
-        <ImagePlaceholder delay={800} />
-        <ImagePlaceholder delay={1200} />
-        {/* Rotating selection ring */}
+        <ImagePlaceholder />
+        <ImagePlaceholder />
+        <ImagePlaceholder />
+        <ImagePlaceholder />
+        {/* Rotating highlight — one tile at a time */}
         <div className="pointer-events-none absolute inset-0 grid grid-cols-2 gap-3">
-          <div className="rounded-xl ring-2 ring-foreground/80 ring-offset-2 ring-offset-white opacity-0 animate-[select-1_4.8s_ease-in-out_infinite]" />
-          <div className="rounded-xl ring-2 ring-foreground/80 ring-offset-2 ring-offset-white opacity-0 animate-[select-2_4.8s_ease-in-out_infinite]" />
-          <div className="rounded-xl ring-2 ring-foreground/80 ring-offset-2 ring-offset-white opacity-0 animate-[select-3_4.8s_ease-in-out_infinite]" />
-          <div className="rounded-xl ring-2 ring-foreground/80 ring-offset-2 ring-offset-white opacity-0 animate-[select-4_4.8s_ease-in-out_infinite]" />
+          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-1_10s_ease-in-out_infinite]" />
+          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-2_10s_ease-in-out_infinite]" />
+          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-3_10s_ease-in-out_infinite]" />
+          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-4_10s_ease-in-out_infinite]" />
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Step 3: Generate — rows fade + slide in on a loop ── */
+/* ── Step 3: Generate — static rows that fade in once with the section ── */
 function StepGenerate() {
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-5 sm:p-6 flex flex-col gap-3 justify-center">
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/50 p-2.5 opacity-0 animate-[row-in_4.8s_ease-out_infinite]"
-          style={{ animationDelay: `${i * 500}ms` }}
+          className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/50 p-2.5 opacity-0 animate-[gen-row-in_0.6s_ease-out_forwards]"
+          style={{ animationDelay: `${300 + i * 200}ms` }}
         >
-          <ImagePlaceholder className="w-14 h-14 shrink-0" delay={i * 600} />
+          <ImagePlaceholder className="w-14 h-14 shrink-0" />
           <div className="flex-1 space-y-2">
             <div className="h-2 w-3/4 rounded-full bg-border/70" />
             <div className="h-1.5 w-1/2 rounded-full bg-border/40" />
@@ -123,42 +106,29 @@ export function HomeHowItWorks() {
   return (
     <section className="py-16 lg:py-32 bg-background" id="how-it-works">
       <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          60%, 100% { transform: translateX(200%); }
-        }
         @keyframes float {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
+          50% { transform: translateY(-2px); }
         }
-        @keyframes bounce-soft {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
+        @keyframes gen-row-in {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes search-grow {
-          0%, 100% { width: 1.25rem; opacity: 0.5; }
-          50% { width: 5rem; opacity: 1; }
+        @keyframes hl-1 {
+          0%, 22%, 100% { opacity: 0; }
+          3%, 19%       { opacity: 1; }
         }
-        @keyframes row-in {
-          0% { opacity: 0; transform: translateY(8px); }
-          15%, 80% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(-4px); }
+        @keyframes hl-2 {
+          0%, 25%, 47%, 100% { opacity: 0; }
+          28%, 44%           { opacity: 1; }
         }
-        @keyframes select-1 {
-          0%, 100% { opacity: 0; }
-          5%, 20% { opacity: 1; }
+        @keyframes hl-3 {
+          0%, 50%, 72%, 100% { opacity: 0; }
+          53%, 69%           { opacity: 1; }
         }
-        @keyframes select-2 {
-          0%, 25%, 100% { opacity: 0; }
-          30%, 45% { opacity: 1; }
-        }
-        @keyframes select-3 {
-          0%, 50%, 100% { opacity: 0; }
-          55%, 70% { opacity: 1; }
-        }
-        @keyframes select-4 {
-          0%, 75%, 100% { opacity: 0; }
-          80%, 95% { opacity: 1; }
+        @keyframes hl-4 {
+          0%, 75%, 97%, 100% { opacity: 0; }
+          78%, 94%           { opacity: 1; }
         }
       `}</style>
 
@@ -204,7 +174,7 @@ export function HomeHowItWorks() {
         {/* CTA */}
         <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
           <Button asChild size="lg" className="rounded-full px-10 h-12 text-base">
-            <Link to="/auth">Start generating</Link>
+            <Link to="/auth">Start Generating Free</Link>
           </Button>
           <p className="text-xs text-muted-foreground">
             No studio. No models. No complex setup.

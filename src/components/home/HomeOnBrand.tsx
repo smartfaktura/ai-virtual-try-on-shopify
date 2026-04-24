@@ -1,5 +1,4 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { Check } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const SUPABASE_PUBLIC =
@@ -13,13 +12,6 @@ const settings = [
   'Mood · Quiet luxury',
 ];
 
-const points = [
-  'One scene, infinite products',
-  'Identical lighting and composition every time',
-  'Catalog-wide visual consistency without re-shoots',
-];
-
-// Same scene ("Mid-century modern lounge") rendered with 4 different products
 const consistentSet = [
   { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/46ac001d-4973-4d6d-a2a9-6df9f42ec685.png`, label: 'Minimalist Elegance' },
   { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/45ce1281-da04-429e-b661-34877e664516.jpg`, label: 'Sculptural Serenity' },
@@ -35,10 +27,10 @@ export function HomeOnBrand() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-            One scene, every product — perfectly on‑brand
+            One scene, every product.
           </h2>
           <p className="text-[#6b7280] text-lg leading-relaxed">
-            Lock your visual direction once. Every new product drops into the same scene, lighting, and mood — so your catalog always looks like one brand.
+            Lock the look once. Every product drops into the same scene.
           </p>
         </div>
 
@@ -64,33 +56,29 @@ export function HomeOnBrand() {
                 </div>
               ))}
             </div>
-
-            <div className="mt-8 space-y-2.5">
-              {points.map((p) => (
-                <div key={p} className="flex items-center gap-2 text-sm text-[#6b7280]">
-                  <Check size={14} className="text-[#475569]" />
-                  {p}
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Right — Consistent output grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {consistentSet.map((item, i) => (
-              <div
-                key={i}
-                className="aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
-              >
-                <img
-                  src={getOptimizedUrl(item.src, { quality: 60 })}
-                  alt={item.label}
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              </div>
-            ))}
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+              Same scene · 4 products
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {consistentSet.map((item, i) => (
+                <div
+                  key={i}
+                  className="aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
+                >
+                  <img
+                    src={getOptimizedUrl(item.src, { quality: 60 })}
+                    alt={item.label}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
