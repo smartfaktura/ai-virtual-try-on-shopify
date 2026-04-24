@@ -44,8 +44,8 @@ export default function Home() {
       <HomeHero />
       <HomeTransformStrip />
       <HomeCreateCards />
-      <HomeTrustBlock />
       <HomeHowItWorks />
+      <HomeTrustBlock />
       <HomeWhySwitch />
       <HomeOnBrand />
       <HomePricingTeaser />

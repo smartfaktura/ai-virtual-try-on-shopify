@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowDown, Search, Upload, ImageIcon } from 'lucide-react';
+// ImagePlaceholder still used by StepGenerate
 
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { Button } from '@/components/ui/button';
@@ -43,8 +44,9 @@ function StepUpload() {
   );
 }
 
-/* ── Step 2: Choose shots — calm rotating highlight on one tile ── */
+/* ── Step 2: Choose shots — dense 6×6 grid hinting at "1000+" library ── */
 function StepChoose() {
+  const SELECTED = new Set([8, 15]);
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-5 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
@@ -56,18 +58,17 @@ function StepChoose() {
           <div className="h-1.5 w-16 rounded-full bg-border/60" />
         </div>
       </div>
-      <div className="flex-1 grid grid-cols-2 gap-3 relative">
-        <ImagePlaceholder />
-        <ImagePlaceholder />
-        <ImagePlaceholder />
-        <ImagePlaceholder />
-        {/* Rotating highlight — one tile at a time */}
-        <div className="pointer-events-none absolute inset-0 grid grid-cols-2 gap-3">
-          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-1_10s_ease-in-out_infinite]" />
-          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-2_10s_ease-in-out_infinite]" />
-          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-3_10s_ease-in-out_infinite]" />
-          <div className="rounded-xl ring-2 ring-foreground/70 bg-foreground/[0.04] opacity-0 animate-[hl-4_10s_ease-in-out_infinite]" />
-        </div>
+      <div className="flex-1 grid grid-cols-6 gap-1.5 content-start">
+        {Array.from({ length: 36 }).map((_, i) => (
+          <div
+            key={i}
+            className={`aspect-square rounded-md bg-muted/50 border ${
+              SELECTED.has(i)
+                ? 'ring-2 ring-foreground/70 border-transparent bg-foreground/[0.06]'
+                : 'border-border/30'
+            }`}
+          />
+        ))}
       </div>
     </div>
   );
@@ -113,22 +114,6 @@ export function HomeHowItWorks() {
         @keyframes gen-row-in {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes hl-1 {
-          0%, 22%, 100% { opacity: 0; }
-          3%, 19%       { opacity: 1; }
-        }
-        @keyframes hl-2 {
-          0%, 25%, 47%, 100% { opacity: 0; }
-          28%, 44%           { opacity: 1; }
-        }
-        @keyframes hl-3 {
-          0%, 50%, 72%, 100% { opacity: 0; }
-          53%, 69%           { opacity: 1; }
-        }
-        @keyframes hl-4 {
-          0%, 75%, 97%, 100% { opacity: 0; }
-          78%, 94%           { opacity: 1; }
         }
       `}</style>
 
