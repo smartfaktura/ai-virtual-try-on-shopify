@@ -1,5 +1,7 @@
-import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { Button } from '@/components/ui/button';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import productVideoLoop from '@/assets/home-create-product-videos.mp4';
 
@@ -9,28 +11,25 @@ const PREVIEW = (id: string) =>
   `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 type CardData =
-  | { title: string; text: string; cta: string; type: 'image'; image: string }
-  | { title: string; text: string; cta: string; type: 'video'; video: string };
+  | { title: string; text: string; type: 'image'; image: string }
+  | { title: string; text: string; type: 'video'; video: string };
 
 const cards: CardData[] = [
   {
     title: 'Product page images',
     text: 'Clean, high-converting visuals for Shopify, Amazon, and product pages.',
-    cta: 'Explore product images',
     image: PREVIEW('1776688965090-edaogg'),
     type: 'image',
   },
   {
     title: 'Social & ad creatives',
     text: 'Campaign-ready visuals for Instagram, Meta ads, launches, and promotions.',
-    cta: 'Explore ad creatives',
     image: PREVIEW('1776689318257-yahkye'),
     type: 'image',
   },
   {
     title: 'Product videos',
     text: 'Short motion content for reels, ads, and product storytelling.',
-    cta: 'Explore videos',
     video: productVideoLoop,
     type: 'video',
   },
@@ -92,17 +91,23 @@ export function HomeCreateCards() {
               <CardVisual card={card} />
               <div className="p-6 lg:p-8">
                 <h3 className="text-[#1a1a2e] text-xl font-semibold mb-2">{card.title}</h3>
-                <p className="text-[#6b7280] text-sm leading-relaxed mb-5">{card.text}</p>
-                <a
-                  href="#"
-                  className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#475569] hover:text-[#1a1a2e] transition-colors"
-                >
-                  {card.cta}
-                  <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                </a>
+                <p className="text-[#6b7280] text-sm leading-relaxed">{card.text}</p>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Single CTA */}
+        <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
+          <Button asChild size="lg" className="rounded-full px-8 text-base">
+            <Link to="/auth">
+              Start creating free
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Free credits · No card required
+          </p>
         </div>
       </div>
     </section>
