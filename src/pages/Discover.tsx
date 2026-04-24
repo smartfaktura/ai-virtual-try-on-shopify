@@ -31,6 +31,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
 import { getItemSlug } from '@/lib/slugUtils';
+import { MasonrySkeletonGrid } from '@/components/app/MasonrySkeletonGrid';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
