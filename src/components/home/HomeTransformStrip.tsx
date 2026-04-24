@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -69,29 +70,22 @@ const EYEWEAR_CARDS: GridCardData[] = [
   { label: 'Beauty Closeup II', src: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014') },
 ];
 
-/* ── All categories collage: one strong shot per category (mobile shows first 9) ── */
-const ALL_CATEGORIES_CARDS: GridCardData[] = [
-  { label: 'Swimwear',   src: PREVIEW('1776523219756-c5vnc7') },
-  { label: 'Fragrance',  src: PREVIEW('1776018015756-3xfquh') },
-  { label: 'Eyewear',    src: PREVIEW('1776102185057-0ulf1m') },
-  { label: 'Beauty',     src: PREVIEW('1776239794347-u8o1yr') },
-  { label: 'Jewelry',    src: PREVIEW('1776241616772-yak1ea') },
-  { label: 'Sneakers',   src: PREVIEW('1776770342811-jr21sq') },
-  { label: 'Bags',       src: PREVIEW('1776239414811-nvmu94') },
-  { label: 'Activewear', src: PREVIEW('1776192305310-dz9fum') },
-  { label: 'Dresses',    src: PREVIEW('1776688399076-0n2cku') },
-  // hidden on mobile
-  { label: 'Watches',    src: PREVIEW('1776247087022-pv2irf') },
-  { label: 'Home Decor', src: PREVIEW('1776588663193-0iekhe') },
-  { label: 'Jackets',    src: PREVIEW('1776690210526-u3dv8r') },
-];
-
 const CATEGORIES = [
-  { id: 'all',       label: 'All categories', cards: ALL_CATEGORIES_CARDS },
-  { id: 'swimwear',  label: 'Swimwear',       cards: SWIMWEAR_CARDS },
-  { id: 'fragrance', label: 'Fragrance',      cards: FRAGRANCE_CARDS },
-  { id: 'eyewear',   label: 'Eyewear',        cards: EYEWEAR_CARDS },
+  { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS },
+  { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS },
+  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS },
 ] as const;
+
+const ALL_CATEGORY_NAMES = [
+  'Swimwear', 'Fragrance', 'Eyewear', 'Skincare', 'Makeup',
+  'Dresses', 'Garments', 'Hoodies', 'Jackets', 'Jeans',
+  'Lingerie', 'Activewear', 'Scarves', 'Belts', 'Hats',
+  'Sneakers', 'Shoes', 'Boots', 'Heels',
+  'Bags & Accessories', 'Backpacks', 'Wallets', 'Cardholders',
+  'Rings', 'Necklaces', 'Earrings', 'Bracelets', 'Watches',
+  'Home Decor', 'Furniture', 'Tech',
+  'Beverages', 'Food', 'Snacks', 'Wellness',
+];
 
 type CategoryId = typeof CATEGORIES[number]['id'];
 
@@ -128,7 +122,7 @@ function GridCard({ card, hideOnMobile }: { card: GridCardData; hideOnMobile: bo
 /* ── Main section ── */
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
-  const [active, setActive] = useState<CategoryId>('all');
+  const [active, setActive] = useState<CategoryId>('swimwear');
 
   const current = CATEGORIES.find((c) => c.id === active)!;
 
@@ -163,6 +157,33 @@ export function HomeTransformStrip() {
                 {cat.label}
               </button>
             ))}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap inline-flex items-center gap-1.5"
+                >
+                  All categories
+                  <ChevronDown size={14} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="center"
+                sideOffset={10}
+                className="w-[min(92vw,560px)] p-5 rounded-2xl"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                  35+ Categories
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                  {ALL_CATEGORY_NAMES.map((name) => (
+                    <span key={name} className="text-sm text-foreground/80">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
