@@ -160,8 +160,12 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
       }
       toast.success('Deleted');
       queryClient.invalidateQueries({ queryKey: ['library'] });
-      queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-      queryClient.invalidateQueries({ queryKey: ['generation_jobs'] });
+      if (activeItem.source === 'freestyle') {
+        queryClient.invalidateQueries({ queryKey: ['freestyle-images'] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+        queryClient.invalidateQueries({ queryKey: ['generation_jobs'] });
+      }
       onClose();
     } catch {
       toast.error('Failed to delete');
