@@ -132,7 +132,7 @@ function PropPickerModal({
                     )}
                     <div className="w-full aspect-square rounded-xl overflow-hidden bg-white flex items-center justify-center p-2">
                       <ShimmerImage
-                        src={p.image_url}
+                        src={getOptimizedUrl(p.image_url, { quality: 60 })}
                         alt={p.title}
                         className="w-full h-full object-contain"
                       />
