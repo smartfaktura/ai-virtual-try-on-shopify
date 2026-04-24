@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Input } from '@/components/ui/input';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
+import { ArrowRight, Heart, Search, X, Eye, Star, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -93,6 +93,9 @@ export function DiscoverDetailModal({
   const [productSearch, setProductSearch] = useState('');
   const [productPopoverOpen, setProductPopoverOpen] = useState(false);
   const [sceneDialogOpen, setSceneDialogOpen] = useState(false);
+  const [isRecreating, setIsRecreating] = useState(false);
+  // Reset spinner when modal closes (component stays mounted in some flows)
+  useEffect(() => { if (!open) setIsRecreating(false); }, [open]);
   const [sceneSearch, setSceneSearch] = useState('');
   const [editSceneDisplayName, setEditSceneDisplayName] = useState('');
   const [editSceneCategory, setEditSceneCategory] = useState('lifestyle');
