@@ -1,45 +1,47 @@
 
 
-## Polish Wordmark sweep + DotPulse (Loading Lab only)
+## Reassurance: no crop zoom risk in this audit
 
-### Scope check (safety)
-- `BrandLoaderProgressGlyph` (Wordmark sweep) — imported **only** in `src/pages/admin/LoadingLab.tsx`. Zero production usage.
-- `DotPulse` — imported **only** in `LoadingLab.tsx`. Zero production usage.
-- `Loader2` (used everywhere else) is **not** touched.
-- All keyframes already exist in `src/index.css` and have `prefers-reduced-motion` fallbacks. We will only tweak Tailwind classes inside the two components — no CSS, no API, no Loading Lab page changes, no other consumers.
+Your concern is valid — past regressions happened when `width=` was passed to `getOptimizedUrl`, which triggers Supabase's server-side **cover crop** and produces zoomed-in thumbnails. This audit explicitly avoids that.
 
-**Risk: effectively zero.** Worst case, the Loading Lab previews look slightly different.
+### Guarantee
+Every single edit in the modal thumbnail audit uses **`quality` only** — never `width`, never `height`, never `resize`.
 
-### Changes
+```tsx
+// ✅ What we will do (safe — no crop, just compression)
+getOptimizedUrl(url, { quality: 60 })
 
-**1. `src/components/ui/brand-loader-progress-glyph.tsx` — Linear-style refinement**
+// ❌ What we will NEVER do (causes the zoom-in bug)
+getOptimizedUrl(url, { width: 56 })
+getOptimizedUrl(url, { width: 56, resize: 'cover' })
+```
 
-Current loader is fine but feels a bit thin. Refinements:
-- Use `VOVV.AI` (matches brand mark rule from memory) instead of `VOVV`.
-- Slightly larger, tighter wordmark (`text-[15px]`, `tracking-[0.18em]`, `font-medium`) so it reads as a logo, not body text.
-- Replace the static `bg-border/60` track with a softer gradient track (`bg-gradient-to-r from-transparent via-border to-transparent`) so the sweep feels seated.
-- Sweep bar gets a soft gradient head (`bg-gradient-to-r from-transparent via-primary to-transparent`) and slightly wider (`w-[40%]`) for a more Linear-like feel.
-- Track widens to `w-20` and centers under the wordmark.
-- Hint text: bump to `text-[11px]`, `tracking-[0.14em]`, `uppercase`, `text-muted-foreground/80` — matches Linear's micro-label tone.
-- Keep all existing animation classes (`animate-glyph-sweep`, `animate-glyph-breathe`) — reduced-motion path stays intact.
-- Props/exports unchanged.
+This matches the existing memory rule `mem://style/image-optimization-no-crop` and the established pattern in `ProductThumbnail.tsx`, `LibraryPickerModal`, `DiscoverDetailModal`, etc.
 
-**2. `src/components/ui/dot-pulse.tsx` — tighter, more premium dots**
+### Why this is mathematically safe
+`quality` only re-encodes the JPEG/WebP at lower bitrate. It does **not** change pixel dimensions, aspect ratio, or framing. The image displayed is the exact same composition — just a smaller file. The `object-cover` / `object-contain` CSS on the wrapper handles the visual fit, identical to today.
 
-- Add a third size `'lg'` (kept backward compatible, default still `'sm'`).
-- Increase visual contrast on `md`: `w-[5px] h-[5px]` instead of `w-1.5 h-1.5` (slightly less chunky, more refined).
-- Tighten gaps: `sm` → `gap-[3px]`, `md` → `gap-[5px]`, `lg` → `gap-1.5`.
-- Base opacity drops from `0.7` → `0.55` so the wave amplitude reads stronger.
-- Keep `currentColor`, `role="status"`, ARIA label, animation class — purely visual tweaks.
+### What changes vs. the original audit plan
+**Nothing functional.** Same 10 files, same `getOptimizedUrl` wrapping, same `loading="lazy"` additions. I'm just confirming the parameter discipline:
 
-### Out of scope
-- No changes to `BrandLoader` (orbit), `BrandLoaderAperture`, `BrandLoaderFrames`, `ShimmerBar`, `LoadingLab.tsx`, `src/index.css`, or any consumer.
-- No new keyframes, no Tailwind config edits.
-- No rollout to production loaders — that's a separate decision once a winner is picked.
+| Thumb | Quality | Width param? |
+|---|---|---|
+| AddToDiscoverModal dropdown rows (20–24px) | 40 | ❌ no |
+| JobDetailModal product thumb (56px) | 60 | ❌ no |
+| ProductAssignmentModal rows (48px) | 60 | ❌ no |
+| ImportProductScenesModal (32–40px) | 60 | ❌ no |
+| PublishModal previews (56px) | 60 | ❌ no |
+| UpscaleSettingsPanel (56px) | 60 | ❌ no |
+| Local-preview modals (blob URLs) | 60–70 | ❌ no (no-op anyway) |
 
-### Verification
-1. Open `/app/admin/loading-lab` → "Wordmark sweep — Linear-style" card now shows polished `VOVV.AI` mark with softer sweep.
-2. DotPulse cards (sm, md, button, chip, sidebar) all render with tighter spacing and stronger pulse.
-3. Toggle OS "Reduce motion" → both fall back to soft opacity pulse (existing reduced-motion CSS still applies).
-4. No other page in the app changes.
+### Visual outcome
+- Same framing as today (no crop, no zoom).
+- ~10–15× smaller payload per thumbnail.
+- Visually indistinguishable at the rendered small sizes.
+- Lightbox / full preview / downloads remain **completely untouched** — full resolution always.
+
+### Rollback safety
+If anything looks off in a single thumbnail, the fix is one-line: remove the `getOptimizedUrl` wrapper for that specific `<img>`. No cascading effects, no state changes, no data shape changes.
+
+Approve and I'll apply the audit exactly as scoped, with quality-only parameters everywhere.
 
