@@ -1,35 +1,56 @@
 
 
-## Steal the Look — projected scene counts after merging recommended scenes
+## Fix: Pre-selected Explore scene gets unchecked after picking a product
 
-Today the dashboard reads only `discover_presets` (~390 items, with Footwear/Watches at **0**). After the planned merge it will also include **497 recommended scenes**, distributed across families as follows.
+### Root cause
 
-### By family (presets + recommended)
+`src/pages/ProductImages.tsx` has two effects fighting each other:
 
-| Family chip | Presets today | + Recommended | **Total visible** |
-|---|---:|---:|---:|
-| Fashion (garments, jackets, dresses, jeans, hoodies, lingerie, swimwear) | 102 | 101 | **203** |
-| Beauty & Fragrance (skincare, makeup, fragrance) | 82 | 50 | **132** |
-| Home (decor, furniture) | 134 | 26 | **160** |
-| Bags & Accessories (bags, backpacks, belts, scarves, hats, wallets, eyewear) | 37 | 112 | **149** |
-| Footwear (sneakers, shoes, boots, heels) | 0 | 61 | **61** |
-| Watches | 0 | 18 | **18** |
-| Jewelry (rings, earrings, necklaces, bracelets) | 9 | 54 | **63** |
-| Food & Drink (food, beverages, snacks) | 5 | 32 | **37** |
-| Tech (tech-devices) | 5 | 15 | **20** |
-| Wellness (supplements) | 1 | 25 | **26** |
-| Activewear | — | 18 | **18** |
-| **All** | **~390** | **497** | **~887** |
+1. **Line 277-288** — auto-adds the Discover scene to `selectedSceneIds` the moment it resolves, and records it in `autoAddedDiscoverRef` so it doesn't re-run.
+2. **Line 634-645** — whenever `selectedProductIds` changes, **wipes** `selectedSceneIds` to an empty Set.
 
-### What this means in the UI
+Recreate flow timing:
+- Land on `/app/generate/product-images?sceneRef=…` → scene resolves → auto-added ✅
+- User picks a product on Step 1 → `selectedProductIds` changes → reset effect clears the Set ❌
+- `autoAddedDiscoverRef` is already set, so the auto-add effect never re-runs → Step 2 shows the pinned card **unchecked**.
 
-- Every chip in the screenshot will have content — Footwear (61), Watches (18), Jewelry (63), Wellness (26), Eyewear (18) are no longer empty.
-- The grid still shows only the first **16 tiles per chip** (existing `visible = filtered.slice(0, 16)`), sorted featured-first then newest. So users see 16 at a time; the rest are reachable on `/app/discover`.
-- The "hide empty chips" safeguard from the prior plan stays in — but in practice no family will be empty after the merge.
+### Fix
 
-### Notes
+**File: `src/pages/ProductImages.tsx`**
 
-- Counts are a ceiling. The active filter `is_active = true` is already applied; admin-hidden scenes via `hidden_scenes` would subtract a small number.
-- "All" in the chip bar will deduplicate correctly because presets and recommended items use distinct IDs (`preset.id` vs `rec-{scene_id}`).
-- No DB changes needed. The merge is purely a client-side hook addition in `DashboardDiscoverSection.tsx` as previously planned.
+**Change 1 — preserve the Discover scene through the product-change reset (line 634-645).**  
+When wiping `selectedSceneIds` because products changed, if a `discoverScene` exists, seed the new Set with it instead of starting empty:
+
+```ts
+const next = new Set<string>();
+if (discoverScene?.sceneId) next.add(discoverScene.sceneId);
+setSelectedSceneIds(next);
+```
+
+Same idea for `perCategoryScenes` — if the discover scene belongs to a known category, seed that category's set with it; otherwise just leave the Map empty (the pinned card renders independently of category buckets).
+
+**Change 2 — make the auto-add effect re-runnable (line 274-288).**  
+Drop the `autoAddedDiscoverRef` early-return guard. Replace it with an idempotent check: if the scene id is already in `selectedSceneIds`, do nothing; otherwise add it. This way if some other code path clears the Set later, the next render re-adds the scene. Idempotency comes from the `has` check, so no infinite loop.
+
+**Change 3 — also seed on the analyze-products path.**  
+The "Trigger product analysis when moving from step 1 to step 2" effect (line 668+) is where category buckets get rebuilt. Audit it to ensure that when it writes default per-category selections, it does NOT remove `discoverScene.sceneId` from `selectedSceneIds`. If it currently overwrites the Set, merge instead.
+
+### Result
+
+- Click Recreate on Explore tile → land on Step 1 with scene already queued internally.
+- Pick a product → product-change reset preserves the Discover scene (no longer wiped).
+- Continue → Step 2 shows the pinned "Pre-selected from Explore" card with the **checkbox checked by default**, exactly as the user intends ("recreate this").
+- User can still uncheck it or add more shots.
+
+### Files to edit
+
+```text
+src/pages/ProductImages.tsx
+```
+
+### Out of scope
+
+- No DB/RPC/RLS changes
+- No changes to `DiscoverPreselectedCard`, the resolver, or routing
+- No Step 2 grid rendering changes — only the seeded selection state
 
