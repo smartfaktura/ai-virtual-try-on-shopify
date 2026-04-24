@@ -84,7 +84,7 @@ function MarqueeRow({ cards, direction, duration }: {
         style={{ animationDuration: duration }}
       >
         {doubled.map((card, i) => (
-          <MarqueeCard key={`${card.label}-${i}`} label={card.label} src={card.src} />
+          <MarqueeCard key={`${card.label}-${i}`} {...card} />
         ))}
       </div>
     </div>
