@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navLinks = [
-  { label: 'Explore Visuals', href: '/product-visual-library', isRoute: true },
   { label: 'Explore', href: '/discover', isRoute: true },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Pricing', href: '/pricing', isRoute: true },
