@@ -1,26 +1,46 @@
-## Changes to `/home`
+## /product-visual-library polish
 
-Small polish pass — typography sizing, a CTA link fix, and two hero tweaks.
+### 1. Pills alignment + scroll arrows (`ProductVisualLibrary.tsx` `FamilySection`)
 
-### 1. Hero — video card cleanup (`HomeHero.tsx`)
-- Remove the `VIDEO` badge: only show the "Original" pill when `isOriginal`, never for video
-- Keep the video tile in **row 1 only**: `row2 = heroImages.slice(6).concat(heroImages.slice(0, 2)).filter(c => !c.isVideo)` so the video never appears in the second marquee
+Current bug: pill row has `-mx-4 sm:-mx-6` so it bleeds outside the content column and starts to the LEFT of the image grid. Fix:
 
-### 2. TransformStrip — caption sizing (`HomeTransformStrip.tsx`)
-- Line 255: bump `"35+ categories · 1000+ scenes · one upload"` from `text-xs` → `text-sm`, slightly stronger color (`text-foreground/70`)
+- Drop the negative margins; pills row sits flush in the same column as the grid (so "Clothing & Apparel" lines up exactly with the first image)
+- Wrap the pill row in a relative container with a horizontally scrollable `<div ref={scrollRef}>`
+- On `lg:` add two ghost arrow buttons (`ChevronLeft` / `ChevronRight`) absolutely positioned at the row's edges with white-to-transparent fade gradients. Click → `scrollRef.current.scrollBy({ left: ±240, behavior: 'smooth' })`
+- Show/hide arrows based on `canScrollLeft` / `canScrollRight` state, updated on scroll + resize
+- Hide arrows on mobile (touch swipe is natural)
+- Keep `pb-2` for scrollbar room; keep webkit-scrollbar:hidden
 
-### 3. FAQ readability (`HomeFAQ.tsx`)
-- Question (`AccordionTrigger`): `text-[15px]` → `text-base sm:text-[17px]`, `font-medium` → `font-semibold`, `py-5` → `py-6`
-- Answer (`AccordionContent`): `text-sm` → `text-[15px] sm:text-base`, soften color from `#6b7280` → `text-foreground/70`, `pb-5` → `pb-6`
+### 2. Tighter hero → pills spacing (`ProductVisualLibrary.tsx`)
 
-### 4. Final CTA — fix secondary link (`HomeFinalCTA.tsx`)
-- Replace the `<a href="#examples">See real examples</a>` with a `<Link to="/discover">` so it routes to the public Explore page instead of an in-page anchor that no longer matches user intent
-- Keep button styling identical
+- Hero section: `py-10 sm:py-14` → `pt-10 sm:pt-14 pb-6 sm:pb-8`
+- Catalog section: `py-10 sm:py-14` → `pt-2 sm:pt-4 pb-10 sm:pb-14`
+
+This collapses the dead air between the H1 block and the first row of categories, while keeping the catalog's bottom padding intact.
+
+### 3. Better loading skeletons
+
+**Initial page load** (`ProductVisualLibrary.tsx`):
+- Replace the bare `h-9 w-64 ... rounded-full` skeleton with a row of 6 pulsing pill skeletons (matching the actual pill row layout) + the existing card skeleton grid expanded to 15 cards (3 rows on desktop) for a richer first paint
+- Sidebar already renders from data; add a graceful loading state for the sidebar nav too: 8 pulsing rows when `isLoading && families.length === 0`
+
+**Family switch / pill switch**: `FamilySection` already shows skeletons via the lazy-load sentinel, but it briefly shows zero cards before first slice renders. Use a short transition: keep the previous content visible until the new family's first 30 cards have at least started loading (already mostly handled by React's render).
+
+### 4. Modal image loading skeleton + optimization (`SceneDetailModal.tsx`)
+
+Currently the modal renders an `<img>` and shows only a static placeholder icon while it loads. Improve:
+
+- Track `imgLoaded` state via `onLoad` handler
+- Show an animated `bg-muted/40 animate-pulse` skeleton overlay while `!imgLoaded`
+- Image already uses `getOptimizedUrl(url, { quality: 75 })` — keep that, but add `srcSet` for retina (`?quality=75&width=...` is not used here per memory `image-optimization-no-crop` to avoid crop, so we keep quality-only). Already good.
+- Reset `imgLoaded` when `scene.scene_id` changes (use `useEffect` keyed on scene id)
+- Hide the static `ImageIcon` once loaded
+
+Also: the modal currently has `overflow-hidden` AND `overflow-y-auto` on the same `DialogContent` — remove the redundant `overflow-hidden` to avoid clipping the scroll on tall content.
 
 ### Files
-- `src/components/home/HomeHero.tsx`
-- `src/components/home/HomeTransformStrip.tsx`
-- `src/components/home/HomeFAQ.tsx`
-- `src/components/home/HomeFinalCTA.tsx`
+- `src/pages/ProductVisualLibrary.tsx` — hero/catalog padding, pills row alignment + arrows, richer loading skeletons, sidebar skeleton
+- `src/components/library/SceneDetailModal.tsx` — image skeleton + load state
+- `src/components/library/LibrarySidebarNav.tsx` — accept optional `isLoading` to render skeleton rows
 
-No other sections need changes — heading scale, eyebrows, section padding, and primary CTA shape are already unified across `/home` from the previous pass.
+No new dependencies. No data hook changes.
