@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, X } from 'lucide-react';
+import { ArrowRight, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -28,6 +28,8 @@ export function PublicDiscoverDetailModal({
   onRecreate,
 }: PublicDiscoverDetailModalProps) {
   const navigate = useNavigate();
+  const [isRecreating, setIsRecreating] = useState(false);
+  useEffect(() => { if (!open) setIsRecreating(false); }, [open]);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -177,7 +179,10 @@ export function PublicDiscoverDetailModal({
 
             {/* Primary CTA — Sign Up */}
             <Button
+              disabled={isRecreating}
               onClick={() => {
+                if (isRecreating) return;
+                setIsRecreating(true);
                 if (onRecreate && item) {
                   onRecreate(item);
                   return;
@@ -216,7 +221,7 @@ export function PublicDiscoverDetailModal({
                   <span className="hidden sm:inline">Create account to recreate this</span>
                 </>
               )}
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {isRecreating ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
 
             <div className="flex items-center justify-center">
