@@ -420,7 +420,7 @@ function SceneThumbnail({ sceneId }: { sceneId: string }) {
   return (
     <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="w-6 h-6 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-        {scene?.previewUrl ? <img src={getOptimizedUrl(scene.previewUrl, { width: 40, quality: 40 })} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40" />}
+        {scene?.previewUrl ? <img src={getOptimizedUrl(scene.previewUrl, { quality: 40 })} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40" />}
       </div>
       {hovered && (
         <div className="absolute z-50 left-0 top-full mt-1 w-[120px] h-[120px] rounded-lg bg-muted border border-border shadow-lg overflow-hidden">
