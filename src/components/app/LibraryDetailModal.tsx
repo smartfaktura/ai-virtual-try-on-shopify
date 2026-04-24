@@ -189,25 +189,42 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
         >
           {/* Left — Image */}
           <div className="relative w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12 group/img">
-            <ShimmerImage
-              src={activeItem.imageUrl}
-              alt={activeItem.label}
-              className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
-              wrapperClassName="flex items-center justify-center max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
-            />
+            {(() => {
+              const ratioMap: Record<string, string> = {
+                '1:1': '1 / 1', '3:4': '3 / 4', '4:3': '4 / 3',
+                '4:5': '4 / 5', '5:4': '5 / 4', '9:16': '9 / 16', '16:9': '16 / 9',
+                '2:3': '2 / 3', '3:2': '3 / 2',
+              };
+              const ar = activeItem.aspectRatio && ratioMap[activeItem.aspectRatio]
+                ? ratioMap[activeItem.aspectRatio]
+                : '4 / 5';
+              return (
+                <ShimmerImage
+                  src={activeItem.imageUrl}
+                  alt={activeItem.label}
+                  aspectRatio={ar}
+                  className="w-full h-full object-contain rounded-lg shadow-2xl"
+                  wrapperClassName="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] flex items-center justify-center"
+                  wrapperStyle={{ aspectRatio: ar, width: 'auto', height: 'auto' }}
+                  fetchPriority="high"
+                />
+              );
+            })()}
 
             {/* Multi-image navigation arrows */}
             {hasMultiple && (
               <>
                 <button
                   onClick={goPrev}
-                  className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/30 dark:hover:bg-white/25 hover:text-white transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                  className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/30 dark:hover:bg-white/25 hover:text-white transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                  style={{ paddingLeft: 'env(safe-area-inset-left, 0px)' }}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={goNext}
-                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/30 dark:hover:bg-white/25 hover:text-white transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/20 dark:bg-white/15 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-black/30 dark:hover:bg-white/25 hover:text-white transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                  style={{ paddingRight: 'env(safe-area-inset-right, 0px)' }}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
