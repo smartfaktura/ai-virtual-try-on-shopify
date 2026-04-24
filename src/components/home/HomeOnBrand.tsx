@@ -3,30 +3,28 @@ import { Check } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const SUPABASE_PUBLIC =
-  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads';
-const PREVIEW = (id: string) =>
-  `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public';
 
 const settings = [
-  'Tone · Clean & editorial',
-  'Background · Warm white',
-  'Composition · Centered',
-  'Lighting · Soft diffused',
-  'Direction · Lifestyle premium',
+  'Scene · Mid-century lounge',
+  'Lighting · Soft warm daylight',
+  'Palette · Olive, cream, walnut',
+  'Composition · Editorial wide',
+  'Mood · Quiet luxury',
 ];
 
 const points = [
-  'Consistent backgrounds and tone',
-  'Repeatable output across products',
-  'Easier approvals for teams and brands',
+  'One scene, infinite products',
+  'Identical lighting and composition every time',
+  'Catalog-wide visual consistency without re-shoots',
 ];
 
-// 4 fragrance variants — same brand-direction feel, different scene moments
+// Same scene ("Mid-century modern lounge") rendered with 4 different products
 const consistentSet = [
-  { src: PREVIEW('1776847150435-bnn7qq'), label: 'Natural Light' },
-  { src: PREVIEW('1776847155437-m5m0nq'), label: 'Warm Studio' },
-  { src: PREVIEW('1776843776495-iyiigl'), label: 'Botanical Plinth' },
-  { src: PREVIEW('1776843792736-sgvazd'), label: 'Neutral Tone' },
+  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/46ac001d-4973-4d6d-a2a9-6df9f42ec685.png`, label: 'Minimalist Elegance' },
+  { src: `${SUPABASE_PUBLIC}/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/45ce1281-da04-429e-b661-34877e664516.jpg`, label: 'Sculptural Serenity' },
+  { src: `${SUPABASE_PUBLIC}/tryon-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5f0fd146-fc8d-43a4-a30e-1abbe67f4512.png`, label: 'Olive Set' },
+  { src: `${SUPABASE_PUBLIC}/tryon-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/cd8b0f5c-4d27-4291-886b-5347b5a3417f.png`, label: 'Effortless Elegance' },
 ];
 
 export function HomeOnBrand() {
@@ -37,10 +35,10 @@ export function HomeOnBrand() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-            Keep every visual on‑brand
+            One scene, every product — perfectly on‑brand
           </h2>
           <p className="text-[#6b7280] text-lg leading-relaxed">
-            Save your visual direction once, then create content that stays consistent across products, campaigns, and channels.
+            Lock your visual direction once. Every new product drops into the same scene, lighting, and mood — so your catalog always looks like one brand.
           </p>
         </div>
 
@@ -82,7 +80,7 @@ export function HomeOnBrand() {
             {consistentSet.map((item, i) => (
               <div
                 key={i}
-                className="aspect-square rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
+                className="aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
               >
                 <img
                   src={getOptimizedUrl(item.src, { quality: 60 })}

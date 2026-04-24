@@ -9,7 +9,6 @@ import { HomeCategoryExamples } from '@/components/home/HomeCategoryExamples';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeWhySwitch } from '@/components/home/HomeWhySwitch';
 import { HomeOnBrand } from '@/components/home/HomeOnBrand';
-import { HomeQualityProof } from '@/components/home/HomeQualityProof';
 import { HomePricingTeaser } from '@/components/home/HomePricingTeaser';
 import { HomeFAQ } from '@/components/home/HomeFAQ';
 import { HomeFinalCTA } from '@/components/home/HomeFinalCTA';
@@ -49,7 +48,6 @@ export default function Home() {
       <HomeHowItWorks />
       <HomeWhySwitch />
       <HomeOnBrand />
-      <HomeQualityProof />
       <HomePricingTeaser />
       <HomeFAQ />
       <HomeFinalCTA />

@@ -33,7 +33,7 @@ const cards = [
 
 function CardVisual({ image, type, alt }: { image: string; type: 'image' | 'video'; alt: string }) {
   return (
-    <div className="relative h-80 sm:h-96 overflow-hidden bg-muted/30">
+    <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
       <img
         src={getOptimizedUrl(image, { quality: 60 })}
         alt={alt}

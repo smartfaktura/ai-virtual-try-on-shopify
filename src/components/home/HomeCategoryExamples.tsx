@@ -69,21 +69,29 @@ export function HomeCategoryExamples() {
               }`}
               style={{ transitionDelay: `${i * 120}ms` }}
             >
-              <div className="grid grid-cols-3 gap-2 p-3">
-                {cat.images.map((src, j) => (
-                  <div
-                    key={j}
-                    className={`aspect-square rounded-xl overflow-hidden bg-muted/30 transition-transform duration-300 ${j === 0 ? 'group-hover:scale-[1.03]' : ''}`}
-                  >
-                    <img
-                      src={getOptimizedUrl(src, { quality: 60 })}
-                      alt={`${cat.title} example ${j + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+              <div className="p-3 space-y-2">
+                <div className="aspect-[3/4] rounded-xl overflow-hidden bg-muted/30 transition-transform duration-300 group-hover:scale-[1.02]">
+                  <img
+                    src={getOptimizedUrl(cat.images[0], { quality: 60 })}
+                    alt={`${cat.title} hero`}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {cat.images.slice(1, 3).map((src, j) => (
+                    <div key={j} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted/30">
+                      <img
+                        src={getOptimizedUrl(src, { quality: 60 })}
+                        alt={`${cat.title} example ${j + 2}`}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="px-5 pb-6 pt-2">

@@ -28,11 +28,11 @@ const steps = [
 // Step 1 — single original product
 const STEP1_ORIGINAL = PREVIEW('1776523219756-c5vnc7'); // Ghost mannequin swimwear
 
-// Step 2 — 3 scene options to "pick"
+// Step 2 — 3 distinct content-type options to "pick what to create"
 const STEP2_OPTIONS = [
-  { src: PREVIEW('1776524131703-gvh4bb'), label: 'Sunbathing' },
-  { src: PREVIEW('1776524132929-q8upyp'), label: 'Yacht Bow' },
-  { src: PREVIEW('1776574228066-oyklfz'), label: 'Golden Horizon' },
+  { src: PREVIEW('1776688965090-edaogg'), label: 'Product image' },
+  { src: PREVIEW('1776689318257-yahkye'), label: 'Ad creative' },
+  { src: PREVIEW('1776843776495-iyiigl'), label: 'Video' },
 ];
 
 // Step 3 — final 4 generated outputs
@@ -46,7 +46,7 @@ const STEP3_OUTPUTS = [
 function StepVisual({ index }: { index: number }) {
   if (index === 0) {
     return (
-      <div className="w-full aspect-[3/2] rounded-3xl bg-white border border-[#e8e7e4] shadow-sm p-5 sm:p-6 flex gap-4">
+      <div className="w-full aspect-[4/5] sm:aspect-[3/4] rounded-3xl bg-white border border-[#e8e7e4] shadow-sm p-5 sm:p-6 flex gap-4">
         <div className="flex-1 rounded-2xl overflow-hidden bg-muted/30 relative">
           <img
             src={getOptimizedUrl(STEP1_ORIGINAL, { quality: 60 })}
@@ -73,13 +73,13 @@ function StepVisual({ index }: { index: number }) {
   }
   if (index === 1) {
     return (
-      <div className="w-full aspect-[3/2] rounded-3xl bg-white border border-[#e8e7e4] shadow-sm p-5 sm:p-6 flex flex-col gap-3">
+      <div className="w-full aspect-[4/5] sm:aspect-[3/4] rounded-3xl bg-white border border-[#e8e7e4] shadow-sm p-5 sm:p-6 flex flex-col gap-3">
         <div className="h-2.5 w-28 rounded-full bg-[#e8e7e4]" />
         <div className="flex-1 grid grid-cols-3 gap-3">
           {STEP2_OPTIONS.map((opt, i) => (
             <div
               key={i}
-              className={`rounded-xl overflow-hidden border-2 ${i === 0 ? 'border-[#1a1a2e]' : 'border-transparent'} relative bg-muted/30`}
+              className={`aspect-[3/4] rounded-xl overflow-hidden border-2 ${i === 0 ? 'border-[#1a1a2e]' : 'border-transparent'} relative bg-muted/30`}
             >
               <img
                 src={getOptimizedUrl(opt.src, { quality: 60 })}
@@ -98,14 +98,14 @@ function StepVisual({ index }: { index: number }) {
     );
   }
   return (
-    <div className="w-full aspect-[3/2] rounded-3xl bg-white border border-[#e8e7e4] shadow-sm p-5 sm:p-6 flex flex-col gap-3">
+    <div className="w-full aspect-[4/5] sm:aspect-[3/4] rounded-3xl bg-white border border-[#e8e7e4] shadow-sm p-5 sm:p-6 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="h-2.5 w-24 rounded-full bg-[#e8e7e4]" />
         <Download size={16} className="text-[#94a3b8]" />
       </div>
       <div className="flex-1 grid grid-cols-2 gap-3">
         {STEP3_OUTPUTS.map((src, i) => (
-          <div key={i} className="rounded-xl overflow-hidden bg-muted/30 relative">
+          <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted/30 relative">
             <img
               src={getOptimizedUrl(src, { quality: 60 })}
               alt={`Generated output ${i + 1}`}
