@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
@@ -99,9 +99,16 @@ export function AppShell({ children }: AppShellProps) {
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); } catch {}
   }, [collapsed]);
 
-  // Reset scroll position on route change (skip Discover to preserve feed position)
+  // Reset scroll on route change. Skip only intra-Discover navigation (item modal open/close).
+  const prevPathRef = useRef<string>(location.pathname);
   useEffect(() => {
-    if (location.pathname.startsWith('/app/discover')) return;
+    const prev = prevPathRef.current;
+    const next = location.pathname;
+    prevPathRef.current = next;
+
+    const bothInDiscover = prev.startsWith('/app/discover') && next.startsWith('/app/discover');
+    if (bothInDiscover) return;
+
     const main = document.getElementById('app-main-scroll');
     if (main) main.scrollTop = 0;
   }, [location.pathname]);
