@@ -241,7 +241,7 @@ export function DashboardDiscoverSection() {
               key={item.type === 'preset' ? item.data.id : item.data.poseId}
               item={item}
               aspectRatioOverride="3/4"
-              eager={idx < 8}
+              eager={idx < 4}
               fetchPriority={idx === 0 ? 'high' : undefined}
               onClick={() => setSelectedItem(item)}
               onRecreate={(e) => {
