@@ -196,8 +196,17 @@ function GridCard({
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
   const [active, setActive] = useState<CategoryId>('swimwear');
+  const [visited, setVisited] = useState<Set<CategoryId>>(() => new Set(['swimwear']));
 
-  const current = CATEGORIES.find((c) => c.id === active)!;
+  const selectCategory = (id: CategoryId) => {
+    setActive(id);
+    setVisited((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
 
   // Warm browser cache for every category's tile so pill-switching is instant.
   useEffect(() => {
