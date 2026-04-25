@@ -95,15 +95,17 @@ export default function ProductVisualLibrary() {
         }}
       />
 
-      {/* HERO — slim, left-aligned */}
+      {/* HERO — centered, premium spacing to match homepage aesthetic */}
       <section id="top" className="bg-[#FAFAF8]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-10 sm:pt-14 pb-6 sm:pb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+        <div className="mx-auto max-w-3xl px-6 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Scene library
+          </p>
+          <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
             AI Product Visual Library
           </h1>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-foreground/65">
-            Browse {totalScenes > 0 ? `${totalScenes}+` : '1,600+'} visual directions across every
-            ecommerce category. Pick one and create it with your product photo.
+          <p className="mx-auto max-w-xl text-muted-foreground text-lg leading-relaxed">
+            Browse {totalScenes > 0 ? `${totalScenes}+` : '1,600+'} visual directions across every ecommerce category. Pick one and create it with your product photo.
           </p>
         </div>
       </section>

@@ -1,19 +1,19 @@
 ## Goal
-The public landing nav pill currently maxes at `lg:max-w-7xl` (1280px), so on wider screens it sits visibly narrower than the page content and looks "cropped." Widen the bar and re-balance the layout so logo, links, and CTA breathe naturally.
+Make the `/product-visual-library` hero match the centered, premium spacing used on `/home` and `/ai-product-photography` (currently it's slim and left-aligned, which feels off-brand).
 
 ## Change
-File: `src/components/landing/LandingNav.tsx`
+File: `src/pages/ProductVisualLibrary.tsx` (lines 98–109)
 
-- Header outer padding: `p-3 lg:px-6` (small extra side gutter on desktop so the bar doesn't kiss the viewport edges).
-- Nav max-width: `lg:max-w-7xl` → **`lg:max-w-[1600px]`** (matches the wide content area used elsewhere on `/home` and `/ai-product-photography`, e.g. `max-w-[1400px]` content + page padding).
-- Layout switch from a single `justify-between` row to a true 3-column flex on desktop:
-  - Logo wrapper: `lg:flex-1` (takes the left third).
-  - Links wrapper: kept centered with `justify-center` and gap bumped from `gap-8` → `gap-10 xl:gap-12` so links breathe in the wider bar.
-  - CTA wrapper: `lg:flex-1 justify-end` (takes the right third, pushing the button to the far right).
-- Mobile behavior unchanged. Mobile toggle gets `ml-auto` since the parent is no longer `justify-between`.
-- Add `whitespace-nowrap` on link buttons (defensive, prevents wrapping if a future label is longer).
+Replace the slim left-aligned hero with a centered hero block:
 
-Result: the pill stretches to ~1600px on large screens, with logo flush left, the four links visually centered, and the "My Dashboard / Start Free" CTA flush right — natural balanced gaps on either side of the link cluster.
+- Container: `max-w-3xl mx-auto px-6 text-center` (matches homepage hero centering).
+- Top padding bumped from `pt-10 sm:pt-14` → `pt-24 sm:pt-28 lg:pt-32` so it clears the fixed nav with breathing room.
+- Bottom padding `pb-12 sm:pb-16 lg:pb-20`.
+- Add the eyebrow used across the brand: small uppercase wide-tracking label *"Scene library"*.
+- H1 styling matches other landing heroes: `text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6` — keeps copy "AI Product Visual Library".
+- Subtitle centered under the H1 with `max-w-xl mx-auto text-muted-foreground text-lg leading-relaxed`. Copy unchanged.
+
+Catalog section below remains untouched.
 
 ## Files touched
-- `src/components/landing/LandingNav.tsx`
+- `src/pages/ProductVisualLibrary.tsx`
