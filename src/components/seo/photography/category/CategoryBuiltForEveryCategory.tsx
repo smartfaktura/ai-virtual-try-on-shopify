@@ -60,11 +60,6 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   const noun = page.heroNoun ?? 'photo';
   const totalScenes = groups.reduce((sum, g) => sum + g.cards.length, 0);
 
-  // When grouping by style, the chip already IS the style — show subject as the lead label.
-  const activeParts = singleSubject
-    ? { subject: active.subCategory, style: undefined as string | undefined }
-    : splitLabel(active.subCategory);
-
   return (
     <section
       id="scenes"
