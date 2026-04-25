@@ -1,52 +1,28 @@
-## In-depth diff of `/` vs `/home`
+## Refresh Landing FAQ — 6 fresh, engaging questions
 
-After a section-by-section comparison, most of the page now matches the `/home` aesthetic. The remaining inconsistencies are concrete and small. Here is exactly what is still off and how to fix it.
+Replace the 10 dated/dense FAQs in `src/components/landing/LandingFAQ.tsx` with 6 sharper questions tied to the current platform's main accents: **one photo → endless visuals**, **AI Studio Team**, **brand consistency**, **video**, **speed**, and **free trial**.
 
-### Issues found
+### New FAQ content
 
-**1. HeroSection — leftover primary-blue accents**
-- Mobile bottom strip shows `text-primary` for "∞ results" and `ArrowRight text-primary` (lines ~373–374). `/home`'s hero uses neutral foreground tones throughout.
-- Mobile dot indicator active state uses `bg-primary` (line ~345). `/home` marquee has no primary accents.
-- "Original" badge on the marquee equivalent in `HomeHero` uses `bg-primary/90` — but the rest of the home page is neutral. We should keep these in sync; for restraint, swap to `bg-foreground/80 text-background`.
+1. **How fast do I get my first set of visuals?**
+   Under two minutes. Upload one product photo, pick your shots, and your AI studio team delivers a full set of brand-ready images while you wait — no booking, no briefing, no back-and-forth.
 
-**2. OneImageToVisualLibrarySection — primary "Original" badge**
-- Source-cell "Original" badge uses `bg-primary/90 text-primary-foreground` (line 214). Should be `bg-foreground/80 text-background` to match the calm neutral system used elsewhere.
+2. **One product photo — what can I actually create?**
+   From a single upload: product page hero shots, on-model try-ons, lifestyle scenes, social and ad creatives, UGC-style selfies, mirror shots, flat lays, and short product videos. Same product, endless scenes.
 
-**3. HowItWorks — Step 1 "drag & drop" border still uses default `border-border` solid look but lacks `/home`'s rounded radius scale**
-- Step 1 inner upload zone uses `rounded-2xl` and `border-2 border-dashed border-border` — `HomeHowItWorks` uses `border-border/70` (softer). Minor: soften the dashed border to `border-border/70` for the lighter look.
-- The "Ready" pill is fine (already neutral foreground). No change.
+3. **Will my visuals look on-brand and consistent?**
+   Yes. Lock your scene, lighting, palette, and mood once in your Brand Profile — every new product drops into the same world automatically. Your catalog stays cohesive without art direction on every shot.
 
-**4. ProductCategoryShowcase — category label uses `text-primary-foreground` ambiguously**
-- Line 82: `text-primary-foreground bg-foreground/60` works but the token mismatch (`primary-foreground` on a `foreground` background) is sloppy. Replace with `text-background bg-foreground/60` for semantic correctness. (Visual is identical — this is a token cleanup.)
+4. **What is my AI Studio Team?**
+   10 AI specialists — photographer, stylist, model director, set designer, retoucher, and more — working together behind the scenes. You give the product; they handle composition, lighting, posing, and finishing.
 
-**5. HomeFinalCTA vs FinalCTA — fully aligned ✅** (matching dark navy, same blur orbs, same eyebrow style). No changes needed.
+5. **Can I generate product videos too?**
+   Absolutely. Turn any product image into short motion content for Reels, TikTok, Meta ads, and product pages. Cinematic camera moves, no shoot required.
 
-**6. LandingFAQ vs HomeFAQ — fully aligned ✅** (same bg, accordion styling, eyebrow).
+6. **How do I try it without paying?**
+   Every account starts with 20 free credits — no credit card required. Enough to generate your first full visual set and see the quality before committing to a plan.
 
-**7. ModelShowcase / EnvironmentShowcase / VideoShowcase — aligned ✅** (consistent eyebrow, h2, py-16 lg:py-32, max-w-[1400px], rounded-2xl shadow tokens).
+### Files changed
+- `src/components/landing/LandingFAQ.tsx` — replace `faqs` array (lines 10–51). Section markup, JSON-LD generator, and styling stay identical.
 
-**8. StudioTeamSection — aligned ✅** (matches HomeCreateCards card styling: `rounded-3xl`, `border-[#f0efed]`, `shadow-sm`, hover `-translate-y-1`).
-
-**9. FreestyleShowcaseSection — aligned ✅** after prior pass (neutral chips, `#4a5578` slate accent).
-
-### Changes to apply
-
-1. **`src/components/landing/HeroSection.tsx`**
-   - Mobile bottom strip (~line 373–374): change `text-primary` "∞ results" + arrow to `text-foreground`.
-   - Mobile dot indicator (~line 345): change active dot from `bg-primary` to `bg-foreground`.
-
-2. **`src/components/landing/OneImageToVisualLibrarySection.tsx`**
-   - Line 214: replace `bg-primary/90 text-primary-foreground` with `bg-foreground/80 text-background`.
-
-3. **`src/components/landing/HowItWorks.tsx`**
-   - Line 153: soften dashed border to `border-border/70`.
-
-4. **`src/components/landing/ProductCategoryShowcase.tsx`**
-   - Line 82: replace `text-primary-foreground` with `text-background` (token correctness, identical visual).
-
-5. **`src/components/home/HomeHero.tsx`** (optional, for full symmetry)
-   - Line 64: "Original" badge — change `bg-primary/90 text-primary-foreground` to `bg-foreground/80 text-background` so both pages use the same neutral badge style.
-
-That's it — these are the last remaining mismatches. After this, both pages will share an identical design language.
-
-**Approve to apply these 5 small refinements?**
+**Approve to apply.**

@@ -9,44 +9,28 @@ import { useMemo } from 'react';
 
 const faqs = [
   {
-    q: 'Will the images look AI-generated?',
-    a: 'No. Our AI generates studio-quality images indistinguishable from professional photography. Combined with your Brand Profile, every image maintains consistent, realistic lighting and composition automatically.',
+    q: 'How fast do I get my first set of visuals?',
+    a: 'Under two minutes. Upload one product photo, pick your shots, and your AI studio team delivers a full set of brand-ready images while you wait — no booking, no briefing, no back-and-forth.',
   },
   {
-    q: 'What are Visual Types?',
-    a: 'Visual Types are built for specific content goals. Choose from seven core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Picture Perspectives, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
+    q: 'One product photo — what can I actually create?',
+    a: 'From a single upload: product page hero shots, on-model try-ons, lifestyle scenes, social and ad creatives, UGC-style selfies, mirror shots, flat lays, and short product videos. Same product, endless scenes.',
   },
   {
-    q: 'What is Freestyle?',
-    a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Visual Types fit your vision.',
+    q: 'Will my visuals look on-brand and consistent?',
+    a: 'Yes. Lock your scene, lighting, palette, and mood once in your Brand Profile — every new product drops into the same world automatically. Your catalog stays cohesive without art direction on every shot.',
   },
   {
-    q: 'How does Virtual Try-On work?',
-    a: 'Upload a clothing item and choose from our library of 40+ diverse AI models across different ethnicities, body types, and ages. Select a pose, framing, and scene, and the AI generates realistic photos of the model wearing your product.',
+    q: 'What is my AI Studio Team?',
+    a: '10 AI specialists — photographer, stylist, model director, set designer, retoucher, and more — working together behind the scenes. You give the product; they handle composition, lighting, posing, and finishing.',
   },
   {
-    q: 'What is the Content Calendar?',
-    a: 'The Content Calendar automates recurring visual runs. You choose your products, select your Visual Types, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
+    q: 'Can I generate product videos too?',
+    a: 'Absolutely. Turn any product image into short motion content for Reels, TikTok, Meta ads, and product pages. Cinematic camera moves, no shoot required.',
   },
   {
-    q: 'How does Brand Profile work?',
-    a: 'When you create a Brand Profile, you set your preferred tone, lighting style, background, color temperature, and composition rules. Every future generation — across Visual Studio and Freestyle — uses this profile automatically so your visuals stay on-brand without manual adjustments.',
-  },
-  {
-    q: 'How many credits does each generation cost?',
-    a: 'Visual Types and Virtual Try-On cost 6 credits per image. Freestyle costs 4 credits per image, or 6 credits when you add a model or scene. Your dashboard always shows the exact cost before you generate.',
-  },
-  {
-    q: 'Is there a free trial?',
-    a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Visual Type or try Freestyle and see the quality before committing to a plan.',
-  },
-  {
-    q: 'What image formats and sizes are supported?',
-    a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print. You can download in JPEG or PNG format.',
-  },
-  {
-    q: 'Can I cancel my subscription anytime?',
-    a: 'Absolutely. You can cancel, upgrade, or downgrade your plan at any time. There are no long-term contracts or cancellation fees. Unused monthly credits don\'t roll over, but top-up credits never expire.',
+    q: 'How do I try it without paying?',
+    a: 'Every account starts with 20 free credits — no credit card required. Enough to generate your first full visual set and see the quality before committing to a plan.',
   },
 ];
 
