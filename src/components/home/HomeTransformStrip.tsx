@@ -150,11 +150,6 @@ function GridCard({
 }) {
   const [loaded, setLoaded] = useState(false);
 
-  // Reset load state when src changes (category switch).
-  useEffect(() => {
-    setLoaded(false);
-  }, [card.src]);
-
   return (
     <div
       className={cn(
