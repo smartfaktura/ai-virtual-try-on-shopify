@@ -18,7 +18,7 @@ import { CategoryUseCases } from '@/components/seo/photography/category/Category
 import { CategoryRelatedCategories } from '@/components/seo/photography/category/CategoryRelatedCategories';
 import { CategoryFAQ } from '@/components/seo/photography/category/CategoryFAQ';
 import { getCategoryPage, PREVIEW } from '@/data/aiProductPhotographyCategoryPages';
-import { getOptimizedSrcSet, getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 /**
  * Inject a <link rel="preload" as="image"> for the LCP hero tile so the
@@ -31,9 +31,8 @@ function HeroPreload({ url }: { url: string }) {
     const link = document.createElement('link');
     link.rel = 'preload';
     link.as = 'image';
-    link.setAttribute('imagesrcset', getOptimizedSrcSet(url, [480, 720, 960, 1280], 55));
-    link.setAttribute('imagesizes', '(min-width: 1024px) 28vw, 50vw');
-    link.href = getOptimizedUrl(url, { width: 720, quality: 55 });
+    // Quality-only: width transforms crop/zoom these editorial images server-side.
+    link.href = getOptimizedUrl(url, { quality: 60 });
     link.fetchPriority = 'high';
     document.head.appendChild(link);
     return () => {

@@ -44,8 +44,13 @@ export function getOptimizedUrl(
 
 /**
  * Build a responsive `srcSet` string at the given widths (in CSS pixels).
- * Pairs nicely with a `sizes` attribute on the <img> tag so the browser
- * downloads the smallest variant that still covers the rendered tile.
+ *
+ * ⚠️ WARNING: Supabase's `/render/image/` endpoint CROPS server-side when a
+ * width is provided without a height — producing a zoomed-in result. Only use
+ * this helper for true fixed-size thumbnails (avatars, product chips) whose
+ * container dimensions exactly match one of the widths. For full-bleed,
+ * editorial, card, hero, or aspect-ratio container images, use
+ * `getOptimizedUrl(url, { quality: 60 })` instead.
  */
 export function getOptimizedSrcSet(
   url: string | null | undefined,
