@@ -1,28 +1,54 @@
-## Fix "Choose your product category" — correct images + accurate shot counts
+## Fix category page images + add per-category "Built for every category" section
 
-The category chooser currently shows wrong shot counts (it counts subcategory chips, not real scenes) and uses generic preview images that don't match each category. I queried the live `product_image_scenes` catalog to get real scene totals per group and hand-picked one strong editorial/lifestyle preview per category.
+The 10 `/ai-product-photography/{slug}` pages currently reuse a small pool of generic preview images that don't match each category (Bags page shows a watch, Jewelry shows fashion shots, Electronics shows handbags, etc.). The fix pulls real, category-matched previews from the live `product_image_scenes` catalog — the same source `/product-visual-library` uses — so every image is exactly on-topic for its page.
 
-### Changes
+I queried the catalog and now have one verified preview per `(category_collection, sub_category)` pair across all 35 collections, so I can build accurate scene examples for every page.
 
-**1. `src/data/aiProductPhotographyCategories.ts`**
-- Add a new `shotCount: number` field to `ProductPhotoCategory`.
-- Replace each `previewImage` with a category-matching editorial shot pulled from the live catalog.
-- Set real shot totals (aggregated across all related subcategories in the live catalog).
+### 1. Replace per-page imagery in `src/data/aiProductPhotographyCategoryPages.ts`
 
-| Category               | Shot count | New preview (from live catalog)             |
-|------------------------|-----------:|---------------------------------------------|
-| Fashion                | 425        | Chair Studio Editorial (garments)           |
-| Footwear               | 226        | Hard Shadow Hero (sneakers)                 |
-| Beauty & Skincare      | 98         | Formula Smear Editorial                     |
-| Fragrance              | 69         | In-Hand Lifestyle (fragrance)               |
-| Jewelry                | 144        | Editorial Neck Portrait (necklaces)         |
-| Bags & Accessories     | 389        | Reclined Studio Editorial (bags)            |
-| Home & Furniture       | 60         | Color Hero Decor Campaign                   |
-| Food & Beverage        | 115        | Sunburn Editorial Sip (beverages)           |
-| Supplements & Wellness | 51         | Dose Preparation Editorial                  |
-| Electronics & Gadgets  | 33         | Color Hero Tech Campaign                    |
+For each of the 10 category pages, replace `heroImageId` and the 8 `sceneExamples` with real previews from the matching collection(s). Each scene now uses the **actual subcategory** from the catalog as `category` (e.g. `Creative Shots`, `Editorial Studio Looks`, `Essential Shots`, `Editorial Wellness Routine`) so it matches exactly what users see on `/product-visual-library`.
 
-**2. `src/components/seo/photography/PhotographyCategoryChooser.tsx`**
-- Change the chip from `{cat.subcategories.length}+ shots` → `{cat.shotCount}+ shots` so it shows real catalog totals (425 instead of 8, etc.).
+| Page                          | Catalog collections used                                                                                  |
+|-------------------------------|-----------------------------------------------------------------------------------------------------------|
+| Fashion                       | `garments`, `dresses`, `jeans`, `jackets`, `hoodies`, `activewear`, `swimwear`, `lingerie`                |
+| Footwear                      | `sneakers`, `shoes`, `boots`, `high-heels`                                                                |
+| Beauty & Skincare             | `beauty-skincare`, `makeup-lipsticks`                                                                     |
+| Fragrance                     | `fragrance`                                                                                               |
+| Jewelry                       | `jewellery-rings`, `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets`                     |
+| Bags & Accessories            | `bags-accessories`, `backpacks`, `wallets`, `belts`, `scarves`, `hats-small`, `eyewear`, `watches`        |
+| Home & Furniture              | `home-decor`, `furniture`                                                                                 |
+| Food & Beverage               | `food`, `snacks-food`, `beverages`                                                                        |
+| Supplements & Wellness        | `supplements-wellness`                                                                                    |
+| Electronics & Gadgets         | `tech-devices`                                                                                            |
 
-No other components need changes — the chooser is the only consumer of these fields.
+### 2. Add a "Built for every category" section to every category page
+
+Create a new component `CategoryBuiltForEveryCategory.tsx` that renders the same `One photo · Every shot — Built for every category.` section pattern from the homepage, but the chips (and revealed images) use this page's own `sceneExamples`. Each chip label uses the format the user requested:
+
+> `Clothing & Apparel · Creative Shots`, `Clothing & Apparel · Essential Shots`, `Clothing & Apparel · Elevated Location Editorial`, `Clothing & Apparel · Editorial Studio Looks`
+
+i.e. `{COLLECTION_LABEL} · {sub_category}`.
+
+To support this, extend each `SceneExample` with two optional fields:
+- `collectionLabel: string` (e.g. `"Clothing & Apparel"`)
+- `subCategory: string` (e.g. `"Creative Shots"`)
+
+Then `CategoryBuiltForEveryCategory` will:
+- Render the eyebrow `One photo · Every shot` and heading `Built for every category.`
+- Show a horizontally-scrollable chip rail built from the page's own scenes.
+- Reveal the corresponding preview image when a chip is selected.
+
+Mount the new section in `src/pages/seo/AIProductPhotographyCategory.tsx` between `CategorySceneExamples` and `PhotographyHowItWorks`.
+
+### 3. Files touched
+
+- `src/data/aiProductPhotographyCategoryPages.ts` — replace hero + scene example image IDs with real catalog matches; add `collectionLabel` + `subCategory` per scene; add `SceneExample` field types.
+- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — new component (chips + active preview), styled to match the homepage section.
+- `src/pages/seo/AIProductPhotographyCategory.tsx` — mount the new section.
+
+### Expected result
+
+- Every preview on every category page comes from that category's real scene library.
+- Bags page shows real bags/wallets/eyewear/watches scenes (not a watch on green).
+- Electronics page shows real tech device scenes (not handbags).
+- Each page has a polished "Built for every category" chip selector using subcategory labels like `Clothing & Apparel · Creative Shots`.

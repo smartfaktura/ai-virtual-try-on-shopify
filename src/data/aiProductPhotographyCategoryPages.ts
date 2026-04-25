@@ -3,6 +3,10 @@
  * /ai-product-photography/{slug}. The dynamic page template
  * (src/pages/seo/AIProductPhotographyCategory.tsx) renders every page from
  * this data — do not hand-roll per-category pages.
+ *
+ * All `imageId` values come from the live `product_image_scenes` catalog
+ * (the same data backing /product-visual-library), so previews are exactly
+ * on-topic for each page.
  */
 
 export type IconKey =
@@ -31,11 +35,19 @@ export interface UseCase {
   icon: IconKey;
 }
 
+/**
+ * A scene example pulled from the live scene library.
+ * `collectionLabel` + `subCategory` are used by the
+ * "Built for every category" chip selector to render labels like:
+ *   "Clothing & Apparel · Creative Shots".
+ */
 export interface SceneExample {
   label: string;
   category: string;
   imageId: string;
   alt: string;
+  collectionLabel: string;
+  subCategory: string;
 }
 
 export interface FAQ {
@@ -49,8 +61,8 @@ export interface CategoryPage {
   groupName: string;
   seoTitle: string;
   metaDescription: string;
-  h1Lead: string;        // smaller, dark line
-  h1Highlight: string;   // larger, slate accent line (matches PhotographyHero pattern)
+  h1Lead: string;
+  h1Highlight: string;
   heroEyebrow: string;
   heroSubheadline: string;
   primaryKeyword: string;
@@ -62,7 +74,7 @@ export interface CategoryPage {
   sceneExamples: SceneExample[];
   useCases: UseCase[];
   faqs: FAQ[];
-  relatedCategories: string[]; // slugs
+  relatedCategories: string[];
   heroImageId: string;
   heroAlt: string;
 }
@@ -102,7 +114,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     ],
     subcategories: [
       'Clothing & Apparel', 'Dresses', 'Hoodies', 'Jeans', 'Jackets',
-      'Activewear & Sportswear', 'Swimwear', 'Lingerie',
+      'Activewear', 'Swimwear', 'Lingerie',
     ],
     painPoints: [
       'Fashion brands need many visuals per product — product page, ads, social, lookbook, and campaign.',
@@ -121,14 +133,14 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Website banners',             text: 'Hero banners and collection covers built around your brand.', icon: 'rocket' },
     ],
     sceneExamples: [
-      { label: 'Minimal Studio Flatlay',     category: 'Studio',     imageId: '1776691909999-ra3rym',  alt: 'AI fashion product photography example: minimal studio flatlay for a clothing brand.' },
-      { label: 'Editorial Campaign',         category: 'Editorial',  imageId: '1776691906436-3fe7l9',  alt: 'AI fashion product photography example: editorial model-style campaign image.' },
-      { label: 'Streetwear Hoodie Scene',    category: 'Streetwear', imageId: '1776691907477-77vt46',  alt: 'AI fashion product photography example: streetwear hoodie in an urban scene.' },
-      { label: 'Denim Lifestyle',            category: 'Lifestyle',  imageId: '1776691911049-gsxycu',  alt: 'AI fashion product photography example: denim styled in a lifestyle visual.' },
-      { label: 'Activewear Fitness',         category: 'Activewear', imageId: '1776690212460-cq4xnb',  alt: 'AI fashion product photography example: activewear in a fitness scene.' },
-      { label: 'Summer Swimwear Campaign',   category: 'Seasonal',   imageId: '1776524131703-gvh4bb',  alt: 'AI fashion product photography example: summer swimwear campaign visual.' },
-      { label: 'Jacket Outdoor Scene',       category: 'Outdoor',    imageId: '1776574208384-fmg2u3',  alt: 'AI fashion product photography example: jacket in an outdoor lifestyle scene.' },
-      { label: 'Fabric Detail Close-up',     category: 'Detail',     imageId: '1776691912818-yiu2uq',  alt: 'AI fashion product photography example: macro fabric texture close-up.' },
+      { label: 'Sunlit Tailoring Studio',   category: 'Editorial Studio Looks',   imageId: '1776664933175-rjlbn6', collectionLabel: 'Clothing & Apparel', subCategory: 'Editorial Studio Looks',   alt: 'AI fashion product photography example: editorial studio look in sunlit tailoring scene.' },
+      { label: 'Greenhouse Elegance',       category: 'Creative Shots',           imageId: '1776840733386-n4bc6x', collectionLabel: 'Clothing & Apparel', subCategory: 'Creative Shots',           alt: 'AI fashion product photography example: creative greenhouse elegance shot.' },
+      { label: 'Side Profile Street Study', category: 'Elevated Location Editorial', imageId: '1776664732243-2tc8uy', collectionLabel: 'Clothing & Apparel', subCategory: 'Elevated Location Editorial', alt: 'AI fashion product photography example: elevated location editorial street study.' },
+      { label: 'Super Editorial Campaign',  category: 'Campaign Statement Images', imageId: '1776606017719-zzhgy7', collectionLabel: 'Clothing & Apparel', subCategory: 'Campaign Statement Images', alt: 'AI fashion product photography example: super editorial campaign visual.' },
+      { label: 'Ghost Mannequin Shot',      category: 'Essential Shots',          imageId: '1776841027943-vetumj', collectionLabel: 'Clothing & Apparel', subCategory: 'Essential Shots',          alt: 'AI fashion product photography example: clean ghost mannequin product page shot.' },
+      { label: 'Editorial Floor Stretch',   category: 'Editorial Sport Poses',    imageId: '1776192312181-3v0u0t', collectionLabel: 'Activewear',         subCategory: 'Editorial Sport Poses',    alt: 'AI fashion product photography example: activewear editorial floor stretch pose.' },
+      { label: 'Sunlit Arch Swim Editorial', category: 'Editorial Resort Poses',  imageId: '1776522810241-oh3lyd', collectionLabel: 'Swimwear',           subCategory: 'Editorial Resort Poses',   alt: 'AI fashion product photography example: swimwear editorial resort pose.' },
+      { label: 'Sunlit Tailored Chair Pose', category: 'Editorial Outerwear Portraits', imageId: '1776691912818-yiu2uq', collectionLabel: 'Jackets',     subCategory: 'Editorial Outerwear Portraits', alt: 'AI fashion product photography example: jacket editorial outerwear portrait.' },
     ],
     useCases: [
       { title: 'Shopify product pages',     text: 'Hero shots, alternates, and lifestyle scenes for every PDP.', icon: 'shopping-bag' },
@@ -146,8 +158,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create campaign visuals for new clothing drops?',              a: 'Yes. Generate multiple seasonal directions in minutes — perfect for testing campaign concepts before a launch.' },
     ],
     relatedCategories: ['footwear', 'bags-accessories', 'jewelry', 'beauty-skincare'],
-    heroImageId: '1776691909999-ra3rym',
-    heroAlt: 'AI fashion product photography example showing clothing in an editorial lifestyle scene.',
+    heroImageId: '1776606017719-zzhgy7',
+    heroAlt: 'AI fashion product photography example showing a super editorial clothing campaign visual.',
   },
 
   // ─────────────────────────────────────── 2. FOOTWEAR
@@ -195,14 +207,14 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Launch banners',               text: 'Hero banners and collection covers for new drops.',         icon: 'rocket' },
     ],
     sceneExamples: [
-      { label: 'Clean White Studio Shot',  category: 'Studio',     imageId: '1776770345914-cg8uyy',                            alt: 'AI footwear product photography example: clean white studio shoe shot.' },
-      { label: 'Sneaker Streetwear',       category: 'Streetwear', imageId: '1776691907477-77vt46',                            alt: 'AI footwear product photography example: sneaker in a streetwear scene.' },
-      { label: 'Athletic Training',        category: 'Activewear', imageId: '1776690212460-cq4xnb',                            alt: 'AI footwear product photography example: athletic shoe in a training scene.' },
-      { label: 'Boot Outdoor Lifestyle',   category: 'Outdoor',    imageId: '1776574208384-fmg2u3',                            alt: 'AI footwear product photography example: boot in an outdoor lifestyle scene.' },
-      { label: 'Luxury High Heel',         category: 'Editorial',  imageId: '1776691912818-yiu2uq',                            alt: 'AI footwear product photography example: luxury high heel editorial visual.' },
-      { label: 'Hard Shadow Hero',         category: 'Studio',     imageId: 'hard-shadow-shoes-sneakers-1776008136691',        alt: 'AI footwear product photography example: hard shadow hero shoe shot.' },
-      { label: 'Floating Product Hero',    category: 'Studio',     imageId: '1776770347820-s3qwmr',                            alt: 'AI footwear product photography example: floating sneaker hero shot.' },
-      { label: 'Urban Pavement Sneaker',   category: 'Streetwear', imageId: '1776691906436-3fe7l9',                            alt: 'AI footwear product photography example: sneaker on urban pavement.' },
+      { label: 'Geometric Grid Minimal', category: 'Trending Editorial',   imageId: '1776770345914-cg8uyy',                    collectionLabel: 'Sneakers', subCategory: 'Trending Editorial',   alt: 'AI footwear product photography example: trending editorial sneaker shot.' },
+      { label: 'Hard Shadow Hero',       category: 'Concept Shots',        imageId: 'hard-shadow-shoes-sneakers-1776008136691', collectionLabel: 'Sneakers', subCategory: 'Concept Shots',        alt: 'AI footwear product photography example: hard shadow concept sneaker shot.' },
+      { label: 'Night Curb',             category: 'Flash Editorial',      imageId: 'night-curb-flash-1776011807130',           collectionLabel: 'Sneakers', subCategory: 'Flash Editorial',      alt: 'AI footwear product photography example: night curb flash editorial sneaker.' },
+      { label: 'Café Sneaker Moment',    category: 'UGC Style Content',    imageId: '1776770529252-2efq00',                    collectionLabel: 'Sneakers', subCategory: 'UGC Style Content',    alt: 'AI footwear product photography example: UGC café sneaker moment.' },
+      { label: 'Tulle Legs',             category: 'Fashion Editorial',    imageId: '1776845513298-afa4ht',                    collectionLabel: 'Shoes',    subCategory: 'Fashion Editorial',    alt: 'AI footwear product photography example: fashion editorial shoe shot.' },
+      { label: 'Hero Stance',            category: 'Power Looks',          imageId: '1776240691300-bk7f4s',                    collectionLabel: 'Boots',    subCategory: 'Power Looks',          alt: 'AI footwear product photography example: power-look boot hero stance.' },
+      { label: 'Trouser Drop',           category: 'Quiet Luxury Editorial', imageId: '1776240737684-bw95ch',                  collectionLabel: 'Boots',    subCategory: 'Quiet Luxury Editorial', alt: 'AI footwear product photography example: quiet luxury boot editorial.' },
+      { label: 'Seated Heel Studio',     category: 'Editorial Heel Studio', imageId: '1776755942377-gtu4o0',                   collectionLabel: 'High Heels', subCategory: 'Editorial Heel Studio', alt: 'AI footwear product photography example: editorial heel studio shot.' },
     ],
     useCases: [
       { title: 'Shopify product pages',  text: 'Hero shots and alternates for every shoe SKU.',                icon: 'shopping-bag' },
@@ -220,8 +232,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create footwear images for Shopify?',              a: 'Yes. The output is sized for Shopify PDPs, collection grids, banners, and ads.' },
     ],
     relatedCategories: ['fashion', 'bags-accessories', 'jewelry'],
-    heroImageId: '1776770345914-cg8uyy',
-    heroAlt: 'AI footwear product photography example showing a sneaker in a streetwear campaign scene.',
+    heroImageId: 'night-curb-flash-1776011807130',
+    heroAlt: 'AI footwear product photography example showing a sneaker in a night curb flash editorial.',
   },
 
   // ─────────────────────────────────────── 3. BEAUTY & SKINCARE
@@ -269,14 +281,14 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Website banners',            text: 'Hero banners for collection launches.',                     icon: 'rocket' },
     ],
     sceneExamples: [
-      { label: 'Serum Bottle Bathroom',   category: 'Lifestyle',  imageId: 'aesthetic-beauty-closeup-eyewear-1776148096014',     alt: 'AI skincare product photography example: serum bottle in a clean bathroom scene.' },
-      { label: 'Cream Jar on Marble',     category: 'Studio',     imageId: '1776102176417-iih747',                                alt: 'AI skincare product photography example: cream jar on a marble counter.' },
-      { label: 'Lipstick Editorial',      category: 'Editorial',  imageId: 'beauty-closeup-oversized-eyewear-1776150210659',     alt: 'AI cosmetic product photography example: lipstick editorial close-up.' },
-      { label: 'Makeup Flatlay',          category: 'Flatlay',    imageId: '1776691909999-ra3rym',                                alt: 'AI cosmetic product photography example: makeup flatlay layout.' },
-      { label: 'Spa-Inspired Skincare',   category: 'Lifestyle',  imageId: '1776856604775-kxc92a',                                alt: 'AI skincare product photography example: spa-inspired routine scene.' },
-      { label: 'Clean White PDP',         category: 'Studio',     imageId: '1776770347820-s3qwmr',                                alt: 'AI skincare product photography example: clean white product page image.' },
-      { label: 'Texture Macro',           category: 'Detail',     imageId: '1776691912818-yiu2uq',                                alt: 'AI cosmetic product photography example: macro texture shot.' },
-      { label: 'Beauty Campaign Hero',    category: 'Campaign',   imageId: '1776691906436-3fe7l9',                                alt: 'AI beauty product photography example: campaign hero image.' },
+      { label: 'Shadow Surface Hero',       category: 'Editorial Skincare Product Studio', imageId: '1776239826550-uaopmt', collectionLabel: 'Beauty & Skincare', subCategory: 'Editorial Skincare Product Studio', alt: 'AI skincare product photography example: editorial studio shadow surface hero.' },
+      { label: 'Sunny Shadows',             category: 'Creative Shots',                    imageId: '1776843788569-i1s066', collectionLabel: 'Beauty & Skincare', subCategory: 'Creative Shots',                    alt: 'AI skincare product photography example: sunny shadows creative shot.' },
+      { label: 'Color Surface Skincare Still', category: 'Aesthetic Color Skincare Stories', imageId: '1776843772252-pv4pt8', collectionLabel: 'Beauty & Skincare', subCategory: 'Aesthetic Color Skincare Stories', alt: 'AI skincare product photography example: aesthetic color surface still.' },
+      { label: 'Vanity Mirror Routine',     category: 'Daily Routine / Vanity UGC',         imageId: '1776843790436-teib3k', collectionLabel: 'Beauty & Skincare', subCategory: 'Daily Routine / Vanity UGC',         alt: 'AI skincare product photography example: vanity mirror routine UGC.' },
+      { label: 'Cheek Application Editorial', category: 'On-Skin Editorial Rituals',        imageId: '1776239798302-zux4q2', collectionLabel: 'Beauty & Skincare', subCategory: 'On-Skin Editorial Rituals',         alt: 'AI skincare product photography example: on-skin cheek application editorial.' },
+      { label: 'Front View',                category: 'Essential Shots',                   imageId: '1776239813791-r7ih97', collectionLabel: 'Beauty & Skincare', subCategory: 'Essential Shots',                   alt: 'AI skincare product photography example: clean essential PDP front view.' },
+      { label: 'Gloss Touch Detail',        category: 'Editorial Beauty Product Studio',   imageId: '1776755066377-ttt1by', collectionLabel: 'Makeup & Lipsticks', subCategory: 'Editorial Beauty Product Studio',  alt: 'AI cosmetic product photography example: editorial gloss touch detail.' },
+      { label: 'Lip Closeup Editorial',     category: 'On-Face / In-Hand Beauty Editorial', imageId: '1776243670920-7gzb3b', collectionLabel: 'Makeup & Lipsticks', subCategory: 'On-Face / In-Hand Beauty Editorial', alt: 'AI cosmetic product photography example: on-face lip closeup editorial.' },
     ],
     useCases: [
       { title: 'Shopify product pages',   text: 'PDP-ready hero shots and alternates.',                  icon: 'shopping-bag' },
@@ -294,8 +306,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I use these visuals for beauty ads and Shopify pages?', a: 'Yes. Output is sized for Shopify PDPs, ad placements, and email banners.' },
     ],
     relatedCategories: ['fragrance', 'supplements-wellness', 'jewelry'],
-    heroImageId: 'aesthetic-beauty-closeup-eyewear-1776148096014',
-    heroAlt: 'AI skincare product photography example showing a serum bottle in a clean beauty scene.',
+    heroImageId: '1776239826550-uaopmt',
+    heroAlt: 'AI skincare product photography example showing a skincare bottle in an editorial studio scene.',
   },
 
   // ─────────────────────────────────────── 4. FRAGRANCE
@@ -337,20 +349,20 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Product page photos',    text: 'Crisp PDP-ready angles for every SKU.',                 icon: 'shopping-bag' },
       { title: 'Gift set visuals',       text: 'Holiday and seasonal gifting compositions.',            icon: 'rocket' },
       { title: 'Seasonal campaigns',     text: 'Story-driven visuals for every fragrance drop.',        icon: 'calendar' },
-      { title: 'Editorial scent stories',text: 'Mood-driven editorial scenes that sell the feeling.',   icon: 'camera' },
+      { title: 'Editorial scent stories', text: 'Mood-driven editorial scenes that sell the feeling.',  icon: 'camera' },
       { title: 'Glass bottle close-ups', text: 'Macro details on glass, caps, and labels.',             icon: 'zoom-in' },
       { title: 'Social ad creatives',    text: 'Performance-ready ad variants.',                        icon: 'instagram' },
       { title: 'Website banners',        text: 'Hero banners and collection covers.',                   icon: 'layout-template' },
     ],
     sceneExamples: [
-      { label: 'Marble Luxury',           category: 'Editorial',  imageId: 'near-face-hold-fragrance-1776013185169',          alt: 'AI perfume product photography example: luxury marble fragrance scene.' },
-      { label: 'Golden Hour Campaign',    category: 'Campaign',   imageId: '1776574228066-oyklfz',                            alt: 'AI perfume product photography example: golden hour fragrance campaign.' },
-      { label: 'Minimal Glass Studio',    category: 'Studio',     imageId: 'repeated-shadow-grid-fragrance-1776013389735',    alt: 'AI perfume product photography example: minimal glass bottle studio shot.' },
-      { label: 'Gift Set Holiday',        category: 'Seasonal',   imageId: '1776018020221-aehe8n',                            alt: 'AI perfume product photography example: gift set holiday visual.' },
-      { label: 'Floral Fragrance',        category: 'Lifestyle',  imageId: '1776524131703-gvh4bb',                            alt: 'AI perfume product photography example: floral fragrance scene.' },
-      { label: 'Dark Luxury Editorial',   category: 'Editorial',  imageId: '1776018038709-gmt0eg',                            alt: 'AI perfume product photography example: dark luxury editorial image.' },
-      { label: 'Bathroom Vanity',         category: 'Lifestyle',  imageId: '1776856604775-kxc92a',                            alt: 'AI perfume product photography example: bathroom vanity fragrance shot.' },
-      { label: 'Wide Campaign Banner',    category: 'Banner',     imageId: '1776574255634-kmhz9g',                            alt: 'AI perfume product photography example: wide campaign banner.' },
+      { label: 'Eclipse Shadow',        category: 'Conceptual Editorial', imageId: '1776842387930-h6xw7w',                  collectionLabel: 'Fragrance', subCategory: 'Conceptual Editorial', alt: 'AI perfume product photography example: conceptual eclipse shadow editorial.' },
+      { label: 'Sheer Motion',          category: 'Dream Editorial',      imageId: '1776842418986-69fvli',                  collectionLabel: 'Fragrance', subCategory: 'Dream Editorial',      alt: 'AI perfume product photography example: dream editorial sheer motion.' },
+      { label: 'Volcanic Sunset',       category: 'Editorial',            imageId: '1776018039712-1hifzr',                  collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: editorial volcanic sunset bottle.' },
+      { label: 'Clean Packshot',        category: 'Essential Shots',      imageId: 'clean-packshot-fragrance-1776013150532', collectionLabel: 'Fragrance', subCategory: 'Essential Shots',      alt: 'AI perfume product photography example: clean essential packshot.' },
+      { label: 'Near Face Hold',        category: 'Editorial',            imageId: 'near-face-hold-fragrance-1776013185169', collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: near-face hold editorial.' },
+      { label: 'Repeated Shadow Grid',  category: 'Conceptual Editorial', imageId: 'repeated-shadow-grid-fragrance-1776013389735', collectionLabel: 'Fragrance', subCategory: 'Conceptual Editorial', alt: 'AI perfume product photography example: repeated shadow grid concept.' },
+      { label: 'Golden Hour Bottle',    category: 'Editorial',            imageId: '1776574228066-oyklfz',                  collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: golden hour fragrance editorial.' },
+      { label: 'Dark Luxury Bottle',    category: 'Editorial',            imageId: '1776018038709-gmt0eg',                  collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: dark luxury fragrance editorial.' },
     ],
     useCases: [
       { title: 'Shopify product pages',   text: 'PDP hero shots and alternates.',                       icon: 'shopping-bag' },
@@ -368,8 +380,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create perfume gift set images?',                         a: 'Yes — including holiday gifting scenes, boxed sets, and PR-ready compositions.' },
     ],
     relatedCategories: ['beauty-skincare', 'jewelry', 'home-furniture'],
-    heroImageId: 'near-face-hold-fragrance-1776013185169',
-    heroAlt: 'AI perfume product photography example showing a fragrance bottle in a luxury campaign setup.',
+    heroImageId: '1776842387930-h6xw7w',
+    heroAlt: 'AI perfume product photography example showing a fragrance bottle in a conceptual editorial scene.',
   },
 
   // ─────────────────────────────────────── 5. JEWELRY
@@ -417,14 +429,14 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Social ad creatives',     text: 'Ad variants for Meta and Pinterest.',                  icon: 'instagram' },
     ],
     sceneExamples: [
-      { label: 'Gold Ring Macro',         category: 'Detail',     imageId: '1776102176417-iih747',  alt: 'AI jewelry product photography example: gold ring macro detail.' },
-      { label: 'Earrings Editorial',      category: 'Editorial',  imageId: '1776691906436-3fe7l9',  alt: 'AI jewelry product photography example: earrings editorial portrait.' },
-      { label: 'Necklace Editorial',      category: 'Editorial',  imageId: '1776691911049-gsxycu',  alt: 'AI jewelry product photography example: necklace editorial scene.' },
-      { label: 'Bracelet Wrist',          category: 'Lifestyle',  imageId: '1776691907477-77vt46',  alt: 'AI jewelry product photography example: bracelet wrist shot.' },
-      { label: 'Minimal White PDP',       category: 'Studio',     imageId: '1776770347820-s3qwmr',  alt: 'AI jewelry product photography example: minimal white product page image.' },
-      { label: 'Velvet Luxury',           category: 'Luxury',     imageId: '1776018020221-aehe8n',  alt: 'AI jewelry product photography example: luxury velvet jewelry scene.' },
-      { label: 'Diamond Close-up',        category: 'Detail',     imageId: '1776691912818-yiu2uq',  alt: 'AI jewelry product photography example: diamond close-up.' },
-      { label: 'Campaign Hero',           category: 'Campaign',   imageId: '1776574228066-oyklfz',  alt: 'AI jewelry product photography example: campaign hero image.' },
+      { label: 'Floating Ring Studio',         category: 'Editorial Product Studio', imageId: '1776244136599-8gw62e', collectionLabel: 'Rings',     subCategory: 'Editorial Product Studio', alt: 'AI jewelry product photography example: editorial floating ring studio.' },
+      { label: 'Natural Hand Diamond Portrait',category: 'On-Hand Editorial',        imageId: '1776667135186-jxx6bj', collectionLabel: 'Rings',     subCategory: 'On-Hand Editorial',       alt: 'AI jewelry product photography example: on-hand diamond portrait.' },
+      { label: 'Editorial Neck Portrait',      category: 'Editorial Neck Studio',    imageId: '1776243905045-8aw72b', collectionLabel: 'Necklaces', subCategory: 'Editorial Neck Studio',   alt: 'AI jewelry product photography example: editorial neck necklace portrait.' },
+      { label: 'Dark Campaign Necklace',       category: 'Campaign Necklace Statements', imageId: '1776243903909-thrg8i', collectionLabel: 'Necklaces', subCategory: 'Campaign Necklace Statements', alt: 'AI jewelry product photography example: dark campaign necklace statement.' },
+      { label: 'Side Profile Earrings',        category: 'On-Ear Editorial',         imageId: '1776753261985-yi93vf', collectionLabel: 'Earrings',  subCategory: 'On-Ear Editorial',        alt: 'AI jewelry product photography example: side profile on-ear editorial.' },
+      { label: 'Clean Wrist Portrait',         category: 'On-Wrist Editorial',       imageId: '1776241050316-4p0d88', collectionLabel: 'Bracelets', subCategory: 'On-Wrist Editorial',      alt: 'AI jewelry product photography example: clean on-wrist bracelet portrait.' },
+      { label: 'Stone Slab Still',             category: 'Jewelry Still Life',       imageId: '1776244160114-g0zd4e', collectionLabel: 'Rings',     subCategory: 'Jewelry Still Life',      alt: 'AI jewelry product photography example: stone slab ring still life.' },
+      { label: 'Color Stone Story',            category: 'Color Ring Stories',       imageId: '1776244131598-oe5699', collectionLabel: 'Rings',     subCategory: 'Color Ring Stories',      alt: 'AI jewelry product photography example: aesthetic color ring story.' },
     ],
     useCases: [
       { title: 'Shopify product pages',  text: 'PDP shots and alternates for every SKU.',           icon: 'shopping-bag' },
@@ -442,8 +454,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create luxury jewelry campaign images?',           a: 'Yes. Generate mood-rich campaign visuals from a single product photo.' },
     ],
     relatedCategories: ['bags-accessories', 'fashion', 'fragrance'],
-    heroImageId: '1776102176417-iih747',
-    heroAlt: 'AI jewelry product photography example showing a ring in a close-up editorial scene.',
+    heroImageId: '1776244136599-8gw62e',
+    heroAlt: 'AI jewelry product photography example showing an editorial floating ring studio shot.',
   },
 
   // ─────────────────────────────────────── 6. BAGS & ACCESSORIES
@@ -491,14 +503,14 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Social ad creatives',      text: 'Ad variations for Meta, TikTok, and Pinterest.',       icon: 'instagram' },
     ],
     sceneExamples: [
-      { label: 'Luxury Handbag Editorial', category: 'Editorial', imageId: '1776856613338-h5sdvq',                                alt: 'AI bag product photography example: luxury handbag editorial scene.' },
-      { label: 'Backpack Travel',          category: 'Lifestyle', imageId: '1776574208384-fmg2u3',                                alt: 'AI bag product photography example: backpack travel lifestyle visual.' },
-      { label: 'Wallet Leather Detail',    category: 'Detail',    imageId: '1776691912818-yiu2uq',                                alt: 'AI accessory product photography example: wallet leather detail close-up.' },
-      { label: 'Sunglasses Summer',        category: 'Lifestyle', imageId: 'beauty-closeup-oversized-eyewear-1776150210659',     alt: 'AI eyewear product photography example: sunglasses summer scene.' },
-      { label: 'Watch Desk Setup',         category: 'Lifestyle', imageId: 'editorial-office-flash-eyewear-1776150153576',       alt: 'AI watch product photography example: watch on a clean desk setup.' },
-      { label: 'Hat Streetwear',           category: 'Streetwear',imageId: '1776691907477-77vt46',                                alt: 'AI accessory product photography example: hat streetwear visual.' },
-      { label: 'Scarf Fashion Flatlay',    category: 'Flatlay',   imageId: '1776691909999-ra3rym',                                alt: 'AI accessory product photography example: scarf fashion flatlay.' },
-      { label: 'Bag PDP Shot',             category: 'Studio',    imageId: '1776770347820-s3qwmr',                                alt: 'AI bag product photography example: clean product page shot.' },
+      { label: 'Sculptural Bag Studio Hero',     category: 'Editorial Product Studio',  imageId: '1776239449949-ygljai',                          collectionLabel: 'Bags',     subCategory: 'Editorial Product Studio',  alt: 'AI bag product photography example: editorial sculptural bag studio hero.' },
+      { label: 'Wind Shoulder Editorial',        category: 'Campaign Bag Statements',   imageId: '1776749559127-ra3hur',                          collectionLabel: 'Bags',     subCategory: 'Campaign Bag Statements',   alt: 'AI bag product photography example: campaign wind shoulder editorial.' },
+      { label: 'Architectural On-Body Editorial', category: 'On-Body Editorial & Location', imageId: '1776239415973-p3m8bq',                       collectionLabel: 'Bags',     subCategory: 'On-Body Editorial & Location', alt: 'AI bag product photography example: architectural on-body editorial.' },
+      { label: 'One Shoulder Carry',             category: 'On-Body Editorial Carry',   imageId: '1776231546156-0g25eq',                          collectionLabel: 'Backpacks', subCategory: 'On-Body Editorial Carry',   alt: 'AI backpack product photography example: editorial one-shoulder carry.' },
+      { label: 'One-Hand Hero Hold',             category: 'In-Hand Editorial Detail',  imageId: '1776695123556-xfq8ak',                          collectionLabel: 'Wallets',  subCategory: 'In-Hand Editorial Detail',  alt: 'AI wallet product photography example: in-hand editorial hero hold.' },
+      { label: 'Beauty Closeup',                 category: 'Editorial Eyewear Portraits', imageId: 'beauty-closeup-oversized-eyewear-1776150210659', collectionLabel: 'Eyewear', subCategory: 'Editorial Eyewear Portraits', alt: 'AI eyewear product photography example: editorial beauty closeup portrait.' },
+      { label: 'Wrist Beauty Portrait',          category: 'On-Wrist Editorial Portraits', imageId: '1776596675195-dlyony',                       collectionLabel: 'Watches',  subCategory: 'On-Wrist Editorial Portraits', alt: 'AI watch product photography example: on-wrist editorial portrait.' },
+      { label: 'Tailored Full-Body Belt Editorial', category: 'On-Body Waist Editorial', imageId: '1776240060436-0k532h',                          collectionLabel: 'Belts',    subCategory: 'On-Body Waist Editorial',   alt: 'AI belt product photography example: on-body waist editorial.' },
     ],
     useCases: [
       { title: 'Shopify product pages',  text: 'PDP visuals and alternates.',                           icon: 'shopping-bag' },
@@ -516,8 +528,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can AI generate lifestyle photos for bags and accessories?', a: 'Yes — travel, city, editorial, and seasonal lifestyle scenes are all available.' },
     ],
     relatedCategories: ['fashion', 'jewelry', 'footwear'],
-    heroImageId: '1776856613338-h5sdvq',
-    heroAlt: 'AI handbag product photography example showing a bag in a luxury lifestyle scene.',
+    heroImageId: '1776239449949-ygljai',
+    heroAlt: 'AI handbag product photography example showing a sculptural bag in an editorial studio scene.',
   },
 
   // ─────────────────────────────────────── 7. HOME & FURNITURE
@@ -562,17 +574,17 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Pinterest-style images', text: 'Vertical inspiration imagery.',                         icon: 'instagram' },
       { title: 'Detail texture shots',   text: 'Macro material and finish details.',                    icon: 'zoom-in' },
       { title: 'Website banners',        text: 'Hero banners and collection covers.',                   icon: 'rocket' },
-      { title: 'Seasonal home campaigns',text: 'Visuals tuned for every season.',                       icon: 'calendar' },
+      { title: 'Seasonal home campaigns', text: 'Visuals tuned for every season.',                      icon: 'calendar' },
     ],
     sceneExamples: [
-      { label: 'Vase on Styled Shelf',     category: 'Lifestyle', imageId: '1776856604775-kxc92a',  alt: 'AI home decor product photography example: vase on a styled shelf.' },
-      { label: 'Candle on Coffee Table',   category: 'Lifestyle', imageId: '1776856607319-693vtg',  alt: 'AI home decor product photography example: candle on a coffee table.' },
-      { label: 'Sofa Modern Living',       category: 'Interior',  imageId: '1776856613338-h5sdvq',  alt: 'AI furniture product photography example: sofa in a modern living room.' },
-      { label: 'Chair Minimal Interior',   category: 'Interior',  imageId: '1776691912818-yiu2uq',  alt: 'AI furniture product photography example: chair in a minimal interior.' },
-      { label: 'Lighting Warm Room',       category: 'Lifestyle', imageId: '1776018020221-aehe8n',  alt: 'AI home decor product photography example: lighting product in a warm room.' },
-      { label: 'Dining Table Scene',       category: 'Interior',  imageId: '1776856609329-7k8ow1',  alt: 'AI furniture product photography example: dining table scene.' },
-      { label: 'Japandi Setup',            category: 'Editorial', imageId: '1776770347820-s3qwmr',  alt: 'AI home decor product photography example: Japandi-inspired setup.' },
-      { label: 'Furniture Catalog Visual', category: 'Catalog',   imageId: '1776691909999-ra3rym',  alt: 'AI furniture product photography example: catalog visual.' },
+      { label: 'Front Object Hero',          category: 'Editorial Object Studio',          imageId: '1776588678988-75liue', collectionLabel: 'Home Decor', subCategory: 'Editorial Object Studio',          alt: 'AI home decor product photography example: editorial front object hero.' },
+      { label: 'Console Placement Story',    category: 'Console / Table / Shelf Lifestyle', imageId: '1776588674825-uxohrz', collectionLabel: 'Home Decor', subCategory: 'Console / Table / Shelf Lifestyle', alt: 'AI home decor product photography example: console placement lifestyle story.' },
+      { label: 'Color Wall Decor Hero',      category: 'Aesthetic Color Decor Stories',    imageId: '1776588673759-kwlh8f', collectionLabel: 'Home Decor', subCategory: 'Aesthetic Color Decor Stories',    alt: 'AI home decor product photography example: aesthetic color wall decor hero.' },
+      { label: 'Paired Objects Composition', category: 'Grouped Styling Still Life',       imageId: '1776588689035-qt6ivw', collectionLabel: 'Home Decor', subCategory: 'Grouped Styling Still Life',       alt: 'AI home decor product photography example: grouped styling still life.' },
+      { label: 'Color Wall Room Hero',       category: 'Aesthetic Color Furniture Stories', imageId: '1776250517893-zqvyrr', collectionLabel: 'Furniture', subCategory: 'Aesthetic Color Furniture Stories', alt: 'AI furniture product photography example: aesthetic color wall room hero.' },
+      { label: 'Front Room Hero',            category: 'Editorial Room Heroes',            imageId: '1776250523409-wvjm1w', collectionLabel: 'Furniture', subCategory: 'Editorial Room Heroes',            alt: 'AI furniture product photography example: editorial front room hero.' },
+      { label: 'Lived-In Room Story',        category: 'Lived-In Interior Lifestyle',      imageId: '1776250524299-apb70u', collectionLabel: 'Furniture', subCategory: 'Lived-In Interior Lifestyle',      alt: 'AI furniture product photography example: lived-in interior room story.' },
+      { label: 'Sunny Shadows',              category: 'Creative Shots',                   imageId: '1776857945899-t4cmfo', collectionLabel: 'Furniture', subCategory: 'Creative Shots',                   alt: 'AI furniture product photography example: sunny shadows creative shot.' },
     ],
     useCases: [
       { title: 'Shopify product pages',   text: 'PDP-ready in-context visuals.',                       icon: 'shopping-bag' },
@@ -590,8 +602,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create Pinterest-style visuals for home decor?',  a: 'Yes — vertical inspiration imagery is a core output for this category.' },
     ],
     relatedCategories: ['fragrance', 'food-beverage', 'electronics-gadgets'],
-    heroImageId: '1776856604775-kxc92a',
-    heroAlt: 'AI home decor product photography example showing a product in a styled interior.',
+    heroImageId: '1776250523409-wvjm1w',
+    heroAlt: 'AI home decor product photography example showing furniture in an editorial front room hero scene.',
   },
 
   // ─────────────────────────────────────── 8. FOOD & BEVERAGE
@@ -640,14 +652,14 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'CPG campaigns',            text: 'Seasonal and launch campaign visuals.',       icon: 'rocket' },
     ],
     sceneExamples: [
-      { label: 'Snack Bag Kitchen',        category: 'Lifestyle', imageId: '1776596629281-anqgf5',  alt: 'AI food product photography example: snack bag in a kitchen scene.' },
-      { label: 'Beverage Can with Ice',    category: 'Beverage',  imageId: '1776856609329-7k8ow1',  alt: 'AI beverage product photography example: can with ice and condensation.' },
-      { label: 'Bottle Splash',            category: 'Beverage',  imageId: '1776856607319-693vtg',  alt: 'AI beverage product photography example: bottle splash visual.' },
-      { label: 'Packaged Food Flatlay',    category: 'Flatlay',   imageId: '1776691909999-ra3rym',  alt: 'AI food product photography example: packaged food flatlay.' },
-      { label: 'Coffee Lifestyle',         category: 'Lifestyle', imageId: '1776856604775-kxc92a',  alt: 'AI beverage product photography example: coffee product lifestyle scene.' },
-      { label: 'Jar with Ingredients',     category: 'Editorial', imageId: '1776102176417-iih747',  alt: 'AI food product photography example: jar with ingredient props.' },
-      { label: 'Wide Campaign Banner',     category: 'Banner',    imageId: '1776574255634-kmhz9g',  alt: 'AI food and beverage product photography example: wide campaign banner.' },
-      { label: 'Clean Ecommerce Image',    category: 'Studio',    imageId: '1776770347820-s3qwmr',  alt: 'AI food product photography example: clean ecommerce product image.' },
+      { label: 'Citrus Impact Packshot',     category: 'Editorial Drink Studio',           imageId: '1776758447403-iisf5e', collectionLabel: 'Beverages', subCategory: 'Editorial Drink Studio',           alt: 'AI beverage product photography example: editorial citrus impact packshot.' },
+      { label: 'Solar Tangerine Wall Hero',  category: 'Aesthetic Color Beverage Stories', imageId: '1776240349610-59fbt7', collectionLabel: 'Beverages', subCategory: 'Aesthetic Color Beverage Stories', alt: 'AI beverage product photography example: aesthetic color wall hero.' },
+      { label: 'Fruit Bed Product Still',    category: 'Fruit / Pour / Surface Still Life', imageId: '1776240326687-r572bp', collectionLabel: 'Beverages', subCategory: 'Fruit / Pour / Surface Still Life', alt: 'AI beverage product photography example: fruit bed surface still life.' },
+      { label: 'Sunlit Street Sip',          category: 'Social Lifestyle / Sport / Party UGC', imageId: '1776758468455-vbo4m1', collectionLabel: 'Beverages', subCategory: 'Social Lifestyle / Sport / Party UGC', alt: 'AI beverage product photography example: social lifestyle sunlit street sip.' },
+      { label: 'Front Hero Snack Portrait',  category: 'Editorial Snack Product Studio',   imageId: '1776246644962-e8u3sy', collectionLabel: 'Snacks',    subCategory: 'Editorial Snack Product Studio',   alt: 'AI food product photography example: editorial front hero snack portrait.' },
+      { label: 'Color Surface Snack Still',  category: 'Aesthetic Color Snack Stories',    imageId: '1776246637687-58l7js', collectionLabel: 'Snacks',    subCategory: 'Aesthetic Color Snack Stories',    alt: 'AI food product photography example: aesthetic color snack still.' },
+      { label: 'Handheld Snack Hero',        category: 'Handheld / Eating Editorial',      imageId: '1776246646982-zm058p', collectionLabel: 'Snacks',    subCategory: 'Handheld / Eating Editorial',      alt: 'AI food product photography example: handheld eating editorial.' },
+      { label: 'Daily Tabletop Snack Story', category: 'Tabletop / Pantry / Daily UGC',    imageId: '1776246639634-bta8qj', collectionLabel: 'Snacks',    subCategory: 'Tabletop / Pantry / Daily UGC',    alt: 'AI food product photography example: daily tabletop snack story.' },
     ],
     useCases: [
       { title: 'Shopify product pages',  text: 'PDP-ready packaging shots.',                          icon: 'shopping-bag' },
@@ -665,8 +677,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create ecommerce images for snacks, bottles, and cans?',  a: 'Yes — sized for Shopify, Amazon, and DTC marketplaces.' },
     ],
     relatedCategories: ['supplements-wellness', 'home-furniture', 'beauty-skincare'],
-    heroImageId: '1776596629281-anqgf5',
-    heroAlt: 'AI food and beverage product photography example showing packaged products in a lifestyle scene.',
+    heroImageId: '1776758447403-iisf5e',
+    heroAlt: 'AI food and beverage product photography example showing an editorial citrus drink packshot.',
   },
 
   // ─────────────────────────────────────── 9. SUPPLEMENTS & WELLNESS
@@ -709,19 +721,19 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Wellness lifestyle',     text: 'Calm, premium routine scenes.',                      icon: 'sparkles' },
       { title: 'Fitness campaigns',      text: 'High-energy training scenes.',                       icon: 'rocket' },
       { title: 'Kitchen routine',        text: 'Morning routine and prep moments.',                  icon: 'camera' },
-      { title: 'Capsule & powder detail',text: 'Macro detail of supplement form.',                   icon: 'zoom-in' },
+      { title: 'Capsule & powder detail', text: 'Macro detail of supplement form.',                  icon: 'zoom-in' },
       { title: 'Clean PDP images',       text: 'E-commerce-ready product photos.',                   icon: 'layout-grid' },
       { title: 'Social ad creatives',    text: 'Performance-ready ad variants.',                     icon: 'instagram' },
     ],
     sceneExamples: [
-      { label: 'Morning Routine Bottle',  category: 'Lifestyle', imageId: '1776856607319-693vtg',  alt: 'AI supplement product photography example: vitamin bottle in a morning routine.' },
-      { label: 'Protein Tub Gym',         category: 'Fitness',   imageId: '1776690212460-cq4xnb',  alt: 'AI supplement product photography example: protein tub in a gym scene.' },
-      { label: 'Wellness Pouch Kitchen',  category: 'Lifestyle', imageId: '1776856604775-kxc92a',  alt: 'AI wellness product photography example: pouch on a kitchen counter.' },
-      { label: 'Capsule Detail',          category: 'Detail',    imageId: '1776691912818-yiu2uq',  alt: 'AI supplement product photography example: capsule detail shot.' },
-      { label: 'Clean White Image',       category: 'Studio',    imageId: '1776770347820-s3qwmr',  alt: 'AI supplement product photography example: clean white product image.' },
-      { label: 'Fitness Campaign',        category: 'Campaign',  imageId: '1776691907477-77vt46',  alt: 'AI supplement product photography example: fitness campaign visual.' },
-      { label: 'Healthy Lifestyle Flatlay',category: 'Flatlay',  imageId: '1776691909999-ra3rym',  alt: 'AI wellness product photography example: healthy lifestyle flatlay.' },
-      { label: 'Website Banner',          category: 'Banner',    imageId: '1776574255634-kmhz9g',  alt: 'AI supplement product photography example: wellness website banner image.' },
+      { label: 'Front View',                category: 'Essential Shots',                imageId: '1776247484304-xpwv5f', collectionLabel: 'Supplements & Wellness', subCategory: 'Essential Shots',                alt: 'AI supplement product photography example: clean essential PDP front view.' },
+      { label: 'Morning Counter Ritual',    category: 'Editorial Wellness Routine',     imageId: '1776247491181-ox42m3', collectionLabel: 'Supplements & Wellness', subCategory: 'Editorial Wellness Routine',     alt: 'AI supplement product photography example: editorial morning counter ritual.' },
+      { label: 'Color Counter Ritual',      category: 'Aesthetic Color Wellness Stories', imageId: '1776247477107-2sx6jy', collectionLabel: 'Supplements & Wellness', subCategory: 'Aesthetic Color Wellness Stories', alt: 'AI supplement product photography example: aesthetic color counter ritual.' },
+      { label: 'Powder and Scoop Still',    category: 'Ingredient / Capsule Still Life', imageId: '1776247494837-xnpgly', collectionLabel: 'Supplements & Wellness', subCategory: 'Ingredient / Capsule Still Life', alt: 'AI supplement product photography example: powder and scoop still life.' },
+      { label: 'Kitchen Counter Daily Use', category: 'Kitchen / Gym / Daily UGC',      imageId: '1776247488148-hdz2kj', collectionLabel: 'Supplements & Wellness', subCategory: 'Kitchen / Gym / Daily UGC',      alt: 'AI supplement product photography example: kitchen counter daily use UGC.' },
+      { label: 'Warm Neutral Studio',       category: 'Creative Shots',                 imageId: '1776856589768-ldrmt8', collectionLabel: 'Supplements & Wellness', subCategory: 'Creative Shots',                 alt: 'AI supplement product photography example: warm neutral studio creative shot.' },
+      { label: 'Editorial Routine Hero',    category: 'Editorial Wellness Routine',     imageId: '1776247491181-ox42m3', collectionLabel: 'Supplements & Wellness', subCategory: 'Editorial Wellness Routine',     alt: 'AI supplement product photography example: editorial wellness routine hero.' },
+      { label: 'Capsule Still Life',        category: 'Ingredient / Capsule Still Life', imageId: '1776247494837-xnpgly', collectionLabel: 'Supplements & Wellness', subCategory: 'Ingredient / Capsule Still Life', alt: 'AI supplement product photography example: capsule still life detail.' },
     ],
     useCases: [
       { title: 'Shopify product pages',   text: 'PDP shots and alternates.',                       icon: 'shopping-bag' },
@@ -739,8 +751,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I use AI visuals for supplement ads and ecommerce?', a: 'Yes. Output is sized for Shopify PDPs, ad placements, and CRM banners.' },
     ],
     relatedCategories: ['food-beverage', 'beauty-skincare', 'home-furniture'],
-    heroImageId: '1776856607319-693vtg',
-    heroAlt: 'AI supplement product photography example showing a vitamin bottle in a wellness lifestyle scene.',
+    heroImageId: '1776247491181-ox42m3',
+    heroAlt: 'AI supplement product photography example showing an editorial morning wellness routine.',
   },
 
   // ─────────────────────────────────────── 10. ELECTRONICS & GADGETS
@@ -788,14 +800,14 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Social ad creatives',     text: 'Performance-ready ad variations.',               icon: 'instagram' },
     ],
     sceneExamples: [
-      { label: 'Headphones Clean Desk',  category: 'Lifestyle', imageId: '1776856609329-7k8ow1',                            alt: 'AI electronics product photography example: headphones on a clean desk.' },
-      { label: 'Phone Case PDP',         category: 'Studio',    imageId: '1776770347820-s3qwmr',                            alt: 'AI electronics product photography example: phone case product page image.' },
-      { label: 'Gadget Launch Hero',     category: 'Launch',    imageId: '1776856613338-h5sdvq',                            alt: 'AI electronics product photography example: gadget launch hero visual.' },
-      { label: 'Smart Device Lifestyle', category: 'Lifestyle', imageId: '1776856604775-kxc92a',                            alt: 'AI electronics product photography example: smart device lifestyle scene.' },
-      { label: 'Minimal Tech Studio',    category: 'Studio',    imageId: 'editorial-office-flash-eyewear-1776150153576',   alt: 'AI electronics product photography example: minimal tech studio shot.' },
-      { label: 'Screen Reflection',      category: 'Detail',    imageId: '1776691912818-yiu2uq',                            alt: 'AI electronics product photography example: screen reflection detail.' },
-      { label: 'Wide Website Banner',    category: 'Banner',    imageId: '1776574255634-kmhz9g',                            alt: 'AI electronics product photography example: wide website banner.' },
-      { label: 'Clean Ecommerce Image',  category: 'Studio',    imageId: '1776691909999-ra3rym',                            alt: 'AI electronics product photography example: clean ecommerce image.' },
+      { label: 'Front Tech Hero',          category: 'Editorial Tech Studio',           imageId: '1776250225810-gdcnka', collectionLabel: 'Tech / Devices', subCategory: 'Editorial Tech Studio',           alt: 'AI electronics product photography example: editorial front tech hero.' },
+      { label: 'Color Wall Tech Hero',     category: 'Aesthetic Color Tech Stories',    imageId: '1776590052780-j2ahu2', collectionLabel: 'Tech / Devices', subCategory: 'Aesthetic Color Tech Stories',    alt: 'AI electronics product photography example: aesthetic color wall tech hero.' },
+      { label: 'In-Hand Tech Hero',        category: 'Desk / Hand / Daily Use UGC',     imageId: '1776590053673-96gw3b', collectionLabel: 'Tech / Devices', subCategory: 'Desk / Hand / Daily Use UGC',     alt: 'AI electronics product photography example: in-hand tech hero UGC.' },
+      { label: 'Desk Surface Tech Still',  category: 'Surface / Setup / Product Still Life', imageId: '1776250220160-yzxngj', collectionLabel: 'Tech / Devices', subCategory: 'Surface / Setup / Product Still Life', alt: 'AI electronics product photography example: desk surface tech still life.' },
+      { label: 'Front View',               category: 'Essential Shots',                 imageId: '1776250227186-ipm40h', collectionLabel: 'Tech / Devices', subCategory: 'Essential Shots',                 alt: 'AI electronics product photography example: clean essential PDP front view.' },
+      { label: 'Tech Studio Hero',         category: 'Editorial Tech Studio',           imageId: '1776250225810-gdcnka', collectionLabel: 'Tech / Devices', subCategory: 'Editorial Tech Studio',           alt: 'AI electronics product photography example: editorial tech studio hero.' },
+      { label: 'Daily Use Setup',          category: 'Desk / Hand / Daily Use UGC',     imageId: '1776590053673-96gw3b', collectionLabel: 'Tech / Devices', subCategory: 'Desk / Hand / Daily Use UGC',     alt: 'AI electronics product photography example: daily use desk setup.' },
+      { label: 'Color Story Tech',         category: 'Aesthetic Color Tech Stories',    imageId: '1776590052780-j2ahu2', collectionLabel: 'Tech / Devices', subCategory: 'Aesthetic Color Tech Stories',    alt: 'AI electronics product photography example: aesthetic color story tech.' },
     ],
     useCases: [
       { title: 'Shopify product pages', text: 'PDP visuals and alternates.',                          icon: 'shopping-bag' },
@@ -813,8 +825,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create ecommerce images for phone cases, headphones, and devices?', a: 'Yes — all common tech accessories are supported.' },
     ],
     relatedCategories: ['home-furniture', 'bags-accessories', 'food-beverage'],
-    heroImageId: '1776856609329-7k8ow1',
-    heroAlt: 'AI electronics product photography example showing a gadget in a clean desk setup.',
+    heroImageId: '1776250225810-gdcnka',
+    heroAlt: 'AI electronics product photography example showing an editorial tech studio hero shot.',
   },
 ];
 
