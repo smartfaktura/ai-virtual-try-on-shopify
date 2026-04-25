@@ -156,49 +156,47 @@ export default function Blog() {
       />
       <JsonLd data={blogListJsonLd} />
 
-      <section className="bg-[#FAFAF8] pt-28 sm:pt-36 pb-20 sm:pb-28">
+      <section className="bg-[#FAFAF8] pt-20 sm:pt-32 pb-16 sm:pb-24 overflow-x-hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-4">
               Journal
             </p>
-            <h1 className="text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] mb-5 leading-[1.05]">
+            <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.025em] mb-4 sm:mb-5 leading-[1.1] px-2">
               Notes on AI photography
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-[15px] sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-2">
               Insights on AI product photography, visual content strategy, and e-commerce growth.
             </p>
           </div>
 
-          {/* Category filters */}
+          {/* Category filters — wrap on mobile, no horizontal scroll */}
           {hasAnyPosts && (
-            <div className="-mx-4 px-4 sm:mx-0 sm:px-0 mb-10 sm:mb-12 overflow-x-auto sm:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <div className="flex sm:flex-wrap sm:justify-center gap-2 w-max sm:w-auto">
+            <div className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-12">
+              <button
+                onClick={() => setActiveCategory(null)}
+                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[12px] sm:text-[13px] font-medium transition-colors border ${
+                  !activeCategory
+                    ? 'bg-[#1a1a2e] text-white border-[#1a1a2e]'
+                    : 'bg-white text-foreground/70 border-[#f0efed] hover:border-foreground/30 hover:text-foreground'
+                }`}
+              >
+                All
+              </button>
+              {categories.map((cat) => (
                 <button
-                  onClick={() => setActiveCategory(null)}
-                  className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
-                    !activeCategory
+                  key={cat}
+                  onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+                  className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[12px] sm:text-[13px] font-medium transition-colors border ${
+                    activeCategory === cat
                       ? 'bg-[#1a1a2e] text-white border-[#1a1a2e]'
                       : 'bg-white text-foreground/70 border-[#f0efed] hover:border-foreground/30 hover:text-foreground'
                   }`}
                 >
-                  All
+                  {cat}
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-                    className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
-                      activeCategory === cat
-                        ? 'bg-[#1a1a2e] text-white border-[#1a1a2e]'
-                        : 'bg-white text-foreground/70 border-[#f0efed] hover:border-foreground/30 hover:text-foreground'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           )}
 
@@ -223,8 +221,8 @@ export default function Blog() {
             <BlogSectionBoundary>
               {/* Featured post */}
               {featured && (
-                <Link to={`/blog/${featured.slug}`} className="block group mb-10 sm:mb-12">
-                  <article className="relative overflow-hidden rounded-3xl bg-white border border-[#f0efed] shadow-sm hover:shadow-md transition-all">
+                <Link to={`/blog/${featured.slug}`} className="block group mb-8 sm:mb-12">
+                  <article className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-[#f0efed] shadow-sm hover:shadow-md transition-all">
                     <div className="relative">
                       {featured.coverImage ? (
                         <div className="relative w-full aspect-[16/10] sm:aspect-[2.2/1] overflow-hidden">
@@ -232,21 +230,20 @@ export default function Blog() {
                             src={featured.coverImage}
                             alt={featured.title}
                             className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                            aspectRatio="16/10"
                           />
                         </div>
                       ) : (
                         <CoverFallback category={featured.category} aspect="featured" />
                       )}
-                      <div className="absolute top-4 right-4">
+                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
                         <Badge className="rounded-full text-[10px] bg-white/95 backdrop-blur text-foreground border border-[#f0efed] shadow-sm">
                           Featured
                         </Badge>
                       </div>
                     </div>
-                    <div className="p-6 sm:p-10 lg:p-12">
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-[12px]">
-                        <span className="font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                    <div className="p-5 sm:p-10 lg:p-12">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-x-4 sm:gap-y-2 mb-3 sm:mb-4 text-[11px] sm:text-[12px]">
+                        <span className="font-semibold uppercase tracking-[0.18em] sm:tracking-[0.2em] text-foreground/60">
                           {featured.category}
                         </span>
                         {formatDate(featured.publishDate) && (
@@ -262,10 +259,10 @@ export default function Blog() {
                           </span>
                         )}
                       </div>
-                      <h2 className="text-2xl sm:text-3xl lg:text-[2.25rem] font-semibold text-foreground tracking-[-0.025em] mb-4 leading-[1.15]">
+                      <h2 className="text-[1.375rem] sm:text-3xl lg:text-[2.25rem] font-semibold text-foreground tracking-[-0.02em] mb-3 sm:mb-4 leading-[1.2]">
                         {featured.title}
                       </h2>
-                      <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-6 max-w-2xl line-clamp-3">
+                      <p className="text-muted-foreground text-[14px] sm:text-base leading-relaxed mb-5 sm:mb-6 max-w-2xl line-clamp-3">
                         {featured.excerpt}
                       </p>
                       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
@@ -278,7 +275,7 @@ export default function Blog() {
 
               {/* Post grid */}
               {rest.length > 0 && (
-                <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
                   {rest.map((post) => (
                     <Link key={post.slug} to={`/blog/${post.slug}`} className="block group">
                       <article className="relative h-full border border-[#f0efed] rounded-2xl bg-white hover:shadow-md transition-all overflow-hidden">
@@ -288,14 +285,13 @@ export default function Blog() {
                               src={post.coverImage}
                               alt={post.title}
                               className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                              aspectRatio="16/9"
                             />
                           </div>
                         ) : (
                           <CoverFallback category={post.category} aspect="card" />
                         )}
-                        <div className="p-5 sm:p-6">
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3 text-[11px]">
+                        <div className="p-4 sm:p-6">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-2.5 sm:mb-3 text-[11px]">
                             <span className="font-semibold uppercase tracking-[0.18em] text-foreground/60">
                               {post.category}
                             </span>
@@ -306,7 +302,7 @@ export default function Blog() {
                               </span>
                             )}
                           </div>
-                          <h2 className="text-lg sm:text-xl font-semibold text-foreground tracking-[-0.015em] mb-2 leading-snug">
+                          <h2 className="text-[1.0625rem] sm:text-xl font-semibold text-foreground tracking-[-0.01em] mb-2 leading-snug">
                             {post.title}
                           </h2>
                           <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-2">
@@ -325,17 +321,17 @@ export default function Blog() {
           )}
 
           {/* Dark CTA — site standard */}
-          <div className="mt-14 sm:mt-20 relative overflow-hidden rounded-3xl bg-[#1a1a2e] p-8 sm:p-14 text-center">
+          <div className="mt-12 sm:mt-20 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#1a1a2e] p-7 sm:p-14 text-center">
             <div className="absolute -top-24 -right-24 w-72 h-72 bg-white/[0.04] rounded-full blur-3xl" />
             <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-white/[0.03] rounded-full blur-3xl" />
             <div className="relative">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-3 sm:mb-4">
                 Get started
               </p>
-              <h3 className="text-2xl sm:text-[2rem] font-semibold text-white tracking-[-0.02em] mb-3 px-2">
+              <h3 className="text-[1.5rem] sm:text-[2rem] font-semibold text-white tracking-[-0.02em] mb-3 leading-[1.2]">
                 See AI photography in action
               </h3>
-              <p className="text-white/60 text-sm sm:text-base mb-8 max-w-md mx-auto px-2">
+              <p className="text-white/60 text-[14px] sm:text-base mb-7 sm:mb-8 max-w-md mx-auto">
                 20 free credits, no credit card. Generate your first product image in under 60 seconds.
               </p>
               <Button asChild size="lg" className="rounded-full px-8 font-semibold bg-white text-[#1a1a2e] hover:bg-white/90 w-full sm:w-auto shadow-lg">
