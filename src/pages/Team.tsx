@@ -4,9 +4,7 @@ import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
 import { TEAM_MEMBERS } from '@/data/teamData';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Upload, ScanSearch, Wand2, Zap, Sparkles, CreditCard, X } from 'lucide-react';
+import { ArrowRight, Upload, ScanSearch, Wand2, Zap } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 /* ─── Staggered-fade hook via IntersectionObserver ─── */
@@ -21,7 +19,6 @@ function useStaggeredReveal(count: number) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          // stagger each card 100ms apart
           for (let i = 0; i < count; i++) {
             setTimeout(() => {
               setVisible((prev) => {
@@ -44,7 +41,6 @@ function useStaggeredReveal(count: number) {
   return { containerRef, visible };
 }
 
-/* ─── How-it-works steps ─── */
 const STEPS = [
   { icon: Upload, title: 'Upload your product image', description: 'Drop in any product photo — flat-lay, mannequin, or hanger.' },
   { icon: ScanSearch, title: 'AI team analyzes style & brand', description: 'Your AI specialists read the product, brand profile, and intent.' },
@@ -63,133 +59,140 @@ export default function Team() {
         canonical={`${SITE_URL}/team`}
       />
 
-      {/* ── Hero ── */}
-      <section className="py-24 sm:py-32 text-center px-4">
-        <Badge variant="secondary" className="mb-6 text-xs tracking-widest uppercase px-4 py-1.5">
-          Your AI Creative Studio
-        </Badge>
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground max-w-3xl mx-auto leading-[1.1]">
-          Your AI Creative Studio
-        </h1>
-        <p className="mt-3 text-2xl sm:text-3xl font-semibold text-primary">
-          10 Specialists. Zero Overhead.
-        </p>
-        <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          A dedicated AI-powered creative team that never sleeps, never misses deadlines,
-          and delivers studio-quality product visuals on demand.
-        </p>
-        <p className="mt-3 text-sm text-muted-foreground/70 italic">
-          Powered by advanced generative AI models trained for e-commerce visual production.
-        </p>
-      </section>
+      <div className="bg-[#FAFAF8]">
+        {/* Hero */}
+        <section className="pt-20 pb-16 sm:pt-28 sm:pb-20">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Your AI Creative Studio
+            </p>
+            <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+              10 specialists.
+              <br />
+              <span className="text-[#4a5578]">Zero overhead.</span>
+            </h1>
+            <p className="max-w-2xl mx-auto text-muted-foreground text-base sm:text-lg leading-relaxed">
+              A dedicated AI-powered creative team that never sleeps, never misses deadlines, and delivers studio-quality product visuals on demand.
+            </p>
+          </div>
+        </section>
 
-      {/* ── Team Grid ── */}
-      <section className="pb-24 sm:pb-32 px-4 sm:px-6 lg:px-8">
-        <div
-          ref={containerRef}
-          className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 lg:gap-10"
-        >
-          {TEAM_MEMBERS.map((member, i) => (
-            <div
-              key={member.name}
-              className="group rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300"
-              style={{
-                opacity: visible[i] ? 1 : 0,
-                transform: visible[i] ? 'translateY(0)' : 'translateY(16px)',
-                transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s, border-color 0.3s',
-              }}
-            >
-              <div className="aspect-[4/5] overflow-hidden bg-muted">
-                <video
-                  src={member.videoUrl}
-                  poster={getOptimizedUrl(member.avatar, { quality: 60 })}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="none"
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                />
-              </div>
-              <div className="p-4 sm:p-5 space-y-1.5">
-                <h3 className="font-semibold text-foreground">{member.fullName}</h3>
-                <p className="text-sm font-medium text-primary">{member.role}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed pt-1">{member.description}</p>
-                {/* Expertise tag — fades in on hover */}
-                <Badge
-                  variant="outline"
-                  className="mt-2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                >
-                  {member.expertiseTag}
-                </Badge>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── How Your AI Studio Team Works ── */}
-      <section className="py-20 sm:py-28 border-t border-border bg-background">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            How Your AI Studio Team Works
-          </h2>
-          <p className="mt-4 text-muted-foreground text-lg max-w-xl mx-auto">
-            From upload to download-ready visuals in four simple steps.
-          </p>
-
-          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-            {STEPS.map((step, idx) => (
-              <div key={step.title} className="flex flex-col items-center text-center space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <step.icon className="w-6 h-6 text-primary" />
+        {/* Team grid */}
+        <section className="pb-20 sm:pb-28">
+          <div
+            ref={containerRef}
+            className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
+          >
+            {TEAM_MEMBERS.map((member, i) => (
+              <div
+                key={member.name}
+                className="group rounded-2xl border border-[#f0efed] bg-white overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                style={{
+                  opacity: visible[i] ? 1 : 0,
+                  transform: visible[i] ? 'translateY(0)' : 'translateY(16px)',
+                  transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s',
+                }}
+              >
+                <div className="aspect-[4/5] overflow-hidden bg-muted">
+                  <video
+                    src={member.videoUrl}
+                    poster={getOptimizedUrl(member.avatar, { quality: 60 })}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="none"
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                  />
                 </div>
-                <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                  Step {idx + 1}
-                </span>
-                <h3 className="text-base font-semibold text-foreground leading-snug">{step.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+                <div className="p-5 space-y-1">
+                  <h3 className="text-[15px] font-semibold text-[#1a1a2e] tracking-tight">
+                    {member.fullName}
+                  </h3>
+                  <p className="text-[12px] font-medium text-primary uppercase tracking-wider">
+                    {member.role}
+                  </p>
+                  <p className="text-[13px] text-foreground/60 leading-relaxed pt-1.5">
+                    {member.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
+        </section>
+
+        {/* How it works */}
+        <section className="py-16 sm:py-24 bg-[#f5f5f3]">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-14">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                How it works
+              </p>
+              <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
+                From upload to download in four steps
+              </h2>
+              <p className="text-muted-foreground text-base max-w-xl mx-auto">
+                Your AI studio team handles every step — you just review and download.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {STEPS.map((step, idx) => (
+                <div
+                  key={step.title}
+                  className="bg-white rounded-2xl border border-[#f0efed] shadow-sm p-6 text-left"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                    <step.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                    Step {idx + 1}
+                  </p>
+                  <h3 className="text-[#1a1a2e] text-[16px] font-semibold leading-snug tracking-tight mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-[14px] text-foreground/70 leading-relaxed">{step.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Final dark CTA */}
+      <section className="py-16 lg:py-28 bg-[#1a1a2e] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#475569] blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#64748b] blur-3xl" />
         </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="py-20 sm:py-28 border-t border-border bg-muted/30">
-        <div className="max-w-2xl mx-auto text-center px-4 space-y-8">
-          {/* Trust signal */}
-          <p className="text-sm text-muted-foreground">
-            Perfect for Shopify brands, Amazon sellers, and modern e-commerce teams.
+        <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+            Get started
           </p>
-
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Your AI Studio Team Is Ready
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
+            Your AI studio team is ready
           </h2>
-          <p className="text-muted-foreground text-lg leading-relaxed">
-            Generate professional product visuals in seconds — without photoshoots, studios, or editing.
+          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-10">
+            Generate professional product visuals in seconds — no photoshoots, studios, or editing.
           </p>
-
-          <Button asChild size="lg" className="text-base px-8 min-h-[48px]">
-            <Link to="/auth">
-              Start Creating Free <ArrowRight className="ml-2 h-4 w-4" />
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+            <Link
+              to="/auth"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto"
+            >
+              Start free
+              <ArrowRight size={16} />
             </Link>
-          </Button>
-
-          <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground pt-2">
-            <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Free to try</span>
-            <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5" /> No credit card required</span>
-            <span className="flex items-center gap-1.5"><X className="h-3.5 w-3.5" /> Cancel anytime</span>
+            <Link
+              to="/discover"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"
+            >
+              See examples
+            </Link>
           </div>
-
-          <div className="pt-4">
-            <p className="text-sm text-muted-foreground">
-              Questions? Reach out at{' '}
-              <a href="mailto:hello@vovv.ai" className="text-primary hover:underline font-medium">
-                hello@vovv.ai
-              </a>
-            </p>
-          </div>
+          <p className="text-[11px] tracking-[0.12em] uppercase text-white/40 font-medium mt-8">
+            Free to try · No credit card required
+          </p>
         </div>
       </section>
     </PageLayout>

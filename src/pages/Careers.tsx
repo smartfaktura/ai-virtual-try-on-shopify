@@ -1,27 +1,24 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
-import { Briefcase, Rocket, Users, Palette, MapPin, Clock } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Rocket, Users, Palette, ArrowRight } from 'lucide-react';
 
 const cultureValues = [
   {
     icon: Rocket,
-    title: 'Ship Fast, Learn Faster',
+    title: 'Ship fast, learn faster',
     description:
       'We believe in rapid iteration. Ship early, gather feedback, and improve relentlessly.',
   },
   {
     icon: Users,
-    title: 'Remote-First Culture',
+    title: 'Remote-first culture',
     description:
       'Work from anywhere. Our team spans 8 time zones and we embrace async collaboration.',
   },
   {
     icon: Palette,
-    title: 'Creativity Meets Engineering',
+    title: 'Creativity meets engineering',
     description:
       'We sit at the intersection of art and technology. Every team member brings a creative lens.',
   },
@@ -73,88 +70,147 @@ const positions = [
 export default function Careers() {
   return (
     <PageLayout>
-      <SEOHead title="Careers at VOVV.AI — Join the Future of AI Photography" description="Join the VOVV.AI team. We're hiring engineers, designers, and marketers to build the future of AI-powered e-commerce photography." canonical={`${SITE_URL}/careers`} />
-      {/* Hero */}
-      <section className="py-20 sm:py-28">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Briefcase className="w-4 h-4" />
-            Careers
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight mb-6">
-            Build the future of visual commerce
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Join a small, passionate team reimagining how brands create product imagery. We're remote-first, creativity-driven, and growing fast.
-          </p>
-        </div>
-      </section>
+      <SEOHead
+        title="Careers at VOVV.AI — Join the Future of AI Photography"
+        description="Join the VOVV.AI team. We're hiring engineers, designers, and marketers to build the future of AI-powered e-commerce photography."
+        canonical={`${SITE_URL}/careers`}
+      />
 
-      {/* Culture */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Why VOVV.AI?</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {cultureValues.map((v) => (
-              <Card key={v.title} className="bg-card border-border">
-                <CardContent className="pt-6">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+      <div className="bg-[#FAFAF8]">
+        {/* Hero */}
+        <section className="pt-20 pb-16 sm:pt-28 sm:pb-20">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Careers
+            </p>
+            <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+              Build the future of visual commerce
+            </h1>
+            <p className="max-w-2xl mx-auto text-muted-foreground text-base sm:text-lg leading-relaxed">
+              Join a small, passionate team reimagining how brands create product imagery. We're remote-first, creativity-driven, and growing fast.
+            </p>
+          </div>
+        </section>
+
+        {/* Culture */}
+        <section className="py-16 sm:py-20 bg-[#f5f5f3]">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                Why VOVV
+              </p>
+              <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight">
+                A studio that feels like a startup
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-5">
+              {cultureValues.map((v) => (
+                <div
+                  key={v.title}
+                  className="bg-white rounded-2xl border border-[#f0efed] shadow-sm p-7"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
                     <v.icon className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2">{v.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{v.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+                  <h3 className="text-[#1a1a2e] text-[17px] font-semibold tracking-tight mb-2">
+                    {v.title}
+                  </h3>
+                  <p className="text-[15px] text-foreground/70 leading-relaxed">{v.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Open Positions */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-3">Open Positions</h2>
-          <p className="text-muted-foreground text-center mb-10">
-            {positions.length} roles open — all remote-friendly
-          </p>
-          <div className="space-y-4">
-            {positions.map((pos) => (
-              <Card key={pos.title} className="bg-card border-border hover:border-primary/30 transition-colors">
-                <CardContent className="py-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                    <h3 className="font-semibold text-foreground text-lg">{pos.title}</h3>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="secondary" className="gap-1 rounded-full">
-                        <Users className="w-3 h-3" />
-                        {pos.team}
-                      </Badge>
-                      <Badge variant="outline" className="gap-1 rounded-full">
-                        <MapPin className="w-3 h-3" />
-                        {pos.location}
-                      </Badge>
-                      <Badge variant="outline" className="gap-1 rounded-full">
-                        <Clock className="w-3 h-3" />
-                        {pos.type}
-                      </Badge>
+        {/* Open positions */}
+        <section className="py-16 sm:py-24" id="positions">
+          <div className="max-w-3xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                Open roles
+              </p>
+              <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
+                {positions.length} positions open
+              </h2>
+              <p className="text-muted-foreground text-base">All remote-friendly · Full-time</p>
+            </div>
+
+            <div className="space-y-3">
+              {positions.map((pos) => (
+                <div
+                  key={pos.title}
+                  className="bg-white rounded-2xl border border-[#f0efed] shadow-sm hover:shadow-md transition-shadow p-7"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-3">
+                    <div>
+                      <h3 className="text-[#1a1a2e] text-[17px] font-semibold tracking-tight mb-1.5">
+                        {pos.title}
+                      </h3>
+                      <p className="text-[13px] text-muted-foreground">
+                        {pos.team} · {pos.location} · {pos.type}
+                      </p>
                     </div>
+                    <a
+                      href={`mailto:hello@vovv.ai?subject=Application: ${pos.title}`}
+                      className="inline-flex items-center justify-center gap-1.5 h-10 px-5 rounded-full border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors shrink-0"
+                    >
+                      Apply
+                      <ArrowRight size={14} />
+                    </a>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">{pos.description}</p>
-                  <Button variant="outline" size="sm" className="rounded-full" onClick={() => window.location.href = 'mailto:hello@vovv.ai?subject=Application: ' + pos.title}>
-                    Apply Now
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <p className="text-[15px] text-foreground/70 leading-relaxed">{pos.description}</p>
+                </div>
+              ))}
+            </div>
 
-          <div className="text-center mt-12 p-8 rounded-2xl bg-muted/50 border border-border">
-            <h3 className="font-semibold text-foreground mb-2">Don't see your role?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              We're always looking for exceptional people. Send us your resume and tell us how you'd contribute.
-            </p>
-            <Button variant="outline" className="rounded-full" onClick={() => window.location.href = 'mailto:hello@vovv.ai'}>
-              Send Open Application
-            </Button>
+            <div className="mt-10 bg-white rounded-2xl border border-[#f0efed] shadow-sm p-8 text-center">
+              <h3 className="text-[#1a1a2e] text-[17px] font-semibold tracking-tight mb-2">
+                Don't see your role?
+              </h3>
+              <p className="text-[15px] text-foreground/70 mb-5 leading-relaxed">
+                We're always looking for exceptional people. Send your resume and tell us how you'd contribute.
+              </p>
+              <a
+                href="mailto:hello@vovv.ai"
+                className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
+              >
+                Send open application
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Final dark CTA */}
+      <section className="py-16 lg:py-28 bg-[#1a1a2e] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#475569] blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#64748b] blur-3xl" />
+        </div>
+        <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+            Build with us
+          </p>
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
+            Help us shape what's next
+          </h2>
+          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-10">
+            Open roles, open inboxes. We read everything.
+          </p>
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+            <a
+              href="#positions"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto"
+            >
+              See open roles
+              <ArrowRight size={16} />
+            </a>
+            <a
+              href="mailto:hello@vovv.ai"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"
+            >
+              Email us
+            </a>
           </div>
         </div>
       </section>
