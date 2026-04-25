@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getOptimizedSrcSet } from '@/lib/imageOptimization';
+import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 
 export function CategorySceneExamples({ page }: { page: CategoryPage }) {
   return (
-    <section id="scenes" className="py-16 lg:py-32 bg-[#FAFAF8] scroll-mt-24">
+    <section id="scene-library" className="py-16 lg:py-32 bg-[#FAFAF8] scroll-mt-24">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
@@ -25,12 +26,12 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
               key={ex.label}
               className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
             >
-              <img
-                src={getOptimizedUrl(PREVIEW(ex.imageId), { quality: 60 })}
+              <SmartImage
+                src={getOptimizedUrl(PREVIEW(ex.imageId), { width: 480, quality: 50 })}
+                srcSet={getOptimizedSrcSet(PREVIEW(ex.imageId), [240, 360, 480, 720], 50)}
+                sizes="(min-width: 1024px) 25vw, 50vw"
                 alt={ex.alt}
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
               />
               <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/65 via-black/20 to-transparent">
                 <span className="block text-[11px] uppercase tracking-wider text-white/70 font-semibold">

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
@@ -17,6 +18,31 @@ import { CategoryUseCases } from '@/components/seo/photography/category/Category
 import { CategoryRelatedCategories } from '@/components/seo/photography/category/CategoryRelatedCategories';
 import { CategoryFAQ } from '@/components/seo/photography/category/CategoryFAQ';
 import { getCategoryPage, PREVIEW } from '@/data/aiProductPhotographyCategoryPages';
+import { getOptimizedSrcSet, getOptimizedUrl } from '@/lib/imageOptimization';
+
+/**
+ * Inject a <link rel="preload" as="image"> for the LCP hero tile so the
+ * browser starts downloading it during HTML parse rather than after React
+ * mounts. Cleans up on unmount/route change to avoid stale preloads.
+ */
+function HeroPreload({ url }: { url: string }) {
+  useEffect(() => {
+    if (!url) return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.setAttribute('imagesrcset', getOptimizedSrcSet(url, [480, 720, 960, 1280], 55));
+    link.setAttribute('imagesizes', '(min-width: 1024px) 28vw, 50vw');
+    link.href = getOptimizedUrl(url, { width: 720, quality: 55 });
+    link.fetchPriority = 'high';
+    document.head.appendChild(link);
+    return () => {
+      link.remove();
+    };
+  }, [url]);
+  return null;
+}
+
 
 export default function AIProductPhotographyCategory() {
   const { slug } = useParams<{ slug: string }>();
@@ -39,6 +65,9 @@ export default function AIProductPhotographyCategory() {
   };
 
   const ogImage = PREVIEW(page.heroImageId) || DEFAULT_OG_IMAGE;
+  // LCP target: first hero collage tile if present, otherwise the single hero image.
+  const lcpImageId = page.heroCollage?.[0]?.imageId ?? page.heroImageId;
+  const lcpUrl = PREVIEW(lcpImageId);
 
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
@@ -48,6 +77,7 @@ export default function AIProductPhotographyCategory() {
         canonical={PAGE_URL}
         ogImage={ogImage}
       />
+      <HeroPreload url={lcpUrl} />
       <JsonLd data={breadcrumbJsonLd} />
 
       <LandingNav />

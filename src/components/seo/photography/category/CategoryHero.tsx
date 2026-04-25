@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getOptimizedSrcSet } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { SmartImage } from './SmartImage';
+
 
 /**
  * Editorial split hero for /ai-product-photography/{slug} pages.
@@ -76,20 +78,18 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
                 <HeroTile tile={collage![2]} />
               </div>
               <div className="flex flex-col gap-3 lg:gap-4 lg:translate-y-8">
-                <HeroTile tile={collage![1]} priority />
+                <HeroTile tile={collage![1]} />
                 <HeroTile tile={collage![3]} />
               </div>
             </div>
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-2xl overflow-hidden bg-muted/30">
-              <img
-                src={getOptimizedUrl(PREVIEW(page.heroImageId), { quality: 70 })}
+              <SmartImage
+                src={getOptimizedUrl(PREVIEW(page.heroImageId), { width: 960, quality: 60 })}
+                srcSet={getOptimizedSrcSet(PREVIEW(page.heroImageId), [480, 720, 960, 1280], 55)}
+                sizes="(min-width: 1024px) 50vw, 100vw"
                 alt={page.heroAlt}
-                loading="eager"
-                decoding="async"
-                // @ts-expect-error fetchpriority is a valid HTML attribute not in React types
-                fetchpriority="high"
-                className="absolute inset-0 w-full h-full object-cover"
+                priority
               />
               <span className="absolute left-4 bottom-4 inline-flex items-center px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-md text-[11px] uppercase tracking-[0.16em] text-foreground/85 font-semibold shadow-sm">
                 {page.groupName}
@@ -109,16 +109,15 @@ function HeroTile({
   tile: { subCategory: string; imageId: string; alt: string };
   priority?: boolean;
 }) {
+  const previewUrl = PREVIEW(tile.imageId);
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
-      <img
-        src={getOptimizedUrl(PREVIEW(tile.imageId), { quality: 70 })}
+      <SmartImage
+        src={getOptimizedUrl(previewUrl, { width: 720, quality: 55 })}
+        srcSet={getOptimizedSrcSet(previewUrl, [360, 480, 720, 960], 55)}
+        sizes="(min-width: 1024px) 28vw, 50vw"
         alt={tile.alt}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        // @ts-expect-error fetchpriority is a valid HTML attribute not in React types
-        fetchpriority={priority ? 'high' : 'auto'}
-        className="absolute inset-0 w-full h-full object-cover"
+        priority={priority}
       />
       <span className="absolute left-3 bottom-3 inline-flex items-center px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-md text-[10px] uppercase tracking-[0.16em] text-foreground/80 font-semibold">
         {tile.subCategory}
