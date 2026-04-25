@@ -5,6 +5,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { HomeHero } from '@/components/home/HomeHero';
 import { HomeTransformStrip } from '@/components/home/HomeTransformStrip';
 import { HomeCreateCards } from '@/components/home/HomeCreateCards';
+import { HomeModels } from '@/components/home/HomeModels';
 
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeWhySwitch } from '@/components/home/HomeWhySwitch';
