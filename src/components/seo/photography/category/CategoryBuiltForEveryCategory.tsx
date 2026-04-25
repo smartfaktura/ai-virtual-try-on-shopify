@@ -50,11 +50,6 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   const noun = page.heroNoun ?? 'photo';
   const totalScenes = groups.reduce((sum, g) => sum + g.cards.length, 0);
 
-  // Split "Bags · On-Body Editorial" → ["Bags", "On-Body Editorial"]
-  const splitLabel = (s: string): { subject: string; style?: string } => {
-    const parts = s.split('·').map((p) => p.trim());
-    return { subject: parts[0], style: parts.slice(1).join(' · ') || undefined };
-  };
   const activeParts = splitLabel(active.subCategory);
 
   return (
