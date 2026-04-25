@@ -65,7 +65,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   }, [displayIndex, incomingIndex]);
 
   return (
-    <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
+    <div className="relative rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-[#efece8] aspect-[3/4] group">
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-muted/40">
         <div
@@ -178,19 +178,17 @@ export function ProductCategoryShowcase() {
   const navigate = useNavigate();
   const { user } = useAuth();
   return (
-    <section className="py-16 lg:py-24 bg-background">
-      {/* Inline keyframes for progress bar */}
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 lg:mb-16">
-          <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-            Every Category
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+    <section className="py-16 lg:py-32 bg-background">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Every category
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
             All products look better here
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Fashion, beauty, food, home décor - our AI adapts to any product category and delivers studio-quality shots.
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+            Fashion, beauty, food, home décor — our AI adapts to any product category and delivers studio-quality shots.
           </p>
         </div>
 
@@ -200,15 +198,18 @@ export function ProductCategoryShowcase() {
           ))}
         </div>
 
-        <div className="mt-10 text-center">
+        <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
           <Button
             size="lg"
-            className="rounded-full px-8 py-5 text-base font-semibold gap-2 shadow-lg shadow-primary/20"
+            className="rounded-full h-[3.25rem] px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
             onClick={() => navigate(user ? '/app' : '/auth')}
           >
             Try It Free
             <ArrowRight className="w-4 h-4" />
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Free credits · No card required
+          </p>
         </div>
       </div>
     </section>
