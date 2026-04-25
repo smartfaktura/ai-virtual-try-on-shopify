@@ -146,7 +146,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               )}
             >
               <img
-                src={getOptimizedUrl(PREVIEW(card.imageId), { quality: 60 })}
+                src={getOptimizedUrl(PREVIEW(card.imageId), { width: 480, quality: 60 })}
                 alt={`${card.label} — ${page.groupName} AI product photography example`}
                 loading="lazy"
                 decoding="async"
