@@ -596,75 +596,96 @@ export function LandingPricing() {
 
         {/* ── FAQ ────────────────────────────────────────────────── */}
         <div className="mt-24 lg:mt-32 max-w-3xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
-              Frequently Asked Questions
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              FAQ
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+              Pricing questions, answered
             </h2>
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+              The most common questions about plans, credits, and billing.
+            </p>
           </div>
 
-          <div className="space-y-2">
+          <Accordion type="single" collapsible className="flex flex-col gap-3">
             {FAQS.map((faq, idx) => (
-              <Collapsible key={idx}>
-                <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-border bg-card px-5 py-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 transition-colors group">
+              <AccordionItem
+                key={idx}
+                value={`faq-${idx}`}
+                className="border border-[#f0efed] bg-white rounded-2xl px-5 sm:px-6"
+              >
+                <AccordionTrigger className="text-left text-[#1a1a2e] text-base font-semibold py-5 hover:no-underline">
                   {faq.q}
-                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-5 pb-4 pt-1 text-sm text-muted-foreground leading-relaxed">
+                </AccordionTrigger>
+                <AccordionContent className="text-[#6b7280] text-sm sm:text-base leading-relaxed pb-5">
                   {faq.a}
-                </CollapsibleContent>
-              </Collapsible>
+                </AccordionContent>
+              </AccordionItem>
             ))}
+          </Accordion>
+
+          <div className="mt-8 text-center">
+            <Link
+              to="/faq"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1a1a2e] hover:text-[#2a2a3e] transition-colors"
+            >
+              See all FAQs
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 
         {/* ── Start Free CTA ─────────────────────────────────────── */}
-        <div className="mt-20 max-w-2xl mx-auto text-center rounded-2xl border border-primary/20 bg-primary/[0.04] p-8 sm:p-10">
-          <h3 className="text-xl font-bold text-foreground mb-2">
+        <div className="mt-24 lg:mt-32 max-w-3xl mx-auto rounded-2xl bg-[#1a1a2e] p-10 sm:p-14 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+            Get started
+          </p>
+          <h3 className="text-white text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4">
             Start with 20 free credits
           </h3>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
             No credit card required. Try every Visual Type and see the quality before committing to a plan.
           </p>
-          <Button
-            className="rounded-full font-semibold px-8 gap-2"
-            onClick={() => navigate(user ? '/app' : '/auth')}
+          <Link
+            to={user ? '/app' : '/auth'}
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors"
           >
-            {user ? 'Go to Studio' : 'Get Started Free'}
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+            {user ? 'Go to Studio' : 'Get started free'}
+            <ArrowRight size={16} />
+          </Link>
         </div>
 
         {/* ── Enterprise Banner ───────────────────────────────────── */}
         {enterprisePlan && (
-          <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8">
+          <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-[#f0efed] bg-white p-7 sm:p-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
               <div className="flex items-center gap-3 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-primary" />
+                <div className="w-11 h-11 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-[#1a1a2e]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">{enterprisePlan.name}</h3>
-                  <p className="text-sm text-muted-foreground">Custom pricing for large teams</p>
+                  <h3 className="text-[#1a1a2e] text-lg font-semibold">{enterprisePlan.name}</h3>
+                  <p className="text-sm text-[#6b7280]">Custom pricing for large teams</p>
                 </div>
               </div>
 
               <ul className="flex-1 flex flex-wrap gap-x-6 gap-y-2">
                 {enterprisePlan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check className="w-4 h-4 text-primary shrink-0" />
+                  <li key={idx} className="flex items-center gap-2 text-sm text-[#4b5563]">
+                    <Check className="w-4 h-4 text-[#1a1a2e] shrink-0" strokeWidth={2.5} />
                     {typeof feature === 'string' ? feature : feature.text}
                   </li>
                 ))}
               </ul>
 
-              <Button
-                variant="outline"
-                className="rounded-full font-semibold gap-2 shrink-0"
-                onClick={() => navigate('/contact')}
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full border border-[#d4d4d4] text-[#1a1a2e] text-sm font-semibold hover:bg-[#f5f5f3] transition-colors shrink-0"
               >
-                Contact Sales
+                Contact sales
                 <ArrowRight className="w-4 h-4" />
-              </Button>
+              </Link>
             </div>
           </div>
         )}
