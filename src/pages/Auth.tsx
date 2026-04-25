@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { TermsContent } from '@/components/legal/TermsContent';
+import { PrivacyContent } from '@/components/legal/PrivacyContent';
 import { toast } from '@/lib/brandedToast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, ArrowLeft, MailCheck, Mail, AlertCircle } from 'lucide-react';
@@ -93,6 +95,8 @@ export default function Auth() {
   const [formError, setFormError] = useState<string | null>(null);
   const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -570,9 +574,21 @@ export default function Auth() {
                 />
                 <label htmlFor="termsAccept" className="text-sm text-muted-foreground leading-snug cursor-pointer">
                   I agree to the{' '}
-                   <Link to="/terms" target="_blank" className="underline text-foreground hover:text-primary">Terms of Service</Link>
-                   {' '}and{' '}
-                   <Link to="/privacy" target="_blank" className="underline text-foreground hover:text-primary">Privacy Policy</Link>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setTermsOpen(true); }}
+                    className="underline text-foreground hover:text-primary"
+                  >
+                    Terms of Service
+                  </button>
+                  {' '}and{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setPrivacyOpen(true); }}
+                    className="underline text-foreground hover:text-primary"
+                  >
+                    Privacy Policy
+                  </button>
                 </label>
               </div>
               {errors.terms && <p className="text-sm text-destructive">{errors.terms}</p>}
