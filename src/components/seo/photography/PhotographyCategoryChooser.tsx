@@ -36,7 +36,7 @@ export function PhotographyCategoryChooser() {
                 />
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
                   <span className="block text-[10px] uppercase tracking-[0.14em] text-white/70 font-semibold mb-0.5">
-                    {cat.subcategories.length}+ shots
+                    {cat.shotCount}+ shots
                   </span>
                   <h3 className="text-white text-base sm:text-lg font-semibold leading-tight">{cat.name}</h3>
                 </div>
