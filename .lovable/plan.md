@@ -1,56 +1,37 @@
-Three small, focused changes — all visual, all in the hero block.
+## Issue
 
-## 1. Breadcrumb — pure minimalist 2026
+The "Free to start · No credit card required" line currently reads as a heavy gray block sitting awkwardly under the CTA. It uses `text-sm` + full `text-muted-foreground`, no visual anchor, and competes with the buttons instead of supporting them. In the screenshot it looks disconnected — like a leftover footnote.
 
-Strip everything to the essentials:
+## Proposed refinement (modern vovv.ai / 2026-forward trust row)
 
-```text
-Home   AI Product Photography   Footwear
-```
+Replace the single muted line with a **trust row** of two micro-signals separated by a hairline divider, anchored by tiny status dots. This is the pattern Linear, Vercel, Arc, Raycast use under hero CTAs — it feels lightweight, structured, and intentional rather than apologetic.
 
-- **No separators at all** — no slash, no em-dash, no chevron, no dot. Whitespace separates the items.
-- **No anchor mark** — drop the navy dot.
-- Spacing: `gap-5` between items so the air carries the rhythm.
-- Type: `text-[11.5px]`, `font-medium`, `tracking-[-0.005em]`.
-- Inactive links: `text-muted-foreground/45` (very quiet).
-- Current page: `text-foreground` (full navy, no bold) — the only contrast cue.
-- Hover: thin animated underline grows from left (`underline-offset-4 decoration-foreground/30`), no color shift.
-- Container & alignment unchanged (locked to hero column).
+**File**: `src/components/seo/photography/category/CategoryHero.tsx` (lines 62–64)
 
-Accessibility / SEO preserved:
-- `<nav aria-label="Breadcrumb"><ol>` with `<a>` + `aria-current="page"`.
-- Visually-hidden `›` between items for screen readers (`<span className="sr-only">›</span>`) so non-sighted users hear correct hierarchy.
-- `BreadcrumbList` JSON-LD untouched.
-
-## 2. Move the eyebrow `FOOTWEAR · SNEAKERS · BOOTS` below the H1
-
-Right now the eyebrow stacks directly under the breadcrumb — two label-style lines competing. Move it BELOW the H1, just above the subheadline, as an editorial kicker:
+### Visual spec
 
 ```text
-Home   AI Product Photography   Footwear   ← breadcrumb (line 1)
-
-AI Product Photography                     ← H1
-for Footwear Brands
-
-— FOOTWEAR · SNEAKERS · BOOTS              ← eyebrow becomes kicker
-Upload one shoe photo and create…          ← sub
+●  Free to start    │    ●  No credit card    │    ●  Cancel anytime
 ```
 
-- Add a thin 24px hairline before the eyebrow (`before:content-[''] before:w-6 before:h-px before:bg-foreground/25 before:mr-3`) so it reads as a hand-set kicker, not a duplicate label.
-- Spacing: `mt-0 mb-3` (sits right above the sub).
+- **Container**: `mt-5 flex flex-wrap items-center gap-x-4 gap-y-2`
+- **Each item**: `inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground/70 font-medium tracking-[-0.005em]`
+- **Status dot**: `h-1.5 w-1.5 rounded-full bg-emerald-500/80` (subtle living signal — the only color accent in the copy column, ties to "free / available")
+- **Dividers**: thin `h-3 w-px bg-border` between items (only on `sm+`, hidden on mobile via `hidden sm:block`)
+- **Weight**: drop from `text-sm` (14px) → `12.5px`, opacity `/70` so it recedes behind the CTA but stays legible
+- **No leading bullet, no full-stop, no sentence form** — three discrete chips of reassurance
 
-## 3. Bigger trust microcopy
+### Why this works
 
-Currently `text-xs text-muted-foreground/70` — reads as a footnote.
+1. **Hierarchy restored**: CTA dominates, trust row supports — it no longer competes
+2. **Three signals > one sentence**: more reassurance, less visual weight per item
+3. **Modern pattern**: matches the editorial restraint of the rest of the hero (hairline eyebrow prefix, ultra-minimal breadcrumbs)
+4. **The green dot** adds one micro-moment of life without breaking the muted palette
 
-Bump to:
-- `text-sm` (14px)
-- `text-muted-foreground` (full muted, drop the /70 opacity)
-- `mt-6` from the CTA row
+### Alternative (simpler) if you prefer to keep one line
 
-Just text, no dot, no icon. Cleaner, properly weighted within the hero block.
+Just refine the existing line:
+- `text-[12.5px] text-muted-foreground/65 font-medium tracking-[-0.005em] mt-5`
+- Keep the `·` separator, drop weight + opacity so it visually recedes
 
-## Files touched
-
-- `src/components/seo/photography/category/CategoryBreadcrumbs.tsx` — strip separators, gap-spaced layout, animated underline.
-- `src/components/seo/photography/category/CategoryHero.tsx` — move eyebrow below H1 with hairline kicker; bump trust microcopy size.
+I'll implement the **3-chip trust row** unless you'd rather go with the simpler one-line refinement.
