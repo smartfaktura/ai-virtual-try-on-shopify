@@ -99,7 +99,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
       'Place home decor and furniture products into realistic interiors, styled rooms, catalog visuals, and lifestyle scenes.',
     subcategories: ['Home Decor', 'Furniture', 'Vases', 'Candles', 'Lighting', 'Tables', 'Chairs', 'Sofas'],
     shotCount: 60,
-    previewImage: PREVIEW('1776588669730-33nh9d'),
+    previewImage: PREVIEW('1776250523409-wvjm1w'),
     alt: 'AI home decor product photography example: color hero decor campaign visual.',
   },
   {
@@ -110,7 +110,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
       'Create packaged food visuals, beverage product photos, snack scenes, bottle images, can visuals, and CPG campaign content.',
     subcategories: ['Food', 'Snacks', 'Beverages', 'Bottles', 'Cans', 'Jars', 'Packaged Food'],
     shotCount: 115,
-    previewImage: PREVIEW('1776758466782-5xyh4q'),
+    previewImage: PREVIEW('1776240325793-lb7xi4'),
     alt: 'AI food and beverage product photography example: editorial beverage campaign scene.',
   },
   {
@@ -121,7 +121,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
       'Create supplement product photos, wellness lifestyle scenes, fitness visuals, vitamin imagery, and clean product page content.',
     subcategories: ['Supplements', 'Vitamins', 'Protein', 'Wellness Products', 'Capsules', 'Powders'],
     shotCount: 51,
-    previewImage: PREVIEW('1776247483431-4i3gbx'),
+    previewImage: PREVIEW('1776247484304-xpwv5f'),
     alt: 'AI supplement product photography example: editorial dose preparation wellness scene.',
   },
   {
@@ -132,7 +132,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
       'Generate tech product photos, gadget visuals, device launch content, desk setups, and clean e-commerce imagery.',
     subcategories: ['Electronics', 'Gadgets', 'Tech Devices', 'Phone Cases', 'Headphones', 'Smart Devices'],
     shotCount: 33,
-    previewImage: PREVIEW('1776590049044-uuse5a'),
+    previewImage: PREVIEW('1776250227186-ipm40h'),
     alt: 'AI electronics product photography example: color hero tech campaign visual.',
   },
 ];
