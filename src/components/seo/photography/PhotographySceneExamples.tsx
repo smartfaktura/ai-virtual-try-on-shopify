@@ -24,7 +24,7 @@ export function PhotographySceneExamples() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Scene library · 1600+ ready-to-use scenes
+            Scene library · 1600+ scenes
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
             Every scene your store needs — already styled.
@@ -60,13 +60,13 @@ export function PhotographySceneExamples() {
           ))}
         </div>
 
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center mt-12 lg:mt-16">
           <Link
             to="/product-visual-library"
-            className="inline-flex items-center justify-center gap-2 h-[3rem] px-7 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-[#1a1a2e]/15 bg-white text-[#1a1a2e] text-base font-semibold hover:bg-[#1a1a2e] hover:text-white hover:border-[#1a1a2e] transition-colors"
           >
             Browse the full scene library
-            <ArrowRight size={14} />
+            <ArrowRight size={16} />
           </Link>
         </div>
       </div>
