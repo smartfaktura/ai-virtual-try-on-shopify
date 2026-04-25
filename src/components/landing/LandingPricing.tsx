@@ -531,11 +531,14 @@ export function LandingPricing() {
 
         {/* ── Platform Features Grid ─────────────────────────────── */}
         <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              The platform
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               Everything you get with VOVV.AI
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               A complete visual production studio — photography, video, editing, and brand management in one place.
             </p>
           </div>
@@ -544,13 +547,13 @@ export function LandingPricing() {
             {PLATFORM_FEATURES.map((feat) => (
               <div
                 key={feat.title}
-                className="rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md transition-shadow"
+                className="rounded-2xl border border-[#f0efed] bg-white p-6 transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(26,26,46,0.10)]"
               >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-                  <feat.icon className="w-4 h-4 text-primary" />
+                <div className="w-9 h-9 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center mb-4">
+                  <feat.icon className="w-4 h-4 text-[#1a1a2e]" />
                 </div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">{feat.title}</h3>
-                <p className="text-[12px] leading-relaxed text-muted-foreground">{feat.desc}</p>
+                <h3 className="text-sm font-semibold text-[#1a1a2e] mb-1.5">{feat.title}</h3>
+                <p className="text-[12.5px] leading-relaxed text-[#6b7280]">{feat.desc}</p>
               </div>
             ))}
           </div>
@@ -563,11 +566,14 @@ export function LandingPricing() {
 
         {/* ── How Credits Work ───────────────────────────────────── */}
         <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Credits
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               How credits work
             </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-lg mx-auto">
               One simple currency for every creative tool on the platform.
             </p>
           </div>
@@ -576,13 +582,13 @@ export function LandingPricing() {
             {CREDIT_CARDS.map((card) => (
               <div
                 key={card.title}
-                className="rounded-xl border border-border bg-card p-5 text-center"
+                className="rounded-2xl border border-[#f0efed] bg-white p-6 text-center"
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <card.icon className="w-5 h-5 text-primary" />
+                <div className="w-11 h-11 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center mx-auto mb-4">
+                  <card.icon className="w-5 h-5 text-[#1a1a2e]" />
                 </div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">{card.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{card.detail}</p>
+                <h3 className="text-sm font-semibold text-[#1a1a2e] mb-1.5">{card.title}</h3>
+                <p className="text-xs text-[#6b7280] leading-relaxed">{card.detail}</p>
               </div>
             ))}
           </div>
