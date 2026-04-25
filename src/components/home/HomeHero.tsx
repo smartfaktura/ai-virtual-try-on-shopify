@@ -61,7 +61,7 @@ function MarqueeCard({ label, src, isOriginal, isVideo }: HeroCard) {
         />
       )}
       {isOriginal && (
-        <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full">
+        <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-foreground/80 text-background px-2 py-0.5 rounded-full">
           Original
         </span>
       )}

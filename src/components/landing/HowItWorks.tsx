@@ -150,7 +150,7 @@ export function HowItWorks() {
               <div className="w-full max-w-sm">
                 <div className="rounded-3xl border border-[#f0efed] bg-white shadow-sm overflow-hidden">
                   <div className="p-4 border-b border-[#f0efed]">
-                    <div className="border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center gap-3 bg-muted/20">
+                    <div className="border-2 border-dashed border-border/70 rounded-2xl p-6 flex flex-col items-center gap-3 bg-muted/20">
                       <div className="w-10 h-10 rounded-lg bg-foreground/[0.06] flex items-center justify-center">
                         <Upload className="w-5 h-5 text-foreground/70" />
                       </div>
