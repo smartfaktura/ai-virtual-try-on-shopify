@@ -20,6 +20,90 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# ───────── AI / LLM crawlers — explicit allow ─────────
+# Listing each agent explicitly signals intent and protects against
+# future restrictive defaults. /app/ is the private product surface.
+
+User-agent: GPTBot
+Allow: /
+Disallow: /app/
+Disallow: /auth
+Disallow: /onboarding
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /app/
+Disallow: /auth
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /app/
+Disallow: /auth
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /app/
+Disallow: /auth
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /app/
+Disallow: /auth
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /app/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /app/
+Disallow: /auth
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /app/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /app/
+Disallow: /auth
+
+User-agent: Applebot
+Allow: /
+Disallow: /app/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /app/
+
+User-agent: Bytespider
+Allow: /
+Disallow: /app/
+
+User-agent: Amazonbot
+Allow: /
+Disallow: /app/
+
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /app/
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /app/
+
+User-agent: DuckAssistBot
+Allow: /
+Disallow: /app/
+
+User-agent: YouBot
+Allow: /
+Disallow: /app/
+
+User-agent: MistralAI-User
+Allow: /
+Disallow: /app/
+
 User-agent: *
 Allow: /
 Disallow: /app/

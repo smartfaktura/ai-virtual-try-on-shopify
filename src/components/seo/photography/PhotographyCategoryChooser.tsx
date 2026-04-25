@@ -64,13 +64,13 @@ export function PhotographyCategoryChooser() {
                       {cat.shotCount}+ shots
                     </span>
                   </div>
-                  <h3 className="text-foreground text-[15px] sm:text-lg font-semibold leading-tight mb-1.5 sm:mb-2">
+                  <h3 className="text-[#1a1a2e] text-[15px] sm:text-lg font-semibold leading-tight mb-1.5 sm:mb-2">
                     {cat.name}
                   </h3>
                   <p className="hidden sm:block text-muted-foreground text-[13px] leading-relaxed mb-4 line-clamp-2">
                     {cat.description}
                   </p>
-                  <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-primary group-hover:gap-2 transition-all">
+                  <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-[#1a1a2e] group-hover:gap-2 transition-all">
                     <span className="sm:hidden">Explore {cat.name}</span>
                     <span className="hidden sm:inline">{anchorText}</span>
                     <ArrowUpRight size={14} />

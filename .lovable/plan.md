@@ -1,85 +1,78 @@
-## Polish all 10 /ai-product-photography/{slug} category pages
+## Strict QA on /ai-product-photography + 10 category hubs
 
-All 10 category pages share one component set, so each fix lands across all 10 pages at once. Same class of inconsistencies as the parent hub, plus a few unique to category pages. **Eyebrow position stays untouched per request.**
-
-### 1. Section background rhythm collapses in the bottom half
-
-Current order:
-
-```text
-Hero               #FAFAF8   warm
-BuiltForEvery      white
-VisualOutputs      #f5f5f3   warm
-PainPoints         white
-SceneExamples      #FAFAF8   ← uses hero tone, breaks the warm pattern
-HowItWorks         white
-UseCases           white     ← two whites
-RelatedCategories  white     ← three whites
-FAQ                white     ← four whites in a row
-FinalCTA           dark
-```
-
-Fix:
-- `CategorySceneExamples` → `bg-[#f5f5f3]` (matches the rest of the warm sections)
-- `CategoryUseCases` → `bg-[#f5f5f3]`
-
-Final rhythm: `FAFAF8 → white → f5f5f3 → white → f5f5f3 → white → f5f5f3 → white → white → dark`. The trailing double-white (Related + FAQ) reads as a calm denser end before the dark CTA.
-
-### 2. SceneExamples CTA is a different button system
-
-Current: `h-[3rem] px-7 bg-foreground text-background text-sm` with `ArrowRight size={14}`.
-
-Standardize to the secondary CTA used on the parent hub:
-`h-[3.25rem] px-8 rounded-full border border-[#1a1a2e]/15 bg-white text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-colors`, arrow `size={16}`.
-
-### 3. VisualOutputs cards use the wrong icon-chip language
-
-Current: `w-10 h-10 rounded-xl bg-primary/10 text-primary` + `hover:-translate-y-0.5` (no duration).
-
-Match the unified dark chip used elsewhere on the page (PainPoints, HowItWorks):
-`w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white shadow-sm`. Hover → `transition-all duration-300 hover:-translate-y-1 hover:shadow-md`.
-
-### 4. UseCases cards are an outlier
-
-Current: `rounded-2xl p-5`, no icon chip (just a colored icon), `hover:-translate-y-0.5`. Doesn't match PainPoints / VisualOutputs cards on the same page.
-
-Align: `rounded-3xl p-6` + dark chip (`w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white`) + `transition-all duration-300 hover:-translate-y-1 hover:shadow-md`. Same treatment applied on the parent hub's UseCases.
-
-### 5. PainPoints number-pill is a different size/radius
-
-Current: `w-9 h-9 rounded-xl`. Bring to standard chip dims: `w-10 h-10 rounded-2xl` (still keeps the mono numeral inside).
-
-### 6. RelatedCategories card hover and arrow drift
-
-Current: `transition-all duration-500 hover:-translate-y-1 hover:shadow-lg`, `ArrowUpRight size={12}`, H3 uses `text-foreground`.
-
-Align to standardized:
-- `transition-all duration-300 hover:-translate-y-1 hover:shadow-md`
-- `ArrowUpRight size={14}`
-- H3 → `text-[#1a1a2e]`
-
-### 7. Heading color token drift
-
-Some sections use `text-[#1a1a2e]`, others use `text-foreground` (Hero H1, BuiltForEvery H2, RelatedCategories H2). Standardize all H1/H2 to `text-[#1a1a2e]`. The H1 highlight `<span>` (`text-[#4a5578]`) stays as-is.
-
-### 8. Hero CTAs use `px-7`
-
-Parent hub and HowItWorks CTAs all use `px-8`. Bump CategoryHero CTAs to `px-8` so buttons measure identically across the whole product photography surface. (Eyebrow position untouched.)
-
-### 9. RelatedCategories inline links use `text-primary`
-
-Convention on the parent hub is dark inline links (`text-[#1a1a2e]`). Switch the "All AI product photography categories" link and the per-card "Explore {name}" inline link to dark.
+I went through every QA question. Below: pass/fail per question, then the **exact fixes I'll apply**. No fluff.
 
 ---
 
-### Files to edit (all under `src/components/seo/photography/category/`)
+### 1. Footer balance
+**Status:** Mostly pass, but Solutions only lists 4 of 10 categories — that wastes the SEO equity of the 6 hub pages we just built. Desktop has room (`lg:grid-cols-5`), and mobile shows footer columns in a 2-col grid that scrolls naturally — adding 6 more rows under one column does NOT create a link dump (it's a single tidy list per heading). Verdict: expand to all 10.
 
-- `CategoryHero.tsx` — H1 → `text-[#1a1a2e]`; CTAs `px-7` → `px-8`. Eyebrow position unchanged.
-- `CategoryBuiltForEveryCategory.tsx` — H2 → `text-[#1a1a2e]`.
-- `CategoryVisualOutputs.tsx` — dark icon chip; hover normalize.
-- `CategoryPainPoints.tsx` — number pill `w-10 h-10 rounded-2xl`.
-- `CategorySceneExamples.tsx` — bg `#f5f5f3`; standardized secondary CTA.
-- `CategoryUseCases.tsx` — bg `#f5f5f3`; rounded-3xl, p-6, dark chip, hover normalize.
-- `CategoryRelatedCategories.tsx` — H2/H3 → `text-[#1a1a2e]`; hover `duration-300 hover:shadow-md`; arrow size 14; inline links `text-[#1a1a2e]`.
+### 2. Footer link selection
+Currently: Fashion, Footwear, Beauty & Skincare, Bags & Accessories + "All categories". Those 4 are commercial winners but the other 6 (Fragrance, Jewelry, Home & Furniture, Food & Beverage, Supplements & Wellness, Electronics & Gadgets) have full hub pages in the sitemap and need at least one sitewide internal link to crawl-prioritize them. **Fix: list all 10 + "All categories".**
 
-No data, route, or schema changes. No new dependencies. All 10 category pages inherit the fixes automatically.
+### 3. Anchor text quality
+- Card desktop: `Explore AI {Category} product photography` (e.g., "Explore AI Fashion product photography") — descriptive, not stuffed. ✅
+- Card mobile: `Explore {Category}` — short, natural. ✅
+- `aria-label` and `title` mirror the desktop anchor → assistive tech + crawler signal aligned. ✅
+- Footer: short solution names ("Fashion Photography", etc.) — varied phrasing, not repeated. ✅
+
+### 4. Duplicate-link risk
+Counted internal links to category pages from the parent hub:
+- Category chooser: 1 link per category
+- Related-category cards on each category page: 3 sibling links
+- Footer: 10 sitewide
+That's natural. CTAs go to `/app/generate/product-images` and `/product-visual-library`, not to other categories — no over-linking loop. ✅
+
+### 5. Mobile category section
+Cards remain 2-col on mobile, `p-3.5`, 15px H3, hidden description, hidden shot count, short CTA. Tap target is the entire card (`<Link>` wraps everything) so accessibility/tappability is fine. Premium feel preserved. ✅
+
+### 6. Image performance
+- 3-image collage thumbs use `getOptimizedUrl(..., { quality: 60 })` and `loading="lazy" decoding="async"`. ✅
+- Aspect-ratio reserved (`aspect-[16/9]` on outer, grid cells fill) → no CLS. ✅
+- Hero LCP image is preloaded via `HeroPreload` + `fetchPriority="high"`. ✅
+
+### 7. SEO semantics
+- Each category page has exactly **one H1** (CategoryHero) — the parent hub also has one. ✅
+- H2/H3 hierarchy is consistent across all sections. ✅
+- No keyword stuffing — anchor variations differ across surfaces. ✅
+
+### 8. Visual hierarchy
+Hero CTA → category chooser → "one photo, many outputs" (visual system) → models → how it works → scenes → use cases → comparison → FAQ → final CTA. Clear. ✅
+
+### 9. Broken routes
+- 10 routes mapped via `:slug` route in `App.tsx`. ✅
+- 10 slugs in `aiProductPhotographyCategoryPages.ts` match 10 in `aiProductPhotographyCategories.ts` (footer hub) match 10 in `public/sitemap.xml`. ✅
+- Canonicals are set per-page in `SEOHead`. ✅
+- `Navigate to="/ai-product-photography" replace` for unknown slugs — clean fallback, no 404 noise. ✅
+
+### 10. External-expert top-3 remaining recommendations
+1. Add **`Organization` + `WebSite` JSON-LD** sitewide (Search Console sitelinks search box, AI knowledge-graph hits). I'll add to `index.html`.
+2. **Per-page Article/CollectionPage JSON-LD** on category pages (alongside breadcrumb + FAQ) — gives Google/AI crawlers a clearer entity for each hub.
+3. **Internal contextual links between siblings** inside body copy (not just Related cards) — but this is a content task, not a code change. Leave for a follow-up.
+
+---
+
+### Bonus: AI crawler support (web + AI surfaces)
+Current `robots.txt` only names Googlebot/Bingbot/Twitterbot/facebookexternalhit + wildcard. The wildcard already permits AI crawlers, but **explicit allow blocks per AI bot** signal intent and protect against future wildcard tightening. I'll add explicit blocks for: GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-Web, anthropic-ai, PerplexityBot, Perplexity-User, Google-Extended (controls Gemini training), Applebot, Applebot-Extended, Bytespider, Amazonbot, Meta-ExternalAgent, cohere-ai, DuckAssistBot, YouBot, MistralAI-User. Each gets `Allow: /` + `Disallow: /app/` (private app surface).
+
+---
+
+### Exact fixes I'll apply
+
+**1. `src/components/seo/photography/PhotographyCategoryChooser.tsx`**
+- Card H3: `text-foreground` → `text-[#1a1a2e]` (token consistency with the rest of the page).
+- Card CTA inline link: `text-primary` → `text-[#1a1a2e]` (matches the new dark inline-link convention).
+
+**2. `src/components/landing/LandingFooter.tsx`**
+- Expand `Solutions` to all 10 categories + "All categories" so every hub page gets a sitewide internal link.
+
+**3. `public/robots.txt`**
+- Add explicit allow blocks for 18 major AI/LLM crawlers (listed above), each with `Disallow: /app/` to protect the private app.
+
+**4. `index.html`**
+- Add sitewide `Organization` and `WebSite` JSON-LD (with `potentialAction` SearchAction) inside `<head>`. Improves Knowledge Panel + AI grounding.
+
+**5. `src/pages/seo/AIProductPhotographyCategory.tsx`**
+- Add a `CollectionPage` JSON-LD per category (name, description, isPartOf the parent hub, hasPart links to the 3 related categories) alongside the existing Breadcrumb JSON-LD. Cheap to add, real schema benefit.
+
+No design changes. No data migrations. No new dependencies.
