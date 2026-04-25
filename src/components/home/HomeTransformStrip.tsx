@@ -86,6 +86,7 @@ const JACKETS_CARDS: GridCardData[] = [
 
 /* ── Footwear / Sneakers (real preview filenames) ── */
 const FOOTWEAR_CARDS: GridCardData[] = [
+  { label: 'Original',              src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/pair-display-shoes-sneakers-1776008063507.jpg?quality=60' },
   { label: 'Pair Display',          src: PREVIEW('pair-display-shoes-sneakers-1776008063507') },
   { label: 'In-Hand Studio',        src: PREVIEW('in-hand-studio-shoes-sneakers-1776008276313') },
   { label: 'Front View',            src: PREVIEW('front-view-shoes-sneakers-1776008034245') },
@@ -102,6 +103,7 @@ const FOOTWEAR_CARDS: GridCardData[] = [
 
 /* ── Bags (bags-accessories — verified filenames) ── */
 const BAGS_CARDS: GridCardData[] = [
+  { label: 'Original',                   src: PREVIEW('1776749548695-11dzfk') },
   { label: 'Sculptural Studio Hero',     src: PREVIEW('1776239449949-ygljai') },
   { label: 'On-Shoulder Editorial',      src: PREVIEW('1776239446567-7mvigz') },
   { label: 'Reclined Studio Editorial',  src: PREVIEW('1776749544620-sn4eh1') },
@@ -110,26 +112,25 @@ const BAGS_CARDS: GridCardData[] = [
   { label: 'Couch Luxury Still',         src: PREVIEW('1776239439946-komlla') },
   { label: 'Car Interior Still',         src: PREVIEW('1776239461462-cykje2') },
   { label: 'Display Dome Editorial',     src: PREVIEW('1776239425806-v6xegn') },
-  { label: 'Sculptural Product Still',   src: PREVIEW('1776749548695-11dzfk') },
   { label: 'Mirror Selfie Luxury',       src: PREVIEW('1776239438796-99x31m') },
   { label: 'Lakeside Soft Minimalism',   src: PREVIEW('1776749534061-yvcf06') },
   { label: 'Sunshadow Outdoor',          src: PREVIEW('1776239457021-4ankwt') },
 ];
 
-/* ── Jewelry (necklaces + earrings — real preview filenames) ── */
+/* ── Jewelry (earrings only — sourced from product_image_scenes) ── */
 const JEWELRY_CARDS: GridCardData[] = [
-  { label: 'Editorial Neck Portrait', src: PREVIEW('1776243905045-8aw72b') },
-  { label: 'Necklace Front View',     src: PREVIEW('1776243907007-f0mhvm') },
-  { label: 'Necklace Angle View',     src: PREVIEW('1776243889543-u2eppc') },
-  { label: 'Mid Portrait Hold',       src: PREVIEW('1776243916154-emtkzb') },
-  { label: 'Close-Up Detail',         src: PREVIEW('1776243897922-iqre1y') },
-  { label: 'Earring Touch Portrait',  src: PREVIEW('1776753278458-z7rmxg') },
-  { label: 'Window Shadow Still',     src: PREVIEW('1776753253052-fd9tdt') },
-  { label: 'Clean Profile Glow',      src: PREVIEW('1776753281771-cipkev') },
-  { label: 'Silk & Paper Still',      src: PREVIEW('1776753260977-tjxo03') },
-  { label: 'Extreme Ear Campaign',    src: PREVIEW('1776241616772-yak1ea') },
-  { label: 'Torn Paper Display',      src: PREVIEW('1776753254407-hldbjy') },
-  { label: 'Shadow Hero Earrings',    src: PREVIEW('1776753269735-5yii82') },
+  { label: 'Earring Touch Portrait', src: PREVIEW('1776753278458-z7rmxg') },
+  { label: 'Side Profile Earrings',  src: PREVIEW('1776753261985-yi93vf') },
+  { label: 'Sunlit Ear Study',       src: PREVIEW('1776753256682-343bsf') },
+  { label: 'Window Shadow Still',    src: PREVIEW('1776753253052-fd9tdt') },
+  { label: 'Sky Bloom Profile',      src: PREVIEW('1776753259830-t0mrxv') },
+  { label: 'Hair Tucked Ear',        src: PREVIEW('1776753273285-bgevon') },
+  { label: 'Sunlit Skin Close-Up',   src: PREVIEW('1776753255640-wl0j9d') },
+  { label: 'Flash Glow Portrait',    src: PREVIEW('1776753275522-ljuq5p') },
+  { label: 'Neckline & Earrings',    src: PREVIEW('1776753755775-c36aay') },
+  { label: 'Shadow Gem Drop',        src: PREVIEW('1776753265588-dmlr31') },
+  { label: 'Ear Stack Study',        src: PREVIEW('1776753279560-dyelri') },
+  { label: 'Sunlit Beauty Moment',   src: PREVIEW('1776753754579-2rfq11') },
 ];
 
 const CATEGORIES = [

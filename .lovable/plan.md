@@ -1,82 +1,58 @@
-## Final, safety-checked loader-unification plan
+## /home — "Built for every category" updates (corrected)
 
-### Re-verification done
-- **73 files** import/use `Loader2`. Confirmed by `rg`.
-- **Zero** Loader2 usages on public pages (`/`, `/home`, `/auth`, `/pricing`, `/discover`). Public-facing risk is near-zero.
-- **2 special-case files** that need careful handling (not a blind replace):
-  1. `src/components/app/DropCard.tsx:41` — `Loader2` is referenced as a **static icon in a config object** (`{ icon: Loader2, ... }`), not a `<JSX>` element. We'll wrap it with a tiny adapter (or swap the config value) so the rendered output still spins.
-  2. `src/pages/admin/LoadingLab.tsx` — uses `Loader2` intentionally as the "before" comparison. **Leave that demo block intact**; rebuild the rest of the page as the canonical reference.
-- **Special render shape**: `<DotPulse>` is an inline `<span>` of dots that inherits `currentColor`, while `<Loader2>` is a single SVG. Inside a few `flex` rows the centering can shift by 1–2px. The plan accounts for this by using `flex-shrink-0` and matching parent `text-*` color on the wrapper.
+You were right: the DB has **108 earring scenes** with previews in `product_image_scenes`. I was looking at the wrong table. Plan is now grounded in real data.
 
-### Final unified system
+**File:** `src/components/home/HomeTransformStrip.tsx`
 
-**1. `<BrandLoaderProgressGlyph>` — Wordmark sweep**
-Used for: anything **page-/route-/section-level** ("we are loading the screen").
-- App-level Suspense fallbacks
-- Page guards (admin/auth check on `/app/admin/loading-lab`, etc.)
-- Generation hero progress
-- "Loading list…" page-center placeholders (current `w-6 h-6 / w-8 h-8 text-muted-foreground` Loader2)
+### 1. Footwear — prepend "Original" sneaker shot
+Insert one new card at index 0 of `FOOTWEAR_CARDS` (~line 88), pointing at the supplied original render and labeled **"Original"**:
 
-**2. `<DotPulse size="sm | md | lg">` — Three-dot pulse**
-Used for: anything **control-/inline-level** ("this button/badge is busy").
-- `sm` (default) → inside `<Button size="sm">`, badges, status pills, tiny inline rows. Replaces all `w-3 / w-3.5 / w-4 / h-4 w-4` Loader2.
-- `md` → inline list footers, "Loading more…" rows. Replaces `w-5 h-5` Loader2.
-- `lg` → mid-card overlays where wordmark would feel too big. Replaces some `w-6 h-6` Loader2 spots that are *not* page-level.
-- Inherits `currentColor` so it works on light cards, dark sidebars, primary buttons, primary-foreground pills — all uniform.
+```ts
+{ label: 'Original',
+  src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/pair-display-shoes-sneakers-1776008063507.jpg?quality=60' },
+```
 
-**3. `<Skeleton>` / `AppShellLoading`** — unchanged. They handle layout placeholders, not "spinner" semantics.
+Existing 12 cards stay; total becomes 13 — sets up the "input → outputs" story when the strip auto-rotates.
 
-**4. `<ShimmerBar>`** — unchanged. Top-of-page progress bar for long async actions.
+### 2. Bags — promote sculptural still to first slot, label as "Original"
+In `BAGS_CARDS` (~line 104):
+- Remove the entry currently at index 8 (`'Sculptural Product Still'`, preview `1776749548695-11dzfk`).
+- Insert it at index 0 with label **"Original"**.
 
-### Phased execution (single PR, three phases)
+```ts
+const BAGS_CARDS: GridCardData[] = [
+  { label: 'Original', src: PREVIEW('1776749548695-11dzfk') },
+  { label: 'Sculptural Studio Hero',     src: PREVIEW('1776239449949-ygljai') },
+  { label: 'On-Shoulder Editorial',      src: PREVIEW('1776239446567-7mvigz') },
+  // …rest in current order, with the old index-8 entry removed
+];
+```
 
-#### Phase 1 — Global entry points
-- `src/App.tsx:126` (public Suspense): swap inline `border-spinner` → `<BrandLoaderProgressGlyph fullScreen />`.
+### 3. Jewelry — earrings only, refreshed from DB (12 cards)
+Replace the entire `JEWELRY_CARDS` array (~line 120) with the top 12 earring scenes from `product_image_scenes`, hand-picked across the available `sub_category` buckets (Essential Shots, On-Ear Editorial, Beauty Lifestyle UGC) for visual variety:
 
-#### Phase 2 — Replace Loader2 across 73 files (mechanical)
-For every match, follow this size table:
+```ts
+const JEWELRY_CARDS: GridCardData[] = [
+  { label: 'Earring Touch Portrait', src: PREVIEW('1776753278458-z7rmxg') },
+  { label: 'Side Profile Earrings',  src: PREVIEW('1776753261985-yi93vf') },
+  { label: 'Sunlit Ear Study',       src: PREVIEW('1776753256682-343bsf') },
+  { label: 'Window Shadow Still',    src: PREVIEW('1776753253052-fd9tdt') },
+  { label: 'Sky Bloom Profile',      src: PREVIEW('1776753259830-t0mrxv') },
+  { label: 'Hair Tucked Ear',        src: PREVIEW('1776753273285-bgevon') },
+  { label: 'Sunlit Skin Close-Up',   src: PREVIEW('1776753255640-wl0j9d') },
+  { label: 'Flash Glow Portrait',    src: PREVIEW('1776753275522-ljuq5p') },
+  { label: 'Neckline & Earrings',    src: PREVIEW('1776753755775-c36aay') },
+  { label: 'Shadow Gem Drop',        src: PREVIEW('1776753265588-dmlr31') },
+  { label: 'Ear Stack Study',        src: PREVIEW('1776753279560-dyelri') },
+  { label: 'Sunlit Beauty Moment',   src: PREVIEW('1776753754579-2rfq11') },
+];
+```
 
-| Existing Loader2 | Replacement |
-|---|---|
-| `w-3` / `w-3.5` / `w-4 h-4` / `h-4 w-4` (any color) | `<DotPulse className="..." />` (keep parent text color) |
-| `w-5 h-5` | `<DotPulse size="md" />` |
-| `w-6 h-6` inside a centered "loading" page block | `<BrandLoaderProgressGlyph />` |
-| `w-6 h-6` inside a card/overlay | `<DotPulse size="lg" />` |
-| `w-8 h-8` | `<BrandLoaderProgressGlyph />` |
+(Necklace entries `1776243905045-8aw72b`, `1776243907007-f0mhvm`, `1776243889543-u2eppc`, `1776243916154-emtkzb`, `1776243897922-iqre1y` are removed. The 6 earring previews previously in the file are kept; 6 new earring scenes are pulled in from the DB so it's a true 12-card jewelry grid — no duplicates.)
 
-Rules:
-- Drop `animate-spin` (DotPulse animates itself).
-- Keep any `mr-1.5 / ml-2` margin classes by moving them onto the DotPulse wrapper.
-- Remove `Loader2` from each file's `lucide-react` import once it's no longer referenced.
-- For `DropCard.tsx`'s config-object case, change the value to a small inline wrapper (`() => <DotPulse size="sm" />`) and update the render site — preserves the icon-key API.
+If you want a different curated mix (e.g. more On-Ear Editorial, fewer UGC), say so before I implement and I'll re-pick from the 108-scene pool.
 
-#### Phase 3 — Cleanup + canonical reference
-- **Delete** unused brand loaders (kept the file count lean):
-  - `src/components/ui/brand-loader-aperture.tsx`
-  - `src/components/ui/brand-loader-frames.tsx`
-  - `src/components/ui/brand-loader.tsx` (V + arc — superseded by wordmark sweep)
-- Rewrite `src/pages/admin/LoadingLab.tsx` as a **single-source-of-truth** reference page documenting:
-  - WordmarkSweep (page / fullScreen variants + when to use)
-  - DotPulse sm/md/lg, including a **dark-sidebar mock** and **inside-button** demo
-  - A small "before / after" with the legacy `Loader2` for context
+### Risk
+None — pure data-array changes. The existing warm-cache `useEffect` (line ~224) and pill-switch logic handle the new cards automatically.
 
-### What I will NOT change
-- Skeletons (layout-shape placeholders).
-- ShimmerBar.
-- The `BrandLoaderProgressGlyph` component itself (already production-ready).
-- Any animation timing/keyframes — they already exist in `index.css`.
-- Public marketing pages — none use Loader2.
-
-### Risk assessment
-- **Public pages**: zero risk (no Loader2 there).
-- **In-app**: low risk — DotPulse already exists, is tested in LoadingLab, and inherits color cleanly. Worst-case visual difference is a 2–3px height delta inside a button row, fixed by `flex items-center` (already present in every site).
-- **Bundle**: net negative (3 brand-loader files deleted, Loader2 still imported by lucide tree-shake when needed elsewhere).
-- **Tests/storybook**: project has no test/storybook coverage on these icons.
-
-### Files touched (estimate)
-- ~73 modified (Loader2 swaps; mostly 2-line edits each)
-- 1 modified: `src/App.tsx` (Suspense fallback)
-- 1 rewritten: `src/pages/admin/LoadingLab.tsx`
-- 3 deleted: `brand-loader-aperture.tsx`, `brand-loader-frames.tsx`, `brand-loader.tsx`
-
-**Approve to execute the full unification in one pass.**
+**Approve to implement.**
