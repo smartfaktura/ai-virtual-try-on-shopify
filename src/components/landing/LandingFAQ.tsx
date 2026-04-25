@@ -62,29 +62,30 @@ export function LandingFAQ() {
   }), []);
 
   return (
-    <section id="faq" className="py-20 sm:py-28 bg-muted/20">
+    <section id="faq" className="py-16 lg:py-32 bg-[#f5f5f3]">
       <JsonLd data={faqJsonLd} />
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Everything you need to know to get started.
-          </p>
-        </div>
+      <div className="max-w-2xl mx-auto px-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 text-center">
+          FAQ
+        </p>
+        <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-center mb-4">
+          Frequently asked questions
+        </h2>
+        <p className="text-muted-foreground text-base sm:text-lg text-center mb-12 leading-relaxed">
+          Quick answers before you commit.
+        </p>
 
-        <Accordion type="single" collapsible className="space-y-2">
+        <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((faq, idx) => (
             <AccordionItem
               key={idx}
               value={`item-${idx}`}
-              className="border border-border rounded-xl px-5 bg-card data-[state=open]:shadow-sm"
+              className="bg-white rounded-2xl border border-[#f0efed] px-6 shadow-sm data-[state=open]:shadow-md transition-shadow"
             >
-              <AccordionTrigger className="text-left text-sm font-semibold text-foreground hover:no-underline py-4">
+              <AccordionTrigger className="text-[#1a1a2e] text-base sm:text-[17px] font-semibold py-6 hover:no-underline text-left">
                 {faq.q}
               </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground leading-relaxed">
+              <AccordionContent className="text-foreground/70 text-[15px] sm:text-base leading-relaxed pb-6">
                 {faq.a}
               </AccordionContent>
             </AccordionItem>

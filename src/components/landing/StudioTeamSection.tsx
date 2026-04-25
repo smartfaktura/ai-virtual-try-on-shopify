@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
@@ -151,20 +151,17 @@ export function StudioTeamSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="team" className="py-20 sm:py-28 bg-muted/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} id="team" className="py-16 lg:py-32 bg-background">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Header */}
-        <div className="text-center mb-14 lg:mb-20">
-          <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Your AI Creative Studio
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            Your AI Creative Studio
-          </h2>
-          <p className="mt-2 text-xl sm:text-2xl font-semibold text-primary">
-            10 Specialists. Zero Overhead.
           </p>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            10 specialists. Zero overhead.
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
             A dedicated AI-powered creative team that never sleeps, never misses deadlines,
             and delivers studio-quality product visuals on demand.
           </p>
@@ -212,7 +209,7 @@ export function StudioTeamSection() {
                 className="flex-shrink-0 w-[240px] sm:w-[270px] lg:w-[300px] snap-start group"
               >
                 {/* Character image card */}
-                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 group-hover:-translate-y-1 transition-all duration-300">
+                <div className="rounded-3xl overflow-hidden aspect-[4/5] bg-white border border-[#f0efed] shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300">
                   {member.videoUrl ? (
                     <LazyVideo
                       src={member.videoUrl}
@@ -231,18 +228,14 @@ export function StudioTeamSection() {
 
                 {/* Info */}
                 <div className="mt-4 px-1">
-                  <h3 className="text-lg font-bold text-foreground">{member.name}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{member.name}</h3>
                   <p className="text-sm font-medium text-primary mt-0.5">{member.role}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed mt-2">
                     {member.description}
                   </p>
-                  {/* Expertise tag — visible on hover */}
-                  <Badge
-                    variant="outline"
-                    className="mt-2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
+                  <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     {member.expertiseTag}
-                  </Badge>
+                  </p>
                 </div>
               </div>
             ))}
@@ -250,14 +243,17 @@ export function StudioTeamSection() {
         </div>
 
         {/* CTA */}
-        <div className="text-center mt-14">
+        <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
           <Button
             size="lg"
-            className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
+            className="rounded-full h-[3.25rem] px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
             onClick={() => navigate('/team')}
           >
             Meet Your Team <ArrowRight className="w-4 h-4" />
           </Button>
+          <p className="text-xs text-muted-foreground">
+            10 specialists ready when you are
+          </p>
         </div>
       </div>
     </section>

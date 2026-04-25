@@ -134,31 +134,28 @@ export function OneImageToVisualLibrarySection({
   return (
     <section
       ref={sectionRef}
-      className="relative py-24 md:py-32 overflow-hidden"
+      className="relative py-16 lg:py-32 bg-background overflow-hidden"
       aria-labelledby="one-image-library-heading"
     >
-      {/* Subtle background tint to match sibling sections */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/[0.02] to-background pointer-events-none" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Text content */}
-        <div className="text-center max-w-3xl mx-auto mb-14 md:mb-20">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-5">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             {eyebrow}
           </p>
           <h2
             id="one-image-library-heading"
-            className="text-3xl md:text-5xl font-semibold text-foreground tracking-tight leading-[1.1] mb-6"
+            className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4"
           >
             {title}
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed mb-8">
             {description}
           </p>
           <div className="flex flex-col items-center gap-3">
             <Button
               size="lg"
-              className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
+              className="rounded-full h-[3.25rem] px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
               onClick={handleCta}
             >
               {ctaLabel}

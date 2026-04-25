@@ -216,24 +216,19 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/8 rounded-full blur-3xl opacity-30" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-4xl mx-auto mb-14">
-          <h1 className="text-[2rem] sm:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight leading-[1.1] mb-6">
-            <span className="hidden sm:inline">Your AI Visual Team.</span>
-            <span className="sm:hidden">Your AI Visual Team.</span>
+    <section className="relative pt-28 pb-6 sm:pt-36 sm:pb-10 overflow-hidden bg-[#FAFAF8]">
+      <div className="relative max-w-[1400px] mx-auto px-6 lg:px-10">
+        <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-14">
+          <h1 className="text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
+            <span>Your AI Visual Team.</span>
             <br />
-            <span className="text-primary inline-block whitespace-nowrap h-[1.15em] sm:h-auto">
+            <span className="text-[#4a5578] inline-block whitespace-nowrap h-[1.15em] sm:h-auto">
               {typedText}
-              <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-0.5 align-middle animate-[blink_1s_step-end_infinite]" />
+              <span className="inline-block w-[3px] h-[0.85em] bg-[#4a5578] ml-0.5 align-middle animate-[blink_1s_step-end_infinite]" />
             </span>
           </h1>
 
-          <p className="hidden sm:block text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="hidden sm:block text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
             Upload a product photo and create high-quality visuals for ads, product listings, and campaigns in seconds.
           </p>
           <p className="sm:hidden text-[15px] text-muted-foreground max-w-xs mx-auto mb-8 leading-relaxed">
@@ -242,29 +237,23 @@ export function HeroSection() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate(user ? '/app/workflows' : '/auth')}>
+            <Button size="lg" className="rounded-full h-[3.25rem] px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate(user ? '/app/workflows' : '/auth')}>
               Try It On My Product
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="lg"
-              className="rounded-full px-8 py-6 text-base font-semibold"
+              className="rounded-full h-[3.25rem] px-8 text-base font-semibold border-border"
               asChild
             >
               <Link to="/discover">See Real Examples</Link>
             </Button>
           </div>
 
-          {/* Trust badges */}
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
-            {trustBadges.map((badge) => (
-              <div key={badge.text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <badge.icon className="w-4 h-4 text-primary" />
-                {badge.text}
-              </div>
-            ))}
-          </div>
+          <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8">
+            20 free credits · No credit card required · Start in seconds
+          </p>
         </div>
 
         {/* Visual showcase: Upload → Carousel of outputs */}
