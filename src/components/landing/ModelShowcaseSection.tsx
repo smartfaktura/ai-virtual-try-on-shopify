@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { mockModels } from '@/data/mockData';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 type ModelItem =
   | { kind: 'model'; name: string; previewUrl: string }
@@ -47,9 +48,10 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
       <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-card">
         <ShimmerImage
-          src={model.previewUrl}
+          src={getOptimizedUrl(model.previewUrl, { quality: 60 })}
           alt={model.name}
           loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover object-top"
           aspectRatio="3/4"
           onError={() => setHidden(true)}
@@ -95,6 +97,16 @@ interface ModelsMarqueeProps {
 
 export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMarqueeProps = {}) {
   const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = 'https://azwiljtrbtaupofwmpzb.supabase.co';
+    link.crossOrigin = '';
+    document.head.appendChild(link);
+    return () => { link.parentNode?.removeChild(link); };
+  }, []);
 
   const { row1, row2, modelCount } = useMemo(() => {
     const processed = sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels]))));

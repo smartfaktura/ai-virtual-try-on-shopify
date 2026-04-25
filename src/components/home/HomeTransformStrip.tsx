@@ -100,20 +100,20 @@ const FOOTWEAR_CARDS: GridCardData[] = [
   { label: 'Sculpt Balance Edge',   src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770349853-t3x72w.jpg?quality=75' },
 ];
 
-/* ── Bags (bags-accessories — verified filenames) ── */
-const BAGS_CARDS: GridCardData[] = [
-  { label: 'Original',                   src: PREVIEW('1776749548695-11dzfk'), isOriginal: true },
-  { label: 'Sculptural Studio Hero',     src: PREVIEW('1776239449949-ygljai') },
-  { label: 'On-Shoulder Editorial',      src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749773469-tqjesf.jpg?quality=75' },
-  { label: 'Reclined Studio Editorial',  src: PREVIEW('1776749544620-sn4eh1') },
-  { label: 'Architectural On-Body',      src: PREVIEW('1776239415973-p3m8bq') },
-  { label: 'Closebody Portrait',         src: PREVIEW('1776239422417-a959mo') },
-  { label: 'Couch Luxury Still',         src: PREVIEW('1776239439946-komlla') },
-  { label: 'Car Interior Still',         src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749519182-i9w68k.jpg?quality=75' },
-  { label: 'Display Dome Editorial',     src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239462616-qs3ut8.jpg?quality=75' },
-  { label: 'Mirror Selfie Luxury',       src: PREVIEW('1776239438796-99x31m') },
-  { label: 'Lakeside Soft Minimalism',   src: PREVIEW('1776749534061-yvcf06') },
-  { label: 'Sunshadow Outdoor',          src: PREVIEW('1776239457021-4ankwt') },
+/* ── Watches (verified preview filenames) ── */
+const WATCHES_CARDS: GridCardData[] = [
+  { label: 'On-Wrist Studio',           src: PREVIEW('1776596629281-anqgf5'), isOriginal: true },
+  { label: 'Front View',                src: PREVIEW('1776247092505-0ugq0d') },
+  { label: 'Side View',                 src: PREVIEW('1776596642031-wqv2yx') },
+  { label: 'Angle View',                src: PREVIEW('1776596689365-pf1c97') },
+  { label: 'Back View',                 src: PREVIEW('1776247087022-pv2irf') },
+  { label: 'On-Wrist Lifestyle',        src: PREVIEW('1776596780029-phrw2z') },
+  { label: 'Close-Up Detail',           src: PREVIEW('1776247088202-e612sc') },
+  { label: 'Texture Detail',            src: PREVIEW('1776247104640-v8gg45') },
+  { label: 'Hard Shadow Hero',          src: PREVIEW('1776247093519-s8oold') },
+  { label: 'Flat Lay Styled',           src: PREVIEW('1776247091482-4lken5') },
+  { label: 'Earthy Glow Stage',         src: PREVIEW('1776856607319-693vtg') },
+  { label: 'Gradient Backdrop Elegance',src: PREVIEW('1776856610327-uhrujn') },
 ];
 
 const CATEGORIES = [
@@ -122,7 +122,7 @@ const CATEGORIES = [
   { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS },
   { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS },
   { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS },
-  { id: 'bags',      label: 'Bags',      cards: BAGS_CARDS },
+  { id: 'watches',   label: 'Watches',   cards: WATCHES_CARDS },
 ] as const;
 
 const ALL_CATEGORY_NAMES = [
