@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import {
@@ -204,47 +204,47 @@ export function LandingPricing() {
             return (
               <div
                 key={plan.planId}
-                className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
+                className={`relative rounded-2xl border bg-white p-7 flex flex-col transition-shadow ${
                   isCurrentPlan
-                    ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                    ? 'border-[#1a1a2e]/15 ring-1 ring-[#1a1a2e]/10 shadow-[0_8px_30px_-8px_rgba(26,26,46,0.12)]'
                     : plan.highlighted && !user
-                      ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
-                      : 'border-border'
+                      ? 'border-[#1a1a2e]/15 ring-1 ring-[#1a1a2e]/10 shadow-[0_8px_30px_-8px_rgba(26,26,46,0.12)]'
+                      : 'border-[#f0efed] hover:shadow-[0_8px_24px_-12px_rgba(26,26,46,0.10)]'
                 }`}
               >
                 {isCurrentPlan ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white text-[11px] font-semibold px-4 py-1 rounded-full">
                     Current Plan
                   </span>
                 ) : plan.badge && !user ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white text-[11px] font-semibold px-4 py-1 rounded-full">
                     {plan.badge}
                   </span>
                 ) : null}
 
                 <div className="mb-6">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                    <h3 className="text-[#1a1a2e] text-base font-semibold">{plan.name}</h3>
                     {isCurrentPlan && subscriptionStatus === 'canceling' && (
                       <Badge variant="destructive" className="text-[10px]">Canceling</Badge>
                     )}
                   </div>
-                  <div className="mt-2">
-                    <span className="text-4xl font-extrabold text-foreground">${price}</span>
-                    <span className="text-muted-foreground text-sm">/mo</span>
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className="text-[#1a1a2e] text-[2.75rem] font-semibold tracking-[-0.02em] leading-none">${price}</span>
+                    <span className="text-[#9ca3af] text-sm">/mo</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-[#6b7280] mt-2">
                     {typeof plan.credits === 'number'
-                      ? `${plan.credits.toLocaleString()} credits/month`
+                      ? `${plan.credits.toLocaleString()} credits / month`
                       : 'Unlimited visuals'}
                   </p>
                   {typeof plan.credits === 'number' && (
                     <>
-                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                      <p className="text-[10px] text-[#9ca3af] mt-0.5">
                         ≈ {Math.round(plan.credits / 5)} images
                       </p>
                       {price > 0 && plan.credits > 0 && (
-                        <p className="text-[10px] text-primary/70 font-medium mt-0.5">
+                        <p className="text-[10px] text-[#1a1a2e]/60 font-medium mt-0.5">
                           ${(price / plan.credits).toFixed(3)} per credit
                         </p>
                       )}
@@ -254,13 +254,13 @@ export function LandingPricing() {
 
                 <ul className="flex-1 space-y-3 mb-6">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <li key={idx} className="flex items-start gap-2 text-sm text-[#4b5563]">
+                      <Check className="w-4 h-4 text-[#1a1a2e] shrink-0 mt-0.5" strokeWidth={2.5} />
                       {typeof feature === 'string' ? feature : (
                         <span className="inline-flex items-center gap-1.5">
                           {feature.text}
                           {feature.badge && (
-                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
+                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-[#1a1a2e] text-white">
                               {feature.badge}
                             </Badge>
                           )}
@@ -270,26 +270,41 @@ export function LandingPricing() {
                   ))}
                 </ul>
 
-                <Button
-                  variant={
-                    user
-                      ? (isCurrentPlan ? 'secondary' : isHigher ? 'default' : 'outline')
-                      : (plan.highlighted ? 'default' : 'outline')
+                {(() => {
+                  const usePrimary = user
+                    ? (!isCurrentPlan && (isHigher || (!isHigher && !isLower)))
+                    : plan.highlighted;
+                  if (isDisabled) {
+                    return (
+                      <button
+                        disabled
+                        className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full border border-[#f0efed] bg-[#f5f5f3] text-[#6b7280] text-sm font-medium w-full cursor-not-allowed"
+                      >
+                        {ctaLabel}
+                      </button>
+                    );
                   }
-                  className="rounded-full font-semibold w-full gap-2"
-                  disabled={isDisabled}
-                  onClick={() => navigate(ctaRoute)}
-                >
-                  {ctaLabel}
-                  {!isDisabled && <ArrowRight className="w-4 h-4" />}
-                </Button>
+                  return (
+                    <Link
+                      to={ctaRoute}
+                      className={`inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full text-sm font-semibold w-full transition-colors ${
+                        usePrimary
+                          ? 'bg-[#1a1a2e] text-white hover:bg-[#2a2a3e]'
+                          : 'border border-[#d4d4d4] text-[#1a1a2e] hover:bg-[#f5f5f3]'
+                      }`}
+                    >
+                      {ctaLabel}
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  );
+                })()}
               </div>
             );
           })}
         </div>
 
         {/* ── Trust microcopy ────────────────────────────────────── */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center text-xs text-[#9ca3af]">
           Cancel anytime · No commitment · Secure checkout
         </p>
 
