@@ -1,16 +1,28 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { aiProductPhotographyCategories } from '@/data/aiProductPhotographyCategories';
 
 type Tile = { label: string; src: string };
 
-// Build hero tiles from the actual category list — each shows the most
-// representative scene image for that category (same image as the chooser card).
-const allTiles: Tile[] = aiProductPhotographyCategories.map((cat) => ({
-  label: cat.name,
-  src: cat.previewImage,
-}));
+const PREVIEW = (id: string) =>
+  `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
+
+// Curated, dynamic editorial set — intentionally distinct from the category
+// chooser and scene library sections to give the hero its own visual identity.
+const allTiles: Tile[] = [
+  { label: 'Volcanic Sunset',    src: PREVIEW('repeated-shadow-grid-fragrance-1776013389735') },
+  { label: 'Cliffside Walk',     src: PREVIEW('1776574208384-fmg2u3') },
+  { label: 'Golden Horizon',     src: PREVIEW('1776574228066-oyklfz') },
+  { label: 'Sunset Drive',       src: PREVIEW('1776102204479-9rlc0n') },
+  { label: 'Movement Shot',      src: PREVIEW('1776690212460-cq4xnb') },
+  { label: 'Office Flash',       src: PREVIEW('editorial-office-flash-eyewear-1776150153576') },
+  { label: 'Yacht Bow',          src: PREVIEW('1776524132929-q8upyp') },
+  { label: 'Dark Elegance',      src: PREVIEW('1776018020221-aehe8n') },
+  { label: 'Old Money Portrait', src: PREVIEW('1776691906436-3fe7l9') },
+  { label: 'Studio Hero',        src: PREVIEW('1776770347820-s3qwmr') },
+  { label: 'Beauty Closeup',     src: PREVIEW('beauty-closeup-oversized-eyewear-1776150210659') },
+  { label: 'Soft Volume Lean',   src: PREVIEW('1776691911049-gsxycu') },
+];
 
 const mid = Math.ceil(allTiles.length / 2);
 const row1: Tile[] = allTiles.slice(0, mid);

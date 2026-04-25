@@ -6,16 +6,16 @@ const PREVIEW = (id: string) =>
   `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 const examples = [
-  { label: 'Fashion editorial', category: 'Fashion', src: PREVIEW('1776689318257-yahkye') },
-  { label: 'Sneaker streetwear', category: 'Footwear', src: PREVIEW('1776770347820-s3qwmr') },
-  { label: 'Skincare bathroom shelf', category: 'Beauty & Skincare', src: PREVIEW('1776018015756-3xfquh') },
-  { label: 'Fragrance luxury campaign', category: 'Fragrance', src: PREVIEW('1776018020221-aehe8n') },
-  { label: 'Jewelry macro detail', category: 'Jewelry', src: PREVIEW('1776102204479-9rlc0n') },
-  { label: 'Bag lifestyle scene', category: 'Bags & Accessories', src: PREVIEW('1776239449949-ygljai') },
-  { label: 'Home interior', category: 'Home & Furniture', src: PREVIEW('1776688413055-z73arv') },
-  { label: 'Food kitchen scene', category: 'Food & Beverage', src: PREVIEW('1776018027926-ua03bd') },
-  { label: 'Supplement wellness scene', category: 'Supplements & Wellness', src: PREVIEW('1776018039712-1hifzr') },
-  { label: 'Tech desk setup', category: 'Electronics & Gadgets', src: PREVIEW('1776102181320-jisnae') },
+  { label: 'Studio Hero',           category: 'Studio',     src: PREVIEW('1776770347820-s3qwmr') },
+  { label: 'Architectural Stair',   category: 'Editorial',  src: PREVIEW('1776522769405-3v1gs0') },
+  { label: 'Sunbathing Editorial',  category: 'Lifestyle',  src: PREVIEW('1776524131703-gvh4bb') },
+  { label: 'Paris Curb Side',       category: 'Streetwear', src: PREVIEW('1776691907477-77vt46') },
+  { label: 'Hard Shadow Hero',      category: 'Studio',     src: PREVIEW('hard-shadow-shoes-sneakers-1776008136691') },
+  { label: 'Sunlit Tailored Chair', category: 'Editorial',  src: PREVIEW('1776691912818-yiu2uq') },
+  { label: 'Frozen Aura',           category: 'Seasonal',   src: PREVIEW('1776018038709-gmt0eg') },
+  { label: 'Coastal Camera',        category: 'Lifestyle',  src: PREVIEW('1776524128011-dcnlpo') },
+  { label: 'Lounge Selfie',         category: 'Editorial',  src: PREVIEW('1776102190563-dioke2') },
+  { label: 'Sunstone Wall',         category: 'Seasonal',   src: PREVIEW('1776574255634-kmhz9g') },
 ];
 
 export function PhotographySceneExamples() {
