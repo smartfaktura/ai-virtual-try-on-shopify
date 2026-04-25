@@ -1,306 +1,298 @@
 import { useNavigate } from 'react-router-dom';
-import { useRef, useEffect, useState } from 'react';
-import { ArrowRight, Layers, Zap, Palette, Settings2, Users, ShoppingBag, Camera, Layout, Home, CheckCircle2 } from 'lucide-react';
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Sparkles,
+  Layers,
+  Camera,
+  Wand2,
+  Compass,
+  Film,
+  ArrowUpCircle,
+  CalendarClock,
+  Palette,
+  Home,
+  UserSquare2,
+  Shirt,
+  Package,
+  Paintbrush,
+  ClipboardCheck,
+  CheckCircle2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
-import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
-import { workflowScenes } from '@/components/app/workflowAnimationData';
 
-const workflows = [
-  {
-    icon: Users,
-    name: 'Virtual Try-On Set',
-    tagline: 'See your products on real AI models — editorial quality, zero photoshoots.',
-    description: 'Upload a single product image and instantly generate professional on-model photography. Choose from 30+ diverse models spanning different ethnicities, body types, and age ranges.',
-    features: [
-      'AI-powered virtual try-on on real models',
-      '30+ diverse models & 30+ curated scenes to choose from',
-      'Professional editorial-quality results',
-      'All aspect ratios supported — portrait, square & landscape',
-    ],
-    gradient: 'from-primary/20 to-primary/5',
-    iconBg: 'bg-primary/15',
-  },
-  {
-    icon: ShoppingBag,
-    name: 'Product Listing Set',
-    tagline: 'E-commerce-ready product shots in every scene imaginable.',
-    description: 'From clean white studio to lifestyle environments — generate 30 unique scene variations for any product. Category-aware lighting adapts automatically to jewelry, apparel, electronics, and more.',
-    features: [
-      '30 diverse scenes from white studio to lifestyle & beyond',
-      'Category-aware lighting and composition',
-      'No people — pure product focus',
-      'Optimized for Amazon, Shopify & social commerce',
-    ],
-    gradient: 'from-accent/20 to-accent/5',
-    iconBg: 'bg-accent/15',
-  },
-  {
-    icon: Camera,
-    name: 'Selfie / UGC Set',
-    tagline: 'Authentic creator-style content that builds instant trust.',
-    description: 'Generate user-generated content without the creators. Realistic selfie angles, natural lighting, and candid compositions that feel genuine — perfect for social proof and ad creatives.',
-    features: [
-      'Authentic user-generated content style',
-      'Natural, lifestyle-oriented compositions',
-      'Perfect for social proof & testimonials',
-      'Realistic selfie & candid angles',
-    ],
-    gradient: 'from-secondary/30 to-secondary/10',
-    iconBg: 'bg-secondary/30',
-  },
-  {
-    icon: Layout,
-    name: 'Flat Lay Set',
-    tagline: 'Styled overhead arrangements — Instagram-ready in seconds.',
-    description: 'Curated top-down product layouts with complementary props and textures. Each image is styled for maximum visual impact on social feeds and lookbooks.',
-    features: [
-      'Curated top-down product arrangements',
-      'Stylized with complementary props',
-      'Instagram-ready compositions',
-      'Multi-product showcase layouts',
-    ],
-    gradient: 'from-primary/15 to-accent/10',
-    iconBg: 'bg-primary/10',
-  },
-  {
-    icon: Camera,
-    name: 'Mirror Selfie Set',
-    tagline: 'The viral format — realistic mirror selfies with your product.',
-    description: 'Generate authentic mirror selfie compositions complete with visible phone and natural room environments. The most relatable content format on social media, now fully automated.',
-    features: [
-      'Realistic mirror selfie compositions with phone visible',
-      'Diverse room and mirror environments to choose from',
-      'Identity-preserved model with your product',
-      'All aspect ratios supported',
-    ],
-    gradient: 'from-accent/15 to-primary/10',
-    iconBg: 'bg-accent/15',
-  },
-  {
-    icon: Home,
-    name: 'Interior / Exterior Staging',
-    tagline: 'Transform empty spaces into fully staged rooms — 12 design styles.',
-    description: 'Upload an empty room or building exterior and watch it come alive. From Modern Minimalist to Japandi, Scandinavian to Industrial — strict architectural preservation ensures windows, doors, and angles stay untouched.',
-    features: [
-      'Transform empty rooms into fully staged interiors',
-      'Enhance building exteriors with curb appeal & landscaping',
-      '12 design styles — Modern, Japandi, Scandinavian & more',
-      'Strict architectural preservation — windows, doors, angles unchanged',
-    ],
-    gradient: 'from-secondary/20 to-primary/5',
-    iconBg: 'bg-secondary/20',
-  },
+const wizardSteps = [
+  { n: '01', label: 'Products', icon: Package },
+  { n: '02', label: 'Shots', icon: Layers },
+  { n: '03', label: 'Setup', icon: Paintbrush },
+  { n: '04', label: 'Review', icon: ClipboardCheck },
+  { n: '05', label: 'Generate', icon: Sparkles },
+  { n: '06', label: 'Results', icon: CheckCircle2 },
 ];
 
-const benefits = [
-  {
-    icon: Zap,
-    title: 'No Prompts Needed',
-    description: 'Select a Visual Type and your product — our AI handles the rest. No writing prompts, no guessing parameters.',
-  },
-  {
-    icon: Layers,
-    title: 'Batch Processing',
-    description: 'Generate on-model, lifestyle, flat lay, and detail shots in a single run. Dozens of images from one upload.',
-  },
-  {
-    icon: Palette,
-    title: 'Brand-Consistent Output',
-    description: 'Pair Visual Types with Brand Profiles to ensure every image matches your visual identity automatically.',
-  },
+const flagshipBullets = [
+  'Upload one product. Generate dozens of category-aware scenes.',
+  'AI-analyzed shots tuned to your category — apparel, fragrance, eyewear, jewelry & more.',
+  'Cast brand models, lock outfits, control lighting and aspect ratios per shot.',
+  'Pro 6-credit-per-image quality. No prompts. No retouching. Ready to ship.',
 ];
 
-const steps = [
-  {
-    number: '01',
-    title: 'Upload Your Product',
-    description: 'Drop in a single product image — packshot, flat lay, even a phone photo. Our AI extracts what it needs.',
-  },
-  {
-    number: '02',
-    title: 'Pick a Visual Type',
-    description: 'Choose from curated Visual Types like "On-Model Editorial", "Lifestyle Scene", or "Social Media Pack". Each one is a complete visual pipeline.',
-  },
-  {
-    number: '03',
-    title: 'Receive Studio-Quality Images',
-    description: 'Your images are generated and delivered to your library — ready to download, share, or push to your store.',
-  },
+type Tool = {
+  name: string;
+  tagline: string;
+  to: string;
+  icon: typeof Sparkles;
+  external?: boolean;
+};
+
+const tools: Tool[] = [
+  { name: 'Brand Models', tagline: 'Cast your own AI models. Lock identity across every shoot.', to: '/app/models', icon: UserSquare2 },
+  { name: 'Virtual Try-On', tagline: 'See garments on 40+ diverse AI models with realistic fit.', to: '/features/virtual-try-on', icon: Shirt },
+  { name: 'Perspectives', tagline: 'One photo, every camera angle — instantly.', to: '/features/perspectives', icon: Compass },
+  { name: 'Catalog Studio', tagline: 'Phase-aware ecommerce sets at scale. (BETA)', to: '/app/catalog', icon: Layers },
+  { name: 'Freestyle', tagline: 'Open-prompt creative playground for art direction.', to: '/app/freestyle', icon: Wand2 },
+  { name: 'Short Film', tagline: 'AI campaign director — script, shots and motion.', to: '/app/video/short-film', icon: Film },
+  { name: 'Image Upscaling', tagline: '2K and 4K refinement with studio-grade clarity.', to: '/features/upscale', icon: ArrowUpCircle },
+  { name: 'Creative Drops', tagline: 'Scheduled monthly content drops on autopilot.', to: '/features/creative-drops', icon: CalendarClock },
+  { name: 'Brand Profiles', tagline: 'Lock palette, mood and lighting across every output.', to: '/features/brand-profiles', icon: Palette },
+  { name: 'Real Estate Staging', tagline: 'Stage empty rooms in 12 design styles.', to: '/features/real-estate-staging', icon: Home },
 ];
 
-function WorkflowFeatureCard({ wf, scene, reversed, onCta }: {
-  wf: typeof workflows[number];
-  scene: (typeof workflowScenes)[keyof typeof workflowScenes] | undefined;
-  reversed: boolean;
-  onCta: () => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isActive, setIsActive] = useState(false);
+const flow = [
+  { n: '01', title: 'Bring your products', desc: 'Drop in packshots, phone photos or flat lays. Our AI extracts category, color and material in seconds.' },
+  { n: '02', title: 'Direct the shoot', desc: 'Pick scenes, models, framings and brand profile. Every choice is a tap — no prompts, no guesswork.' },
+  { n: '03', title: 'Ship campaigns', desc: 'Download the set, push to Shopify, or feed it straight into ads. From upload to assets in minutes.' },
+];
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsActive(entry.isIntersecting),
-      { threshold: 0.3 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} className="rounded-2xl border bg-card overflow-hidden">
-      <div className={`flex flex-col lg:flex-row ${reversed ? 'lg:flex-row-reverse' : ''}`}>
-        {/* Visual side */}
-        <div className="relative w-full lg:w-[45%] shrink-0">
-          {scene ? (
-            <div className="aspect-square lg:aspect-[3/4] overflow-hidden">
-              <WorkflowAnimatedThumbnail scene={scene} isActive={isActive} />
-            </div>
-          ) : (
-            <div className={`aspect-square lg:aspect-[3/4] bg-gradient-to-br ${wf.gradient} flex items-center justify-center`}>
-              <div className={`w-24 h-24 rounded-3xl ${wf.iconBg} flex items-center justify-center`}>
-                <wf.icon className="w-12 h-12 text-primary" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Content side */}
-        <div className="flex flex-col justify-center gap-5 p-6 lg:p-10 flex-1">
-          <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
-            {wf.name}
-          </h2>
-          <p className="text-base font-medium text-foreground/80">
-            {wf.tagline}
-          </p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {wf.description}
-          </p>
-
-          <ul className="space-y-2.5">
-            {wf.features.map((f) => (
-              <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="pt-2">
-            <Button
-              size="lg"
-              className="rounded-full font-semibold gap-2 h-11 px-8"
-              onClick={onCta}
-            >
-              Try {wf.name} Free
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+const stats = [
+  { kpi: '~2 min', label: 'From upload to first hero shot' },
+  { kpi: '30+', label: 'Curated scenes across 14 categories' },
+  { kpi: '6 credits', label: 'Pro-quality per image — no surprises' },
+];
 
 export default function WorkflowsFeature() {
   const navigate = useNavigate();
 
   return (
     <PageLayout>
-      <SEOHead title="AI Photography Visual Types — VOVV.AI" description="Six purpose-built AI photography Visual Types: Virtual Try-On, Product Listing, Flat Lay, Mirror Selfie, UGC, and Interior Staging. Professional results in 60 seconds." canonical={`${SITE_URL}/features/workflows`} />
+      <SEOHead
+        title="The VOVV Studio — One Workspace for Every Brand Visual"
+        description="Product Images is the AI photo studio at the core of VOVV. Surrounded by Brand Models, Virtual Try-On, Catalog Studio, Short Film, Upscaling and more — every visual your brand needs in one place."
+        canonical={`${SITE_URL}/features/workflows`}
+      />
+
       {/* Hero */}
-      <section className="py-20 sm:py-28">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Settings2 className="w-4 h-4" />
-            Visual Studio
+      <section className="pt-24 pb-16 sm:pt-32 sm:pb-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-[11px] font-medium tracking-[0.22em] uppercase text-muted-foreground mb-6">
+            The Studio
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight mb-6">
-            6 Visual Pipelines.<br />One Upload. Zero Prompts.
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-[1.05] mb-6">
+            One workspace.<br />
+            Every visual your brand needs.
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            From on-model editorial to flat lays, UGC selfies to interior staging — each Visual Type is a complete creative pipeline that turns a single product image into dozens of studio-quality visuals.
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
+            Product Images is the AI photo studio at the core of VOVV. Around it sits a focused toolkit — models, motion, upscaling, drops — so every campaign starts and ships in the same place.
           </p>
-          <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
-            Start Free — No Credit Card
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              size="lg"
+              className="rounded-full px-8 h-12 text-sm font-semibold gap-2"
+              onClick={() => navigate('/auth')}
+            >
+              Start free
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 h-12 text-sm font-semibold border-foreground/15 hover:bg-foreground/5"
+              onClick={() => navigate('/discover')}
+            >
+              See it in action
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* Workflow Showcase */}
-      <section className="py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          {workflows.map((wf, i) => {
-            const reversed = i % 2 === 1;
-            const scene = workflowScenes[wf.name];
-            return (
-              <WorkflowFeatureCard
-                key={wf.name}
-                wf={wf}
-                scene={scene}
-                reversed={reversed}
-                onCta={() => navigate('/auth')}
-              />
-            );
-          })}
+      {/* Flagship Spotlight — Product Images */}
+      <section className="pb-20 sm:pb-28">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-foreground text-background p-8 sm:p-12 lg:p-16 overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-start gap-12 lg:gap-16">
+              <div className="flex-1 max-w-2xl">
+                <div className="text-[11px] font-medium tracking-[0.22em] uppercase text-background/60 mb-5">
+                  The Hero Tool
+                </div>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.05] mb-6">
+                  Product Images —<br />your AI photo studio.
+                </h2>
+                <p className="text-base sm:text-lg text-background/70 leading-relaxed mb-8">
+                  A single 6-step flow takes one product upload and returns a full editorial shoot. Category-aware, brand-consistent, and tuned for ecommerce, ads and lookbooks.
+                </p>
+
+                <ul className="space-y-3 mb-10">
+                  {flagshipBullets.map((b) => (
+                    <li key={b} className="flex items-start gap-3 text-sm text-background/80">
+                      <div className="mt-2 w-1 h-1 rounded-full bg-background/60 shrink-0" />
+                      <span className="leading-relaxed">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  size="lg"
+                  className="rounded-full px-8 h-12 text-sm font-semibold gap-2 bg-background text-foreground hover:bg-background/90"
+                  onClick={() => navigate('/app/generate/product-images')}
+                >
+                  Open the studio
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Step ladder */}
+              <div className="lg:w-[42%] w-full">
+                <div className="text-[11px] font-medium tracking-[0.22em] uppercase text-background/50 mb-5">
+                  The 6-step flow
+                </div>
+                <div className="space-y-2">
+                  {wizardSteps.map((s) => (
+                    <div
+                      key={s.n}
+                      className="flex items-center gap-4 rounded-2xl border border-background/10 bg-background/[0.03] px-5 py-4"
+                    >
+                      <div className="text-[11px] font-mono tracking-wider text-background/50 w-8">
+                        {s.n}
+                      </div>
+                      <s.icon className="w-4 h-4 text-background/70 shrink-0" />
+                      <div className="text-sm font-medium text-background">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="py-20 bg-muted/30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Why Visual Types?</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {benefits.map((b) => (
-              <Card key={b.title} className="bg-card border-border">
-                <CardContent className="pt-6">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <b.icon className="w-5 h-5 text-primary" />
+      {/* Studio toolkit */}
+      <section className="pb-20 sm:pb-28">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="text-[11px] font-medium tracking-[0.22em] uppercase text-muted-foreground mb-4">
+              The Toolkit
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-3">
+              Specialist tools, one studio.
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Whatever Product Images doesn't cover, a focused tool does — and they all share the same brand profile, models and library.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border rounded-2xl overflow-hidden border border-border">
+            {tools.map((t) => (
+              <button
+                key={t.name}
+                onClick={() => navigate(t.to)}
+                className="group text-left bg-card hover:bg-muted/40 transition-colors p-7 flex flex-col gap-4 min-h-[180px]"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="w-9 h-9 rounded-xl border border-border flex items-center justify-center">
+                    <t.icon className="w-4 h-4 text-foreground" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2">{b.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{b.description}</p>
-                </CardContent>
-              </Card>
+                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-foreground mb-1.5 tracking-tight">
+                    {t.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {t.tagline}
+                  </p>
+                </div>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-12">How It Works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((s) => (
-              <div key={s.number} className="text-center">
-                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-lg flex items-center justify-center mx-auto mb-4">
-                  {s.number}
+      {/* How it fits together */}
+      <section className="py-20 sm:py-28 border-t border-border">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <div className="text-[11px] font-medium tracking-[0.22em] uppercase text-muted-foreground mb-4">
+              How it fits together
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+              From upload to campaign — without leaving the studio.
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-10">
+            {flow.map((s) => (
+              <div key={s.n}>
+                <div className="text-[11px] font-mono tracking-wider text-muted-foreground mb-3">
+                  {s.n}
                 </div>
-                <h3 className="font-semibold text-foreground mb-2">{s.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2 tracking-tight">
+                  {s.title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 bg-muted/30">
+      {/* Stats */}
+      <section className="py-20 sm:py-28 border-t border-border">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-10 md:gap-6 text-center md:text-left">
+            {stats.map((s) => (
+              <div key={s.label} className="space-y-2">
+                <div className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
+                  {s.kpi}
+                </div>
+                <div className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto md:mx-0">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 sm:py-32 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Stop Scheduling Photoshoots. Start Generating.</h2>
-          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Sign up free and run your first Visual Type in under 2 minutes. Upload one image, pick a Visual Type, get studio-quality results. No credit card required.
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-5">
+            Your studio is one upload away.
+          </h2>
+          <p className="text-muted-foreground mb-10 max-w-xl mx-auto">
+            Start free. Generate your first hero shot in minutes. Scale into a full visual library when you're ready.
           </p>
-          <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
-            Get Started Free
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              size="lg"
+              className="rounded-full px-8 h-12 text-sm font-semibold gap-2"
+              onClick={() => navigate('/auth')}
+            >
+              Start free
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 h-12 text-sm font-semibold border-foreground/15 hover:bg-foreground/5"
+              onClick={() => navigate('/pricing')}
+            >
+              See pricing
+            </Button>
+          </div>
         </div>
       </section>
     </PageLayout>
