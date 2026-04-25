@@ -41,7 +41,12 @@ const navLinks: NavLink[] = [
     isRoute: true,
     prefetch: () => import('@/pages/Pricing'),
   },
-  { label: 'FAQ', href: '#faq', isRoute: false },
+  {
+    label: 'FAQ',
+    href: '/faq',
+    isRoute: true,
+    prefetch: () => import('@/pages/FAQ'),
+  },
 ];
 
 export function LandingNav() {

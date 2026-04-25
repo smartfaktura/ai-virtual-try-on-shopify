@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import {
@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { pricingPlans } from '@/data/mockData';
 import { CompetitorComparison } from '@/components/app/CompetitorComparison';
 
@@ -136,23 +137,28 @@ export function LandingPricing() {
   const enterprisePlan = pricingPlans.find((p) => p.isEnterprise);
 
   return (
-    <section id="pricing" className="py-20 sm:py-28">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="pricing" className="bg-[#FAFAF8]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 lg:pb-32">
 
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Start free. Automate as you grow. Content Calendar included on Growth and above.
+        <div className="text-center mb-14 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Pricing
+          </p>
+          <h1 className="text-[#1a1a2e] text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+            Simple pricing.
+            <br />
+            Real production output.
+          </h1>
+          <p className="mx-auto max-w-xl text-[#6b7280] text-lg leading-relaxed mb-10">
+            Start free. Scale when you're ready. Every plan unlocks the full visual library.
           </p>
 
-          <div className="inline-flex items-center p-1 rounded-full bg-muted">
+          <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#f0efed] shadow-[0_1px_3px_rgba(26,26,46,0.04)]">
             <button
               onClick={() => setAnnual(false)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
-                !annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                !annual ? 'bg-[#1a1a2e] text-white' : 'text-[#6b7280] hover:text-[#1a1a2e]'
               }`}
             >
               Monthly
@@ -160,11 +166,11 @@ export function LandingPricing() {
             <button
               onClick={() => setAnnual(true)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
-                annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                annual ? 'bg-[#1a1a2e] text-white' : 'text-[#6b7280] hover:text-[#1a1a2e]'
               }`}
             >
               Annual
-              <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${annual ? 'bg-white text-[#1a1a2e]' : 'bg-[#1a1a2e] text-white'}`}>
                 -20%
               </span>
             </button>
@@ -199,47 +205,47 @@ export function LandingPricing() {
             return (
               <div
                 key={plan.planId}
-                className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
+                className={`relative rounded-2xl border bg-white p-7 flex flex-col transition-shadow ${
                   isCurrentPlan
-                    ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                    ? 'border-[#1a1a2e]/15 ring-1 ring-[#1a1a2e]/10 shadow-[0_8px_30px_-8px_rgba(26,26,46,0.12)]'
                     : plan.highlighted && !user
-                      ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
-                      : 'border-border'
+                      ? 'border-[#1a1a2e]/15 ring-1 ring-[#1a1a2e]/10 shadow-[0_8px_30px_-8px_rgba(26,26,46,0.12)]'
+                      : 'border-[#f0efed] hover:shadow-[0_8px_24px_-12px_rgba(26,26,46,0.10)]'
                 }`}
               >
                 {isCurrentPlan ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white text-[11px] font-semibold px-4 py-1 rounded-full">
                     Current Plan
                   </span>
                 ) : plan.badge && !user ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white text-[11px] font-semibold px-4 py-1 rounded-full">
                     {plan.badge}
                   </span>
                 ) : null}
 
                 <div className="mb-6">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                    <h3 className="text-[#1a1a2e] text-base font-semibold">{plan.name}</h3>
                     {isCurrentPlan && subscriptionStatus === 'canceling' && (
                       <Badge variant="destructive" className="text-[10px]">Canceling</Badge>
                     )}
                   </div>
-                  <div className="mt-2">
-                    <span className="text-4xl font-extrabold text-foreground">${price}</span>
-                    <span className="text-muted-foreground text-sm">/mo</span>
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className="text-[#1a1a2e] text-[2.75rem] font-semibold tracking-[-0.02em] leading-none">${price}</span>
+                    <span className="text-[#9ca3af] text-sm">/mo</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-[#6b7280] mt-2">
                     {typeof plan.credits === 'number'
-                      ? `${plan.credits.toLocaleString()} credits/month`
+                      ? `${plan.credits.toLocaleString()} credits / month`
                       : 'Unlimited visuals'}
                   </p>
                   {typeof plan.credits === 'number' && (
                     <>
-                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                      <p className="text-[10px] text-[#9ca3af] mt-0.5">
                         ≈ {Math.round(plan.credits / 5)} images
                       </p>
                       {price > 0 && plan.credits > 0 && (
-                        <p className="text-[10px] text-primary/70 font-medium mt-0.5">
+                        <p className="text-[10px] text-[#1a1a2e]/60 font-medium mt-0.5">
                           ${(price / plan.credits).toFixed(3)} per credit
                         </p>
                       )}
@@ -249,13 +255,13 @@ export function LandingPricing() {
 
                 <ul className="flex-1 space-y-3 mb-6">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <li key={idx} className="flex items-start gap-2 text-sm text-[#4b5563]">
+                      <Check className="w-4 h-4 text-[#1a1a2e] shrink-0 mt-0.5" strokeWidth={2.5} />
                       {typeof feature === 'string' ? feature : (
                         <span className="inline-flex items-center gap-1.5">
                           {feature.text}
                           {feature.badge && (
-                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
+                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-[#1a1a2e] text-white">
                               {feature.badge}
                             </Badge>
                           )}
@@ -265,36 +271,54 @@ export function LandingPricing() {
                   ))}
                 </ul>
 
-                <Button
-                  variant={
-                    user
-                      ? (isCurrentPlan ? 'secondary' : isHigher ? 'default' : 'outline')
-                      : (plan.highlighted ? 'default' : 'outline')
+                {(() => {
+                  const usePrimary = user
+                    ? (!isCurrentPlan && (isHigher || (!isHigher && !isLower)))
+                    : plan.highlighted;
+                  if (isDisabled) {
+                    return (
+                      <button
+                        disabled
+                        className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full border border-[#f0efed] bg-[#f5f5f3] text-[#6b7280] text-sm font-medium w-full cursor-not-allowed"
+                      >
+                        {ctaLabel}
+                      </button>
+                    );
                   }
-                  className="rounded-full font-semibold w-full gap-2"
-                  disabled={isDisabled}
-                  onClick={() => navigate(ctaRoute)}
-                >
-                  {ctaLabel}
-                  {!isDisabled && <ArrowRight className="w-4 h-4" />}
-                </Button>
+                  return (
+                    <Link
+                      to={ctaRoute}
+                      className={`inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full text-sm font-semibold w-full transition-colors ${
+                        usePrimary
+                          ? 'bg-[#1a1a2e] text-white hover:bg-[#2a2a3e]'
+                          : 'border border-[#d4d4d4] text-[#1a1a2e] hover:bg-[#f5f5f3]'
+                      }`}
+                    >
+                      {ctaLabel}
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  );
+                })()}
               </div>
             );
           })}
         </div>
 
         {/* ── Trust microcopy ────────────────────────────────────── */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center text-xs text-[#9ca3af]">
           Cancel anytime · No commitment · Secure checkout
         </p>
 
         {/* ── Compare every feature ──────────────────────────────── */}
-        <div className="mt-20 max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+        <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Compare plans
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               Compare every feature
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               Every plan, side-by-side. Pick the one that matches your output.
             </p>
           </div>
@@ -461,55 +485,61 @@ export function LandingPricing() {
         </div>
 
         {/* ── Team Comparison ────────────────────────────────────── */}
-        <div className="mt-24 max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Replaces a studio
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               One platform replaces your entire creative team
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               Stop hiring photographers, renting studios, and booking models. VOVV.AI handles it all.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border overflow-hidden">
+          <div className="rounded-2xl border border-[#f0efed] overflow-hidden bg-white">
             {/* Header */}
-            <div className="grid grid-cols-3 bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <div className="px-5 py-3">Role</div>
-              <div className="px-5 py-3 text-center">Traditional</div>
-              <div className="px-5 py-3 text-center text-primary">VOVV.AI</div>
+            <div className="grid grid-cols-3 bg-[#FAFAF8] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b7280]">
+              <div className="px-5 py-3.5">Role</div>
+              <div className="px-5 py-3.5 text-center">Traditional</div>
+              <div className="px-5 py-3.5 text-center text-[#1a1a2e]">VOVV.AI</div>
             </div>
             {TEAM_COMPARISON.map((row, i) => (
               <div
                 key={row.role}
-                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'} border-t border-border/50`}
+                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF8]/60'} border-t border-[#f0efed]`}
               >
-                <div className="px-5 py-3.5 font-medium text-foreground">{row.role}</div>
-                <div className="px-5 py-3.5 text-center text-muted-foreground flex items-center justify-center gap-1.5">
-                  <X className="w-3.5 h-3.5 text-destructive/60 shrink-0" />
+                <div className="px-5 py-3.5 font-medium text-[#1a1a2e]">{row.role}</div>
+                <div className="px-5 py-3.5 text-center text-[#6b7280] flex items-center justify-center gap-1.5">
+                  <X className="w-3.5 h-3.5 text-[#9ca3af] shrink-0" />
                   {row.traditional}
                 </div>
-                <div className="px-5 py-3.5 text-center font-medium text-primary flex items-center justify-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 shrink-0" />
+                <div className="px-5 py-3.5 text-center font-medium text-[#1a1a2e] flex items-center justify-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
                   {row.vovv}
                 </div>
               </div>
             ))}
             {/* Total */}
-            <div className="grid grid-cols-3 border-t-2 border-border bg-muted/30 font-semibold text-sm">
-              <div className="px-5 py-4 text-foreground">Total per shoot</div>
-              <div className="px-5 py-4 text-center text-muted-foreground">$4,500–22,000+</div>
-              <div className="px-5 py-4 text-center text-primary text-base font-bold">From $0/mo</div>
+            <div className="grid grid-cols-3 border-t border-[#f0efed] bg-[#FAFAF8] font-semibold text-sm">
+              <div className="px-5 py-4 text-[#1a1a2e]">Total per shoot</div>
+              <div className="px-5 py-4 text-center text-[#6b7280]">$4,500–22,000+</div>
+              <div className="px-5 py-4 text-center text-[#1a1a2e] text-base font-semibold">From $0/mo</div>
             </div>
           </div>
         </div>
 
         {/* ── Platform Features Grid ─────────────────────────────── */}
-        <div className="mt-24 max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+        <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              The platform
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               Everything you get with VOVV.AI
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               A complete visual production studio — photography, video, editing, and brand management in one place.
             </p>
           </div>
@@ -518,30 +548,33 @@ export function LandingPricing() {
             {PLATFORM_FEATURES.map((feat) => (
               <div
                 key={feat.title}
-                className="rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md transition-shadow"
+                className="rounded-2xl border border-[#f0efed] bg-white p-6 transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(26,26,46,0.10)]"
               >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-                  <feat.icon className="w-4 h-4 text-primary" />
+                <div className="w-9 h-9 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center mb-4">
+                  <feat.icon className="w-4 h-4 text-[#1a1a2e]" />
                 </div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">{feat.title}</h3>
-                <p className="text-[12px] leading-relaxed text-muted-foreground">{feat.desc}</p>
+                <h3 className="text-sm font-semibold text-[#1a1a2e] mb-1.5">{feat.title}</h3>
+                <p className="text-[12.5px] leading-relaxed text-[#6b7280]">{feat.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── Cost Comparison ────────────────────────────────────── */}
-        <div className="mt-24 max-w-4xl mx-auto">
+        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
           <CompetitorComparison />
         </div>
 
         {/* ── How Credits Work ───────────────────────────────────── */}
-        <div className="mt-24 max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Credits
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               How credits work
             </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-lg mx-auto">
               One simple currency for every creative tool on the platform.
             </p>
           </div>
@@ -550,89 +583,110 @@ export function LandingPricing() {
             {CREDIT_CARDS.map((card) => (
               <div
                 key={card.title}
-                className="rounded-xl border border-border bg-card p-5 text-center"
+                className="rounded-2xl border border-[#f0efed] bg-white p-6 text-center"
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <card.icon className="w-5 h-5 text-primary" />
+                <div className="w-11 h-11 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center mx-auto mb-4">
+                  <card.icon className="w-5 h-5 text-[#1a1a2e]" />
                 </div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">{card.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{card.detail}</p>
+                <h3 className="text-sm font-semibold text-[#1a1a2e] mb-1.5">{card.title}</h3>
+                <p className="text-xs text-[#6b7280] leading-relaxed">{card.detail}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── FAQ ────────────────────────────────────────────────── */}
-        <div className="mt-24 max-w-3xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
-              Frequently Asked Questions
+        <div className="mt-24 lg:mt-32 max-w-3xl mx-auto">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              FAQ
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+              Pricing questions, answered
             </h2>
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+              The most common questions about plans, credits, and billing.
+            </p>
           </div>
 
-          <div className="space-y-2">
+          <Accordion type="single" collapsible className="flex flex-col gap-3">
             {FAQS.map((faq, idx) => (
-              <Collapsible key={idx}>
-                <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-border bg-card px-5 py-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 transition-colors group">
+              <AccordionItem
+                key={idx}
+                value={`faq-${idx}`}
+                className="border border-[#f0efed] bg-white rounded-2xl px-5 sm:px-6"
+              >
+                <AccordionTrigger className="text-left text-[#1a1a2e] text-base font-semibold py-5 hover:no-underline">
                   {faq.q}
-                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-5 pb-4 pt-1 text-sm text-muted-foreground leading-relaxed">
+                </AccordionTrigger>
+                <AccordionContent className="text-[#6b7280] text-sm sm:text-base leading-relaxed pb-5">
                   {faq.a}
-                </CollapsibleContent>
-              </Collapsible>
+                </AccordionContent>
+              </AccordionItem>
             ))}
+          </Accordion>
+
+          <div className="mt-8 text-center">
+            <Link
+              to="/faq"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1a1a2e] hover:text-[#2a2a3e] transition-colors"
+            >
+              See all FAQs
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 
         {/* ── Start Free CTA ─────────────────────────────────────── */}
-        <div className="mt-20 max-w-2xl mx-auto text-center rounded-2xl border border-primary/20 bg-primary/[0.04] p-8 sm:p-10">
-          <h3 className="text-xl font-bold text-foreground mb-2">
+        <div className="mt-24 lg:mt-32 max-w-3xl mx-auto rounded-2xl bg-[#1a1a2e] p-10 sm:p-14 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+            Get started
+          </p>
+          <h3 className="text-white text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4">
             Start with 20 free credits
           </h3>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
             No credit card required. Try every Visual Type and see the quality before committing to a plan.
           </p>
-          <Button
-            className="rounded-full font-semibold px-8 gap-2"
-            onClick={() => navigate(user ? '/app' : '/auth')}
+          <Link
+            to={user ? '/app' : '/auth'}
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors"
           >
-            {user ? 'Go to Studio' : 'Get Started Free'}
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+            {user ? 'Go to Studio' : 'Get started free'}
+            <ArrowRight size={16} />
+          </Link>
         </div>
 
         {/* ── Enterprise Banner ───────────────────────────────────── */}
         {enterprisePlan && (
-          <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8">
+          <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-[#f0efed] bg-white p-7 sm:p-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
               <div className="flex items-center gap-3 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-primary" />
+                <div className="w-11 h-11 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-[#1a1a2e]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">{enterprisePlan.name}</h3>
-                  <p className="text-sm text-muted-foreground">Custom pricing for large teams</p>
+                  <h3 className="text-[#1a1a2e] text-lg font-semibold">{enterprisePlan.name}</h3>
+                  <p className="text-sm text-[#6b7280]">Custom pricing for large teams</p>
                 </div>
               </div>
 
               <ul className="flex-1 flex flex-wrap gap-x-6 gap-y-2">
                 {enterprisePlan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check className="w-4 h-4 text-primary shrink-0" />
+                  <li key={idx} className="flex items-center gap-2 text-sm text-[#4b5563]">
+                    <Check className="w-4 h-4 text-[#1a1a2e] shrink-0" strokeWidth={2.5} />
                     {typeof feature === 'string' ? feature : feature.text}
                   </li>
                 ))}
               </ul>
 
-              <Button
-                variant="outline"
-                className="rounded-full font-semibold gap-2 shrink-0"
-                onClick={() => navigate('/contact')}
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full border border-[#d4d4d4] text-[#1a1a2e] text-sm font-semibold hover:bg-[#f5f5f3] transition-colors shrink-0"
               >
-                Contact Sales
+                Contact sales
                 <ArrowRight className="w-4 h-4" />
-              </Button>
+              </Link>
             </div>
           </div>
         )}
