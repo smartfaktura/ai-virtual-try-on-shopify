@@ -1,21 +1,21 @@
-## Fix /home — Built for every category: Jackets, Footwear, Bags, Jewelry images missing
+## Add "Brand Models" CTA card to /home model showcase
 
-### Root cause
-`HomeTransformStrip.tsx` builds preview URLs via `PREVIEW(id)` which expects the **filename basename** in `product-uploads/.../scene-previews/{id}.jpg`. The Bags/Fragrance/Eyewear/Swimwear arrays use real timestamp filenames (e.g. `1776239449949-ygljai`) so they load. But Jackets/Footwear/Jewelry arrays were filled with `scene_id` strings (e.g. `streetwear-editorial-side-profile-jackets`) that don't exist as filenames, so every image 404s.
+Insert one minimal, luxury-styled "Brand Models — Create your own" card into both rows of the `Professional models. Every look.` section. Card matches the landing page monochrome aesthetic.
 
-I queried `product_image_scenes` for each category and pulled the **real preview filenames** that the `/app/generate/product-images` Step 2 catalog uses.
+### Design
+- Same dimensions as model cards (`w-28/32/36 × h-36/40/44`, `rounded-2xl`)
+- Inverted aesthetic: `bg-foreground text-background` (so it stands out as intentional, not broken)
+- Centered: thin circular plus icon, then "BRAND MODELS" in two lines (uppercase, tracked `0.18em`), then tiny "Create your own" subtitle
+- Subtle scale on hover for the icon ring
+- Caption below reads "Custom" (italic, muted) instead of a name
+- Wrapped in `<Link to="/app/models">`
 
-### Fix
+### Implementation
+In `src/components/landing/ModelShowcaseSection.tsx`:
+1. Add a `BrandModelCTA` component with the styled card.
+2. Change `MarqueeRow`'s `items` type to a discriminated union (`{kind:'model'} | {kind:'cta'}`) and render either component.
+3. In `ModelShowcaseSection`, prepend `{ kind: 'cta' }` to both `row1` and `row2` so the card appears in each marquee.
 
-In `src/components/home/HomeTransformStrip.tsx`, replace the `JACKETS_CARDS`, `FOOTWEAR_CARDS`, `BAGS_CARDS`, and `JEWELRY_CARDS` arrays (lines 71–133) with versions that use the real filenames from the database.
-
-- **Jackets (12)** — pulled from `category_collection = 'jackets'`
-- **Footwear (12)** — pulled from `'sneakers'`
-- **Bags (12)** — refreshed from `'bags-accessories'` with verified filenames
-- **Jewelry (12)** — pulled from `'jewellery-necklaces'` + `'jewellery-earrings'`
-
-Every filename was verified against the live DB and points to an existing `scene-previews/*.jpg` in the public `product-uploads` bucket.
-
-No other code changes — labels, layout, animation, and section markup stay identical.
+No other files touched. No new dependencies.
 
 **Approve to apply.**
