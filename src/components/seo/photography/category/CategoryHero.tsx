@@ -56,7 +56,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
                     className="relative overflow-hidden rounded-xl bg-muted/50"
                   >
                     <img
-                      src={getOptimizedUrl(PREVIEW(tile.imageId), { width: 600, quality: 70 })}
+                      src={getOptimizedUrl(PREVIEW(tile.imageId), { quality: 65 })}
                       alt={tile.alt}
                       loading="eager"
                       decoding="async"
@@ -74,7 +74,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-3xl overflow-hidden shadow-lg shadow-foreground/[0.04] bg-muted/30">
               <img
-                src={getOptimizedUrl(PREVIEW(page.heroImageId), { width: 900, quality: 72 })}
+                src={getOptimizedUrl(PREVIEW(page.heroImageId), { quality: 70 })}
                 alt={page.heroAlt}
                 loading="eager"
                 decoding="async"

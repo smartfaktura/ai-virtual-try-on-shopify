@@ -26,7 +26,7 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
               className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
             >
               <img
-                src={getOptimizedUrl(PREVIEW(ex.imageId), { width: 480, quality: 60 })}
+                src={getOptimizedUrl(PREVIEW(ex.imageId), { quality: 60 })}
                 alt={ex.alt}
                 loading="lazy"
                 decoding="async"

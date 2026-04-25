@@ -69,7 +69,7 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
                         className="relative overflow-hidden rounded-xl bg-muted/40"
                       >
                         <img
-                          src={getOptimizedUrl(PREVIEW(t.id), { width: 360, quality: 60 })}
+                          src={getOptimizedUrl(PREVIEW(t.id), { quality: 60 })}
                           alt={t.alt}
                           loading="lazy"
                           decoding="async"
