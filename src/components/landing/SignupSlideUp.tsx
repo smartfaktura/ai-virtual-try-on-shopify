@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Sparkles, Check, Loader2, Mail } from 'lucide-react';
+import { X, Check, Loader2, Mail, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 type Phase = 'hidden' | 'visible' | 'submitting' | 'success' | 'error';
@@ -84,69 +84,66 @@ export function SignupSlideUp() {
 
   if (phase === 'hidden') return null;
 
-  const isIdle = phase === 'visible' || phase === 'error';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pointer-events-none">
-      {/* Backdrop — only on desktop centered mode */}
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+      {/* Backdrop — desktop only */}
       <div
-        className="hidden sm:block fixed inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-auto animate-in fade-in duration-300"
+        className="hidden sm:block fixed inset-0 bg-foreground/20 backdrop-blur-[2px] pointer-events-auto animate-in fade-in duration-300"
         onClick={dismiss}
       />
 
       {/* Card */}
-      <div
-        className="relative w-full sm:max-w-[420px] pointer-events-auto animate-in slide-in-from-bottom-6 fade-in duration-500"
-      >
-        <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3 bg-primary/[0.04] border-b border-border/50">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-xs font-bold tracking-tight text-primary">VOVV.AI</span>
-            </div>
-            <button
-              onClick={dismiss}
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted/50"
-              aria-label="Dismiss"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+      <div className="relative w-full sm:max-w-[460px] pointer-events-auto animate-in slide-in-from-bottom-6 fade-in duration-500">
+        <div className="relative bg-card border border-border/60 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-foreground/10 overflow-hidden">
+          {/* Floating close */}
+          <button
+            onClick={dismiss}
+            className="absolute top-4 right-4 z-10 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
 
-          <div className="px-5 pb-5 pt-4">
+          <div className="px-7 pt-8 pb-7 sm:pb-8">
             {phase === 'success' ? (
-              <div className="flex items-center gap-3 py-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Check className="h-5 w-5 text-primary" />
+              <div className="flex flex-col items-center text-center py-4 space-y-4">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Check className="h-7 w-7 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">You're in!</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Check your inbox for a welcome email.</p>
+                  <p className="text-lg font-bold tracking-tight text-foreground">You're in!</p>
+                  <p className="text-[13px] text-muted-foreground mt-1">Check your inbox for a welcome email.</p>
                 </div>
               </div>
             ) : phase === 'submitting' ? (
-              <div className="flex items-center gap-3 py-6 justify-center">
+              <div className="flex items-center gap-3 py-10 justify-center">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">Signing you up…</p>
               </div>
             ) : (
               <>
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <Mail className="h-5 w-5 text-primary" />
+                {/* Eyebrow */}
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary mb-4">
+                  VOVV.AI
+                </p>
+
+                {/* Header */}
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Mail className="h-6 w-6 text-primary" />
                   </div>
-                  <div>
-                    <p className="text-[15px] font-semibold text-foreground leading-snug">
+                  <div className="pt-0.5">
+                    <h3 className="text-xl font-bold tracking-tight text-foreground leading-snug">
                       Get 20 free credits
-                    </p>
-                    <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed mt-1.5">
                       AI product photography tips, new features & creative inspiration. No spam.
                     </p>
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-2.5">
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-3">
                   <input
                     type="email"
                     value={email}
@@ -156,22 +153,23 @@ export function SignupSlideUp() {
                       if (phase === 'error') setPhase('visible');
                     }}
                     placeholder="you@example.com"
-                    className="w-full h-11 rounded-xl border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 transition-shadow"
+                    className="w-full h-12 rounded-full border border-input bg-background px-5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 transition-shadow"
                     autoComplete="email"
                   />
                   <button
                     type="submit"
-                    className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                    className="w-full h-12 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30"
                   >
                     Get Started Free
+                    <ArrowRight className="h-4 w-4" />
                   </button>
                 </form>
 
                 {errorMsg && (
-                  <p className="text-xs text-destructive mt-2 text-center">{errorMsg}</p>
+                  <p className="text-xs text-destructive mt-3 text-center">{errorMsg}</p>
                 )}
 
-                <p className="text-[11px] text-muted-foreground/60 text-center mt-3">
+                <p className="text-[11px] text-muted-foreground/60 text-center mt-4">
                   Unsubscribe anytime. We respect your inbox.
                 </p>
               </>
