@@ -164,6 +164,13 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['footwear', 'bags-accessories', 'jewelry', 'beauty-skincare'],
     heroImageId: '1776606017719-zzhgy7',
     heroAlt: 'AI fashion product photography example showing a super editorial clothing campaign visual.',
+    heroNoun: 'garment',
+    heroCollage: [
+      { subCategory: 'Apparel',    imageId: '1776664933175-rjlbn6', alt: 'AI fashion editorial studio look.' },
+      { subCategory: 'Activewear', imageId: '1776192312181-3v0u0t', alt: 'AI activewear editorial floor stretch.' },
+      { subCategory: 'Swimwear',   imageId: '1776522810241-oh3lyd', alt: 'AI swimwear editorial resort pose.' },
+      { subCategory: 'Jackets',    imageId: '1776691912818-yiu2uq', alt: 'AI jacket editorial outerwear portrait.' },
+    ],
   },
 
   // ─────────────────────────────────────── 2. FOOTWEAR
@@ -238,6 +245,13 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['fashion', 'bags-accessories', 'jewelry'],
     heroImageId: 'night-curb-flash-1776011807130',
     heroAlt: 'AI footwear product photography example showing a sneaker in a night curb flash editorial.',
+    heroNoun: 'shoe',
+    heroCollage: [
+      { subCategory: 'Sneakers',   imageId: 'night-curb-flash-1776011807130', alt: 'AI sneaker night curb flash editorial.' },
+      { subCategory: 'Shoes',      imageId: '1776845513298-afa4ht',           alt: 'AI shoe fashion editorial.' },
+      { subCategory: 'Boots',      imageId: '1776240737684-bw95ch',           alt: 'AI boot quiet luxury editorial.' },
+      { subCategory: 'High Heels', imageId: '1776755942377-gtu4o0',           alt: 'AI heel editorial studio shot.' },
+    ],
   },
 
   // ─────────────────────────────────────── 3. BEAUTY & SKINCARE
@@ -312,6 +326,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['fragrance', 'supplements-wellness', 'jewelry'],
     heroImageId: '1776239826550-uaopmt',
     heroAlt: 'AI skincare product photography example showing a skincare bottle in an editorial studio scene.',
+    heroNoun: 'product',
   },
 
   // ─────────────────────────────────────── 4. FRAGRANCE
@@ -386,6 +401,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['beauty-skincare', 'jewelry', 'home-furniture'],
     heroImageId: '1776842387930-h6xw7w',
     heroAlt: 'AI perfume product photography example showing a fragrance bottle in a conceptual editorial scene.',
+    heroNoun: 'bottle',
   },
 
   // ─────────────────────────────────────── 5. JEWELRY
@@ -460,6 +476,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['bags-accessories', 'fashion', 'fragrance'],
     heroImageId: '1776244136599-8gw62e',
     heroAlt: 'AI jewelry product photography example showing an editorial floating ring studio shot.',
+    heroNoun: 'piece',
   },
 
   // ─────────────────────────────────────── 6. BAGS & ACCESSORIES
@@ -534,6 +551,13 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['fashion', 'jewelry', 'footwear'],
     heroImageId: '1776239449949-ygljai',
     heroAlt: 'AI handbag product photography example showing a sculptural bag in an editorial studio scene.',
+    heroNoun: 'accessory',
+    heroCollage: [
+      { subCategory: 'Bags',        imageId: '1776239449949-ygljai', alt: 'AI handbag editorial studio scene.' },
+      { subCategory: 'Accessories', imageId: '1776239826550-uaopmt', alt: 'AI accessory editorial.' },
+      { subCategory: 'Eyewear',     imageId: '1776102176417-iih747', alt: 'AI eyewear candy flash editorial.' },
+      { subCategory: 'Watches',     imageId: '1776664933175-rjlbn6', alt: 'AI watch editorial.' },
+    ],
   },
 
   // ─────────────────────────────────────── 7. HOME & FURNITURE
@@ -608,6 +632,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['fragrance', 'food-beverage', 'electronics-gadgets'],
     heroImageId: '1776250523409-wvjm1w',
     heroAlt: 'AI home decor product photography example showing furniture in an editorial front room hero scene.',
+    heroNoun: 'piece',
   },
 
   // ─────────────────────────────────────── 8. FOOD & BEVERAGE
@@ -683,6 +708,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['supplements-wellness', 'home-furniture', 'beauty-skincare'],
     heroImageId: '1776758447403-iisf5e',
     heroAlt: 'AI food and beverage product photography example showing an editorial citrus drink packshot.',
+    heroNoun: 'product',
   },
 
   // ─────────────────────────────────────── 9. SUPPLEMENTS & WELLNESS
@@ -757,6 +783,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['food-beverage', 'beauty-skincare', 'home-furniture'],
     heroImageId: '1776247491181-ox42m3',
     heroAlt: 'AI supplement product photography example showing an editorial morning wellness routine.',
+    heroNoun: 'product',
   },
 
   // ─────────────────────────────────────── 10. ELECTRONICS & GADGETS
@@ -831,6 +858,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     relatedCategories: ['home-furniture', 'bags-accessories', 'food-beverage'],
     heroImageId: '1776250225810-gdcnka',
     heroAlt: 'AI electronics product photography example showing an editorial tech studio hero shot.',
+    heroNoun: 'device',
   },
 ];
 
