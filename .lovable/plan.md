@@ -1,39 +1,42 @@
-# Redesign Signup Slide-Up Popup
+# Help Center Landing — Aesthetic Refresh
 
-Restyle `src/components/landing/SignupSlideUp.tsx` to feel premium, spacious, and match the app's pill-button language.
+Restyle `/help` to match the home page's premium 2026 look. No structural changes, no new data — just visual polish and tighter rhythm.
 
-## Visual changes
+## What changes
 
-**Container**
-- Wider: `sm:max-w-[460px]` (from 420px)
-- Softer corners: `rounded-3xl` (from `rounded-2xl`)
-- Stronger shadow: `shadow-2xl shadow-foreground/10`
-- Mobile: bottom-sheet style with rounded top corners only (`rounded-t-3xl`), edge-to-edge feel
-- Remove the colored header bar — replace with a subtle close button floating top-right
+**File:** `src/pages/HelpCenter.tsx` (only)
 
-**Spacing**
-- Increase inner padding: `px-7 pt-8 pb-7` (from `px-5 pb-5 pt-4`)
-- Larger icon tile: `h-12 w-12 rounded-2xl` (from h-10/rounded-xl)
-- More breathing room between header, form, and fine print (gap stack with `space-y-5`)
+### 1. Page background
+- Wrap content in `bg-[#FAFAF8]` (cream, matches `Home.tsx`) instead of default background.
 
-**Typography**
-- Eyebrow: tiny uppercase `tracking-[0.2em] text-[11px] font-semibold text-primary` ("VOVV.AI" moved here, no header strip)
-- Headline: `text-xl font-bold tracking-tight` ("Get 20 free credits")
-- Sub-copy: `text-[13px] leading-relaxed text-muted-foreground`
+### 2. Hero section
+- Replace pill chip + small heading with home-style hero:
+  - Eyebrow: `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground` → "Help Center"
+  - H1: `text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em]` → "How can we help?"
+  - Sub: muted, max-w-xl → "Search answers, browse topics, or talk to a human."
+- Search input: taller (`h-12`), `rounded-full`, soft border, subtle shadow, `pl-12` for icon. Matches the pill aesthetic from `SignupSlideUp` / hero CTAs.
 
-**Form**
-- Input: taller `h-12 rounded-full` pill, `px-5`, subtle border, focus ring
-- Submit button: pill `h-12 rounded-full bg-primary` with arrow icon, font-semibold, shadow `shadow-lg shadow-primary/25`
-- Spacing between input and button: `space-y-3`
+### 3. FAQ list
+- Keep accordion + categories (no data change).
+- Card style mirrors `HomeFAQ`:
+  - `bg-white rounded-2xl border border-[#f0efed] px-6 shadow-sm data-[state=open]:shadow-md`
+  - Trigger: `text-[#1a1a2e] text-[17px] font-semibold py-6`
+  - Content: `text-foreground/70 text-[15px] leading-relaxed pb-6`
+- Category label: small uppercase eyebrow (`text-[11px] tracking-[0.2em] text-muted-foreground`) instead of the current `text-lg` heading — quieter, more editorial.
+- Increase vertical spacing between categories (`space-y-14`).
 
-**Success state**
-- Larger checkmark tile (h-14 w-14 rounded-2xl), centered layout, more padding
+### 4. "Still need help?" → Final dark CTA
+- Replace muted gray box with home-style dark CTA section, mirroring `HomeFinalCTA`:
+  - `bg-[#1a1a2e]` full-width section with soft blurred blobs
+  - Eyebrow "Still stuck?", H2 "Talk to a human", muted sub
+  - Two pill buttons: white "Contact support" (→ `/contact`) + outlined "Join Discord" (→ existing Discord link)
 
-**Close button**
-- Floating top-right inside card: `absolute top-4 right-4`, small ghost circle button matching `EarnCreditsModal` pattern
+### 5. Empty search state
+- Center, more breathing room, same muted tone — minor polish only.
 
-## Behavior
-- No logic changes (scroll trigger, capture-lead invocation, dismiss persistence remain identical)
+## Out of scope
+- No new sections, no new images, no data edits, no copy rewrite beyond the hero/CTA microcopy above.
+- No changes to `faqContent.ts`, `PageLayout`, or nav/footer.
 
-## File touched
-- `src/components/landing/SignupSlideUp.tsx`
+## Visual reference
+Aesthetic tokens borrowed verbatim from `HomeHero`, `HomeFAQ`, `HomeFinalCTA` so the page feels native to the home flow.
