@@ -182,21 +182,21 @@ function FaqSection({ items }: { items: { q: string; a: string }[] }) {
 function WhyVovvSection({ cards, eyebrow, heading }: { cards: { title: string; text: string }[]; eyebrow: string; heading: string }) {
   const { ref, visible } = useScrollReveal();
   return (
-    <section className="py-16 lg:py-28 bg-[#22223a]">
+    <section className="py-16 lg:py-28 bg-[#FAFAF8] border-t border-[#f0efed]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">{eyebrow}</p>
-          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">{heading}</h2>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-4">{eyebrow}</p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.025em]">{heading}</h2>
         </div>
         <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {cards.map((c, i) => (
             <div
               key={c.title}
-              className={`bg-white/[0.04] border border-white/10 rounded-3xl p-7 sm:p-8 lg:p-10 transition-all duration-700 hover:bg-white/[0.08] hover:border-white/20 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+              className={`bg-white border border-[#f0efed] rounded-3xl p-7 sm:p-8 lg:p-10 shadow-sm transition-all duration-700 hover:shadow-md hover:-translate-y-0.5 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
               style={{ transitionDelay: `${i * 150}ms` }}
             >
-              <h3 className="text-white text-lg font-semibold mb-3">{c.title}</h3>
-              <p className="text-[#9ca3af] text-sm leading-relaxed">{c.text}</p>
+              <h3 className="text-foreground text-lg font-semibold mb-3 tracking-[-0.01em]">{c.title}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{c.text}</p>
             </div>
           ))}
         </div>
