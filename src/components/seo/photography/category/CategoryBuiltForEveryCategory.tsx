@@ -141,7 +141,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
             <div
               key={`${active.subCategory}-${card.imageId}-${i}`}
               className={cn(
-                'group relative aspect-square rounded-2xl overflow-hidden bg-muted/40 shadow-sm shadow-foreground/[0.04]',
+                'group relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted/40 shadow-sm shadow-foreground/[0.04]',
                 i >= 6 && 'hidden sm:block',
               )}
             >
