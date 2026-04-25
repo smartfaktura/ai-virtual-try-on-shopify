@@ -204,8 +204,8 @@ export default function Blog() {
             <BlogEmptyState
               title="New stories are on the way"
               description="We're working on fresh insights about AI product photography and visual content. Check back soon — or try VOVV.AI in the meantime."
-              primaryAction={{ label: 'Try VOVV.AI free', to: '/auth' }}
-              secondaryAction={{ label: 'Back to home', to: '/' }}
+              primaryAction={{ label: 'Back to home', to: '/' }}
+              secondaryAction={{ label: 'Try VOVV.AI free', to: '/auth' }}
             />
           )}
 
