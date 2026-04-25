@@ -11,6 +11,7 @@ import { getBlogPostBySlug, getRelatedPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, Clock, ArrowLeft, Sparkles, Quote, Lightbulb, BookOpen } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { Components } from 'react-markdown';
 
 function extractHeadings(markdown: string): { id: string; text: string }[] {
