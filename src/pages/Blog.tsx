@@ -156,49 +156,47 @@ export default function Blog() {
       />
       <JsonLd data={blogListJsonLd} />
 
-      <section className="bg-[#FAFAF8] pt-28 sm:pt-36 pb-20 sm:pb-28">
+      <section className="bg-[#FAFAF8] pt-20 sm:pt-32 pb-16 sm:pb-24 overflow-x-hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-4">
               Journal
             </p>
-            <h1 className="text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] mb-5 leading-[1.05]">
+            <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.025em] mb-4 sm:mb-5 leading-[1.1] px-2">
               Notes on AI photography
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-[15px] sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-2">
               Insights on AI product photography, visual content strategy, and e-commerce growth.
             </p>
           </div>
 
-          {/* Category filters */}
+          {/* Category filters — wrap on mobile, no horizontal scroll */}
           {hasAnyPosts && (
-            <div className="-mx-4 px-4 sm:mx-0 sm:px-0 mb-10 sm:mb-12 overflow-x-auto sm:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <div className="flex sm:flex-wrap sm:justify-center gap-2 w-max sm:w-auto">
+            <div className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-12">
+              <button
+                onClick={() => setActiveCategory(null)}
+                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[12px] sm:text-[13px] font-medium transition-colors border ${
+                  !activeCategory
+                    ? 'bg-[#1a1a2e] text-white border-[#1a1a2e]'
+                    : 'bg-white text-foreground/70 border-[#f0efed] hover:border-foreground/30 hover:text-foreground'
+                }`}
+              >
+                All
+              </button>
+              {categories.map((cat) => (
                 <button
-                  onClick={() => setActiveCategory(null)}
-                  className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
-                    !activeCategory
+                  key={cat}
+                  onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+                  className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[12px] sm:text-[13px] font-medium transition-colors border ${
+                    activeCategory === cat
                       ? 'bg-[#1a1a2e] text-white border-[#1a1a2e]'
                       : 'bg-white text-foreground/70 border-[#f0efed] hover:border-foreground/30 hover:text-foreground'
                   }`}
                 >
-                  All
+                  {cat}
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-                    className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
-                      activeCategory === cat
-                        ? 'bg-[#1a1a2e] text-white border-[#1a1a2e]'
-                        : 'bg-white text-foreground/70 border-[#f0efed] hover:border-foreground/30 hover:text-foreground'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           )}
 
