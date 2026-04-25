@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Badge } from '@/components/ui/badge';
+
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { mockModels } from '@/data/mockData';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
@@ -11,7 +11,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
 
   return (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
+      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-card">
         <ShimmerImage
           src={model.previewUrl}
           alt={model.name}
@@ -21,7 +21,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
           onError={() => setHidden(true)}
         />
       </div>
-      <span className="text-xs sm:text-sm font-medium text-foreground">{model.name}</span>
+      <span className="text-[11px] tracking-wide text-muted-foreground">{model.name}</span>
     </div>
   );
 }
@@ -60,17 +60,17 @@ export function ModelShowcaseSection() {
   }, [sortModels, applyOverrides, applyNameOverrides, filterHidden]);
 
   return (
-    <section className="py-20 lg:py-24 bg-muted/30 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <div className="text-center">
-          <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
+    <section className="py-16 lg:py-32 bg-[#FAFAF8] overflow-hidden">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-12 lg:mb-16">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             {row1.length + row2.length}+ AI Models
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            Professional Models. Every Look.
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            Professional models. Every look.
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Diverse models across every body type, ethnicity, and age - ready for your next campaign.
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+            Diverse models across every body type, ethnicity, and age — ready for your next campaign.
           </p>
         </div>
       </div>

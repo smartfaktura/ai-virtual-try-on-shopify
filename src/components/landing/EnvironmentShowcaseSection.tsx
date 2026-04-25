@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge';
+
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -59,7 +59,7 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 100 }: { item
       >
         {tripled.map((env, i) => (
           <div key={`${env.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
-            <div className="w-36 h-48 sm:w-44 sm:h-56 lg:w-52 lg:h-64 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
+            <div className="w-36 h-48 sm:w-44 sm:h-56 lg:w-52 lg:h-64 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-card">
               <ShimmerImage
                 src={env.image}
                 alt={env.name}
@@ -69,7 +69,7 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 100 }: { item
                 aspectRatio="3/4"
               />
             </div>
-            <span className="text-xs sm:text-sm font-medium text-foreground">{env.name}</span>
+            <span className="text-[11px] tracking-wide text-muted-foreground">{env.name}</span>
           </div>
         ))}
       </div>
@@ -79,17 +79,17 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 100 }: { item
 
 export function EnvironmentShowcaseSection() {
   return (
-    <section className="py-12 lg:py-16 bg-background overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <div className="text-center">
-          <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-            30+ Scenes
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            Every Environment. One Click.
+    <section className="py-16 lg:py-32 bg-background overflow-hidden">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-12 lg:mb-16">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            30+ scenes
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            Every environment. One click.
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Studio, lifestyle, editorial, streetwear - place your products in any setting instantly.
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+            Studio, lifestyle, editorial, streetwear — place your products in any setting instantly.
           </p>
         </div>
       </div>

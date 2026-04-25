@@ -137,33 +137,30 @@ export function FreestyleShowcaseSection() {
   }, [cycle, promptText]);
 
   return (
-    <section className="py-12 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
-      <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
-
-      <div className="container mx-auto px-4 relative z-10 max-w-4xl">
+    <section className="py-16 lg:py-32 relative overflow-hidden bg-[#FAFAF8]">
+      <div className="container mx-auto px-6 lg:px-10 relative z-10 max-w-4xl">
         {/* Centered header */}
-        <div className="text-center space-y-4 mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide uppercase">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Freestyle Studio
-          </div>
+          </p>
 
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
-            Your Creative Studio.{' '}
-            <span className="text-primary">No Limits.</span>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            Your creative studio.{' '}
+            <span className="text-primary">No limits.</span>
           </h2>
 
-          <p className="text-muted-foreground text-sm md:text-lg max-w-lg mx-auto hidden md:block">
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed hidden md:block">
             Describe what you want, pick your inputs, and get studio-quality images in seconds.
           </p>
-          <p className="text-muted-foreground text-sm md:hidden">
+          <p className="text-muted-foreground text-base leading-relaxed md:hidden">
             Describe it, generate it. Studio quality in seconds.
           </p>
         </div>
 
         {/* Demo panel — flattened toolbar style */}
         <div className="relative">
-          <div className="rounded-2xl border border-border/60 bg-card shadow-xl overflow-hidden">
+          <div className="rounded-3xl border border-[#f0efed] bg-white shadow-sm shadow-foreground/[0.04] overflow-hidden">
             {/* Progress bar */}
             <div className="h-[2px] rounded-t-2xl overflow-hidden">
               <div
@@ -271,7 +268,7 @@ export function FreestyleShowcaseSection() {
               <div
                 key={i}
                 className={cn(
-                  'rounded-xl overflow-hidden border border-border/50 bg-card shadow-md transition-[opacity,transform] duration-500 will-change-[opacity,transform]',
+                  'rounded-2xl overflow-hidden border border-[#f0efed] bg-white shadow-sm shadow-foreground/[0.04] transition-[opacity,transform] duration-500 will-change-[opacity,transform]',
                   visibleResults.includes(i)
                     ? 'opacity-100 translate-y-0 scale-100'
                     : 'opacity-0 translate-y-4 scale-95',
@@ -284,7 +281,7 @@ export function FreestyleShowcaseSection() {
                   aspectRatio="4/5"
                   className="w-full h-full object-cover"
                 />
-                <div className="px-2.5 py-1.5 bg-card">
+                <div className="px-2.5 py-1.5 bg-white">
                   <p className="text-[10px] text-muted-foreground font-medium truncate">
                     {card.label}
                   </p>
@@ -296,15 +293,18 @@ export function FreestyleShowcaseSection() {
         </div>
 
         {/* CTA below results */}
-        <div className="text-center mt-10">
+        <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
           <Button
             size="lg"
-            className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
+            className="rounded-full h-[3.25rem] px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
             onClick={() => navigate(user ? '/app/freestyle' : '/freestyle')}
           >
             Try Freestyle Free
             <Sparkles className="w-4 h-4" />
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Free to start · No card required
+          </p>
         </div>
       </div>
     </section>
