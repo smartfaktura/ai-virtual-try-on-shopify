@@ -101,6 +101,7 @@ const TryFree = lazy(() => import('@/pages/TryFree'));
 const AIProductPhotographyEcommerce = lazy(() => import('@/pages/seo/AIProductPhotographyEcommerce'));
 const AIProductPhotography = lazy(() => import('@/pages/seo/AIProductPhotography'));
 const ProductVisualLibrary = lazy(() => import('@/pages/ProductVisualLibrary'));
+const HowItWorks = lazy(() => import('@/pages/HowItWorks'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -158,6 +159,7 @@ const App = () => {
             <Route path="/ai-product-photography-for-ecommerce" element={<AIProductPhotographyEcommerce />} />
             <Route path="/ai-product-photography" element={<AIProductPhotography />} />
             <Route path="/product-visual-library" element={<ProductVisualLibrary />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
