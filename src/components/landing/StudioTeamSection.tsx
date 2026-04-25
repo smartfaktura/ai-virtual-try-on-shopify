@@ -229,7 +229,7 @@ export function StudioTeamSection() {
                 {/* Info */}
                 <div className="mt-4 px-1">
                   <h3 className="text-lg font-semibold text-foreground">{member.name}</h3>
-                  <p className="text-sm font-medium text-primary mt-0.5">{member.role}</p>
+                  <p className="text-sm font-medium text-foreground/80 mt-0.5">{member.role}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed mt-2">
                     {member.description}
                   </p>

@@ -181,8 +181,8 @@ export function OneImageToVisualLibrarySection({
                 <div
                   key={idx}
                   className={cn(
-                    'relative overflow-hidden rounded-2xl border border-border/40 bg-muted/30',
-                    'shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+                    'relative overflow-hidden rounded-2xl bg-muted/30',
+                    'shadow-md shadow-foreground/[0.04]',
                     'transition-[opacity,transform] duration-[600ms] ease-out',
                     'will-change-transform',
                     revealed
@@ -190,7 +190,7 @@ export function OneImageToVisualLibrarySection({
                       : cell.isSource
                         ? 'opacity-100 scale-100'
                         : 'opacity-0 scale-90',
-                    cell.isSource && revealed && 'ring-1 ring-primary/40',
+                    cell.isSource && revealed && 'ring-1 ring-foreground/15',
                   )}
                   style={{
                     transitionDelay: `${delayMs}ms`,

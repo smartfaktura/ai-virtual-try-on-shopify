@@ -147,7 +147,7 @@ export function FreestyleShowcaseSection() {
 
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
             Your creative studio.{' '}
-            <span className="text-primary">No limits.</span>
+            <span className="text-[#4a5578]">No limits.</span>
           </h2>
 
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed hidden md:block">
@@ -193,7 +193,7 @@ export function FreestyleShowcaseSection() {
                       className={cn(
                         'inline-flex items-center gap-1 sm:gap-1.5 h-8 px-2.5 sm:px-3 rounded-full text-[11px] font-medium border whitespace-nowrap transition-[color,background-color,border-color,transform] duration-500 shrink-0',
                         active
-                          ? 'border-primary/40 bg-primary/10 text-primary sm:scale-105'
+                          ? 'border-foreground/20 bg-foreground/[0.06] text-foreground sm:scale-105'
                           : 'border-border/50 bg-muted/30 text-muted-foreground/50',
                       )}
                     >

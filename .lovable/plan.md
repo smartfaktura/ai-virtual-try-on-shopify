@@ -1,121 +1,59 @@
+After comparing every Landing (`/`) section against `/home` line-by-line, the typography, spacing, eyebrows, and CTA pills are already aligned. The remaining mismatches are smaller details where Landing still leans on heavier UI (gradients, primary chips, mismatched corner radii, duplicated borders, slightly off section bands). This pass cleans those up so the main landing page reads as one continuous, calm piece — exactly like /home.
 
-# Restyle every section on `/` to match the `/home` aesthetic
+## What still doesn't match (and the fix)
 
-You're right — the previous plan grouped sections together. This one covers **every** block rendered on `/` (main landing) individually. Goal: keep all current sections, copy, animations, and links — only swap visual styling so the page feels like the refined `/home` page.
+### 1. HeroSection.tsx
+- Mobile hero scene pills use `bg-primary` blue when active — /home uses `bg-foreground` (near-black). Switch active pill to `bg-foreground text-background` to match HomeTransformStrip pills.
+- Mobile output card label badge uses `bg-primary/80` — replace with the home-style `bg-foreground/60` overlay (matches HomeHero MarqueeCard label).
+- Tighten section band: change `bg-[#FAFAF8]` is fine, but remove the leftover `pt-28 pb-6 sm:pt-36 sm:pb-10` and use `pt-28 pb-6 lg:pt-36 lg:pb-10` (already matches /home — keep). No change here.
 
-## The shared `/home` design tokens (applied everywhere below)
+### 2. ProductCategoryShowcase.tsx
+- Category label chip uses `bg-foreground/60` with white text — keep, but currently it's `text-primary-foreground` (which is white in this theme). Confirmed fine.
+- Card uses `rounded-2xl` and `shadow-md shadow-foreground/[0.04]` ✓ matches HomeHero.
+- The progress bar at top of each card is `bg-primary/70` blue — /home has none. Change to `bg-foreground/30` for a calmer, on-brand indicator (or remove entirely). Recommendation: keep but switch to `bg-foreground/40`.
 
-- **Section rhythm:** `py-16 lg:py-32`. Container: `max-w-[1400px] mx-auto px-6 lg:px-10` (FAQ stays narrower at `max-w-2xl mx-auto px-6`).
-- **Eyebrow:** `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4` (white/50 on dark band).
-- **Heading:** `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight` (replace every `font-bold`).
-- **Subcopy:** `text-base sm:text-lg leading-relaxed text-muted-foreground`.
-- **Header block wrapper:** `text-center max-w-2xl mx-auto mb-12 lg:mb-16`.
-- **Cards:** `bg-white rounded-3xl shadow-sm border border-[#f0efed]`. Tile thumbnails: `rounded-2xl shadow-md shadow-foreground/[0.04]`.
-- **Primary CTA:** `Button size="lg" className="rounded-full h-[3.25rem] px-8 text-base font-semibold shadow-lg shadow-primary/25"` + small `text-xs text-muted-foreground` reassurance line beneath.
-- **Secondary CTA:** same shape, `border border-border` outline.
-- **Dark band style:** `bg-[#1a1a2e]` with white/5 cards and `border border-white/10`.
-- **FAQ list style:** `bg-[#f5f5f3]` page band, `bg-white rounded-2xl border-[#f0efed] px-6 shadow-sm` items.
-- **Remove all `<Badge>` eyebrows** above headings — replace with the plain text eyebrow.
+### 3. OneImageToVisualLibrarySection.tsx
+- Cells use `border border-border/40` + `shadow-[0_1px_2px...]`. /home cards use `shadow-md shadow-foreground/[0.04]` and no border. Drop the border, use the same shadow token for visual consistency.
+- Source "Original" badge is `bg-primary/90` blue — /home uses `bg-primary/90` too in HomeTransformStrip GridCard, so this one is consistent. No change.
+- Source ring `ring-1 ring-primary/40` — soften to `ring-1 ring-foreground/15` so it doesn't pop blue against a calm grid.
 
-## Sections on `/` — every single one (in render order)
+### 4. StudioTeamSection.tsx
+- Member role uses `text-primary` (bright blue) — /home is monochrome. Change to `text-foreground/80` for the role line (keeps hierarchy but removes the only blue accent in the carousel).
+- Card border uses `border-[#f0efed]` ✓ matches /home tokens.
 
-### 1. `LandingNav` — *no change*
-Shared component used elsewhere. Skip.
+### 5. HowItWorks.tsx
+- Step header pattern (`Step 01` text eyebrow) ✓ matches /home.
+- Step 2 demo: `Lifestyle` chip is `bg-primary text-primary-foreground` — /home equivalent demo (HomeHowItWorks StepChoose) uses `ring-2 ring-foreground/70 bg-foreground/[0.06]` style. Change the active workflow chip to `bg-foreground text-background` to match.
+- Step 1 "Ready" pulse + Step 2 "Generate" Sparkles use `text-primary` blue. Soften to `text-foreground` so the calm minimalist tone holds.
+- Upload icon container uses `bg-primary/10 text-primary` — switch to `bg-foreground/[0.06] text-foreground/70` to match HomeHowItWorks StepUpload.
 
-### 2. `src/components/landing/HeroSection.tsx`
-- Section: `pt-28 pb-20 sm:pt-36 sm:pb-28` → `pt-28 pb-6 lg:pt-36 lg:pb-10` on `bg-[#FAFAF8]`. Drop the gradient overlay + `bg-primary/8 blur-3xl` blob.
-- H1: keep typewriter; tighten with `tracking-[-0.03em]` and replace primary-tinted typed text color with the `/home` `text-[#4a5578]` accent for the rotating phrase.
-- Subcopy: keep both desktop/mobile lines, restyle to `text-lg leading-relaxed text-muted-foreground`.
-- CTAs: rebuild "Try It On My Product" / "See Real Examples" as `h-[3.25rem] px-8 rounded-full` pair (filled primary + outline border). Behavior identical (`navigate(user ? '/app/workflows' : '/auth')`, `Link to="/discover"`).
-- Trust badges row → replace with single line `20 free credits · No credit card required · Start in seconds` styled as `text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8`.
-- Showcase carousel: keep all logic, only restyle wrappers — `rounded-2xl` (was `rounded-xl`), `shadow-sm shadow-foreground/[0.04]`, label badges to gradient-bottom strip pattern from `HomeHero`. Scene pill buttons → match `HomeTransformStrip` pill style (active `bg-foreground text-background`, idle `bg-muted/60 text-muted-foreground border border-border/60`).
+### 6. FreestyleShowcaseSection.tsx
+- Heading uses `<span className="text-primary">No limits.</span>` — /home doesn't use color accents in headings. Change span to `text-[#4a5578]` (the same muted slate used in HomeHero subhead).
+- Active chips use `border-primary/40 bg-primary/10 text-primary` — calm to `border-foreground/20 bg-foreground/[0.06] text-foreground`.
+- Generate button stays primary (it IS the CTA inside the demo) — keep.
+- Progress bar `bg-primary` — keep (it's a transient demo signal).
 
-### 3. `src/components/landing/ProductCategoryShowcase.tsx`
-- Section: `py-16 lg:py-24` → `py-16 lg:py-32`. Container `max-w-7xl` → `max-w-[1400px] … px-6 lg:px-10`.
-- Header: drop `<Badge>Every Category</Badge>`; replace with text eyebrow. H2 → `font-semibold tracking-tight` (was `font-bold`). Subcopy weight unchanged.
-- Cards: `rounded-xl border border-border/40` → `rounded-2xl border-0 shadow-md shadow-foreground/[0.04]`. Category label chip: change `bg-foreground/60` chip to `text-[10px] font-semibold uppercase tracking-wider bg-foreground/60 text-white px-2 py-0.5 rounded-full` and move into the gradient-bottom strip pattern.
-- CTA: button `px-8 py-5` → standard `h-[3.25rem] px-8` + add `text-xs text-muted-foreground` reassurance line beneath.
+### 7. VideoShowcaseSection.tsx — already matches. No change.
 
-### 4. `src/components/landing/OneImageToVisualLibrarySection.tsx`
-- Section: `py-24 md:py-32` → `py-16 lg:py-32`. Drop the `bg-gradient-to-b from-background via-primary/[0.02]` overlay (set plain `bg-background`).
-- Container `max-w-7xl` → `max-w-[1400px] … px-6 lg:px-10`.
-- Eyebrow: `text-xs uppercase tracking-[0.2em] mb-5` → `text-[11px] font-semibold uppercase tracking-[0.2em] mb-4`.
-- H2: keep size, already `font-semibold` ✓ — just normalize to the canonical class (`text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight`).
-- Subcopy size unchanged; standardize to `text-base sm:text-lg leading-relaxed`.
-- CTA: `px-8 py-6` → `h-[3.25rem] px-8`. Reassurance microcopy stays.
-- Grid cells: `rounded-2xl border border-border/40 bg-muted/30` → `rounded-2xl shadow-md shadow-foreground/[0.04] bg-[#efece8]` (matches `HomeTransformStrip` tile shell). Keep "Original" pill.
+### 8. ModelShowcaseSection.tsx — already matches (`bg-[#FAFAF8]`, marquee, soft shadow). No change.
 
-### 5. `src/components/landing/StudioTeamSection.tsx`
-- Section: `py-20 sm:py-28 bg-muted/30` → `py-16 lg:py-32 bg-background`. Container `max-w-7xl` → `max-w-[1400px] … px-6 lg:px-10`.
-- Header: remove `<Badge>` and the duplicate H2 (`Your AI Creative Studio` shown twice). Use eyebrow `Your AI Creative Studio` + single H2 `10 specialists. Zero overhead.` + existing subcopy. H2 → `font-semibold tracking-tight` (was `font-bold`).
-- Card outer: `rounded-2xl border border-border` → `rounded-3xl border border-[#f0efed] shadow-sm`. Hover lift unchanged.
-- Member name → `font-semibold` (not `font-bold`). Expertise `<Badge>` → `text-[10px] uppercase tracking-wider text-muted-foreground`.
-- CTA: `px-8 py-6` → `h-[3.25rem] px-8` + reassurance line beneath ("Meet the full team").
+### 9. EnvironmentShowcaseSection.tsx — already matches. No change.
 
-### 6. `src/components/landing/HowItWorks.tsx`
-- Section: `py-20 sm:py-28 bg-muted/20` → `py-16 lg:py-32 bg-background`. Container `max-w-7xl` → `max-w-[1400px]`.
-- Header: add eyebrow `How it works`. H2 → `font-semibold tracking-tight` (was `font-bold`).
-- Step number badge: `w-8 h-8 rounded-full bg-primary` → text-only `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground` chip (matches `HomeHowItWorks` "1. Upload" pattern). Step title → `text-lg font-semibold` (currently `text-2xl font-bold`).
-- Mockup outer cards: `rounded-2xl border border-border` → `rounded-3xl border border-[#f0efed] shadow-sm shadow-foreground/[0.04]`. Inner sub-cards keep current borders (just tone to `border-[#f0efed]`).
-- Platform chips (Shopify/Wix/etc.) → keep as-is (already small pills).
-- CTA: `px-8 py-6` → `h-[3.25rem] px-8` + reassurance line beneath.
+### 10. LandingFAQ.tsx — already mirrors HomeFAQ exactly. No change.
 
-### 7. `src/components/landing/FreestyleShowcaseSection.tsx`
-- Section: `py-12 md:py-28 bg-[hsl(30,20%,98%)]` → `py-16 lg:py-32 bg-[#FAFAF8]`. Drop the `bg-primary/[0.04] blur-3xl` orb.
-- Container `max-w-4xl` → keep the narrow width but switch to the canonical `mx-auto px-6 lg:px-10`.
-- Header: replace the primary-tinted "Freestyle Studio" pill with the standard eyebrow `Freestyle Studio`. H2 → `font-semibold tracking-tight` (was `font-bold`); accent span keeps `text-primary`.
-- Demo panel: outer `rounded-2xl border border-border/60 bg-card shadow-xl` → `rounded-3xl border border-[#f0efed] bg-white shadow-sm shadow-foreground/[0.04]`. Internal chip styles, animation, and progress bar untouched.
-- Result cards: `rounded-xl border border-border/50` → `rounded-2xl border border-[#f0efed] shadow-sm`.
-- CTA: `px-8 py-6` → `h-[3.25rem] px-8` + small reassurance line.
+### 11. FinalCTA.tsx — already mirrors HomeFinalCTA exactly (same bg, blur orbs, white pill, outline pill). No change.
 
-### 8. `src/components/landing/VideoShowcaseSection.tsx`
-- Section: `py-20 lg:py-28` → `py-16 lg:py-32`. Container `max-w-7xl` → `max-w-[1400px] … px-6 lg:px-10`.
-- Header: add eyebrow `Video`. H2 already `font-semibold tracking-tight` ✓. Subcopy class unchanged.
-- Video tiles: `rounded-lg` → `rounded-2xl shadow-md shadow-foreground/[0.04]`, gap `gap-1` → `gap-3 lg:gap-4`.
-- CTA: `px-10 py-6 shadow-xl` → standard `h-[3.25rem] px-8 shadow-lg shadow-primary/25` + reassurance line.
+## Summary of the rule being applied
+Anywhere on the landing page that still uses `text-primary` / `bg-primary` / `bg-primary/10` for **decorative** accents (not the main page-level CTA buttons), swap to neutral `foreground`-based tokens. The /home page uses primary blue **only** on the hero CTA, the FAQ heading underline, and the Generate button — nothing else. This pass brings Landing to the same discipline.
 
-### 9. `src/components/landing/ModelShowcaseSection.tsx`
-- Section: `py-20 lg:py-24 bg-muted/30` → `py-16 lg:py-32 bg-[#FAFAF8]`. Container `max-w-7xl` → `max-w-[1400px] … px-6 lg:px-10`.
-- Header: drop `<Badge>{count}+ AI Models</Badge>`; replace with eyebrow `${count}+ AI Models`. H2 → `font-semibold tracking-tight` (was `font-bold`).
-- Model cards: `rounded-xl border border-border` → `rounded-2xl shadow-md shadow-foreground/[0.04] border-0`. Marquee fade gradients re-tinted to match the new section background (`#FAFAF8`).
-- Model name label: `text-xs sm:text-sm font-medium` → `text-[11px] tracking-wide text-muted-foreground` to match `HomeHero` marquee labels.
-- No CTA currently — leave as-is (matches `/home` marquee usage).
+## Files to edit (6)
+- `src/components/landing/HeroSection.tsx`
+- `src/components/landing/ProductCategoryShowcase.tsx`
+- `src/components/landing/OneImageToVisualLibrarySection.tsx`
+- `src/components/landing/StudioTeamSection.tsx`
+- `src/components/landing/HowItWorks.tsx`
+- `src/components/landing/FreestyleShowcaseSection.tsx`
 
-### 10. `src/components/landing/EnvironmentShowcaseSection.tsx`
-- Section: `py-12 lg:py-16` → `py-16 lg:py-32 bg-background`. Container `max-w-7xl` → `max-w-[1400px] … px-6 lg:px-10`.
-- Header: drop `<Badge>30+ Scenes</Badge>`; replace with eyebrow `30+ scenes`. H2 → `font-semibold tracking-tight` (was `font-bold`).
-- Environment cards: `rounded-xl border border-border` → `rounded-2xl shadow-md shadow-foreground/[0.04] border-0`. Label `text-xs sm:text-sm font-medium` → `text-[11px] tracking-wide text-muted-foreground`.
-- No CTA — leave as-is.
+No content, no copy, no structural changes — only token-level color/border/shadow swaps to match /home's monochrome restraint.
 
-### 11. `src/components/landing/LandingFAQ.tsx`
-- Section: `py-20 sm:py-28 bg-muted/20` → `py-16 lg:py-32 bg-[#f5f5f3]`. Container `max-w-3xl` → `max-w-2xl mx-auto px-6` (matches `HomeFAQ`).
-- Header: add eyebrow `FAQ`. H2 → `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-[#1a1a2e]` (was `text-3xl sm:text-4xl font-bold`). Add subcopy line `Quick answers before you commit`.
-- Accordion items: `border border-border rounded-xl px-5 bg-card` → `bg-white rounded-2xl border border-[#f0efed] px-6 shadow-sm data-[state=open]:shadow-md transition-shadow`. List spacing `space-y-2` → `space-y-3`.
-- Trigger: `text-sm font-semibold py-4` → `text-base sm:text-[17px] font-semibold py-6 hover:no-underline text-left text-[#1a1a2e]`.
-- Content: `text-sm text-muted-foreground` → `text-foreground/70 text-[15px] sm:text-base leading-relaxed pb-6`.
-- JSON-LD untouched.
-
-### 12. `src/components/landing/FinalCTA.tsx`
-- Replace gradient/glow background with `HomeFinalCTA` treatment: `py-16 lg:py-32 bg-[#1a1a2e]` plus the two soft slate orbs (`#475569` and `#64748b` at 10% opacity).
-- Drop the `Sparkles` pill; use eyebrow `Get started` (`text-white/50`).
-- H2 → `text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight`. Subcopy → `text-[#9ca3af] text-base sm:text-lg leading-relaxed`.
-- CTAs: pair of pills — primary `bg-white text-[#1a1a2e]` and secondary `border border-white/20 text-white` (`/auth` and `/discover`), both `h-[3.25rem] px-8`. Replace the three `Free to try / No prompts / Cancel anytime` icon row with the same caption pattern as `HomeFinalCTA`.
-- Team avatars row: keep, restyle caption to `text-[#9ca3af] text-sm`.
-
-### 13. `LandingFooter` — *no change*
-Shared component. Skip.
-
-### 14. `src/pages/Landing.tsx` — *no structural change*
-Render order untouched. Wrapper background stays `bg-background` so the new `bg-[#FAFAF8]`, `bg-[#1a1a2e]`, and `bg-[#f5f5f3]` bands read as intentional.
-
-## Out of scope
-- No copy or content rewrites.
-- No section removals, additions, or reordering.
-- No nav/footer changes.
-- No route, data, hook, or animation logic changes.
-- Loading/spinner standardization from earlier requests is unrelated.
-
-## Risk
-Low and visual-only. Every change is className/wrapper level inside files used **only on `/`**. Carousels, video players, intersection observers, typewriter, and onClick targets are preserved byte-for-byte.
-
-**Approve to apply the full restyle across all 11 visual sections on `/`?**
+Approve to apply?
