@@ -68,6 +68,28 @@ export default function AIProductPhotographyCategory() {
   const lcpImageId = page.heroCollage?.[0]?.imageId ?? page.heroImageId;
   const lcpUrl = PREVIEW(lcpImageId);
 
+  const collectionJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: page.seoTitle,
+    description: page.metaDescription,
+    url: PAGE_URL,
+    inLanguage: 'en',
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'VOVV.AI',
+      url: SITE_URL,
+    },
+    about: {
+      '@type': 'Thing',
+      name: `${page.groupName} product photography`,
+    },
+    primaryImageOfPage: {
+      '@type': 'ImageObject',
+      url: ogImage,
+    },
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <SEOHead
@@ -78,6 +100,7 @@ export default function AIProductPhotographyCategory() {
       />
       <HeroPreload url={lcpUrl} />
       <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={collectionJsonLd} />
 
       <LandingNav />
       <main>
