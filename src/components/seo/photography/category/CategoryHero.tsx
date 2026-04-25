@@ -48,12 +48,12 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
 
           {/* Hero visual: collage if multi-category, otherwise single image */}
           {collage && collage.length >= 2 ? (
-            <div className="relative aspect-[5/6] rounded-3xl overflow-hidden shadow-xl shadow-foreground/[0.06] bg-muted/30">
-              <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1.5 p-1.5">
+            <div className="relative aspect-[5/6] rounded-3xl overflow-hidden shadow-lg shadow-foreground/[0.04] bg-muted/30">
+              <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-2 p-2">
                 {collage.slice(0, 4).map((tile) => (
                   <div
                     key={tile.imageId}
-                    className="relative overflow-hidden rounded-2xl bg-muted/50"
+                    className="relative overflow-hidden rounded-xl bg-muted/50"
                   >
                     <img
                       src={getOptimizedUrl(PREVIEW(tile.imageId), { quality: 70 })}
@@ -62,17 +62,15 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
                       decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"
                     />
-                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/55 via-black/10 to-transparent">
-                      <span className="text-[10px] uppercase tracking-[0.14em] text-white/85 font-semibold">
-                        {tile.subCategory}
-                      </span>
-                    </div>
+                    <span className="absolute left-2.5 bottom-2.5 inline-flex items-center px-2.5 py-1 rounded-full bg-background/85 backdrop-blur-md text-[10px] uppercase tracking-[0.14em] text-foreground/80 font-semibold shadow-sm">
+                      {tile.subCategory}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-3xl overflow-hidden shadow-xl shadow-foreground/[0.06] bg-muted/30">
+            <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-3xl overflow-hidden shadow-lg shadow-foreground/[0.04] bg-muted/30">
               <img
                 src={getOptimizedUrl(PREVIEW(page.heroImageId), { quality: 70 })}
                 alt={page.heroAlt}
@@ -80,11 +78,9 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
                 decoding="async"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/55 via-black/10 to-transparent">
-                <span className="text-[11px] uppercase tracking-[0.16em] text-white/80 font-semibold">
-                  {page.groupName}
-                </span>
-              </div>
+              <span className="absolute left-4 bottom-4 inline-flex items-center px-3 py-1.5 rounded-full bg-background/85 backdrop-blur-md text-[11px] uppercase tracking-[0.14em] text-foreground/80 font-semibold shadow-sm">
+                {page.groupName}
+              </span>
             </div>
           )}
         </div>

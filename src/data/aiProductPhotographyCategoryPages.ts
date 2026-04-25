@@ -168,7 +168,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroCollage: [
       { subCategory: 'Apparel',    imageId: '1776664933175-rjlbn6', alt: 'AI fashion editorial studio look.' },
       { subCategory: 'Activewear', imageId: '1776192312181-3v0u0t', alt: 'AI activewear editorial floor stretch.' },
-      { subCategory: 'Swimwear',   imageId: '1776522810241-oh3lyd', alt: 'AI swimwear editorial resort pose.' },
+      { subCategory: 'Swimwear',   imageId: '1776246297359-aecrip', alt: 'AI swimwear editorial resort hero.' },
       { subCategory: 'Jackets',    imageId: '1776691912818-yiu2uq', alt: 'AI jacket editorial outerwear portrait.' },
     ],
   },
@@ -553,10 +553,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroAlt: 'AI handbag product photography example showing a sculptural bag in an editorial studio scene.',
     heroNoun: 'accessory',
     heroCollage: [
-      { subCategory: 'Bags',        imageId: '1776239449949-ygljai', alt: 'AI handbag editorial studio scene.' },
-      { subCategory: 'Accessories', imageId: '1776239826550-uaopmt', alt: 'AI accessory editorial.' },
-      { subCategory: 'Eyewear',     imageId: '1776102176417-iih747', alt: 'AI eyewear candy flash editorial.' },
-      { subCategory: 'Watches',     imageId: '1776664933175-rjlbn6', alt: 'AI watch editorial.' },
+      { subCategory: 'Bags',      imageId: '1776239449949-ygljai', alt: 'AI handbag sculptural studio hero.' },
+      { subCategory: 'Backpacks', imageId: '1776231546156-0g25eq', alt: 'AI backpack one-shoulder editorial carry.' },
+      { subCategory: 'Eyewear',   imageId: '1776102186144-xrnwnc', alt: 'AI eyewear handheld frame editorial.' },
+      { subCategory: 'Watches',   imageId: '1776856607319-693vtg', alt: 'AI watch editorial earthy glow stage.' },
     ],
   },
 

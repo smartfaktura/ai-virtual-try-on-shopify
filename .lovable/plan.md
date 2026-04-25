@@ -1,84 +1,53 @@
-## Goal
+## Problem
 
-Improve the SEO category pages under `/ai-product-photography/{slug}` with three changes:
+On `/ai-product-photography/bags-accessories` (and similarly fashion), the hero collage:
 
-1. **Multi-category hero collage** — when a page covers multiple subcategories (e.g. Bags · Accessories · Eyewear · Watches), show a 4-image collage in the hero (one image per subcategory) instead of a single image.
-2. **Modern, breathing breadcrumbs** — restyled and repositioned for a more premium feel.
-3. **"One photo · Every shot" section** — moved to be the **second** section of the page (right after the hero), retitled per category, and rebuilt to match the homepage's `HomeTransformStrip` pattern: chip rail of subcategories, each chip reveals an 8-image grid.
+1. **Wrong subjects**: "Watches" tile shows a **fashion/apparel image** (`1776664933175-rjlbn6` = Sunlit Tailoring Studio from the fashion data — a person in a coat, no watch). "Eyewear" tile is a portrait dominated by a lollipop instead of the frames.
+2. **Mixed scales**: Top row = product-only still-life (bag, bottle), bottom row = full human portraits. Tiles feel disjointed because they don't share a visual scale family.
+3. **Inconsistent labels**: One tile reads "BAGS" while the page already says "Bags & Accessories" — labels duplicate what the H1 already announces.
 
----
+Single-category pages (footwear, beauty, jewelry, etc.) currently use one big hero image — fine, but a small visual upgrade will make all hub pages feel cohesive.
 
-## 1. Hero collage for multi-category pages
+## Fix
 
-In `src/data/aiProductPhotographyCategoryPages.ts`:
-- Add an optional `heroCollage?: { subCategory: string; imageId: string; alt: string }[]` field on `CategoryPage` (4 entries when used).
-- Populate it for the 4 multi-group pages where the hero eyebrow lists multiple categories:
-  - **bags-accessories** → Bags, Accessories, Eyewear, Watches
-  - **footwear** → Shoes, Sneakers, Boots, High Heels
-  - **beauty-skincare** → Skincare, Cosmetics, Makeup, Lipsticks
-  - **home-furniture** → Home Decor, Furniture, Lighting, Styled Interiors
-  - (also fashion if it makes sense: Apparel, Activewear, Swimwear, Jackets)
-- All `imageId`s pulled from existing `sceneExamples` IDs already verified against `product_image_scenes`.
+### 1. Re-curate the multi-category hero collages with on-subject, scale-matched images
 
-In `src/components/seo/photography/category/CategoryHero.tsx`:
-- If `page.heroCollage` exists, render a 2×2 collage in the hero image slot using the same rounded-3xl container, with subtle gaps and a single subtle gradient label across the bottom listing the four subcategory names. Each tile keeps `object-cover` and aspect square; the outer container retains the existing `aspect-[5/6]` for layout consistency.
-- Otherwise, render the single hero image as today.
+Use real, subject-focused tiles pulled from the existing `BUILT_FOR_GRIDS` catalog so every tile actually shows the named subcategory at a similar scale (mid-shot product-with-context, not full-body portraits next to still-life).
 
-## 2. Breadcrumbs redesign
+**Bags & Accessories (`bags-accessories`)** — replace current 4 tiles with:
 
-Extract breadcrumbs out of `CategoryHero` into a new component `src/components/seo/photography/category/CategoryBreadcrumbs.tsx` and mount it in `AIProductPhotographyCategory.tsx` **above** the hero, inside a slim full-width band:
-- Background: `bg-[#FAFAF8]` with a hairline `border-b border-border/40`.
-- Inner container `max-w-[1200px] mx-auto px-6 lg:px-10 py-4 lg:py-5`.
-- Pills/links style: muted text, `gap-2`, separators using a small `/` or `ChevronRight` with reduced opacity, current page in foreground weight-medium with `bg-muted/50 px-2.5 py-1 rounded-full` chip treatment.
-- Generous spacing, premium typography matching the rest of the site.
+| Tile | Image ID | Why |
+|------|----------|-----|
+| Bags | `1776239449949-ygljai` (Sculptural Bag Studio Hero) | keep — proper bag still-life |
+| Backpacks | `1776231546156-0g25eq` (One Shoulder Carry) | swap "Accessories" → real backpack tile |
+| Eyewear | `1776102186144-xrnwnc` (Handheld Frame) or `1776102198082-xi72z6` (Sleek Black) | frames are the hero, not a lollipop |
+| Watches | `1776856607319-693vtg` (Earthy Glow Stage) | actual watch editorial — fixes the wrong-image bug |
 
-Remove the inline breadcrumb block from `CategoryHero.tsx` and reduce its top padding accordingly (`pt-10 lg:pt-14`).
+**Fashion (`fashion`)** — keep concept but verify each tile is on-subject:
 
-## 3. Rebuild "One photo · Every shot" as second section
+| Tile | Image ID |
+|------|----------|
+| Apparel | `1776664933175-rjlbn6` (Sunlit Tailoring Studio) |
+| Activewear | `1776192312181-3v0u0t` (Editorial Floor Stretch) |
+| Swimwear | `1776246297359-aecrip` (Resort Editorial Hero) — replace current swimwear ID with a cleaner, more on-brand tile |
+| Jackets | `1776691912818-yiu2uq` (Sunlit Tailored Chair Pose) |
 
-Replace `CategoryBuiltForEveryCategory.tsx` with a homepage-style implementation:
+### 2. Improve collage layout for visual cohesion
 
-- **Position**: mount right after `CategoryHero` (move above `CategorySubcategoryChips`, `CategoryVisualOutputs`, etc.).
-- **Title/subtitle adapts per category**:
-  - Eyebrow: `One {category-noun} · Every shot` (e.g. "One bag · Every shot", "One shoe · Every shot", "One bottle · Every shot").
-  - H2: `Built for every {groupName.toLowerCase()} shot.` (e.g. "Built for every bags & accessories shot.").
-  - Add `heroNoun` field on `CategoryPage` to drive the eyebrow noun cleanly.
-- **Chip rail = page subcategories** (e.g. Bags-Accessories page → chips: Bags, Handbags, Backpacks, Eyewear, Watches…). Uses the same chip styling as `HomeTransformStrip` (mobile scrollable rail with edge fades + desktop centered chip group inside a `bg-muted/60` pill container).
-- **Grid = 8 images per subcategory** (mobile shows 6, desktop shows 8 in a `sm:grid-cols-4 grid-cols-3 gap-3 lg:gap-4`, square cards with rounded corners, label gradient on hover — same `GridCard` pattern as home).
-- **Data**: extend `CategoryPage` with:
-  ```ts
-  builtForGrids: { subCategory: string; cards: { label: string; imageId: string }[] }[]
-  ```
-  Populate 8 cards per subcategory per page (10 pages × ~6 subcategories × 8 = ~480 image IDs). All IDs sourced from the live `product_image_scenes` catalog matching the page's category collection (same source of truth used by `/product-visual-library`).
-- Bottom CTA mirrors home: small caption (`{N}+ scenes for {groupName.toLowerCase()} · one upload`) + two buttons (`Create your first visuals free` → `/app/generate/product-images`, `Browse the visual library` → `/product-visual-library`).
+In `CategoryHero.tsx`:
 
-The old single-active-image variant of this section is removed entirely.
+- Tighten gutter (`gap-1.5` → `gap-2`) and inner padding (`p-1.5` → `p-2`) for a more balanced grid.
+- Replace the heavy bottom-gradient + uppercase chip with a **subtle bottom-left chip** (rounded pill, frosted background, no gradient overlay) so the imagery breathes. Removes the "one tile is dark, another is bright" feel caused by the full-width gradient on light shots.
+- Slightly bump tile corner radius (`rounded-2xl` → `rounded-xl`) for a more editorial, less "card-stack" look.
+- Outer container shadow softened to match the rest of the page surface.
 
-## Page section order (after changes)
+### 3. Single-category hero — small polish
 
-```text
-LandingNav
-CategoryBreadcrumbs            ← NEW slim band
-CategoryHero                   ← collage when multi-category
-CategoryBuiltForEveryCategory  ← MOVED UP, now homepage-style 8-image grid
-CategorySubcategoryChips
-CategoryVisualOutputs
-CategoryPainPoints
-CategorySceneExamples
-PhotographyHowItWorks
-CategoryUseCases
-CategoryRelatedCategories
-CategoryFAQ
-PhotographyFinalCTA
-LandingFooter
-```
+- Add a thin overlay-free corner chip (same component as collage) instead of the full gradient bar so the hero photo breathes consistently with the collage variant.
 
-## Files touched
+## Files
 
-- `src/data/aiProductPhotographyCategoryPages.ts` — add `heroCollage`, `heroNoun`, `builtForGrids`; populate for all 10 pages with verified scene IDs.
-- `src/components/seo/photography/category/CategoryBreadcrumbs.tsx` — NEW.
-- `src/components/seo/photography/category/CategoryHero.tsx` — collage support, breadcrumb removed, padding adjusted.
-- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — rewritten to match `HomeTransformStrip` (chip rail + 8-image grid, adaptive title).
-- `src/pages/seo/AIProductPhotographyCategory.tsx` — mount `CategoryBreadcrumbs`, reorder sections.
+- `src/data/aiProductPhotographyCategoryPages.ts` — update `heroCollage` for `fashion` and `bags-accessories` with the new image IDs + alts.
+- `src/components/seo/photography/category/CategoryHero.tsx` — refine collage gutters, replace gradient label with frosted chip, soften shadows, apply chip to single-image variant.
 
-No DB, routing, or sitemap changes required.
+No new dependencies, no schema changes.
