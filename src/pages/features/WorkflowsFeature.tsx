@@ -4,20 +4,16 @@ import {
   ArrowUpRight,
   Sparkles,
   Layers,
-  Camera,
   Wand2,
   Compass,
   Film,
   ArrowUpCircle,
-  CalendarClock,
   Palette,
   Home,
   UserSquare2,
   Shirt,
   Package,
   Paintbrush,
-  ClipboardCheck,
-  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageLayout } from '@/components/landing/PageLayout';
@@ -25,19 +21,10 @@ import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
 
 const wizardSteps = [
-  { n: '01', label: 'Products', icon: Package },
-  { n: '02', label: 'Shots', icon: Layers },
-  { n: '03', label: 'Setup', icon: Paintbrush },
-  { n: '04', label: 'Review', icon: ClipboardCheck },
-  { n: '05', label: 'Generate', icon: Sparkles },
-  { n: '06', label: 'Results', icon: CheckCircle2 },
-];
-
-const flagshipBullets = [
-  'Upload one product. Generate dozens of category-aware scenes.',
-  'AI-analyzed shots tuned to your category — apparel, fragrance, eyewear, jewelry & more.',
-  'Cast brand models, lock outfits, control lighting and aspect ratios per shot.',
-  'Pro 6-credit-per-image quality. No prompts. No retouching. Ready to ship.',
+  { n: '01', label: 'Product',  icon: Package },
+  { n: '02', label: 'Shots',    icon: Layers },
+  { n: '03', label: 'Setup',    icon: Paintbrush },
+  { n: '04', label: 'Generate', icon: Sparkles },
 ];
 
 type Tool = {
@@ -45,32 +32,30 @@ type Tool = {
   tagline: string;
   to: string;
   icon: typeof Sparkles;
-  external?: boolean;
 };
 
 const tools: Tool[] = [
-  { name: 'Brand Models', tagline: 'Cast your own AI models. Lock identity across every shoot.', to: '/app/models', icon: UserSquare2 },
-  { name: 'Virtual Try-On', tagline: 'See garments on 40+ diverse AI models with realistic fit.', to: '/features/virtual-try-on', icon: Shirt },
-  { name: 'Perspectives', tagline: 'One photo, every camera angle — instantly.', to: '/features/perspectives', icon: Compass },
-  { name: 'Catalog Studio', tagline: 'Phase-aware ecommerce sets at scale. (BETA)', to: '/app/catalog', icon: Layers },
-  { name: 'Freestyle', tagline: 'Open-prompt creative playground for art direction.', to: '/app/freestyle', icon: Wand2 },
-  { name: 'Short Film', tagline: 'AI campaign director — script, shots and motion.', to: '/app/video/short-film', icon: Film },
-  { name: 'Image Upscaling', tagline: '2K and 4K refinement with studio-grade clarity.', to: '/features/upscale', icon: ArrowUpCircle },
-  { name: 'Creative Drops', tagline: 'Scheduled monthly content drops on autopilot.', to: '/features/creative-drops', icon: CalendarClock },
-  { name: 'Brand Profiles', tagline: 'Lock palette, mood and lighting across every output.', to: '/features/brand-profiles', icon: Palette },
-  { name: 'Real Estate Staging', tagline: 'Stage empty rooms in 12 design styles.', to: '/features/real-estate-staging', icon: Home },
+  { name: 'Brand Models',        tagline: 'Cast your own AI models. Lock identity across every shoot.', to: '/app/models',                    icon: UserSquare2 },
+  { name: 'Virtual Try-On',      tagline: 'See garments on 40+ diverse AI models with realistic fit.',  to: '/features/virtual-try-on',       icon: Shirt },
+  { name: 'Perspectives',        tagline: 'One photo, every camera angle — instantly.',                 to: '/features/perspectives',         icon: Compass },
+  { name: 'Catalog Studio',      tagline: 'Phase-aware ecommerce sets at scale. (BETA)',                to: '/app/catalog',                   icon: Layers },
+  { name: 'Freestyle',           tagline: 'Open-prompt creative playground for art direction.',         to: '/app/freestyle',                 icon: Wand2 },
+  { name: 'Short Film',          tagline: 'AI campaign director — script, shots and motion.',           to: '/app/video/short-film',          icon: Film },
+  { name: 'Image Upscaling',     tagline: '2K and 4K refinement with studio-grade clarity.',            to: '/features/upscale',              icon: ArrowUpCircle },
+  { name: 'Brand Profiles',      tagline: 'Lock palette, mood and lighting across every output.',      to: '/features/brand-profiles',       icon: Palette },
+  { name: 'Real Estate Staging', tagline: 'Stage empty rooms in 12 design styles.',                    to: '/features/real-estate-staging',  icon: Home },
 ];
 
 const flow = [
   { n: '01', title: 'Bring your products', desc: 'Drop in packshots, phone photos or flat lays. Our AI extracts category, color and material in seconds.' },
-  { n: '02', title: 'Direct the shoot', desc: 'Pick scenes, models, framings and brand profile. Every choice is a tap — no prompts, no guesswork.' },
-  { n: '03', title: 'Ship campaigns', desc: 'Download the set, push to Shopify, or feed it straight into ads. From upload to assets in minutes.' },
+  { n: '02', title: 'Direct the shoot',    desc: 'Pick scenes, models, framings and brand profile. Every choice is a tap — no prompts, no guesswork.' },
+  { n: '03', title: 'Ship campaigns',      desc: 'Download the set, push to Shopify, or feed it straight into ads. From upload to assets in minutes.' },
 ];
 
 const stats = [
   { kpi: '~2 min', label: 'From upload to first hero shot' },
-  { kpi: '30+', label: 'Curated scenes across 14 categories' },
-  { kpi: '6 credits', label: 'Pro-quality per image — no surprises' },
+  { kpi: '35+',    label: 'Product categories supported' },
+  { kpi: '1500+',  label: 'Curated scenes in the library' },
 ];
 
 export default function WorkflowsFeature() {
@@ -95,7 +80,7 @@ export default function WorkflowsFeature() {
             Every visual your brand needs.
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            Product Images is the AI photo studio at the core of VOVV. Around it sits a focused toolkit — models, motion, upscaling, drops — so every campaign starts and ships in the same place.
+            Product Images is the AI photo studio at the core of VOVV. Around it sits a focused toolkit — models, motion, upscaling and more — so every campaign starts and ships in the same place.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Button
@@ -122,27 +107,17 @@ export default function WorkflowsFeature() {
       <section className="pb-20 sm:pb-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-foreground text-background p-8 sm:p-12 lg:p-16 overflow-hidden">
-            <div className="flex flex-col lg:flex-row lg:items-start gap-12 lg:gap-16">
-              <div className="flex-1 max-w-2xl">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-16">
+              <div className="flex-1 max-w-xl">
                 <div className="text-[11px] font-medium tracking-[0.22em] uppercase text-background/60 mb-5">
                   The Hero Tool
                 </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.05] mb-6">
-                  Product Images —<br />your AI photo studio.
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.05] mb-5">
+                  Your AI photo studio.
                 </h2>
                 <p className="text-base sm:text-lg text-background/70 leading-relaxed mb-8">
-                  A single 6-step flow takes one product upload and returns a full editorial shoot. Category-aware, brand-consistent, and tuned for ecommerce, ads and lookbooks.
+                  Upload a product. Get a full editorial shoot — category-aware, brand-consistent, ready to ship.
                 </p>
-
-                <ul className="space-y-3 mb-10">
-                  {flagshipBullets.map((b) => (
-                    <li key={b} className="flex items-start gap-3 text-sm text-background/80">
-                      <div className="mt-2 w-1 h-1 rounded-full bg-background/60 shrink-0" />
-                      <span className="leading-relaxed">{b}</span>
-                    </li>
-                  ))}
-                </ul>
-
                 <Button
                   size="lg"
                   className="rounded-full px-8 h-12 text-sm font-semibold gap-2 bg-background text-foreground hover:bg-background/90"
@@ -156,7 +131,7 @@ export default function WorkflowsFeature() {
               {/* Step ladder */}
               <div className="lg:w-[42%] w-full">
                 <div className="text-[11px] font-medium tracking-[0.22em] uppercase text-background/50 mb-5">
-                  The 6-step flow
+                  The 4-step flow
                 </div>
                 <div className="space-y-2">
                   {wizardSteps.map((s) => (
@@ -266,32 +241,38 @@ export default function WorkflowsFeature() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-24 sm:py-32 border-t border-border">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-5">
+      {/* Final CTA — dark signature block (matches homepage) */}
+      <section className="py-16 lg:py-32 bg-[#1a1a2e] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#475569] blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#64748b] blur-3xl" />
+        </div>
+
+        <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+            Get started
+          </p>
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
             Your studio is one upload away.
           </h2>
-          <p className="text-muted-foreground mb-10 max-w-xl mx-auto">
-            Start free. Generate your first hero shot in minutes. Scale into a full visual library when you're ready.
+          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-10">
+            Start free. Generate your first hero shot in minutes.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button
-              size="lg"
-              className="rounded-full px-8 h-12 text-sm font-semibold gap-2"
+
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+            <button
               onClick={() => navigate('/auth')}
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto"
             >
               Start free
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full px-8 h-12 text-sm font-semibold border-foreground/15 hover:bg-foreground/5"
+              <ArrowRight size={16} />
+            </button>
+            <button
               onClick={() => navigate('/pricing')}
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"
             >
               See pricing
-            </Button>
+            </button>
           </div>
         </div>
       </section>
