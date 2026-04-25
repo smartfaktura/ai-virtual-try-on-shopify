@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { aiProductPhotographyCategories } from '@/data/aiProductPhotographyCategories';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const PREVIEW = (id: string) =>
+  `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 export function PhotographyCategoryChooser() {
   return (
@@ -19,37 +22,58 @@ export function PhotographyCategoryChooser() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-5">
-          {aiProductPhotographyCategories.map((cat) => (
-            <Link
-              key={cat.slug}
-              to={cat.url}
-              className="group flex flex-col bg-white rounded-2xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
-                <img
-                  src={getOptimizedUrl(cat.previewImage, { quality: 60 })}
-                  alt={cat.alt}
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-                  <span className="block text-[10px] uppercase tracking-[0.14em] text-white/70 font-semibold mb-0.5">
-                    {cat.shotCount}+ shots
-                  </span>
-                  <h3 className="text-white text-base sm:text-lg font-semibold leading-tight">{cat.name}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+          {aiProductPhotographyCategories.map((cat) => {
+            const thumbs = cat.previewImages.slice(0, 3);
+            return (
+              <Link
+                key={cat.slug}
+                to={cat.url}
+                className="group flex flex-col bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {/* 3-image horizontal collage */}
+                <div className="relative aspect-[16/9] bg-muted/30 p-1.5">
+                  <div className="absolute inset-1.5 grid grid-cols-3 gap-1.5">
+                    {thumbs.map((id, idx) => (
+                      <div
+                        key={`${id}-${idx}`}
+                        className="relative overflow-hidden rounded-xl bg-muted/40"
+                      >
+                        <img
+                          src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
+                          alt={`${cat.name} AI product photography example`}
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-col flex-1 p-4 lg:p-5">
-                <p className="text-[#6b7280] text-[13px] leading-relaxed mb-3 line-clamp-3">{cat.description}</p>
-                <span className="mt-auto inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
-                  Explore {cat.name}
-                  <ArrowRight size={12} />
-                </span>
-              </div>
-            </Link>
-          ))}
+
+                <div className="flex flex-col p-5 lg:p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">
+                      AI Product Photography
+                    </span>
+                    <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
+                      {cat.shotCount}+ shots
+                    </span>
+                  </div>
+                  <h3 className="text-foreground text-lg font-semibold leading-tight mb-2">
+                    {cat.name}
+                  </h3>
+                  <p className="text-muted-foreground text-[13px] leading-relaxed mb-4 line-clamp-2">
+                    {cat.description}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
+                    Explore {cat.name}
+                    <ArrowUpRight size={12} />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

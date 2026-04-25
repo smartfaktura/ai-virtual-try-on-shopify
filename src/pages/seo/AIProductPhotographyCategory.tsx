@@ -8,7 +8,7 @@ import { PhotographyHowItWorks } from '@/components/seo/photography/PhotographyH
 import { PhotographyFinalCTA } from '@/components/seo/photography/PhotographyFinalCTA';
 import { CategoryBreadcrumbs } from '@/components/seo/photography/category/CategoryBreadcrumbs';
 import { CategoryHero } from '@/components/seo/photography/category/CategoryHero';
-import { CategorySubcategoryChips } from '@/components/seo/photography/category/CategorySubcategoryChips';
+
 import { CategoryVisualOutputs } from '@/components/seo/photography/category/CategoryVisualOutputs';
 import { CategoryPainPoints } from '@/components/seo/photography/category/CategoryPainPoints';
 import { CategorySceneExamples } from '@/components/seo/photography/category/CategorySceneExamples';
@@ -55,7 +55,7 @@ export default function AIProductPhotographyCategory() {
         <CategoryBreadcrumbs page={page} />
         <CategoryHero page={page} />
         <CategoryBuiltForEveryCategory page={page} />
-        <CategorySubcategoryChips page={page} />
+        
         <CategoryVisualOutputs page={page} />
         <CategoryPainPoints page={page} />
         <CategorySceneExamples page={page} />

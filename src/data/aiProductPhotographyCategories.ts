@@ -17,7 +17,10 @@ export interface ProductPhotoCategory {
   subcategories: string[];
   /** Real number of scenes available across all subcategories in this group. */
   shotCount: number;
+  /** Legacy single preview — kept for backwards compatibility. */
   previewImage: string;
+  /** 3 on-subject preview ids used by the hub card collage. */
+  previewImages: string[];
   alt: string;
 }
 
@@ -34,6 +37,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Clothing', 'Dresses', 'Hoodies', 'Jeans', 'Jackets', 'Activewear', 'Swimwear', 'Lingerie'],
     shotCount: 425,
     previewImage: PREVIEW('1776664924644-8pmju4'),
+    previewImages: ['1776664933175-rjlbn6', '1776192312181-3v0u0t', '1776691912818-yiu2uq'],
     alt: 'AI fashion product photography example: editorial garment in a chair studio scene.',
   },
   {
@@ -45,6 +49,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Shoes', 'Sneakers', 'Boots', 'High Heels'],
     shotCount: 226,
     previewImage: PREVIEW('hard-shadow-shoes-sneakers-1776008136691'),
+    previewImages: ['hard-shadow-shoes-sneakers-1776008136691', 'night-curb-flash-1776011807130', '1776239826550-uaopmt'],
     alt: 'AI footwear product photography example: sneaker hard shadow hero shot.',
   },
   {
@@ -56,6 +61,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Skincare', 'Cosmetics', 'Makeup', 'Lipsticks', 'Serums', 'Creams'],
     shotCount: 98,
     previewImage: PREVIEW('1776239812719-8u80jx'),
+    previewImages: ['1776239812719-8u80jx', '1776239813791-r7ih97', '1776239827591-4xy8ov'],
     alt: 'AI skincare product photography example: editorial formula smear with serum.',
   },
   {
@@ -67,6 +73,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Perfume Bottles', 'Fragrance Boxes', 'Gift Sets', 'Glass Bottles'],
     shotCount: 69,
     previewImage: PREVIEW('in-hand-lifestyle-fragrance-1776013280517'),
+    previewImages: ['in-hand-lifestyle-fragrance-1776013280517', '1776842387930-h6xw7w', 'repeated-shadow-grid-fragrance-1776013389735'],
     alt: 'AI fragrance product photography example: in-hand lifestyle perfume bottle scene.',
   },
   {
@@ -78,6 +85,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Rings', 'Necklaces', 'Earrings', 'Bracelets'],
     shotCount: 144,
     previewImage: PREVIEW('1776243905045-8aw72b'),
+    previewImages: ['1776243905045-8aw72b', '1776244136599-8gw62e', '1776243682026-h1itvm'],
     alt: 'AI jewelry product photography example: editorial neck portrait with necklace.',
   },
   {
@@ -89,6 +97,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Bags', 'Handbags', 'Backpacks', 'Wallets', 'Belts', 'Scarves', 'Hats', 'Eyewear', 'Watches'],
     shotCount: 389,
     previewImage: PREVIEW('1776749544620-sn4eh1'),
+    previewImages: ['1776749544620-sn4eh1', '1776239449949-ygljai', 'editorial-office-flash-eyewear-1776150153576'],
     alt: 'AI bag product photography example: reclined studio editorial handbag scene.',
   },
   {
@@ -100,6 +109,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Home Decor', 'Furniture', 'Vases', 'Candles', 'Lighting', 'Tables', 'Chairs', 'Sofas'],
     shotCount: 60,
     previewImage: PREVIEW('1776250523409-wvjm1w'),
+    previewImages: ['1776250523409-wvjm1w', '1776669395926-r2grx3', '1776250518879-ichrf6'],
     alt: 'AI home decor product photography example: color hero decor campaign visual.',
   },
   {
@@ -111,6 +121,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Food', 'Snacks', 'Beverages', 'Bottles', 'Cans', 'Jars', 'Packaged Food'],
     shotCount: 115,
     previewImage: PREVIEW('1776240325793-lb7xi4'),
+    previewImages: ['1776240325793-lb7xi4', '1776246646068-vtqnyc', '1776758447403-iisf5e'],
     alt: 'AI food and beverage product photography example: editorial beverage campaign scene.',
   },
   {
@@ -122,6 +133,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Supplements', 'Vitamins', 'Protein', 'Wellness Products', 'Capsules', 'Powders'],
     shotCount: 51,
     previewImage: PREVIEW('1776247484304-xpwv5f'),
+    previewImages: ['1776247484304-xpwv5f', '1776247486394-r95qn0', '1776247491181-ox42m3'],
     alt: 'AI supplement product photography example: editorial dose preparation wellness scene.',
   },
   {
@@ -133,6 +145,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['Electronics', 'Gadgets', 'Tech Devices', 'Phone Cases', 'Headphones', 'Smart Devices'],
     shotCount: 33,
     previewImage: PREVIEW('1776250227186-ipm40h'),
+    previewImages: ['1776250227186-ipm40h', '1776250232617-zoxalv', '1776250225810-gdcnka'],
     alt: 'AI electronics product photography example: color hero tech campaign visual.',
   },
 ];

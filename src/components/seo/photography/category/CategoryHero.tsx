@@ -25,19 +25,19 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
               {page.heroSubheadline}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/app/generate/product-images"
-                className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
+                className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-7 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
               >
                 Create your first visuals free
                 <ArrowRight size={16} />
               </Link>
               <a
                 href="#scenes"
-                className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
+                className="inline-flex items-center justify-center h-[3.25rem] px-7 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
               >
-                See {page.groupName.toLowerCase()} examples
+                See examples
               </a>
             </div>
 
