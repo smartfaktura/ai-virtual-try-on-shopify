@@ -76,7 +76,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             One {noun} · Every shot
           </p>
-          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
+          <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
             Built for every {page.groupName.toLowerCase()} shot.
           </h2>
           {/* Style descriptor below H2, updates with active chip */}

@@ -31,7 +31,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
         <div className="grid lg:grid-cols-[5fr_6fr] gap-12 lg:gap-20 items-center">
           {/* ── Copy column ─────────────────────────────────────────── */}
           <div>
-            <h1 className="text-foreground text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] leading-[1.05] font-semibold tracking-[-0.035em] mb-7">
+            <h1 className="text-[#1a1a2e] text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] leading-[1.05] font-semibold tracking-[-0.035em] mb-7">
               {page.h1Lead}
               <br />
               <span className="text-[#4a5578]">{page.h1Highlight}</span>
@@ -48,14 +48,14 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 to="/app/generate/product-images"
-                className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-7 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
+                className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
               >
                 Create your first visuals free
                 <ArrowRight size={16} />
               </Link>
               <a
                 href="#scenes"
-                className="inline-flex items-center justify-center h-[3.25rem] px-7 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
+                className="inline-flex items-center justify-center h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
               >
                 See examples
               </a>

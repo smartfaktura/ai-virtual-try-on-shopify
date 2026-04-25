@@ -39,13 +39,13 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
               Explore more
             </p>
-            <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
               Related product photography categories
             </h2>
           </div>
           <Link
             to="/ai-product-photography"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2 transition-all self-start sm:self-end"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1a1a2e] hover:gap-2.5 transition-all self-start sm:self-end"
           >
             All AI product photography categories
             <ArrowRight size={14} />
@@ -59,7 +59,7 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
               <Link
                 key={rel.slug}
                 to={rel.url}
-                className="group flex flex-col bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-lg"
+                className="group flex flex-col bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
                 {/* 3-image horizontal collage */}
                 <div className="relative aspect-[16/9] bg-muted/30 p-1.5">
@@ -83,15 +83,15 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
                   <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-semibold mb-2">
                     AI Product Photography
                   </span>
-                  <h3 className="text-foreground text-lg font-semibold leading-tight mb-2">
+                  <h3 className="text-[#1a1a2e] text-lg font-semibold leading-tight mb-2">
                     {rel.groupName}
                   </h3>
                   <p className="text-muted-foreground text-[13px] leading-relaxed mb-4 line-clamp-2">
                     {rel.heroSubheadline}
                   </p>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1a1a2e] group-hover:gap-2 transition-all">
                     Explore {rel.groupName}
-                    <ArrowUpRight size={12} />
+                    <ArrowUpRight size={14} />
                   </span>
                 </div>
               </Link>
