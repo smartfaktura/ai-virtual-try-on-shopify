@@ -7,7 +7,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
   const collage = page.heroCollage;
 
   return (
-    <section className="pt-6 pb-16 lg:pt-10 lg:pb-20 bg-[#FAFAF8] overflow-hidden">
+    <section className="pt-8 pb-16 lg:pt-12 lg:pb-20 bg-[#FAFAF8] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-16 items-center">
           {/* Copy */}
@@ -41,8 +41,8 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
               </a>
             </div>
 
-            <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-6">
-              No photoshoot needed · Built for {page.groupName.toLowerCase()} brands
+            <p className="text-xs text-muted-foreground/70 mt-5">
+              Free to start · No credit card required
             </p>
           </div>
 
