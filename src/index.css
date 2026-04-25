@@ -393,125 +393,140 @@
   }
 }
 
-/* Blog content styles — magazine layout */
+/* Blog content styles — editorial / quiet luxury */
 
-/* Drop cap on first paragraph */
+/* Drop cap on first paragraph — charcoal, quiet */
 .blog-content > p:first-of-type::first-letter {
   float: left;
-  font-size: 3.5rem;
-  line-height: 1;
-  font-weight: 800;
-  color: hsl(var(--primary));
+  font-size: 3rem;
+  line-height: 0.95;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: hsl(var(--foreground));
   margin-right: 0.5rem;
-  margin-top: 0.25rem;
+  margin-top: 0.4rem;
 }
 
-/* Numbered H2 headings */
+/* Numbered H2 — neutral, no decorative bar */
 .blog-h2-numbered {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
-  font-size: 1.75rem;
-  font-weight: 800;
+  gap: 0.625rem;
+  font-size: 1.875rem;
+  font-weight: 600;
   letter-spacing: -0.025em;
-  margin-top: 3.5rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid hsl(var(--border));
-  position: relative;
+  line-height: 1.2;
+  margin-top: 4rem;
+  margin-bottom: 1rem;
+  color: hsl(var(--foreground));
 }
 
-.blog-h2-numbered::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 80px;
-  height: 2px;
-  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.3));
+@media (max-width: 640px) {
+  .blog-h2-numbered {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+    font-size: 1.5rem;
+    margin-top: 3rem;
+  }
 }
 
 .blog-h2-number {
-  font-family: 'Inter', monospace;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: hsl(var(--primary) / 0.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: hsl(var(--foreground) / 0.4);
   flex-shrink: 0;
-  min-width: 1.5rem;
+  letter-spacing: 0.05em;
 }
 
-/* H3 pill style */
+.blog-h2-number::after {
+  content: ' ·';
+}
+
+/* H3 — left rule, no pill */
 .blog-h3-pill {
-  font-size: 1.375rem;
-  font-weight: 700;
-  margin-top: 2.75rem;
-  margin-bottom: 1rem;
-  padding: 0.375rem 0.75rem;
-  background: hsl(var(--muted) / 0.6);
-  border-radius: 0.5rem;
-  display: inline-block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-top: 2.5rem;
+  margin-bottom: 0.875rem;
+  padding-left: 0.875rem;
+  border-left: 2px solid hsl(var(--foreground) / 0.2);
+  color: hsl(var(--foreground));
 }
 
-/* Blockquote with quote icon */
+/* Blockquote — pure typography moment */
 .blog-blockquote {
   position: relative;
-  border-left: 4px solid hsl(var(--primary));
-  background: linear-gradient(135deg, hsl(var(--primary) / 0.04), hsl(var(--muted) / 0.5));
-  border-radius: 0 0.75rem 0.75rem 0;
-  padding: 1.5rem 1.5rem 1.5rem 3rem;
-  margin: 2rem 0;
+  padding: 1rem 0 1rem 2.5rem;
+  margin: 2.5rem 0;
   font-style: italic;
-  font-size: 1.125rem;
-  line-height: 1.75;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: hsl(var(--foreground) / 0.85);
+  letter-spacing: -0.005em;
+}
+
+@media (max-width: 640px) {
+  .blog-blockquote {
+    font-size: 1.0625rem;
+    padding-left: 1.75rem;
+    margin: 2rem 0;
+  }
 }
 
 .blog-blockquote-icon {
   position: absolute;
-  top: 1.25rem;
-  left: 0.75rem;
-  width: 1.25rem;
-  height: 1.25rem;
-  color: hsl(var(--primary) / 0.3);
+  top: 0.5rem;
+  left: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: hsl(var(--foreground) / 0.15);
 }
 
 .blog-blockquote p {
   margin: 0;
 }
 
-/* Callout cards for key takeaways */
+/* Callout — cream card, neutral */
 .blog-callout {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  background: hsl(var(--primary) / 0.06);
-  border: 1px solid hsl(var(--primary) / 0.12);
-  border-left: 4px solid hsl(var(--primary));
-  border-radius: 0.75rem;
-  padding: 1.25rem 1.25rem 1.25rem 1rem;
-  margin: 1.5rem 0;
+  gap: 0.875rem;
+  background: #FAFAF8;
+  border: 1px solid #f0efed;
+  border-radius: 1rem;
+  padding: 1.125rem 1.25rem;
+  margin: 1.75rem 0;
   font-size: 0.9375rem;
   line-height: 1.65;
+  color: hsl(var(--foreground) / 0.8);
 }
 
 .blog-callout-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: hsl(var(--primary));
+  width: 1.125rem;
+  height: 1.125rem;
+  color: hsl(var(--foreground) / 0.55);
   flex-shrink: 0;
-  margin-top: 0.125rem;
+  margin-top: 0.2rem;
+}
+
+.blog-callout strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
 }
 
 .blog-strong-takeaway {
   color: hsl(var(--foreground));
 }
 
-/* Table wrapper */
+/* Table — editorial data */
 .blog-table-wrapper {
   margin: 2rem 0;
-  border-radius: 0.75rem;
+  border-radius: 0.875rem;
   overflow: hidden;
-  border: 1px solid hsl(var(--border));
-  box-shadow: 0 1px 4px hsl(var(--foreground) / 0.04);
+  border: 1px solid #f0efed;
 }
 
 .blog-table-wrapper table {
@@ -522,23 +537,22 @@
 }
 
 .blog-table-wrapper thead th {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: hsl(var(--foreground) / 0.04);
+  color: hsl(var(--foreground));
   font-weight: 600;
   text-align: left;
   padding: 0.75rem 1rem;
-  font-size: 0.8125rem;
-  border-bottom: none;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #f0efed;
 }
 
 .blog-table-wrapper tbody td {
-  padding: 0.625rem 1rem;
+  padding: 0.75rem 1rem;
   font-size: 0.875rem;
-  border-bottom: 1px solid hsl(var(--border));
-}
-
-.blog-table-wrapper tbody tr:nth-child(even) {
-  background: hsl(var(--muted) / 0.3);
+  color: hsl(var(--foreground) / 0.8);
+  border-bottom: 1px solid #f0efed;
 }
 
 .blog-table-wrapper tbody tr:last-child td {
@@ -546,38 +560,42 @@
 }
 
 .blog-table-wrapper tbody tr:hover {
-  background: hsl(var(--muted) / 0.5);
+  background: hsl(var(--foreground) / 0.02);
 }
 
 /* Inline code */
-.blog-inline-code {
-  background: hsl(var(--muted));
-  color: hsl(var(--primary));
+.blog-content code {
+  background: hsl(var(--foreground) / 0.06);
+  color: hsl(var(--foreground));
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-size: 0.875em;
   font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Links */
-.blog-link {
-  color: hsl(var(--primary));
-  text-decoration: none;
+/* Links — editorial underline */
+.blog-content a {
+  color: hsl(var(--foreground));
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--foreground) / 0.3);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
   font-weight: 500;
-  border-bottom: 1px solid hsl(var(--primary) / 0.2);
-  transition: border-color 0.15s;
+  transition: text-decoration-color 0.15s;
 }
 
-.blog-link:hover {
-  border-bottom-color: hsl(var(--primary));
+.blog-content a:hover {
+  text-decoration-color: hsl(var(--foreground));
 }
 
-/* General prose overrides */
+/* Body */
 .blog-content p {
-  font-size: 1.125rem;
-  line-height: 1.85;
+  font-size: 1.0625rem;
+  line-height: 1.8;
   margin-bottom: 1.5rem;
-  color: hsl(var(--foreground) / 0.85);
+  color: hsl(var(--foreground) / 0.8);
+  letter-spacing: -0.003em;
 }
 
 .blog-content ul,
@@ -587,34 +605,49 @@
 }
 
 .blog-content li::marker {
-  color: hsl(var(--primary));
+  color: hsl(var(--foreground) / 0.4);
 }
 
 .blog-content li {
   margin-bottom: 0.5rem;
-  font-size: 1.125rem;
-  line-height: 1.8;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: hsl(var(--foreground) / 0.8);
 }
 
 .blog-content hr {
-  border-color: hsl(var(--border));
-  margin: 2.5rem 0;
+  border: none;
+  border-top: 1px solid #f0efed;
+  margin: 3rem 0;
 }
 
 .blog-content strong {
   color: hsl(var(--foreground));
-  font-weight: 700;
+  font-weight: 600;
 }
 
-/* Strong-only paragraphs as highlight cards (legacy compat) */
+/* Strong-only paragraphs as quiet highlight cards */
 .blog-content p > strong:first-child:only-child {
   display: block;
-  background: hsl(var(--primary) / 0.06);
-  border: 1px solid hsl(var(--primary) / 0.12);
-  border-radius: 0.75rem;
+  background: #FAFAF8;
+  border: 1px solid #f0efed;
+  border-radius: 1rem;
   padding: 1rem 1.25rem;
   font-size: 0.9375rem;
   line-height: 1.6;
+  color: hsl(var(--foreground));
+  font-weight: 500;
+}
+
+/* Figure caption for inline blog images */
+.blog-figcaption {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: hsl(var(--foreground) / 0.5);
+  text-align: center;
+  margin-top: 0.875rem;
+  font-weight: 500;
 }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
