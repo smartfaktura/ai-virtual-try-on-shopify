@@ -29,15 +29,15 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
         <div className="grid lg:grid-cols-[5fr_6fr] gap-12 lg:gap-20 items-center">
           {/* ── Copy column ─────────────────────────────────────────── */}
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground mb-5">
-              {page.heroEyebrow}
-            </p>
-
             <h1 className="text-foreground text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] leading-[1.05] font-semibold tracking-[-0.035em] mb-7">
               {page.h1Lead}
               <br />
               <span className="text-[#4a5578]">{page.h1Highlight}</span>
             </h1>
+
+            <p className="flex items-center text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground mb-4 before:content-[''] before:block before:w-6 before:h-px before:bg-foreground/25 before:mr-3">
+              {page.heroEyebrow}
+            </p>
 
             <p className="max-w-xl text-muted-foreground text-base sm:text-lg leading-relaxed mb-9">
               {page.heroSubheadline}
@@ -59,7 +59,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
               </a>
             </div>
 
-            <p className="text-xs text-muted-foreground/70 mt-5">
+            <p className="text-sm text-muted-foreground mt-6">
               Free to start · No credit card required
             </p>
           </div>
