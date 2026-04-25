@@ -35,7 +35,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
               <span className="text-[#4a5578]">{page.h1Highlight}</span>
             </h1>
 
-            <p className="flex items-center text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground mb-4 before:content-[''] before:block before:w-6 before:h-px before:bg-foreground/25 before:mr-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground mb-4">
               {page.heroEyebrow}
             </p>
 
@@ -70,11 +70,15 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
 
           {/* ── Visual column ───────────────────────────────────────── */}
           {hasCollage ? (
-            <div className="grid grid-cols-2 grid-rows-2 gap-3 lg:gap-4">
-              <HeroTile tile={collage![0]} priority />
-              <HeroTile tile={collage![1]} priority />
-              <HeroTile tile={collage![2]} />
-              <HeroTile tile={collage![3]} />
+            <div className="grid grid-cols-2 gap-3 lg:gap-4">
+              <div className="flex flex-col gap-3 lg:gap-4">
+                <HeroTile tile={collage![0]} priority />
+                <HeroTile tile={collage![2]} />
+              </div>
+              <div className="flex flex-col gap-3 lg:gap-4 lg:translate-y-8">
+                <HeroTile tile={collage![1]} priority />
+                <HeroTile tile={collage![3]} />
+              </div>
             </div>
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-2xl overflow-hidden bg-muted/30">
