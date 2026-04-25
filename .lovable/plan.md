@@ -1,58 +1,46 @@
-## /home — "Built for every category" updates (corrected)
+# Terms & Privacy as Modals on Auth Page
 
-You were right: the DB has **108 earring scenes** with previews in `product_image_scenes`. I was looking at the wrong table. Plan is now grounded in real data.
+Keep the user on the signup form. Replace the two `<Link target="_blank">` anchors in the Terms checkbox with buttons that open scrollable modals containing the policy text — with a clear close button. The standalone `/terms` and `/privacy` routes stay intact (still used by the footer, emails, SEO).
 
-**File:** `src/components/home/HomeTransformStrip.tsx`
+## Scope
 
-### 1. Footwear — prepend "Original" sneaker shot
-Insert one new card at index 0 of `FOOTWEAR_CARDS` (~line 88), pointing at the supplied original render and labeled **"Original"**:
+Only one file changes: **`src/pages/Auth.tsx`** (the signup checkbox row at lines 571–576).
 
-```ts
-{ label: 'Original',
-  src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/pair-display-shoes-sneakers-1776008063507.jpg?quality=60' },
-```
+No changes to:
+- `src/pages/TermsOfService.tsx` / `src/pages/PrivacyPolicy.tsx` (routes preserved)
+- `App.tsx` routes
+- Footers (`HomeFooter`, `LandingFooter`) — those stay as page links, which is correct outside of signup
 
-Existing 12 cards stay; total becomes 13 — sets up the "input → outputs" story when the strip auto-rotates.
+## What the user sees
 
-### 2. Bags — promote sculptural still to first slot, label as "Original"
-In `BAGS_CARDS` (~line 104):
-- Remove the entry currently at index 8 (`'Sculptural Product Still'`, preview `1776749548695-11dzfk`).
-- Insert it at index 0 with label **"Original"**.
+- Checkbox label still reads: *"I agree to the **Terms of Service** and **Privacy Policy**"*
+- Clicking either underlined word opens a centered modal (Dialog) on top of the auth screen
+- Modal has: title, scrollable body with the full policy content, a footer "Close" button, and the standard top-right `X` close (built into `DialogContent`)
+- Closing returns the user to the exact same signup state (form values preserved — modal is purely presentational)
+- Mobile: dialog is responsive (already handled by our `Dialog` primitive: `w-[calc(100%-2rem)]`, `max-h-[calc(100vh-2rem)]`, `overflow-y-auto`)
 
-```ts
-const BAGS_CARDS: GridCardData[] = [
-  { label: 'Original', src: PREVIEW('1776749548695-11dzfk') },
-  { label: 'Sculptural Studio Hero',     src: PREVIEW('1776239449949-ygljai') },
-  { label: 'On-Shoulder Editorial',      src: PREVIEW('1776239446567-7mvigz') },
-  // …rest in current order, with the old index-8 entry removed
-];
-```
+## Technical implementation
 
-### 3. Jewelry — earrings only, refreshed from DB (12 cards)
-Replace the entire `JEWELRY_CARDS` array (~line 120) with the top 12 earring scenes from `product_image_scenes`, hand-picked across the available `sub_category` buckets (Essential Shots, On-Ear Editorial, Beauty Lifestyle UGC) for visual variety:
+1. In `src/pages/Auth.tsx`:
+   - Add two state booleans: `termsOpen`, `privacyOpen`
+   - Import `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogFooter` from `@/components/ui/dialog`, plus `Button`
+   - Replace the two `<Link>` elements inside the checkbox label with `<button type="button">` (so they don't submit the form) styled identically (`underline text-foreground hover:text-primary`), each setting its respective state to true
+   - Render two `<Dialog>` blocks at the bottom of the signup form JSX
 
-```ts
-const JEWELRY_CARDS: GridCardData[] = [
-  { label: 'Earring Touch Portrait', src: PREVIEW('1776753278458-z7rmxg') },
-  { label: 'Side Profile Earrings',  src: PREVIEW('1776753261985-yi93vf') },
-  { label: 'Sunlit Ear Study',       src: PREVIEW('1776753256682-343bsf') },
-  { label: 'Window Shadow Still',    src: PREVIEW('1776753253052-fd9tdt') },
-  { label: 'Sky Bloom Profile',      src: PREVIEW('1776753259830-t0mrxv') },
-  { label: 'Hair Tucked Ear',        src: PREVIEW('1776753273285-bgevon') },
-  { label: 'Sunlit Skin Close-Up',   src: PREVIEW('1776753255640-wl0j9d') },
-  { label: 'Flash Glow Portrait',    src: PREVIEW('1776753275522-ljuq5p') },
-  { label: 'Neckline & Earrings',    src: PREVIEW('1776753755775-c36aay') },
-  { label: 'Shadow Gem Drop',        src: PREVIEW('1776753265588-dmlr31') },
-  { label: 'Ear Stack Study',        src: PREVIEW('1776753279560-dyelri') },
-  { label: 'Sunlit Beauty Moment',   src: PREVIEW('1776753754579-2rfq11') },
-];
-```
+2. Content source — to avoid duplicating long legal copy, **extract the body JSX** of each policy page into a small shared component:
+   - Create `src/components/legal/TermsContent.tsx` (the `<main>` inner content of `TermsOfService.tsx`)
+   - Create `src/components/legal/PrivacyContent.tsx` (same for `PrivacyPolicy.tsx`)
+   - Update `TermsOfService.tsx` and `PrivacyPolicy.tsx` to render these components inside their existing page chrome (no visible change)
+   - The Auth modals render `<TermsContent />` / `<PrivacyContent />` inside a `max-h-[70vh] overflow-y-auto` wrapper
 
-(Necklace entries `1776243905045-8aw72b`, `1776243907007-f0mhvm`, `1776243889543-u2eppc`, `1776243916154-emtkzb`, `1776243897922-iqre1y` are removed. The 6 earring previews previously in the file are kept; 6 new earring scenes are pulled in from the DB so it's a true 12-card jewelry grid — no duplicates.)
+3. Modal sizing: `DialogContent className="max-w-2xl"` so legal text is readable on desktop; default mobile sizing already fits viewport.
 
-If you want a different curated mix (e.g. more On-Ear Editorial, fewer UGC), say so before I implement and I'll re-pick from the 108-scene pool.
+4. Accessibility: `DialogTitle` provides the accessible name; the built-in `X` button + footer "Close" button + Escape key + overlay click all dismiss.
 
-### Risk
-None — pure data-array changes. The existing warm-cache `useEffect` (line ~224) and pill-switch logic handle the new cards automatically.
+## Out of scope
 
-**Approve to implement.**
+- No change to footer links across the site (those should remain real pages)
+- No change to the actual policy text
+- No new routes, no DB changes
+
+Approve to implement.
