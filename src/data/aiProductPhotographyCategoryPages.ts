@@ -83,8 +83,23 @@ export interface CategoryPage {
   heroCollage?: { subCategory: string; imageId: string; alt: string }[];
 }
 
-export const PREVIEW = (id: string) =>
-  `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
+/**
+ * A small set of preview IDs are stored as `.png` rather than the default `.jpg`.
+ * Resolve the correct extension here so hero images don't 404.
+ */
+const PNG_PREVIEW_IDS = new Set<string>([
+  '1775135707468-egh405',
+  'night-curb-flash-1776011807130',
+  'crosswalk-flash-shot-1776011827266',
+  'taxi-exit-flash-1776011516130',
+  'garage-tilt-flash-1776011711963',
+  '1775132143765-g9lpgc',
+]);
+
+export const PREVIEW = (id: string) => {
+  const ext = PNG_PREVIEW_IDS.has(id) ? 'png' : 'jpg';
+  return `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.${ext}`;
+};
 
 const BASE = '/ai-product-photography';
 
