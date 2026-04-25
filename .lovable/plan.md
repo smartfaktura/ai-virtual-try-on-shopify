@@ -1,21 +1,15 @@
-## Add "Brand Models" CTA card to /home model showcase
+## Match /auth logo to footer wordmark
 
-Insert one minimal, luxury-styled "Brand Models — Create your own" card into both rows of the `Professional models. Every look.` section. Card matches the landing page monochrome aesthetic.
+The `/auth` page currently renders the legacy logo: a rounded-square indigo badge with a "V" glyph next to small "VOVV.AI" text. The site footer (and the rest of the landing) uses a clean **wordmark only** — no glyph box.
 
-### Design
-- Same dimensions as model cards (`w-28/32/36 × h-36/40/44`, `rounded-2xl`)
-- Inverted aesthetic: `bg-foreground text-background` (so it stands out as intentional, not broken)
-- Centered: thin circular plus icon, then "BRAND MODELS" in two lines (uppercase, tracked `0.18em`), then tiny "Create your own" subtitle
-- Subtle scale on hover for the icon ring
-- Caption below reads "Custom" (italic, muted) instead of a name
-- Wrapped in `<Link to="/app/models">`
+### Fix
+In `src/pages/Auth.tsx` (lines 405–413), replace the badge+text combo with the footer-style wordmark:
 
-### Implementation
-In `src/components/landing/ModelShowcaseSection.tsx`:
-1. Add a `BrandModelCTA` component with the styled card.
-2. Change `MarqueeRow`'s `items` type to a discriminated union (`{kind:'model'} | {kind:'cta'}`) and render either component.
-3. In `ModelShowcaseSection`, prepend `{ kind: 'cta' }` to both `row1` and `row2` so the card appears in each marquee.
+- Remove the `w-9 h-9 rounded-xl bg-primary` glyph box and the small "V"
+- Render only `VOVV.AI` as a bold, tight-tracked wordmark (`text-2xl sm:text-[28px]`, `font-bold`, `tracking-tight`, `text-foreground`)
+- Keep it as a button that navigates to `/` with a subtle `hover:opacity-70` transition
+- Add `aria-label` for accessibility
 
-No other files touched. No new dependencies.
+This brings the auth screen in line with the footer and overall minimal monochrome identity. No other files change.
 
 **Approve to apply.**
