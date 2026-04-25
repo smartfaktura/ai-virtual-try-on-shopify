@@ -11,6 +11,7 @@ import { CategorySubcategoryChips } from '@/components/seo/photography/category/
 import { CategoryVisualOutputs } from '@/components/seo/photography/category/CategoryVisualOutputs';
 import { CategoryPainPoints } from '@/components/seo/photography/category/CategoryPainPoints';
 import { CategorySceneExamples } from '@/components/seo/photography/category/CategorySceneExamples';
+import { CategoryBuiltForEveryCategory } from '@/components/seo/photography/category/CategoryBuiltForEveryCategory';
 import { CategoryUseCases } from '@/components/seo/photography/category/CategoryUseCases';
 import { CategoryRelatedCategories } from '@/components/seo/photography/category/CategoryRelatedCategories';
 import { CategoryFAQ } from '@/components/seo/photography/category/CategoryFAQ';
@@ -55,6 +56,7 @@ export default function AIProductPhotographyCategory() {
         <CategoryVisualOutputs page={page} />
         <CategoryPainPoints page={page} />
         <CategorySceneExamples page={page} />
+        <CategoryBuiltForEveryCategory page={page} />
         <PhotographyHowItWorks />
         <CategoryUseCases page={page} />
         <CategoryRelatedCategories page={page} />
