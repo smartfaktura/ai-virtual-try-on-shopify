@@ -182,7 +182,7 @@ function FaqSection({ items }: { items: { q: string; a: string }[] }) {
 function WhyVovvSection({ cards, eyebrow, heading }: { cards: { title: string; text: string }[]; eyebrow: string; heading: string }) {
   const { ref, visible } = useScrollReveal();
   return (
-    <section className="py-16 lg:py-32 bg-[#1a1a2e]">
+    <section className="py-16 lg:py-28 bg-[#22223a]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">{eyebrow}</p>
@@ -192,7 +192,7 @@ function WhyVovvSection({ cards, eyebrow, heading }: { cards: { title: string; t
           {cards.map((c, i) => (
             <div
               key={c.title}
-              className={`bg-white/5 border border-white/10 rounded-3xl p-7 sm:p-8 lg:p-10 transition-all duration-700 hover:bg-white/10 hover:border-white/20 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+              className={`bg-white/[0.04] border border-white/10 rounded-3xl p-7 sm:p-8 lg:p-10 transition-all duration-700 hover:bg-white/[0.08] hover:border-white/20 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
               style={{ transitionDelay: `${i * 150}ms` }}
             >
               <h3 className="text-white text-lg font-semibold mb-3">{c.title}</h3>
