@@ -14,7 +14,35 @@ import { BUILT_FOR_GRIDS, type BuiltForGroup } from '@/data/aiProductPhotography
  * Title and eyebrow adapt to the page's category and noun.
  */
 export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) {
-  const groups: BuiltForGroup[] = BUILT_FOR_GRIDS[page.slug] ?? [];
+  const rawGroups: BuiltForGroup[] = BUILT_FOR_GRIDS[page.slug] ?? [];
+
+  // Split "Bags · On-Body Editorial" → ["Bags", "On-Body Editorial"]
+  const splitLabel = (s: string): { subject: string; style?: string } => {
+    const parts = s.split('·').map((p) => p.trim());
+    return { subject: parts[0], style: parts.slice(1).join(' · ') || undefined };
+  };
+
+  // Merge groups with the same subject so chips stay short and unique.
+  const groups = (() => {
+    const order: string[] = [];
+    const map = new Map<string, BuiltForGroup>();
+    for (const g of rawGroups) {
+      const subject = splitLabel(g.subCategory).subject;
+      const existing = map.get(subject);
+      if (existing) {
+        const seen = new Set(existing.cards.map((c) => c.imageId));
+        for (const c of g.cards) if (!seen.has(c.imageId)) { existing.cards.push(c); seen.add(c.imageId); }
+      } else {
+        order.push(subject);
+        map.set(subject, { subCategory: subject, cards: [...g.cards] });
+      }
+    }
+    return order.map((s) => {
+      const g = map.get(s)!;
+      return { ...g, cards: g.cards.slice(0, 8) };
+    });
+  })();
+
   const [activeIdx, setActiveIdx] = useState(0);
 
   if (groups.length === 0) return null;
