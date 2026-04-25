@@ -1,5 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useEffect, useState, useMemo } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { BlogMarkdownImage } from '@/components/app/BlogMarkdownImage';
@@ -273,7 +274,7 @@ export default function BlogPost() {
         {/* Centered content */}
         <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <div className="blog-content prose prose-lg prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight">
-            <ReactMarkdown components={markdownComponents}>{post.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{post.content}</ReactMarkdown>
           </div>
 
           {/* Tags */}
