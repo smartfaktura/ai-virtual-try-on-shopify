@@ -24,12 +24,12 @@ function CoverFallback({ category, aspect }: { category?: string; aspect: 'featu
     <div
       className={`relative w-full ${
         aspect === 'featured' ? 'aspect-[16/10] sm:aspect-[2.2/1]' : 'aspect-[16/9]'
-      } overflow-hidden bg-gradient-to-br from-primary/15 via-accent/40 to-card flex items-center justify-center`}
+      } overflow-hidden bg-[#f5f4f1] flex items-center justify-center`}
     >
-      <Sparkles className="w-10 h-10 text-primary/30" aria-hidden />
+      <Sparkles className="w-10 h-10 text-foreground/20" aria-hidden />
       {category && (
         <div className="absolute bottom-3 left-3">
-          <Badge variant="secondary" className="rounded-full text-[10px]">
+          <Badge variant="secondary" className="rounded-full text-[10px] bg-white border border-[#f0efed]">
             {category}
           </Badge>
         </div>
