@@ -60,11 +60,6 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   const noun = page.heroNoun ?? 'photo';
   const totalScenes = groups.reduce((sum, g) => sum + g.cards.length, 0);
 
-  // When grouping by style, the chip already IS the style — show subject as the lead label.
-  const activeParts = singleSubject
-    ? { subject: active.subCategory, style: undefined as string | undefined }
-    : splitLabel(active.subCategory);
-
   return (
     <section
       id="scenes"
@@ -79,19 +74,8 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
             Built for every {page.groupName.toLowerCase()} shot.
           </h2>
-          {/* Style descriptor below H2, updates with active chip */}
-          <p
-            key={active.subCategory}
-            className="mt-4 text-sm sm:text-base text-muted-foreground animate-in fade-in duration-300"
-          >
-            Now showing{' '}
-            <span className="text-foreground font-medium">{activeParts.subject}</span>
-            {activeParts.style && (
-              <>
-                {' · '}
-                <span className="text-foreground/70">{activeParts.style}</span>
-              </>
-            )}
+          <p className="mt-4 text-sm sm:text-base text-muted-foreground">
+            Switch between {page.groupName.toLowerCase()} subcategories — every chip reveals real scenes generated from a single upload.
           </p>
         </div>
 
