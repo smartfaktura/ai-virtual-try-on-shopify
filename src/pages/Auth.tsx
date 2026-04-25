@@ -770,6 +770,42 @@ export default function Auth() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Terms of Service modal — keeps user on the signup page */}
+      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Terms of Service</DialogTitle>
+            <DialogDescription>Last updated: March 2026</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-y-auto pr-1 -mr-1">
+            <TermsContent />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setTermsOpen(false)} className="rounded-full">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy Policy modal — keeps user on the signup page */}
+      <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Privacy Policy</DialogTitle>
+            <DialogDescription>Last updated: March 2026</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-y-auto pr-1 -mr-1">
+            <PrivacyContent />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPrivacyOpen(false)} className="rounded-full">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
