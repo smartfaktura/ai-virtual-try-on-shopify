@@ -98,6 +98,16 @@ interface ModelsMarqueeProps {
 export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMarqueeProps = {}) {
   const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = 'https://azwiljtrbtaupofwmpzb.supabase.co';
+    link.crossOrigin = '';
+    document.head.appendChild(link);
+    return () => { link.parentNode?.removeChild(link); };
+  }, []);
+
   const { row1, row2, modelCount } = useMemo(() => {
     const processed = sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels]))));
     const mid = Math.ceil(processed.length / 2);
