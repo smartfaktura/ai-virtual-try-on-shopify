@@ -6,6 +6,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { PhotographyHowItWorks } from '@/components/seo/photography/PhotographyHowItWorks';
 import { PhotographyFinalCTA } from '@/components/seo/photography/PhotographyFinalCTA';
+import { CategoryBreadcrumbs } from '@/components/seo/photography/category/CategoryBreadcrumbs';
 import { CategoryHero } from '@/components/seo/photography/category/CategoryHero';
 import { CategorySubcategoryChips } from '@/components/seo/photography/category/CategorySubcategoryChips';
 import { CategoryVisualOutputs } from '@/components/seo/photography/category/CategoryVisualOutputs';
@@ -51,12 +52,13 @@ export default function AIProductPhotographyCategory() {
 
       <LandingNav />
       <main>
+        <CategoryBreadcrumbs page={page} />
         <CategoryHero page={page} />
+        <CategoryBuiltForEveryCategory page={page} />
         <CategorySubcategoryChips page={page} />
         <CategoryVisualOutputs page={page} />
         <CategoryPainPoints page={page} />
         <CategorySceneExamples page={page} />
-        <CategoryBuiltForEveryCategory page={page} />
         <PhotographyHowItWorks />
         <CategoryUseCases page={page} />
         <CategoryRelatedCategories page={page} />

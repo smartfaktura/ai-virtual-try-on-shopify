@@ -1,29 +1,40 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { BUILT_FOR_GRIDS, type BuiltForGroup } from '@/data/aiProductPhotographyBuiltForGrids';
 
 /**
- * Per-category version of the homepage "One photo · Every shot" chip selector.
- * Chips read like: "Clothing & Apparel · Creative Shots".
- * The active scene's preview image is shown beside the chip rail.
+ * Per-category "One photo · Every shot" section, rebuilt to mirror the
+ * homepage's HomeTransformStrip pattern: chip rail of subcategories, each
+ * chip reveals an 8-image grid of real scenes from the live catalog.
+ *
+ * Title and eyebrow adapt to the page's category and noun.
  */
 export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) {
-  const scenes = page.sceneExamples;
+  const groups: BuiltForGroup[] = BUILT_FOR_GRIDS[page.slug] ?? [];
   const [activeIdx, setActiveIdx] = useState(0);
-  const active = scenes[activeIdx] ?? scenes[0];
-  if (!active) return null;
+
+  if (groups.length === 0) return null;
+  const active = groups[Math.min(activeIdx, groups.length - 1)];
+  const noun = page.heroNoun ?? 'photo';
+  const totalScenes = groups.reduce((sum, g) => sum + g.cards.length, 0);
 
   return (
-    <section className="py-16 lg:py-32 bg-background overflow-hidden">
+    <section
+      id="scenes"
+      className="py-16 lg:py-32 bg-background overflow-hidden"
+    >
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-        {/* Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-10 lg:mb-14">
+        {/* Heading — adaptive */}
+        <div className="text-center max-w-2xl mx-auto mb-10 lg:mb-12">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            One photo · Every shot
+            One {noun} · Every shot
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
-            Built for every category.
+            Built for every {page.groupName.toLowerCase()} shot.
           </h2>
         </div>
 
@@ -32,9 +43,9 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
           {/* Mobile: full-bleed scrollable rail with edge fades */}
           <div className="lg:hidden relative -mx-6">
             <div className="flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {scenes.map((s, idx) => (
+              {groups.map((g, idx) => (
                 <button
-                  key={`${s.collectionLabel}-${s.subCategory}-${idx}`}
+                  key={g.subCategory}
                   type="button"
                   onClick={() => setActiveIdx(idx)}
                   className={cn(
@@ -44,7 +55,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
                       : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
                   )}
                 >
-                  {s.collectionLabel} · {s.subCategory}
+                  {g.subCategory}
                 </button>
               ))}
             </div>
@@ -52,45 +63,73 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
             <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
           </div>
 
-          {/* Desktop: centered wrap */}
-          <div className="hidden lg:flex flex-wrap justify-center gap-2 max-w-5xl mx-auto">
-            {scenes.map((s, idx) => (
-              <button
-                key={`${s.collectionLabel}-${s.subCategory}-${idx}`}
-                type="button"
-                onClick={() => setActiveIdx(idx)}
-                className={cn(
-                  'px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
-                  activeIdx === idx
-                    ? 'bg-foreground text-background border-foreground shadow-sm'
-                    : 'bg-muted/40 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted/70',
-                )}
-              >
-                {s.collectionLabel} · {s.subCategory}
-              </button>
-            ))}
+          {/* Desktop: centered chip group inside a pill container */}
+          <div className="hidden lg:flex justify-center">
+            <div className="inline-flex flex-wrap items-center justify-center gap-1 p-1 rounded-3xl bg-muted/60 border border-border/60 max-w-5xl">
+              {groups.map((g, idx) => (
+                <button
+                  key={g.subCategory}
+                  type="button"
+                  onClick={() => setActiveIdx(idx)}
+                  className={cn(
+                    'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap',
+                    activeIdx === idx
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {g.subCategory}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Active preview */}
-        <div className="max-w-3xl mx-auto">
-          <div className="relative aspect-[4/5] sm:aspect-[16/10] rounded-3xl overflow-hidden shadow-xl shadow-foreground/[0.08] bg-muted/30">
-            <img
-              key={active.imageId}
-              src={getOptimizedUrl(PREVIEW(active.imageId), { quality: 70 })}
-              alt={active.alt}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 w-full h-full object-cover animate-in fade-in duration-500"
-            />
-            <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/60 via-black/15 to-transparent">
-              <span className="block text-[11px] uppercase tracking-[0.18em] text-white/75 font-semibold">
-                {active.collectionLabel} · {active.subCategory}
-              </span>
-              <span className="block text-base text-white font-medium leading-tight mt-1">
-                {active.label}
-              </span>
+        {/* Grid — 8 images per subcategory (mobile shows 6) */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 lg:gap-4 animate-in fade-in duration-500" key={active.subCategory}>
+          {active.cards.map((card, i) => (
+            <div
+              key={`${active.subCategory}-${card.imageId}-${i}`}
+              className={cn(
+                'group relative aspect-square rounded-2xl overflow-hidden bg-muted/40 shadow-sm shadow-foreground/[0.04]',
+                i >= 6 && 'hidden sm:block',
+              )}
+            >
+              <img
+                src={getOptimizedUrl(PREVIEW(card.imageId), { quality: 60 })}
+                alt={`${card.label} — ${page.groupName} AI product photography example`}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[11px] font-medium text-white/90 leading-tight line-clamp-2">
+                  {card.label}
+                </span>
+              </div>
             </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div className="flex flex-col items-center gap-4 mt-10 lg:mt-14">
+          <p className="text-sm text-foreground/70 tracking-wide">
+            {totalScenes}+ scenes for {page.groupName.toLowerCase()} · one upload
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/app/generate/product-images"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
+            >
+              Create your first visuals free
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/product-visual-library"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
+            >
+              Browse the visual library
+            </Link>
           </div>
         </div>
       </div>

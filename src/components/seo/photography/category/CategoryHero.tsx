@@ -1,26 +1,14 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 
 export function CategoryHero({ page }: { page: CategoryPage }) {
-  return (
-    <section className="pt-28 pb-16 lg:pt-36 lg:pb-20 bg-[#FAFAF8] overflow-hidden">
-      <div className="max-w-[1200px] mx-auto px-6 lg:px-10">
-        {/* Breadcrumb */}
-        <nav
-          aria-label="Breadcrumb"
-          className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-8"
-        >
-          <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
-          <ChevronRight size={12} className="opacity-50" />
-          <Link to="/ai-product-photography" className="hover:text-foreground transition-colors">
-            AI Product Photography
-          </Link>
-          <ChevronRight size={12} className="opacity-50" />
-          <span className="text-foreground/80 font-medium">{page.groupName}</span>
-        </nav>
+  const collage = page.heroCollage;
 
+  return (
+    <section className="pt-6 pb-16 lg:pt-10 lg:pb-20 bg-[#FAFAF8] overflow-hidden">
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-16 items-center">
           {/* Copy */}
           <div>
@@ -58,21 +46,47 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
             </p>
           </div>
 
-          {/* Hero image */}
-          <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-3xl overflow-hidden shadow-xl shadow-foreground/[0.06] bg-muted/30">
-            <img
-              src={getOptimizedUrl(PREVIEW(page.heroImageId), { quality: 70 })}
-              alt={page.heroAlt}
-              loading="eager"
-              decoding="async"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/55 via-black/10 to-transparent">
-              <span className="text-[11px] uppercase tracking-[0.16em] text-white/80 font-semibold">
-                {page.groupName}
-              </span>
+          {/* Hero visual: collage if multi-category, otherwise single image */}
+          {collage && collage.length >= 2 ? (
+            <div className="relative aspect-[5/6] rounded-3xl overflow-hidden shadow-xl shadow-foreground/[0.06] bg-muted/30">
+              <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1.5 p-1.5">
+                {collage.slice(0, 4).map((tile) => (
+                  <div
+                    key={tile.imageId}
+                    className="relative overflow-hidden rounded-2xl bg-muted/50"
+                  >
+                    <img
+                      src={getOptimizedUrl(PREVIEW(tile.imageId), { quality: 70 })}
+                      alt={tile.alt}
+                      loading="eager"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/55 via-black/10 to-transparent">
+                      <span className="text-[10px] uppercase tracking-[0.14em] text-white/85 font-semibold">
+                        {tile.subCategory}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-3xl overflow-hidden shadow-xl shadow-foreground/[0.06] bg-muted/30">
+              <img
+                src={getOptimizedUrl(PREVIEW(page.heroImageId), { quality: 70 })}
+                alt={page.heroAlt}
+                loading="eager"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/55 via-black/10 to-transparent">
+                <span className="text-[11px] uppercase tracking-[0.16em] text-white/80 font-semibold">
+                  {page.groupName}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
