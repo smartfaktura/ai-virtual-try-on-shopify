@@ -43,6 +43,7 @@ export default function Home() {
       <LandingNav />
       <HomeHero />
       <HomeTransformStrip />
+      <HomeModels />
       <HomeCreateCards />
       <HomeHowItWorks />
       <HomeWhySwitch />
