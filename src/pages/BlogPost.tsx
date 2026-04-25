@@ -174,7 +174,7 @@ export default function BlogPost() {
       <article id="blog-article" className="bg-[#FAFAF8]">
         {/* Hero header — editorial cream */}
         <div className="relative bg-[#FAFAF8] border-b border-[#f0efed]">
-          <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-14 sm:pb-20">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-36 pb-14 sm:pb-20">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-[12px] text-muted-foreground mb-10">
               <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
@@ -188,7 +188,7 @@ export default function BlogPost() {
               {post.category}
             </p>
 
-            <h1 className="text-[2.25rem] sm:text-[3rem] lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] mb-6 leading-[1.05]">
+            <h1 className="text-[2rem] sm:text-[2.75rem] lg:text-[3.25rem] font-semibold text-foreground tracking-[-0.025em] sm:tracking-[-0.03em] mb-6 leading-[1.08]">
               {post.title}
             </h1>
 
@@ -196,23 +196,25 @@ export default function BlogPost() {
               {post.excerpt}
             </p>
 
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-[13px] text-muted-foreground">
-              <span className="inline-flex items-center gap-2 bg-white border border-[#f0efed] rounded-full pl-1 pr-3 py-1 shadow-sm">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-3 text-[13px] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
                 <span className="w-7 h-7 rounded-full bg-foreground/[0.06] flex items-center justify-center">
                   <Sparkles className="w-3.5 h-3.5 text-foreground/70" />
                 </span>
                 <span className="font-medium text-foreground text-xs">{post.author}</span>
               </span>
+              <span className="text-foreground/25">·</span>
               <span className="flex items-center gap-1.5">
-                <CalendarDays className="w-4 h-4" />
+                <CalendarDays className="w-3.5 h-3.5" />
                 {new Date(post.publishDate).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
                 })}
               </span>
+              <span className="text-foreground/25">·</span>
               <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
+                <Clock className="w-3.5 h-3.5" />
                 {post.readTime}
               </span>
             </div>
