@@ -404,12 +404,12 @@ export default function Auth() {
           <div className="mb-10">
             <button
               onClick={() => navigate('/')}
-              className="inline-flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity"
+              className="inline-flex items-center mb-8 hover:opacity-70 transition-opacity"
+              aria-label="VOVV.AI — back to home"
             >
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">V</span>
-              </div>
-              <span className="font-bold text-lg text-foreground tracking-tight">VOVV.AI</span>
+              <span className="font-bold text-2xl sm:text-[28px] tracking-tight text-foreground">
+                VOVV.AI
+              </span>
             </button>
 
             {!signupComplete && !magicLinkSent && (
