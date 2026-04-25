@@ -17,23 +17,23 @@ function BrandModelCTA() {
       className="group flex flex-col items-center gap-2 flex-shrink-0"
       aria-label="Create your own brand models"
     >
-      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden bg-foreground text-background flex flex-col items-center justify-center gap-3 transition-all duration-500 group-hover:bg-foreground/90 shadow-md shadow-foreground/[0.08]">
-        <div className="w-9 h-9 rounded-full border border-background/30 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-          <Plus className="w-4 h-4 text-background/90" strokeWidth={1.5} />
+      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden bg-background border border-foreground/10 flex flex-col items-center justify-center gap-3 transition-all duration-500 group-hover:border-foreground/25">
+        <div className="w-9 h-9 rounded-full border border-foreground/20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+          <Plus className="w-4 h-4 text-foreground/80" strokeWidth={1.5} />
         </div>
         <div className="text-center px-2">
-          <div className="text-[11px] font-medium tracking-[0.18em] uppercase text-background/95 leading-tight">
+          <div className="text-[11px] font-medium tracking-[0.18em] uppercase text-foreground leading-tight">
             Brand
           </div>
-          <div className="text-[11px] font-medium tracking-[0.18em] uppercase text-background/95 leading-tight">
+          <div className="text-[11px] font-medium tracking-[0.18em] uppercase text-foreground leading-tight">
             Models
           </div>
-          <div className="mt-1.5 text-[9px] tracking-wide text-background/55 font-light">
+          <div className="mt-1.5 text-[9px] tracking-wide text-foreground/70 font-medium">
             Create your own
           </div>
         </div>
       </div>
-      <span className="text-[11px] tracking-wide text-muted-foreground/70 italic">Custom</span>
+      <span className="text-[11px] tracking-wide text-muted-foreground">Custom</span>
     </Link>
   );
 }
