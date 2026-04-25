@@ -100,6 +100,7 @@ const Pricing = lazy(() => import('@/pages/Pricing'));
 const TryFree = lazy(() => import('@/pages/TryFree'));
 const AIProductPhotographyEcommerce = lazy(() => import('@/pages/seo/AIProductPhotographyEcommerce'));
 const AIProductPhotography = lazy(() => import('@/pages/seo/AIProductPhotography'));
+const AIProductPhotographyCategory = lazy(() => import('@/pages/seo/AIProductPhotographyCategory'));
 const ProductVisualLibrary = lazy(() => import('@/pages/ProductVisualLibrary'));
 const HowItWorks = lazy(() => import('@/pages/HowItWorks'));
 const FAQ = lazy(() => import('@/pages/FAQ'));
@@ -159,6 +160,7 @@ const App = () => {
             <Route path="/try" element={<TryFree />} />
             <Route path="/ai-product-photography-for-ecommerce" element={<AIProductPhotographyEcommerce />} />
             <Route path="/ai-product-photography" element={<AIProductPhotography />} />
+            <Route path="/ai-product-photography/:slug" element={<AIProductPhotographyCategory />} />
             <Route path="/product-visual-library" element={<ProductVisualLibrary />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/faq" element={<FAQ />} />
