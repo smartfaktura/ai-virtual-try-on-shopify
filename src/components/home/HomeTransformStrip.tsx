@@ -150,11 +150,6 @@ function GridCard({
 }) {
   const [loaded, setLoaded] = useState(false);
 
-  // Reset load state when src changes (category switch).
-  useEffect(() => {
-    setLoaded(false);
-  }, [card.src]);
-
   return (
     <div
       className={cn(
@@ -201,8 +196,17 @@ function GridCard({
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
   const [active, setActive] = useState<CategoryId>('swimwear');
+  const [visited, setVisited] = useState<Set<CategoryId>>(() => new Set(['swimwear']));
 
-  const current = CATEGORIES.find((c) => c.id === active)!;
+  const selectCategory = (id: CategoryId) => {
+    setActive(id);
+    setVisited((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
 
   // Warm browser cache for every category's tile so pill-switching is instant.
   useEffect(() => {
@@ -262,7 +266,7 @@ export function HomeTransformStrip() {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setActive(cat.id)}
+                  onClick={() => selectCategory(cat.id)}
                   className={cn(
                     'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
                     active === cat.id
@@ -304,7 +308,7 @@ export function HomeTransformStrip() {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setActive(cat.id)}
+                  onClick={() => selectCategory(cat.id)}
                   className={cn(
                     'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap',
                     active === cat.id
@@ -337,16 +341,33 @@ export function HomeTransformStrip() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Grid — all categories stay mounted; visibility toggles via CSS to avoid re-loading */}
         <div
           ref={ref}
           className={cn(
-            'grid grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4 transition-all duration-700',
+            'transition-all duration-700',
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
           )}
         >
-          {current.cards.map((card, i) => (
-            <GridCard key={`${current.id}-${card.label}-${i}`} card={card} hideOnMobile={i >= 9} eager={i < 9} />
+          {CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              className={cn(
+                'grid grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4',
+                active === cat.id ? 'block' : 'hidden',
+              )}
+              aria-hidden={active !== cat.id}
+            >
+              {visited.has(cat.id) &&
+                cat.cards.map((card, i) => (
+                  <GridCard
+                    key={`${cat.id}-${card.label}-${i}`}
+                    card={card}
+                    hideOnMobile={i >= 9}
+                    eager={cat.id === 'swimwear' && i < 9}
+                  />
+                ))}
+            </div>
           ))}
         </div>
 
