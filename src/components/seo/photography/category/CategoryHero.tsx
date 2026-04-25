@@ -78,7 +78,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
                 <HeroTile tile={collage![2]} />
               </div>
               <div className="flex flex-col gap-3 lg:gap-4 lg:translate-y-8">
-                <HeroTile tile={collage![1]} priority />
+                <HeroTile tile={collage![1]} />
                 <HeroTile tile={collage![3]} />
               </div>
             </div>
