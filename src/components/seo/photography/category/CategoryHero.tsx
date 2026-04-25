@@ -59,9 +59,22 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
               </a>
             </div>
 
-            <p className="text-sm text-muted-foreground mt-6">
-              Free to start · No credit card required
-            </p>
+            <ul className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12.5px] font-medium tracking-[-0.005em] text-muted-foreground/70">
+              <li className="inline-flex items-center gap-1.5">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
+                Free to start
+              </li>
+              <li aria-hidden className="hidden sm:block h-3 w-px bg-border" />
+              <li className="inline-flex items-center gap-1.5">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
+                No credit card
+              </li>
+              <li aria-hidden className="hidden sm:block h-3 w-px bg-border" />
+              <li className="inline-flex items-center gap-1.5">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
+                Cancel anytime
+              </li>
+            </ul>
           </div>
 
           {/* ── Visual column ───────────────────────────────────────── */}
