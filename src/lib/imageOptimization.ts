@@ -41,3 +41,20 @@ export function getOptimizedUrl(
   const separator = transformed.includes('?') ? '&' : '?';
   return `${transformed}${separator}${params.join('&')}`;
 }
+
+/**
+ * Build a responsive `srcSet` string at the given widths (in CSS pixels).
+ * Pairs nicely with a `sizes` attribute on the <img> tag so the browser
+ * downloads the smallest variant that still covers the rendered tile.
+ */
+export function getOptimizedSrcSet(
+  url: string | null | undefined,
+  widths: number[],
+  quality = 55,
+): string {
+  if (!url) return '';
+  return widths
+    .map((w) => `${getOptimizedUrl(url, { width: w, quality })} ${w}w`)
+    .join(', ');
+}
+
