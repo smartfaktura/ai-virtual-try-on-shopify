@@ -266,7 +266,7 @@ export function HomeTransformStrip() {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setActive(cat.id)}
+                  onClick={() => selectCategory(cat.id)}
                   className={cn(
                     'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
                     active === cat.id
