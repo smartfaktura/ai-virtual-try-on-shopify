@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getOptimizedSrcSet } from '@/lib/imageOptimization';
+import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { BUILT_FOR_GRIDS, type BuiltForGroup } from '@/data/aiProductPhotographyBuiltForGrids';
 
@@ -157,12 +158,12 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
                 i >= 6 && 'hidden sm:block',
               )}
             >
-              <img
-                src={getOptimizedUrl(PREVIEW(card.imageId), { quality: 60 })}
+              <SmartImage
+                src={getOptimizedUrl(PREVIEW(card.imageId), { width: 480, quality: 50 })}
+                srcSet={getOptimizedSrcSet(PREVIEW(card.imageId), [240, 360, 480, 720], 50)}
+                sizes="(min-width: 1024px) 18vw, 33vw"
                 alt={`${card.label} — ${page.groupName} AI product photography example`}
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
               />
               <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="text-[11px] font-medium text-white/90 leading-tight line-clamp-2">
