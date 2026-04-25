@@ -95,6 +95,69 @@ function MarqueeRow({ cards, direction, duration }: {
   );
 }
 
+/* ── Typewriter for the hero subline ── */
+const TYPED_PHRASES = [
+  'AI shoots every angle.',
+  'AI styles every scene.',
+  'AI runs your photoshoot.',
+  'AI fills your product page.',
+  'AI creates your campaign.',
+  'AI ships visuals in minutes.',
+];
+
+function HeroTypewriter() {
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [text, setText] = useState('');
+  const [phase, setPhase] = useState<'typing' | 'holding' | 'deleting'>('typing');
+  const reduceMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+  useEffect(() => {
+    const full = TYPED_PHRASES[phraseIdx];
+
+    if (reduceMotion) {
+      setText(full);
+      const t = setTimeout(() => setPhraseIdx((i) => (i + 1) % TYPED_PHRASES.length), 2400);
+      return () => clearTimeout(t);
+    }
+
+    if (phase === 'typing') {
+      if (text.length < full.length) {
+        const t = setTimeout(() => setText(full.slice(0, text.length + 1)), 55);
+        return () => clearTimeout(t);
+      }
+      const t = setTimeout(() => setPhase('holding'), 1600);
+      return () => clearTimeout(t);
+    }
+    if (phase === 'holding') {
+      const t = setTimeout(() => setPhase('deleting'), 0);
+      return () => clearTimeout(t);
+    }
+    if (phase === 'deleting') {
+      if (text.length > 0) {
+        const t = setTimeout(() => setText(full.slice(0, text.length - 1)), 28);
+        return () => clearTimeout(t);
+      }
+      setPhraseIdx((i) => (i + 1) % TYPED_PHRASES.length);
+      setPhase('typing');
+    }
+  }, [text, phase, phraseIdx, reduceMotion]);
+
+  return (
+    <span
+      className="text-[#4a5578] inline-block min-h-[1.16em] align-baseline"
+      aria-live="polite"
+    >
+      {text}
+      <span
+        className="inline-block w-[2px] h-[0.85em] -mb-[0.05em] ml-1 bg-[#4a5578] animate-caret-blink align-middle"
+        aria-hidden
+      />
+    </span>
+  );
+}
+
 /* ── Main component ── */
 export function HomeHero() {
   return (
@@ -104,7 +167,7 @@ export function HomeHero() {
         <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
           One product photo.
           <br />
-          <span className="text-[#4a5578]">AI creates the rest.</span>
+          <HeroTypewriter />
         </h1>
 
         <p className="max-w-xl mx-auto text-muted-foreground text-lg leading-relaxed mb-10">

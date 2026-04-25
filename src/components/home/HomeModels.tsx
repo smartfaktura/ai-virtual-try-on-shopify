@@ -4,8 +4,8 @@ export function HomeModels() {
   return (
     <ModelsMarquee
       eyebrow={(count) => `Models · ${count}+ ready-to-shoot`}
-      title="Your cast. Ready in seconds."
-      subtitle="Pick from 40+ professional AI models across every body type, ethnicity, and age — or train your own brand model in minutes and shoot it forever."
+      title="Pick a model. Start shooting."
+      subtitle="40+ professional AI models across body types, ethnicities, and ages. Or train your own brand model in minutes and reuse it on every product, forever."
     />
   );
 }

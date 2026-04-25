@@ -1,55 +1,69 @@
 ## Goal
-Polish `/ai-product-photography`: replace hero category labels with real category images + names, fix the loader's size jitter, make the category chooser denser with vertical cards, retitle the scene library section to "1600+ scenes" with a CTA to `/product-visual-library`, and refine the How It Works step icons.
+Refine `/home`: clearer Models copy, remove the "AI Creative Studio" team section, swap Watches grid for Creative Shots, add a CTA under the 1600+ scenes section, and add a typewriter effect on the hero subline with rotating motivating phrases.
 
 ---
 
-## 1. Hero — show categories instead of generic labels
-File: `src/components/seo/photography/PhotographyHero.tsx`
+## 1. Hero — typewriter effect on the second line
+File: `src/components/home/HomeHero.tsx`
 
-Replace the hardcoded `row1` / `row2` ("Product page", "Lifestyle", etc.) with tiles built from `aiProductPhotographyCategories`:
-- Each tile uses `cat.previewImage` and `cat.name` as the label (Fashion, Footwear, Beauty & Skincare, Fragrance, Jewelry, Bags & Accessories, Home & Furniture, Food & Beverage, Supplements & Wellness, Electronics & Gadgets).
-- Split the 10-item list into two rows (5 + 5) and double inside `MarqueeRow` for seamless loop.
-- Slow the marquee a touch (50s / 55s) since each tile now has more meaning.
-- Keep the existing tile styling and label gradient.
+- Keep `One product photo.` static.
+- Replace the static `<span>AI creates the rest.</span>` with a typewriter component that cycles through 5–6 short, motivating, brand-on phrases. Each phrase types in, holds ~1.6s, then deletes and the next types in.
+- Phrases (all start with a verb so the line reads "AI [does the rest]" naturally; we'll just type the full phrase rather than prefix "AI"):
+  - `AI shoots every angle.`
+  - `AI styles every scene.`
+  - `AI runs your photoshoot.`
+  - `AI fills your product page.`
+  - `AI creates your campaign.`
+  - `AI ships visuals in minutes.`
+- Implementation: small inline `Typewriter` component (no new dep) using `useEffect` + `setTimeout`; respects `prefers-reduced-motion` (falls back to a static rotation with `animate-fade-in`). A blinking caret `▍` (1s ease-in-out) sits at the end and uses the `text-[#4a5578]` color so it matches the existing accent.
+- Add `min-h-[1.16em]` and `inline-block` to the typewriter span so the line height never jumps as the text changes length.
 
-## 2. Loader — stop the size shift on `/ai-product-photography`
-File: `src/components/ui/brand-loader-progress-glyph.tsx`
+## 2. Models — clearer title + tighter eyebrow, no em-dash
+File: `src/components/home/HomeModels.tsx`
 
-The `animate-glyph-breathe` class on the VOVV.AI wordmark animates `letter-spacing -0.01em → 0.02em` (defined in `index.css`), which visibly resizes the wordmark width while loading. Remove `animate-glyph-breathe` from the wordmark `<span>` so the text stays a fixed size. The underline sweep (`animate-glyph-sweep`) stays — it's the actual progress affordance.
+- Eyebrow: `Models · {n}+ ready-to-shoot` (already short — keep as-is).
+- New title: **Pick a model. Start shooting.** (clear and direct).
+- New subtitle (no em-dash, sentence case): *"40+ professional AI models across body types, ethnicities, and ages. Or train your own brand model in minutes and reuse it on every product, forever."*
 
-## 3. Category Chooser — vertical cards, denser grid
-File: `src/components/seo/photography/PhotographyCategoryChooser.tsx`
+## 3. Remove the "AI Creative Studio / 10 specialists" section
+File: `src/pages/Home.tsx`
 
-- Image aspect: `3/4` (vertical) instead of `4/3`.
-- Grid: `grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-5` (mobile 2/row, tablet+desktop 4/row).
-- Move the category name + "{n}+ shots" eyebrow on top of the image with a bottom gradient overlay (cleaner, more editorial feel).
-- Below the image: 3-line clamped description and a small "Explore {Name} →" link.
-- Drop the subcategory chip cloud (too dense for a 4-col grid). Subcategories still live in the data file for future per-category sub-pages.
-- Card radius `rounded-2xl`, padding `p-4 lg:p-5`.
+- Remove the `import { HomeStudioTeam } from ...` line.
+- Remove `<HomeStudioTeam />` from the JSX (between `HomeWhySwitch` and `HomeOnBrand`).
+- Leave the `HomeStudioTeam.tsx` file in place (no other consumers; safe to keep around, can be deleted later if desired).
 
-## 4. Scene Examples — retitle to "1600+ scenes" + CTA to library
-File: `src/components/seo/photography/PhotographySceneExamples.tsx`
+## 4. Watches → Creative Shots
+File: `src/components/home/HomeTransformStrip.tsx`
 
-- Eyebrow: `Scene library`
-- H2: **1600+ scenes**
-- Subtitle (short): *Studio, lifestyle, editorial, seasonal — one click.*
-- Replace the bottom anchor link with a primary CTA pill linking to `/product-visual-library`:  
-  *"Browse the full scene library →"* (dark `bg-foreground` pill matching the page's premium tone).
-- Keep the 10-tile grid as-is.
+Replace the current `WATCHES_CARDS` (which is mostly packshot angles: Front View, Side View, Angle View, etc.) with 12 verified Creative-Shots scenes pulled from `product_image_scenes` where `category_collection ILIKE '%watch%'` and `sub_category = 'Creative Shots'`. New cards:
+- On-Wrist Studio (kept as Original)
+- Amber Glow Studio
+- Concrete Shadow Play
+- Dark Elegance
+- Dynamic Water Splash
+- Earthy Glow Stage
+- Frozen Aura
+- Gradient Backdrop Elegance
+- Moody Wet Concrete
+- Volcanic Sunset
+- Reflective Floral Display
+- Botanical Oasis
 
-## 5. How It Works — refined step icons
-File: `src/components/seo/photography/PhotographyHowItWorks.tsx`
+All preview URLs verified to exist.
 
-- Replace `Upload / Palette / Sparkles` with `ImagePlus / Wand2 / Sparkles` — more on-brand for AI image generation.
-- Redesign the icon presentation: a single 48×48 rounded-square chip with `bg-[#1a1a2e]` and white icon (mirrors the dark-primary accent used across the page) instead of the small "1" circle + ghost icon combo.
-- Move the step number to a subtle `01 / 02 / 03` mono label in the top-right corner of each card (quiet, editorial).
-- Heading still tracks tight; spacing unchanged so the row still aligns with the connector arrows.
+## 5. 1600+ scenes — better copy + CTA
+File: `src/components/home/HomeEnvironments.tsx`
+
+- Eyebrow: `1600+ scenes` (kept).
+- Title: **Place your product anywhere.** (clearer than "Every environment. One click.").
+- Subtitle: *"Studio, lifestyle, editorial, streetwear, seasonal. Pick a scene and your product is dropped in instantly."* (no em-dash).
+- Add a CTA block immediately under the marquee (inside the same wrapper, before the section closes): a dark `bg-foreground` pill linking to `/product-visual-library` — *"Browse the full scene library →"* — with a small subline *"1600+ scenes across 35+ categories"*. Mirrors the CTA styling used on the `/ai-product-photography` Scene Library section so the brand language stays consistent.
 
 ---
 
 ## Files touched
-- `src/components/seo/photography/PhotographyHero.tsx`
-- `src/components/seo/photography/PhotographyCategoryChooser.tsx`
-- `src/components/seo/photography/PhotographySceneExamples.tsx`
-- `src/components/seo/photography/PhotographyHowItWorks.tsx`
-- `src/components/ui/brand-loader-progress-glyph.tsx`
+- `src/components/home/HomeHero.tsx` (typewriter)
+- `src/components/home/HomeModels.tsx` (copy)
+- `src/components/home/HomeTransformStrip.tsx` (Watches cards)
+- `src/components/home/HomeEnvironments.tsx` (copy + CTA wrapper)
+- `src/pages/Home.tsx` (remove HomeStudioTeam usage)

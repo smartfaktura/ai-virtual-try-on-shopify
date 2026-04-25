@@ -100,20 +100,20 @@ const FOOTWEAR_CARDS: GridCardData[] = [
   { label: 'Sculpt Balance Edge',   src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770349853-t3x72w.jpg?quality=75' },
 ];
 
-/* ── Watches (verified preview filenames) ── */
+/* ── Watches (Creative Shots — bold, art-directed scenes) ── */
 const WATCHES_CARDS: GridCardData[] = [
   { label: 'On-Wrist Studio',           src: PREVIEW('1776596629281-anqgf5'), isOriginal: true },
-  { label: 'Front View',                src: PREVIEW('1776247092505-0ugq0d') },
-  { label: 'Side View',                 src: PREVIEW('1776596642031-wqv2yx') },
-  { label: 'Angle View',                src: PREVIEW('1776596689365-pf1c97') },
-  { label: 'Back View',                 src: PREVIEW('1776247087022-pv2irf') },
-  { label: 'On-Wrist Lifestyle',        src: PREVIEW('1776596780029-phrw2z') },
-  { label: 'Close-Up Detail',           src: PREVIEW('1776247088202-e612sc') },
-  { label: 'Texture Detail',            src: PREVIEW('1776247104640-v8gg45') },
-  { label: 'Hard Shadow Hero',          src: PREVIEW('1776247093519-s8oold') },
-  { label: 'Flat Lay Styled',           src: PREVIEW('1776247091482-4lken5') },
+  { label: 'Amber Glow Studio',         src: PREVIEW('1776856603031-vybcm8') },
+  { label: 'Concrete Shadow Play',      src: PREVIEW('1776856604775-kxc92a') },
+  { label: 'Dark Elegance',             src: PREVIEW('1776856605657-a54nf3') },
+  { label: 'Dynamic Water Splash',      src: PREVIEW('1776856606480-9xz95i') },
   { label: 'Earthy Glow Stage',         src: PREVIEW('1776856607319-693vtg') },
+  { label: 'Frozen Aura',               src: PREVIEW('1776856609329-7k8ow1') },
   { label: 'Gradient Backdrop Elegance',src: PREVIEW('1776856610327-uhrujn') },
+  { label: 'Moody Wet Concrete',        src: PREVIEW('1776856611262-tg2qyg') },
+  { label: 'Volcanic Sunset',           src: PREVIEW('1776856616175-63q2ly') },
+  { label: 'Reflective Floral Display', src: PREVIEW('1776856613338-h5sdvq') },
+  { label: 'Botanical Oasis',           src: PREVIEW('1776856603977-sm8siv') },
 ];
 
 const CATEGORIES = [
