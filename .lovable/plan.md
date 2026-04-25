@@ -1,28 +1,21 @@
-## Refresh Landing FAQ — 6 fresh, engaging questions
+## Fix /home — Built for every category: Jackets, Footwear, Bags, Jewelry images missing
 
-Replace the 10 dated/dense FAQs in `src/components/landing/LandingFAQ.tsx` with 6 sharper questions tied to the current platform's main accents: **one photo → endless visuals**, **AI Studio Team**, **brand consistency**, **video**, **speed**, and **free trial**.
+### Root cause
+`HomeTransformStrip.tsx` builds preview URLs via `PREVIEW(id)` which expects the **filename basename** in `product-uploads/.../scene-previews/{id}.jpg`. The Bags/Fragrance/Eyewear/Swimwear arrays use real timestamp filenames (e.g. `1776239449949-ygljai`) so they load. But Jackets/Footwear/Jewelry arrays were filled with `scene_id` strings (e.g. `streetwear-editorial-side-profile-jackets`) that don't exist as filenames, so every image 404s.
 
-### New FAQ content
+I queried `product_image_scenes` for each category and pulled the **real preview filenames** that the `/app/generate/product-images` Step 2 catalog uses.
 
-1. **How fast do I get my first set of visuals?**
-   Under two minutes. Upload one product photo, pick your shots, and your AI studio team delivers a full set of brand-ready images while you wait — no booking, no briefing, no back-and-forth.
+### Fix
 
-2. **One product photo — what can I actually create?**
-   From a single upload: product page hero shots, on-model try-ons, lifestyle scenes, social and ad creatives, UGC-style selfies, mirror shots, flat lays, and short product videos. Same product, endless scenes.
+In `src/components/home/HomeTransformStrip.tsx`, replace the `JACKETS_CARDS`, `FOOTWEAR_CARDS`, `BAGS_CARDS`, and `JEWELRY_CARDS` arrays (lines 71–133) with versions that use the real filenames from the database.
 
-3. **Will my visuals look on-brand and consistent?**
-   Yes. Lock your scene, lighting, palette, and mood once in your Brand Profile — every new product drops into the same world automatically. Your catalog stays cohesive without art direction on every shot.
+- **Jackets (12)** — pulled from `category_collection = 'jackets'`
+- **Footwear (12)** — pulled from `'sneakers'`
+- **Bags (12)** — refreshed from `'bags-accessories'` with verified filenames
+- **Jewelry (12)** — pulled from `'jewellery-necklaces'` + `'jewellery-earrings'`
 
-4. **What is my AI Studio Team?**
-   10 AI specialists — photographer, stylist, model director, set designer, retoucher, and more — working together behind the scenes. You give the product; they handle composition, lighting, posing, and finishing.
+Every filename was verified against the live DB and points to an existing `scene-previews/*.jpg` in the public `product-uploads` bucket.
 
-5. **Can I generate product videos too?**
-   Absolutely. Turn any product image into short motion content for Reels, TikTok, Meta ads, and product pages. Cinematic camera moves, no shoot required.
-
-6. **How do I try it without paying?**
-   Every account starts with 20 free credits — no credit card required. Enough to generate your first full visual set and see the quality before committing to a plan.
-
-### Files changed
-- `src/components/landing/LandingFAQ.tsx` — replace `faqs` array (lines 10–51). Section markup, JSON-LD generator, and styling stay identical.
+No other code changes — labels, layout, animation, and section markup stay identical.
 
 **Approve to apply.**
