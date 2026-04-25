@@ -22,7 +22,7 @@ export function BrandLoaderProgressGlyph({ fullScreen, label, hints, className }
     <div className={cn('flex flex-col items-center gap-5', className)}>
       <div className="flex flex-col items-center gap-2.5">
         <span
-          className="text-[15px] font-medium tracking-[0.18em] text-foreground animate-glyph-breathe leading-none"
+          className="text-[15px] font-medium tracking-[0.18em] text-foreground leading-none"
           aria-hidden
         >
           VOVV.AI

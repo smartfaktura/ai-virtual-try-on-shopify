@@ -1,24 +1,24 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowDown, Upload, Palette, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowDown, ImagePlus, Wand2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STEPS = [
   {
-    num: '1',
+    num: '01',
     title: 'Upload your product photo',
     text: 'Start with one clean image of your product.',
-    Icon: Upload,
+    Icon: ImagePlus,
   },
   {
-    num: '2',
+    num: '02',
     title: 'Choose a visual direction',
-    text: 'Select product page shots, lifestyle scenes, campaign visuals, social content, or category-specific styles.',
-    Icon: Palette,
+    text: 'Pick product page shots, lifestyle scenes, campaign visuals, social content, or category-specific styles.',
+    Icon: Wand2,
   },
   {
-    num: '3',
+    num: '03',
     title: 'Generate brand-ready visuals',
-    text: 'Create images for your store, ads, emails, social media, and product launches.',
+    text: 'Create images for your store, ads, emails, social, and product launches.',
     Icon: Sparkles,
   },
 ];
@@ -42,20 +42,20 @@ export function PhotographyHowItWorks() {
         <div className="flex flex-col lg:flex-row items-stretch justify-center gap-6 lg:gap-4">
           {STEPS.map((step, i) => (
             <div key={step.num} className="contents">
-              <div className="flex-1 max-w-sm mx-auto w-full bg-white rounded-3xl border border-[#f0efed] shadow-sm p-7 lg:p-8">
-                <div className="flex items-center gap-3 mb-5">
-                  <span className="w-9 h-9 rounded-full bg-foreground text-background text-sm font-semibold flex items-center justify-center">
-                    {step.num}
-                  </span>
-                  <step.Icon size={20} className="text-muted-foreground" strokeWidth={1.75} />
+              <div className="flex-1 max-w-sm mx-auto w-full bg-white rounded-3xl border border-[#f0efed] shadow-sm p-7 lg:p-8 relative overflow-hidden">
+                <span className="absolute top-5 right-6 text-[11px] font-mono font-medium tracking-[0.18em] text-foreground/30">
+                  {step.num}
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-[#1a1a2e] text-white flex items-center justify-center mb-5 shadow-sm">
+                  <step.Icon size={20} strokeWidth={1.75} />
                 </div>
-                <h3 className="text-[#1a1a2e] text-lg font-semibold mb-2">{step.title}</h3>
+                <h3 className="text-[#1a1a2e] text-lg font-semibold mb-2 tracking-tight">{step.title}</h3>
                 <p className="text-[#6b7280] text-sm leading-relaxed">{step.text}</p>
               </div>
               {i < STEPS.length - 1 && (
-                <div className="flex items-center justify-center text-muted-foreground/60 shrink-0">
-                  <ArrowDown size={22} className="lg:hidden" strokeWidth={1.5} />
-                  <ArrowRight size={22} className="hidden lg:block" strokeWidth={1.5} />
+                <div className="flex items-center justify-center text-muted-foreground/50 shrink-0">
+                  <ArrowDown size={20} className="lg:hidden" strokeWidth={1.5} />
+                  <ArrowRight size={20} className="hidden lg:block" strokeWidth={1.5} />
                 </div>
               )}
             </div>

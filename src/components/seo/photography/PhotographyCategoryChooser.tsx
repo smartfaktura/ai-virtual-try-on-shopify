@@ -19,38 +19,33 @@ export function PhotographyCategoryChooser() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-5">
           {aiProductPhotographyCategories.map((cat) => (
             <Link
               key={cat.slug}
               to={cat.url}
-              className="group flex flex-col bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="group flex flex-col bg-white rounded-2xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted/30">
+              <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
                 <img
                   src={getOptimizedUrl(cat.previewImage, { quality: 60 })}
                   alt={cat.alt}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 />
-              </div>
-              <div className="flex flex-col flex-1 p-6 lg:p-7">
-                <h3 className="text-[#1a1a2e] text-xl font-semibold mb-2">{cat.name}</h3>
-                <p className="text-[#6b7280] text-sm leading-relaxed mb-4">{cat.description}</p>
-                <div className="flex flex-wrap gap-1.5 mb-5">
-                  {cat.subcategories.map((sub) => (
-                    <span
-                      key={sub}
-                      className="text-[11px] font-medium text-muted-foreground bg-muted/60 border border-border/40 rounded-full px-2.5 py-1"
-                    >
-                      {sub}
-                    </span>
-                  ))}
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+                  <span className="block text-[10px] uppercase tracking-[0.14em] text-white/70 font-semibold mb-0.5">
+                    {cat.subcategories.length}+ shots
+                  </span>
+                  <h3 className="text-white text-base sm:text-lg font-semibold leading-tight">{cat.name}</h3>
                 </div>
-                <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:gap-2.5 transition-all">
+              </div>
+              <div className="flex flex-col flex-1 p-4 lg:p-5">
+                <p className="text-[#6b7280] text-[13px] leading-relaxed mb-3 line-clamp-3">{cat.description}</p>
+                <span className="mt-auto inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
                   Explore {cat.name}
-                  <ArrowRight size={14} />
+                  <ArrowRight size={12} />
                 </span>
               </div>
             </Link>
