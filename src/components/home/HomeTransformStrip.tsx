@@ -68,39 +68,39 @@ const EYEWEAR_CARDS: GridCardData[] = [
   { label: 'Beauty Closeup II', src: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014') },
 ];
 
-/* ── Jackets (from /app/generate/product-images Step 2 · jackets) ── */
+/* ── Jackets (real preview filenames from product_image_scenes · jackets) ── */
 const JACKETS_CARDS: GridCardData[] = [
-  { label: 'Streetwear Side Profile',  src: PREVIEW('streetwear-editorial-side-profile-jackets') },
-  { label: 'Old Money Outdoor',        src: PREVIEW('apparel-oldmoney-outdoor-portrait-jackets') },
-  { label: 'On-Model Editorial',       src: PREVIEW('on-model-editorial-garments-jackets') },
-  { label: 'Studio Fisheye',           src: PREVIEW('apparel-studio-fisheye-streetwear-jackets') },
-  { label: 'Sunlit Tailored Chair',    src: PREVIEW('sunlit-tailored-chair-pose-jackets') },
-  { label: 'Paris Curb Side',          src: PREVIEW('paris-curb-side-pose-jackets') },
-  { label: 'Soft Volume Lean',         src: PREVIEW('soft-volume-lean-jackets') },
-  { label: 'Super Editorial Campaign', src: PREVIEW('apparel-super-editorial-campaign-jackets') },
-  { label: 'Night Flash Campaign',     src: PREVIEW('apparel-night-flash-campaign-jackets') },
-  { label: 'Window Salon Editorial',   src: PREVIEW('window-salon-editorial-jackets') },
-  { label: 'Desert Tailored Walk',     src: PREVIEW('desert-tailored-walk-jackets') },
-  { label: 'Luxury Door Statement',    src: PREVIEW('luxury-door-statement-jackets') },
+  { label: 'Side Profile Street Study',  src: PREVIEW('1776691909999-ra3rym') },
+  { label: 'Old Money Outdoor Portrait', src: PREVIEW('1776691906436-3fe7l9') },
+  { label: 'Ghost Mannequin Shot',       src: PREVIEW('1776690211513-2hgcjm') },
+  { label: 'On-Model Front',             src: PREVIEW('1776690214570-al6wzo') },
+  { label: 'On-Model Back',              src: PREVIEW('1776690213075-4gnekd') },
+  { label: 'On-Model Editorial',         src: PREVIEW('1776690213983-4h5fjc') },
+  { label: 'Movement Shot',              src: PREVIEW('1776690212460-cq4xnb') },
+  { label: 'Texture Detail',             src: PREVIEW('1776690215217-gkv2x3') },
+  { label: 'Fisheye Streetwear Studio',  src: PREVIEW('1776691901110-5dydmu') },
+  { label: 'Sunlit Tailored Chair',      src: PREVIEW('1776691912818-yiu2uq') },
+  { label: 'Paris Curb Side',            src: PREVIEW('1776691907477-77vt46') },
+  { label: 'Soft Volume Lean',           src: PREVIEW('1776691911049-gsxycu') },
 ];
 
-/* ── Footwear (sneakers from /app/generate/product-images Step 2) ── */
+/* ── Footwear / Sneakers (real preview filenames) ── */
 const FOOTWEAR_CARDS: GridCardData[] = [
-  { label: 'Pair Display',             src: PREVIEW('pair-display-shoes-sneakers') },
-  { label: 'In-Hand Studio',           src: PREVIEW('in-hand-studio-shoes-sneakers') },
-  { label: 'Geometric Grid Minimal',   src: PREVIEW('geometric-grid-minimal') },
-  { label: 'Casual Lace Moment',       src: PREVIEW('casual-lace-moment') },
-  { label: 'Hard Shadow',              src: PREVIEW('hard-shadow-shoes-sneakers') },
-  { label: 'Studio Flex Pull',         src: PREVIEW('studio-flex-pull') },
-  { label: 'Cafe Sneaker Moment',      src: PREVIEW('cafe-sneaker-moment') },
-  { label: 'Sculpt Balance Edge',      src: PREVIEW('sculpt-balance-edge') },
-  { label: 'Paris Side Pause',         src: PREVIEW('paris-side-pause') },
-  { label: 'Dynamic Motion Drift',     src: PREVIEW('dynamic-motion-drift') },
-  { label: 'City Step Detail',         src: PREVIEW('city-step-detail') },
-  { label: 'Effortless City Walk',     src: PREVIEW('effortless-city-walk') },
+  { label: 'Pair Display',          src: PREVIEW('pair-display-shoes-sneakers-1776008063507') },
+  { label: 'In-Hand Studio',        src: PREVIEW('in-hand-studio-shoes-sneakers-1776008276313') },
+  { label: 'Front View',            src: PREVIEW('front-view-shoes-sneakers-1776008034245') },
+  { label: 'Geometric Grid Minimal',src: PREVIEW('1776770345914-cg8uyy') },
+  { label: 'Clean Top View',        src: PREVIEW('1776770342811-jr21sq') },
+  { label: 'Close-Up Detail',       src: PREVIEW('closeup-detail-shoes-sneakers-1776008260513') },
+  { label: 'Woven Chair Display',   src: PREVIEW('1776770352201-yu4wqm') },
+  { label: 'Casual Lace Moment',    src: PREVIEW('1776770353784-010tv3') },
+  { label: 'Hard Shadow Hero',      src: PREVIEW('hard-shadow-shoes-sneakers-1776008136691') },
+  { label: 'Studio Flex Pull',      src: PREVIEW('1776770536324-y8omd3') },
+  { label: 'Café Sneaker Moment',   src: PREVIEW('1776770529252-2efq00') },
+  { label: 'Sculpt Balance Edge',   src: PREVIEW('1776770351069-2defhq') },
 ];
 
-/* ── Bags (bags-accessories) ── */
+/* ── Bags (bags-accessories — verified filenames) ── */
 const BAGS_CARDS: GridCardData[] = [
   { label: 'Sculptural Studio Hero',     src: PREVIEW('1776239449949-ygljai') },
   { label: 'On-Shoulder Editorial',      src: PREVIEW('1776239446567-7mvigz') },
@@ -110,26 +110,26 @@ const BAGS_CARDS: GridCardData[] = [
   { label: 'Couch Luxury Still',         src: PREVIEW('1776239439946-komlla') },
   { label: 'Car Interior Still',         src: PREVIEW('1776239461462-cykje2') },
   { label: 'Display Dome Editorial',     src: PREVIEW('1776239425806-v6xegn') },
-  { label: 'Retro Car Editorial',        src: PREVIEW('1776749545971-gv6zst') },
+  { label: 'Sculptural Product Still',   src: PREVIEW('1776749548695-11dzfk') },
   { label: 'Mirror Selfie Luxury',       src: PREVIEW('1776239438796-99x31m') },
   { label: 'Lakeside Soft Minimalism',   src: PREVIEW('1776749534061-yvcf06') },
   { label: 'Sunshadow Outdoor',          src: PREVIEW('1776239457021-4ankwt') },
 ];
 
-/* ── Jewelry (necklaces + earrings mix for variety) ── */
+/* ── Jewelry (necklaces + earrings — real preview filenames) ── */
 const JEWELRY_CARDS: GridCardData[] = [
-  { label: 'Necklace Editorial',         src: PREVIEW('necklace-editorial-neck-portrait') },
-  { label: 'Seated Editorial Studio',    src: PREVIEW('necklace-seated-editorial-studio') },
-  { label: 'Shadow Face Editorial',      src: PREVIEW('necklace-shadow-face-editorial') },
-  { label: 'Layered Editorial',          src: PREVIEW('necklace-layered-editorial-studio') },
-  { label: 'Collarbone Closeup',         src: PREVIEW('necklace-collarbone-closeup') },
-  { label: 'Earring Touch Portrait',     src: PREVIEW('earring-touch-portrait') },
-  { label: 'Sunlit Ear Study',           src: PREVIEW('sunlit-ear-study') },
-  { label: 'Sky Bloom Profile',          src: PREVIEW('sky-bloom-profile') },
-  { label: 'Mirror Self Portrait',       src: PREVIEW('necklace-mirror-self-portrait') },
-  { label: 'Aesthetic Color Portrait',   src: PREVIEW('necklace-aesthetic-color-portrait') },
-  { label: 'Sunlit Campaign Glow',       src: PREVIEW('necklace-sunlit-campaign-glow') },
-  { label: 'Sunlit Skin Closeup',        src: PREVIEW('sunlit-skin-closeup') },
+  { label: 'Editorial Neck Portrait', src: PREVIEW('1776243905045-8aw72b') },
+  { label: 'Necklace Front View',     src: PREVIEW('1776243907007-f0mhvm') },
+  { label: 'Necklace Angle View',     src: PREVIEW('1776243889543-u2eppc') },
+  { label: 'Mid Portrait Hold',       src: PREVIEW('1776243916154-emtkzb') },
+  { label: 'Close-Up Detail',         src: PREVIEW('1776243897922-iqre1y') },
+  { label: 'Earring Touch Portrait',  src: PREVIEW('1776753278458-z7rmxg') },
+  { label: 'Window Shadow Still',     src: PREVIEW('1776753253052-fd9tdt') },
+  { label: 'Clean Profile Glow',      src: PREVIEW('1776753281771-cipkev') },
+  { label: 'Silk & Paper Still',      src: PREVIEW('1776753260977-tjxo03') },
+  { label: 'Extreme Ear Campaign',    src: PREVIEW('1776241616772-yak1ea') },
+  { label: 'Torn Paper Display',      src: PREVIEW('1776753254407-hldbjy') },
+  { label: 'Shadow Hero Earrings',    src: PREVIEW('1776753269735-5yii82') },
 ];
 
 const CATEGORIES = [
