@@ -1,15 +1,23 @@
-Two small fixes:
+The breadcrumb currently competes with the hero eyebrow (`FOOTWEAR · SNEAKERS · BOOTS`) and the footer microcopy (`NO PHOTOSHOOT NEEDED · BUILT FOR FOOTWEAR BRANDS`). Three label-like elements stacked above each other make it feel "worn together." Two changes:
 
-## 1. Bug: "Built for every fragrance shot" shows a single chip and no images
+## 1. Modernize the breadcrumb (`CategoryBreadcrumbs.tsx`)
 
-Root cause: in `CategoryBuiltForEveryCategory.tsx`, the chip merge logic groups by **subject** (the part before `·`). For fragrance, all four built-for groups share the subject "Fragrance" (`Fragrance · Editorial`, `Fragrance · Conceptual Editorial`, `Fragrance · Dream Editorial`, `Fragrance · Essential Shots`). They all collapse into one chip and the visible grid renders only the first 8 cards of one merged blob.
+- Drop the dark filled pill on the current page — replace with plain text in `text-foreground` weight 500. Pills belong to CTAs, not navigation.
+- Use a thin slash divider (`/`) instead of `ChevronRight` icons — lighter visual rhythm, common on premium editorial sites (Aesop, SSENSE, Apple support).
+- Slightly larger type (`text-[13.5px]`), refined letter-spacing (`tracking-[-0.005em]`), `text-muted-foreground/70` for inactive, `text-foreground` for active.
+- Tighter vertical band: reduce the `py-4 lg:py-5` to `py-3 lg:py-4` and shrink hero `pt-6 lg:pt-10` accordingly so the crumb sits as a quiet line, not a band.
+- Add a hairline bottom divider (`border-b border-border/40`) so it reads as a navigation strip rather than floating chrome.
 
-Fix: detect when all groups would merge to a single subject and, in that case, switch the chip label to the **style** part instead. So fragrance chips become: Editorial · Conceptual Editorial · Dream Editorial · Essential Shots. Each chip then shows its own 8-image grid. Same logic protects any future single-subject category.
+Result example:  `Home  /  AI Product Photography  /  Footwear`
 
-## 2. Wrong image: "Golden Hour Bottle" on the fragrance page is not a fragrance shot
+## 2. De-clutter the hero (`CategoryHero.tsx`)
 
-The scene example uses imageId `1776574228066-oyklfz`, which is a generic editorial portrait (woman in swimwear with mountains) borrowed for the homepage hero — not a fragrance bottle. Replace with a confirmed on-subject fragrance scene from the live catalog: `1776018040785-dq78y5` ("Warm Neutral Studio"), and update the label/alt text accordingly.
+- Remove the bottom microcopy line `NO PHOTOSHOOT NEEDED · BUILT FOR FOOTWEAR BRANDS` — it duplicates the eyebrow and the H1 promise. Keeping just the trust line under the CTA row creates space.
+- Replace it with a single, lighter trust line in normal case: `Free to start · No credit card required` (sentence case, `text-xs text-muted-foreground/70`, no uppercase tracking).
+- Keeps the top eyebrow (`FOOTWEAR · SNEAKERS · BOOTS`) as the only uppercase label in the hero, which restores hierarchy.
 
 Files touched:
-- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`
-- `src/data/aiProductPhotographyCategoryPages.ts`
+- `src/components/seo/photography/category/CategoryBreadcrumbs.tsx`
+- `src/components/seo/photography/category/CategoryHero.tsx`
+
+Applies to all 10 category pages automatically (shared components).
