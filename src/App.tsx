@@ -101,6 +101,11 @@ const TryFree = lazy(() => import('@/pages/TryFree'));
 const AIProductPhotographyEcommerce = lazy(() => import('@/pages/seo/AIProductPhotographyEcommerce'));
 const AIProductPhotography = lazy(() => import('@/pages/seo/AIProductPhotography'));
 const AIProductPhotographyCategory = lazy(() => import('@/pages/seo/AIProductPhotographyCategory'));
+const ShopifyProductPhotography = lazy(() => import('@/pages/seo/ShopifyProductPhotography'));
+const AIProductPhotoGenerator = lazy(() => import('@/pages/seo/AIProductPhotoGenerator'));
+const EtsyProductPhotography = lazy(() => import('@/pages/seo/EtsyProductPhotography'));
+const AIPhotographyVsPhotoshoot = lazy(() => import('@/pages/seo/AIPhotographyVsPhotoshoot'));
+const AIPhotographyVsStudio = lazy(() => import('@/pages/seo/AIPhotographyVsStudio'));
 const ProductVisualLibrary = lazy(() => import('@/pages/ProductVisualLibrary'));
 const HowItWorks = lazy(() => import('@/pages/HowItWorks'));
 const FAQ = lazy(() => import('@/pages/FAQ'));
@@ -161,6 +166,11 @@ const App = () => {
             <Route path="/ai-product-photography-for-ecommerce" element={<AIProductPhotographyEcommerce />} />
             <Route path="/ai-product-photography" element={<AIProductPhotography />} />
             <Route path="/ai-product-photography/:slug" element={<AIProductPhotographyCategory />} />
+            <Route path="/shopify-product-photography-ai" element={<ShopifyProductPhotography />} />
+            <Route path="/ai-product-photo-generator" element={<AIProductPhotoGenerator />} />
+            <Route path="/etsy-product-photography-ai" element={<EtsyProductPhotography />} />
+            <Route path="/ai-product-photography-vs-photoshoot" element={<AIPhotographyVsPhotoshoot />} />
+            <Route path="/ai-product-photography-vs-studio" element={<AIPhotographyVsStudio />} />
             <Route path="/product-visual-library" element={<ProductVisualLibrary />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/faq" element={<FAQ />} />

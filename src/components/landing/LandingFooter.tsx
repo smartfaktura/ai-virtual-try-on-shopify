@@ -3,26 +3,23 @@ import { Instagram, Facebook } from 'lucide-react';
 
 const footerLinks = {
   Product: [
-    { label: 'Visual Studio', to: '/features/workflows' },
     { label: 'AI Product Photography', to: '/ai-product-photography' },
-    { label: 'Pricing', to: '/pricing' },
+    { label: 'AI Product Photo Generator', to: '/ai-product-photo-generator' },
+    { label: 'Visual Studio', to: '/features/workflows' },
     { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
     { label: 'Brand Profiles', to: '/features/brand-profiles' },
     { label: 'Image Upscaling', to: '/features/upscale' },
     { label: 'Perspectives', to: '/features/perspectives' },
-    { label: 'Real Estate Staging', to: '/features/real-estate-staging' },
+    { label: 'Pricing', to: '/pricing' },
   ],
   Solutions: [
+    { label: 'Shopify Product Photos', to: '/shopify-product-photography-ai' },
+    { label: 'Etsy Product Photos', to: '/etsy-product-photography-ai' },
     { label: 'Fashion Photography', to: '/ai-product-photography/fashion' },
-    { label: 'Footwear Photography', to: '/ai-product-photography/footwear' },
     { label: 'Beauty & Skincare', to: '/ai-product-photography/beauty-skincare' },
-    { label: 'Fragrance', to: '/ai-product-photography/fragrance' },
     { label: 'Jewelry', to: '/ai-product-photography/jewelry' },
-    { label: 'Bags & Accessories', to: '/ai-product-photography/bags-accessories' },
-    { label: 'Home & Furniture', to: '/ai-product-photography/home-furniture' },
     { label: 'Food & Beverage', to: '/ai-product-photography/food-beverage' },
-    { label: 'Supplements & Wellness', to: '/ai-product-photography/supplements-wellness' },
-    { label: 'Electronics & Gadgets', to: '/ai-product-photography/electronics-gadgets' },
+    { label: 'AI vs Photoshoot', to: '/ai-product-photography-vs-photoshoot' },
     { label: 'All categories', to: '/ai-product-photography' },
   ],
   Company: [

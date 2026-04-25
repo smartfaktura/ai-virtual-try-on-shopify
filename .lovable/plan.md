@@ -1,53 +1,117 @@
-## Goals
+# 5 New SEO Landing Pages
 
-1. Fix the awkward "Now showing Sneakers" line on all 10 category hub pages — it currently reads like debug copy because the chip already shows the same label right below it.
-2. On `/ai-product-photography`, make the "Choose your product category" card thumbnails larger and more impactful on mobile by showing **2 images per card instead of 3**.
+Build 5 public landing pages that feel like natural extensions of `/ai-product-photography` — same nav, footer, typography, spacing, gradients, card style, and conversion logic. Each page is configuration-driven so we keep one design system and avoid duplicate code.
 
----
+## Pages & routes
 
-## 1. The "Now showing …" line
+| # | Route | H1 |
+|---|---|---|
+| 1 | `/shopify-product-photography-ai` | AI Product Photos for Shopify Stores |
+| 2 | `/ai-product-photo-generator` | AI Product Photo Generator for E-commerce Brands |
+| 3 | `/etsy-product-photography-ai` | AI Product Photos for Etsy Sellers |
+| 4 | `/ai-product-photography-vs-photoshoot` | AI Product Photography vs Traditional Photoshoot |
+| 5 | `/ai-product-photography-vs-studio` | VOVV.AI vs Product Photography Studio |
 
-**Where**: `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` (lines 82–95). Used by all 10 category pages.
+## Design approach — reuse, don't reinvent
 
-**Why it feels off**:
-- It restates the active chip's label that sits right below it → redundant.
-- "Now showing" reads like a filter status label, not editorial copy.
-- It pushes the chip rail down and adds a second muted line under the H2, weakening hierarchy.
+We already have a polished section system under `src/components/seo/photography/` (Hero, VisualSystem, HowItWorks, SceneExamples, UseCases, Comparison, FAQ, FinalCTA, CategoryChooser). Rather than fork them per page, we extract a small set of **prop-driven shared sections** so all 5 pages render the homepage aesthetic with page-specific copy & visuals.
 
-**Fix** — replace the dynamic "Now showing X" line with a **static, editorial subline** that describes the section's value, and let the chips do the "what's selected" job (they already visually indicate active state with the dark pill).
+New shared section primitives (under `src/components/seo/landing/`):
 
-New copy under the H2 (static, per page):
-> "Switch between {groupName.toLowerCase()} subcategories — every chip reveals real scenes generated from a single upload."
+- `LandingHeroSEO` — eyebrow, H1, sub, dual CTA, trust line, hero collage (reuses the gradient + glyph treatment from `PhotographyHero`).
+- `LandingValueCards` — H2 + intro + responsive card grid (used for "Visual needs", "What VOVV.AI is built for", etc.).
+- `LandingOneToManyShowcase` — input → outputs visual (reuses `PhotographyVisualSystem` look).
+- `LandingHowItWorksSteps` — 3-step block (mirrors `PhotographyHowItWorks`).
+- `LandingCategoryGrid` — compact category cards linking to the 10 hub category pages (subset configurable per page).
+- `LandingComparisonTable` — two-column "Traditional vs VOVV.AI" / "Studio vs VOVV.AI" comparison (mirrors `PhotographyComparison` styling, accepts column titles + bullets).
+- `LandingDecisionMatrix` — "Choose A if… / Choose B if…" two-column block (used by both vs-pages).
+- `LandingFAQConfig` — wraps existing FAQ visual style, accepts Q/A array (also emits `FAQPage` JSON-LD).
+- `LandingFinalCTASEO` — wraps `PhotographyFinalCTA` style with custom headline/copy/CTA.
 
-This:
-- Removes the redundant echo of the chip label.
-- Adds genuine context for first-time visitors (explains what the chips do and what the grid below is).
-- Keeps the section's editorial voice consistent with the rest of the page.
+Each page becomes a thin `pages/seo/*.tsx` file: `<LandingNav /> + sections + <LandingFooter />` plus a config object for copy.
 
-The grid still re-animates on chip change (the `key={active.subCategory}` on the grid stays), so the interaction remains obvious without needing a text label.
+## SEO scaffolding (every page)
 
----
+- `SEOHead` with unique title/description/canonical/OG image/Twitter card.
+- One H1 only.
+- `JsonLd` for `BreadcrumbList` (Home → page).
+- `JsonLd` for `FAQPage` (matches visible FAQs exactly).
+- `SoftwareApplication` JSON-LD on pages 1, 2, 3 (reuse the shape from `AIProductPhotography.tsx`).
+- Sitemap entry added to `public/sitemap.xml` for all 5 routes (priority 0.85, monthly).
+- All internal links use crawlable `<a href>` (or `<Link>` from react-router which renders `<a href>`).
+- Image alts: descriptive, no stuffing. Reuse `getOptimizedUrl` and `loading="lazy"` for below-fold imagery.
 
-## 2. Mobile cards on `/ai-product-photography`
+## Routing
 
-**Where**: `src/components/seo/photography/PhotographyCategoryChooser.tsx` (lines 27, 39–55).
+Add 5 lazy routes in `src/App.tsx` (public section, alongside `/ai-product-photography`):
 
-**Current**: `thumbs = cat.previewImages.slice(0, 3)` rendered in a `grid-cols-3` collage at all breakpoints. On a 390px viewport each thumb is ~55px wide → too small to read.
+```text
+/shopify-product-photography-ai      → ShopifyProductPhotography
+/ai-product-photo-generator          → AIProductPhotoGenerator
+/etsy-product-photography-ai         → EtsyProductPhotography
+/ai-product-photography-vs-photoshoot → AIPhotographyVsPhotoshoot
+/ai-product-photography-vs-studio     → AIPhotographyVsStudio
+```
 
-**Fix**:
-- Slice the thumbnails responsively: **2 on mobile, 3 from `sm:` up**.
-  - Render `previewImages.slice(0, 3)` but hide the 3rd thumb under `sm:` with `hidden sm:block`.
-- Switch the inner grid to `grid-cols-2 sm:grid-cols-3` so the 2 visible thumbs fill the full card width on mobile.
-- Bump the collage aspect ratio slightly on mobile (`aspect-[4/3] sm:aspect-[16/9]`) so the larger thumbs aren't overly letterboxed.
-- Keep desktop (`sm:` and up) exactly as today — 3 thumbs, 16/9 — so nothing changes above mobile.
+## Per-page section composition
 
-Result: each card on mobile shows two clean, readable preview images instead of three cramped ones, matching the premium feel of the rest of the page.
+**1. Shopify** — Hero · ValueCards (Shopify visual needs) · OneToManyShowcase · HowItWorksSteps · CategoryGrid (Fashion, Beauty, Jewelry, Footwear, Food, Home) · ValueCards (Use cases) · ComparisonTable (Traditional Shopify shoot vs VOVV.AI) · FAQ · FinalCTA.
 
----
+**2. Generator** — Hero · ValueCards (More than one image) · OneToManyShowcase (before/after) · HowItWorksSteps · CategoryGrid (all 10) · ValueCards (Use cases) · ValueCards (Why VOVV.AI) · FAQ · FinalCTA.
 
-## Files to edit
+**3. Etsy** — Hero · ValueCards (Etsy listing visuals) · OneToManyShowcase · CategoryGrid (Jewelry, Home, Fashion, Bags, Beauty, Food) · HowItWorksSteps · ValueCards (Etsy use cases) · Trust block (review-before-publish, soft tone) · FAQ · FinalCTA.
 
-- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — replace the "Now showing" block (lines 82–95) with the static editorial subline; drop the `splitLabel(active.subCategory)` usage that's only needed for that line.
-- `src/components/seo/photography/PhotographyCategoryChooser.tsx` — responsive 2-vs-3 thumb grid + mobile aspect ratio tweak.
+**4. vs Photoshoot** — Hero (split visual) · ComparisonTable · ValueCards (When AI is better) · ValueCards (When traditional still makes sense) · Workflow strip · ValueCards (Visual examples) · CategoryGrid · DecisionMatrix · FAQ · FinalCTA.
 
-No data files, no routes, no SEO copy elsewhere change.
+**5. vs Studio** — Hero (split visual) · ComparisonTable · ValueCards (What studios are great for) · ValueCards (What VOVV.AI is built for) · Workflow strip · ValueCards (Output examples) · CategoryGrid (all 10) · Cost/speed positioning block · FAQ · FinalCTA.
+
+## Internal linking (crawlable `<a>` / `<Link to>`)
+
+Each page footer block + inline links per the brief:
+
+- Generator → hub, all 10 categories, Shopify page, vs-Photoshoot.
+- Shopify → Generator, hub, relevant categories.
+- Etsy → Generator, hub, Jewelry/Home/Fashion/Bags/Beauty.
+- vs-Photoshoot → Generator, vs-Studio, hub, `/app/generate/product-images`.
+- vs-Studio → Generator, vs-Photoshoot, hub, `/app/generate/product-images`.
+
+All primary CTAs link to `/app/generate/product-images` (existing `ProtectedRoute` triggers auth flow when logged out — no change needed).
+
+## Footer update
+
+Update `LandingFooter.tsx`:
+- **Product** column: add "AI Product Photo Generator" → `/ai-product-photo-generator`.
+- **Solutions** column: add "Shopify Product Photos" → `/shopify-product-photography-ai` and "Etsy Product Photos" → `/etsy-product-photography-ai` near the top; keep the existing 10 category links but trim to the 4 highlighted ones (Fashion, Beauty, Jewelry, Food) per the brief's "don't overload" rule, and move the rest to the hub page (which already lists all 10). Mobile stays the same compact accordion.
+
+## Sitemap
+
+Append 5 `<url>` entries to `public/sitemap.xml` with `lastmod=2026-04-25`, `changefreq=monthly`, `priority=0.85`.
+
+## Files
+
+**New:**
+- `src/components/seo/landing/LandingHeroSEO.tsx`
+- `src/components/seo/landing/LandingValueCards.tsx`
+- `src/components/seo/landing/LandingOneToManyShowcase.tsx`
+- `src/components/seo/landing/LandingHowItWorksSteps.tsx`
+- `src/components/seo/landing/LandingCategoryGrid.tsx`
+- `src/components/seo/landing/LandingComparisonTable.tsx`
+- `src/components/seo/landing/LandingDecisionMatrix.tsx`
+- `src/components/seo/landing/LandingFAQConfig.tsx`
+- `src/components/seo/landing/LandingFinalCTASEO.tsx`
+- `src/components/seo/landing/LandingWorkflowStrip.tsx` (vs-pages)
+- `src/pages/seo/ShopifyProductPhotography.tsx`
+- `src/pages/seo/AIProductPhotoGenerator.tsx`
+- `src/pages/seo/EtsyProductPhotography.tsx`
+- `src/pages/seo/AIPhotographyVsPhotoshoot.tsx`
+- `src/pages/seo/AIPhotographyVsStudio.tsx`
+
+**Edited:**
+- `src/App.tsx` — add 5 lazy routes
+- `src/components/landing/LandingFooter.tsx` — refined Product/Solutions columns
+- `public/sitemap.xml` — 5 new entries
+- `public/version.json` — bump
+
+## Final QA pass
+
+After build, manually verify each page: one H1, canonical correct, FAQ JSON-LD matches DOM, all internal links are real `<a href>`, mobile spacing matches `/ai-product-photography`, hero/cards/CTAs visually consistent, no keyword stuffing in alts, lazy-loaded below-fold images.
