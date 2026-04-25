@@ -109,6 +109,10 @@ export default {
           "0%": { transform: "scaleX(0)" },
           "100%": { transform: "scaleX(1)" },
         },
+        "caret-blink": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -119,6 +123,7 @@ export default {
         "marquee-left": "marquee-left linear infinite",
         "marquee-right": "marquee-right linear infinite",
         "progress-grow": "progress-grow 1.2s ease-out forwards",
+        "caret-blink": "caret-blink 1s ease-in-out infinite",
       },
     },
   },
