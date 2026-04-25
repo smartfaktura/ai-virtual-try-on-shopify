@@ -12,6 +12,13 @@ const footerLinks = {
     { label: 'Perspectives', to: '/features/perspectives' },
     { label: 'Real Estate Staging', to: '/features/real-estate-staging' },
   ],
+  Solutions: [
+    { label: 'Fashion Photography', to: '/ai-product-photography/fashion' },
+    { label: 'Footwear Photography', to: '/ai-product-photography/footwear' },
+    { label: 'Beauty & Skincare', to: '/ai-product-photography/beauty-skincare' },
+    { label: 'Bags & Accessories', to: '/ai-product-photography/bags-accessories' },
+    { label: 'All categories', to: '/ai-product-photography' },
+  ],
   Company: [
     { label: 'About', to: '/about' },
     { label: 'Blog', to: '/blog' },
@@ -92,7 +99,7 @@ export function LandingFooter() {
           </div>
 
           {/* Link columns */}
-          <div className="col-span-2 md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
+          <div className="col-span-2 md:col-span-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
             {Object.entries(footerLinks).map(([heading, links]) => (
               <div key={heading}>
                 <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 mb-4">

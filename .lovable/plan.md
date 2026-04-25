@@ -1,35 +1,32 @@
-I found the issue: the recent optimization added responsive `width=` transforms to the storage image URLs. In this project that can crop/zoom images server-side, which is exactly the rule already saved in memory: full-bleed/card/background images must use quality-only optimization.
+Strict re-audit of `/ai-product-photography` against the 10 contra-questions. Most checks pass; below are the issues found and the targeted fixes I'll make.
 
-Plan:
+## Audit results
 
-1. Remove crop-causing width transforms
-   - Update the `/ai-product-photography/*` category image usage so full image cards use quality-only optimized URLs.
-   - Remove `srcSet` width variants from the hero collage, scene grids, built-for grid, related category collage, and fallback hero image.
+1. **Crawlability** — Pass. All 10 cards in `PhotographyCategoryChooser` use real `<Link to=…>` → `<a href>`. No tabs/filters/JS gating.
+2. **Sitemap + canonical consistency** — Pass. Slugs in `aiProductPhotographyCategories.ts`, sitemap.xml, route paths and canonicals match exactly. All `https`, no trailing slashes, no www mismatch.
+3. **Schema validity** — Pass. Hub renders one BreadcrumbList, one SoftwareApplication, one FAQPage. FAQ questions are visible in the on-page accordion and match JSON-LD exactly. No duplicates on this route.
+4. **Content uniqueness** — Pass. Hero marquee, VisualSystem (6 outputs with images), HowItWorks, SceneExamples (10 scenes), Comparison, UseCases (8), FAQ (7), final CTA. Not thin.
+5. **Internal anchor text** — **Weak.** Cards say "Explore Fashion" instead of a descriptive, keyword-aligned phrase. Fix.
+6. **Mobile UX** — **Weak.** On mobile the chooser is single-column with full descriptions = 10 tall cards = directory feel. Fix to 2-column denser layout on mobile.
+7. **Image SEO** — Pass. Alts are natural and category-specific.
+8. **Performance / CLS** — Pass. All chooser/scene images are lazy + async, aspect-ratio containers prevent CLS, quality-only optimization (no width crop).
+9. **Footer strategy** — **Improvement worth making.** Add a small "Solutions" column with 4 strongest category links + an "All categories" link. Keeps it useful without becoming a link dump.
+10. **Conversion clarity** — Pass. Primary CTA "Create your first visuals free" + secondary "Explore categories" anchor link in hero, repeated in HowItWorks and FinalCTA.
 
-2. Keep the good loading UX
-   - Keep the `SmartImage` skeleton shimmer and fade-in behavior.
-   - Keep lazy loading for non-critical images and eager/high priority only for the first hero tile.
+## Fixes I'll apply
 
-3. Fix the hero preload so it does not request a cropped variant
-   - Change the preload to use the same quality-only URL as the displayed first hero image.
-   - Remove `imagesrcset/imagesizes` from the preload because those point to width-transformed variants.
+### A. `src/components/seo/photography/PhotographyCategoryChooser.tsx`
+- Mobile layout: change `grid-cols-1 sm:grid-cols-2` → `grid-cols-2 lg:grid-cols-3`. Tighter gaps and padding on small screens. Hide the long description on mobile (keep title + collage + CTA) so the section feels scannable instead of like a directory.
+- Anchor text: render descriptive SEO anchor on desktop ("Explore AI fashion product photography"), keep short "Explore Fashion" label visually on mobile, and apply the descriptive text as `aria-label` and `title` on every card so it's the link's accessible name everywhere.
+- Hide "{shotCount}+ shots" badge on mobile to reduce noise; keep on sm+.
 
-4. Make the helper safer for future work
-   - Adjust `getOptimizedSrcSet` or stop using it on these pages so it cannot accidentally be applied to full-bleed/card images again.
-   - Add a clear code comment warning that width-based transforms are only safe for true fixed thumbnails, not these editorial image tiles.
+### B. `src/components/landing/LandingFooter.tsx`
+- Add a new "Solutions" column with 4 strongest category links + "All categories":
+  - Fashion Photography → /ai-product-photography/fashion
+  - Footwear Photography → /ai-product-photography/footwear
+  - Beauty & Skincare → /ai-product-photography/beauty-skincare
+  - Bags & Accessories → /ai-product-photography/bags-accessories
+  - All categories → /ai-product-photography
+- Keep the existing "AI Product Photography" entry inside Product so the hub still appears in two natural contexts without becoming a dump.
 
-Technical details:
-
-- Files to update:
-  - `src/components/seo/photography/category/CategoryHero.tsx`
-  - `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`
-  - `src/components/seo/photography/category/CategorySceneExamples.tsx`
-  - `src/components/seo/photography/category/CategoryRelatedCategories.tsx`
-  - `src/pages/seo/AIProductPhotographyCategory.tsx`
-  - likely `src/lib/imageOptimization.ts` comment/helper guard
-
-Expected result:
-
-- Images return to their original framing without the unwanted zoom/crop.
-- Skeletons and fade-in remain.
-- Pages still load better than before via lazy loading, decoding async, quality compression, and LCP preload, but without using unsafe width transforms.
+No other files change. No content/feature regressions.

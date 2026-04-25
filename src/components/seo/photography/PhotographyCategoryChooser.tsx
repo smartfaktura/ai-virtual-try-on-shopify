@@ -22,22 +22,26 @@ export function PhotographyCategoryChooser() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
           {aiProductPhotographyCategories.map((cat) => {
             const thumbs = cat.previewImages.slice(0, 3);
+            // Descriptive, category-specific anchor for SEO + a11y.
+            const anchorText = `Explore AI ${cat.name.toLowerCase()} product photography`;
             return (
               <Link
                 key={cat.slug}
                 to={cat.url}
-                className="group flex flex-col bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label={anchorText}
+                title={anchorText}
+                className="group flex flex-col bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 {/* 3-image horizontal collage */}
-                <div className="relative aspect-[16/9] bg-muted/30 p-1.5">
-                  <div className="absolute inset-1.5 grid grid-cols-3 gap-1.5">
+                <div className="relative aspect-[16/9] bg-muted/30 p-1 sm:p-1.5">
+                  <div className="absolute inset-1 sm:inset-1.5 grid grid-cols-3 gap-1 sm:gap-1.5">
                     {thumbs.map((id, idx) => (
                       <div
                         key={`${id}-${idx}`}
-                        className="relative overflow-hidden rounded-xl bg-muted/40"
+                        className="relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40"
                       >
                         <img
                           src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
@@ -51,23 +55,24 @@ export function PhotographyCategoryChooser() {
                   </div>
                 </div>
 
-                <div className="flex flex-col p-5 lg:p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">
+                <div className="flex flex-col p-3.5 sm:p-5 lg:p-6">
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.16em] text-muted-foreground font-semibold">
                       AI Product Photography
                     </span>
-                    <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
+                    <span className="hidden sm:inline text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
                       {cat.shotCount}+ shots
                     </span>
                   </div>
-                  <h3 className="text-foreground text-lg font-semibold leading-tight mb-2">
+                  <h3 className="text-foreground text-[15px] sm:text-lg font-semibold leading-tight mb-1.5 sm:mb-2">
                     {cat.name}
                   </h3>
-                  <p className="text-muted-foreground text-[13px] leading-relaxed mb-4 line-clamp-2">
+                  <p className="hidden sm:block text-muted-foreground text-[13px] leading-relaxed mb-4 line-clamp-2">
                     {cat.description}
                   </p>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
-                    Explore {cat.name}
+                  <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-primary group-hover:gap-2 transition-all">
+                    <span className="sm:hidden">Explore {cat.name}</span>
+                    <span className="hidden sm:inline">{anchorText}</span>
                     <ArrowUpRight size={12} />
                   </span>
                 </div>
