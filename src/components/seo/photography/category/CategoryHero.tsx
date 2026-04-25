@@ -66,17 +66,11 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
 
           {/* ── Visual column ───────────────────────────────────────── */}
           {hasCollage ? (
-            <div className="grid grid-cols-2 gap-3 lg:gap-4">
-              {/* Left column — slightly raised */}
-              <div className="flex flex-col gap-3 lg:gap-4 lg:-translate-y-6">
-                <HeroTile tile={collage![0]} priority />
-                <HeroTile tile={collage![2]} />
-              </div>
-              {/* Right column — slightly lowered for editorial stagger */}
-              <div className="flex flex-col gap-3 lg:gap-4 lg:translate-y-6">
-                <HeroTile tile={collage![1]} priority />
-                <HeroTile tile={collage![3]} />
-              </div>
+            <div className="grid grid-cols-2 grid-rows-2 gap-3 lg:gap-4">
+              <HeroTile tile={collage![0]} priority />
+              <HeroTile tile={collage![1]} priority />
+              <HeroTile tile={collage![2]} />
+              <HeroTile tile={collage![3]} />
             </div>
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-2xl overflow-hidden bg-muted/30">
