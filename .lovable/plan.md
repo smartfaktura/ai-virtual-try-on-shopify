@@ -1,92 +1,85 @@
-## Audit findings on /ai-product-photography
+## Polish all 10 /ai-product-photography/{slug} category pages
 
-The page is structurally solid, but several small inconsistencies break the "premium, seamless" feel. Here is what I found and what I will fix.
+All 10 category pages share one component set, so each fix lands across all 10 pages at once. Same class of inconsistencies as the parent hub, plus a few unique to category pages. **Eyebrow position stays untouched per request.**
 
-### 1. Section background rhythm is broken
+### 1. Section background rhythm collapses in the bottom half
 
-Current order of section backgrounds:
-
-```text
-Hero            #FAFAF8   (warm)
-CategoryChooser white     (clean)
-VisualSystem    #f5f5f3   (warm)
-HomeModels      #FAFAF8   ← breaks the warm/white toggle
-HowItWorks      white
-SceneExamples   #f5f5f3
-UseCases        white
-Comparison      #f5f5f3
-FAQ             white
-FinalCTA        #1a1a2e
-```
-
-Two warm tones (`#FAFAF8` next to `#f5f5f3`) sit back-to-back and create a muddy seam between VisualSystem and HomeModels. Fix: pass `className="bg-background"` to `HomeModels` so the alternation stays clean (warm → white → warm → white …).
-
-### 2. Headings don't share one color token
-
-Most H2s use `text-[#1a1a2e]`, but `HomeModels` (via `ModelsMarquee` defaults) uses `text-foreground`, which renders as a slightly different near-black. Pass an override or align to `#1a1a2e` so all section headings match.
-
-### 3. CTA buttons aren't standardized
-
-| Location | Height | Padding | Style |
-|---|---|---|---|
-| Hero primary | 3.25rem | px-8 | `bg-primary` rounded-full, shadow ✓ |
-| HowItWorks primary | 3.25rem | px-8 | shadcn Button rounded-full ✓ |
-| SceneExamples "Browse library" | **3rem** | **px-7** | `bg-foreground` (black) — odd shape & color |
-| FinalCTA primary | 3.25rem | px-8 | `bg-white` ✓ (dark bg) |
-
-Fix: bring the SceneExamples CTA to the same `h-[3.25rem] px-8` size and switch to a softer secondary style (outlined dark on warm bg) so it doesn't look like a different button system. Keep the primary `bg-primary` style reserved for the true conversion CTAs.
-
-### 4. Arrow icon sizes drift
-
-`ArrowRight size={16}` in Hero, `h-4 w-4` (=16) in HowItWorks, `size={14}` in SceneExamples, `ArrowUpRight size={12}` in CategoryChooser. Standardize:
-- Inside primary CTAs: 16
-- Inside secondary CTAs / inline links: 14
-- Inside small card meta links (CategoryChooser cards): 14 (currently 12 looks undersized next to the label)
-
-### 5. Card system has two different icon-chip languages
-
-- `PhotographyVisualSystem` chips: `rounded-xl bg-primary/10 text-primary`
-- `PhotographyHowItWorks` chips: `rounded-2xl bg-[#1a1a2e] text-white`
-
-Same page, two different visual languages. Align both to a single chip style: `rounded-2xl bg-[#1a1a2e] text-white` (more premium, matches the dark FinalCTA and Comparison panel).
-
-### 6. Card radii inconsistency
-
-Most content cards use `rounded-3xl` (HowItWorks, VisualSystem, Comparison, FAQ, CategoryChooser ≥sm). `PhotographyUseCases` cards are `rounded-2xl`, which makes that grid look like it belongs to a different system. Promote them to `rounded-3xl` for parity, and bump padding from `p-5` to `p-6` so they breathe.
-
-### 7. Hover transitions drift
-
-`duration-500 hover:-translate-y-1` (Chooser, VisualSystem) vs `hover:-translate-y-0.5` with no duration (UseCases). Standardize all interactive cards to `transition-all duration-300 hover:-translate-y-1 hover:shadow-md`.
-
-### 8. Eyebrow / heading duplication in CategoryChooser
+Current order:
 
 ```text
-Eyebrow: "Choose your category"
-H2:      "Choose your product category"
+Hero               #FAFAF8   warm
+BuiltForEvery      white
+VisualOutputs      #f5f5f3   warm
+PainPoints         white
+SceneExamples      #FAFAF8   ← uses hero tone, breaks the warm pattern
+HowItWorks         white
+UseCases           white     ← two whites
+RelatedCategories  white     ← three whites
+FAQ                white     ← four whites in a row
+FinalCTA           dark
 ```
 
-The eyebrow restates the H2. Replace eyebrow with `Categories · 10 product verticals` to add information instead of repeating.
+Fix:
+- `CategorySceneExamples` → `bg-[#f5f5f3]` (matches the rest of the warm sections)
+- `CategoryUseCases` → `bg-[#f5f5f3]`
 
-Also tighten the SceneExamples eyebrow from "Scene library · 1600+ ready-to-use scenes" to the cleaner "Scene library · 1600+ scenes" so all eyebrows stay short.
+Final rhythm: `FAFAF8 → white → f5f5f3 → white → f5f5f3 → white → f5f5f3 → white → white → dark`. The trailing double-white (Related + FAQ) reads as a calm denser end before the dark CTA.
 
-### 9. Comparison X-pill is visually heavier than needed
+### 2. SceneExamples CTA is a different button system
 
-`bg-muted` X-circle reads almost as a button. Soften to `bg-foreground/5 text-foreground/40` so the negatives feel quieter and the green Checks dominate (better for the "VOVV wins" message).
+Current: `h-[3rem] px-7 bg-foreground text-background text-sm` with `ArrowRight size={14}`.
 
-### 10. UseCases has no closing action
+Standardize to the secondary CTA used on the parent hub:
+`h-[3.25rem] px-8 rounded-full border border-[#1a1a2e]/15 bg-white text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-colors`, arrow `size={16}`.
 
-Every other section ends with a CTA or onward link; UseCases dead-ends. Add a small inline link under the grid: "See all 1600+ scenes →" pointing to `/product-visual-library`, using the standardized inline-link style.
+### 3. VisualOutputs cards use the wrong icon-chip language
+
+Current: `w-10 h-10 rounded-xl bg-primary/10 text-primary` + `hover:-translate-y-0.5` (no duration).
+
+Match the unified dark chip used elsewhere on the page (PainPoints, HowItWorks):
+`w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white shadow-sm`. Hover → `transition-all duration-300 hover:-translate-y-1 hover:shadow-md`.
+
+### 4. UseCases cards are an outlier
+
+Current: `rounded-2xl p-5`, no icon chip (just a colored icon), `hover:-translate-y-0.5`. Doesn't match PainPoints / VisualOutputs cards on the same page.
+
+Align: `rounded-3xl p-6` + dark chip (`w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white`) + `transition-all duration-300 hover:-translate-y-1 hover:shadow-md`. Same treatment applied on the parent hub's UseCases.
+
+### 5. PainPoints number-pill is a different size/radius
+
+Current: `w-9 h-9 rounded-xl`. Bring to standard chip dims: `w-10 h-10 rounded-2xl` (still keeps the mono numeral inside).
+
+### 6. RelatedCategories card hover and arrow drift
+
+Current: `transition-all duration-500 hover:-translate-y-1 hover:shadow-lg`, `ArrowUpRight size={12}`, H3 uses `text-foreground`.
+
+Align to standardized:
+- `transition-all duration-300 hover:-translate-y-1 hover:shadow-md`
+- `ArrowUpRight size={14}`
+- H3 → `text-[#1a1a2e]`
+
+### 7. Heading color token drift
+
+Some sections use `text-[#1a1a2e]`, others use `text-foreground` (Hero H1, BuiltForEvery H2, RelatedCategories H2). Standardize all H1/H2 to `text-[#1a1a2e]`. The H1 highlight `<span>` (`text-[#4a5578]`) stays as-is.
+
+### 8. Hero CTAs use `px-7`
+
+Parent hub and HowItWorks CTAs all use `px-8`. Bump CategoryHero CTAs to `px-8` so buttons measure identically across the whole product photography surface. (Eyebrow position untouched.)
+
+### 9. RelatedCategories inline links use `text-primary`
+
+Convention on the parent hub is dark inline links (`text-[#1a1a2e]`). Switch the "All AI product photography categories" link and the per-card "Explore {name}" inline link to dark.
 
 ---
 
-### Files to edit
+### Files to edit (all under `src/components/seo/photography/category/`)
 
-- `src/pages/seo/AIProductPhotography.tsx` — pass `className="bg-background"` to `HomeModels`.
-- `src/components/home/HomeModels.tsx` — accept and forward `className`; also pass an explicit `text-[#1a1a2e]` heading override (via a small wrapper or, simpler, leave wrapper bg and rely on global token if it already resolves to `#1a1a2e`).
-- `src/components/seo/photography/PhotographyCategoryChooser.tsx` — eyebrow copy, ArrowUpRight size 12 → 14.
-- `src/components/seo/photography/PhotographyVisualSystem.tsx` — icon chip → dark style to match HowItWorks.
-- `src/components/seo/photography/PhotographySceneExamples.tsx` — eyebrow tighten, CTA height/padding/style normalize, arrow size 14.
-- `src/components/seo/photography/PhotographyUseCases.tsx` — `rounded-3xl`, `p-6`, unified hover, add closing inline link.
-- `src/components/seo/photography/PhotographyComparison.tsx` — soften X pill background.
+- `CategoryHero.tsx` — H1 → `text-[#1a1a2e]`; CTAs `px-7` → `px-8`. Eyebrow position unchanged.
+- `CategoryBuiltForEveryCategory.tsx` — H2 → `text-[#1a1a2e]`.
+- `CategoryVisualOutputs.tsx` — dark icon chip; hover normalize.
+- `CategoryPainPoints.tsx` — number pill `w-10 h-10 rounded-2xl`.
+- `CategorySceneExamples.tsx` — bg `#f5f5f3`; standardized secondary CTA.
+- `CategoryUseCases.tsx` — bg `#f5f5f3`; rounded-3xl, p-6, dark chip, hover normalize.
+- `CategoryRelatedCategories.tsx` — H2/H3 → `text-[#1a1a2e]`; hover `duration-300 hover:shadow-md`; arrow size 14; inline links `text-[#1a1a2e]`.
 
-No new dependencies, no schema changes, no copy changes beyond the two eyebrow tweaks.
+No data, route, or schema changes. No new dependencies. All 10 category pages inherit the fixes automatically.

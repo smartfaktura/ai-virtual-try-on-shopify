@@ -23,9 +23,9 @@ export function CategoryVisualOutputs({ page }: { page: CategoryPage }) {
             return (
               <div
                 key={title}
-                className="bg-white rounded-3xl border border-[#f0efed] shadow-sm p-6 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="bg-white rounded-3xl border border-[#f0efed] shadow-sm p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white flex items-center justify-center mb-4 shadow-sm">
                   <Icon size={18} strokeWidth={1.75} />
                 </div>
                 <h3 className="text-[#1a1a2e] text-base font-semibold mb-1.5">{title}</h3>

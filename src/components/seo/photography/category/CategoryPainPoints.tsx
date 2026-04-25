@@ -19,7 +19,7 @@ export function CategoryPainPoints({ page }: { page: CategoryPage }) {
               key={i}
               className="bg-white rounded-3xl border border-[#f0efed] shadow-sm p-7 lg:p-8 flex gap-5"
             >
-              <span className="shrink-0 w-9 h-9 rounded-xl bg-[#1a1a2e] text-white text-sm font-mono font-medium flex items-center justify-center">
+              <span className="shrink-0 w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white text-sm font-mono font-medium flex items-center justify-center">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <p className="text-[#374151] text-[15px] leading-relaxed pt-1">{p}</p>

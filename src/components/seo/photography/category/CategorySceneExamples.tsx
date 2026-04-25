@@ -6,7 +6,7 @@ import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryP
 
 export function CategorySceneExamples({ page }: { page: CategoryPage }) {
   return (
-    <section id="scene-library" className="py-16 lg:py-32 bg-[#FAFAF8] scroll-mt-24">
+    <section id="scene-library" className="py-16 lg:py-32 bg-[#f5f5f3] scroll-mt-24">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
@@ -46,10 +46,10 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
         <div className="flex justify-center mt-12">
           <Link
             to="/product-visual-library"
-            className="inline-flex items-center justify-center gap-2 h-[3rem] px-7 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-[#1a1a2e]/15 bg-white text-[#1a1a2e] text-base font-semibold hover:bg-[#1a1a2e] hover:text-white transition-colors"
           >
             Browse the full scene library
-            <ArrowRight size={14} />
+            <ArrowRight size={16} />
           </Link>
         </div>
       </div>
