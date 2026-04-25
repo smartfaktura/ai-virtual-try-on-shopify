@@ -25,7 +25,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
         }}
       />
 
-      <div className="relative max-w-[1320px] mx-auto px-6 sm:px-8 lg:px-12 py-14 lg:py-24">
+      <div className="relative max-w-[1320px] mx-auto px-6 sm:px-8 lg:px-12 pt-4 pb-14 lg:pt-6 lg:pb-24">
         <div className="grid lg:grid-cols-[5fr_6fr] gap-12 lg:gap-20 items-center">
           {/* ── Copy column ─────────────────────────────────────────── */}
           <div>
