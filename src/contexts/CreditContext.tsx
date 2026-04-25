@@ -127,9 +127,27 @@ export function CreditProvider({ children }: CreditProviderProps) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+
+      // Retry transient edge-runtime errors (503 / cold-start churn) with backoff.
+      // These come from the platform before our handler runs (lineno: 0, RUNTIME_ERROR)
+      // and resolve on a subsequent invocation once the isolate is warm.
+      let data: any = null;
+      let error: any = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await supabase.functions.invoke('check-subscription');
+        data = res.data;
+        error = res.error;
+        const msg = (error as any)?.message || '';
+        const isTransient =
+          /503|temporarily unavailable|SUPABASE_EDGE_RUNTIME_ERROR|Failed to fetch|boot/i.test(msg);
+        if (!error || !isTransient) break;
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      }
+
       if (error) {
-        console.error('check-subscription error:', error);
+        // Silent on transient platform errors — user state stays as-is and next
+        // periodic refresh will pick up the latest values.
+        console.warn('check-subscription transient failure (state unchanged):', (error as any)?.message);
         return;
       }
       if (data) {
