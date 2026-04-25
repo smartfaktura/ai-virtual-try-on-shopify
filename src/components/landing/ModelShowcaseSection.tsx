@@ -1,8 +1,42 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { mockModels } from '@/data/mockData';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
+
+type ModelItem =
+  | { kind: 'model'; name: string; previewUrl: string }
+  | { kind: 'cta' };
+
+function BrandModelCTA() {
+  return (
+    <Link
+      to="/app/models"
+      className="group flex flex-col items-center gap-2 flex-shrink-0"
+      aria-label="Create your own brand models"
+    >
+      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden bg-foreground text-background flex flex-col items-center justify-center gap-3 transition-all duration-500 group-hover:bg-foreground/90 shadow-md shadow-foreground/[0.08]">
+        <div className="w-9 h-9 rounded-full border border-background/30 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+          <Plus className="w-4 h-4 text-background/90" strokeWidth={1.5} />
+        </div>
+        <div className="text-center px-2">
+          <div className="text-[11px] font-medium tracking-[0.18em] uppercase text-background/95 leading-tight">
+            Brand
+          </div>
+          <div className="text-[11px] font-medium tracking-[0.18em] uppercase text-background/95 leading-tight">
+            Models
+          </div>
+          <div className="mt-1.5 text-[9px] tracking-wide text-background/55 font-light">
+            Create your own
+          </div>
+        </div>
+      </div>
+      <span className="text-[11px] tracking-wide text-muted-foreground/70 italic">Custom</span>
+    </Link>
+  );
+}
 
 function ModelCardItem({ model }: { model: { name: string; previewUrl: string } }) {
   const [hidden, setHidden] = useState(false);
@@ -26,7 +60,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
   );
 }
 
-function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: { name: string; previewUrl: string }[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
+function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelItem[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
   const tripled = [...items, ...items, ...items];
 
   return (
@@ -42,9 +76,11 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
           animation: `marquee-${direction} ${durationSeconds}s linear infinite`,
         }}
       >
-        {tripled.map((model, i) => (
-          <ModelCardItem key={`${model.name}-${i}`} model={model} />
-        ))}
+        {tripled.map((item, i) =>
+          item.kind === 'cta'
+            ? <BrandModelCTA key={`cta-${i}`} />
+            : <ModelCardItem key={`${item.name}-${i}`} model={item} />
+        )}
       </div>
     </div>
   );
