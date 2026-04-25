@@ -1,65 +1,45 @@
-# Fix `/blog` Mobile Layout
+## Goal
+Make `/blog` resilient when data is missing or filters return nothing — no broken/blank layout, no missing-image holes, and a clear error fallback.
 
-The Blog page has several mobile issues causing a poor experience on small viewports (≤440px):
+## Scope
+Single file: `src/pages/Blog.tsx`. No new pages, no data changes.
 
-## Issues Identified
+## Failure cases to cover
 
-1. **Featured card text overlaps the "Featured" badge** — the badge uses `absolute top-4 right-4`, but on mobile the meta row (category + date + read time) wraps and collides with it. Date is rendered in long form ("November 14, 2025") which forces ugly wrapping next to the badge.
-2. **Featured card padding too large on mobile** — `p-8` (32px) eats into a 440px viewport, leaving little room for content.
-3. **Featured image aspect ratio `2.2/1` is too tall-content / too wide** — fine on desktop, but combined with the heavy padded text block below, the card feels enormous on phones.
-4. **Card body padding `p-6 sm:p-7` is too dense** on small screens for the post grid.
-5. **Section vertical padding `py-20`** (80px top + 80px bottom) is excessive on mobile, pushing content down unnecessarily.
-6. **Category filter row** wraps into 3-4 lines on mobile (cramped). Should scroll horizontally on mobile instead, like a chip row.
-7. **Mid-page CTA padding `p-8`** also too large on mobile; heading wraps awkwardly.
-8. **H1 size `text-4xl`** (36px) is OK but `mb-12` spacing under header is too large on mobile.
+1. **No posts at all** (`blogPosts` empty) — currently renders just a header and an empty grid (looks broken).
+2. **Active category yields zero posts** — currently shows the filter row then nothing below it.
+3. **Featured/grid post missing `coverImage`** — currently the image block is skipped entirely, leaving an awkward text-only card. Need a branded fallback.
+4. **Render error inside the list** (bad date, missing field) — currently crashes the whole page. Wrap in an ErrorBoundary fallback so the rest of the page still renders.
 
-## Fix Plan — single file: `src/pages/Blog.tsx`
+## Changes
 
-### 1. Section + container
-- `py-20 sm:py-28` → `py-12 sm:py-20 lg:py-28`
-- Header `mb-12` → `mb-8 sm:mb-12`
+### 1. Empty state component (in-file)
+Add a small `BlogEmptyState` block used in two situations:
+- No posts in the data file → "We're working on new stories" + CTA back to `/` and "Try VOVV.AI free".
+- Filtered category has zero results → "No posts in {category} yet" + a "Show all posts" button that calls `setActiveCategory(null)`.
 
-### 2. Header
-- H1: `text-4xl sm:text-5xl` → `text-3xl sm:text-4xl lg:text-5xl`
-- Subtitle: `text-lg` → `text-base sm:text-lg`, add `px-2` for safety
+Visual: centered card matching the existing rounded-2xl/border-border aesthetic, uses `Sparkles` icon (already imported), `py-16 sm:py-20`, mobile-friendly full-width CTA.
 
-### 3. Category filters — horizontal scroll on mobile
-Replace `flex flex-wrap justify-center gap-2 mb-12` with a horizontally scrollable strip on mobile, centered wrap on `sm+`:
+### 2. Cover image fallback
+Extract a tiny `<CoverFallback />` rendered when `post.coverImage` is missing — a gradient block (`bg-gradient-to-br from-primary/15 via-accent/40 to-card`) with the post category badge centered and a faint Sparkles glyph. Used by both featured card and grid cards so cards stay uniform height.
+
+### 3. Safe date formatting
+Wrap `new Date(post.publishDate).toLocaleDateString(...)` in a helper `formatDate(iso)` that returns `''` (and hides the date row) if the date is invalid, instead of rendering "Invalid Date".
+
+### 4. ErrorBoundary fallback
+Wrap the featured card and the grid in the existing `src/components/ErrorBoundary.tsx`. Fallback UI: the same friendly empty-state card with a "Reload page" button. Keeps header + category chips + CTA visible even if a post throws.
+
+### 5. Conditional rendering flow
+```text
+if (sorted.length === 0)           → BlogEmptyState (no data variant)
+else if (filtered.length === 0)    → keep filters, show BlogEmptyState (no results variant)
+else                               → featured + grid (each wrapped in ErrorBoundary)
 ```
-<div className="-mx-4 px-4 sm:mx-0 sm:px-0 mb-8 sm:mb-12 overflow-x-auto sm:overflow-visible">
-  <div className="flex sm:flex-wrap sm:justify-center gap-2 w-max sm:w-auto">
-    ...buttons with `whitespace-nowrap shrink-0`
-  </div>
-</div>
-```
-Add `scrollbar-hide` style or `[&::-webkit-scrollbar]:hidden` utility.
 
-### 4. Featured card
-- Move "Featured" badge from absolute-positioned overlay to **inline at the top of the meta row** (or overlay on the image instead of the text block) — fixes overlap.
-- Wrapper: `mb-10` → `mb-8 sm:mb-10`
-- Inner padding: `p-8 sm:p-10` → `p-5 sm:p-8 lg:p-10`
-- Image aspect: `aspect-[2.2/1]` → `aspect-[16/10] sm:aspect-[2.2/1]` (taller/squarer on mobile reads better)
-- Move "Featured" badge to overlay the image top-right (`absolute top-3 right-3` on the image container) so it never collides with body text.
-- Date format: switch to short form on mobile (`Nov 14, 2025`) — use `month: 'short'`.
-- H2: `text-2xl sm:text-3xl` → `text-xl sm:text-2xl lg:text-3xl`
-- Excerpt: keep `text-sm`, add `line-clamp-3` to prevent overflow.
+## Out of scope
+- No changes to `blogPosts` data, routes, or `BlogPost.tsx`.
+- No new dependencies.
+- No layout/styling changes to working states from the previous mobile-fix pass.
 
-### 5. Post grid cards
-- Grid gap `gap-5` → `gap-4 sm:gap-5`
-- Card body padding `p-6 sm:p-7` → `p-4 sm:p-6`
-- H2: `text-lg` → `text-base sm:text-lg`
-- Meta row gap `gap-3` → `gap-2 sm:gap-3` (tighter)
-
-### 6. Mid-page CTA
-- Wrapper margin `mt-14` → `mt-10 sm:mt-14`
-- Padding `p-8 sm:p-10` → `p-6 sm:p-8 lg:p-10`
-- Heading: `text-xl sm:text-2xl` keep, but add `px-2` to allow breathing room.
-- Button: add `w-full sm:w-auto` so it fills nicely on mobile.
-
-## Out of Scope
-- No content/data changes to `blogPosts`.
-- No changes to `BlogPost.tsx` (individual article page) — only the `/blog` index. If user later reports the article page also has issues, address separately.
-- No changes to `LandingNav` / `LandingFooter` / `PageLayout`.
-
-## Files Edited
-- `src/pages/Blog.tsx` (only file touched)
+## Files
+- Edit: `src/pages/Blog.tsx`
