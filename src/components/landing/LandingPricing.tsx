@@ -485,43 +485,46 @@ export function LandingPricing() {
 
         {/* ── Team Comparison ────────────────────────────────────── */}
         <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Replaces a studio
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               One platform replaces your entire creative team
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               Stop hiring photographers, renting studios, and booking models. VOVV.AI handles it all.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border overflow-hidden">
+          <div className="rounded-2xl border border-[#f0efed] overflow-hidden bg-white">
             {/* Header */}
-            <div className="grid grid-cols-3 bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <div className="px-5 py-3">Role</div>
-              <div className="px-5 py-3 text-center">Traditional</div>
-              <div className="px-5 py-3 text-center text-primary">VOVV.AI</div>
+            <div className="grid grid-cols-3 bg-[#FAFAF8] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b7280]">
+              <div className="px-5 py-3.5">Role</div>
+              <div className="px-5 py-3.5 text-center">Traditional</div>
+              <div className="px-5 py-3.5 text-center text-[#1a1a2e]">VOVV.AI</div>
             </div>
             {TEAM_COMPARISON.map((row, i) => (
               <div
                 key={row.role}
-                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'} border-t border-border/50`}
+                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF8]/60'} border-t border-[#f0efed]`}
               >
-                <div className="px-5 py-3.5 font-medium text-foreground">{row.role}</div>
-                <div className="px-5 py-3.5 text-center text-muted-foreground flex items-center justify-center gap-1.5">
-                  <X className="w-3.5 h-3.5 text-destructive/60 shrink-0" />
+                <div className="px-5 py-3.5 font-medium text-[#1a1a2e]">{row.role}</div>
+                <div className="px-5 py-3.5 text-center text-[#6b7280] flex items-center justify-center gap-1.5">
+                  <X className="w-3.5 h-3.5 text-[#9ca3af] shrink-0" />
                   {row.traditional}
                 </div>
-                <div className="px-5 py-3.5 text-center font-medium text-primary flex items-center justify-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 shrink-0" />
+                <div className="px-5 py-3.5 text-center font-medium text-[#1a1a2e] flex items-center justify-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
                   {row.vovv}
                 </div>
               </div>
             ))}
             {/* Total */}
-            <div className="grid grid-cols-3 border-t-2 border-border bg-muted/30 font-semibold text-sm">
-              <div className="px-5 py-4 text-foreground">Total per shoot</div>
-              <div className="px-5 py-4 text-center text-muted-foreground">$4,500–22,000+</div>
-              <div className="px-5 py-4 text-center text-primary text-base font-bold">From $0/mo</div>
+            <div className="grid grid-cols-3 border-t border-[#f0efed] bg-[#FAFAF8] font-semibold text-sm">
+              <div className="px-5 py-4 text-[#1a1a2e]">Total per shoot</div>
+              <div className="px-5 py-4 text-center text-[#6b7280]">$4,500–22,000+</div>
+              <div className="px-5 py-4 text-center text-[#1a1a2e] text-base font-semibold">From $0/mo</div>
             </div>
           </div>
         </div>
