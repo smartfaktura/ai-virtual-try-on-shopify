@@ -17,7 +17,10 @@ export interface ProductPhotoCategory {
   subcategories: string[];
   /** Real number of scenes available across all subcategories in this group. */
   shotCount: number;
+  /** Legacy single preview — kept for backwards compatibility. */
   previewImage: string;
+  /** 3 on-subject preview ids used by the hub card collage. */
+  previewImages: string[];
   alt: string;
 }
 
