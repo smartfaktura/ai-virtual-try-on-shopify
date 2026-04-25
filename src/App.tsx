@@ -12,6 +12,7 @@ import { ProtectedRoute } from '@/components/app/ProtectedRoute';
 import { AppShell } from '@/components/app/AppShell';
 import { AppShellLoading } from '@/components/app/AppShellLoading';
 import { checkAppVersion } from '@/lib/versionCheck';
+import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
 import Landing from '@/pages/Landing';
 
 const TryShot = lazy(() => import('@/pages/TryShot'));
@@ -123,7 +124,7 @@ const App = () => {
     <AuthProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
+          <Suspense fallback={<BrandLoaderProgressGlyph fullScreen />}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
