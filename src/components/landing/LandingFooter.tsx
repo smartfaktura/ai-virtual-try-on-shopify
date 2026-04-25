@@ -99,7 +99,7 @@ export function LandingFooter() {
           </div>
 
           {/* Link columns */}
-          <div className="col-span-2 md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
+          <div className="col-span-2 md:col-span-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
             {Object.entries(footerLinks).map(([heading, links]) => (
               <div key={heading}>
                 <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 mb-4">
