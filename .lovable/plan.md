@@ -1,42 +1,76 @@
-# Fix /blog mobile layout
+# Blog Post — Editorial Aesthetic Refinement
 
-## What's broken on mobile (≤440px)
-1. **Horizontal page scroll** — the category filter row uses `-mx-4 px-4 ... overflow-x-auto` with `w-max` children. The negative margin escapes the parent's container, pushing the document past the viewport. There's no global `overflow-x-hidden`, so the entire page scrolls sideways.
-2. **Hero is too tall** — `pt-28 pb-20` (112/80px) eats most of the first screen on a 440×688 viewport before any content shows.
-3. **Headline crowding** — `text-[2.5rem]` (40px) with very tight `tracking-[-0.03em]` causes "Notes on AI photography" to break awkwardly and feel oversized at 360–414px widths.
-4. **Filter pills overflow visibly** as a horizontal strip even when categories fit, because of forced `w-max`.
-5. **Featured / grid card padding too generous** on mobile (`p-6` + tight tracking on `text-2xl` headings) — feels cramped and pushes content.
-6. **Dark CTA quirks** — extra `px-2` on inner heading/paragraph inside an already-padded `p-8` container; `w-full sm:w-auto` button on `Button asChild size="lg"` stretches edge-to-edge oddly with the rounded card.
-7. **Redundant `aspectRatio` prop** on ShimmerImage when the parent wrapper already sets the same aspect — no visual bug but cleans up rendering.
+The article container (`/blog/:slug`) currently mixes the new cream hero with **legacy blue-accented prose** (blue drop cap, blue numbered H2 underline, blue pill H3, blue blockquote, blue callouts, blue table headers, blue list markers). It looks loud and inconsistent with the rest of the site's "luxury restraint" cream/charcoal aesthetic.
 
-## Fixes (single file: `src/pages/Blog.tsx`)
+This plan tunes the in-article typography and small UI moments so the reading experience feels like a premium magazine — quiet, confident, content-first.
 
-- **Section spacing**: `pt-28 sm:pt-36 pb-20 sm:pb-28` → `pt-20 sm:pt-32 pb-16 sm:pb-24`. Add `overflow-x-hidden` on the outer `<section>` as a guard.
-- **Header**: 
-  - Headline: `text-[2rem] sm:text-5xl lg:text-[3.5rem]` (was `text-[2.5rem]`), `tracking-[-0.025em]` (slightly looser), `leading-[1.1]`, `px-2` so it never touches edges.
-  - Lead paragraph: `text-[15px] sm:text-lg` for better mobile readability.
-  - Margin: `mb-10 sm:mb-16`.
-- **Filter row**: drop the `-mx-4 px-4 overflow-x-auto` escape pattern. Use plain `flex flex-wrap justify-center gap-2 mb-8 sm:mb-12`. Pills wrap to multiple lines on mobile — clean, no horizontal scroll. Pills also get `px-3.5 py-1.5 text-[12px]` for compact mobile look.
-- **Featured card**: 
-  - Card padding `p-5 sm:p-10 lg:p-12` (was `p-6`).
-  - Heading `text-[1.375rem] sm:text-3xl lg:text-[2.25rem]` with `tracking-[-0.02em]` and `leading-[1.2]`.
-  - Meta row: keep but `text-[11px]` on mobile.
-  - Excerpt: `text-[14px] sm:text-base`, `mb-5 sm:mb-6`.
-- **Grid cards**:
-  - `grid gap-4 sm:gap-5 sm:grid-cols-2`.
-  - Card padding `p-4 sm:p-6`.
-  - Heading `text-[1.0625rem] sm:text-xl`, `tracking-[-0.01em]`.
-- **Dark CTA**:
-  - Outer `p-7 sm:p-14` (was `p-8`).
-  - Inner heading `text-[1.5rem] sm:text-[2rem]` — drop the inner `px-2` (parent already pads), keep `leading-[1.2]`.
-  - Paragraph: drop `px-2`, use `text-[14px] sm:text-base mb-7 sm:mb-8`.
-  - Button: `w-full sm:w-auto` is fine but wrap it in `flex justify-center` — current Button has the width applied but the `Link` text uses its own width inside.
-  - Margin top `mt-12 sm:mt-20`.
-- **ShimmerImage redundancy**: remove the duplicate `aspectRatio` prop on featured + grid (the parent `<div>` already enforces aspect). No visual regression.
+## Scope
+
+Files to edit:
+- `src/index.css` — `.blog-content` / `.blog-h2-numbered` / `.blog-h3-pill` / `.blog-blockquote` / `.blog-callout` / `.blog-table-wrapper` and friends
+- `src/pages/BlogPost.tsx` — hero polish, TOC chrome, related cards, mobile spacing
+- `src/components/app/BlogMarkdownImage.tsx` — caption support + softer frame
+
+## Design changes
+
+### 1. Body typography (calmer, more editorial)
+- Body paragraph: `1.0625rem` (was 1.125), line-height `1.8`, color `foreground/80`. Tighter rhythm, less "blog template".
+- Drop cap: switch from primary blue to **charcoal foreground**, lighter weight (700), slightly smaller (3rem), serif-ish via tighter tracking. Reads as editorial, not Medium.
+- Lists: bullet/number markers in `foreground/40` (no blue). List items at body size.
+- `strong`: keep dark, weight 600 (down from 700) — looks less shouty.
+- Links: underline offset `4px`, `text-decoration-thickness: 1px`, color `foreground` with `foreground/30` underline that darkens on hover. No primary blue.
+
+### 2. Headings
+- **H2**: drop the bottom border + gradient bar. Use a small neutral number prefix (`01 ·` in `foreground/40`, mono) inline with the title. Title weight 600, tracking `-0.025em`, size `1.875rem`. Generous top margin (`4rem`), shorter bottom (`1rem`). Gives clear section breaks without being decorative.
+- **H3**: remove pill background. Plain `1.25rem` weight 600 with a 2px charcoal left accent bar (`border-l-2 border-foreground/20 pl-3`). Quieter, more print-like.
+
+### 3. Blockquote
+- Remove blue gradient + blue border. New style: oversized hanging quote glyph in `foreground/15`, italic `1.25rem` text in `foreground/85`, no border, just generous left padding and top/bottom margins. Pure typography moment.
+
+### 4. Callouts (Key takeaway)
+- Replace blue tint with **cream `#FAFAF8` card on white**, `1px solid #f0efed`, lightbulb icon in `foreground/60`. Same restraint as the dark-CTA-adjacent sections elsewhere on the site. Bold "Key takeaway" label in foreground, body in muted-foreground.
+
+### 5. Tables
+- Header background: `foreground/[0.04]` with `foreground` text (was solid primary blue with white text). Row hover `foreground/[0.02]`. Border `#f0efed`. Looks like a real editorial data table.
+
+### 6. Inline code
+- Background `foreground/[0.06]`, color `foreground` (not primary). Mono.
+
+### 7. Hero header polish (`BlogPost.tsx`)
+- Tighten headline to `text-[2rem] sm:text-[2.75rem] lg:text-[3.25rem]` (slightly smaller — feels more refined; today's `3.5rem` is too big next to a small excerpt).
+- Add a thin separator dot row between author chip / date / read time on desktop using `text-foreground/30` `·` separators instead of three loose pills — cleaner.
+- Mobile: reduce `pt-28` → `pt-24`, headline tracking `-0.025em` (current `-0.03em` is too aggressive at small sizes).
+
+### 8. Hero image
+- Wrap in a softer cream frame (`bg-[#f5f4f1]` already correct), but constrain `max-h-[56vh]` and add a tiny caption slot below (uses `post.coverImageCaption` if present — falls back to nothing). Adds editorial credibility.
+
+### 9. Inline images (`BlogMarkdownImage.tsx`)
+- Add optional caption support from markdown alt text — render `<figcaption>` with small uppercase tracked label in `text-muted-foreground text-[11px]` below image, when alt is non-empty. Wrap rounded `1rem` (was `xl=0.75rem`) and add `border border-[#f0efed]`. Matches hero treatment.
+
+### 10. TOC card refinement
+- Switch from white card to a plain inline list (no card chrome) when reading on desktop — feels more print-magazine, less SaaS. Keep BookOpen eyebrow. Active item gets a 2px charcoal left rule instead of background fill.
+- On mobile (<sm), keep the current collapsed card pattern but reduce padding.
+
+### 11. Related posts
+- Remove category badge background tint (use plain uppercase eyebrow text). Title weight 500, slightly larger (`text-[15px]`). Card hover: lift shadow only, no border color change. Adds restraint.
+
+### 12. Dark CTA at bottom
+- Already aligned with site pattern. Minor: reduce top margin from `mt-14` → `mt-20` for breathing room after Topics section, and unify rounded corner to `rounded-[28px]` matching landing CTA.
+
+## Mobile considerations (440px viewport user is on)
+- Confirm headline doesn't overflow at `2rem`.
+- Reduce blockquote font to `1.0625rem` on mobile.
+- Numbered H2: stack number above title on `<sm` so long titles don't squeeze.
+- TOC: keep card variant on mobile (current behavior).
+- Dark CTA: already `w-full` button on mobile via the matching pattern — verify after edits.
+
+## What stays the same
+- Page structure, routing, SEO, JsonLd, reading progress bar, breadcrumb, tags row, related posts data flow, dark CTA copy.
+- Cream `#FAFAF8` background, `#f0efed` borders, white surface cards — fully preserved.
 
 ## Out of scope
-- No changes to `BlogPost.tsx`, `ShimmerImage`, data, or other landing pages.
-- No new images, no new components, no markdown changes.
+- No changes to `src/pages/Blog.tsx` (the listing page).
+- No changes to blog post content/data.
+- No new dependencies.
 
-## Files touched
-- `src/pages/Blog.tsx`
+After approval I'll implement these in `src/index.css`, `src/pages/BlogPost.tsx`, and `src/components/app/BlogMarkdownImage.tsx`.
