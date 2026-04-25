@@ -341,16 +341,33 @@ export function HomeTransformStrip() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Grid — all categories stay mounted; visibility toggles via CSS to avoid re-loading */}
         <div
           ref={ref}
           className={cn(
-            'grid grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4 transition-all duration-700',
+            'transition-all duration-700',
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
           )}
         >
-          {current.cards.map((card, i) => (
-            <GridCard key={`${current.id}-${card.label}-${i}`} card={card} hideOnMobile={i >= 9} eager={i < 9} />
+          {CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              className={cn(
+                'grid grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4',
+                active === cat.id ? 'block' : 'hidden',
+              )}
+              aria-hidden={active !== cat.id}
+            >
+              {visited.has(cat.id) &&
+                cat.cards.map((card, i) => (
+                  <GridCard
+                    key={`${cat.id}-${card.label}-${i}`}
+                    card={card}
+                    hideOnMobile={i >= 9}
+                    eager={cat.id === 'swimwear' && i < 9}
+                  />
+                ))}
+            </div>
           ))}
         </div>
 
