@@ -168,7 +168,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroCollage: [
       { subCategory: 'Apparel',    imageId: '1776664933175-rjlbn6', alt: 'AI fashion editorial studio look.' },
       { subCategory: 'Activewear', imageId: '1776192312181-3v0u0t', alt: 'AI activewear editorial floor stretch.' },
-      { subCategory: 'Swimwear',   imageId: '1776522810241-oh3lyd', alt: 'AI swimwear editorial resort pose.' },
+      { subCategory: 'Swimwear',   imageId: '1776246297359-aecrip', alt: 'AI swimwear editorial resort hero.' },
       { subCategory: 'Jackets',    imageId: '1776691912818-yiu2uq', alt: 'AI jacket editorial outerwear portrait.' },
     ],
   },
