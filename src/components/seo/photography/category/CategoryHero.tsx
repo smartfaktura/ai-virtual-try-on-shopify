@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl, getOptimizedSrcSet } from '@/lib/imageOptimization';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { SmartImage } from './SmartImage';
 
@@ -85,9 +85,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-2xl overflow-hidden bg-muted/30">
               <SmartImage
-                src={getOptimizedUrl(PREVIEW(page.heroImageId), { width: 960, quality: 60 })}
-                srcSet={getOptimizedSrcSet(PREVIEW(page.heroImageId), [480, 720, 960, 1280], 55)}
-                sizes="(min-width: 1024px) 50vw, 100vw"
+                src={getOptimizedUrl(PREVIEW(page.heroImageId), { quality: 60 })}
                 alt={page.heroAlt}
                 priority
               />
@@ -113,9 +111,7 @@ function HeroTile({
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
       <SmartImage
-        src={getOptimizedUrl(previewUrl, { width: 720, quality: 55 })}
-        srcSet={getOptimizedSrcSet(previewUrl, [360, 480, 720, 960], 55)}
-        sizes="(min-width: 1024px) 28vw, 50vw"
+        src={getOptimizedUrl(previewUrl, { quality: 60 })}
         alt={tile.alt}
         priority={priority}
       />

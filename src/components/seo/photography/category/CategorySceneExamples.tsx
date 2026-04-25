@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl, getOptimizedSrcSet } from '@/lib/imageOptimization';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 
@@ -27,9 +27,7 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
               className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
             >
               <SmartImage
-                src={getOptimizedUrl(PREVIEW(ex.imageId), { width: 480, quality: 50 })}
-                srcSet={getOptimizedSrcSet(PREVIEW(ex.imageId), [240, 360, 480, 720], 50)}
-                sizes="(min-width: 1024px) 25vw, 50vw"
+                src={getOptimizedUrl(PREVIEW(ex.imageId), { quality: 55 })}
                 alt={ex.alt}
                 imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
               />
