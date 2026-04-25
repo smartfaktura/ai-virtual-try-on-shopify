@@ -16,7 +16,13 @@ const footerLinks = {
     { label: 'Fashion Photography', to: '/ai-product-photography/fashion' },
     { label: 'Footwear Photography', to: '/ai-product-photography/footwear' },
     { label: 'Beauty & Skincare', to: '/ai-product-photography/beauty-skincare' },
+    { label: 'Fragrance', to: '/ai-product-photography/fragrance' },
+    { label: 'Jewelry', to: '/ai-product-photography/jewelry' },
     { label: 'Bags & Accessories', to: '/ai-product-photography/bags-accessories' },
+    { label: 'Home & Furniture', to: '/ai-product-photography/home-furniture' },
+    { label: 'Food & Beverage', to: '/ai-product-photography/food-beverage' },
+    { label: 'Supplements & Wellness', to: '/ai-product-photography/supplements-wellness' },
+    { label: 'Electronics & Gadgets', to: '/ai-product-photography/electronics-gadgets' },
     { label: 'All categories', to: '/ai-product-photography' },
   ],
   Company: [
