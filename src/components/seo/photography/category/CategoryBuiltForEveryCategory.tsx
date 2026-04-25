@@ -63,19 +63,19 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
             <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
           </div>
 
-          {/* Desktop: centered chip group inside a pill container */}
+          {/* Desktop: centered chip group — wraps cleanly when many chips */}
           <div className="hidden lg:flex justify-center">
-            <div className="inline-flex flex-wrap items-center justify-center gap-1 p-1 rounded-3xl bg-muted/60 border border-border/60 max-w-5xl">
+            <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl">
               {groups.map((g, idx) => (
                 <button
                   key={g.subCategory}
                   type="button"
                   onClick={() => setActiveIdx(idx)}
                   className={cn(
-                    'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap',
+                    'px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
                     activeIdx === idx
-                      ? 'bg-foreground text-background shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground',
+                      ? 'bg-foreground text-background border-foreground shadow-sm'
+                      : 'bg-muted/50 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted',
                   )}
                 >
                   {g.subCategory}
