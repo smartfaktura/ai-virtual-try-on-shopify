@@ -77,6 +77,10 @@ export interface CategoryPage {
   relatedCategories: string[];
   heroImageId: string;
   heroAlt: string;
+  /** Singular noun for the "One {noun} · Every shot" eyebrow on the BuiltFor section. */
+  heroNoun?: string;
+  /** Optional 4-image collage for multi-subcategory hero pages. */
+  heroCollage?: { subCategory: string; imageId: string; alt: string }[];
 }
 
 export const PREVIEW = (id: string) =>
