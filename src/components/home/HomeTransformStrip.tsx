@@ -86,8 +86,8 @@ const JACKETS_CARDS: GridCardData[] = [
 
 /* ── Footwear / Sneakers (real preview filenames) ── */
 const FOOTWEAR_CARDS: GridCardData[] = [
-  { label: 'Original',              src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/pair-display-shoes-sneakers-1776008063507.jpg?quality=60' },
-  { label: 'Pair Display',          src: PREVIEW('pair-display-shoes-sneakers-1776008063507') },
+  { label: 'Original',              src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/pair-display-shoes-sneakers-1776008063507.jpg?quality=60', isOriginal: true },
+  { label: 'Pair Display',          src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770356335-261bui.jpg?quality=75' },
   { label: 'In-Hand Studio',        src: PREVIEW('in-hand-studio-shoes-sneakers-1776008276313') },
   { label: 'Front View',            src: PREVIEW('front-view-shoes-sneakers-1776008034245') },
   { label: 'Geometric Grid Minimal',src: PREVIEW('1776770345914-cg8uyy') },
@@ -96,41 +96,23 @@ const FOOTWEAR_CARDS: GridCardData[] = [
   { label: 'Woven Chair Display',   src: PREVIEW('1776770352201-yu4wqm') },
   { label: 'Casual Lace Moment',    src: PREVIEW('1776770353784-010tv3') },
   { label: 'Hard Shadow Hero',      src: PREVIEW('hard-shadow-shoes-sneakers-1776008136691') },
-  { label: 'Studio Flex Pull',      src: PREVIEW('1776770536324-y8omd3') },
-  { label: 'Café Sneaker Moment',   src: PREVIEW('1776770529252-2efq00') },
-  { label: 'Sculpt Balance Edge',   src: PREVIEW('1776770351069-2defhq') },
+  { label: 'Sculpt Balance Edge',   src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770349853-t3x72w.jpg?quality=75' },
 ];
 
 /* ── Bags (bags-accessories — verified filenames) ── */
 const BAGS_CARDS: GridCardData[] = [
-  { label: 'Original',                   src: PREVIEW('1776749548695-11dzfk') },
+  { label: 'Original',                   src: PREVIEW('1776749548695-11dzfk'), isOriginal: true },
   { label: 'Sculptural Studio Hero',     src: PREVIEW('1776239449949-ygljai') },
-  { label: 'On-Shoulder Editorial',      src: PREVIEW('1776239446567-7mvigz') },
+  { label: 'On-Shoulder Editorial',      src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749773469-tqjesf.jpg?quality=75' },
   { label: 'Reclined Studio Editorial',  src: PREVIEW('1776749544620-sn4eh1') },
   { label: 'Architectural On-Body',      src: PREVIEW('1776239415973-p3m8bq') },
   { label: 'Closebody Portrait',         src: PREVIEW('1776239422417-a959mo') },
   { label: 'Couch Luxury Still',         src: PREVIEW('1776239439946-komlla') },
-  { label: 'Car Interior Still',         src: PREVIEW('1776239461462-cykje2') },
-  { label: 'Display Dome Editorial',     src: PREVIEW('1776239425806-v6xegn') },
+  { label: 'Car Interior Still',         src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749519182-i9w68k.jpg?quality=75' },
+  { label: 'Display Dome Editorial',     src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239462616-qs3ut8.jpg?quality=75' },
   { label: 'Mirror Selfie Luxury',       src: PREVIEW('1776239438796-99x31m') },
   { label: 'Lakeside Soft Minimalism',   src: PREVIEW('1776749534061-yvcf06') },
   { label: 'Sunshadow Outdoor',          src: PREVIEW('1776239457021-4ankwt') },
-];
-
-/* ── Jewelry (earrings only — sourced from product_image_scenes) ── */
-const JEWELRY_CARDS: GridCardData[] = [
-  { label: 'Earring Touch Portrait', src: PREVIEW('1776753278458-z7rmxg') },
-  { label: 'Side Profile Earrings',  src: PREVIEW('1776753261985-yi93vf') },
-  { label: 'Sunlit Ear Study',       src: PREVIEW('1776753256682-343bsf') },
-  { label: 'Window Shadow Still',    src: PREVIEW('1776753253052-fd9tdt') },
-  { label: 'Sky Bloom Profile',      src: PREVIEW('1776753259830-t0mrxv') },
-  { label: 'Hair Tucked Ear',        src: PREVIEW('1776753273285-bgevon') },
-  { label: 'Sunlit Skin Close-Up',   src: PREVIEW('1776753255640-wl0j9d') },
-  { label: 'Flash Glow Portrait',    src: PREVIEW('1776753275522-ljuq5p') },
-  { label: 'Neckline & Earrings',    src: PREVIEW('1776753755775-c36aay') },
-  { label: 'Shadow Gem Drop',        src: PREVIEW('1776753265588-dmlr31') },
-  { label: 'Ear Stack Study',        src: PREVIEW('1776753279560-dyelri') },
-  { label: 'Sunlit Beauty Moment',   src: PREVIEW('1776753754579-2rfq11') },
 ];
 
 const CATEGORIES = [
@@ -140,7 +122,6 @@ const CATEGORIES = [
   { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS },
   { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS },
   { id: 'bags',      label: 'Bags',      cards: BAGS_CARDS },
-  { id: 'jewelry',   label: 'Jewelry',   cards: JEWELRY_CARDS },
 ] as const;
 
 const ALL_CATEGORY_NAMES = [
