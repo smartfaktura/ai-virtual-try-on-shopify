@@ -2,8 +2,11 @@ import { Link } from 'react-router-dom';
 import type { CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 
 /**
- * SEO breadcrumb for category hub pages. Renders as a quiet inline strip
- * sitting just above the hero — no border, no band feel, fully crawlable.
+ * VOVV.AI signature breadcrumb.
+ *
+ * Editorial, restrained, locked to the hero column. Navy dot anchor,
+ * em-dash separators, color-only weight contrast (grey → navy on current).
+ * No band, no border — the page surface does the work.
  *
  * Pairs with the `BreadcrumbList` JSON-LD emitted in
  * `AIProductPhotographyCategory.tsx`.
@@ -11,28 +14,41 @@ import type { CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 export function CategoryBreadcrumbs({ page }: { page: CategoryPage }) {
   return (
     <nav aria-label="Breadcrumb" className="pt-24 lg:pt-28">
-      <div className="max-w-[1320px] mx-auto px-6 sm:px-8 lg:px-12 pb-2 lg:pb-3">
-        <ol className="flex items-center gap-2 text-[12.5px] tracking-[-0.005em]">
+      <div className="max-w-[1320px] mx-auto px-6 sm:px-8 lg:px-12 pb-4 lg:pb-5">
+        <ol className="flex items-center text-[12px] font-medium tracking-[-0.005em]">
+          {/* Anchor dot — VOVV "you are here" mark */}
+          <li aria-hidden className="mr-2.5 flex items-center">
+            <span className="block w-[4px] h-[4px] rounded-full bg-foreground" />
+          </li>
+
           <li>
             <Link
               to="/"
-              className="text-muted-foreground/60 hover:text-foreground transition-colors"
+              className="text-muted-foreground/60 hover:text-foreground hover:underline underline-offset-4 decoration-foreground/30 transition-colors duration-200"
             >
               Home
             </Link>
           </li>
-          <li aria-hidden className="text-muted-foreground/30 select-none">/</li>
+
+          <li aria-hidden className="mx-2.5 text-muted-foreground/25 select-none">
+            —
+          </li>
+
           <li>
             <Link
               to="/ai-product-photography"
-              className="text-muted-foreground/60 hover:text-foreground transition-colors"
+              className="text-muted-foreground/60 hover:text-foreground hover:underline underline-offset-4 decoration-foreground/30 transition-colors duration-200"
             >
               AI Product Photography
             </Link>
           </li>
-          <li aria-hidden className="text-muted-foreground/30 select-none">/</li>
+
+          <li aria-hidden className="mx-2.5 text-muted-foreground/25 select-none">
+            —
+          </li>
+
           <li>
-            <span aria-current="page" className="text-foreground/80">
+            <span aria-current="page" className="text-foreground">
               {page.groupName}
             </span>
           </li>
