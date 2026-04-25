@@ -1,44 +1,68 @@
-## 1. Add a "Models" section to `/home`
+## Problem
 
-**Recommended placement:** between `HomeTransformStrip` ("Built for every category") and `HomeCreateCards` ("What do you want to create first?").
+In the **"Built for every category"** section on `/home`, every time you click a category pill (Swimwear, Fragrance, Eyewear, Jackets, Footwear, Bags), the grid **flashes its skeleton shimmer and re-fades the images in** — even for categories you've already viewed. It feels like the page is "loading again."
 
-Rationale for the order:
-- `HomeTransformStrip` proves the visual range of the engine across product categories.
-- A models section right after answers the natural next question — *"who can wear/hold my product?"* — before pivoting to the broader "what you can create" cards.
-- It also breaks up two card-grid sections (category grid + create cards) with a horizontally-scrolling marquee, giving the page rhythm.
+### Why this happens
 
-**Implementation:** Create a thin Home wrapper `src/components/home/HomeModels.tsx` that re-uses the existing `ModelShowcaseSection` marquee internals but with Home-tuned copy and the cohesive `#FAFAF8` background (same as the rest of `/home`).
+In `src/components/home/HomeTransformStrip.tsx`:
 
-Copy adjustments to better match the Home page tone (Home is more benefit-led and conversational than the marketing landing page):
+1. Only the active category's cards are rendered (`current.cards.map(...)`). Switching categories **unmounts the previous `<GridCard>`s and mounts new ones**, so React creates fresh `<img>` elements every time.
+2. Inside `GridCard`, a `useEffect([card.src])` resets `loaded` to `false`, and the image starts at `opacity-0` until `onLoad` fires. Even when the browser has the image cached, this triggers a brief skeleton + 500ms fade-in.
+3. Although there is a `<link rel="preload">` warmer for all tiles, the browser still goes through `decode → onLoad`, so the React state still toggles back to "not loaded" on every switch.
 
-- Eyebrow: `Models · 40+ looks` (small uppercase, matches the eyebrow pattern used by `HomeTransformStrip` — "One photo · Every shot")
-- Title: `Every face. Every look. Every campaign.` (parallels the punchy, period-separated style of "Built for every category.")
-- Subtitle: `Pick from 40+ ready-to-shoot AI models — or create your own brand model in minutes.`
+The images themselves are fine — this is purely a UX/state issue.
 
-Two implementation options:
+## Fix — Keep all categories mounted, toggle visibility
 
-- **Option A (simpler, recommended):** Extract the marquee body of `ModelShowcaseSection` into a small internal `ModelsMarquee` component and have both `ModelShowcaseSection` (landing) and a new `HomeModels` wrapper render it with their own headings. Avoids duplicating the marquee/CTA logic.
-- **Option B (fastest, low-risk):** Just import `ModelShowcaseSection` directly into `Home.tsx`. Drawback: the heading copy will read "Professional models. Every look." which is fine but less aligned with Home's voice.
+Instead of swapping which cards render, **render every category's grid once** and just show/hide them with CSS. Once a tile has loaded, it stays loaded and there is zero shimmer when you tab back.
 
-I'll go with **Option A** so Home gets its own copy without code duplication.
+### Changes to `src/components/home/HomeTransformStrip.tsx`
 
-Then in `src/pages/Home.tsx`, insert `<HomeModels />` between `<HomeTransformStrip />` and `<HomeCreateCards />`.
+1. **Stop remounting on category switch.** Replace the single `current.cards.map(...)` grid with one grid per category, each wrapped in a container that uses `hidden`/`block` based on `active`. All `<img>` elements stay mounted in the DOM.
 
-## 2. Add 1 image to Footwear in "Built for every category"
+2. **Remove the `loaded`-reset effect in `GridCard`.** The `useEffect([card.src]) → setLoaded(false)` is no longer needed because `card.src` never changes for a given mounted card. This eliminates the shimmer flash on switch.
 
-In `src/components/home/HomeTransformStrip.tsx` → `FOOTWEAR_CARDS`, append one entry so the row goes from 9 → 10 visible cards (the desktop grid is 6 cols, last row has 4 = 10 total ✓; mobile shows first 9, so the 10th will be desktop-only just like the other categories).
+3. **Lazy-load non-active categories on first reveal.** To avoid a huge initial paint cost from rendering all ~70 images at once, track which categories have been "visited" in a `Set<CategoryId>` (seeded with `'swimwear'`). When a pill is clicked, add that id to the set; only render `<GridCard>`s for categories that have been visited at least once. After first visit they remain mounted forever, so subsequent switches are instant with no skeleton.
 
-New entry, inserted just before `Sculpt Balance Edge` (which is currently the last card):
+4. **Keep the existing preload warmer** — it still helps the very first visit to each tab feel fast.
 
-```ts
-{ label: 'Studio Hero',  src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770347820-s3qwmr.jpg?quality=75' },
+### Pseudocode sketch (technical)
+
+```tsx
+const [active, setActive] = useState<CategoryId>('swimwear');
+const [visited, setVisited] = useState<Set<CategoryId>>(new Set(['swimwear']));
+
+const handleSelect = (id: CategoryId) => {
+  setActive(id);
+  setVisited(prev => prev.has(id) ? prev : new Set(prev).add(id));
+};
+
+// In render, one grid per category, all kept mounted:
+{CATEGORIES.map(cat => (
+  <div key={cat.id} className={cn('grid grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4',
+                                  active === cat.id ? 'block' : 'hidden')}>
+    {visited.has(cat.id) && cat.cards.map((card, i) => (
+      <GridCard key={`${cat.id}-${i}`} card={card}
+                hideOnMobile={i >= 9}
+                eager={cat.id === 'swimwear' && i < 9} />
+    ))}
+  </div>
+))}
 ```
 
-Final Footwear count: 11 cards. Wait — current count is 11 already (Original + 10 others), and you said only 9 are visible. Let me re-check during implementation: the current array length is 11; mobile shows 9 (`hideOnMobile` when `i >= 9`), desktop shows all. If your screenshot only shows 9 on desktop, the cause is likely the grid layout; adding one more image brings the total to 12 (= 6×2 full rows on desktop, exactly matching Bags). I'll verify the count at edit time and end up with **12 cards total** for Footwear so it visually matches Bags' full 6×2 grid.
+And in `GridCard`, drop the reset effect:
 
-## Files touched
+```tsx
+// REMOVE:
+// useEffect(() => { setLoaded(false); }, [card.src]);
+```
 
-- `src/components/home/HomeModels.tsx` (new)
-- `src/components/landing/ModelShowcaseSection.tsx` (extract marquee into a shared sub-component, no visual change to landing page)
-- `src/pages/Home.tsx` (insert `<HomeModels />`)
-- `src/components/home/HomeTransformStrip.tsx` (add 1 footwear image)
+## Result
+
+- First click on a category: brief one-time skeleton while images load (expected).
+- Every subsequent click on the same category: **instant**, no shimmer, no fade-in — feels like a real tabbed gallery.
+- No layout / visual changes; only the switching behavior is fixed.
+
+## Files changed
+
+- `src/components/home/HomeTransformStrip.tsx` — restructure grid rendering and remove the `loaded` reset effect in `GridCard`.
