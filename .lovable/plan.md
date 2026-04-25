@@ -1,27 +1,44 @@
-Edit `src/components/home/HomeTransformStrip.tsx` only. All changes are within `FOOTWEAR_CARDS`, `BAGS_CARDS`, `JEWELRY_CARDS`, and the `CATEGORIES` array.
+## 1. Add a "Models" section to `/home`
 
-## 1. Footwear fixes
+**Recommended placement:** between `HomeTransformStrip` ("Built for every category") and `HomeCreateCards` ("What do you want to create first?").
 
-- Mark the 1st card as Original by adding `isOriginal: true` (currently missing the flag — that's why no badge shows).
-- Replace the 2nd card image (`Pair Display`) with the new URL: `…/scene-previews/1776770356335-261bui.jpg?quality=75`.
-- Remove the 11th card (`Studio Flex Pull` — `1776770536324-y8omd3`), leaving 10 cards total.
-  - Note: cards #11 and #12 are currently hidden on mobile (`hideOnMobile` triggers when `i >= 9`), so on mobile only 9 show; on desktop the grid is 6 columns × 2 rows = 12 slots. With 10 cards the last row has 4 items (still visually fine; matches user request "only 10 image per block").
-- Replace the (new) last card — currently `Sculpt Balance Edge` (`1776770351069-2defhq`) — with the new URL: `…/scene-previews/1776770349853-t3x72w.jpg?quality=75`.
+Rationale for the order:
+- `HomeTransformStrip` proves the visual range of the engine across product categories.
+- A models section right after answers the natural next question — *"who can wear/hold my product?"* — before pivoting to the broader "what you can create" cards.
+- It also breaks up two card-grid sections (category grid + create cards) with a horizontally-scrolling marquee, giving the page rhythm.
 
-## 2. Bags fixes
+**Implementation:** Create a thin Home wrapper `src/components/home/HomeModels.tsx` that re-uses the existing `ModelShowcaseSection` marquee internals but with Home-tuned copy and the cohesive `#FAFAF8` background (same as the rest of `/home`).
 
-- Mark the 1st card as Original by adding `isOriginal: true`.
-- Replace `1776239461462-cykje2` (Car Interior Still) → `1776749519182-i9w68k.jpg?quality=75`.
-- Replace `1776239425806-v6xegn` (Display Dome Editorial) → `1776239462616-qs3ut8.jpg?quality=75`.
-- Replace `1776239446567-7mvigz` (On-Shoulder Editorial) → `1776749773469-tqjesf.jpg?quality=75`.
+Copy adjustments to better match the Home page tone (Home is more benefit-led and conversational than the marketing landing page):
 
-## 3. Remove Jewelry
+- Eyebrow: `Models · 40+ looks` (small uppercase, matches the eyebrow pattern used by `HomeTransformStrip` — "One photo · Every shot")
+- Title: `Every face. Every look. Every campaign.` (parallels the punchy, period-separated style of "Built for every category.")
+- Subtitle: `Pick from 40+ ready-to-shoot AI models — or create your own brand model in minutes.`
 
-- Delete the `JEWELRY_CARDS` array.
-- Remove the `{ id: 'jewelry', label: 'Jewelry', cards: JEWELRY_CARDS }` entry from `CATEGORIES`.
+Two implementation options:
 
-## Technical notes
+- **Option A (simpler, recommended):** Extract the marquee body of `ModelShowcaseSection` into a small internal `ModelsMarquee` component and have both `ModelShowcaseSection` (landing) and a new `HomeModels` wrapper render it with their own headings. Avoids duplicating the marquee/CTA logic.
+- **Option B (fastest, low-risk):** Just import `ModelShowcaseSection` directly into `Home.tsx`. Drawback: the heading copy will read "Professional models. Every look." which is fine but less aligned with Home's voice.
 
-For the new full-URL images (which already include `?quality=75`), they'll go through `getOptimizedUrl` again with `quality: 60`. This works for the existing render-image URLs in the file (e.g. the current Footwear "Original" entry uses the same pattern). No helper changes required — keep them as raw strings in the card list.
+I'll go with **Option A** so Home gets its own copy without code duplication.
 
-No other files affected.
+Then in `src/pages/Home.tsx`, insert `<HomeModels />` between `<HomeTransformStrip />` and `<HomeCreateCards />`.
+
+## 2. Add 1 image to Footwear in "Built for every category"
+
+In `src/components/home/HomeTransformStrip.tsx` → `FOOTWEAR_CARDS`, append one entry so the row goes from 9 → 10 visible cards (the desktop grid is 6 cols, last row has 4 = 10 total ✓; mobile shows first 9, so the 10th will be desktop-only just like the other categories).
+
+New entry, inserted just before `Sculpt Balance Edge` (which is currently the last card):
+
+```ts
+{ label: 'Studio Hero',  src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770347820-s3qwmr.jpg?quality=75' },
+```
+
+Final Footwear count: 11 cards. Wait — current count is 11 already (Original + 10 others), and you said only 9 are visible. Let me re-check during implementation: the current array length is 11; mobile shows 9 (`hideOnMobile` when `i >= 9`), desktop shows all. If your screenshot only shows 9 on desktop, the cause is likely the grid layout; adding one more image brings the total to 12 (= 6×2 full rows on desktop, exactly matching Bags). I'll verify the count at edit time and end up with **12 cards total** for Footwear so it visually matches Bags' full 6×2 grid.
+
+## Files touched
+
+- `src/components/home/HomeModels.tsx` (new)
+- `src/components/landing/ModelShowcaseSection.tsx` (extract marquee into a shared sub-component, no visual change to landing page)
+- `src/pages/Home.tsx` (insert `<HomeModels />`)
+- `src/components/home/HomeTransformStrip.tsx` (add 1 footwear image)

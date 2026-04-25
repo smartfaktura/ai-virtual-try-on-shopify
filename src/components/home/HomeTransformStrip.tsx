@@ -96,6 +96,7 @@ const FOOTWEAR_CARDS: GridCardData[] = [
   { label: 'Woven Chair Display',   src: PREVIEW('1776770352201-yu4wqm') },
   { label: 'Casual Lace Moment',    src: PREVIEW('1776770353784-010tv3') },
   { label: 'Hard Shadow Hero',      src: PREVIEW('hard-shadow-shoes-sneakers-1776008136691') },
+  { label: 'Studio Hero',           src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770347820-s3qwmr.jpg?quality=75' },
   { label: 'Sculpt Balance Edge',   src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770349853-t3x72w.jpg?quality=75' },
 ];
 
