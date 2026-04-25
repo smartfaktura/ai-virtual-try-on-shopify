@@ -136,23 +136,28 @@ export function LandingPricing() {
   const enterprisePlan = pricingPlans.find((p) => p.isEnterprise);
 
   return (
-    <section id="pricing" className="py-20 sm:py-28">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="pricing" className="bg-[#FAFAF8]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 lg:pb-32">
 
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Start free. Automate as you grow. Content Calendar included on Growth and above.
+        <div className="text-center mb-14 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Pricing
+          </p>
+          <h1 className="text-[#1a1a2e] text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+            Simple pricing.
+            <br />
+            Real production output.
+          </h1>
+          <p className="mx-auto max-w-xl text-[#6b7280] text-lg leading-relaxed mb-10">
+            Start free. Scale when you're ready. Every plan unlocks the full visual library.
           </p>
 
-          <div className="inline-flex items-center p-1 rounded-full bg-muted">
+          <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#f0efed] shadow-[0_1px_3px_rgba(26,26,46,0.04)]">
             <button
               onClick={() => setAnnual(false)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
-                !annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                !annual ? 'bg-[#1a1a2e] text-white' : 'text-[#6b7280] hover:text-[#1a1a2e]'
               }`}
             >
               Monthly
@@ -160,11 +165,11 @@ export function LandingPricing() {
             <button
               onClick={() => setAnnual(true)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
-                annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                annual ? 'bg-[#1a1a2e] text-white' : 'text-[#6b7280] hover:text-[#1a1a2e]'
               }`}
             >
               Annual
-              <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${annual ? 'bg-white text-[#1a1a2e]' : 'bg-[#1a1a2e] text-white'}`}>
                 -20%
               </span>
             </button>
