@@ -1,45 +1,58 @@
-## Goal
-Make `/blog` resilient when data is missing or filters return nothing — no broken/blank layout, no missing-image holes, and a clear error fallback.
+# Replace old spinners with the brand loader
 
-## Scope
-Single file: `src/pages/Blog.tsx`. No new pages, no data changes.
+## What you're seeing in the screenshots
 
-## Failure cases to cover
+The grey-ring spinner in `IMG_6924.png` / `IMG_6925.png` is the **boot HTML fallback** baked into `index.html` (lines 86–89). It renders before React mounts, so it ignores all your nice `BrandLoader` components.
 
-1. **No posts at all** (`blogPosts` empty) — currently renders just a header and an empty grid (looks broken).
-2. **Active category yields zero posts** — currently shows the filter row then nothing below it.
-3. **Featured/grid post missing `coverImage`** — currently the image block is skipped entirely, leaving an awkward text-only card. Need a branded fallback.
-4. **Render error inside the list** (bad date, missing field) — currently crashes the whole page. Wrap in an ErrorBoundary fallback so the rest of the page still renders.
+There's also a second category of leftovers: route-level and in-page `Loader2 + animate-spin` usages that show the old spinner once React is running (App.tsx Suspense fallback, Settings, VideoHub, ProductImages, VideoGenerate, MobileUpload, Auth, etc.).
 
 ## Changes
 
-### 1. Empty state component (in-file)
-Add a small `BlogEmptyState` block used in two situations:
-- No posts in the data file → "We're working on new stories" + CTA back to `/` and "Try VOVV.AI free".
-- Filtered category has zero results → "No posts in {category} yet" + a "Show all posts" button that calls `setActiveCategory(null)`.
+### 1. Boot fallback in `index.html` (the one in your screenshots)
 
-Visual: centered card matching the existing rounded-2xl/border-border aesthetic, uses `Sparkles` icon (already imported), `py-16 sm:py-20`, mobile-friendly full-width CTA.
+Replace the inline grey-ring div with a brand-aligned static fallback that matches `BrandLoaderProgressGlyph` (the wordmark + sweep) — done in pure HTML/CSS so it works before JS loads. Same off-white background (`#faf9f7`), `VOVV.AI` wordmark, thin sweeping primary line underneath. No external assets, no flash when React mounts and swaps in the real component.
 
-### 2. Cover image fallback
-Extract a tiny `<CoverFallback />` rendered when `post.coverImage` is missing — a gradient block (`bg-gradient-to-br from-primary/15 via-accent/40 to-card`) with the post category badge centered and a faint Sparkles glyph. Used by both featured card and grid cards so cards stay uniform height.
+### 2. Route-level Suspense fallback (`src/App.tsx` line 126)
 
-### 3. Safe date formatting
-Wrap `new Date(post.publishDate).toLocaleDateString(...)` in a helper `formatDate(iso)` that returns `''` (and hides the date row) if the date is invalid, instead of rendering "Invalid Date".
+Replace the `animate-spin` div with `<BrandLoader fullScreen />` so route transitions match the rest of the app.
 
-### 4. ErrorBoundary fallback
-Wrap the featured card and the grid in the existing `src/components/ErrorBoundary.tsx`. Fallback UI: the same friendly empty-state card with a "Reload page" button. Keeps header + category chips + CTA visible even if a post throws.
+### 3. In-page spinners
 
-### 5. Conditional rendering flow
-```text
-if (sorted.length === 0)           → BlogEmptyState (no data variant)
-else if (filtered.length === 0)    → keep filters, show BlogEmptyState (no results variant)
-else                               → featured + grid (each wrapped in ErrorBoundary)
-```
+Audit and convert the remaining `Loader2` / `animate-spin` usages to brand-consistent loaders:
+
+- **Full-section / page loaders** (e.g. VideoHub list loader, ProductImages page boot, Auth submit overlay, MobileUpload progress) → use `<BrandLoader />` or `<DotPulse size="md" />` depending on context.
+- **Inline button spinners** (e.g. Settings "Open portal" button, VideoHub download button, "Load more" button) → use `<DotPulse size="sm" className="mr-2" />`. Keeps button height stable and inherits `currentColor`.
+- **Action-icon spins that aren't loaders** (e.g. Settings `RefreshCw` rotating during regenerate) → leave as-is. These are semantic action animations, not loading states.
+
+Files to touch (in-page edits):
+- `src/App.tsx`
+- `src/pages/Settings.tsx`
+- `src/pages/VideoHub.tsx`
+- `src/pages/VideoGenerate.tsx`
+- `src/pages/ProductImages.tsx`
+- `src/pages/Generate.tsx`
+- `src/pages/Freestyle.tsx`
+- `src/pages/Perspectives.tsx`
+- `src/pages/TryShot.tsx`
+- `src/pages/Auth.tsx` (if present in spinner list — confirm during edit)
+- `src/pages/MobileUpload.tsx`
+- `src/pages/Jobs.tsx`
+- `src/pages/CatalogGenerate.tsx`
+- `src/pages/BrandModels.tsx`
+- `src/pages/TextToProduct.tsx`
+- `src/pages/video/AnimateVideo.tsx`
+- `src/components/landing/SignupSlideUp.tsx`
+- `src/components/landing/FreestyleShowcaseSection.tsx`
+- `src/components/app/video/short-film/*` (3 files)
+
+Admin pages (`AdminModels`, `AdminTrendWatch`, `AdminStatus`, `AdminScenes`, `AdminSceneUpload`, `AdminSceneLibrary`, `AdminUgcBulkPreviewUpload`, `AdminUIAudit`, `admin/SceneUsage`, `admin/LoadingLab`) → leave as-is. They're internal tools and `LoadingLab` intentionally shows old vs new.
 
 ## Out of scope
-- No changes to `blogPosts` data, routes, or `BlogPost.tsx`.
-- No new dependencies.
-- No layout/styling changes to working states from the previous mobile-fix pass.
 
-## Files
-- Edit: `src/pages/Blog.tsx`
+- No design changes to the existing `BrandLoader` / `DotPulse` components themselves.
+- No changes to action-icon spins (`RefreshCw` mid-action).
+- No changes to admin tooling.
+
+## Result
+
+The spinner you screenshotted (the boot one) becomes the VOVV wordmark + sweep. Every user-facing route transition and in-app loading state uses brand loaders. No more grey rings on the user side of the app.
