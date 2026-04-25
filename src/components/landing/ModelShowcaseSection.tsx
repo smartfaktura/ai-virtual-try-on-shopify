@@ -86,7 +86,14 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
   );
 }
 
-export function ModelShowcaseSection() {
+interface ModelsMarqueeProps {
+  eyebrow?: (modelCount: number) => string;
+  title?: string;
+  subtitle?: string;
+  className?: string;
+}
+
+export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMarqueeProps = {}) {
   const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
 
   const { row1, row2, modelCount } = useMemo(() => {
@@ -94,7 +101,6 @@ export function ModelShowcaseSection() {
     const mid = Math.ceil(processed.length / 2);
     const wrap = (m: { name: string; previewUrl: string }): ModelItem => ({ kind: 'model', name: m.name, previewUrl: m.previewUrl });
 
-    // Insert a Brand Models CTA every N cards so one is always visible on screen.
     const INTERLEAVE = 6;
     const interleaveCta = (models: ModelItem[], startOffset = 0): ModelItem[] => {
       const out: ModelItem[] = [];
@@ -110,24 +116,27 @@ export function ModelShowcaseSection() {
     };
 
     const r1 = interleaveCta(processed.slice(0, mid).map(wrap), 0);
-    // Offset row 2 by 3 so its CTAs don't vertically align with row 1.
     const r2 = interleaveCta(processed.slice(mid).map(wrap), 3);
 
     return { row1: r1, row2: r2, modelCount: processed.length };
   }, [sortModels, applyOverrides, applyNameOverrides, filterHidden]);
 
+  const eyebrowText = eyebrow ? eyebrow(modelCount) : `${modelCount}+ AI Models`;
+  const titleText = title ?? 'Professional models. Every look.';
+  const subtitleText = subtitle ?? 'Diverse models across every body type, ethnicity, and age — ready for your next campaign.';
+
   return (
-    <section className="py-16 lg:py-32 bg-[#FAFAF8] overflow-hidden">
+    <section className={`py-16 lg:py-32 overflow-hidden ${className ?? 'bg-[#FAFAF8]'}`}>
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-12 lg:mb-16">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            {modelCount}+ AI Models
+            {eyebrowText}
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            Professional models. Every look.
+            {titleText}
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Diverse models across every body type, ethnicity, and age — ready for your next campaign.
+            {subtitleText}
           </p>
         </div>
       </div>
@@ -138,4 +147,8 @@ export function ModelShowcaseSection() {
       </div>
     </section>
   );
+}
+
+export function ModelShowcaseSection() {
+  return <ModelsMarquee />;
 }
