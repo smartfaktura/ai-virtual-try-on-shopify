@@ -1,56 +1,33 @@
-## Tighten and re-skin `/features/workflows`
+## Always show the Brand Models CTA on screen
 
-Five focused changes to `src/pages/features/WorkflowsFeature.tsx`.
+The CTA currently sits only at the very start of each marquee row. Since the row is tripled for the loop, the card only passes by every ~30+ models — so for stretches of the marquee the user sees no CTA at all (matches the screenshots).
 
-### 1. Flagship spotlight — fix step count + cut copy
+### Fix
+Interleave the CTA every **6 models** in each row. With 6–8 cards visible per screen at any given time, that guarantees at least one Brand Models card is always on screen.
 
-The wizard is **4 steps**, not 6 (matches `STEP_DEFS` in `ProductImages.tsx`: Product · Shots · Setup · Generate).
-
-- Replace `wizardSteps` array with the real 4 steps:
-  ```ts
-  const wizardSteps = [
-    { n: '01', label: 'Product',  icon: Package },
-    { n: '02', label: 'Shots',    icon: Layers },
-    { n: '03', label: 'Setup',    icon: Paintbrush },
-    { n: '04', label: 'Generate', icon: Sparkles },
-  ];
-  ```
-- Eyebrow above ladder: `The 4-step flow` (was 6).
-- Drop the long bullet list entirely. Replace heading + paragraph + 4 bullets with a leaner block:
-  - H2: `Your AI photo studio.` (drop "Product Images —")
-  - One-line sub: `Upload a product. Get a full editorial shoot — category-aware, brand-consistent, ready to ship.`
-  - Single CTA `Open the studio` → `/app/generate/product-images`
-- Removes `flagshipBullets`, `CheckCircle2`, `ClipboardCheck` (no longer needed).
-
-### 2. Toolkit — remove Creative Drops
-
-Delete the Creative Drops entry from `tools` (and the now-unused `CalendarClock` import). Grid becomes 9 tools, still 3-col responsive.
-
-### 3. Stats — update to real numbers, drop credit stat
+Add a small helper inside the `useMemo` in `ModelShowcaseSection.tsx`:
 
 ```ts
-const stats = [
-  { kpi: '~2 min',   label: 'From upload to first hero shot' },
-  { kpi: '35+',      label: 'Product categories supported' },
-  { kpi: '1500+',    label: 'Curated scenes in the library' },
-];
+const INTERLEAVE = 6;
+const interleaveCta = (models: ModelItem[]): ModelItem[] => {
+  const out: ModelItem[] = [{ kind: 'cta' }];
+  models.forEach((m, i) => {
+    out.push(m);
+    if ((i + 1) % INTERLEAVE === 0 && i !== models.length - 1) {
+      out.push({ kind: 'cta' });
+    }
+  });
+  return out;
+};
 ```
 
-### 4. Final CTA — dark hero block (matches homepage `HomeFinalCTA`)
+Build each row as `interleaveCta(processed.slice(...).map(wrap))` so:
+- Row 1 starts with CTA, then a CTA every 6 models.
+- Row 2 same pattern, but offset visually because `direction='right'` and a different list — keeps it from looking like a vertical column.
 
-Replace the white border-top section with a full-width dark block in the same `bg-[#1a1a2e]` style as the homepage final CTA, including the soft slate blur orbs:
+Also fix the model-count line: `{row1.length + row2.length - ctaCount}+ AI Models` (subtract the actual number of CTAs inserted, not just `2`). Compute `ctaCount = row1.filter(i => i.kind === 'cta').length + row2.filter(i => i.kind === 'cta').length`.
 
-- Section: `bg-[#1a1a2e]` with two blurred slate circles (opacity-10).
-- Eyebrow: `Get started` (white/50).
-- H2: `Your studio is one upload away.` (white).
-- Sub: `Start free. Generate your first hero shot in minutes.` (slate-400).
-- Primary CTA: white pill → `/auth` (`Start free`).
-- Secondary CTA: white-bordered ghost → `/pricing` (`See pricing`).
+### Optional polish
+None — the CTA card's visual style stays exactly as it is now (light, hairline border, readable text).
 
-Same exact aesthetic tokens as `HomeFinalCTA.tsx` so the page closes with the brand's signature dark moment.
-
-### 5. Cleanup
-
-Remove unused icon imports (`CalendarClock`, `CheckCircle2`, `ClipboardCheck`, `Camera` if unused) so lint stays clean.
-
-**Single file edited:** `src/pages/features/WorkflowsFeature.tsx`. Approve to apply.
+**Single file edited:** `src/components/landing/ModelShowcaseSection.tsx`. Approve to apply.

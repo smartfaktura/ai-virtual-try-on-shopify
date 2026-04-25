@@ -89,15 +89,31 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
 export function ModelShowcaseSection() {
   const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
 
-  const { row1, row2 } = useMemo(() => {
+  const { row1, row2, modelCount } = useMemo(() => {
     const processed = sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels]))));
     const mid = Math.ceil(processed.length / 2);
     const wrap = (m: { name: string; previewUrl: string }): ModelItem => ({ kind: 'model', name: m.name, previewUrl: m.previewUrl });
-    const cta: ModelItem = { kind: 'cta' };
-    return {
-      row1: [cta, ...processed.slice(0, mid).map(wrap)],
-      row2: [cta, ...processed.slice(mid).map(wrap)],
+
+    // Insert a Brand Models CTA every N cards so one is always visible on screen.
+    const INTERLEAVE = 6;
+    const interleaveCta = (models: ModelItem[], startOffset = 0): ModelItem[] => {
+      const out: ModelItem[] = [];
+      if (startOffset === 0) out.push({ kind: 'cta' });
+      models.forEach((m, i) => {
+        out.push(m);
+        const pos = i + 1 + startOffset;
+        if (pos % INTERLEAVE === 0 && i !== models.length - 1) {
+          out.push({ kind: 'cta' });
+        }
+      });
+      return out;
     };
+
+    const r1 = interleaveCta(processed.slice(0, mid).map(wrap), 0);
+    // Offset row 2 by 3 so its CTAs don't vertically align with row 1.
+    const r2 = interleaveCta(processed.slice(mid).map(wrap), 3);
+
+    return { row1: r1, row2: r2, modelCount: processed.length };
   }, [sortModels, applyOverrides, applyNameOverrides, filterHidden]);
 
   return (
@@ -105,7 +121,7 @@ export function ModelShowcaseSection() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-12 lg:mb-16">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            {row1.length + row2.length - 2}+ AI Models
+            {modelCount}+ AI Models
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
             Professional models. Every look.
