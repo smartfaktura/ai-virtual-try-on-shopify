@@ -77,19 +77,29 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 100 }: { item
   );
 }
 
-export function EnvironmentShowcaseSection() {
+interface EnvironmentsMarqueeProps {
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export function EnvironmentsMarquee({
+  eyebrow = '30+ scenes',
+  title = 'Every environment. One click.',
+  subtitle = 'Studio, lifestyle, editorial, streetwear — place your products in any setting instantly.',
+}: EnvironmentsMarqueeProps = {}) {
   return (
     <section className="py-16 lg:py-32 bg-background overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-12 lg:mb-16">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            30+ scenes
+            {eyebrow}
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            Every environment. One click.
+            {title}
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Studio, lifestyle, editorial, streetwear — place your products in any setting instantly.
+            {subtitle}
           </p>
         </div>
       </div>
@@ -100,4 +110,8 @@ export function EnvironmentShowcaseSection() {
       </div>
     </section>
   );
+}
+
+export function EnvironmentShowcaseSection() {
+  return <EnvironmentsMarquee />;
 }
