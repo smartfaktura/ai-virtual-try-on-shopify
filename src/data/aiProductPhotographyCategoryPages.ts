@@ -380,7 +380,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { label: 'Clean Packshot',        category: 'Essential Shots',      imageId: 'clean-packshot-fragrance-1776013150532', collectionLabel: 'Fragrance', subCategory: 'Essential Shots',      alt: 'AI perfume product photography example: clean essential packshot.' },
       { label: 'Near Face Hold',        category: 'Editorial',            imageId: 'near-face-hold-fragrance-1776013185169', collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: near-face hold editorial.' },
       { label: 'Repeated Shadow Grid',  category: 'Conceptual Editorial', imageId: 'repeated-shadow-grid-fragrance-1776013389735', collectionLabel: 'Fragrance', subCategory: 'Conceptual Editorial', alt: 'AI perfume product photography example: repeated shadow grid concept.' },
-      { label: 'Golden Hour Bottle',    category: 'Editorial',            imageId: '1776574228066-oyklfz',                  collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: golden hour fragrance editorial.' },
+      { label: 'Warm Neutral Studio',  category: 'Editorial',            imageId: '1776018040785-dq78y5',                  collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: warm neutral studio fragrance bottle.' },
       { label: 'Dark Luxury Bottle',    category: 'Editorial',            imageId: '1776018038709-gmt0eg',                  collectionLabel: 'Fragrance', subCategory: 'Editorial',            alt: 'AI perfume product photography example: dark luxury fragrance editorial.' },
     ],
     useCases: [
