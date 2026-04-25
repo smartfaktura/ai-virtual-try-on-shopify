@@ -25,7 +25,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Create product page images, flatlays, lifestyle visuals, on-model style shots, and fashion campaign content for clothing brands.',
     subcategories: ['Clothing', 'Dresses', 'Hoodies', 'Jeans', 'Jackets', 'Activewear', 'Swimwear', 'Lingerie'],
-    previewImage: PREVIEW('1776689318257-yahkye'),
+    previewImage: PREVIEW('1776691909999-ra3rym'),
     alt: 'AI product photography example for fashion and clothing brands.',
   },
   {
@@ -35,7 +35,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Create shoe product photos, sneaker launch visuals, boot scenes, high heel imagery, and ad-ready footwear content.',
     subcategories: ['Shoes', 'Sneakers', 'Boots', 'High Heels'],
-    previewImage: PREVIEW('1776770347820-s3qwmr'),
+    previewImage: PREVIEW('1776770345914-cg8uyy'),
     alt: 'AI footwear product photography example showing a shoe in a lifestyle scene.',
   },
   {
@@ -45,7 +45,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Generate skincare product images, clean beauty visuals, spa-style lifestyle scenes, and campaign-ready cosmetic content.',
     subcategories: ['Skincare', 'Cosmetics', 'Makeup', 'Lipsticks', 'Serums', 'Creams'],
-    previewImage: PREVIEW('1776018015756-3xfquh'),
+    previewImage: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014'),
     alt: 'AI skincare product photography example showing a serum bottle in a clean beauty setup.',
   },
   {
@@ -55,7 +55,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Create luxury perfume visuals, fragrance bottle photography, product page images, and campaign-ready scent stories.',
     subcategories: ['Perfume Bottles', 'Fragrance Boxes', 'Gift Sets', 'Glass Bottles'],
-    previewImage: PREVIEW('1776018020221-aehe8n'),
+    previewImage: PREVIEW('near-face-hold-fragrance-1776013185169'),
     alt: 'AI fragrance product photography example showing a perfume bottle in a luxury campaign scene.',
   },
   {
@@ -65,7 +65,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Create elegant jewelry product photos, macro detail shots, model-style visuals, and luxury campaign imagery.',
     subcategories: ['Rings', 'Necklaces', 'Earrings', 'Bracelets'],
-    previewImage: PREVIEW('1776102204479-9rlc0n'),
+    previewImage: PREVIEW('1776102176417-iih747'),
     alt: 'AI jewelry product photography example showing a ring in a close-up editorial scene.',
   },
   {
@@ -75,7 +75,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Generate handbag visuals, accessory product photos, lifestyle scenes, and luxury campaign content for fashion brands.',
     subcategories: ['Bags', 'Handbags', 'Backpacks', 'Wallets', 'Belts', 'Scarves', 'Hats', 'Eyewear', 'Watches'],
-    previewImage: PREVIEW('1776239449949-ygljai'),
+    previewImage: PREVIEW('1776856613338-h5sdvq'),
     alt: 'AI bag and accessory product photography example showing a handbag in a luxury editorial scene.',
   },
   {
@@ -85,7 +85,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Place home decor and furniture products into realistic interiors, styled rooms, catalog visuals, and lifestyle scenes.',
     subcategories: ['Home Decor', 'Furniture', 'Vases', 'Candles', 'Lighting', 'Tables', 'Chairs', 'Sofas'],
-    previewImage: PREVIEW('1776688413055-z73arv'),
+    previewImage: PREVIEW('1776856604775-kxc92a'),
     alt: 'AI home and furniture product photography example showing decor in a styled interior scene.',
   },
   {
@@ -95,7 +95,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Create packaged food visuals, beverage product photos, snack scenes, bottle images, can visuals, and CPG campaign content.',
     subcategories: ['Food', 'Snacks', 'Beverages', 'Bottles', 'Cans', 'Jars', 'Packaged Food'],
-    previewImage: PREVIEW('1776018027926-ua03bd'),
+    previewImage: PREVIEW('1776596629281-anqgf5'),
     alt: 'AI food and beverage product photography example showing packaged products in a lifestyle scene.',
   },
   {
@@ -105,7 +105,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Create supplement product photos, wellness lifestyle scenes, fitness visuals, vitamin imagery, and clean product page content.',
     subcategories: ['Supplements', 'Vitamins', 'Protein', 'Wellness Products', 'Capsules', 'Powders'],
-    previewImage: PREVIEW('1776018039712-1hifzr'),
+    previewImage: PREVIEW('1776856607319-693vtg'),
     alt: 'AI supplements and wellness product photography example showing a vitamin bottle in a clean wellness scene.',
   },
   {
@@ -115,7 +115,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     description:
       'Generate tech product photos, gadget visuals, device launch content, desk setups, and clean e-commerce imagery.',
     subcategories: ['Electronics', 'Gadgets', 'Tech Devices', 'Phone Cases', 'Headphones', 'Smart Devices'],
-    previewImage: PREVIEW('1776102181320-jisnae'),
+    previewImage: PREVIEW('1776856609329-7k8ow1'),
     alt: 'AI electronics product photography example showing a gadget in a clean desk setup.',
   },
 ];

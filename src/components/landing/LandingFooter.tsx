@@ -4,6 +4,7 @@ import { Instagram, Facebook } from 'lucide-react';
 const footerLinks = {
   Product: [
     { label: 'Visual Studio', to: '/features/workflows' },
+    { label: 'AI Product Photography', to: '/ai-product-photography' },
     { label: 'Pricing', to: '/pricing' },
     { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
     { label: 'Brand Profiles', to: '/features/brand-profiles' },
