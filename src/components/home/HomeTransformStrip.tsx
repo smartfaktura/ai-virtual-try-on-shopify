@@ -376,18 +376,20 @@ export function HomeTransformStrip() {
           <p className="text-sm text-foreground/70 tracking-wide">
             35+ categories · 1000+ scenes · one upload
           </p>
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <Button asChild size="lg" className="rounded-full px-8 text-base">
-              <Link to="/auth">
-                Try it on my product
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-full px-8 text-base">
-              <Link to="/product-visual-library">
-                Browse the visual library
-              </Link>
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/auth"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
+            >
+              Try it on my product
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/product-visual-library"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
+            >
+              Browse the visual library
+            </Link>
           </div>
         </div>
       </div>
