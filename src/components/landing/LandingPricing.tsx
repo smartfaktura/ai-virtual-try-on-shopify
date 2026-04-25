@@ -310,11 +310,14 @@ export function LandingPricing() {
 
         {/* ── Compare every feature ──────────────────────────────── */}
         <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Compare plans
+            </p>
+            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               Compare every feature
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               Every plan, side-by-side. Pick the one that matches your output.
             </p>
           </div>
