@@ -58,7 +58,7 @@ export default function AIProductPhotography() {
         <PhotographyHero />
         <PhotographyCategoryChooser />
         <PhotographyVisualSystem />
-        <HomeModels />
+        <HomeModels className="bg-background" />
         <PhotographyHowItWorks />
         <PhotographySceneExamples />
         <PhotographyUseCases />

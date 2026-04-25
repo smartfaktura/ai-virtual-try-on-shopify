@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom';
 import {
-  ShoppingBag, Megaphone, Instagram, Mail, Calendar, Rocket, LayoutGrid, Sparkles,
+  ShoppingBag, Megaphone, Instagram, Mail, Calendar, Rocket, LayoutGrid, Sparkles, ArrowRight,
 } from 'lucide-react';
 
 const useCases = [
@@ -26,14 +27,29 @@ export function PhotographyUseCases() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
           {useCases.map(({ title, text, Icon }) => (
-            <div key={title} className="bg-white rounded-2xl border border-[#f0efed] shadow-sm p-5 transition-all hover:-translate-y-0.5 hover:shadow-md">
-              <Icon size={20} className="text-primary mb-3" strokeWidth={1.75} />
-              <h3 className="text-[#1a1a2e] text-base font-semibold mb-1">{title}</h3>
+            <div
+              key={title}
+              className="bg-white rounded-3xl border border-[#f0efed] shadow-sm p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white flex items-center justify-center mb-4 shadow-sm">
+                <Icon size={18} strokeWidth={1.75} />
+              </div>
+              <h3 className="text-[#1a1a2e] text-base font-semibold mb-1.5 tracking-tight">{title}</h3>
               <p className="text-[#6b7280] text-sm leading-relaxed">{text}</p>
             </div>
           ))}
+        </div>
+
+        <div className="flex justify-center mt-12 lg:mt-16">
+          <Link
+            to="/product-visual-library"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1a1a2e] hover:gap-2.5 transition-all"
+          >
+            See all 1600+ scenes
+            <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
     </section>

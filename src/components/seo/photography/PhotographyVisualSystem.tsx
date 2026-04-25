@@ -65,7 +65,7 @@ export function PhotographyVisualSystem() {
           {items.map(({ title, text, Icon, imageIds }) => (
             <div
               key={title}
-              className="group bg-white rounded-3xl border border-[#f0efed] shadow-sm overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg"
+              className="group bg-white rounded-3xl border border-[#f0efed] shadow-sm overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
             >
               {/* 3 vertical thumbnails side-by-side — matches catalog ratio */}
               <div className="relative aspect-[5/3] bg-muted/30 p-1.5">
@@ -87,8 +87,8 @@ export function PhotographyVisualSystem() {
                 </div>
               </div>
               <div className="p-5 lg:p-6 flex items-start gap-3">
-                <div className="w-9 h-9 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                  <Icon size={16} strokeWidth={1.75} />
+                <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#1a1a2e] text-white flex items-center justify-center shadow-sm">
+                  <Icon size={18} strokeWidth={1.75} />
                 </div>
                 <div>
                   <h3 className="text-[#1a1a2e] text-base font-semibold leading-tight">{title}</h3>

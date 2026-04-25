@@ -38,7 +38,7 @@ export function PhotographyComparison() {
             <ul className="space-y-3">
               {traditional.map((t) => (
                 <li key={t} className="flex items-start gap-3 text-[#374151] text-[15px]">
-                  <span className="mt-0.5 w-5 h-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+                  <span className="mt-0.5 w-5 h-5 rounded-full bg-foreground/5 text-foreground/40 flex items-center justify-center shrink-0">
                     <X size={12} strokeWidth={2.5} />
                   </span>
                   <span>{t}</span>
