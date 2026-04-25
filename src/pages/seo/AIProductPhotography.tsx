@@ -6,6 +6,7 @@ import { LandingFooter } from '@/components/landing/LandingFooter';
 import { PhotographyHero } from '@/components/seo/photography/PhotographyHero';
 import { PhotographyCategoryChooser } from '@/components/seo/photography/PhotographyCategoryChooser';
 import { PhotographyVisualSystem } from '@/components/seo/photography/PhotographyVisualSystem';
+import { HomeModels } from '@/components/home/HomeModels';
 import { PhotographyHowItWorks } from '@/components/seo/photography/PhotographyHowItWorks';
 import { PhotographySceneExamples } from '@/components/seo/photography/PhotographySceneExamples';
 import { PhotographyUseCases } from '@/components/seo/photography/PhotographyUseCases';
@@ -57,6 +58,7 @@ export default function AIProductPhotography() {
         <PhotographyHero />
         <PhotographyCategoryChooser />
         <PhotographyVisualSystem />
+        <HomeModels />
         <PhotographyHowItWorks />
         <PhotographySceneExamples />
         <PhotographyUseCases />
