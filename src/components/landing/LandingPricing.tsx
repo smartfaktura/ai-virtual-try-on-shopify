@@ -309,7 +309,7 @@ export function LandingPricing() {
         </p>
 
         {/* ── Compare every feature ──────────────────────────────── */}
-        <div className="mt-20 max-w-6xl mx-auto">
+        <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
               Compare every feature
@@ -481,7 +481,7 @@ export function LandingPricing() {
         </div>
 
         {/* ── Team Comparison ────────────────────────────────────── */}
-        <div className="mt-24 max-w-4xl mx-auto">
+        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
               One platform replaces your entire creative team
@@ -524,7 +524,7 @@ export function LandingPricing() {
         </div>
 
         {/* ── Platform Features Grid ─────────────────────────────── */}
-        <div className="mt-24 max-w-6xl mx-auto">
+        <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
               Everything you get with VOVV.AI
@@ -551,12 +551,12 @@ export function LandingPricing() {
         </div>
 
         {/* ── Cost Comparison ────────────────────────────────────── */}
-        <div className="mt-24 max-w-4xl mx-auto">
+        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
           <CompetitorComparison />
         </div>
 
         {/* ── How Credits Work ───────────────────────────────────── */}
-        <div className="mt-24 max-w-4xl mx-auto">
+        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
               How credits work
@@ -583,7 +583,7 @@ export function LandingPricing() {
         </div>
 
         {/* ── FAQ ────────────────────────────────────────────────── */}
-        <div className="mt-24 max-w-3xl mx-auto">
+        <div className="mt-24 lg:mt-32 max-w-3xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
               Frequently Asked Questions
