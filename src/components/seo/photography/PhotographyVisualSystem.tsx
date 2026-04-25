@@ -4,13 +4,45 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 const PREVIEW = (id: string) =>
   `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
+// 3 on-topic vertical previews per output type — keeps the section visually
+// consistent with the rest of the catalog (which is vertical editorial imagery).
 const items = [
-  { title: 'Product page',   text: 'Clean PDP hero shots.',                Icon: ShoppingBag, imageId: '1776770347820-s3qwmr' },
-  { title: 'Lifestyle',      text: 'Editorial real-world scenes.',         Icon: Sparkles,    imageId: '1776664924644-8pmju4' },
-  { title: 'Social content', text: 'IG, TikTok & Pinterest ready.',        Icon: Instagram,   imageId: '1776691906436-3fe7l9' },
-  { title: 'Paid ads',       text: 'High-CTR Meta & Google creative.',     Icon: Megaphone,   imageId: '1776102204479-9rlc0n' },
-  { title: 'Detail shots',   text: 'Macro texture & craftsmanship.',       Icon: ZoomIn,      imageId: '1776243905045-8aw72b' },
-  { title: 'Campaigns',      text: 'Seasonal launches & brand stories.',   Icon: Camera,      imageId: '1776524132929-q8upyp' },
+  {
+    title: 'Product page',
+    text: 'Clean PDP hero shots.',
+    Icon: ShoppingBag,
+    imageIds: ['1776770347820-s3qwmr', '1776841027943-vetumj', '1776664933175-rjlbn6'],
+  },
+  {
+    title: 'Lifestyle',
+    text: 'Editorial real-world scenes.',
+    Icon: Sparkles,
+    imageIds: ['1776664924644-8pmju4', '1776524131703-gvh4bb', '1776524128011-dcnlpo'],
+  },
+  {
+    title: 'Social content',
+    text: 'IG, TikTok & Pinterest ready.',
+    Icon: Instagram,
+    imageIds: ['1776691906436-3fe7l9', '1776102190563-dioke2', '1776691907477-77vt46'],
+  },
+  {
+    title: 'Paid ads',
+    text: 'High-CTR Meta & Google creative.',
+    Icon: Megaphone,
+    imageIds: ['1776102204479-9rlc0n', '1776606017719-zzhgy7', '1776239826550-uaopmt'],
+  },
+  {
+    title: 'Detail shots',
+    text: 'Macro texture & craftsmanship.',
+    Icon: ZoomIn,
+    imageIds: ['1776243905045-8aw72b', '1776244136599-8gw62e', '1776243682026-h1itvm'],
+  },
+  {
+    title: 'Campaigns',
+    text: 'Seasonal launches & brand stories.',
+    Icon: Camera,
+    imageIds: ['1776524132929-q8upyp', '1776574228066-oyklfz', '1776018020221-aehe8n'],
+  },
 ];
 
 export function PhotographyVisualSystem() {
@@ -30,19 +62,29 @@ export function PhotographyVisualSystem() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
-          {items.map(({ title, text, Icon, imageId }) => (
+          {items.map(({ title, text, Icon, imageIds }) => (
             <div
               key={title}
               className="group bg-white rounded-3xl border border-[#f0efed] shadow-sm overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg"
             >
-              <div className="relative aspect-[16/10] bg-muted/30 overflow-hidden">
-                <img
-                  src={getOptimizedUrl(PREVIEW(imageId), { quality: 60 })}
-                  alt={`${title} — AI product photography example`}
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                />
+              {/* 3 vertical thumbnails side-by-side — matches catalog ratio */}
+              <div className="relative aspect-[5/3] bg-muted/30 p-1.5">
+                <div className="absolute inset-1.5 grid grid-cols-3 gap-1.5">
+                  {imageIds.map((id, idx) => (
+                    <div
+                      key={`${id}-${idx}`}
+                      className="relative overflow-hidden rounded-xl bg-muted/40"
+                    >
+                      <img
+                        src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
+                        alt={`${title} — AI product photography example ${idx + 1}`}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="p-5 lg:p-6 flex items-start gap-3">
                 <div className="w-9 h-9 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">

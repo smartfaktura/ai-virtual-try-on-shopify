@@ -24,13 +24,14 @@ export function PhotographySceneExamples() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Scene library
+            Scene library · 1600+ ready-to-use scenes
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            1600+ scenes
+            Every scene your store needs — already styled.
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Studio, lifestyle, editorial, seasonal — one click.
+            Studio, lifestyle, editorial, streetwear, and seasonal scenes built for e-commerce.
+            Pick one, drop in your product, generate brand-ready visuals in minutes.
           </p>
         </div>
 

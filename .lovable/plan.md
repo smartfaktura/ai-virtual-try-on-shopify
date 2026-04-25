@@ -1,32 +1,33 @@
-Strict re-audit of `/ai-product-photography` against the 10 contra-questions. Most checks pass; below are the issues found and the targeted fixes I'll make.
+Three improvements to `/ai-product-photography`:
 
-## Audit results
+## 1. Fix `PhotographyVisualSystem` aspect ratio — vertical, 3 images per card
 
-1. **Crawlability** — Pass. All 10 cards in `PhotographyCategoryChooser` use real `<Link to=…>` → `<a href>`. No tabs/filters/JS gating.
-2. **Sitemap + canonical consistency** — Pass. Slugs in `aiProductPhotographyCategories.ts`, sitemap.xml, route paths and canonicals match exactly. All `https`, no trailing slashes, no www mismatch.
-3. **Schema validity** — Pass. Hub renders one BreadcrumbList, one SoftwareApplication, one FAQPage. FAQ questions are visible in the on-page accordion and match JSON-LD exactly. No duplicates on this route.
-4. **Content uniqueness** — Pass. Hero marquee, VisualSystem (6 outputs with images), HowItWorks, SceneExamples (10 scenes), Comparison, UseCases (8), FAQ (7), final CTA. Not thin.
-5. **Internal anchor text** — **Weak.** Cards say "Explore Fashion" instead of a descriptive, keyword-aligned phrase. Fix.
-6. **Mobile UX** — **Weak.** On mobile the chooser is single-column with full descriptions = 10 tall cards = directory feel. Fix to 2-column denser layout on mobile.
-7. **Image SEO** — Pass. Alts are natural and category-specific.
-8. **Performance / CLS** — Pass. All chooser/scene images are lazy + async, aspect-ratio containers prevent CLS, quality-only optimization (no width crop).
-9. **Footer strategy** — **Improvement worth making.** Add a small "Solutions" column with 4 strongest category links + an "All categories" link. Keeps it useful without becoming a link dump.
-10. **Conversion clarity** — Pass. Primary CTA "Create your first visuals free" + secondary "Explore categories" anchor link in hero, repeated in HowItWorks and FinalCTA.
+The "One photo · Many outputs" grid currently shows ONE horizontal `aspect-[16/10]` image per card. Since the catalog is vertical editorial imagery, those images get cropped/letterboxed and feel off.
 
-## Fixes I'll apply
+**Change:** make each card a **horizontal collage of 3 vertical thumbnails** stacked side-by-side (same pattern used by the category chooser cards), using a `aspect-[3/2]` outer container with 3 vertical tiles inside (`aspect-[3/4]` each). Pick 3 on-topic preview images per output type from the live catalog.
 
-### A. `src/components/seo/photography/PhotographyCategoryChooser.tsx`
-- Mobile layout: change `grid-cols-1 sm:grid-cols-2` → `grid-cols-2 lg:grid-cols-3`. Tighter gaps and padding on small screens. Hide the long description on mobile (keep title + collage + CTA) so the section feels scannable instead of like a directory.
-- Anchor text: render descriptive SEO anchor on desktop ("Explore AI fashion product photography"), keep short "Explore Fashion" label visually on mobile, and apply the descriptive text as `aria-label` and `title` on every card so it's the link's accessible name everywhere.
-- Hide "{shotCount}+ shots" badge on mobile to reduce noise; keep on sm+.
+File: `src/components/seo/photography/PhotographyVisualSystem.tsx`
+- Replace single `imageId` per item with `imageIds: string[]` (3 ids).
+- Replace the single `<img>` block with a 3-column `grid grid-cols-3` of small vertical cards.
+- Adjust outer aspect to `aspect-[5/3]` so the three vertical tiles sit nicely.
 
-### B. `src/components/landing/LandingFooter.tsx`
-- Add a new "Solutions" column with 4 strongest category links + "All categories":
-  - Fashion Photography → /ai-product-photography/fashion
-  - Footwear Photography → /ai-product-photography/footwear
-  - Beauty & Skincare → /ai-product-photography/beauty-skincare
-  - Bags & Accessories → /ai-product-photography/bags-accessories
-  - All categories → /ai-product-photography
-- Keep the existing "AI Product Photography" entry inside Product so the hub still appears in two natural contexts without becoming a dump.
+## 2. Add a Models section on the page
 
-No other files change. No content/feature regressions.
+Use the existing `HomeModels` component (which renders `ModelsMarquee`) directly — same component already used on the homepage, so it stays in sync.
+
+File: `src/pages/seo/AIProductPhotography.tsx`
+- Import `HomeModels` from `@/components/home/HomeModels`.
+- Place it between `PhotographyVisualSystem` and `PhotographyHowItWorks` so the flow is:
+  Hero → Categories → One photo / Many outputs → Models → How it works → Scenes → Use cases → Comparison → FAQ → CTA.
+
+## 3. Improve `PhotographySceneExamples` copy
+
+Replace the weak heading with a category-aware, value-driven block.
+
+File: `src/components/seo/photography/PhotographySceneExamples.tsx`
+
+- Eyebrow: `Scene library · 1600+ ready-to-use scenes`
+- H2: `Every scene your store needs — already styled.`
+- Subhead: `Studio, lifestyle, editorial, streetwear, and seasonal scenes built for e-commerce. Pick one, drop in your product, generate brand-ready visuals in minutes.`
+
+No data-model changes outside `PhotographyVisualSystem.tsx`. No routing changes.
