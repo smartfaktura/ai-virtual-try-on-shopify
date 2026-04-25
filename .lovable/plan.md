@@ -1,70 +1,44 @@
-## 1. Critical fix: revert image zoom across all SEO photography pages
+## 1. Remove the orphan "What we cover in {category}" chip section
 
-The previous performance pass added a `width` parameter to `getOptimizedUrl(...)` calls. Per the project's no-crop rule, `width` without `height` makes Supabase's image renderer crop server-side, producing the zoomed-in look you're seeing. We will switch every full-bleed/grid/collage image back to **quality-only** optimization.
+The `CategorySubcategoryChips` section is redundant — `CategoryBuiltForEveryCategory` already shows every subcategory as a clickable chip rail with images and labels. The standalone chip row floating between the hero/built-for grid and the visual outputs reads as a stray, unstyled list and adds no info.
 
-Files to fix (5 call sites):
-- `CategoryHero.tsx` — collage tiles + single hero image → `{ quality: 70 }` only
-- `CategoryBuiltForEveryCategory.tsx` — chip grid → `{ quality: 60 }` only
-- `CategorySceneExamples.tsx` — scene grid → `{ quality: 60 }` only
-- `CategoryRelatedCategories.tsx` — 3-image collage thumbs → `{ quality: 60 }` only
+**Action**: Delete the `<CategorySubcategoryChips />` section from `src/pages/seo/AIProductPhotographyCategory.tsx` (and its import). Leave the component file in place in case it's reused elsewhere.
 
-We keep `loading="lazy"`, `decoding="async"`, deferred chip rendering, and `fetchpriority="high"` on heroes — those don't crop. To recover the load-time benefit lost from dropping `width`, we'll keep quality at 60 for grid tiles (smaller payload than 70/72) and continue lazy-loading everything below the fold.
+## 2. Shorten the hero CTAs (no more long "See bags & accessories examples")
 
-## 2. Hub banner (/ai-product-photography) — fix wrong names/images
+Current secondary CTA expands to up to ~32 chars on bags & accessories which makes the two pills look stuck together visually.
 
-Audit `src/data/aiProductPhotographyCategories.ts` and `PhotographyCategoryChooser.tsx` against the live category pages, then:
-- Re-pick `previewImage` IDs so each category card shows an on-subject scene (e.g., bags should be a bag, jewelry a jewelry shot, electronics tech, supplements a supplement bottle, food a food shot).
-- Verify `name`, `description`, and `shotCount` strings match the actual category page content/intent.
-- Use the same `getRelatedThumbs` style 3-tile collage on the hub cards so the hub mirrors the polished related-categories design (optional polish — only if it doesn't visually clash).
+**Action** in `CategoryHero.tsx`:
+- Primary CTA → keep "Create your first visuals free", with arrow.
+- Secondary CTA → change from `See {groupName.toLowerCase()} examples` to a single short label: **"See examples"** (always 12 chars, anchors to `#scenes`).
+- Tighten button padding from `px-8` to `px-7` and gap to `gap-3` so the two pills breathe.
 
-## 3. Redesign "One product photo. A full visual system." section
+This applies to all 10 category pages (one component, one change).
 
-Current `PhotographyVisualSystem.tsx` is 8 dense text cards in a 4-col grid → feels like a feature list. Redesign:
-- Collapse to **6 outputs** by merging overlapping items: drop "Website banners" (covered by Campaign visuals) and "Product launch assets" (covered by Campaign visuals); keep Product page, Lifestyle, Social, Paid ads, Detail shots, Campaign visuals.
-- Move to a **3-col x 2-row** layout with more breathing room.
-- For each card: keep icon + short title, **shorten copy to one tight line** (max ~60 chars).
-- Add a small visual sample thumbnail on each card (16:9 image from `PREVIEW(...)` matching the output type) so the section becomes visual-first instead of text-first.
-- Tighten the heading: "One product photo. A full visual system." stays, subheadline trimmed to one short sentence.
+## 3. Hub: bring "Choose your product category" cards in line with the related-categories aesthetic
 
-## 4. Audit & improvement pass for the 10 category pages
+The `/ai-product-photography` hub uses single-image vertical cards. The new related-categories design uses a clean **3-image horizontal collage** thumbnail. The user wants the hub to match.
 
-We'll work through each `/ai-product-photography/<slug>` and answer the 5 questions. Findings drive concrete edits in `aiProductPhotographyCategoryPages.ts` and components.
+**Action**: Rewrite `PhotographyCategoryChooser.tsx` so each card uses the same 3-image horizontal collage (16:9) on top, with the category name + short description + arrow underneath. Pull the 3 thumbs from a curated `previewImages: [id, id, id]` field added to `aiProductPhotographyCategories.ts` (one per category, on-subject). Card layout will visually mirror `CategoryRelatedCategories.tsx` (rounded-3xl, hairline border, hover lift).
 
-### Q1 — Uniqueness
-Quick audit of pain points, FAQs, scene examples, and visual outputs per page. Where copy is too generic or repeats verbatim across pages, rewrite to category-specific language (e.g., "ingredient hero shots" for beauty, "macro pour shots" for beverage, "on-wrist lifestyle" for watches, "thread-level macro" for fashion, "teardown flat-lay" for electronics).
+Required data change in `src/data/aiProductPhotographyCategories.ts`:
+- Add `previewImages: string[]` (3 ids) per category, populated with on-subject scene ids already used elsewhere in the codebase.
+- Keep existing `previewImage` for backwards compat / fallback.
 
-### Q2 — SEO
-- Verify each page has a unique `<title>`, meta description, H1, canonical URL, breadcrumbs, FAQ schema (`JsonLd`), and image `alt` attributes that include the category keyword once (no stuffing).
-- Fix any duplicate H1/title patterns.
-- Confirm internal links to related categories are real, anchor text varies.
+## 4. Acceptance checklist
 
-### Q3 — UI/UX premium feel
-After image zoom is fixed, all pages will visually match `/home`. Additional polish:
-- Replace any remaining heavy gradients with frosted pill labels (already partly done).
-- Ensure section background rhythm alternates `#FAFAF8` ↔ `bg-background` ↔ `#f5f5f3`.
-
-### Q4 — Conversion structure
-Each page already has: hero → built-for grid → scene examples → use cases → visual outputs → related categories → FAQ → final CTA. We'll verify the CTA appears at hero AND above-the-fold-of-FAQ, and that the "See examples" anchor works on every page.
-
-### Q5 — SEO grouping recommendations
-After audit, surface a short recommendation list (no immediate URL changes — those affect indexing). Likely calls:
-- Rename "Electronics & Gadgets" page H1/title to lead with "Electronics" (higher intent), keep "gadgets/tech" as supporting keywords.
-- Keep "Home & Furniture" as one page for now; flag a future split into `/home-decor` + `/furniture` once traffic justifies it.
-- Beauty & Skincare: add explicit "makeup" keyword coverage in H1/subheadline + at least one makeup scene example.
-- Bags & Accessories: confirm watches + eyewear sub-sections deserve dedicated future pages.
-- Fragrance, Jewelry, Footwear, Fashion, Food & Beverage, Supplements & Wellness: keep as-is.
-
-We will deliver these recommendations as inline copy edits where safe and as a written summary at the end of the change.
-
-## 5. Acceptance checklist
-- No `width` parameter on any full-bleed image in the SEO photography stack.
-- Hub banner shows correct on-subject imagery and accurate category names.
-- Visual System section: 6 cards, breathing room, optional sample thumb, no text wall.
-- Each of the 10 category pages: unique H1/title/meta, on-subject hero, no duplicated copy across pages.
-- Build passes TypeScript cleanly.
+- "What we cover" chip section gone from all 10 category pages.
+- Hero secondary CTA reads "See examples" everywhere; the two pills no longer collide visually.
+- Hub `/ai-product-photography` category cards show 3-image horizontal collages matching the related-categories style.
+- TypeScript build passes.
+- No `width` parameter sneaks back into `getOptimizedUrl` calls (no-crop rule still in effect).
 
 ## Technical notes
-- All edits stay inside `src/components/seo/photography/**` and `src/data/aiProductPhotography*.ts`.
-- No DB migrations.
-- No changes to `src/integrations/supabase/*`.
-- Memory rule `mem://style/image-optimization-no-crop` will be respected and re-applied to any future image work in this stack.
+
+Files touched:
+- `src/pages/seo/AIProductPhotographyCategory.tsx` (remove section + import)
+- `src/components/seo/photography/category/CategoryHero.tsx` (CTA copy + spacing)
+- `src/components/seo/photography/PhotographyCategoryChooser.tsx` (rewrite to collage card)
+- `src/data/aiProductPhotographyCategories.ts` (add `previewImages` triplet per category)
+
+No DB migrations. No changes to Supabase config.
