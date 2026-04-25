@@ -1,29 +1,20 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-
-const PREVIEW = (id: string) =>
-  `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
+import { aiProductPhotographyCategories } from '@/data/aiProductPhotographyCategories';
 
 type Tile = { label: string; src: string };
 
-const row1: Tile[] = [
-  { label: 'Product page', src: PREVIEW('1776688965090-edaogg') },
-  { label: 'Lifestyle', src: PREVIEW('1776840733386-n4bc6x') },
-  { label: 'Ad creative', src: PREVIEW('1776689318257-yahkye') },
-  { label: 'Campaign', src: PREVIEW('1776688403670-i0t3r6') },
-  { label: 'Detail shot', src: PREVIEW('closeup-detail-shoes-sneakers-1776008260513') },
-  { label: 'Banner', src: PREVIEW('1776688413055-z73arv') },
-];
+// Build hero tiles from the actual category list — each shows the most
+// representative scene image for that category (same image as the chooser card).
+const allTiles: Tile[] = aiProductPhotographyCategories.map((cat) => ({
+  label: cat.name,
+  src: cat.previewImage,
+}));
 
-const row2: Tile[] = [
-  { label: 'Product page', src: PREVIEW('1776770347820-s3qwmr') },
-  { label: 'Lifestyle', src: PREVIEW('1776239449949-ygljai') },
-  { label: 'Ad creative', src: PREVIEW('1776018020221-aehe8n') },
-  { label: 'Campaign', src: PREVIEW('1776102204479-9rlc0n') },
-  { label: 'Detail shot', src: PREVIEW('1776018015756-3xfquh') },
-  { label: 'Banner', src: PREVIEW('1776102181320-jisnae') },
-];
+const mid = Math.ceil(allTiles.length / 2);
+const row1: Tile[] = allTiles.slice(0, mid);
+const row2: Tile[] = allTiles.slice(mid);
 
 function Tile({ tile }: { tile: Tile }) {
   return (
@@ -35,8 +26,8 @@ function Tile({ tile }: { tile: Tile }) {
         decoding="async"
         className="w-full h-full object-cover"
       />
-      <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
-        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">
+      <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
+        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/95">
           {tile.label}
         </span>
       </div>
@@ -99,8 +90,8 @@ export function PhotographyHero() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <MarqueeRow tiles={row1} direction="left" duration="35s" />
-        <MarqueeRow tiles={row2} direction="right" duration="40s" />
+        <MarqueeRow tiles={row1} direction="left" duration="50s" />
+        <MarqueeRow tiles={row2} direction="right" duration="55s" />
       </div>
     </section>
   );

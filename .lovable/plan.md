@@ -1,78 +1,55 @@
 ## Goal
-On `/home`: swap the **Bags** category for **Watches**, fix the Models marquee load quality, refine the Models copy, drop in a shorter "Your AI Creative Studio" block, and add the "Every environment. One click." scenes section right before the FAQ.
+Polish `/ai-product-photography`: replace hero category labels with real category images + names, fix the loader's size jitter, make the category chooser denser with vertical cards, retitle the scene library section to "1600+ scenes" with a CTA to `/product-visual-library`, and refine the How It Works step icons.
 
 ---
 
-## 1. Swap Bags → Watches in HomeTransformStrip
+## 1. Hero — show categories instead of generic labels
+File: `src/components/seo/photography/PhotographyHero.tsx`
 
-In `src/components/home/HomeTransformStrip.tsx`:
+Replace the hardcoded `row1` / `row2` ("Product page", "Lifestyle", etc.) with tiles built from `aiProductPhotographyCategories`:
+- Each tile uses `cat.previewImage` and `cat.name` as the label (Fashion, Footwear, Beauty & Skincare, Fragrance, Jewelry, Bags & Accessories, Home & Furniture, Food & Beverage, Supplements & Wellness, Electronics & Gadgets).
+- Split the 10-item list into two rows (5 + 5) and double inside `MarqueeRow` for seamless loop.
+- Slow the marquee a touch (50s / 55s) since each tile now has more meaning.
+- Keep the existing tile styling and label gradient.
 
-- Replace the `BAGS_CARDS` array with a new `WATCHES_CARDS` array (12 entries) using the verified watch scene preview filenames:
-  - Original: `1776596629281-anqgf5` (On-Wrist Studio)
-  - Front View · Side View · Angle View · Back View · On-Wrist Studio · On-Wrist Lifestyle · Close-Up Detail · Texture Detail · Hard Shadow Hero · Flat Lay Styled · Earthy Glow Stage · Gradient Backdrop Elegance · Concrete Shadow Play
-- Update the `CATEGORIES` tuple: replace `{ id: 'bags', label: 'Bags', cards: BAGS_CARDS }` with `{ id: 'watches', label: 'Watches', cards: WATCHES_CARDS }`.
+## 2. Loader — stop the size shift on `/ai-product-photography`
+File: `src/components/ui/brand-loader-progress-glyph.tsx`
 
-## 2. Fix Models marquee image loading
+The `animate-glyph-breathe` class on the VOVV.AI wordmark animates `letter-spacing -0.01em → 0.02em` (defined in `index.css`), which visibly resizes the wordmark width while loading. Remove `animate-glyph-breathe` from the wordmark `<span>` so the text stays a fixed size. The underline sweep (`animate-glyph-sweep`) stays — it's the actual progress affordance.
 
-In `src/components/landing/ModelShowcaseSection.tsx`:
+## 3. Category Chooser — vertical cards, denser grid
+File: `src/components/seo/photography/PhotographyCategoryChooser.tsx`
 
-- Wrap `model.previewUrl` with `getOptimizedUrl(model.previewUrl, { quality: 60 })` in `ModelCardItem` so all 100+ marquee tiles load as compressed images instead of raw originals (this is what makes the row look slow and inconsistent).
-- Add `decoding="async"` and a stable aspect-ratio placeholder (already present via `aspectRatio="3/4"` — keep).
-- Add a one-time preconnect to the Supabase storage origin inside `ModelsMarquee` `useEffect` (matches the pattern used in `HomeTransformStrip`).
+- Image aspect: `3/4` (vertical) instead of `4/3`.
+- Grid: `grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-5` (mobile 2/row, tablet+desktop 4/row).
+- Move the category name + "{n}+ shots" eyebrow on top of the image with a bottom gradient overlay (cleaner, more editorial feel).
+- Below the image: 3-line clamped description and a small "Explore {Name} →" link.
+- Drop the subcategory chip cloud (too dense for a 4-col grid). Subcategories still live in the data file for future per-category sub-pages.
+- Card radius `rounded-2xl`, padding `p-4 lg:p-5`.
 
-## 3. Improve Models section copy
+## 4. Scene Examples — retitle to "1600+ scenes" + CTA to library
+File: `src/components/seo/photography/PhotographySceneExamples.tsx`
 
-In `src/components/home/HomeModels.tsx`, mirror the BrandModels voice (Every face. Every story.):
+- Eyebrow: `Scene library`
+- H2: **1600+ scenes**
+- Subtitle (short): *Studio, lifestyle, editorial, seasonal — one click.*
+- Replace the bottom anchor link with a primary CTA pill linking to `/product-visual-library`:  
+  *"Browse the full scene library →"* (dark `bg-foreground` pill matching the page's premium tone).
+- Keep the 10-tile grid as-is.
 
-- Eyebrow: `Models · {count}+ ready-to-shoot`
-- Title: **Your cast. Ready in seconds.**
-- Subtitle: *Pick from 40+ professional AI models across every body type, ethnicity, and age — or train your own brand model in minutes and shoot it forever.*
+## 5. How It Works — refined step icons
+File: `src/components/seo/photography/PhotographyHowItWorks.tsx`
 
-## 4. Add a shortened "Your AI Creative Studio" block to /home
-
-Create `src/components/home/HomeStudioTeam.tsx` — a stripped-down version of `StudioTeamSection`:
-
-- Same eyebrow `Your AI Creative Studio` + headline `10 specialists. Zero overhead.`
-- Subtitle shortened to one line: *A dedicated AI creative crew that ships studio-grade visuals on demand.*
-- Reuse the existing `TEAM_MEMBERS` carousel logic (import the carousel JSX from `StudioTeamSection`) — to keep it short, render a smaller card size (`w-[200px] sm:w-[220px] lg:w-[240px]`) and remove the bottom CTA button, replacing it with a single ghost link "Meet the team →" routing to `/team`.
-- Reduce vertical padding to `py-14 lg:py-24` so it feels lighter than the full version on `/`.
-
-Mount it in `src/pages/Home.tsx` between `HomeWhySwitch` and `HomeOnBrand`.
-
-## 5. Add Environment/scenes section to /home
-
-Create `src/components/home/HomeEnvironments.tsx` that wraps `EnvironmentShowcaseSection` with refreshed copy:
-
-- Eyebrow: `1600+ scenes`
-- Title: **Every environment. One click.**
-- Subtitle: *Studio, lifestyle, editorial, streetwear — place your products in any setting instantly.*
-
-The simplest implementation: extract the marquee body of `EnvironmentShowcaseSection` into a reusable `EnvironmentsMarquee({ eyebrow, title, subtitle })` (same pattern as `ModelsMarquee`), keep the existing `ROW_1`/`ROW_2` data, and have `HomeEnvironments` call it with the new strings. Update existing `EnvironmentShowcaseSection` to call the same component with its current copy so the landing page `/` is unaffected.
-
-Mount `<HomeEnvironments />` in `src/pages/Home.tsx` **right before `<HomeFAQ />`**.
+- Replace `Upload / Palette / Sparkles` with `ImagePlus / Wand2 / Sparkles` — more on-brand for AI image generation.
+- Redesign the icon presentation: a single 48×48 rounded-square chip with `bg-[#1a1a2e]` and white icon (mirrors the dark-primary accent used across the page) instead of the small "1" circle + ghost icon combo.
+- Move the step number to a subtle `01 / 02 / 03` mono label in the top-right corner of each card (quiet, editorial).
+- Heading still tracks tight; spacing unchanged so the row still aligns with the connector arrows.
 
 ---
-
-## Final Home.tsx order
-```
-HomeHero
-HomeTransformStrip       (Watches now in pills)
-HomeModels               (refined copy)
-HomeCreateCards
-HomeHowItWorks
-HomeWhySwitch
-HomeStudioTeam           (NEW — shorter)
-HomeOnBrand
-HomeEnvironments         (NEW — 1600+ scenes)
-HomeFAQ
-HomeFinalCTA
-```
 
 ## Files touched
-- `src/components/home/HomeTransformStrip.tsx` — swap Bags → Watches
-- `src/components/landing/ModelShowcaseSection.tsx` — optimize image URLs, extract `EnvironmentsMarquee` (no — that file is models; environment refactor lives in EnvironmentShowcaseSection)
-- `src/components/landing/EnvironmentShowcaseSection.tsx` — extract reusable `EnvironmentsMarquee`
-- `src/components/home/HomeModels.tsx` — new copy
-- `src/components/home/HomeStudioTeam.tsx` — NEW (shorter team carousel)
-- `src/components/home/HomeEnvironments.tsx` — NEW (wraps `EnvironmentsMarquee`)
-- `src/pages/Home.tsx` — mount the two new sections in the right slots
+- `src/components/seo/photography/PhotographyHero.tsx`
+- `src/components/seo/photography/PhotographyCategoryChooser.tsx`
+- `src/components/seo/photography/PhotographySceneExamples.tsx`
+- `src/components/seo/photography/PhotographyHowItWorks.tsx`
+- `src/components/ui/brand-loader-progress-glyph.tsx`

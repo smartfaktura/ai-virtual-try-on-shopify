@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const PREVIEW = (id: string) =>
@@ -22,13 +24,13 @@ export function PhotographySceneExamples() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Scene examples
+            Scene library
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            Explore hundreds of AI product photography scenes
+            1600+ scenes
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Choose from clean studio setups, lifestyle interiors, editorial campaigns, seasonal scenes, product detail shots, and category-specific visual directions.
+            Studio, lifestyle, editorial, seasonal — one click.
           </p>
         </div>
 
@@ -58,12 +60,13 @@ export function PhotographySceneExamples() {
         </div>
 
         <div className="flex justify-center mt-12">
-          <a
-            href="#categories"
-            className="inline-flex items-center justify-center gap-2 h-[3rem] px-7 rounded-full border border-border bg-white text-foreground text-sm font-semibold hover:bg-secondary transition-colors"
+          <Link
+            to="/product-visual-library"
+            className="inline-flex items-center justify-center gap-2 h-[3rem] px-7 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
           >
-            Explore product categories
-          </a>
+            Browse the full scene library
+            <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
     </section>
