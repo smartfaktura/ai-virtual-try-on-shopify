@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getOptimizedSrcSet } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { SmartImage } from './SmartImage';
+
 
 /**
  * Editorial split hero for /ai-product-photography/{slug} pages.
