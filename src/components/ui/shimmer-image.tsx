@@ -75,7 +75,7 @@ export const ShimmerImage = forwardRef<HTMLImageElement, ShimmerImageProps>(
           loading={rest.loading ?? 'lazy'}
           decoding="async"
           className={cn(
-            'transition-opacity duration-300',
+            'max-w-full transition-opacity duration-300',
             loaded ? 'opacity-100' : 'opacity-0',
             className,
           )}
