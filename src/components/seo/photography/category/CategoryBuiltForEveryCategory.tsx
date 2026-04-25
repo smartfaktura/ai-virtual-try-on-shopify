@@ -22,19 +22,28 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
     return { subject: parts[0], style: parts.slice(1).join(' · ') || undefined };
   };
 
-  // Merge groups with the same subject so chips stay short and unique.
+  // If every raw group shares the same subject (e.g. fragrance: all "Fragrance · X"),
+  // group by **style** so chips stay distinct. Otherwise group by subject.
+  const subjects = rawGroups.map((g) => splitLabel(g.subCategory).subject);
+  const singleSubject = subjects.length > 0 && subjects.every((s) => s === subjects[0]);
+  const groupKey = (s: string) => {
+    const { subject, style } = splitLabel(s);
+    return singleSubject && style ? style : subject;
+  };
+
+  // Merge groups with the same key so chips stay short and unique.
   const groups = (() => {
     const order: string[] = [];
     const map = new Map<string, BuiltForGroup>();
     for (const g of rawGroups) {
-      const subject = splitLabel(g.subCategory).subject;
-      const existing = map.get(subject);
+      const key = groupKey(g.subCategory);
+      const existing = map.get(key);
       if (existing) {
         const seen = new Set(existing.cards.map((c) => c.imageId));
         for (const c of g.cards) if (!seen.has(c.imageId)) { existing.cards.push(c); seen.add(c.imageId); }
       } else {
-        order.push(subject);
-        map.set(subject, { subCategory: subject, cards: [...g.cards] });
+        order.push(key);
+        map.set(key, { subCategory: key, cards: [...g.cards] });
       }
     }
     return order.map((s) => {
@@ -50,7 +59,10 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   const noun = page.heroNoun ?? 'photo';
   const totalScenes = groups.reduce((sum, g) => sum + g.cards.length, 0);
 
-  const activeParts = splitLabel(active.subCategory);
+  // When grouping by style, the chip already IS the style — show subject as the lead label.
+  const activeParts = singleSubject
+    ? { subject: active.subCategory, style: undefined as string | undefined }
+    : splitLabel(active.subCategory);
 
   return (
     <section
