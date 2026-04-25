@@ -1,53 +1,70 @@
-## Problem
+## Diagnosis
 
-On `/ai-product-photography/bags-accessories` (and similarly fashion), the hero collage:
+Three issues across the 10 `/ai-product-photography/{slug}` hub pages:
 
-1. **Wrong subjects**: "Watches" tile shows a **fashion/apparel image** (`1776664933175-rjlbn6` = Sunlit Tailoring Studio from the fashion data — a person in a coat, no watch). "Eyewear" tile is a portrait dominated by a lollipop instead of the frames.
-2. **Mixed scales**: Top row = product-only still-life (bag, bottle), bottom row = full human portraits. Tiles feel disjointed because they don't share a visual scale family.
-3. **Inconsistent labels**: One tile reads "BAGS" while the page already says "Bags & Accessories" — labels duplicate what the H1 already announces.
+### 1. Missing / incorrect images
+- **`supplements-wellness`** and **`electronics-gadgets`** only have **1 chip group / 8 images** in the "Built for every category" grid (the build script under-collected). The DB has 5–6 sub-categories with 30+ scenes each, all unused.
+- A few hub pages reference `imageId`s that resolve but show off-topic shots (e.g. duplicate IDs in the supplements `sceneExamples` list — same image used twice — and food-beverage doesn't reuse beverage editorial IDs in its scene examples).
+- React warning logged on every page: `Function components cannot be given refs` originating from `JsonLd`, `PhotographyFinalCTA`, and `LandingFooter`. Harmless but spammy and indicates these are wrapped without `forwardRef`.
 
-Single-category pages (footwear, beauty, jewelry, etc.) currently use one big hero image — fine, but a small visual upgrade will make all hub pages feel cohesive.
+### 2. Slow loading
+- Every BUILT_FOR group ships **8 full-quality scene previews** even though only one chip's grid is visible at a time. With 6 chips that's **48 images requested up-front per hub page** (multi-category pages reach **~390 image rows in the imported data file** because the whole `BUILT_FOR_GRIDS` constant is bundled).
+- Hero image and collage images request `quality=70` Supabase render but no `width=`, so the CDN serves the full source file — slow LCP.
+- `loading="lazy"` is on grid tiles, but inactive chips are still in the DOM (just rendered when picked) — actually fine. The real waste is the JSON payload size + non-sized image fetches.
+
+### 3. Visual polish vs `/home`
+- `/home` uses a marquee hero, premium chip rail with snappy transitions, cards with rich shadows/transitions, and a video card. Hub pages today look "templated" — all sections share the same `bg-[#f5f5f3]` and rounded white cards. No rhythm.
+- "Related product photography categories" tiles use a single hero image (16:10) per related category. User wants a **3-image horizontal collage** per related card so each tile teases the variety inside.
 
 ## Fix
 
-### 1. Re-curate the multi-category hero collages with on-subject, scale-matched images
+### A. Data — re-collect missing scene groups (all hub pages)
 
-Use real, subject-focused tiles pulled from the existing `BUILT_FOR_GRIDS` catalog so every tile actually shows the named subcategory at a similar scale (mid-shot product-with-context, not full-body portraits next to still-life).
+Update `src/data/aiProductPhotographyBuiltForGrids.ts` (regenerate the affected slugs by querying the live `product_image_scenes` table, grouped by `sub_category`):
 
-**Bags & Accessories (`bags-accessories`)** — replace current 4 tiles with:
+- `supplements-wellness` → 6 chip groups: Essential Shots, Editorial Wellness Routine, Aesthetic Color Wellness Stories, Ingredient / Capsule Still Life, Kitchen / Gym / Daily UGC, Creative Shots (8 cards each, capped).
+- `electronics-gadgets` → 5 chip groups: Essential Shots, Editorial Tech Studio, Aesthetic Color Tech Stories, Desk / Hand / Daily Use UGC, Surface / Setup / Product Still Life.
+- Spot-fix duplicate IDs in `sceneExamples` for `supplements-wellness` (`1776247491181-ox42m3` and `1776247494837-xnpgly` appear twice) and `electronics-gadgets` (`1776250225810-gdcnka`, `1776590053673-96gw3b`, `1776590052780-j2ahu2` appear twice). Replace with fresh DB picks so the 8-tile examples grid is unique.
+- Audit the `heroCollage` IDs of multi-category pages once more to confirm each tile actually depicts its subcategory (already done for fashion + bags-accessories last round; verify food-beverage, home-furniture).
 
-| Tile | Image ID | Why |
-|------|----------|-----|
-| Bags | `1776239449949-ygljai` (Sculptural Bag Studio Hero) | keep — proper bag still-life |
-| Backpacks | `1776231546156-0g25eq` (One Shoulder Carry) | swap "Accessories" → real backpack tile |
-| Eyewear | `1776102186144-xrnwnc` (Handheld Frame) or `1776102198082-xi72z6` (Sleek Black) | frames are the hero, not a lollipop |
-| Watches | `1776856607319-693vtg` (Earthy Glow Stage) | actual watch editorial — fixes the wrong-image bug |
+### B. Performance — three compounding wins
 
-**Fashion (`fashion`)** — keep concept but verify each tile is on-subject:
+1. **Size every grid/related/scene image** by passing `width` to `getOptimizedUrl` (e.g. `width=480` for grid tiles, `width=720` for collage tiles, `width=900` for hero, `width=560` for related-card collage thumbs). Supabase's render endpoint will serve resized JPEGs that are ~5–10× smaller.
+2. **Defer non-active chip groups**: only mount the grid tiles for the active chip; preload the next chip on hover. Cuts initial image requests on multi-chip pages from 48 → 8.
+3. **Add `fetchpriority="high"` to the hero image** and keep `loading="eager"` so LCP fires fast. Everything else stays `loading="lazy" decoding="async"`.
+4. (Optional cleanup) Add `forwardRef` shims to `JsonLd`, `PhotographyFinalCTA`, `LandingFooter` to silence the React ref warning. Pure noise removal — no behavior change.
 
-| Tile | Image ID |
-|------|----------|
-| Apparel | `1776664933175-rjlbn6` (Sunlit Tailoring Studio) |
-| Activewear | `1776192312181-3v0u0t` (Editorial Floor Stretch) |
-| Swimwear | `1776246297359-aecrip` (Resort Editorial Hero) — replace current swimwear ID with a cleaner, more on-brand tile |
-| Jackets | `1776691912818-yiu2uq` (Sunlit Tailored Chair Pose) |
+### C. "Related product photography categories" — 3-image horizontal collage per card
 
-### 2. Improve collage layout for visual cohesion
+Rebuild the related-card visual (`CategoryRelatedCategories.tsx`):
 
-In `CategoryHero.tsx`:
+- Each card's image area becomes a **3-column horizontal collage** (`grid grid-cols-3 gap-1`) at `aspect-[16/9]`. The three images come from that related category's first 3 scene examples (or its hero collage if present, or first 3 BUILT_FOR cards as fallback) — picked via a small helper `getRelatedThumbs(slug)`.
+- Each thumb is `object-cover`, sized via `getOptimizedUrl(..., { width: 320, quality: 60 })`, lazy.
+- Soft inner padding (`p-1`), rounded subtiles, subtle hover scale on whole card. Keeps the card feeling like one unit, not three loose images.
 
-- Tighten gutter (`gap-1.5` → `gap-2`) and inner padding (`p-1.5` → `p-2`) for a more balanced grid.
-- Replace the heavy bottom-gradient + uppercase chip with a **subtle bottom-left chip** (rounded pill, frosted background, no gradient overlay) so the imagery breathes. Removes the "one tile is dark, another is bright" feel caused by the full-width gradient on light shots.
-- Slightly bump tile corner radius (`rounded-2xl` → `rounded-xl`) for a more editorial, less "card-stack" look.
-- Outer container shadow softened to match the rest of the page surface.
+### D. Visual polish — make hub pages feel like `/home`
 
-### 3. Single-category hero — small polish
+Tighten the template without changing structure:
 
-- Add a thin overlay-free corner chip (same component as collage) instead of the full gradient bar so the hero photo breathes consistently with the collage variant.
+1. **Hero**: tighten the gap, lift the H1 with `tracking-[-0.035em]`, add a tiny "trust" bar under the buttons (`No photoshoot · 2K resolution · Built for {groupName} brands`) styled like /home's pill row.
+2. **Built-for section**: chip rail gets `/home`-style segmented look — pill row inside a thin border container with active chip in solid foreground; tiles get `aspect-[3/4]` (already done) and a soft hover label fade-up like /home.
+3. **Section rhythm**: alternate `bg-background` ↔ `bg-[#FAFAF8]` ↔ `bg-[#f5f5f3]` deliberately — currently three sections in a row use `#f5f5f3`. Pattern: Hero (#FAFAF8) → BuiltFor (bg) → Subcategory chips (#FAFAF8) → VisualOutputs (bg) → PainPoints (#FAFAF8) → SceneExamples (bg) → HowItWorks (existing) → UseCases (#FAFAF8) → Related (bg) → FAQ (#FAFAF8) → FinalCTA.
+4. **Cards** (visual outputs, pain points, use cases): swap the heavy white card on light grey with a softer treatment — `bg-white/70 backdrop-blur-sm` with hairline border, `rounded-3xl`, longer hover lift (`translate-y-[-2px] shadow-lg`). Mirrors /home's premium feel.
+5. **Section titles**: bump font weight/tracking and use the `/home` two-tone heading pattern (`text-foreground` + a muted accent span on the highlight word) where natural.
+
+### E. Smoke test
+After edits, navigate to `/ai-product-photography/supplements-wellness` and `/electronics-gadgets` to confirm chip rails now show 5–6 groups; spot-check a few other hub pages for image fidelity.
 
 ## Files
 
-- `src/data/aiProductPhotographyCategoryPages.ts` — update `heroCollage` for `fashion` and `bags-accessories` with the new image IDs + alts.
-- `src/components/seo/photography/category/CategoryHero.tsx` — refine collage gutters, replace gradient label with frosted chip, soften shadows, apply chip to single-image variant.
+- `src/data/aiProductPhotographyBuiltForGrids.ts` — regenerate the two thin slugs (rebuild via `psql` query → emit JSON groups). 
+- `src/data/aiProductPhotographyCategoryPages.ts` — replace duplicate-ID scene examples; add `heroNoun` to supplements/electronics if missing; verify collages.
+- `src/components/seo/photography/category/CategoryHero.tsx` — width-sized hero, `fetchpriority`, optional pill-row trust bar.
+- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — render only active group's tiles, width-sized URLs, segmented chip styling, hover-preload next chip.
+- `src/components/seo/photography/category/CategoryRelatedCategories.tsx` — replace single image with 3-image collage helper.
+- `src/components/seo/photography/category/CategorySceneExamples.tsx` — width-sized URLs, softer card treatment.
+- `src/components/seo/photography/category/CategoryVisualOutputs.tsx`, `CategoryPainPoints.tsx`, `CategoryUseCases.tsx` — softer card treatment, alternating section backgrounds aligned with the rhythm above.
+- `src/pages/seo/AIProductPhotographyCategory.tsx` — apply the new alternating-bg rhythm by passing `tone` props or wrapping sections (small reorder + className tweaks; no structural change).
+- (Optional) `src/components/JsonLd.tsx`, `src/components/seo/photography/PhotographyFinalCTA.tsx`, `src/components/landing/LandingFooter.tsx` — wrap with `React.forwardRef` to silence ref warning.
 
-No new dependencies, no schema changes.
+No DB migrations, no new dependencies.

@@ -5,7 +5,7 @@ import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryP
 
 export function CategorySceneExamples({ page }: { page: CategoryPage }) {
   return (
-    <section id="scenes" className="py-16 lg:py-32 bg-[#f5f5f3] scroll-mt-24">
+    <section id="scenes" className="py-16 lg:py-32 bg-[#FAFAF8] scroll-mt-24">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
@@ -26,7 +26,7 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
               className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
             >
               <img
-                src={getOptimizedUrl(PREVIEW(ex.imageId), { quality: 60 })}
+                src={getOptimizedUrl(PREVIEW(ex.imageId), { width: 480, quality: 60 })}
                 alt={ex.alt}
                 loading="lazy"
                 decoding="async"

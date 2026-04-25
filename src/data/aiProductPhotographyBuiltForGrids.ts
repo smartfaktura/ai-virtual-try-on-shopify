@@ -1759,7 +1759,73 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "supplements-wellness": [
     {
-      "subCategory": "Supplements & Wellness · All",
+      "subCategory": "Supplements · Essential Shots",
+      "cards": [
+        {
+          "label": "Front View",
+          "imageId": "1776247484304-xpwv5f"
+        },
+        {
+          "label": "In-Hand Studio",
+          "imageId": "1776247486394-r95qn0"
+        },
+        {
+          "label": "Capsule / Tablet Spill",
+          "imageId": "1776247474402-h90732"
+        },
+        {
+          "label": "Close-Up Detail",
+          "imageId": "1776247476167-fwn0so"
+        },
+        {
+          "label": "In-Hand Lifestyle",
+          "imageId": "1776247470649-211k4n"
+        },
+        {
+          "label": "Product + Packaging",
+          "imageId": "1776247495950-u5fsgi"
+        },
+        {
+          "label": "Back View",
+          "imageId": "1776247472438-n0hb3j"
+        },
+        {
+          "label": "Packaging Detail",
+          "imageId": "1776247493080-1uim2g"
+        }
+      ]
+    },
+    {
+      "subCategory": "Supplements · Editorial Routine",
+      "cards": [
+        {
+          "label": "Morning Counter Ritual",
+          "imageId": "1776247491181-ox42m3"
+        },
+        {
+          "label": "Hand and Water Ritual",
+          "imageId": "1776247468839-d6f55j"
+        },
+        {
+          "label": "Dose Preparation Editorial",
+          "imageId": "1776247483431-4i3gbx"
+        },
+        {
+          "label": "Shelf Wellness Portrait",
+          "imageId": "1776247497983-q02i5n"
+        },
+        {
+          "label": "Sinkside Wellness Composition",
+          "imageId": "1776247499852-jy1uxk"
+        },
+        {
+          "label": "Wellness Tray Ritual",
+          "imageId": "1776247504806-p9xhhn"
+        }
+      ]
+    },
+    {
+      "subCategory": "Supplements · Aesthetic Color",
       "cards": [
         {
           "label": "Color Counter Ritual",
@@ -1784,21 +1850,170 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         {
           "label": "Color Hero Campaign Wellness",
           "imageId": "1776247478611-ci4c06"
+        }
+      ]
+    },
+    {
+      "subCategory": "Supplements · Still Life",
+      "cards": [
+        {
+          "label": "Powder and Scoop Still",
+          "imageId": "1776247494837-xnpgly"
         },
         {
-          "label": "Volcanic Sunset",
-          "imageId": "1776856588457-a5mm5p"
+          "label": "Ingredient Pairing Surface Story",
+          "imageId": "1776247487257-g59840"
         },
         {
-          "label": "Earthy Botanicals Plinth",
-          "imageId": "1775132737341-losy8h"
+          "label": "Capsule Dish and Tray Composition",
+          "imageId": "1776247473530-9wnkc6"
+        },
+        {
+          "label": "Clean Product and Water Glass Still",
+          "imageId": "1776247475327-k7tdfv"
+        },
+        {
+          "label": "Macro Wellness Detail Still",
+          "imageId": "1776247489924-ygkka7"
+        }
+      ]
+    },
+    {
+      "subCategory": "Supplements · Daily UGC",
+      "cards": [
+        {
+          "label": "Kitchen Counter Daily Use",
+          "imageId": "1776247488148-hdz2kj"
+        },
+        {
+          "label": "Post-Workout Routine",
+          "imageId": "1776247493970-vykoas"
+        },
+        {
+          "label": "Workday Wellness Break",
+          "imageId": "1776247506258-6b04vh"
+        },
+        {
+          "label": "Smoothie or Mix Prep Lifestyle",
+          "imageId": "1776247500821-de5jji"
+        },
+        {
+          "label": "Travel or On-the-Go Wellness",
+          "imageId": "1776247503038-0h5iah"
+        },
+        {
+          "label": "Handheld Daily Wellness Moment",
+          "imageId": "1776247485158-xe02s0"
+        }
+      ]
+    },
+    {
+      "subCategory": "Supplements · Creative Shots",
+      "cards": [
+        {
+          "label": "Natural Light Backdrop",
+          "imageId": "1776856582781-grdk0o"
+        },
+        {
+          "label": "Sunny Shadows",
+          "imageId": "1776856586561-9ekfcs"
+        },
+        {
+          "label": "Red Gradient Embrace",
+          "imageId": "1776856584876-12tw9v"
+        },
+        {
+          "label": "Earthy Minimal Shadows",
+          "imageId": "1775136153833-abw8j5"
+        },
+        {
+          "label": "Earthy Glow Stage",
+          "imageId": "1775135707468-egh405"
+        },
+        {
+          "label": "Gradient Backdrop Elegance",
+          "imageId": "1776856581773-y0p48h"
+        },
+        {
+          "label": "Frozen Surface Product",
+          "imageId": "1776856580364-9fpith"
+        },
+        {
+          "label": "Dynamic Water Splash",
+          "imageId": "1775132044712-m8fods"
         }
       ]
     }
   ],
   "electronics-gadgets": [
     {
-      "subCategory": "Tech Devices · All",
+      "subCategory": "Tech · Essential Shots",
+      "cards": [
+        {
+          "label": "Front View",
+          "imageId": "1776250227186-ipm40h"
+        },
+        {
+          "label": "In-Hand Studio",
+          "imageId": "1776250232617-zoxalv"
+        },
+        {
+          "label": "Screen/Interface Detail",
+          "imageId": "1776590057184-aqv6dz"
+        },
+        {
+          "label": "Port & Button Detail",
+          "imageId": "1776590055378-rq666d"
+        },
+        {
+          "label": "Close-Up Detail",
+          "imageId": "1776250211477-rzmwwm"
+        },
+        {
+          "label": "In-Use Lifestyle",
+          "imageId": "1776250234056-sbc991"
+        },
+        {
+          "label": "Product + Packaging",
+          "imageId": "1776590056312-ikvpzv"
+        },
+        {
+          "label": "Packaging Detail",
+          "imageId": "1776590054562-dubos6"
+        }
+      ]
+    },
+    {
+      "subCategory": "Tech · Editorial Studio",
+      "cards": [
+        {
+          "label": "Front Tech Hero",
+          "imageId": "1776250225810-gdcnka"
+        },
+        {
+          "label": "Shadow Tech Hero",
+          "imageId": "1776250240820-dbonqe"
+        },
+        {
+          "label": "Material and Hardware Detail",
+          "imageId": "1776250236111-okpnze"
+        },
+        {
+          "label": "Floating Tech Studio",
+          "imageId": "1776250224298-1dobg2"
+        },
+        {
+          "label": "Reflection Surface Tech Still",
+          "imageId": "1776250239823-pcsjnb"
+        },
+        {
+          "label": "Grouped Tech Composition",
+          "imageId": "1776250228615-yd9ysf"
+        }
+      ]
+    },
+    {
+      "subCategory": "Tech · Aesthetic Color",
       "cards": [
         {
           "label": "Color Wall Tech Hero",
@@ -1823,7 +2038,12 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         {
           "label": "Color Hero Tech Campaign",
           "imageId": "1776590049044-uuse5a"
-        },
+        }
+      ]
+    },
+    {
+      "subCategory": "Tech · Desk & Daily UGC",
+      "cards": [
         {
           "label": "In-Hand Tech Hero",
           "imageId": "1776590053673-96gw3b"
@@ -1831,6 +2051,51 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         {
           "label": "Desk Use Lifestyle",
           "imageId": "1776250221503-498lc7"
+        },
+        {
+          "label": "Café or Travel Use Moment",
+          "imageId": "1776590047050-ug526z"
+        },
+        {
+          "label": "Wearable or Body-Use Moment",
+          "imageId": "1776250245967-3onadh"
+        },
+        {
+          "label": "Charging or Connection Story",
+          "imageId": "1776250210111-twke5n"
+        },
+        {
+          "label": "Bag or Pocket Tech Story",
+          "imageId": "1776250208937-t4m53k"
+        }
+      ]
+    },
+    {
+      "subCategory": "Tech · Still Life",
+      "cards": [
+        {
+          "label": "Desk Surface Tech Still",
+          "imageId": "1776250220160-yzxngj"
+        },
+        {
+          "label": "Open Device or Case Still",
+          "imageId": "1776250237937-1s8a3b"
+        },
+        {
+          "label": "Paired Accessory Composition",
+          "imageId": "1776250238944-o3fq2u"
+        },
+        {
+          "label": "Shelf or Studio Placement",
+          "imageId": "1776250241939-w8pfn5"
+        },
+        {
+          "label": "Hardware Material Closeup",
+          "imageId": "1776250231180-yr4w8z"
+        },
+        {
+          "label": "Symmetry Tech Composition",
+          "imageId": "1776250243926-dy9rc5"
         }
       ]
     }
