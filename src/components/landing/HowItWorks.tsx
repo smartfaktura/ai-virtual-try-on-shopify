@@ -94,17 +94,20 @@ export function HowItWorks() {
   return (
     <>
     
-    <section id="how-it-works" className="py-20 sm:py-28 bg-muted/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="how-it-works" className="py-16 lg:py-32 bg-background">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Header */}
         <div
           ref={header.ref}
-          className={`text-center mb-16 ${baseTransition} ${header.inView ? visible : hidden}`}
+          className={`text-center max-w-2xl mx-auto mb-12 lg:mb-16 ${baseTransition} ${header.inView ? visible : hidden}`}
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Three Steps to Automated Product Visuals
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            How it works
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+            Three steps to automated product visuals
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
             Set it once, get fresh visuals forever. No design skills needed.
           </p>
         </div>
@@ -117,11 +120,11 @@ export function HowItWorks() {
               className={`${baseTransition} ${step1Text.inView ? visible : hidden}`}
             >
               <div className="flex items-center gap-3 mb-4">
-                <span
-                  className={`w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center transition-transform duration-500 ${step1Text.inView ? 'scale-100' : 'scale-0'}`}
-                >01</span>
-                <h3 className="text-2xl font-bold text-foreground">Upload Your Product</h3>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Step 01
+                </span>
               </div>
+              <h3 className="text-2xl font-semibold text-foreground mb-3">Upload your product</h3>
               <p className="text-muted-foreground leading-relaxed mb-6">
                 Drag & drop your product image or import from your product library. Works with any product type — clothing, cosmetics, food, home goods, and more.
               </p>
@@ -130,7 +133,7 @@ export function HowItWorks() {
                 {['Shopify', 'Wix', 'WooCommerce', 'BigCommerce', 'Squarespace'].map((platform, i) => (
                   <span
                     key={platform}
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full bg-card border border-border text-[11px] font-medium text-muted-foreground ${baseTransition} ${step1Text.inView ? visible : hidden}`}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full bg-white border border-[#f0efed] text-[11px] font-medium text-muted-foreground ${baseTransition} ${step1Text.inView ? visible : hidden}`}
                     style={{ transitionDelay: step1Text.inView ? `${400 + i * 60}ms` : '0ms' }}
                   >
                     {platform}
@@ -145,9 +148,9 @@ export function HowItWorks() {
               style={{ transitionDelay: step1Card.inView ? '150ms' : '0ms' }}
             >
               <div className="w-full max-w-sm">
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                  <div className="p-4 border-b border-border">
-                    <div className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-3 bg-muted/20">
+                <div className="rounded-3xl border border-[#f0efed] bg-white shadow-sm overflow-hidden">
+                  <div className="p-4 border-b border-[#f0efed]">
+                    <div className="border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center gap-3 bg-muted/20">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Upload className="w-5 h-5 text-primary" />
                       </div>
@@ -158,7 +161,7 @@ export function HowItWorks() {
                   </div>
                   <div className="p-3 flex items-center gap-3 relative overflow-hidden">
                     <div
-                      className="w-14 h-14 rounded-lg overflow-hidden border border-border shrink-0"
+                      className="w-14 h-14 rounded-lg overflow-hidden border border-[#f0efed] shrink-0"
                       style={step1Card.inView ? {
                         animation: 'drag-drop-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both',
                       } : { opacity: 0 }}
@@ -198,11 +201,11 @@ export function HowItWorks() {
               className={`lg:order-2 ${baseTransition} ${step2Text.inView ? visible : hidden}`}
             >
               <div className="flex items-center gap-3 mb-4">
-                <span
-                  className={`w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center transition-transform duration-500 ${step2Text.inView ? 'scale-100' : 'scale-0'}`}
-                >02</span>
-                <h3 className="text-2xl font-bold text-foreground">Choose What You're Creating</h3>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Step 02
+                </span>
               </div>
+              <h3 className="text-2xl font-semibold text-foreground mb-3">Choose what you're creating</h3>
               <p className="text-muted-foreground leading-relaxed mb-6">
                 Pick your model, environment, and style — from studio shots to lifestyle scenes. Control every detail or let your AI team handle it.
               </p>
@@ -214,9 +217,9 @@ export function HowItWorks() {
               style={{ transitionDelay: step2Card.inView ? '150ms' : '0ms' }}
             >
               <div className="w-full max-w-sm">
-                <div className="rounded-2xl border border-border bg-card shadow-sm">
-                  <div className="p-3 border-b border-border rounded-t-2xl">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
+                <div className="rounded-3xl border border-[#f0efed] bg-white shadow-sm">
+                  <div className="p-3 border-b border-[#f0efed] rounded-t-3xl">
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your selection</p>
                     <div className="flex items-center gap-2">
                       {[
                         { type: 'preview', src: cropTopProduct, alt: 'Product', label: 'Product', delay: 0 },
@@ -250,7 +253,7 @@ export function HowItWorks() {
                       ))}
                     </div>
                   </div>
-                  <div className="p-3 rounded-b-2xl">
+                  <div className="p-3 rounded-b-3xl">
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1.5">
                         {['Ad Refresh', 'Hero Set', 'Lifestyle'].map((wf) => (
@@ -284,11 +287,11 @@ export function HowItWorks() {
               className={`${baseTransition} ${step3Text.inView ? visible : hidden}`}
             >
               <div className="flex items-center gap-3 mb-4">
-                <span
-                  className={`w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center transition-transform duration-500 ${step3Text.inView ? 'scale-100' : 'scale-0'}`}
-                >03</span>
-                <h3 className="text-2xl font-bold text-foreground">Get a Visual Set</h3>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Step 03
+                </span>
               </div>
+              <h3 className="text-2xl font-semibold text-foreground mb-3">Get a visual set</h3>
               <p className="text-muted-foreground leading-relaxed mb-6">
                 Receive 6–20 brand-ready images in seconds. Same product, endless scenes. Or schedule your Content Calendar and get fresh visuals every month, automatically.
               </p>
@@ -300,10 +303,10 @@ export function HowItWorks() {
               style={{ transitionDelay: step3Card.inView ? '150ms' : '0ms' }}
             >
               <div className="w-full max-w-sm">
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                  <div className="p-3 border-b border-border flex items-center justify-between">
+                <div className="rounded-3xl border border-[#f0efed] bg-white shadow-sm overflow-hidden">
+                  <div className="p-3 border-b border-[#f0efed] flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-border shrink-0">
+                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#f0efed] shrink-0">
                         <ShimmerImage src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                       </div>
                       <div>
@@ -318,7 +321,7 @@ export function HowItWorks() {
                       {[sceneStudio, sceneCoffee, sceneBeach, scenePark, sceneRooftop, sceneUrban].map((scene, i) => (
                         <div
                           key={i}
-                          className={`rounded-md overflow-hidden border border-border aspect-[4/5] ${baseTransition} ${step3Card.inView ? visible : hidden}`}
+                          className={`rounded-md overflow-hidden border border-[#f0efed] aspect-[4/5] ${baseTransition} ${step3Card.inView ? visible : hidden}`}
                           style={{ transitionDelay: step3Card.inView ? `${250 + i * 80}ms` : '0ms' }}
                         >
                           <ShimmerImage
@@ -340,12 +343,15 @@ export function HowItWorks() {
 
         <div
           ref={ctaRef.ref}
-          className={`text-center ${baseTransition} ${ctaRef.inView ? visible : hidden}`}
+          className={`flex flex-col items-center gap-3 ${baseTransition} ${ctaRef.inView ? visible : hidden}`}
         >
-          <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate(user ? '/app' : '/auth')}>
+          <Button size="lg" className="rounded-full h-[3.25rem] px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate(user ? '/app' : '/auth')}>
             Try It Free
             <ArrowRight className="w-4 h-4" />
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Free to start · No card required
+          </p>
         </div>
       </div>
     </section>
