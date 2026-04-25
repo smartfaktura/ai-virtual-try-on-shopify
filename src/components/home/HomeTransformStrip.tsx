@@ -353,8 +353,8 @@ export function HomeTransformStrip() {
             <div
               key={cat.id}
               className={cn(
-                'grid grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4',
-                active === cat.id ? 'block' : 'hidden',
+                'grid-cols-3 sm:grid-cols-6 gap-3 lg:gap-4',
+                active === cat.id ? 'grid' : 'hidden',
               )}
               aria-hidden={active !== cat.id}
             >
