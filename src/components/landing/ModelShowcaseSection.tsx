@@ -105,7 +105,7 @@ export function ModelShowcaseSection() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-12 lg:mb-16">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            {row1.length + row2.length}+ AI Models
+            {row1.length + row2.length - 2}+ AI Models
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
             Professional models. Every look.
