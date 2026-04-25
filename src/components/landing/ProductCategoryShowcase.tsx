@@ -70,7 +70,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
       <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-muted/40">
         <div
           key={progressKey}
-          className="h-full bg-primary/70"
+          className="h-full bg-foreground/40"
           style={{
             animation: `progress-fill ${cycleDuration}ms linear forwards`,
           }}

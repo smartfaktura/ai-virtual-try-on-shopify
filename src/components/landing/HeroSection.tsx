@@ -314,7 +314,7 @@ export function HeroSection() {
                             loading={sceneIdx === 0 && idx < 3 ? 'eager' : 'lazy'}
                             fetchPriority={sceneIdx === 0 && idx < 2 ? 'high' : undefined}
                           />
-                          <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                          <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-foreground/60 text-background px-1.5 py-0.5 rounded" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
                             {output.label}
                           </span>
                         </div>
@@ -382,8 +382,8 @@ export function HeroSection() {
                       onMouseEnter={() => preloadScene(i)}
                       className={`px-3 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                         activeScene === i
-                          ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-105'
-                          : 'bg-card text-muted-foreground border-border/80 hover:border-primary/40'
+                          ? 'bg-foreground text-background border-foreground shadow-sm scale-105'
+                          : 'bg-card text-muted-foreground border-border/80 hover:border-foreground/40'
                       }`}
                     >
                       {sc.product.label}

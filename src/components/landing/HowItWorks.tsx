@@ -151,11 +151,11 @@ export function HowItWorks() {
                 <div className="rounded-3xl border border-[#f0efed] bg-white shadow-sm overflow-hidden">
                   <div className="p-4 border-b border-[#f0efed]">
                     <div className="border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center gap-3 bg-muted/20">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Upload className="w-5 h-5 text-primary" />
+                      <div className="w-10 h-10 rounded-lg bg-foreground/[0.06] flex items-center justify-center">
+                        <Upload className="w-5 h-5 text-foreground/70" />
                       </div>
                       <p className="text-xs text-muted-foreground text-center">
-                        Drag & drop or <span className="text-primary font-medium">browse</span>
+                        Drag & drop or <span className="text-foreground font-medium">browse</span>
                       </p>
                     </div>
                   </div>
@@ -185,8 +185,8 @@ export function HowItWorks() {
                         transitionDelay: '1100ms',
                       } : { opacity: 0, transform: 'scale(0.8)' }}
                     >
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      <span className="text-[10px] font-medium text-primary">Ready</span>
+                      <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" />
+                      <span className="text-[10px] font-medium text-foreground">Ready</span>
                     </div>
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export function HowItWorks() {
                             key={wf}
                             className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${
                               wf === 'Lifestyle'
-                                ? 'bg-primary text-primary-foreground'
+                                ? 'bg-foreground text-background'
                                 : 'bg-muted text-muted-foreground'
                             }`}
                           >
@@ -269,7 +269,7 @@ export function HowItWorks() {
                           </span>
                         ))}
                       </div>
-                      <div className="flex items-center gap-1.5 text-primary">
+                      <div className="flex items-center gap-1.5 text-foreground">
                         <Sparkles className="w-3.5 h-3.5" />
                         <span className="text-[11px] font-semibold">Generate</span>
                       </div>
@@ -314,7 +314,7 @@ export function HowItWorks() {
                         <p className="text-[10px] text-muted-foreground">6 scenes generated</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-medium text-primary">Download All</span>
+                    <span className="text-[10px] font-medium text-foreground">Download All</span>
                   </div>
                   <div className="p-2">
                     <div className="grid grid-cols-3 gap-1.5">
