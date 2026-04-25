@@ -229,7 +229,7 @@ export default function BlogPost() {
                 src={getOptimizedUrl(post.coverImage, { quality: 80 })}
                 alt={post.title}
                 wrapperClassName="!h-auto"
-                className="block w-full h-auto max-h-[60vh] object-contain"
+                className="block w-full h-auto max-h-[56vh] object-contain"
                 loading="lazy"
                 decoding="async"
               />
@@ -237,31 +237,34 @@ export default function BlogPost() {
           </div>
         )}
 
-        {/* Inline TOC */}
+        {/* Inline TOC — quiet, print-magazine */}
         {headings.length > 2 && (
-          <div className="max-w-[720px] mx-auto px-4 sm:px-6 pt-10 sm:pt-14">
-            <div className="border border-[#f0efed] rounded-2xl bg-white shadow-sm p-5 sm:p-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-3 flex items-center gap-2">
+          <div className="max-w-[720px] mx-auto px-4 sm:px-6 pt-12 sm:pt-16">
+            <div className="sm:border-0 sm:bg-transparent sm:shadow-none sm:p-0 border border-[#f0efed] rounded-2xl bg-white shadow-sm p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-4 flex items-center gap-2">
                 <BookOpen className="w-3.5 h-3.5" />
                 In this article
               </p>
-              <nav className="grid sm:grid-cols-2 gap-1">
-                {headings.map((h, i) => (
-                  <a
-                    key={h.id}
-                    href={`#${h.id}`}
-                    className={`text-[13px] leading-snug py-1.5 px-3 rounded-md transition-all ${
-                      activeHeading === h.id
-                        ? 'text-foreground bg-foreground/[0.04] font-medium'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
-                    }`}
-                  >
-                    <span className="text-muted-foreground/40 mr-1.5 text-[11px] font-mono">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    {h.text}
-                  </a>
-                ))}
+              <nav className="grid sm:grid-cols-2 gap-x-6 gap-y-0.5">
+                {headings.map((h, i) => {
+                  const isActive = activeHeading === h.id;
+                  return (
+                    <a
+                      key={h.id}
+                      href={`#${h.id}`}
+                      className={`group text-[13px] leading-snug py-2 pl-3 -ml-px border-l transition-all ${
+                        isActive
+                          ? 'border-foreground text-foreground font-medium'
+                          : 'border-transparent text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                      }`}
+                    >
+                      <span className="text-foreground/30 mr-2 text-[11px] font-mono tracking-wider">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      {h.text}
+                    </a>
+                  );
+                })}
               </nav>
             </div>
           </div>
@@ -274,7 +277,7 @@ export default function BlogPost() {
           </div>
 
           {/* Tags */}
-          <div className="mt-14 pt-8 border-t border-[#f0efed]">
+          <div className="mt-16 pt-8 border-t border-[#f0efed]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-3">Topics</p>
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag) => (
@@ -286,7 +289,7 @@ export default function BlogPost() {
           </div>
 
           {/* Dark CTA — matches site pattern */}
-          <div className="mt-14 relative overflow-hidden rounded-2xl bg-[#1a1a2e] p-8 sm:p-12 text-center">
+          <div className="mt-20 relative overflow-hidden rounded-[28px] bg-[#1a1a2e] p-8 sm:p-12 text-center">
             <div className="absolute -top-24 -right-24 w-72 h-72 bg-white/[0.04] rounded-full blur-3xl" />
             <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-white/[0.03] rounded-full blur-3xl" />
             <div className="relative">
@@ -299,7 +302,7 @@ export default function BlogPost() {
               <p className="text-white/60 text-sm sm:text-base mb-8 max-w-md mx-auto">
                 Get 20 free credits — no credit card required. See the difference in seconds.
               </p>
-              <Button asChild size="lg" className="rounded-full px-8 font-semibold bg-white text-[#1a1a2e] hover:bg-white/90 shadow-lg">
+              <Button asChild size="lg" className="rounded-full px-8 font-semibold bg-white text-[#1a1a2e] hover:bg-white/90 shadow-lg w-full sm:w-auto">
                 <Link to="/auth">Start free →</Link>
               </Button>
             </div>
@@ -307,22 +310,24 @@ export default function BlogPost() {
 
           {/* Related Posts */}
           {related.length > 0 && (
-            <div className="mt-16">
+            <div className="mt-20">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-5">More from the blog</p>
               <div className="grid gap-4 sm:grid-cols-3">
                 {related.map((r) => (
                   <Link
                     key={r.slug}
                     to={`/blog/${r.slug}`}
-                    className="group relative border border-[#f0efed] rounded-2xl p-5 hover:shadow-md transition-all bg-white"
+                    className="group relative border border-[#f0efed] rounded-2xl p-5 hover:shadow-md transition-shadow bg-white"
                   >
-                    <Badge variant="secondary" className="rounded-full text-[10px] mb-3 bg-foreground/[0.05] border-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50 mb-3">
                       {r.category}
-                    </Badge>
-                    <p className="text-sm font-semibold text-foreground group-hover:text-foreground/80 transition-colors line-clamp-2 leading-snug mb-2">
+                    </p>
+                    <p className="text-[15px] font-medium text-foreground group-hover:text-foreground/75 transition-colors line-clamp-2 leading-snug mb-3 tracking-[-0.01em]">
                       {r.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">{r.readTime}</p>
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" /> {r.readTime}
+                    </p>
                   </Link>
                 ))}
               </div>
