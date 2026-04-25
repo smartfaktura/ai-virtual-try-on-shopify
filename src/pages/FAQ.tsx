@@ -7,7 +7,7 @@ import { LandingFooter } from '@/components/landing/LandingFooter';
 import { FAQHero } from '@/components/faq/FAQHero';
 import { FAQAccordion, FAQ_GROUPS } from '@/components/faq/FAQAccordion';
 import { FAQContactStrip } from '@/components/faq/FAQContactStrip';
-import { HomeFinalCTA } from '@/components/home/HomeFinalCTA';
+
 
 const PAGE_URL = `${SITE_URL}/faq`;
 
@@ -52,7 +52,6 @@ export default function FAQ() {
         <FAQHero />
         <FAQAccordion />
         <FAQContactStrip />
-        <HomeFinalCTA />
       </main>
       <LandingFooter />
     </div>
