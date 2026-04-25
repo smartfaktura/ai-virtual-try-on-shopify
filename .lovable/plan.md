@@ -1,46 +1,65 @@
-# Terms & Privacy as Modals on Auth Page
+# Fix `/blog` Mobile Layout
 
-Keep the user on the signup form. Replace the two `<Link target="_blank">` anchors in the Terms checkbox with buttons that open scrollable modals containing the policy text — with a clear close button. The standalone `/terms` and `/privacy` routes stay intact (still used by the footer, emails, SEO).
+The Blog page has several mobile issues causing a poor experience on small viewports (≤440px):
 
-## Scope
+## Issues Identified
 
-Only one file changes: **`src/pages/Auth.tsx`** (the signup checkbox row at lines 571–576).
+1. **Featured card text overlaps the "Featured" badge** — the badge uses `absolute top-4 right-4`, but on mobile the meta row (category + date + read time) wraps and collides with it. Date is rendered in long form ("November 14, 2025") which forces ugly wrapping next to the badge.
+2. **Featured card padding too large on mobile** — `p-8` (32px) eats into a 440px viewport, leaving little room for content.
+3. **Featured image aspect ratio `2.2/1` is too tall-content / too wide** — fine on desktop, but combined with the heavy padded text block below, the card feels enormous on phones.
+4. **Card body padding `p-6 sm:p-7` is too dense** on small screens for the post grid.
+5. **Section vertical padding `py-20`** (80px top + 80px bottom) is excessive on mobile, pushing content down unnecessarily.
+6. **Category filter row** wraps into 3-4 lines on mobile (cramped). Should scroll horizontally on mobile instead, like a chip row.
+7. **Mid-page CTA padding `p-8`** also too large on mobile; heading wraps awkwardly.
+8. **H1 size `text-4xl`** (36px) is OK but `mb-12` spacing under header is too large on mobile.
 
-No changes to:
-- `src/pages/TermsOfService.tsx` / `src/pages/PrivacyPolicy.tsx` (routes preserved)
-- `App.tsx` routes
-- Footers (`HomeFooter`, `LandingFooter`) — those stay as page links, which is correct outside of signup
+## Fix Plan — single file: `src/pages/Blog.tsx`
 
-## What the user sees
+### 1. Section + container
+- `py-20 sm:py-28` → `py-12 sm:py-20 lg:py-28`
+- Header `mb-12` → `mb-8 sm:mb-12`
 
-- Checkbox label still reads: *"I agree to the **Terms of Service** and **Privacy Policy**"*
-- Clicking either underlined word opens a centered modal (Dialog) on top of the auth screen
-- Modal has: title, scrollable body with the full policy content, a footer "Close" button, and the standard top-right `X` close (built into `DialogContent`)
-- Closing returns the user to the exact same signup state (form values preserved — modal is purely presentational)
-- Mobile: dialog is responsive (already handled by our `Dialog` primitive: `w-[calc(100%-2rem)]`, `max-h-[calc(100vh-2rem)]`, `overflow-y-auto`)
+### 2. Header
+- H1: `text-4xl sm:text-5xl` → `text-3xl sm:text-4xl lg:text-5xl`
+- Subtitle: `text-lg` → `text-base sm:text-lg`, add `px-2` for safety
 
-## Technical implementation
+### 3. Category filters — horizontal scroll on mobile
+Replace `flex flex-wrap justify-center gap-2 mb-12` with a horizontally scrollable strip on mobile, centered wrap on `sm+`:
+```
+<div className="-mx-4 px-4 sm:mx-0 sm:px-0 mb-8 sm:mb-12 overflow-x-auto sm:overflow-visible">
+  <div className="flex sm:flex-wrap sm:justify-center gap-2 w-max sm:w-auto">
+    ...buttons with `whitespace-nowrap shrink-0`
+  </div>
+</div>
+```
+Add `scrollbar-hide` style or `[&::-webkit-scrollbar]:hidden` utility.
 
-1. In `src/pages/Auth.tsx`:
-   - Add two state booleans: `termsOpen`, `privacyOpen`
-   - Import `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogFooter` from `@/components/ui/dialog`, plus `Button`
-   - Replace the two `<Link>` elements inside the checkbox label with `<button type="button">` (so they don't submit the form) styled identically (`underline text-foreground hover:text-primary`), each setting its respective state to true
-   - Render two `<Dialog>` blocks at the bottom of the signup form JSX
+### 4. Featured card
+- Move "Featured" badge from absolute-positioned overlay to **inline at the top of the meta row** (or overlay on the image instead of the text block) — fixes overlap.
+- Wrapper: `mb-10` → `mb-8 sm:mb-10`
+- Inner padding: `p-8 sm:p-10` → `p-5 sm:p-8 lg:p-10`
+- Image aspect: `aspect-[2.2/1]` → `aspect-[16/10] sm:aspect-[2.2/1]` (taller/squarer on mobile reads better)
+- Move "Featured" badge to overlay the image top-right (`absolute top-3 right-3` on the image container) so it never collides with body text.
+- Date format: switch to short form on mobile (`Nov 14, 2025`) — use `month: 'short'`.
+- H2: `text-2xl sm:text-3xl` → `text-xl sm:text-2xl lg:text-3xl`
+- Excerpt: keep `text-sm`, add `line-clamp-3` to prevent overflow.
 
-2. Content source — to avoid duplicating long legal copy, **extract the body JSX** of each policy page into a small shared component:
-   - Create `src/components/legal/TermsContent.tsx` (the `<main>` inner content of `TermsOfService.tsx`)
-   - Create `src/components/legal/PrivacyContent.tsx` (same for `PrivacyPolicy.tsx`)
-   - Update `TermsOfService.tsx` and `PrivacyPolicy.tsx` to render these components inside their existing page chrome (no visible change)
-   - The Auth modals render `<TermsContent />` / `<PrivacyContent />` inside a `max-h-[70vh] overflow-y-auto` wrapper
+### 5. Post grid cards
+- Grid gap `gap-5` → `gap-4 sm:gap-5`
+- Card body padding `p-6 sm:p-7` → `p-4 sm:p-6`
+- H2: `text-lg` → `text-base sm:text-lg`
+- Meta row gap `gap-3` → `gap-2 sm:gap-3` (tighter)
 
-3. Modal sizing: `DialogContent className="max-w-2xl"` so legal text is readable on desktop; default mobile sizing already fits viewport.
+### 6. Mid-page CTA
+- Wrapper margin `mt-14` → `mt-10 sm:mt-14`
+- Padding `p-8 sm:p-10` → `p-6 sm:p-8 lg:p-10`
+- Heading: `text-xl sm:text-2xl` keep, but add `px-2` to allow breathing room.
+- Button: add `w-full sm:w-auto` so it fills nicely on mobile.
 
-4. Accessibility: `DialogTitle` provides the accessible name; the built-in `X` button + footer "Close" button + Escape key + overlay click all dismiss.
+## Out of Scope
+- No content/data changes to `blogPosts`.
+- No changes to `BlogPost.tsx` (individual article page) — only the `/blog` index. If user later reports the article page also has issues, address separately.
+- No changes to `LandingNav` / `LandingFooter` / `PageLayout`.
 
-## Out of scope
-
-- No change to footer links across the site (those should remain real pages)
-- No change to the actual policy text
-- No new routes, no DB changes
-
-Approve to implement.
+## Files Edited
+- `src/pages/Blog.tsx` (only file touched)
