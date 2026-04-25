@@ -553,10 +553,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroAlt: 'AI handbag product photography example showing a sculptural bag in an editorial studio scene.',
     heroNoun: 'accessory',
     heroCollage: [
-      { subCategory: 'Bags',        imageId: '1776239449949-ygljai', alt: 'AI handbag editorial studio scene.' },
-      { subCategory: 'Accessories', imageId: '1776239826550-uaopmt', alt: 'AI accessory editorial.' },
-      { subCategory: 'Eyewear',     imageId: '1776102176417-iih747', alt: 'AI eyewear candy flash editorial.' },
-      { subCategory: 'Watches',     imageId: '1776664933175-rjlbn6', alt: 'AI watch editorial.' },
+      { subCategory: 'Bags',      imageId: '1776239449949-ygljai', alt: 'AI handbag sculptural studio hero.' },
+      { subCategory: 'Backpacks', imageId: '1776231546156-0g25eq', alt: 'AI backpack one-shoulder editorial carry.' },
+      { subCategory: 'Eyewear',   imageId: '1776102186144-xrnwnc', alt: 'AI eyewear handheld frame editorial.' },
+      { subCategory: 'Watches',   imageId: '1776856607319-693vtg', alt: 'AI watch editorial earthy glow stage.' },
     ],
   },
 
