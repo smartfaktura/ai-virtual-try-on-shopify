@@ -35,13 +35,13 @@ export function PhotographyCategoryChooser() {
                 title={anchorText}
                 className="group flex flex-col bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                {/* 3-image horizontal collage */}
-                <div className="relative aspect-[16/9] bg-muted/30 p-1 sm:p-1.5">
-                  <div className="absolute inset-1 sm:inset-1.5 grid grid-cols-3 gap-1 sm:gap-1.5">
+                {/* Image collage — 2 thumbs on mobile, 3 from sm: up */}
+                <div className="relative aspect-[4/3] sm:aspect-[16/9] bg-muted/30 p-1 sm:p-1.5">
+                  <div className="absolute inset-1 sm:inset-1.5 grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-1.5">
                     {thumbs.map((id, idx) => (
                       <div
                         key={`${id}-${idx}`}
-                        className="relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40"
+                        className={`relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40 ${idx === 2 ? 'hidden sm:block' : ''}`}
                       >
                         <img
                           src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
