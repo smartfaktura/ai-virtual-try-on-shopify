@@ -70,9 +70,9 @@ const EYEWEAR_CARDS: GridCardData[] = [
 
 /* ── Jackets (real preview filenames from product_image_scenes · jackets) ── */
 const JACKETS_CARDS: GridCardData[] = [
+  { label: 'Original',                   src: PREVIEW('1776690211513-2hgcjm'), isOriginal: true },
   { label: 'Side Profile Street Study',  src: PREVIEW('1776691909999-ra3rym') },
   { label: 'Old Money Outdoor Portrait', src: PREVIEW('1776691906436-3fe7l9') },
-  { label: 'Ghost Mannequin Shot',       src: PREVIEW('1776690211513-2hgcjm') },
   { label: 'On-Model Front',             src: PREVIEW('1776690214570-al6wzo') },
   { label: 'On-Model Back',              src: PREVIEW('1776690213075-4gnekd') },
   { label: 'On-Model Editorial',         src: PREVIEW('1776690213983-4h5fjc') },
