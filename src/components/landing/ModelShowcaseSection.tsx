@@ -92,7 +92,12 @@ export function ModelShowcaseSection() {
   const { row1, row2 } = useMemo(() => {
     const processed = sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels]))));
     const mid = Math.ceil(processed.length / 2);
-    return { row1: processed.slice(0, mid), row2: processed.slice(mid) };
+    const wrap = (m: { name: string; previewUrl: string }): ModelItem => ({ kind: 'model', name: m.name, previewUrl: m.previewUrl });
+    const cta: ModelItem = { kind: 'cta' };
+    return {
+      row1: [cta, ...processed.slice(0, mid).map(wrap)],
+      row2: [cta, ...processed.slice(mid).map(wrap)],
+    };
   }, [sortModels, applyOverrides, applyNameOverrides, filterHidden]);
 
   return (
