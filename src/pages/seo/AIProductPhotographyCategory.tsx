@@ -65,6 +65,9 @@ export default function AIProductPhotographyCategory() {
   };
 
   const ogImage = PREVIEW(page.heroImageId) || DEFAULT_OG_IMAGE;
+  // LCP target: first hero collage tile if present, otherwise the single hero image.
+  const lcpImageId = page.heroCollage?.[0]?.imageId ?? page.heroImageId;
+  const lcpUrl = PREVIEW(lcpImageId);
 
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
@@ -74,6 +77,7 @@ export default function AIProductPhotographyCategory() {
         canonical={PAGE_URL}
         ogImage={ogImage}
       />
+      <HeroPreload url={lcpUrl} />
       <JsonLd data={breadcrumbJsonLd} />
 
       <LandingNav />
