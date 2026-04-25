@@ -171,40 +171,35 @@ export default function BlogPost() {
         />
       </div>
 
-      <article id="blog-article">
-        {/* Hero header — dramatic */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/[0.08] via-accent/40 to-background border-b border-border">
-          {/* Decorative orbs */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/[0.04] rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-primary/[0.06] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-
+      <article id="blog-article" className="bg-[#FAFAF8]">
+        {/* Hero header — editorial cream */}
+        <div className="relative bg-[#FAFAF8] border-b border-[#f0efed]">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-14 sm:pb-20">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-10">
+            <nav className="flex items-center gap-2 text-[12px] text-muted-foreground mb-10">
               <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
-              <span className="text-border">/</span>
+              <span className="text-[#d6d4d0]">/</span>
               <Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link>
-              <span className="text-border">/</span>
-              <span className="text-foreground/70 truncate max-w-[200px]">{post.title}</span>
+              <span className="text-[#d6d4d0]">/</span>
+              <span className="text-foreground/60 truncate max-w-[200px]">{post.title}</span>
             </nav>
 
-            <Badge variant="secondary" className="rounded-full text-xs mb-6 bg-primary/10 text-primary border-primary/20 px-3 py-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-4">
               {post.category}
-            </Badge>
+            </p>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-5 leading-[1.1]">
+            <h1 className="text-[2.25rem] sm:text-[3rem] lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] mb-6 leading-[1.05]">
               {post.title}
             </h1>
 
-            {/* Excerpt as subtitle */}
-            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-8 max-w-2xl">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl">
               {post.excerpt}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-2 bg-card border border-border rounded-full pl-1 pr-3 py-1 shadow-sm">
-                <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-[13px] text-muted-foreground">
+              <span className="inline-flex items-center gap-2 bg-white border border-[#f0efed] rounded-full pl-1 pr-3 py-1 shadow-sm">
+                <span className="w-7 h-7 rounded-full bg-foreground/[0.06] flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-foreground/70" />
                 </span>
                 <span className="font-medium text-foreground text-xs">{post.author}</span>
               </span>
@@ -224,15 +219,15 @@ export default function BlogPost() {
           </div>
         </div>
 
-        {/* Hero image */}
+        {/* Hero image — natural aspect, no forced crop, no overflow */}
         {post.coverImage && (
-          <div className="max-w-[720px] mx-auto px-4 sm:px-6 -mt-6 sm:-mt-8 relative z-10">
-            <div className="rounded-2xl overflow-hidden border border-border shadow-lg">
+          <div className="max-w-[760px] mx-auto px-4 sm:px-6 -mt-6 sm:-mt-10 relative z-10">
+            <div className="rounded-2xl overflow-hidden border border-[#f0efed] shadow-sm bg-[#f5f4f1]">
               <ShimmerImage
-                src={post.coverImage}
+                src={getOptimizedUrl(post.coverImage, { quality: 80 })}
                 alt={post.title}
-                className="w-full h-auto object-cover"
-                aspectRatio="16/9"
+                wrapperClassName="!h-auto"
+                className="block w-full h-auto max-h-[60vh] object-contain"
                 loading="lazy"
                 decoding="async"
               />
@@ -240,11 +235,11 @@ export default function BlogPost() {
           </div>
         )}
 
-        {/* Inline TOC — compact, centered */}
+        {/* Inline TOC */}
         {headings.length > 2 && (
           <div className="max-w-[720px] mx-auto px-4 sm:px-6 pt-10 sm:pt-14">
-            <div className="border border-border rounded-xl bg-card/50 p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+            <div className="border border-[#f0efed] rounded-2xl bg-white shadow-sm p-5 sm:p-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-3 flex items-center gap-2">
                 <BookOpen className="w-3.5 h-3.5" />
                 In this article
               </p>
@@ -255,8 +250,8 @@ export default function BlogPost() {
                     href={`#${h.id}`}
                     className={`text-[13px] leading-snug py-1.5 px-3 rounded-md transition-all ${
                       activeHeading === h.id
-                        ? 'text-foreground bg-primary/5 font-medium'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        ? 'text-foreground bg-foreground/[0.04] font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
                     }`}
                   >
                     <span className="text-muted-foreground/40 mr-1.5 text-[11px] font-mono">
@@ -276,68 +271,68 @@ export default function BlogPost() {
             <ReactMarkdown components={markdownComponents}>{post.content}</ReactMarkdown>
           </div>
 
-              {/* Tags */}
-              <div className="mt-14 pt-8 border-t border-border">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Topics</p>
-                <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="rounded-full text-xs bg-muted/50 hover:bg-muted transition-colors">
-                      {tag}
+          {/* Tags */}
+          <div className="mt-14 pt-8 border-t border-[#f0efed]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-3">Topics</p>
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <Badge key={tag} variant="outline" className="rounded-full text-xs bg-white border-[#f0efed] hover:bg-foreground/[0.03] transition-colors">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Dark CTA — matches site pattern */}
+          <div className="mt-14 relative overflow-hidden rounded-2xl bg-[#1a1a2e] p-8 sm:p-12 text-center">
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-white/[0.04] rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-white/[0.03] rounded-full blur-3xl" />
+            <div className="relative">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+                Get started
+              </p>
+              <h3 className="text-2xl sm:text-3xl font-semibold text-white tracking-[-0.02em] mb-3">
+                Ready to try AI product photography?
+              </h3>
+              <p className="text-white/60 text-sm sm:text-base mb-8 max-w-md mx-auto">
+                Get 20 free credits — no credit card required. See the difference in seconds.
+              </p>
+              <Button asChild size="lg" className="rounded-full px-8 font-semibold bg-white text-[#1a1a2e] hover:bg-white/90 shadow-lg">
+                <Link to="/auth">Start free →</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Related Posts */}
+          {related.length > 0 && (
+            <div className="mt-16">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60 mb-5">More from the blog</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {related.map((r) => (
+                  <Link
+                    key={r.slug}
+                    to={`/blog/${r.slug}`}
+                    className="group relative border border-[#f0efed] rounded-2xl p-5 hover:shadow-md transition-all bg-white"
+                  >
+                    <Badge variant="secondary" className="rounded-full text-[10px] mb-3 bg-foreground/[0.05] border-0">
+                      {r.category}
                     </Badge>
-                  ))}
-                </div>
+                    <p className="text-sm font-semibold text-foreground group-hover:text-foreground/80 transition-colors line-clamp-2 leading-snug mb-2">
+                      {r.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{r.readTime}</p>
+                  </Link>
+                ))}
               </div>
+            </div>
+          )}
 
-              {/* CTA */}
-              <div className="mt-14 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-8 sm:p-10 text-center">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--primary-foreground)/0.08),transparent_60%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,hsl(var(--primary-foreground)/0.04),transparent_40%)]" />
-                <div className="relative">
-                  <h3 className="text-xl sm:text-2xl font-bold text-primary-foreground mb-2">
-                    Ready to try AI product photography?
-                  </h3>
-                  <p className="text-primary-foreground/70 text-sm mb-6 max-w-md mx-auto">
-                    Get 20 free credits — no credit card required. See the difference in seconds.
-                  </p>
-                  <Button asChild size="lg" variant="secondary" className="rounded-full px-8 font-semibold shadow-lg">
-                    <Link to="/auth">Start Free →</Link>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Related Posts */}
-              {related.length > 0 && (
-                <div className="mt-16">
-                  <h3 className="text-lg font-semibold text-foreground mb-6">More from the blog</h3>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    {related.map((r) => (
-                      <Link
-                        key={r.slug}
-                        to={`/blog/${r.slug}`}
-                        className="group relative border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-lg transition-all bg-card overflow-hidden"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative">
-                          <Badge variant="secondary" className="rounded-full text-[10px] mb-3 bg-muted">
-                            {r.category}
-                          </Badge>
-                          <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
-                            {r.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{r.readTime}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Back */}
-              <div className="mt-10">
-                <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  <ArrowLeft className="w-3.5 h-3.5" /> All articles
-                </Link>
-              </div>
+          {/* Back */}
+          <div className="mt-10">
+            <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" /> All articles
+            </Link>
+          </div>
         </div>
       </article>
     </PageLayout>
