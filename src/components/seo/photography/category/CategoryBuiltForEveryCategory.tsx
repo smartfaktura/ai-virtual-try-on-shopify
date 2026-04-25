@@ -22,6 +22,13 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   const noun = page.heroNoun ?? 'photo';
   const totalScenes = groups.reduce((sum, g) => sum + g.cards.length, 0);
 
+  // Split "Bags · On-Body Editorial" → ["Bags", "On-Body Editorial"]
+  const splitLabel = (s: string): { subject: string; style?: string } => {
+    const parts = s.split('·').map((p) => p.trim());
+    return { subject: parts[0], style: parts.slice(1).join(' · ') || undefined };
+  };
+  const activeParts = splitLabel(active.subCategory);
+
   return (
     <section
       id="scenes"
@@ -36,51 +43,71 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
             Built for every {page.groupName.toLowerCase()} shot.
           </h2>
+          {/* Style descriptor below H2, updates with active chip */}
+          <p
+            key={active.subCategory}
+            className="mt-4 text-sm sm:text-base text-muted-foreground animate-in fade-in duration-300"
+          >
+            Now showing{' '}
+            <span className="text-foreground font-medium">{activeParts.subject}</span>
+            {activeParts.style && (
+              <>
+                {' · '}
+                <span className="text-foreground/70">{activeParts.style}</span>
+              </>
+            )}
+          </p>
         </div>
 
-        {/* Chip rail */}
+        {/* Chip rail — short subject-only labels */}
         <div className="mb-8 lg:mb-10">
           {/* Mobile: full-bleed scrollable rail with edge fades */}
           <div className="lg:hidden relative -mx-6">
             <div className="flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {groups.map((g, idx) => (
-                <button
-                  key={g.subCategory}
-                  type="button"
-                  onClick={() => setActiveIdx(idx)}
-                  className={cn(
-                    'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
-                    activeIdx === idx
-                      ? 'bg-foreground text-background border-foreground shadow-sm'
-                      : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
-                  )}
-                >
-                  {g.subCategory}
-                </button>
-              ))}
+              {groups.map((g, idx) => {
+                const { subject } = splitLabel(g.subCategory);
+                return (
+                  <button
+                    key={g.subCategory}
+                    type="button"
+                    onClick={() => setActiveIdx(idx)}
+                    className={cn(
+                      'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
+                      activeIdx === idx
+                        ? 'bg-foreground text-background border-foreground shadow-sm'
+                        : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
+                    )}
+                  >
+                    {subject}
+                  </button>
+                );
+              })}
             </div>
             <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
             <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
           </div>
 
-          {/* Desktop: centered chip group — wraps cleanly when many chips */}
+          {/* Desktop: centered chip group — short labels keep it tidy on one or two rows */}
           <div className="hidden lg:flex justify-center">
-            <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl">
-              {groups.map((g, idx) => (
-                <button
-                  key={g.subCategory}
-                  type="button"
-                  onClick={() => setActiveIdx(idx)}
-                  className={cn(
-                    'px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
-                    activeIdx === idx
-                      ? 'bg-foreground text-background border-foreground shadow-sm'
-                      : 'bg-muted/50 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted',
-                  )}
-                >
-                  {g.subCategory}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl">
+              {groups.map((g, idx) => {
+                const { subject } = splitLabel(g.subCategory);
+                return (
+                  <button
+                    key={g.subCategory}
+                    type="button"
+                    onClick={() => setActiveIdx(idx)}
+                    className={cn(
+                      'px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
+                      activeIdx === idx
+                        ? 'bg-foreground text-background border-foreground shadow-sm'
+                        : 'bg-muted/50 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted',
+                    )}
+                  >
+                    {subject}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
