@@ -342,7 +342,7 @@ export function HeroSection() {
                   }}
                   className={`rounded-full transition-all duration-200 ${
                     visibleDot === i
-                      ? 'w-4 h-1.5 bg-primary'
+                      ? 'w-4 h-1.5 bg-foreground'
                       : 'w-1.5 h-1.5 bg-muted-foreground/30'
                   }`}
                   aria-label={`Go to image ${i + 1}`}
@@ -370,8 +370,8 @@ export function HeroSection() {
               <div className="flex flex-col gap-1.5 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold text-foreground whitespace-nowrap">1 photo</span>
-                  <ArrowRight className="w-3 h-3 text-primary flex-shrink-0" />
-                  <span className="text-[11px] font-bold text-primary whitespace-nowrap">∞ results</span>
+                  <ArrowRight className="w-3 h-3 text-foreground flex-shrink-0" />
+                  <span className="text-[11px] font-bold text-foreground whitespace-nowrap">∞ results</span>
                 </div>
                 <span className="text-[10px] text-muted-foreground">Switch product ↓</span>
                 <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">

@@ -79,7 +79,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
 
       {/* Category label */}
       <div className="absolute top-3 left-3 z-20">
-        <span className="text-xs font-medium tracking-wide text-primary-foreground bg-foreground/60 px-2.5 py-1 rounded-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+        <span className="text-xs font-medium tracking-wide text-background bg-foreground/60 px-2.5 py-1 rounded-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
           {label}
         </span>
       </div>

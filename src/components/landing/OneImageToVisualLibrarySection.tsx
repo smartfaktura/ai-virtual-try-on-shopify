@@ -211,7 +211,7 @@ export function OneImageToVisualLibrarySection({
                     <span
                       className={cn(
                         'absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wider',
-                        'bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full',
+                        'bg-foreground/80 text-background px-2 py-0.5 rounded-full',
                         'transition-opacity duration-500',
                         revealed ? 'opacity-100' : 'opacity-0',
                       )}

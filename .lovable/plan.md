@@ -1,59 +1,52 @@
-After comparing every Landing (`/`) section against `/home` line-by-line, the typography, spacing, eyebrows, and CTA pills are already aligned. The remaining mismatches are smaller details where Landing still leans on heavier UI (gradients, primary chips, mismatched corner radii, duplicated borders, slightly off section bands). This pass cleans those up so the main landing page reads as one continuous, calm piece — exactly like /home.
+## In-depth diff of `/` vs `/home`
 
-## What still doesn't match (and the fix)
+After a section-by-section comparison, most of the page now matches the `/home` aesthetic. The remaining inconsistencies are concrete and small. Here is exactly what is still off and how to fix it.
 
-### 1. HeroSection.tsx
-- Mobile hero scene pills use `bg-primary` blue when active — /home uses `bg-foreground` (near-black). Switch active pill to `bg-foreground text-background` to match HomeTransformStrip pills.
-- Mobile output card label badge uses `bg-primary/80` — replace with the home-style `bg-foreground/60` overlay (matches HomeHero MarqueeCard label).
-- Tighten section band: change `bg-[#FAFAF8]` is fine, but remove the leftover `pt-28 pb-6 sm:pt-36 sm:pb-10` and use `pt-28 pb-6 lg:pt-36 lg:pb-10` (already matches /home — keep). No change here.
+### Issues found
 
-### 2. ProductCategoryShowcase.tsx
-- Category label chip uses `bg-foreground/60` with white text — keep, but currently it's `text-primary-foreground` (which is white in this theme). Confirmed fine.
-- Card uses `rounded-2xl` and `shadow-md shadow-foreground/[0.04]` ✓ matches HomeHero.
-- The progress bar at top of each card is `bg-primary/70` blue — /home has none. Change to `bg-foreground/30` for a calmer, on-brand indicator (or remove entirely). Recommendation: keep but switch to `bg-foreground/40`.
+**1. HeroSection — leftover primary-blue accents**
+- Mobile bottom strip shows `text-primary` for "∞ results" and `ArrowRight text-primary` (lines ~373–374). `/home`'s hero uses neutral foreground tones throughout.
+- Mobile dot indicator active state uses `bg-primary` (line ~345). `/home` marquee has no primary accents.
+- "Original" badge on the marquee equivalent in `HomeHero` uses `bg-primary/90` — but the rest of the home page is neutral. We should keep these in sync; for restraint, swap to `bg-foreground/80 text-background`.
 
-### 3. OneImageToVisualLibrarySection.tsx
-- Cells use `border border-border/40` + `shadow-[0_1px_2px...]`. /home cards use `shadow-md shadow-foreground/[0.04]` and no border. Drop the border, use the same shadow token for visual consistency.
-- Source "Original" badge is `bg-primary/90` blue — /home uses `bg-primary/90` too in HomeTransformStrip GridCard, so this one is consistent. No change.
-- Source ring `ring-1 ring-primary/40` — soften to `ring-1 ring-foreground/15` so it doesn't pop blue against a calm grid.
+**2. OneImageToVisualLibrarySection — primary "Original" badge**
+- Source-cell "Original" badge uses `bg-primary/90 text-primary-foreground` (line 214). Should be `bg-foreground/80 text-background` to match the calm neutral system used elsewhere.
 
-### 4. StudioTeamSection.tsx
-- Member role uses `text-primary` (bright blue) — /home is monochrome. Change to `text-foreground/80` for the role line (keeps hierarchy but removes the only blue accent in the carousel).
-- Card border uses `border-[#f0efed]` ✓ matches /home tokens.
+**3. HowItWorks — Step 1 "drag & drop" border still uses default `border-border` solid look but lacks `/home`'s rounded radius scale**
+- Step 1 inner upload zone uses `rounded-2xl` and `border-2 border-dashed border-border` — `HomeHowItWorks` uses `border-border/70` (softer). Minor: soften the dashed border to `border-border/70` for the lighter look.
+- The "Ready" pill is fine (already neutral foreground). No change.
 
-### 5. HowItWorks.tsx
-- Step header pattern (`Step 01` text eyebrow) ✓ matches /home.
-- Step 2 demo: `Lifestyle` chip is `bg-primary text-primary-foreground` — /home equivalent demo (HomeHowItWorks StepChoose) uses `ring-2 ring-foreground/70 bg-foreground/[0.06]` style. Change the active workflow chip to `bg-foreground text-background` to match.
-- Step 1 "Ready" pulse + Step 2 "Generate" Sparkles use `text-primary` blue. Soften to `text-foreground` so the calm minimalist tone holds.
-- Upload icon container uses `bg-primary/10 text-primary` — switch to `bg-foreground/[0.06] text-foreground/70` to match HomeHowItWorks StepUpload.
+**4. ProductCategoryShowcase — category label uses `text-primary-foreground` ambiguously**
+- Line 82: `text-primary-foreground bg-foreground/60` works but the token mismatch (`primary-foreground` on a `foreground` background) is sloppy. Replace with `text-background bg-foreground/60` for semantic correctness. (Visual is identical — this is a token cleanup.)
 
-### 6. FreestyleShowcaseSection.tsx
-- Heading uses `<span className="text-primary">No limits.</span>` — /home doesn't use color accents in headings. Change span to `text-[#4a5578]` (the same muted slate used in HomeHero subhead).
-- Active chips use `border-primary/40 bg-primary/10 text-primary` — calm to `border-foreground/20 bg-foreground/[0.06] text-foreground`.
-- Generate button stays primary (it IS the CTA inside the demo) — keep.
-- Progress bar `bg-primary` — keep (it's a transient demo signal).
+**5. HomeFinalCTA vs FinalCTA — fully aligned ✅** (matching dark navy, same blur orbs, same eyebrow style). No changes needed.
 
-### 7. VideoShowcaseSection.tsx — already matches. No change.
+**6. LandingFAQ vs HomeFAQ — fully aligned ✅** (same bg, accordion styling, eyebrow).
 
-### 8. ModelShowcaseSection.tsx — already matches (`bg-[#FAFAF8]`, marquee, soft shadow). No change.
+**7. ModelShowcase / EnvironmentShowcase / VideoShowcase — aligned ✅** (consistent eyebrow, h2, py-16 lg:py-32, max-w-[1400px], rounded-2xl shadow tokens).
 
-### 9. EnvironmentShowcaseSection.tsx — already matches. No change.
+**8. StudioTeamSection — aligned ✅** (matches HomeCreateCards card styling: `rounded-3xl`, `border-[#f0efed]`, `shadow-sm`, hover `-translate-y-1`).
 
-### 10. LandingFAQ.tsx — already mirrors HomeFAQ exactly. No change.
+**9. FreestyleShowcaseSection — aligned ✅** after prior pass (neutral chips, `#4a5578` slate accent).
 
-### 11. FinalCTA.tsx — already mirrors HomeFinalCTA exactly (same bg, blur orbs, white pill, outline pill). No change.
+### Changes to apply
 
-## Summary of the rule being applied
-Anywhere on the landing page that still uses `text-primary` / `bg-primary` / `bg-primary/10` for **decorative** accents (not the main page-level CTA buttons), swap to neutral `foreground`-based tokens. The /home page uses primary blue **only** on the hero CTA, the FAQ heading underline, and the Generate button — nothing else. This pass brings Landing to the same discipline.
+1. **`src/components/landing/HeroSection.tsx`**
+   - Mobile bottom strip (~line 373–374): change `text-primary` "∞ results" + arrow to `text-foreground`.
+   - Mobile dot indicator (~line 345): change active dot from `bg-primary` to `bg-foreground`.
 
-## Files to edit (6)
-- `src/components/landing/HeroSection.tsx`
-- `src/components/landing/ProductCategoryShowcase.tsx`
-- `src/components/landing/OneImageToVisualLibrarySection.tsx`
-- `src/components/landing/StudioTeamSection.tsx`
-- `src/components/landing/HowItWorks.tsx`
-- `src/components/landing/FreestyleShowcaseSection.tsx`
+2. **`src/components/landing/OneImageToVisualLibrarySection.tsx`**
+   - Line 214: replace `bg-primary/90 text-primary-foreground` with `bg-foreground/80 text-background`.
 
-No content, no copy, no structural changes — only token-level color/border/shadow swaps to match /home's monochrome restraint.
+3. **`src/components/landing/HowItWorks.tsx`**
+   - Line 153: soften dashed border to `border-border/70`.
 
-Approve to apply?
+4. **`src/components/landing/ProductCategoryShowcase.tsx`**
+   - Line 82: replace `text-primary-foreground` with `text-background` (token correctness, identical visual).
+
+5. **`src/components/home/HomeHero.tsx`** (optional, for full symmetry)
+   - Line 64: "Original" badge — change `bg-primary/90 text-primary-foreground` to `bg-foreground/80 text-background` so both pages use the same neutral badge style.
+
+That's it — these are the last remaining mismatches. After this, both pages will share an identical design language.
+
+**Approve to apply these 5 small refinements?**
