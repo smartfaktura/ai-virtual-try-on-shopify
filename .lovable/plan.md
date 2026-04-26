@@ -1,41 +1,34 @@
-## Issues on `/product-visual-library` (mobile)
+## Two fixes
 
-1. Filter trigger bar shows the current category (e.g. "Fashion & Apparel · 425") — confusing as a filter affordance. Should read as a clear action like "View by category".
-2. Mobile filter drawer highlights "All categories" at the top in solid dark even though Fashion & Apparel is the actual active category — double active state, confusing.
-3. Scene detail modal on mobile: hero image is wide (16:11) and the body sits below, but content still overflows on smaller phones, making the user scroll inside the modal. Needs a tighter vertical layout that fits a single mobile screen.
-4. The default close X is hard to see against the dark hero image — needs a clearly visible floating close button.
+### 1. `/contact` page — match the homepage / `/home` premium aesthetic
 
-## Fixes
+The current page uses a primary-colored pill badge, generic shadcn cards, and a default tinted submit button — it does not match the editorial, off-white-cream, foreground-on-background style of the rest of the marketing site (Home, Product Visual Library, etc.).
 
-### A) `src/pages/ProductVisualLibrary.tsx` — filter trigger label
-- Change the mobile trigger label logic so it always says "View by category" (with the current category shown as a smaller secondary chip on the right). Concretely:
-  - Remove the `triggerLabel` variable usage in the trigger button.
-  - Replace the trigger button content with: icon + "View by category" + (if a family is active) a small pill on the right showing the family label and count, e.g. "Fashion & Apparel · 425".
-  - This makes the bar read as an action instead of a status.
+Edit `src/pages/Contact.tsx`:
 
-### B) `src/components/library/LibraryMobileFilters.tsx` — drawer active state
-- Stop highlighting "All categories" in solid dark when a real family is already active. The "All categories" row should only be shown as active when **no** family is selected (or the user explicitly chose "All"). Today the condition `activeFamilySlug === families[0]?.slug && !activeCollectionSlug` highlights the first family as if it were "All", which is wrong.
-- New rule: "All categories" highlighted only if `activeFamilySlug === null`.
-- Add a separate "All categories" handler that sets `activeFamilySlug = null`. (`ProductVisualLibrary` already auto-falls back to `families[0]` for rendering when slug is null, so behaviour is preserved — but the visual state becomes correct.)
-- Visual polish: when a family is expanded, render its sub-items in a slightly indented "tray" with a subtle left rule (1px `border-l border-foreground/10` + `ml-5 pl-3`) instead of pure indentation, so the hierarchy reads as a tree, not as two equal-level pills.
+- **Hero section:** swap the colored "Contact Us" pill for a small uppercase eyebrow (`text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground`) like Home / Library. Title stays "Get in touch" but use the same tighter editorial sizing (`text-4xl sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em]`). Centered, with generous top padding (`pt-24 sm:pt-28 lg:pt-32`).
+- **Section background:** wrap hero in `bg-[#FAFAF8]` (cream) like other landing sections; form section gets `bg-background`.
+- **Form card:** drop the shadcn `Card` chrome. Use a single editorial container `rounded-3xl border border-foreground/10 bg-background p-6 sm:p-10` with subtle shadow.
+- **Inputs:** keep the existing `Input/Textarea/Select` components but add a uniform `rounded-xl` and slightly larger height (`h-11`) for inputs/select trigger to feel more premium.
+- **Submit button:** match the `SceneDetailModal` / discover CTA — full-width on mobile, auto on desktop, `h-[3.25rem] rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold`.
+- **Side cards (Email Us / Response Time):** convert to plain editorial blocks (no Card chrome) with a small icon in a soft circle, label uppercase eyebrow, then the value. Same off-white surface treatment.
+- **Spacing:** match Home — section paddings `py-16 sm:py-20 lg:py-24` instead of the current `py-20 sm:py-28`.
 
-### C) `src/components/library/SceneDetailModal.tsx` — vertical fit on mobile + visible close
+No logic / submit handler changes.
 
-- **Layout switch on mobile to a vertical scroll-free design.** Replace the current 16:11 hero with a compact vertical stack tuned for a single phone screen:
-  - Container: keep `max-h-[92dvh]`, but switch the inner layout to `flex flex-col` on mobile and the existing `md:grid-cols-[5fr_6fr]` on desktop.
-  - Hero on mobile: change aspect ratio from `aspect-[16/11]` to `aspect-[5/4]` *but cap with `max-h-[42dvh]`* so the image never eats more than ~42 % of viewport height. Use `object-cover`. Desktop unchanged (`md:aspect-[4/5] md:max-h-none`).
-  - Body padding on mobile reduced to `p-4` (was `p-5`), and gap reduced to `gap-3` (was `gap-4`) so badges, title, description and CTA all fit in the remaining ~50dvh.
-  - Description: clamp to 3 lines on mobile via `line-clamp-3 sm:line-clamp-none` so very long copy can't push the CTA off-screen.
-  - CTA stays the existing pill at `h-[3.25rem]`; helper line below the CTA stays as is.
+### 2. Models marquee — fix the "zoomed-in" model thumbnails
 
-- **Add a clearly visible floating close button.**
-  - Hide the default theme X (`[&>button[aria-label='Close']]:hidden` on `DialogContent`) because it sits low-contrast on the hero.
-  - Add an explicit `<DialogClose>`-wrapped circular button absolutely positioned at `top-3 right-3` on top of the hero: `h-9 w-9 rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur border border-foreground/10 flex items-center justify-center` with an `X` icon (4px stroke). On desktop this floats over the same hero corner and stays consistent.
+Cause: `src/components/landing/ModelShowcaseSection.tsx` calls `getOptimizedUrl(url, { width: 320, quality: 55, resize: 'cover' })`. Per the helper's own warning (`imageOptimization.ts` line 48-53), passing `width` without `height` makes Supabase's `/render/image/` endpoint crop the image — exactly the "zoomed in heads only" effect shown in the screenshot.
+
+Fix: pass both width and height in the card's natural 3:4 aspect ratio so Supabase resizes-to-cover at the correct frame instead of cropping.
+
+```tsx
+src={getOptimizedUrl(model.previewUrl, { width: 320, height: 426, quality: 55, resize: 'cover' })}
+```
+
+That's a one-line change inside `ModelCardItem`. The 320×426 box is ~2× the largest rendered card (`lg:w-36 lg:h-44` = 144×176) so it stays sharp on retina without downloading the full 300 KB original.
 
 ## Files
 
-- `src/pages/ProductVisualLibrary.tsx` — trigger button content only.
-- `src/components/library/LibraryMobileFilters.tsx` — handler + active-state condition + tray styling.
-- `src/components/library/SceneDetailModal.tsx` — mobile layout tweaks + floating close button.
-
-No data, routing, or logic changes beyond the above.
+- `src/pages/Contact.tsx` — restyle the page only.
+- `src/components/landing/ModelShowcaseSection.tsx` — add `height: 426` to the optimized URL.
