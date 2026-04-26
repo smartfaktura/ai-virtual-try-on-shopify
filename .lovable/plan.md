@@ -1,18 +1,15 @@
-## Swap 6 marquee tiles in "Place your product anywhere" section
+## Fix mobile overflow on hero typewriter
 
-Single file: `src/components/landing/EnvironmentShowcaseSection.tsx`
+**Problem:** `whitespace-nowrap` on the typewriter span clips long phrases like "For E-commerce Brands." on narrow viewports.
 
-Add a `PB` (product-uploads scene-previews) base + `p()` helper, then replace these tiles:
+**Fix in `src/components/home/HomeHero.tsx`:**
 
-| Card | Old source | New source (scene-previews/...) |
-|---|---|---|
-| Studio Movement | `poses/pose-studio-movement.jpg` | `1776840731708-d8q4ox.jpg` |
-| Dynamic Water Splash | `freestyle/baebb27e-…png` | `1776018020221-aehe8n.jpg` |
-| Frozen Aura | `freestyle/2f6bb14f-…png` | `1776018027926-ua03bd.jpg` |
-| Earthy Woodland Product | `freestyle/ccfaf5c8-…png` | `1776842392261-39paz7.jpg` |
-| Brutalist Urban Steps | `freestyle/0682905a-…png` | `1776664678316-msnkm0.jpg` |
-| Amber Glow Studio (×2 — rows 1 & 2) | `freestyle/91418be3-…png` | `1776848678453-vw1uf9.jpg` |
+1. Remove `whitespace-nowrap` so text wraps naturally on mobile; keep `nowrap` only at `sm:` and up where there's room.
+2. Scale the H1 down a notch on mobile (`text-[2rem]` at base → `text-[2.5rem]` at sm → unchanged from sm up) so the longest phrase fits cleanly on one line.
+3. Shorten 1–2 typewriter phrases that are too long for narrow widths:
+   - `For E-commerce Brands.` → `For E-commerce.`
+   - `From One Product Photo.` → `From One Photo.`
+   - Keep `Product Page Ready.`, `Ads That Convert.`, `Every Scene. Every Angle.`, `No Photoshoot Needed.`
+4. Reserve vertical space for 2 lines on mobile (`min-h-[2.3em] sm:min-h-[1.15em]`) so when a phrase wraps the layout doesn't jump.
 
-Helper: `p(name, file)` resolves `${PB}/${file}` through `getOptimizedUrl({ quality: 75 })` (matches the explicit `?quality=75` in your URLs).
-
-Plus version.json bump.
+That keeps the /home aesthetic and SEO intent while making the hero render cleanly down to 320px.

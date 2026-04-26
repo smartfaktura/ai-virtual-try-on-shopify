@@ -98,8 +98,8 @@ function MarqueeRow({ cards, direction, duration }: {
 
 /* ── Typewriter for the hero subline ── */
 const TYPED_PHRASES = [
-  'For E-commerce Brands.',
-  'From One Product Photo.',
+  'For E-commerce.',
+  'From One Photo.',
   'Product Page Ready.',
   'Ads That Convert.',
   'Every Scene. Every Angle.',
@@ -147,7 +147,7 @@ function HeroTypewriter() {
 
   return (
     <span
-      className="text-[#4a5578] inline-block whitespace-nowrap min-h-[1.15em] align-baseline"
+      className="text-[#4a5578] inline-block sm:whitespace-nowrap min-h-[2.3em] sm:min-h-[1.15em] align-baseline px-2"
       aria-live="polite"
     >
       {text}
@@ -165,7 +165,7 @@ export function HomeHero() {
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {/* ── Centered copy ── */}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
-        <h1 className="text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
+        <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
           <span>AI Product Visuals.</span>
           <br />
           <HeroTypewriter />
