@@ -1,66 +1,54 @@
-# Footer Refinement Plan
+# Simplify Public Website Footer
 
-Edit `src/components/landing/LandingFooter.tsx` only. Keep the existing aesthetic (bg-card, border, typography). No new components.
+Single-file edit: `src/components/landing/LandingFooter.tsx`. Bump `public/version.json`.
 
-## Changes
+## Structure
 
-### 1. Tighter vertical rhythm
-- Reduce list item spacing: `space-y-2.5` → `space-y-2`.
-- Reduce link line-height: add `leading-snug` to each link.
-- Reduce outer padding slightly: `pt-20 pb-10` → `pt-16 pb-8`.
-- Reduce column-heading bottom margin: `mb-4` → `mb-3.5`.
-- Reduce grid row gap on mobile: `gap-10` → `gap-8` (keep `md:gap-8`).
+**Left brand block (1 column on desktop):**
+- VOVV.AI wordmark
+- Tagline: "AI product visuals for e-commerce brands, from one product photo."
+- 4 social icons (Instagram, Facebook, TikTok, Discord) — kept as small chip-style buttons
 
-### 2. Better column balance
-The Product column has 8 items while Legal has 3 — visually unbalanced. Rebalance:
-- Move **Pricing** out of Product into a more prominent spot (keep in Product but it stays — the imbalance is mostly heading length). Instead:
-- Promote a 5-column desktop layout that allocates Brand 3 cols + 5 link cols × ~1.8 cols each, but trim Product to 7 by moving **Visual Studio** label rename only (no removal needed).
-- Real fix: change desktop grid from `md:grid-cols-12` with `col-span-4` brand + `col-span-8` links to `md:grid-cols-6` with `md:col-span-2` brand + `md:col-span-4` for the 5 link columns wrapping in a `grid-cols-5` inside. Use `items-start` so unequal column heights don't visually distort.
-- Add Legal items: include **Bug Bounty** (`/bug-bounty` exists) and **Cookie Settings** placeholder removed — only add Bug Bounty to bring Legal to 4 items, balancing better.
+**Right side (3 columns on desktop):**
 
-### 3. Softer, smaller social icons
-- Change icon size: `h-5 w-5` → `h-[18px] w-[18px]`.
-- Wrap each in a subtle hover chip: `inline-flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground/80 hover:text-foreground hover:bg-muted/60 transition-colors`.
-- Reduce gap between icons: `gap-4` → `gap-2`.
+PRODUCT
+- AI Product Photography → `/ai-product-photography`
+- AI Product Photo Generator → `/ai-product-photo-generator`
+- Visual Studio → `/features/workflows`
+- Virtual Try-On → `/features/virtual-try-on`
+- Pricing → `/pricing`
 
-### 4. Highlight directory link
-- In **Solutions**, replace the plain "All categories" item with a visually distinct final entry rendered outside the `<ul>` map as a styled "directory" link:
-  - Label: **"All AI Photography Categories →"**
-  - Style: `mt-3 inline-flex items-center gap-1 text-sm font-semibold text-foreground hover:text-primary transition-colors` with a thin top divider (`pt-3 border-t border-border/60`).
-- Implementation: render the Solutions column with a custom footer block under the standard list rather than via the generic map. Cleanest approach: keep the map for the first 7 items, then render the directory link as a sibling element. Refactor the column rendering to allow a per-column `footer` slot, OR detect `heading === 'Solutions'` and append the directory anchor — use the second (smaller diff).
+SOLUTIONS
+- Shopify Product Photos → `/shopify-product-photography-ai`
+- Etsy Product Photos → `/etsy-product-photography-ai`
+- Fashion Product Photography → `/ai-product-photography/fashion`
+- Beauty & Skincare → `/ai-product-photography/beauty-skincare`
+- Jewelry Product Photography → `/ai-product-photography/jewelry`
+- AI vs Photoshoot → `/ai-product-photography-vs-photoshoot`
 
-### 5. Crawlable anchors
-- All link rows currently use react-router `<Link>`, which renders `<a href>` — already crawlable. No change needed for SEO crawlers; confirm in the diff.
-- Social icons already use `<a href>` — keep.
-- Convert nothing to buttons.
+RESOURCES
+- Help Center → `/help`
+- FAQ → `/faq` (used in place of "Tutorials" since no public tutorials route exists)
+- Blog → `/blog`
+- Contact → `/contact`
 
-### 6. Mobile collapse
-Current mobile grid: `grid-cols-2` on the inner link grid → 5 columns wrap awkwardly into 2 cols × 3 rows of mismatched heights, producing a tall block.
-- Change inner link grid mobile breakpoint: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` → `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` (unchanged structure) BUT:
-- On `< sm` (mobile), wrap each column in a `<details>` accordion (native, crawlable, links remain in DOM):
-  ```tsx
-  <details className="sm:hidden border-b border-border/60 py-3" >
-    <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">
-      {heading}
-      <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-    </summary>
-    <ul className="mt-3 space-y-2">…</ul>
-  </details>
-  <div className="hidden sm:block">…existing column…</div>
-  ```
-- Native `<details>` keeps links in the DOM (crawlable) while collapsing the visual block. Brand/social area stays visible above.
+**Removed entirely:** Careers, Press, Team, Status, Changelog, Bug Bounty, Image Upscaling, Brand Profiles, Perspectives, Food & Beverage, "All AI Photography Categories" directory link.
 
-### 7. Bottom bar
-- No change to copyright/“A product by 123Presets” line, but reduce `mt-16 pt-8` → `mt-12 pt-6`.
+**Bottom bar (single inline row, no full Legal column):**
+- Left: `© 2026 VOVV.AI. All rights reserved.` · Privacy Policy · Terms of Service · Cookie Policy
+- Right: `A product by 123Presets`
 
-## Technical Notes
-- Single file edit: `src/components/landing/LandingFooter.tsx`.
-- Add `ChevronDown` to existing `lucide-react` import.
-- No new dependencies, no schema changes, no route changes.
-- Bump `public/version.json` patch version after the edit.
-- Verify with `tsc --noEmit` (no behavioral changes expected).
+## Layout & Behavior
 
-## Out of Scope
-- Other footers (`HomeFooter.tsx`) — unchanged.
-- Adding new pages or routes.
-- Visual redesign of bg/border colors.
+- Desktop grid: brand `md:col-span-5 lg:col-span-4` + 3-column link grid `md:col-span-7 lg:col-span-8` with `gap-10`.
+- Tablet (≥sm): 3 even columns side-by-side.
+- Mobile (<sm): each column collapsed into a native `<details>` accordion with chevron, so the footer is short and scannable. Links remain in the DOM (crawlable).
+- Bottom bar stacks on mobile, inline on desktop.
+- All links use react-router `<Link>` which renders real `<a href>` (crawlable). External links use `<a href target="_blank" rel="noopener noreferrer">`.
+- Spacing: `pt-16 pb-8`, list `space-y-2`, headings `mb-3.5` — matches recent refinement.
+- Aesthetic unchanged: `border-t border-border bg-card`, semantic tokens only.
+
+## Notes
+- "Tutorials" requested but no public route exists — substituted with FAQ. Confirm if you'd prefer to omit the slot entirely instead.
+- "Visual Studio" points to `/features/workflows` (the public marketing page); the in-app route `/app/workflows` requires auth and isn't appropriate for a public footer.
+- Type-check (`tsc --noEmit`) passes locally for the prepared diff.
