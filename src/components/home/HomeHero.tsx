@@ -55,7 +55,7 @@ function MarqueeCard({ label, src, alt, isOriginal, isVideo, eager }: HeroCard &
         />
       ) : (
         <img
-          src={isOriginal ? src : getOptimizedUrl(src, { quality: 60 })}
+          src={isOriginal ? src : getOptimizedUrl(src, { width: 320, height: 426, quality: 55, resize: 'cover' })}
           alt={alt ?? label}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"

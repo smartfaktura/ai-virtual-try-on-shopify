@@ -143,7 +143,7 @@ export function HomeHowItWorks() {
         }
       `}</style>
 
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+      <div ref={ref} className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
@@ -159,7 +159,6 @@ export function HomeHowItWorks() {
 
         {/* Mobile: swipeable carousel */}
         <div
-          ref={ref}
           className={`lg:hidden transition-all duration-700 ${
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           }`}
