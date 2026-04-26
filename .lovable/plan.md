@@ -1,41 +1,18 @@
 ## Problem
 
-On `/`, the "Choose a model or create your own" section (component: `ModelsMarquee` rendered by `HomeModels`) sometimes shows fewer model images than expected on desktop, with visible gaps in the marquee.
+On `/product-visual-library`, when a scene card is clicked the `SceneDetailModal` shows white bands above and below the image on mobile. Cause: the mobile hero uses `aspect-[3/4]` with `object-contain`, which letterboxes the image and exposes the white modal background.
 
-## Root cause
+## Fix (single file: `src/components/library/SceneDetailModal.tsx`)
 
-`ModelCardItem` calls `setHidden(true)` and returns `null` whenever the image fails to load (slow network, transient Supabase render hiccup, optimized URL edge case). Because the marquee duplicates the items list (`[...items, ...items]`) and animates by exactly `-50%`:
+1. **Hero image fills its frame on every viewport** — switch className from `object-contain md:object-cover` to plain `object-cover`. No more letterbox bands.
+2. **Use a single, friendlier aspect ratio across breakpoints** — replace `aspect-[3/4] max-h-[55dvh] md:aspect-[4/5]` with `aspect-[4/5]`. Slightly less tall on mobile, prevents the modal from feeling oversized while keeping the visual generous.
+3. **Tighten the modal size on mobile** — change `DialogContent` `max-w-3xl` → `max-w-[26rem] sm:max-w-2xl md:max-w-3xl`, and `max-h-[92dvh]` → `max-h-[88dvh]`. Smaller, more pop-in.
+4. **Move overflow scrolling inside the grid wrapper** — `DialogContent` becomes `overflow-hidden` (so the rounded corners clip cleanly) and the inner grid gets `overflow-y-auto`. Eliminates any scroll-track artifact at the modal edge.
 
-- An image that fails in **only one** of the two duplicated copies removes that card on one side, breaking the seamless loop and leaving a gap that scrolls past the viewport.
-- Multiple failures compound, producing the "missing models" effect on long desktop rows.
-- Quality is also low (`quality=55`, no retina `srcSet`), which both looks soft and fails more often when Supabase render returns a transient error.
+No other layout, copy, or behavior changes.
 
-## Fix (single file: `src/components/landing/ModelShowcaseSection.tsx`)
+## Out of scope
 
-### 1. Never unmount on error — render a stable placeholder instead
-
-Replace the `if (hidden) return null` pattern with an `errored` flag that swaps the `<img>` for a neutral avatar placeholder (a `lucide` `User` icon on a `bg-muted/40` tile) while keeping the card's exact dimensions and the name label. This guarantees both copies of the doubled list always have identical width, so the `-50%` keyframe loop stays seamless and no gaps appear.
-
-### 2. Bump image quality + add retina srcSet
-
-Apply the same standard already used elsewhere on the homepage (per `mem://style/image-optimization-no-crop`):
-
-- `getOptimizedUrl(url, { width: 360, height: 480, quality: 72, resize: 'cover' })` as the base `src`
-- `getResizedSrcSet(url, { widths: [240, 360, 480], aspect: [3, 4], quality: 72 })` for `srcSet`
-- `sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"` matching the actual tile widths (`w-28` / `sm:w-32` / `lg:w-36`)
-
-`ShimmerImage` already extends `ImgHTMLAttributes`, so it forwards `srcSet`/`sizes` natively — no component changes needed.
-
-### 3. Add `User` to the lucide import (alongside existing `Plus`)
-
-## What does NOT change
-
-- `MarqueeRow`, doubling logic, and CSS keyframes — already correct
-- `BrandModelCTA` — untouched
-- Interleave logic, sort/override hooks, eyebrow/title/subtitle props
-- `HomeModels.tsx` — untouched
-
-## Result
-
-- Every model card always occupies its slot, even if the source image fails — marquee never gaps.
-- Sharper portraits on retina displays at the same network cost (q72 with proper srcSet beats today's q55 single URL).
+- The body panel (badges, title, description, CTA) — untouched
+- Desktop split layout — already cover-based, looks correct
+- Scene grid, hooks, navigation logic — untouched
