@@ -85,8 +85,8 @@ export default function AIPhotographyVsStudio() {
           }
           subheadline="Compare a traditional product photography studio with an AI visual workflow built for ecommerce brands that need product images, ads, social content, and campaigns faster."
           trustLine="Studio-quality direction · Faster iteration · Built for ecommerce"
-          primaryCta={{ label: 'Create visuals with VOVV.AI', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Compare AI vs photoshoot', to: '/ai-product-photography-vs-photoshoot' }}
+          primaryCta={{ label: 'Try VOVV.AI free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'vs Photoshoot', to: '/ai-product-photography-vs-photoshoot' }}
           altPrefix="VOVV.AI vs studio comparison example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'Studio Hero' },
@@ -218,8 +218,8 @@ export default function AIPhotographyVsStudio() {
         <LandingFinalCTASEO
           headline="Create product visuals without starting a new studio shoot"
           copy="Use VOVV.AI to turn one product photo into product page images, lifestyle visuals, ads, social content, and campaign-ready creative."
-          primaryCta={{ label: 'Create visuals with VOVV.AI', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' }}
+          primaryCta={{ label: 'Try VOVV.AI free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'Open generator', to: '/ai-product-photo-generator' }}
           pageId="vs-studio"
         />
       </main>

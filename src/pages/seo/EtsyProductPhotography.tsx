@@ -75,8 +75,8 @@ export default function EtsyProductPhotography() {
           }
           subheadline="Upload one product photo and create Etsy listing images, lifestyle visuals, detail shots, shop banners, and social content in minutes."
           trustLine="Made for small shops · No studio needed · Create from one product photo"
-          primaryCta={{ label: 'Create Etsy product visuals free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Explore AI product photography', to: '/ai-product-photography' }}
+          primaryCta={{ label: 'Try it free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
           altPrefix="AI Etsy product photography example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'Listing Hero' },
@@ -212,8 +212,8 @@ export default function EtsyProductPhotography() {
         <LandingFinalCTASEO
           headline="Create polished Etsy visuals from one product photo"
           copy="Generate listing images, lifestyle scenes, detail shots, banners, and social content for your Etsy shop."
-          primaryCta={{ label: 'Create Etsy product visuals free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' }}
+          primaryCta={{ label: 'Try it free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'Open generator', to: '/ai-product-photo-generator' }}
           pageId="etsy"
         />
       </main>

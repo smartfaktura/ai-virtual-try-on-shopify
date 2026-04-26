@@ -86,8 +86,8 @@ export default function AIPhotographyVsPhotoshoot() {
           }
           subheadline="See when AI product photography is faster, more flexible, and more scalable — and when a traditional photoshoot still makes sense."
           trustLine="Compare cost · Speed · Flexibility · Creative output"
-          primaryCta={{ label: 'Try AI product photography free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Explore AI product photography', to: '/ai-product-photography' }}
+          primaryCta={{ label: 'Try VOVV.AI free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
           altPrefix="AI vs traditional photoshoot example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'Studio Hero' },
@@ -218,8 +218,8 @@ export default function AIPhotographyVsPhotoshoot() {
         <LandingFinalCTASEO
           headline="Create more product visuals without planning another shoot"
           copy="Upload one product photo and generate product page images, lifestyle visuals, ads, social content, and campaign-ready creative with VOVV.AI."
-          primaryCta={{ label: 'Try AI product photography free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Compare VOVV.AI vs studio', to: '/ai-product-photography-vs-studio' }}
+          primaryCta={{ label: 'Try VOVV.AI free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'vs Studio', to: '/ai-product-photography-vs-studio' }}
           pageId="vs-photoshoot"
         />
       </main>

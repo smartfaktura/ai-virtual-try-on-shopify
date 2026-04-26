@@ -166,7 +166,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               to="/app/generate/product-images"
               className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
             >
-              Create your first visuals free
+              Try it free
               <ArrowRight size={16} />
             </Link>
             <Link

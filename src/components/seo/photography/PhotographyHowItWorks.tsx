@@ -65,7 +65,7 @@ export function PhotographyHowItWorks() {
         <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
           <Button asChild size="lg" className="rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
             <Link to="/app/generate/product-images">
-              Create your first visuals free
+              Try it free
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
