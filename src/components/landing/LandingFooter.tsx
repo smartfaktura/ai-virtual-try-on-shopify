@@ -155,7 +155,7 @@ function GroupedColumn({ heading, groups }: { heading: string; groups: FooterGro
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-border bg-card">
+    <footer className="border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
         {/* Brand + columns row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 items-start">
@@ -194,14 +194,14 @@ export function LandingFooter() {
         </div>
 
         {/* Mobile collapsible columns */}
-        <div className="sm:hidden mt-8 border-t border-border/60">
+        <div className="sm:hidden mt-10 border-t border-border/60">
           {/* Product accordion */}
-          <details className="group border-b border-border/60 py-3">
-            <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          <details className="group border-b border-border/60 py-4">
+            <summary className="flex items-center justify-between text-sm font-semibold uppercase tracking-[0.14em] text-foreground cursor-pointer list-none [&::-webkit-details-marker]:hidden">
               <span>Product</span>
               <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
             </summary>
-            <ul className="mt-3 space-y-2 pb-1">
+            <ul className="mt-4 space-y-3 pb-2">
               {productLinks.map((link) => (
                 <li key={link.label}>
                   <Link to={link.to} className={linkClass}>
@@ -213,16 +213,16 @@ export function LandingFooter() {
           </details>
 
           {/* Solutions accordion (grouped) */}
-          <details className="group border-b border-border/60 py-3">
-            <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          <details className="group border-b border-border/60 py-4">
+            <summary className="flex items-center justify-between text-sm font-semibold uppercase tracking-[0.14em] text-foreground cursor-pointer list-none [&::-webkit-details-marker]:hidden">
               <span>Solutions</span>
               <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
             </summary>
-            <div className="mt-3 space-y-4 pb-1">
+            <div className="mt-4 space-y-6 pb-2">
               {solutionsGroups.map((group) => (
                 <div key={group.subheading}>
                   {group.subheading && <p className={subheadingClass}>{group.subheading}</p>}
-                  <ul className="space-y-2">
+                  <ul className="space-y-3 pl-0.5">
                     {group.links.map((link) => (
                       <li key={link.label}>
                         <Link to={link.to} className={linkClass}>
@@ -237,16 +237,16 @@ export function LandingFooter() {
           </details>
 
           {/* Resources accordion (grouped) */}
-          <details className="group border-b border-border/60 py-3">
-            <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          <details className="group border-b border-border/60 py-4">
+            <summary className="flex items-center justify-between text-sm font-semibold uppercase tracking-[0.14em] text-foreground cursor-pointer list-none [&::-webkit-details-marker]:hidden">
               <span>Resources</span>
               <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
             </summary>
-            <div className="mt-3 space-y-4 pb-1">
+            <div className="mt-4 space-y-6 pb-2">
               {resourcesGroups.map((group) => (
                 <div key={group.subheading}>
                   {group.subheading && <p className={subheadingClass}>{group.subheading}</p>}
-                  <ul className="space-y-2">
+                  <ul className="space-y-3 pl-0.5">
                     {group.links.map((link) => (
                       <li key={link.label}>
                         <Link to={link.to} className={linkClass}>
@@ -262,14 +262,14 @@ export function LandingFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 sm:mt-12 pt-6 border-t border-border flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} VOVV.AI. All rights reserved.
           </p>
 
           <nav
             aria-label="Legal"
-            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground"
           >
             {legalLinks.map((link, i) => (
               <span key={link.label} className="flex items-center gap-x-3">
