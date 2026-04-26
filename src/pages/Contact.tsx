@@ -65,7 +65,9 @@ export default function Contact() {
             Contact us
           </p>
           <h1 className="text-foreground text-4xl sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
-            Get in touch
+            Let's talk.
+            <br />
+            <span className="text-[#4a5578]">Get in touch.</span>
           </h1>
           <p className="mx-auto max-w-xl text-muted-foreground text-lg leading-relaxed">
             Have a question, feature request, or need help? We'd love to hear from you.
