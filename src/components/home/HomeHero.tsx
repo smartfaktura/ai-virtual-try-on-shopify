@@ -144,7 +144,7 @@ function HeroTypewriter() {
 
     if (reduceMotion) {
       setText(full);
-      const t = setTimeout(() => setPhraseIdx((i) => (i + 1) % TYPED_PHRASES.length), 2400);
+      const t = setTimeout(() => setPhraseIdx((i) => (i + 1) % phrases.length), 2400);
       return () => clearTimeout(t);
     }
 
@@ -165,14 +165,14 @@ function HeroTypewriter() {
         const t = setTimeout(() => setText(full.slice(0, text.length - 1)), 28);
         return () => clearTimeout(t);
       }
-      setPhraseIdx((i) => (i + 1) % TYPED_PHRASES.length);
+      setPhraseIdx((i) => (i + 1) % phrases.length);
       setPhase('typing');
     }
-  }, [text, phase, phraseIdx, reduceMotion]);
+  }, [text, phase, phraseIdx, reduceMotion, phrases]);
 
   return (
     <span
-      className="text-[#4a5578] inline-block sm:whitespace-nowrap min-h-[2.3em] sm:min-h-[1.15em] align-baseline px-2"
+      className="text-[#4a5578] inline-block whitespace-nowrap min-h-[1.15em] align-baseline"
       aria-live="polite"
     >
       {text}
