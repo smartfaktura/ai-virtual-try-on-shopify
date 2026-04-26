@@ -265,7 +265,9 @@ export default function SeoPageVisuals() {
       <PageHeader
         title="SEO page visuals"
         subtitle="Manage images shown on public SEO landing pages. Choose a page, pick a slot, replace its image from the Product Visuals library."
-      />
+      >
+        <></>
+      </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] gap-6 mt-6">
         {/* LEFT — page selector */}
