@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
 import { TEAM_MEMBERS } from '@/data/teamData';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 
 /* Lightweight lazy video — same idea as StudioTeamSection but smaller */
 function LazyVideo({ src, poster, className }: { src: string; poster: string; className: string }) {
