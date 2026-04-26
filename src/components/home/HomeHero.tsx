@@ -98,12 +98,12 @@ function MarqueeRow({ cards, direction, duration }: {
 
 /* ── Typewriter for the hero subline ── */
 const TYPED_PHRASES = [
-  'AI shoots every angle.',
-  'AI styles every scene.',
-  'AI runs your photoshoot.',
-  'AI fills your product page.',
-  'AI creates your campaign.',
-  'AI ships visuals in minutes.',
+  'For E-commerce Brands.',
+  'From One Product Photo.',
+  'Product Page Ready.',
+  'Ads That Convert.',
+  'Every Scene. Every Angle.',
+  'No Photoshoot Needed.',
 ];
 
 function HeroTypewriter() {
@@ -147,12 +147,12 @@ function HeroTypewriter() {
 
   return (
     <span
-      className="text-[#4a5578] inline-block min-h-[1.16em] align-baseline"
+      className="text-[#4a5578] inline-block whitespace-nowrap min-h-[1.15em] align-baseline"
       aria-live="polite"
     >
       {text}
       <span
-        className="inline-block w-[2px] h-[0.85em] -mb-[0.05em] ml-1 bg-[#4a5578] animate-caret-blink align-middle"
+        className="inline-block w-[3px] h-[0.85em] bg-[#4a5578] ml-0.5 align-middle animate-[blink_1s_step-end_infinite]"
         aria-hidden
       />
     </span>
@@ -165,38 +165,37 @@ export function HomeHero() {
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {/* ── Centered copy ── */}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
-        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-5">
-          AI product visuals
+        <h1 className="text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
+          <span>AI Product Visuals.</span>
           <br />
-          for e&#8209;commerce brands.
+          <HeroTypewriter />
         </h1>
 
-        <p className="text-foreground/70 text-base sm:text-lg leading-relaxed mb-3 max-w-xl mx-auto">
-          One product photo. <HeroTypewriter />
+        <p className="hidden sm:block text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
+          Turn one product photo into product page images, lifestyle visuals, ads, and campaign-ready creative — built for e-commerce brands.
+        </p>
+        <p className="sm:hidden text-[15px] text-muted-foreground max-w-xs mx-auto mb-8 leading-relaxed">
+          One product photo. Ads, product pages, lifestyle, campaigns — built for e-commerce brands.
         </p>
 
-        <p className="max-w-xl mx-auto text-muted-foreground text-base sm:text-lg leading-relaxed mb-8">
-          Turn a single product image into product page visuals, lifestyle scenes, ads, social content, and campaign-ready creative — built for DTC and e-commerce teams.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             to="/auth"
             className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
           >
-            Try it on my product
+            Try It On My Product
             <ArrowRight size={16} />
           </Link>
           <a
             href="#examples"
             className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
           >
-            See examples
+            See Real Examples
           </a>
         </div>
 
         <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8">
-          No photoshoot needed · Built for e-commerce brands · Start from one product photo
+          20 free credits · No credit card required · Start in seconds
         </p>
       </div>
 

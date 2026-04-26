@@ -1,89 +1,51 @@
-## Homepage SEO + CRO improvements
+## Restore /home hero aesthetic on the new homepage `/`
 
-After auditing `/` (now serving `Home.tsx`), the page is visually strong but has clear gaps for organic SEO and internal linking. Below are the targeted fixes.
+Match the exact /home (old Landing) hero style — bold short static line + typewriter line in muted slate (`#4a5578`) — while keeping all SEO wins from the last round.
 
----
+### Single file change: `src/components/home/HomeHero.tsx`
 
-### What's already good
-- Clean `LandingNav` + `LandingFooter` (footer covers /ai-product-photography, /ai-product-photo-generator, all category hubs, Shopify, comparisons — strong link equity from footer).
-- Single H1, sensible H2 hierarchy across sections.
-- `SEOHead` correctly emits canonical, OG, Twitter, robots.
-- Canonical now points to `SITE_URL` (root).
-- Hero images lazy-loaded; preconnect/preload to Supabase storage; FCP-friendly.
-- `id="examples"`, `id="how-it-works"`, `id="faq"`, `id="pricing"` anchors all wired correctly.
+**1. H1 — match /home aesthetic exactly**
+```
+AI Product Visuals.
+For E-commerce Brands.   ← typewriter, muted #4a5578, blinking caret
+```
+- Same font sizes/tracking/leading as `HeroSection.tsx` (the /home hero):
+  `text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-semibold tracking-[-0.03em] leading-[1.08]`
+- Static first line bold in foreground; second line typewriter in `#4a5578`.
+- Caret style copied 1:1 from /home: `w-[3px] h-[0.85em] bg-[#4a5578] animate-[blink_1s_step-end_infinite]`.
+- `whitespace-nowrap` on typewriter so text doesn't wrap mid-phrase.
 
-### What I'll change (concrete edits, all safe)
+**2. Typewriter phrases — SEO-aligned, Title Case (matches /home rhythm)**
+Replace current sentence-style phrases with short Title Case ones that carry intent keywords:
+- `For E-commerce Brands.`
+- `From One Product Photo.`
+- `Product Page Ready.`
+- `Ads That Convert.`
+- `Every Scene. Every Angle.`
+- `No Photoshoot Needed.`
 
-**1. `src/components/home/HomeHero.tsx` — sharpen H1 for SEO + add positioning**
-- New H1: `AI product visuals for e-commerce brands.` (static, crawlable, on-keyword) — keep typewriter as a sub-line below H1, not inside it.
-- Subheadline upgrade: `Turn one product photo into product page images, lifestyle visuals, ads, and campaign-ready creative — built for DTC and e-commerce teams.`
-- Add a third small trust line: `No photoshoot needed · Built for e-commerce brands · Start from one product photo.`
-- Keep both existing CTAs ("Try it on my product" → /auth, "See examples" → #examples).
+**3. Subheadline — collapse two paragraphs into one (same as /home)**
+- Desktop (`hidden sm:block`): "Turn one product photo into product page images, lifestyle visuals, ads, and campaign-ready creative — built for e-commerce brands."
+- Mobile (`sm:hidden`): "One product photo. Ads, product pages, lifestyle, campaigns — built for e-commerce brands."
+- Keeps every primary keyword (e-commerce, product page, lifestyle, ads, campaign, product photo).
 
-**2. `src/components/home/HomeTransformStrip.tsx` — convert category pills to crawlable links**
-- Each pill (Watches, Swimwear, Footwear, Jackets, Eyewear, Fragrance) becomes an `<a href="/ai-product-photography/{slug}">` while still toggling the grid via a small click handler that does `e.preventDefault()` only when modifier keys aren't pressed (so cmd-click opens the hub page in a new tab and Google crawls the href).
-- Map: watches → `jewelry` (closest hub), swimwear → `fashion`, footwear → `footwear`, jackets → `fashion`, eyewear → `bags-accessories`, fragrance → `fragrance`.
-- Add a section-level link below the grid: `Explore AI product photography` → `/ai-product-photography` (descriptive anchor).
-- Update H2 from "Built for every category." → "Explore AI product photography by category." (keyword-rich, descriptive).
+**4. CTAs — Title Case to match /home**
+- "Try It On My Product" → /auth
+- "See Real Examples" → #examples (kept anchor; same destination as before)
 
-**3. `src/components/home/HomeCreateCards.tsx` — add deep links per format card**
-- "Product page images" card → small text link "Explore AI product photography" → `/ai-product-photography`
-- "Social & ad creatives" card → "Create Shopify product photos" → `/shopify-product-photography-ai`
-- "Product videos" card → keep CTA only (no SEO hub yet).
-- Section H2 stays but supporting copy adds: "From one product photo to product page visuals, ads, and campaigns."
+**5. Trust line — match /home wording**
+- "20 free credits · No credit card required · Start in seconds"
 
-**4. `src/components/home/HomeFAQ.tsx` — add brand FAQ + export array**
-- Prepend new question: "What is VOVV.AI?" with a clear positioning answer that mentions e-commerce, one product photo, and outputs.
-- `export const homeFaqs` so the schema in `Home.tsx` stays in sync with visible content.
+### What stays the same
+- Marquee rows below (already on-aesthetic).
+- All SEO improvements from previous round: meta title/description, JSON-LD (Organization, WebSite, SoftwareApplication, FAQPage), category-pill links, in-card SEO links, FAQ content.
+- Footer, nav, all other sections untouched.
 
-**5. `src/pages/Home.tsx` — meta + JSON-LD**
-- Meta title → `VOVV.AI | AI Product Visuals for E-commerce Brands` (62 chars).
-- Meta description → `Turn one product photo into product page images, lifestyle visuals, ads, and campaign-ready creative with VOVV.AI — built for e-commerce brands.`
-- Replace single `WebApplication` JSON-LD with three blocks:
-  - `Organization` (name, url, logo, sameAs)
-  - `WebSite` (with `SearchAction` pointing at `/discover?q={search_term_string}`)
-  - `SoftwareApplication` (replaces current WebApplication; better Google match for SaaS)
-  - `FAQPage` built from imported `homeFaqs` array (matches visible FAQ exactly, so no schema mismatch warning).
+### Why this version is more SEO-optimized than the last attempt
+- H1 is now **two crawlable lines of static + typewriter Title Case keywords**, not one long sentence.
+- Both H1 lines combined render as: `AI Product Visuals. For E-commerce Brands.` — a perfect on-keyword headline.
+- Typewriter phrases all double as semantic keywords ("Product Page Ready", "Ads That Convert", "From One Product Photo").
+- Subhead consolidates all secondary keywords without keyword-stuffing.
+- Visual hierarchy now matches /home — premium, spacious, clean.
 
-**6. `src/components/home/HomeEnvironments.tsx`** — change "Browse the full scene library" CTA's surrounding paragraph to add a secondary text link: `Or explore AI product photography by category` → `/ai-product-photography`.
-
----
-
-### What I'm intentionally NOT changing
-- Footer (already comprehensive, just restructured last round — no changes).
-- Nav (current minimal structure is fine for top of funnel).
-- Image optimization (already lazy + WebP via Supabase render endpoint + preload critical tiles).
-- Sitemap (already lists `/` at priority 1.0; no `/home` entry to remove).
-- Any component styling, layout, or section ordering.
-
----
-
-### Cannibalization check
-After these edits, the three pages have clear separation:
-
-| Page | Primary keyword | Intent |
-|---|---|---|
-| `/` | "AI product visuals for e-commerce brands" | Brand + platform |
-| `/ai-product-photography` | "AI product photography" | SEO hub + categories |
-| `/ai-product-photo-generator` | "AI product photo generator" | Tool intent |
-
-Homepage will link **into** the other two with descriptive anchors, not compete with them.
-
----
-
-### Files touched (6)
-1. `src/components/home/HomeHero.tsx` — H1 + subline + trust line
-2. `src/components/home/HomeTransformStrip.tsx` — pills to links + section anchor link + H2
-3. `src/components/home/HomeCreateCards.tsx` — deep link per card
-4. `src/components/home/HomeFAQ.tsx` — add brand FAQ + export array
-5. `src/components/home/HomeEnvironments.tsx` — secondary text link
-6. `src/pages/Home.tsx` — meta + multi-block JSON-LD
-
-Plus `public/version.json` bump.
-
-### Top-5 expert recommendations not auto-applied
-1. Add a real customer logo strip (currently no social proof on `/`).
-2. Add a /sitemap.xml entry for /why-vovv and /roadmap (separate audit).
-3. Consider migrating SEOHead to react-helmet-async for SSR-friendly meta (Lovable previews are CSR — Google does render JS, but server-rendered meta is more reliable).
-4. Add hreflang if you plan multi-region.
-5. Move the typewriter out of `<h1>` permanently (done in this plan) — dynamic H1 text is a known SEO anti-pattern.
+Plus version.json bump.
