@@ -1,81 +1,62 @@
-## Footer additions + new Freestyle Studio marketing page
+## SEO audit of /ai-product-photography/* category pages
 
-### Part 1 — Footer link additions
+Audited all 10 category pages against your 5 questions. Content lives in `src/data/aiProductPhotographyCategoryPages.ts` and renders through shared section components.
 
-Edit `src/components/landing/LandingFooter.tsx`:
+### Audit findings
 
-**Solutions** column — add 2 links:
-- "Home & Furniture" → `/ai-product-photography/home-furniture`
-- "Electronics & Gadgets" → `/ai-product-photography/electronics-gadgets`
+**1. Keyword cluster targeting** — ✅ `primaryKeyword` and `secondaryKeywords` arrays match the intended clusters exactly. ⚠️ But the primary keyword does **not** appear in 9 of 10 H1s or SEO titles. Only Fashion uses "AI Fashion Product Photography" in its H1; the other 9 use the generic "AI Product Photography for [X] Brands" pattern. This is the biggest SEO miss.
 
-**Resources** column — add 4 links (insert near top, before Blog):
-- "How It Works" → `/how-it-works`
-- "FAQ" → `/faq`
-- "Careers" → `/careers`
-- "Press" → `/press`
+**2. Category-specific content** — ✅ Strong. Pain points, FAQ answers, scene examples, visual outputs and use cases are genuinely personalized (fragrance talks about glass/reflections/gift sets, footwear about soles/stitching, supplements about labels/tubs/capsules, etc.). No template-stuffing.
 
-**Product** column — repoint:
-- "Freestyle Studio" → change from `/freestyle` to `/features/freestyle` (the new marketing page)
+**3. Uniqueness across pages** — ✅ Meta descriptions, hero subheads, FAQs, pain points and visual outputs are all differentiated. ⚠️ SEO titles share boilerplate "for [X] Brands | VOVV.AI" for 9 of 10 pages. Some meta descriptions also bury the primary keyword.
 
-### Part 2 — New Freestyle Studio marketing page
+**4. Scene examples** — ✅ Each page already pulls real, category-matched scenes from the live catalog (footwear has "hard-shadow-shoes-sneakers", fragrance has "in-hand-lifestyle-fragrance", etc.). Match the brief.
 
-**Route:** `/features/freestyle` (sits alongside `/features/workflows`, `/features/perspectives`, etc.)
+**5. Internal linking** — ✅ `relatedCategories` arrays match your suggested mapping exactly. ⚠️ Anchor text on the related-category cards is the generic "Explore {groupName}" — should be descriptive like "Explore AI footwear product photography" for SEO.
 
-**File:** `src/pages/features/FreestyleFeature.tsx` — registered in `src/App.tsx`.
+### Fixes to apply
 
-**Why a new route (not reusing `/freestyle`):** `/freestyle` is a working public preset gallery + prompt builder (presets browser with an interactive prompt bar). It's not a marketing landing page. The user wants a polished feature page in the same aesthetic as `/home` and `/` — hero, sections, CTAs.
+#### A. Rewrite 9 SEO titles + 9 H1s to lead with category-specific primary keyword
 
-#### Page structure (matches existing `/features/*` aesthetic)
+| Slug | New seoTitle | New H1Lead + Highlight |
+|---|---|---|
+| footwear | AI Footwear Product Photography for Shoe Brands \| VOVV.AI | "AI Footwear Product Photography" + "for Shoe Brands" |
+| beauty-skincare | AI Skincare Product Photography for Beauty Brands \| VOVV.AI | "AI Skincare Product Photography" + "for Beauty & Skincare Brands" |
+| fragrance | AI Perfume Product Photography for Fragrance Brands \| VOVV.AI | "AI Perfume Product Photography" + "for Perfume & Fragrance Brands" |
+| jewelry | AI Jewelry Product Photography for Jewelry Brands \| VOVV.AI | "AI Jewelry Product Photography" + "for Jewelry Brands" |
+| bags-accessories | AI Bag Product Photography for Bags & Accessories Brands \| VOVV.AI | "AI Bag Product Photography" + "for Bags & Accessories Brands" |
+| home-furniture | AI Home Decor Product Photography for Furniture Brands \| VOVV.AI | "AI Home Decor Product Photography" + "for Home & Furniture Brands" |
+| food-beverage | AI Food Product Photography for Food & Beverage Brands \| VOVV.AI | "AI Food Product Photography" + "for Food & Beverage Brands" |
+| supplements-wellness | AI Supplement Product Photography for Wellness Brands \| VOVV.AI | "AI Supplement Product Photography" + "for Supplement & Wellness Brands" |
+| electronics-gadgets | AI Electronics Product Photography for Tech & Gadget Brands \| VOVV.AI | "AI Electronics Product Photography" + "for Electronics & Gadget Brands" |
 
-Wrapped in `PageLayout` with `SEOHead` + JSON-LD (same pattern as `WorkflowsFeature.tsx`).
+(Fashion already correct — leave as-is.)
 
-1. **Hero — animated preview**
-   - Eyebrow: "FREESTYLE STUDIO"
-   - H1: *Your creative studio. No limits.*
-   - Sub: *Describe what you want, pick your inputs, and get studio-quality images in seconds.*
-   - Primary CTA: "Try it free" → `/auth?redirect=/app/freestyle`
-   - Secondary CTA: "See examples" → `/freestyle` (the preset gallery)
-   - **Animated preview:** reuse the existing `FreestyleShowcaseSection` animation (typewriter prompt → chip selection → progress bar → 3 result cards) by extracting/importing that component. It already animates exactly the headline/sub copy the user requested.
+#### B. Tighten 9 meta descriptions to lead with the primary keyword
 
-2. **What you can do (capability grid)** — built from auditing `/app/freestyle`:
-   - **Open prompts** — natural-language scene direction
-   - **Mix references** — products + models + scene presets in one shot
-   - **Edit existing images** — image-role selector (edit / restyle / extend) from `ImageRoleSelector`
-   - **Style presets** — quick-apply via `StylePresetChips` / `FreestyleQuickPresets`
-   - **Brand-locked output** — `BrandProfileChip` for palette/mood lock
-   - **Pro camera + framing controls** — aspect ratio, framing, camera style, quality (from `FreestyleSettingsChips`)
-   - **Negatives** — exclude unwanted elements (`NegativesChip`)
-   - **Browse the Discover gallery** — remix any preset
+Each rewritten meta description leads with the exact `primaryKeyword` and pulls the category-specific visual problems verbatim from your brief — fabric/silhouette for fashion, soles/stitching for footwear, glass/reflections for fragrance, ice/condensation for beverage, capsules/powders for supplements, etc. All within ~160 characters.
 
-   3-column grid of icon + title + 1-line description. Icons from lucide-react (Sparkles, Layers, Wand2, ImagePlus, Palette, Camera, etc.).
+#### C. Improve related-categories anchor text
 
-3. **How it works** — 3-step horizontal: Describe → Add inputs → Generate. Mirrors hero animation.
+In `src/components/seo/photography/category/CategoryRelatedCategories.tsx`, change the card CTA text from generic `Explore {groupName}` to a descriptive phrase derived from each related category's `primaryKeyword`:
 
-4. **Showcase strip** — pull 6-8 thumbnails from `useDiscoverPresets` (freestyle-only) for a real gallery preview, click → `/freestyle/:id`.
+- "Explore AI footwear product photography"
+- "Explore AI jewelry product photography"
+- "Explore AI beauty & skincare product photography"
+- etc.
 
-5. **Comparison strip** — "vs. Visual Studio (workflows)": when to pick Freestyle (open creative direction) vs. Visual Studio (templated batch generation). Helps SEO/discoverability.
+This uses the primary keyword as natural anchor text — strong internal-link SEO signal — and varies across pages instead of repeating the same string everywhere.
 
-6. **FAQ** — 4-5 questions reusing existing FAQ accordion style (do I need a brief? credits? can I edit a photo? etc.).
+### Files changed
 
-7. **Final CTA** — gradient panel "Start creating free" → `/auth?redirect=/app/freestyle`.
-
-#### SEO
-
-- Title: "Freestyle Studio — Open AI Image Studio for Brands | VOVV.AI"
-- Description: "Describe what you want, pick your inputs, and get studio-quality product images in seconds. Open-prompt creative studio for brands."
-- Canonical: `${SITE_URL}/features/freestyle`
-- JSON-LD: SoftwareApplication schema (matches other feature pages)
-
-#### Files changed
-
-- `src/components/landing/LandingFooter.tsx` — link list updates
-- `src/pages/features/FreestyleFeature.tsx` — NEW
-- `src/App.tsx` — register `/features/freestyle` route (in public routes block, lazy-loaded like the other feature pages)
-- `public/sitemap.xml` — add new URL
+- `src/data/aiProductPhotographyCategoryPages.ts` — 9 × (seoTitle + metaDescription + h1Lead + h1Highlight) rewrites
+- `src/components/seo/photography/category/CategoryRelatedCategories.tsx` — descriptive anchor text on the 3 related-category cards
 - `public/version.json` — bump
 
-### Out of scope
+### Out of scope (already strong, no changes)
 
-- No changes to `/freestyle` (preset gallery stays as-is)
-- No changes to `/app/freestyle` (the authenticated studio)
-- No new copy beyond what's needed; reuses homepage Freestyle section animation rather than re-building it
+- Pain points, visual outputs, use cases, FAQs, hero subheads — all already category-specific
+- Scene example IDs — already match real category-tagged scenes in the catalog
+- `relatedCategories` arrays — already match your recommended mapping exactly
+- Section H2s — already dynamically interpolated with `groupName`
+- JSON-LD schemas — already personalized via `seoTitle` and `groupName`
