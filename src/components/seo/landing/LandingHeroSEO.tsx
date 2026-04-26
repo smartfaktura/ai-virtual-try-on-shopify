@@ -42,12 +42,11 @@ function Tile({
   eager?: boolean;
   highPriority?: boolean;
 }) {
-  const src = tile.id.startsWith('http') ? tile.id : PREVIEW(tile.id);
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(src, { quality: 60 })}
-        alt={`${altPrefix}: ${tile.label}`}
+        src={getOptimizedUrl(resolvedSrc, { quality: 60 })}
+        alt={resolvedAlt}
         width={210}
         height={280}
         loading={eager ? 'eager' : 'lazy'}
@@ -64,6 +63,14 @@ function Tile({
   );
 }
 
+interface ResolvedTile {
+  tile: HeroTile;
+  src: string;
+  alt: string;
+  /** Original index in the full `tiles[]` array (0-based). */
+  baseIndex: number;
+}
+
 function MarqueeRow({
   tiles,
   direction,
@@ -71,7 +78,7 @@ function MarqueeRow({
   altPrefix,
   eager = false,
 }: {
-  tiles: HeroTile[];
+  tiles: ResolvedTile[];
   direction: 'left' | 'right';
   duration: string;
   altPrefix: string;
@@ -88,11 +95,13 @@ function MarqueeRow({
         className={`flex gap-3 w-max ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'} group-hover/marquee:[animation-play-state:paused]`}
         style={{ animationDuration: duration }}
       >
-        {repeated.map((t, i) => (
+        {repeated.map((rt, i) => (
           <Tile
-            key={`${t.label}-${i}`}
-            tile={t}
+            key={`${rt.tile.label}-${i}`}
+            tile={rt.tile}
             altPrefix={altPrefix}
+            resolvedSrc={rt.src}
+            resolvedAlt={rt.alt}
             eager={eager && i < tiles.length}
             highPriority={eager && i < 2}
           />
