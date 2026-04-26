@@ -68,9 +68,8 @@ export default function SeoPageVisuals() {
   if (!isRealAdmin) return <Navigate to="/app" replace />;
 
   const selectedPage = SEO_PAGES.find((p) => p.route === selectedRoute)!;
-  const selectedSlot = selectedSlotKey
-    ? selectedPage.slots.find((s) => s.key === selectedSlotKey)
-    : undefined;
+  // (selectedSlotKey is still tracked for the picker selection state)
+
 
   // Per-page draft helpers
   const getEffective = (slot: SeoVisualSlot): {
