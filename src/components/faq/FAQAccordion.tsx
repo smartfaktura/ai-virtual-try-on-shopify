@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/accordion';
 
 export type FAQGroup = {
+  eyebrow: string;
   title: string;
   items: { q: string; a: string }[];
 };
