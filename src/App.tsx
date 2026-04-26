@@ -264,6 +264,7 @@ const App = () => {
                         <Route path="/admin/ui-audit" element={<AdminUIAudit />} />
                         <Route path="/admin/loading-lab" element={<LoadingLab />} />
                         <Route path="/admin/scene-performance" element={<SceneUsage />} />
+                        <Route path="/admin/seo-page-visuals" element={<SeoPageVisuals />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
