@@ -20,10 +20,10 @@ export function HomeFinalCTA() {
           Get started
         </p>
         <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
-          Start creating with VOVV.AI
+          Start creating today
         </h2>
         <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-10">
-          Upload one product photo. See what VOVV.AI creates for your brand.
+          Upload one product photo. See what we create for your brand.
         </p>
 
         <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
