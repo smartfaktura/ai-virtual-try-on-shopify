@@ -18,6 +18,8 @@ export interface LandingCategoryGridProps {
   /** Optional list of slugs to include — defaults to all 10. */
   slugs?: string[];
   background?: 'background' | 'soft';
+  /** Route key used to look up overrides in seo_page_visuals. */
+  pageRoute?: string;
 }
 
 export function LandingCategoryGrid({
@@ -26,7 +28,9 @@ export function LandingCategoryGrid({
   intro,
   slugs,
   background = 'background',
+  pageRoute,
 }: LandingCategoryGridProps) {
+  const overrides = useSeoVisualOverridesMap();
   const categories: ProductPhotoCategory[] = slugs
     ? slugs
         .map((s) => aiProductPhotographyCategories.find((c) => c.slug === s))
