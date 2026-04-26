@@ -372,7 +372,7 @@ export function HomeTransformStrip() {
                     key={`${cat.id}-${card.label}-${i}`}
                     card={card}
                     hideOnMobile={i >= 9}
-                    eager={cat.id === 'swimwear' && i < 9}
+                    eager={cat.id === 'swimwear' && i < 3}
                   />
                 ))}
             </div>
