@@ -6,12 +6,14 @@ import {
 } from '@/components/ui/accordion';
 
 export type FAQGroup = {
+  eyebrow: string;
   title: string;
   items: { q: string; a: string }[];
 };
 
 export const FAQ_GROUPS: FAQGroup[] = [
   {
+    eyebrow: '01 · The basics',
     title: 'Getting started',
     items: [
       {
@@ -33,6 +35,7 @@ export const FAQ_GROUPS: FAQGroup[] = [
     ],
   },
   {
+    eyebrow: '02 · Pricing',
     title: 'Plans & credits',
     items: [
       {
@@ -49,7 +52,7 @@ export const FAQ_GROUPS: FAQGroup[] = [
       },
       {
         q: 'Do you offer refunds?',
-        a: 'Subscription fees are non-refundable, but you can cancel anytime to stop future billing. For unused top-up credits or special cases, contact support and we\'ll review.',
+        a: "Subscription fees are non-refundable, but you can cancel anytime to stop future billing. For unused top-up credits or special cases, contact support and we'll review.",
       },
       {
         q: 'Can I use VOVV with a team?',
@@ -58,6 +61,7 @@ export const FAQ_GROUPS: FAQGroup[] = [
     ],
   },
   {
+    eyebrow: '03 · The output',
     title: 'Generation & quality',
     items: [
       {
@@ -79,6 +83,7 @@ export const FAQ_GROUPS: FAQGroup[] = [
     ],
   },
   {
+    eyebrow: '04 · Your identity',
     title: 'Brand & assets',
     items: [
       {
@@ -100,6 +105,7 @@ export const FAQ_GROUPS: FAQGroup[] = [
     ],
   },
   {
+    eyebrow: '05 · The fine print',
     title: 'Ownership & privacy',
     items: [
       {
@@ -116,7 +122,7 @@ export const FAQ_GROUPS: FAQGroup[] = [
       },
       {
         q: 'How do I delete my account or assets?',
-        a: 'You can delete individual assets from your library at any time. To delete your full account and all associated data, contact support and we\'ll process the request.',
+        a: "You can delete individual assets from your library at any time. To delete your full account and all associated data, contact support and we'll process the request.",
       },
     ],
   },
@@ -125,23 +131,26 @@ export const FAQ_GROUPS: FAQGroup[] = [
 export function FAQAccordion() {
   return (
     <section className="py-16 lg:py-24 bg-[#FAFAF8]">
-      <div className="max-w-3xl mx-auto px-6 space-y-14 lg:space-y-20">
+      <div className="max-w-3xl mx-auto px-6 space-y-16 lg:space-y-24">
         {FAQ_GROUPS.map((group) => (
           <div key={group.title}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-5">
-              {group.title}
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+              {group.eyebrow}
             </p>
+            <h2 className="text-foreground text-2xl sm:text-3xl lg:text-[2.25rem] font-semibold tracking-[-0.02em] leading-[1.15] mb-8">
+              <span className="text-[#4a5578]">{group.title}.</span>
+            </h2>
             <Accordion type="single" collapsible className="flex flex-col gap-3">
               {group.items.map((item, i) => (
                 <AccordionItem
                   key={i}
                   value={`${group.title}-${i}`}
-                  className="border border-[#f0efed] bg-white rounded-2xl px-5 sm:px-6"
+                  className="border border-[#f0efed] bg-white rounded-2xl px-5 sm:px-6 transition-shadow hover:shadow-sm"
                 >
-                  <AccordionTrigger className="text-left text-[#1a1a2e] text-base font-semibold py-5 hover:no-underline">
+                  <AccordionTrigger className="text-left text-foreground text-base font-semibold py-5 hover:no-underline">
                     {item.q}
                   </AccordionTrigger>
-                  <AccordionContent className="text-[#6b7280] text-sm sm:text-base leading-relaxed pb-5">
+                  <AccordionContent className="text-muted-foreground text-sm sm:text-base leading-relaxed pb-5">
                     {item.a}
                   </AccordionContent>
                 </AccordionItem>
