@@ -1,42 +1,25 @@
-## Problem
+Plan to fix the homepage model section on mobile:
 
-On mobile, the homepage models marquee runs the full-width animation off-screen. Tiles spend most of their cycle outside the viewport, which:
+1. Remove the animated two-row marquee behavior on mobile
+   - Keep the desktop/tablet marquee if desired, but mobile will no longer use horizontally translating rows.
+   - This prevents the “looping rows”, off-screen movement, and cut/cropped tile visibility shown in the screenshots.
 
-- Makes the section feel empty/broken (only 2-3 visible at a time, then long gaps)
-- Causes lazy-loaded images in the second row to never trigger loading
-- Wastes the marquee's purpose — users barely see the variety of models
+2. Add a stable mobile-only model layout
+   - Render a clean, non-animated 2-row grid/list of model cards on phones.
+   - Show a controlled set of models plus the “Brand Models” CTA.
+   - Keep all cards fully inside the viewport with consistent spacing and no partial off-screen cards.
 
-## Root cause
+3. Tune mobile card sizing and section height
+   - Use fixed mobile card dimensions that fit the 440px-wide viewport cleanly.
+   - Reduce the large empty vertical gap currently appearing below the carousel.
+   - Ensure model names are not clipped.
 
-In `src/components/landing/ModelShowcaseSection.tsx`:
+4. Keep image loading reliable
+   - Keep the direct `<img>` loading approach from the previous fix.
+   - Use eager but low-priority loading for these small cards so they appear immediately without blocking the hero.
 
-- Each row contains the full model list **doubled** (`[...items, ...items]`) at fixed tile widths (`w-28` ≈ 112px on mobile).
-- The animation translates the row at the same speed regardless of viewport width.
-- On a 440px-wide mobile screen, the row is ~3000px+ wide, so most of it sits off-screen at any moment.
-- `loading="lazy"` images that never enter the viewport never resolve their `onLoad`, so `ShimmerImage` shows a permanent skeleton (visible on row 2 e.g. "Rafael" tile).
-
-## Fix
-
-Two combined changes in `src/components/landing/ModelShowcaseSection.tsx`:
-
-### 1. Make the marquee actually visible on mobile
-
-- **Faster animation on mobile** so more models cycle through the visible window per second. Use shorter `durationSeconds` below the `sm` breakpoint (e.g. 60s mobile vs. 120s desktop).
-- **Smaller, tighter tiles on mobile** so 3-4 models fit on screen at once instead of 2-3. Reduce mobile size from `w-28 h-36` to `w-24 h-32` and tighten gap from `gap-4` to `gap-3`.
-- **Lighter edge fade** on mobile (`w-10` instead of `w-16`) so tiles aren't half-hidden behind the gradient at the edges of a narrow viewport.
-
-### 2. Guarantee images load even when off-screen
-
-- Replace `ShimmerImage` in `ModelCardItem` with a plain `<img>` using `loading="eager"`, `decoding="async"`, `fetchpriority="low"`.
-- Use a static `bg-muted/40` placeholder behind the image (no animated shimmer that can stick).
-- Keep the existing `errored` → `User` icon fallback.
-
-This ensures all ~30 small avatar tiles fetch immediately on mount (cheap, low-priority so hero LCP is unaffected) and never rely on the unreliable lazy-load + transform interaction on mobile.
-
-## Files touched
-
-- `src/components/landing/ModelShowcaseSection.tsx`
-  - `ModelCardItem`: swap `ShimmerImage` for eager low-priority `<img>` + static placeholder; reduce mobile tile size.
-  - `BrandModelCTA`: match the new mobile tile size.
-  - `MarqueeRow`: shrink mobile edge-fade width; accept and apply a mobile-specific duration via a media-query-aware approach (use Tailwind's `sm:` to swap CSS animation duration via inline style is not possible — instead add a CSS class with a `@media` rule, or pass two durations and pick via a `useIsMobile` hook).
-  - Reduce `gap-4` → `gap-3` on mobile.
+Technical details:
+- Update `src/components/landing/ModelShowcaseSection.tsx`.
+- Add a `MobileModelGrid`/mobile branch inside `ModelsMarquee` or hide/show variants with responsive classes.
+- Use a non-animated layout for mobile, e.g. a 4-column-style horizontal-fit grid or two centered rows depending on available width.
+- Desktop can continue using `MarqueeRow`, but mobile will bypass the marquee keyframes entirely.
