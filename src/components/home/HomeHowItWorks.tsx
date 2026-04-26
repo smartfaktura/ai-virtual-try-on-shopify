@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowDown, Search, Upload, ImageIcon } from 'lucide-react';
+import { ArrowRight, Search, Upload, ImageIcon } from 'lucide-react';
 // ImagePlaceholder still used by StepGenerate
 
 import { useScrollReveal } from '@/hooks/useScrollReveal';
@@ -103,9 +104,34 @@ const STEPS = [
 
 export function HomeHowItWorks() {
   const { ref, visible } = useScrollReveal();
+  const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Track active slide on mobile via IntersectionObserver.
+  useEffect(() => {
+    const slides = slideRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (slides.length === 0) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        let bestIdx = -1;
+        let bestRatio = 0;
+        entries.forEach((e) => {
+          const idx = Number((e.target as HTMLElement).dataset.index);
+          if (e.intersectionRatio > bestRatio) {
+            bestRatio = e.intersectionRatio;
+            bestIdx = idx;
+          }
+        });
+        if (bestRatio > 0 && bestIdx >= 0) setActiveIndex(bestIdx);
+      },
+      { threshold: [0.5, 0.75, 1] },
+    );
+    slides.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   return (
-    <section className="py-16 lg:py-32 bg-background" id="how-it-works">
+    <section className="py-12 lg:py-32 bg-background" id="how-it-works">
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0); }
@@ -119,7 +145,7 @@ export function HomeHowItWorks() {
 
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             How it works
           </p>
@@ -131,25 +157,62 @@ export function HomeHowItWorks() {
           </p>
         </div>
 
-        {/* Steps */}
+        {/* Mobile: swipeable carousel */}
         <div
           ref={ref}
-          className={`flex flex-col lg:flex-row items-stretch lg:items-center justify-center gap-6 lg:gap-4 transition-all duration-700 ${
+          className={`lg:hidden transition-all duration-700 ${
+            visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
+          <div className="-mx-6 px-6 overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex gap-4 pb-2">
+              {STEPS.map((step, i) => (
+                <div
+                  key={step.num}
+                  ref={(el) => { slideRefs.current[i] = el; }}
+                  data-index={i}
+                  className="w-[78%] sm:w-[60%] shrink-0 snap-center flex flex-col items-center gap-3"
+                >
+                  <h3 className="text-foreground text-base font-semibold">
+                    {step.num}
+                  </h3>
+                  <step.Visual />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Step indicator dots */}
+          <div className="flex justify-center gap-1.5 mt-4">
+            {STEPS.map((_, i) => (
+              <span
+                key={i}
+                aria-hidden
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === activeIndex ? 'w-5 bg-foreground/70' : 'w-1.5 bg-foreground/20'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: 3-column layout */}
+        <div
+          className={`hidden lg:flex items-center justify-center gap-4 transition-all duration-700 ${
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           }`}
         >
           {STEPS.map((step, i) => (
-            <div key={step.num} className="contents lg:contents">
-              <div className="flex flex-col items-center gap-4 flex-1 max-w-sm mx-auto w-full">
-                <h3 className="text-foreground text-base sm:text-lg font-semibold">
+            <div key={step.num} className="contents">
+              <div className="flex flex-col items-center gap-4 flex-1 max-w-sm w-full">
+                <h3 className="text-foreground text-lg font-semibold">
                   {step.num}
                 </h3>
                 <step.Visual />
               </div>
               {i < STEPS.length - 1 && (
                 <div className="flex items-center justify-center text-muted-foreground/60 shrink-0">
-                  <ArrowDown size={22} className="lg:hidden" strokeWidth={1.5} />
-                  <ArrowRight size={22} className="hidden lg:block" strokeWidth={1.5} />
+                  <ArrowRight size={22} strokeWidth={1.5} />
                 </div>
               )}
             </div>
@@ -157,7 +220,7 @@ export function HomeHowItWorks() {
         </div>
 
         {/* CTA */}
-        <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
+        <div className="flex flex-col items-center gap-3 mt-10 lg:mt-16">
           <Button asChild size="lg" className="rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
             <Link to="/auth">Start Generating Free</Link>
           </Button>
