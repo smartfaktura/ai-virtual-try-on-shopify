@@ -1909,6 +1909,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_page_visuals: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          id: string
+          page_route: string
+          preview_image_url: string
+          scene_id: string
+          slot_key: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          page_route: string
+          preview_image_url: string
+          scene_id: string
+          slot_key: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          page_route?: string
+          preview_image_url?: string
+          scene_id?: string
+          slot_key?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
