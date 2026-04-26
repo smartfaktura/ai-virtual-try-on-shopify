@@ -54,7 +54,7 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
                 <ArrowRight size={16} />
               </Link>
               <a
-                href="#scenes"
+                href="#scene-library"
                 className="inline-flex items-center justify-center h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
               >
                 See examples
