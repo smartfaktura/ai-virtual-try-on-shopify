@@ -12,18 +12,45 @@ import { HomeWhySwitch } from '@/components/home/HomeWhySwitch';
 
 import { HomeOnBrand } from '@/components/home/HomeOnBrand';
 import { HomeEnvironments } from '@/components/home/HomeEnvironments';
-import { HomeFAQ } from '@/components/home/HomeFAQ';
+import { HomeFAQ, homeFaqs } from '@/components/home/HomeFAQ';
 import { HomeFinalCTA } from '@/components/home/HomeFinalCTA';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
-const jsonLd = {
+const organizationLd = {
   '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: 'VOVV',
+  '@type': 'Organization',
+  name: 'VOVV.AI',
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.ico`,
+  description: 'AI product visual platform for e-commerce brands.',
+  sameAs: [
+    'https://www.instagram.com/vovv.ai',
+    'https://www.linkedin.com/company/vovv-ai',
+    'https://x.com/vovv_ai',
+  ],
+};
+
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'VOVV.AI',
+  url: SITE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/discover?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+};
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'VOVV.AI',
   url: SITE_URL,
   description:
-    'Turn one product photo into ready-to-use product images, ads, and videos for e-commerce brands.',
+    'Turn one product photo into product page images, lifestyle visuals, ads, social content, and campaign-ready creative.',
   applicationCategory: 'DesignApplication',
+  operatingSystem: 'Web',
   offers: {
     '@type': 'Offer',
     price: '0',
@@ -31,16 +58,32 @@ const jsonLd = {
   },
 };
 
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: homeFaqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: f.a,
+    },
+  })),
+};
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <SEOHead
-        title="VOVV — AI Product Visuals & Videos for Ecommerce"
-        description="Turn one product photo into ready-to-use product visuals, ads, and videos. Create e-commerce visuals in minutes without booking another shoot."
+        title="VOVV.AI | AI Product Visuals for E-commerce Brands"
+        description="Turn one product photo into product page images, lifestyle visuals, ads, and campaign-ready creative with VOVV.AI — built for e-commerce brands."
         canonical={SITE_URL}
         ogImage={DEFAULT_OG_IMAGE}
       />
-      <JsonLd data={jsonLd} />
+      <JsonLd data={organizationLd} />
+      <JsonLd data={websiteLd} />
+      <JsonLd data={softwareLd} />
+      <JsonLd data={faqLd} />
 
       <LandingNav />
       <HomeHero />
