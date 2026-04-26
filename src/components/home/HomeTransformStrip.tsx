@@ -166,7 +166,7 @@ function GridCard({
         <ImageIcon size={22} strokeWidth={1.25} />
       </div>
       <img
-        src={getOptimizedUrl(card.src, { quality: 60 })}
+        src={getOptimizedUrl(card.src, { width: 320, height: 426, quality: 60, resize: 'cover' })}
         alt={card.label}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
