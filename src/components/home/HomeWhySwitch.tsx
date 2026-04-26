@@ -30,7 +30,7 @@ export function HomeWhySwitch() {
             Why VOVV
           </p>
           <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-            Replace slow content production
+            Why e-commerce brands choose VOVV.AI
           </h2>
           <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed">
             Generate new product visuals in minutes — no shoots, no edits, no waiting.

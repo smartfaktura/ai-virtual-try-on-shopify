@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
+const seoLinks = [
+  { label: 'Explore AI product photography', to: '/ai-product-photography' },
+  { label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' },
+  { label: 'Create Shopify product photos', to: '/shopify-product-photography-ai' },
+];
+
 export function HomeFinalCTA() {
   return (
     <section className="py-16 lg:py-32 bg-[#1a1a2e] relative overflow-hidden">
@@ -14,10 +20,10 @@ export function HomeFinalCTA() {
           Get started
         </p>
         <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
-          Try it on your product
+          Start creating with VOVV.AI
         </h2>
         <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-10">
-          Upload one photo. See what VOVV creates for your brand.
+          Upload one product photo. See what VOVV.AI creates for your brand.
         </p>
 
         <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
@@ -35,6 +41,21 @@ export function HomeFinalCTA() {
             See real examples
           </Link>
         </div>
+
+        <nav
+          aria-label="Explore VOVV.AI"
+          className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm"
+        >
+          {seoLinks.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="text-white/60 hover:text-white underline-offset-4 hover:underline transition-colors"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </section>
   );

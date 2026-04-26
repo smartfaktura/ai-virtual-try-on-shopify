@@ -11,6 +11,10 @@ export const homeFaqs = [
     a: 'VOVV.AI is an AI product visual platform for e-commerce brands. Upload one product photo and create product page images, lifestyle visuals, ads, social content, and campaign-ready creative — without booking a photoshoot.',
   },
   {
+    q: 'Who is VOVV.AI for?',
+    a: 'VOVV.AI is built for e-commerce brands, DTC founders, marketing teams, and creative agencies that need a steady supply of on-brand product visuals — without the cost or schedule of traditional photoshoots.',
+  },
+  {
     q: 'How fast can I get my first visual?',
     a: 'Under a minute. Drop a product photo, pick a shot, hit generate — your first brand-ready image lands before your coffee cools.',
   },
