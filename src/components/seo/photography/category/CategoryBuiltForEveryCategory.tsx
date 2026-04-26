@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
-import { BUILT_FOR_GRIDS, type BuiltForGroup } from '@/data/aiProductPhotographyBuiltForGrids';
+import { getBuiltForGroupsForPage, slotSlugify } from '@/data/builtForGridGroups';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
 
 /**
  * Per-category "One photo · Every shot" section, rebuilt to mirror the
@@ -15,44 +17,14 @@ import { BUILT_FOR_GRIDS, type BuiltForGroup } from '@/data/aiProductPhotography
  * Title and eyebrow adapt to the page's category and noun.
  */
 export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) {
-  const rawGroups: BuiltForGroup[] = BUILT_FOR_GRIDS[page.slug] ?? [];
-
-  // Split "Bags · On-Body Editorial" → ["Bags", "On-Body Editorial"]
+  // Shared with the SEO slot registry so admin overrides match this layout.
+  const groups = getBuiltForGroupsForPage(page.slug);
   const splitLabel = (s: string): { subject: string; style?: string } => {
     const parts = s.split('·').map((p) => p.trim());
     return { subject: parts[0], style: parts.slice(1).join(' · ') || undefined };
   };
 
-  // If every raw group shares the same subject (e.g. fragrance: all "Fragrance · X"),
-  // group by **style** so chips stay distinct. Otherwise group by subject.
-  const subjects = rawGroups.map((g) => splitLabel(g.subCategory).subject);
-  const singleSubject = subjects.length > 0 && subjects.every((s) => s === subjects[0]);
-  const groupKey = (s: string) => {
-    const { subject, style } = splitLabel(s);
-    return singleSubject && style ? style : subject;
-  };
-
-  // Merge groups with the same key so chips stay short and unique.
-  const groups = (() => {
-    const order: string[] = [];
-    const map = new Map<string, BuiltForGroup>();
-    for (const g of rawGroups) {
-      const key = groupKey(g.subCategory);
-      const existing = map.get(key);
-      if (existing) {
-        const seen = new Set(existing.cards.map((c) => c.imageId));
-        for (const c of g.cards) if (!seen.has(c.imageId)) { existing.cards.push(c); seen.add(c.imageId); }
-      } else {
-        order.push(key);
-        map.set(key, { subCategory: key, cards: [...g.cards] });
-      }
-    }
-    return order.map((s) => {
-      const g = map.get(s)!;
-      return { ...g, cards: g.cards.slice(0, 8) };
-    });
-  })();
-
+  const overrides = useSeoVisualOverridesMap();
   const [activeIdx, setActiveIdx] = useState(0);
 
   if (groups.length === 0) return null;
@@ -134,26 +106,30 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
         {/* Grid — 8 images per subcategory (mobile shows 6) */}
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 lg:gap-4 animate-in fade-in duration-500" key={active.subCategory}>
-          {active.cards.map((card, i) => (
-            <div
-              key={`${active.subCategory}-${card.imageId}-${i}`}
-              className={cn(
-                'group relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted/40 shadow-sm shadow-foreground/[0.04]',
-                i >= 6 && 'hidden sm:block',
-              )}
-            >
-              <SmartImage
-                src={getOptimizedUrl(PREVIEW(card.imageId), { quality: 55 })}
-                alt={`${card.label} — ${page.groupName} AI product photography example`}
-                imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] font-medium text-white/90 leading-tight line-clamp-2">
-                  {card.label}
-                </span>
+          {active.cards.map((card, i) => {
+            const slotKey = `builtFor_${slotSlugify(active.subCategory)}_${i + 1}`;
+            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId));
+            return (
+              <div
+                key={`${active.subCategory}-${card.imageId}-${i}`}
+                className={cn(
+                  'group relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted/40 shadow-sm shadow-foreground/[0.04]',
+                  i >= 6 && 'hidden sm:block',
+                )}
+              >
+                <SmartImage
+                  src={getOptimizedUrl(resolved, { quality: 55 })}
+                  alt={`${card.label} — ${page.groupName} AI product photography example`}
+                  imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[11px] font-medium text-white/90 leading-tight line-clamp-2">
+                    {card.label}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTA */}

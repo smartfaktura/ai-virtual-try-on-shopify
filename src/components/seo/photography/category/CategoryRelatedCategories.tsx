@@ -3,6 +3,8 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, getRelatedPages, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
 
 /**
  * Pick 3 unique imageIds that best preview the variety inside a related category.
@@ -30,6 +32,7 @@ function getRelatedThumbs(rel: CategoryPage): { id: string; alt: string }[] {
 
 export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
   const related = getRelatedPages(page.relatedCategories);
+  const overrides = useSeoVisualOverridesMap();
 
   return (
     <section className="py-16 lg:py-32 bg-background">
@@ -64,18 +67,22 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
                 {/* 3-image horizontal collage */}
                 <div className="relative aspect-[16/9] bg-muted/30 p-1.5">
                   <div className="absolute inset-1.5 grid grid-cols-3 gap-1.5">
-                    {thumbs.map((t, idx) => (
-                      <div
-                        key={`${t.id}-${idx}`}
-                        className="relative overflow-hidden rounded-xl bg-muted/40"
-                      >
-                        <SmartImage
-                          src={getOptimizedUrl(PREVIEW(t.id), { quality: 55 })}
-                          alt={t.alt}
-                          imgClassName="transition-transform duration-700 group-hover:scale-[1.05]"
-                        />
-                      </div>
-                    ))}
+                    {thumbs.map((t, idx) => {
+                      const slotKey = `related_${rel.slug}_${idx + 1}`;
+                      const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(t.id));
+                      return (
+                        <div
+                          key={`${t.id}-${idx}`}
+                          className="relative overflow-hidden rounded-xl bg-muted/40"
+                        >
+                          <SmartImage
+                            src={getOptimizedUrl(resolved, { quality: 55 })}
+                            alt={t.alt}
+                            imgClassName="transition-transform duration-700 group-hover:scale-[1.05]"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

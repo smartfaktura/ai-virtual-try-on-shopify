@@ -12,10 +12,14 @@
 
 import {
   aiProductPhotographyCategoryPages,
+  getRelatedPages,
   PREVIEW,
   type CategoryPage,
 } from './aiProductPhotographyCategoryPages';
 import { aiProductPhotographyCategories } from './aiProductPhotographyCategories';
+import { getBuiltForGroupsForPage, slotSlugify } from './builtForGridGroups';
+
+const slugify = slotSlugify;
 
 export type SeoPageGroup = 'main' | 'category' | 'tool' | 'comparison';
 
@@ -264,13 +268,81 @@ function buildCategorySlots(page: CategoryPage): SeoVisualSlot[] {
   return [heroMain, ...collageSlots, ...sceneSlots];
 }
 
+// "Built for every {category} shot" — chip rail × 8-tile grid.
+// Source of truth: BUILT_FOR_GRIDS[page.slug]
+function buildBuiltForGridSlots(page: CategoryPage): SeoVisualSlot[] {
+  const groups = getBuiltForGroupsForPage(page.slug);
+  const baseTags = [page.slug, ...(page.subcategories ?? []).map((s) => s.toLowerCase())];
+  const slots: SeoVisualSlot[] = [];
+  for (const g of groups) {
+    const subSlug = slugify(g.subCategory);
+    g.cards.forEach((card, i) => {
+      slots.push({
+        key: `builtFor_${subSlug}_${i + 1}`,
+        section: `Built for every ${page.groupName.toLowerCase()} shot`,
+        label: `${g.subCategory} · tile ${i + 1} — ${card.label}`,
+        whereItAppears: `“Built for every ${page.groupName.toLowerCase()} shot” · "${g.subCategory}" chip · tile ${i + 1}.`,
+        required: false,
+        recommendedTags: [...baseTags, ...slugify(g.subCategory).split('-'), ...slugify(card.label).split('-')],
+        recommendedAspectRatio: '3:4',
+        fallbackImageId: card.imageId,
+        fallbackAlt: `${card.label} — ${page.groupName} AI product photography example`,
+      });
+    });
+  }
+  return slots;
+}
+
+// Mirror getRelatedThumbs() in CategoryRelatedCategories.tsx so the admin
+// preview matches the live render exactly.
+function pickRelatedThumbIds(rel: CategoryPage): string[] {
+  const picks: string[] = [];
+  const seen = new Set<string>();
+  const push = (id?: string) => {
+    if (!id || seen.has(id) || picks.length >= 3) return;
+    seen.add(id);
+    picks.push(id);
+  };
+  rel.heroCollage?.forEach((t) => push(t.imageId));
+  rel.sceneExamples.forEach((s) => push(s.imageId));
+  push(rel.heroImageId);
+  return picks.slice(0, 3);
+}
+
+// "Related product photography categories" — 3 thumbs per related category.
+function buildRelatedCategorySlots(page: CategoryPage): SeoVisualSlot[] {
+  const related = getRelatedPages(page.relatedCategories ?? []);
+  const slots: SeoVisualSlot[] = [];
+  for (const rel of related) {
+    const ids = pickRelatedThumbIds(rel);
+    ids.forEach((id, i) => {
+      slots.push({
+        key: `related_${rel.slug}_${i + 1}`,
+        section: 'Related product photography categories',
+        label: `${rel.groupName} · thumb ${i + 1}`,
+        whereItAppears: `“Related categories” · "${rel.groupName}" card · thumbnail ${i + 1} of 3.`,
+        required: false,
+        recommendedTags: [rel.slug, ...(rel.subcategories ?? []).map((s) => s.toLowerCase())],
+        recommendedAspectRatio: '1:1',
+        fallbackImageId: id,
+        fallbackAlt: `${rel.groupName} AI product photography example`,
+      });
+    });
+  }
+  return slots;
+}
+
 // ── The full registry ──
 
 const categoryEntries: SeoPageEntry[] = aiProductPhotographyCategoryPages.map((p) => ({
   route: p.url,
   label: p.groupName,
   group: 'category' as const,
-  slots: buildCategorySlots(p),
+  slots: [
+    ...buildCategorySlots(p),
+    ...buildBuiltForGridSlots(p),
+    ...buildRelatedCategorySlots(p),
+  ],
 }));
 
 const HUB_TAGS = ['product photography', 'ecommerce', 'editorial', 'studio', 'lifestyle'];
