@@ -1,87 +1,36 @@
-## Goal
-Shorten every CTA button label across the SEO hub pages so both buttons fit nicely (max 3 words), while staying meaningful and on-brand. No layout, routing, tracking, or component logic changes.
+## Add explainer video to Product Visuals guide
 
-## Final CTA vocabulary
+Embed the YouTube video `https://youtu.be/lm9ywh7Ipwc` as the main explainer at the top of the Product Visuals guide (`/app/learn/visual-studio/product-images`). Since this is currently the only tutorial video for the app, place it prominently as a hero element right under the title, so it doubles as the general app walkthrough.
 
-**Primary** = the action (go generate). **Secondary** = the lateral move (explore / compare / examples).
+### Where it goes
 
-### Main hub: `/ai-product-photography`
-- `PhotographyHero.tsx`
-  - Primary: `Create your first visuals free` → **`Try it free`**
-  - Secondary: `Explore categories` → **`See examples`**
-- `PhotographyHowItWorks.tsx`
-  - CTA: `Create your first visuals free` → **`Try it free`**
-- `PhotographyFinalCTA.tsx`
-  - Primary: `Create your first visuals free` → **`Try it free`**
-  - Secondary: `Explore categories` → **`See categories`**
+`src/components/app/learn/ProductVisualsGuide.tsx` — inside the hero `<header>`, between the tagline (line ~246) and the animated mini-stepper (line ~248).
 
-### Category pages: `/ai-product-photography/[slug]`
-- `category/CategoryHero.tsx`
-  - Primary: `Create your first visuals free` → **`Try it free`**
-  - Secondary: `See examples` → **`See examples`** (kept)
-- `category/CategoryBuiltForEveryCategory.tsx`
-  - CTA: `Create your first visuals free` → **`Try it free`**
+### Visual treatment
 
-### Shopify hub: `/shopify-product-photography`
-- Hero
-  - Primary: `Create your first Shopify visuals free` → **`Try it free`**
-  - Secondary: `Explore AI product photography` → **`See examples`**
-- Final CTA
-  - Primary: `Create your first Shopify visuals free` → **`Try it free`**
-  - Secondary: `Try the AI product photo generator` → **`Open generator`**
+- Full-width 16:9 responsive container using a wrapper div with `aspect-video`
+- Rounded-xl, soft border (`border-border/50`), subtle shadow, overflow-hidden — matches the existing "soft panel" aesthetic used in `vsAlternatives` and `Quick start` sections
+- Black background while loading
+- A small caption row underneath: "Watch: 2-min walkthrough" on the left, optional "Open on YouTube ↗" link on the right (muted, text-[12px])
 
-### Etsy hub: `/etsy-product-photography`
-- Hero
-  - Primary: `Create Etsy product visuals free` → **`Try it free`**
-  - Secondary: `Explore AI product photography` → **`See examples`**
-- Final CTA
-  - Primary: `Create Etsy product visuals free` → **`Try it free`**
-  - Secondary: `Try the AI product photo generator` → **`Open generator`**
+### Embed approach
 
-### Generator hub: `/ai-product-photo-generator`
-- Hero
-  - Primary: `Generate product photos free` → **`Generate free`**
-  - Secondary: `Explore AI product photography` → **`See examples`**
-- Final CTA
-  - Primary: `Generate product photos free` → **`Generate free`**
-  - Secondary: `Compare AI vs photoshoot` → **`vs Photoshoot`**
+- Use a native `<iframe>` with `youtube-nocookie.com` privacy-enhanced domain
+- Params: `?rel=0&modestbranding=1&playsinline=1` (no related videos at end, minimal branding, mobile-friendly)
+- Lazy-loaded: `loading="lazy"` so it doesn't block initial guide render
+- `title="VOVV.AI product visuals walkthrough"` for accessibility
+- `allow="accelerated-2d-canvas; encrypted-media; picture-in-picture; fullscreen"`
+- `allowFullScreen`
 
-### Comparison hub: `/ai-product-photography-vs-studio`
-- Hero
-  - Primary: `Create visuals with VOVV.AI` → **`Try VOVV.AI free`** (3 words)
-  - Secondary: `Compare AI vs photoshoot` → **`vs Photoshoot`**
-- Final CTA
-  - Primary: `Create visuals with VOVV.AI` → **`Try VOVV.AI free`**
-  - Secondary: `Try the AI product photo generator` → **`Open generator`**
+No new dependencies, no thumbnail-click-to-load wrapper (keeps it simple — one iframe, lazy-loaded is sufficient for a single video on a guide page).
 
-### Comparison hub: `/ai-product-photography-vs-photoshoot`
-- Hero
-  - Primary: `Try AI product photography free` → **`Try VOVV.AI free`**
-  - Secondary: `Explore AI product photography` → **`See examples`**
-- Final CTA
-  - Primary: `Try AI product photography free` → **`Try VOVV.AI free`**
-  - Secondary: `Compare VOVV.AI vs studio` → **`vs Studio`**
+### Files changed
 
-## Reasoning (why this set)
-- **`Try it free`** beats `Start free` — it specifies a low-commitment action and keeps "free" as the sales hook. Used on all hubs that aren't the comparison/generator pages.
-- **`Generate free`** stays only on the generator page — matches the page intent + search term.
-- **`Try VOVV.AI free`** on comparison pages — the brand needs to be visible against "Studio"/"Photoshoot" framing.
-- **`See examples`** beats `Explore categories` / `Explore hub` — concrete, scannable, no jargon.
-- **`See categories`** kept on the main hub final CTA only, because that page actually has a `#categories` anchor.
-- **`Open generator`** beats `Try the AI product photo generator` — short, clear it leads to a tool.
-- **`vs Studio`** / **`vs Photoshoot`** — uses each page's own SEO term, instantly recognizable, ultra-short.
+- `src/components/app/learn/ProductVisualsGuide.tsx` — add video block in hero
+- `public/version.json` — bump
 
-## Files to edit
-- `src/components/seo/photography/PhotographyHero.tsx`
-- `src/components/seo/photography/PhotographyHowItWorks.tsx`
-- `src/components/seo/photography/PhotographyFinalCTA.tsx`
-- `src/components/seo/photography/category/CategoryHero.tsx`
-- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`
-- `src/pages/seo/ShopifyProductPhotography.tsx`
-- `src/pages/seo/EtsyProductPhotography.tsx`
-- `src/pages/seo/AIProductPhotoGenerator.tsx`
-- `src/pages/seo/AIPhotographyVsStudio.tsx`
-- `src/pages/seo/AIPhotographyVsPhotoshoot.tsx`
-- `public/version.json` (patch bump)
+### Out of scope
 
-Out of scope: routes, `data-cta` tracking attributes, `LandingHeroSEO` / `LandingFinalCTASEO` component internals (only consumer labels change).
+- No changes to other Learn guides (they keep their text-only template)
+- No video on the `/app/learn` hub list (the request is specifically for Product Visuals)
+- No autoplay (poor UX, blocked on most browsers anyway)

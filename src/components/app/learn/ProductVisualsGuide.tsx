@@ -245,6 +245,31 @@ export function ProductVisualsGuide({ guide }: Props) {
             {guide.tagline}
           </p>
 
+          {/* Explainer video */}
+          <figure className="mt-8">
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border/50 bg-black shadow-sm">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/lm9ywh7Ipwc?rel=0&modestbranding=1&playsinline=1"
+                title="VOVV.AI product visuals walkthrough"
+                loading="lazy"
+                allow="accelerated-2d-canvas; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
+            <figcaption className="mt-2.5 flex items-center justify-between text-[12px] text-muted-foreground">
+              <span>Watch: app walkthrough</span>
+              <a
+                href="https://youtu.be/lm9ywh7Ipwc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                Open on YouTube ↗
+              </a>
+            </figcaption>
+          </figure>
+
           {/* Animated mini-stepper */}
           <div className="mt-8 relative">
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
