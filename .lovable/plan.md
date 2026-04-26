@@ -1,85 +1,71 @@
 ## Goal
 
-Make `/app/admin/seo-page-visuals` a true single source of control for **every image** rendered on every public SEO page — grouped by the same section names the user sees on the live page (Hero, Categories, Visual System, Scene examples, etc.). Today only the Hero marquee on `/ai-product-photography` is wired through; everything else still renders hardcoded image IDs.
+Make every image on the tool and comparison SEO pages controllable from `/app/admin/seo-page-visuals`, matching what's already done for `/ai-product-photography`.
 
-## Pages covered
+Currently those pages still show "0/9" / "0/13" because the registry only lists their hero marquee. Their other image-bearing sections render through shared `Landing*` components that don't read overrides yet.
 
-1. `/ai-product-photography` (hub)
-2. `/ai-product-photo-generator`
-3. `/shopify-product-photography-ai`
-4. `/etsy-product-photography-ai`
-5. `/ai-product-photography-vs-photoshoot`
-6. `/ai-product-photography-vs-studio`
-7. All `/ai-product-photography/{category}` pages (fashion, footwear, beauty-skincare, etc.)
+## Pages to cover
 
-## What's missing today (gap analysis)
+- `/ai-product-photo-generator`
+- `/shopify-product-photography-ai`
+- `/etsy-product-photography-ai`
+- `/ai-product-photography-vs-photoshoot`
+- `/ai-product-photography-vs-studio`
 
-For the hub `/ai-product-photography` the live page renders these image groups, but only **Hero (12 tiles)** is editable. Everything else is hardcoded:
+(`LandingValueCards`, `LandingComparisonTable`, `LandingWorkflowStrip`, `LandingDecisionMatrix`, `LandingFinalCTASEO`, `LandingFAQConfig` contain no images — nothing to wire there.)
 
-| Section on live page | # images | Editable today? |
-|---|---|---|
-| Hero banner marquee | 12 | Yes |
-| Choose your product category (collage thumbs) | 10 categories × 3 thumbs = **30** | No |
-| One product photo. A full visual system. | 6 cards × 3 thumbs = **18** | No |
-| Every scene your store needs | 10 | No (registry exists but component reads hardcoded array) |
+## Image-bearing sections per page
 
-Same pattern on the 3 tool pages and 2 comparison pages (they re-use the same hub components).
+| Section | Component | # images | Tool pages | Comparison pages |
+|---|---|---|---|---|
+| Hero marquee | `LandingHeroSEO` | 12 | already wired | already wired |
+| "One product photo. A full visual system." | `LandingOneToManyShowcase` | 6 cards × 3 = 18 | Generator, Shopify, Etsy | — (not used) |
+| "Built for every product category" | `LandingCategoryGrid` | up to 10 cards × 3 = 30 | all 3 | both |
 
-## Plan
+So total slots per page after wiring:
+- Generator / Shopify / Etsy: 12 + 18 + 30 = **60 slots**
+- Vs Photoshoot / Vs Studio: 12 + 30 = **42 slots**
 
-### 1. Expand the slot registry (`src/data/seoPageVisualSlots.ts`)
+## Approach
 
-Add new slot factories so every image becomes a registered slot, grouped under the **exact section titles users see on the page**:
+### 1. Registry expansion (`src/data/seoPageVisualSlots.ts`)
 
-- **HERO BANNER IMAGES** — already exists (12 tiles), just rename section label
-- **Choose your product category** — new factory `buildCategoryChooserSlots()` producing 30 slots keyed `categoryThumb_{slug}_{1|2|3}` with the category name in the label (e.g. "Fashion · thumb 1")
-- **One product photo. A full visual system.** — replace the current 6-slot factory with `buildVisualSystemSlots()` producing **18 slots** keyed `visualSystem_{cardSlug}_{1|2|3}` (3 per card)
-- **Every scene your store needs — already styled.** — keep existing `sceneExample{1..10}` slots
+- Add a `buildOneToManyShowcaseSlots()` factory (6 fixed cards × 3 thumbs, keys `oneToMany_{cardSlug}_{1..3}`, section `"One product photo. A full visual system."`).
+- Add a `buildCategoryGridSlots()` factory (iterates `aiProductPhotographyCategories`, keys `categoryGrid_{slug}_{1..3}`, section `"Built for every product category"`).
+- Update each tool/comparison page entry in `SEO_PAGES` to include the new factories (with appropriate per-page tags).
+- Each page gets its **own** override scope — the same Shopify thumb override won't bleed into the Etsy page.
 
-Section labels in the registry will match the live page headings 1:1 so the admin UI mirrors what users see.
+### 2. Component wiring
 
-For the 3 tool pages and 2 comparison pages: same expanded slot set (they share components).
+Update three shared components to optionally read from the override map when given a `pageRoute` prop:
 
-For category pages (`/ai-product-photography/{slug}`): keep existing per-page builder but verify section names match the live page.
+- `LandingHeroSEO` — already reads overrides; verify it accepts `pageRoute` and uses the same `heroTile{i+1}` keys we use on the hub. If it currently uses a different key scheme, normalize it.
+- `LandingOneToManyShowcase` — accept optional `pageRoute`, resolve each `imageIds[idx]` via `resolveSlotImageUrl(overrides, pageRoute, oneToMany_{slug}_{idx+1}, fallback)`.
+- `LandingCategoryGrid` — accept optional `pageRoute`, resolve each `thumbs[idx]` via `resolveSlotImageUrl(overrides, pageRoute, categoryGrid_{cat.slug}_{idx+1}, fallback)`.
 
-### 2. Wire the live components to consume overrides
+All three use `useSeoVisualOverridesMap(pageRoute)` (already exists). When `pageRoute` is omitted, behavior stays exactly as today (pure fallback) — no risk to other consumers.
 
-Update each component to call `useSeoVisualOverridesMap()` and `resolveSlotImageUrl()` per image, the same pattern `PhotographyHero.tsx` already uses:
+### 3. Page-level prop pass
 
-- `src/components/seo/photography/PhotographyCategoryChooser.tsx` — pass `pageRoute` prop, resolve each of the 3 thumbs per category through `categoryThumb_{slug}_{n}`
-- `src/components/seo/photography/PhotographyVisualSystem.tsx` — pass `pageRoute` prop, resolve all 18 thumbs through `visualSystem_{cardSlug}_{n}`
-- `src/components/seo/photography/PhotographySceneExamples.tsx` — pass `pageRoute` prop, resolve 10 tiles through `sceneExample{n}`
+Add a single `pageRoute="/..."` prop to each `<LandingHeroSEO>`, `<LandingOneToManyShowcase>`, `<LandingCategoryGrid>` usage on the 5 pages.
 
-Each component accepts an optional `pageRoute` prop (defaults to `/ai-product-photography`) so the same component can render with different overrides on tool pages and comparison pages.
+## Behavior guarantees
 
-Update the page files (`AIProductPhotography.tsx`, `AIProductPhotoGenerator.tsx`, `ShopifyProductPhotography.tsx`, `EtsyProductPhotography.tsx`, `AIPhotographyVsPhotoshoot.tsx`, `AIPhotographyVsStudio.tsx`) to pass their own route into these shared components.
+- If no override exists, every page renders pixel-identical to today.
+- Overrides are **scoped per route** — admin can give Etsy a craft-style category thumb without affecting Shopify.
+- Slot keys are stable strings; safe for future rename of card titles.
+- Admin counts will jump from `0/9` and `0/13` to `0/60` (tool pages) and `0/42` (comparison pages) until images are assigned.
 
-For category pages, audit `category/CategorySceneExamples.tsx` and `CategoryHero.tsx` to confirm they already consume overrides; wire any that don't.
+## Files to edit
 
-### 3. Admin UI polish (`src/pages/admin/SeoPageVisuals.tsx`)
+- `src/data/seoPageVisualSlots.ts` — add 2 factories, expand 5 page entries
+- `src/components/seo/landing/LandingHeroSEO.tsx` — verify override wiring + slot keys
+- `src/components/seo/landing/LandingOneToManyShowcase.tsx` — add override resolution
+- `src/components/seo/landing/LandingCategoryGrid.tsx` — add override resolution
+- `src/pages/seo/AIProductPhotoGenerator.tsx` — pass `pageRoute`
+- `src/pages/seo/ShopifyProductPhotography.tsx` — pass `pageRoute`
+- `src/pages/seo/EtsyProductPhotography.tsx` — pass `pageRoute`
+- `src/pages/seo/AIPhotographyVsPhotoshoot.tsx` — pass `pageRoute`
+- `src/pages/seo/AIPhotographyVsStudio.tsx` — pass `pageRoute`
 
-The page already groups slots by `section` and renders them — no structural change needed. Just confirm:
-
-- Section headers display the **live page wording** ("Choose your product category", "One product photo. A full visual system.", "Every scene your store needs — already styled.", "HERO BANNER IMAGES").
-- Slot order matches the visual order on the live page (top to bottom, left to right).
-- Each card's `whereItAppears` text says exactly which tile/card/category it controls (e.g. "Fashion category card · thumbnail 2 of 3").
-
-No new DB schema, no new API surface — the existing `seo_page_visuals` table + `useSeoVisualOverridesMap` already handle arbitrary slot keys.
-
-## Files touched
-
-**Edited**
-- `src/data/seoPageVisualSlots.ts` — expand factories, rename sections to match live wording
-- `src/components/seo/photography/PhotographyCategoryChooser.tsx` — read overrides
-- `src/components/seo/photography/PhotographyVisualSystem.tsx` — read overrides
-- `src/components/seo/photography/PhotographySceneExamples.tsx` — read overrides, accept `pageRoute` prop
-- `src/components/seo/photography/PhotographyHero.tsx` — accept `pageRoute` prop (currently hardcodes hub route)
-- `src/pages/seo/AIProductPhotography.tsx` + 5 sibling pages — pass `pageRoute` to shared components
-- `src/components/seo/photography/category/CategorySceneExamples.tsx` (only if not already wired)
-
-**Unchanged**
-- DB schema, RLS, `useSeoVisualOverrides.ts`, `useAdminSeoVisuals.ts`, `ScenePickerModal.tsx`, `resolveSlotImage.ts`
-
-## Result
-
-After this change, opening `/app/admin/seo-page-visuals` and selecting any page shows every image from the live page, organized under the same headings the user sees, each replaceable from the Product Visuals library — with the live SEO page falling back to the existing hardcoded image whenever no override is set (so SEO never breaks).
+No DB migration needed — uses existing `seo_page_visuals` table and existing helpers.
