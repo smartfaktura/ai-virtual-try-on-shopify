@@ -307,23 +307,27 @@ export function LandingPricing() {
         </div>
 
         {/* ── Trust microcopy ────────────────────────────────────── */}
-        <p className="mt-6 text-center text-xs text-[#9ca3af]">
+        <p className="mt-8 text-center text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
           Cancel anytime · No commitment · Secure checkout
         </p>
 
-        {/* ── Compare every feature ──────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
-          <div className="text-center mb-10 lg:mb-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              Compare plans
-            </p>
-            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
-              Compare every feature
-            </h2>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-              Every plan, side-by-side. Pick the one that matches your output.
-            </p>
-          </div>
+      </div>
+    </section>
+
+    {/* ═══ BAND 2 · Compare every feature (white) ═══ */}
+    <section className="bg-white py-20 lg:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Compare plans
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+            Compare every feature
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+            Every plan, side-by-side. Pick the one that matches your output.
+          </p>
+        </div>
 
           {/* Desktop table */}
           <div className="hidden md:block rounded-2xl border border-border/50 overflow-hidden bg-card">
