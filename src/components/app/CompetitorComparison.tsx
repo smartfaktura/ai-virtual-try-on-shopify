@@ -6,13 +6,16 @@ export function CompetitorComparison() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1 text-center">
-        <h2 className="text-lg font-semibold tracking-tight">
-          Save 60–80% compared to alternatives
+    <>
+      <div className="text-center mb-12 lg:mb-16">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+          Cost comparison
+        </p>
+        <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+          Save 60–80% vs alternatives
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Professional AI product visuals at a fraction of the cost
+        <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+          Professional AI product visuals at a fraction of the cost.
         </p>
       </div>
 
@@ -23,7 +26,7 @@ export function CompetitorComparison() {
               <span className={comp.highlight ? 'font-semibold text-foreground' : 'text-muted-foreground'}>
                 {comp.name}
               </span>
-              <span className={`font-semibold tabular-nums ${comp.highlight ? 'text-primary' : 'text-muted-foreground'}`}>
+              <span className={`font-semibold tabular-nums ${comp.highlight ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {comp.price}
                 <span className="text-[11px] font-normal ml-0.5">/ credit</span>
               </span>
@@ -32,7 +35,7 @@ export function CompetitorComparison() {
               <div
                 className={`h-full rounded-full transition-all ${
                   comp.highlight
-                    ? 'bg-primary'
+                    ? 'bg-[#1a1a2e]'
                     : 'bg-muted-foreground/25'
                 }`}
                 style={{ width: comp.width }}
@@ -42,9 +45,9 @@ export function CompetitorComparison() {
         ))}
       </div>
 
-      <p className="text-[11px] text-muted-foreground/60 text-center">
+      <p className="text-[11px] text-muted-foreground/60 text-center mt-6">
         Based on average cost across platforms for AI-generated product visuals. VOVV pricing varies by plan ($0.04–$0.08 per credit).
       </p>
-    </div>
+    </>
   );
 }
