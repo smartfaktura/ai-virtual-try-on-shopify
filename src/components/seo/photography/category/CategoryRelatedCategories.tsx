@@ -90,7 +90,7 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
                     {rel.heroSubheadline}
                   </p>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1a1a2e] group-hover:gap-2 transition-all">
-                    Explore {rel.groupName}
+                    Explore {rel.primaryKeyword}
                     <ArrowUpRight size={14} />
                   </span>
                 </div>

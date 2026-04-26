@@ -193,11 +193,11 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'footwear',
     url: `${BASE}/footwear`,
     groupName: 'Footwear',
-    seoTitle: 'AI Product Photography for Footwear Brands | VOVV.AI',
+    seoTitle: 'AI Footwear Product Photography for Shoe Brands | VOVV.AI',
     metaDescription:
-      'Create footwear product photography with AI. Upload one shoe image and generate product page visuals, sneaker campaigns, boot scenes, high heel imagery, ads, and lifestyle content.',
-    h1Lead: 'AI Product Photography',
-    h1Highlight: 'for Footwear Brands',
+      'AI footwear product photography for shoe and sneaker brands. Upload one shoe photo and generate product page images, sneaker launch visuals, boot scenes, high heel editorials, and ad-ready content.',
+    h1Lead: 'AI Footwear Product Photography',
+    h1Highlight: 'for Shoe Brands',
     heroEyebrow: 'Footwear · Sneakers · Boots',
     heroSubheadline:
       'Upload one shoe photo and create product page images, lifestyle visuals, sneaker launch scenes, boot campaigns, high heel imagery, and ad-ready footwear content.',
@@ -274,10 +274,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'beauty-skincare',
     url: `${BASE}/beauty-skincare`,
     groupName: 'Beauty & Skincare',
-    seoTitle: 'AI Product Photography for Beauty & Skincare Brands | VOVV.AI',
+    seoTitle: 'AI Skincare Product Photography for Beauty Brands | VOVV.AI',
     metaDescription:
-      'Create AI product photography for beauty and skincare brands. Generate clean skincare product images, cosmetic visuals, makeup scenes, spa-style lifestyle photos, ads, and campaign content.',
-    h1Lead: 'AI Product Photography',
+      'AI skincare and beauty product photography. Generate clean serum and cream visuals, cosmetic flatlays, makeup close-ups, spa-style lifestyle scenes, and campaign content from one product photo.',
+    h1Lead: 'AI Skincare Product Photography',
     h1Highlight: 'for Beauty & Skincare Brands',
     heroEyebrow: 'Beauty · Skincare · Cosmetics',
     heroSubheadline:
@@ -349,10 +349,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'fragrance',
     url: `${BASE}/fragrance`,
     groupName: 'Fragrance',
-    seoTitle: 'AI Product Photography for Perfume & Fragrance Brands | VOVV.AI',
+    seoTitle: 'AI Perfume Product Photography for Fragrance Brands | VOVV.AI',
     metaDescription:
-      'Create AI perfume product photography for fragrance brands. Generate luxury bottle visuals, fragrance campaign scenes, product page images, gift set content, ads, and social visuals.',
-    h1Lead: 'AI Product Photography',
+      'AI perfume and fragrance product photography. Generate luxury bottle visuals, glass and reflection close-ups, gift set scenes, seasonal scent campaigns, and product page imagery from one bottle photo.',
+    h1Lead: 'AI Perfume Product Photography',
     h1Highlight: 'for Perfume & Fragrance Brands',
     heroEyebrow: 'Fragrance · Perfume',
     heroSubheadline:
@@ -424,10 +424,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'jewelry',
     url: `${BASE}/jewelry`,
     groupName: 'Jewelry',
-    seoTitle: 'AI Product Photography for Jewelry Brands | VOVV.AI',
+    seoTitle: 'AI Jewelry Product Photography for Jewelry Brands | VOVV.AI',
     metaDescription:
-      'Create AI jewelry product photography for rings, necklaces, earrings, and bracelets. Generate macro detail shots, model-style visuals, luxury campaign images, and ecommerce photos.',
-    h1Lead: 'AI Product Photography',
+      'AI jewelry product photography for rings, necklaces, earrings, and bracelets. Generate macro detail shots, on-hand and on-neck visuals, gemstone close-ups, and luxury campaign imagery from one product photo.',
+    h1Lead: 'AI Jewelry Product Photography',
     h1Highlight: 'for Jewelry Brands',
     heroEyebrow: 'Jewelry · Fine & Fashion',
     heroSubheadline:
@@ -499,10 +499,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'bags-accessories',
     url: `${BASE}/bags-accessories`,
     groupName: 'Bags & Accessories',
-    seoTitle: 'AI Product Photography for Bags & Accessories Brands | VOVV.AI',
+    seoTitle: 'AI Bag Product Photography for Bags & Accessories Brands | VOVV.AI',
     metaDescription:
-      'Create AI product photography for bags, handbags, backpacks, wallets, belts, scarves, hats, eyewear, and watches. Generate lifestyle scenes, product photos, and campaign visuals.',
-    h1Lead: 'AI Product Photography',
+      'AI bag and accessory product photography for handbags, backpacks, wallets, belts, scarves, eyewear, and watches. Generate detail shots, lifestyle scenes, and luxury campaign visuals from one product photo.',
+    h1Lead: 'AI Bag Product Photography',
     h1Highlight: 'for Bags & Accessories Brands',
     heroEyebrow: 'Bags · Accessories · Eyewear · Watches',
     heroSubheadline:
@@ -580,11 +580,11 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'home-furniture',
     url: `${BASE}/home-furniture`,
     groupName: 'Home & Furniture',
-    seoTitle: 'AI Product Photography for Home Decor & Furniture Brands | VOVV.AI',
+    seoTitle: 'AI Home Decor Product Photography for Furniture Brands | VOVV.AI',
     metaDescription:
-      'Create AI product photography for home decor and furniture brands. Generate styled interiors, room scenes, catalog visuals, lifestyle images, and product page photos.',
-    h1Lead: 'AI Product Photography',
-    h1Highlight: 'for Home Decor & Furniture Brands',
+      'AI home decor and furniture product photography. Place sofas, chairs, vases, candles, and lighting into styled rooms, Japandi interiors, and lifestyle scenes — catalog and PDP-ready, from one product photo.',
+    h1Lead: 'AI Home Decor Product Photography',
+    h1Highlight: 'for Home & Furniture Brands',
     heroEyebrow: 'Home · Furniture · Decor',
     heroSubheadline:
       'Place home decor and furniture products into realistic interiors, styled rooms, lifestyle scenes, catalog visuals, and product page images.',
@@ -655,10 +655,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'food-beverage',
     url: `${BASE}/food-beverage`,
     groupName: 'Food & Beverage',
-    seoTitle: 'AI Product Photography for Food & Beverage Brands | VOVV.AI',
+    seoTitle: 'AI Food Product Photography for Food & Beverage Brands | VOVV.AI',
     metaDescription:
-      'Create AI food and beverage product photography. Generate packaged food visuals, snack scenes, bottle photos, can visuals, CPG campaign content, ads, and ecommerce images.',
-    h1Lead: 'AI Product Photography',
+      'AI food and beverage product photography. Generate packaged snack visuals, bottle and can shots with ice and condensation, ingredient flatlays, and CPG campaign content from one product photo.',
+    h1Lead: 'AI Food Product Photography',
     h1Highlight: 'for Food & Beverage Brands',
     heroEyebrow: 'Food · Beverage · CPG',
     heroSubheadline:
@@ -731,10 +731,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'supplements-wellness',
     url: `${BASE}/supplements-wellness`,
     groupName: 'Supplements & Wellness',
-    seoTitle: 'AI Product Photography for Supplement & Wellness Brands | VOVV.AI',
+    seoTitle: 'AI Supplement Product Photography for Wellness Brands | VOVV.AI',
     metaDescription:
-      'Create AI product photography for supplement and wellness brands. Generate vitamin bottle images, protein tub photos, wellness lifestyle scenes, fitness visuals, ads, and ecommerce content.',
-    h1Lead: 'AI Product Photography',
+      'AI supplement and wellness product photography. Generate vitamin bottle visuals, protein tub scenes, capsule and powder close-ups, fitness campaigns, and morning-routine lifestyle imagery from one product photo.',
+    h1Lead: 'AI Supplement Product Photography',
     h1Highlight: 'for Supplement & Wellness Brands',
     heroEyebrow: 'Supplements · Wellness · Fitness',
     heroSubheadline:
@@ -806,10 +806,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     slug: 'electronics-gadgets',
     url: `${BASE}/electronics-gadgets`,
     groupName: 'Electronics & Gadgets',
-    seoTitle: 'AI Product Photography for Electronics & Gadget Brands | VOVV.AI',
+    seoTitle: 'AI Electronics Product Photography for Tech & Gadget Brands | VOVV.AI',
     metaDescription:
-      'Create AI product photography for electronics, gadgets, tech devices, phone cases, headphones, and smart products. Generate launch visuals, desk setups, ads, and ecommerce images.',
-    h1Lead: 'AI Product Photography',
+      'AI electronics and gadget product photography. Generate clean device hero shots, headphone and phone case visuals, desk-setup lifestyle scenes, and launch campaign imagery from one product photo.',
+    h1Lead: 'AI Electronics Product Photography',
     h1Highlight: 'for Electronics & Gadget Brands',
     heroEyebrow: 'Electronics · Gadgets · Tech',
     heroSubheadline:
