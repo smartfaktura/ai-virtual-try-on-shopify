@@ -1,36 +1,81 @@
-## Add explainer video to Product Visuals guide
+## Footer additions + new Freestyle Studio marketing page
 
-Embed the YouTube video `https://youtu.be/lm9ywh7Ipwc` as the main explainer at the top of the Product Visuals guide (`/app/learn/visual-studio/product-images`). Since this is currently the only tutorial video for the app, place it prominently as a hero element right under the title, so it doubles as the general app walkthrough.
+### Part 1 — Footer link additions
 
-### Where it goes
+Edit `src/components/landing/LandingFooter.tsx`:
 
-`src/components/app/learn/ProductVisualsGuide.tsx` — inside the hero `<header>`, between the tagline (line ~246) and the animated mini-stepper (line ~248).
+**Solutions** column — add 2 links:
+- "Home & Furniture" → `/ai-product-photography/home-furniture`
+- "Electronics & Gadgets" → `/ai-product-photography/electronics-gadgets`
 
-### Visual treatment
+**Resources** column — add 4 links (insert near top, before Blog):
+- "How It Works" → `/how-it-works`
+- "FAQ" → `/faq`
+- "Careers" → `/careers`
+- "Press" → `/press`
 
-- Full-width 16:9 responsive container using a wrapper div with `aspect-video`
-- Rounded-xl, soft border (`border-border/50`), subtle shadow, overflow-hidden — matches the existing "soft panel" aesthetic used in `vsAlternatives` and `Quick start` sections
-- Black background while loading
-- A small caption row underneath: "Watch: 2-min walkthrough" on the left, optional "Open on YouTube ↗" link on the right (muted, text-[12px])
+**Product** column — repoint:
+- "Freestyle Studio" → change from `/freestyle` to `/features/freestyle` (the new marketing page)
 
-### Embed approach
+### Part 2 — New Freestyle Studio marketing page
 
-- Use a native `<iframe>` with `youtube-nocookie.com` privacy-enhanced domain
-- Params: `?rel=0&modestbranding=1&playsinline=1` (no related videos at end, minimal branding, mobile-friendly)
-- Lazy-loaded: `loading="lazy"` so it doesn't block initial guide render
-- `title="VOVV.AI product visuals walkthrough"` for accessibility
-- `allow="accelerated-2d-canvas; encrypted-media; picture-in-picture; fullscreen"`
-- `allowFullScreen`
+**Route:** `/features/freestyle` (sits alongside `/features/workflows`, `/features/perspectives`, etc.)
 
-No new dependencies, no thumbnail-click-to-load wrapper (keeps it simple — one iframe, lazy-loaded is sufficient for a single video on a guide page).
+**File:** `src/pages/features/FreestyleFeature.tsx` — registered in `src/App.tsx`.
 
-### Files changed
+**Why a new route (not reusing `/freestyle`):** `/freestyle` is a working public preset gallery + prompt builder (presets browser with an interactive prompt bar). It's not a marketing landing page. The user wants a polished feature page in the same aesthetic as `/home` and `/` — hero, sections, CTAs.
 
-- `src/components/app/learn/ProductVisualsGuide.tsx` — add video block in hero
+#### Page structure (matches existing `/features/*` aesthetic)
+
+Wrapped in `PageLayout` with `SEOHead` + JSON-LD (same pattern as `WorkflowsFeature.tsx`).
+
+1. **Hero — animated preview**
+   - Eyebrow: "FREESTYLE STUDIO"
+   - H1: *Your creative studio. No limits.*
+   - Sub: *Describe what you want, pick your inputs, and get studio-quality images in seconds.*
+   - Primary CTA: "Try it free" → `/auth?redirect=/app/freestyle`
+   - Secondary CTA: "See examples" → `/freestyle` (the preset gallery)
+   - **Animated preview:** reuse the existing `FreestyleShowcaseSection` animation (typewriter prompt → chip selection → progress bar → 3 result cards) by extracting/importing that component. It already animates exactly the headline/sub copy the user requested.
+
+2. **What you can do (capability grid)** — built from auditing `/app/freestyle`:
+   - **Open prompts** — natural-language scene direction
+   - **Mix references** — products + models + scene presets in one shot
+   - **Edit existing images** — image-role selector (edit / restyle / extend) from `ImageRoleSelector`
+   - **Style presets** — quick-apply via `StylePresetChips` / `FreestyleQuickPresets`
+   - **Brand-locked output** — `BrandProfileChip` for palette/mood lock
+   - **Pro camera + framing controls** — aspect ratio, framing, camera style, quality (from `FreestyleSettingsChips`)
+   - **Negatives** — exclude unwanted elements (`NegativesChip`)
+   - **Browse the Discover gallery** — remix any preset
+
+   3-column grid of icon + title + 1-line description. Icons from lucide-react (Sparkles, Layers, Wand2, ImagePlus, Palette, Camera, etc.).
+
+3. **How it works** — 3-step horizontal: Describe → Add inputs → Generate. Mirrors hero animation.
+
+4. **Showcase strip** — pull 6-8 thumbnails from `useDiscoverPresets` (freestyle-only) for a real gallery preview, click → `/freestyle/:id`.
+
+5. **Comparison strip** — "vs. Visual Studio (workflows)": when to pick Freestyle (open creative direction) vs. Visual Studio (templated batch generation). Helps SEO/discoverability.
+
+6. **FAQ** — 4-5 questions reusing existing FAQ accordion style (do I need a brief? credits? can I edit a photo? etc.).
+
+7. **Final CTA** — gradient panel "Start creating free" → `/auth?redirect=/app/freestyle`.
+
+#### SEO
+
+- Title: "Freestyle Studio — Open AI Image Studio for Brands | VOVV.AI"
+- Description: "Describe what you want, pick your inputs, and get studio-quality product images in seconds. Open-prompt creative studio for brands."
+- Canonical: `${SITE_URL}/features/freestyle`
+- JSON-LD: SoftwareApplication schema (matches other feature pages)
+
+#### Files changed
+
+- `src/components/landing/LandingFooter.tsx` — link list updates
+- `src/pages/features/FreestyleFeature.tsx` — NEW
+- `src/App.tsx` — register `/features/freestyle` route (in public routes block, lazy-loaded like the other feature pages)
+- `public/sitemap.xml` — add new URL
 - `public/version.json` — bump
 
 ### Out of scope
 
-- No changes to other Learn guides (they keep their text-only template)
-- No video on the `/app/learn` hub list (the request is specifically for Product Visuals)
-- No autoplay (poor UX, blocked on most browsers anyway)
+- No changes to `/freestyle` (preset gallery stays as-is)
+- No changes to `/app/freestyle` (the authenticated studio)
+- No new copy beyond what's needed; reuses homepage Freestyle section animation rather than re-building it
