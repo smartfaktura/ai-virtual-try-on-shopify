@@ -54,11 +54,11 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl border-none bg-background p-0 sm:rounded-3xl max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl border-none bg-background p-0 sm:rounded-3xl max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto [&>button]:hidden">
         <DialogTitle className="sr-only">{scene.title}</DialogTitle>
         <div className="grid gap-0 md:grid-cols-[5fr_6fr]">
           {/* Hero */}
-          <div className="relative aspect-[16/11] md:aspect-[4/5] w-full overflow-hidden bg-muted/40">
+          <div className="relative aspect-[5/4] max-h-[42dvh] md:aspect-[4/5] md:max-h-none w-full overflow-hidden bg-muted/40">
             {/* Skeleton shimmer */}
             {!imgLoaded && (
               <Skeleton className="absolute inset-0 z-[1] rounded-none" />
@@ -90,10 +90,18 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
                 }`}
               />
             )}
+
+            {/* Floating close — high contrast over hero */}
+            <DialogClose
+              aria-label="Close"
+              className="absolute top-3 right-3 z-[4] flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background"
+            >
+              <X className="h-4 w-4" strokeWidth={2.25} />
+            </DialogClose>
           </div>
 
           {/* Body */}
-          <div className="flex flex-col gap-4 sm:gap-5 p-5 sm:p-8">
+          <div className="flex flex-col gap-3 sm:gap-5 p-4 sm:p-8">
             <div className="flex flex-wrap items-center gap-2">
               {familyLabel && (
                 <Badge variant="secondary" className="rounded-full bg-foreground/[0.06] text-foreground/70 border-none font-medium">
@@ -105,15 +113,15 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
               </Badge>
             </div>
 
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem] leading-tight">
+            <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-[1.75rem] leading-tight">
               {scene.title}
             </h2>
 
-            <p className="text-sm leading-relaxed text-foreground/65">
+            <p className="text-sm leading-relaxed text-foreground/65 line-clamp-3 sm:line-clamp-none">
               {description}
             </p>
 
-            <div className="mt-auto space-y-3 pt-4">
+            <div className="mt-auto space-y-2.5 sm:space-y-3 pt-2 sm:pt-4">
               <Button
                 onClick={handleCta}
                 size="lg"
