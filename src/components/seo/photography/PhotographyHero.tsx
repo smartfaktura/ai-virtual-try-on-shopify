@@ -1,39 +1,39 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 
-type Tile = { label: string; src: string };
+type Tile = { label: string; src: string; slotKey: string; alt: string };
+
+const PAGE_ROUTE = '/ai-product-photography';
 
 const PREVIEW = (id: string) =>
   `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 // Curated, dynamic editorial set — intentionally distinct from the category
 // chooser and scene library sections to give the hero its own visual identity.
-const allTiles: Tile[] = [
-  { label: 'Volcanic Sunset',    src: PREVIEW('repeated-shadow-grid-fragrance-1776013389735') },
-  { label: 'Cliffside Walk',     src: PREVIEW('1776574208384-fmg2u3') },
-  { label: 'Golden Horizon',     src: PREVIEW('1776574228066-oyklfz') },
-  { label: 'Sunset Drive',       src: PREVIEW('1776102204479-9rlc0n') },
-  { label: 'Movement Shot',      src: PREVIEW('1776690212460-cq4xnb') },
-  { label: 'Office Flash',       src: PREVIEW('editorial-office-flash-eyewear-1776150153576') },
-  { label: 'Yacht Bow',          src: PREVIEW('1776524132929-q8upyp') },
-  { label: 'Dark Elegance',      src: PREVIEW('1776018020221-aehe8n') },
-  { label: 'Old Money Portrait', src: PREVIEW('1776691906436-3fe7l9') },
-  { label: 'Studio Hero',        src: PREVIEW('1776770347820-s3qwmr') },
-  { label: 'Beauty Closeup',     src: PREVIEW('beauty-closeup-oversized-eyewear-1776150210659') },
-  { label: 'Soft Volume Lean',   src: PREVIEW('1776691911049-gsxycu') },
+const FALLBACK_TILES = [
+  { label: 'Volcanic Sunset',    id: 'repeated-shadow-grid-fragrance-1776013389735' },
+  { label: 'Cliffside Walk',     id: '1776574208384-fmg2u3' },
+  { label: 'Golden Horizon',     id: '1776574228066-oyklfz' },
+  { label: 'Sunset Drive',       id: '1776102204479-9rlc0n' },
+  { label: 'Movement Shot',      id: '1776690212460-cq4xnb' },
+  { label: 'Office Flash',       id: 'editorial-office-flash-eyewear-1776150153576' },
+  { label: 'Yacht Bow',          id: '1776524132929-q8upyp' },
+  { label: 'Dark Elegance',      id: '1776018020221-aehe8n' },
+  { label: 'Old Money Portrait', id: '1776691906436-3fe7l9' },
+  { label: 'Studio Hero',        id: '1776770347820-s3qwmr' },
+  { label: 'Beauty Closeup',     id: 'beauty-closeup-oversized-eyewear-1776150210659' },
+  { label: 'Soft Volume Lean',   id: '1776691911049-gsxycu' },
 ];
-
-const mid = Math.ceil(allTiles.length / 2);
-const row1: Tile[] = allTiles.slice(0, mid);
-const row2: Tile[] = allTiles.slice(mid);
 
 function Tile({ tile }: { tile: Tile }) {
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
         src={getOptimizedUrl(tile.src, { quality: 60 })}
-        alt={`AI product photography example: ${tile.label}`}
+        alt={tile.alt}
         loading="lazy"
         decoding="async"
         className="w-full h-full object-cover"
@@ -64,6 +64,23 @@ function MarqueeRow({ tiles, direction, duration }: { tiles: Tile[]; direction: 
 }
 
 export function PhotographyHero() {
+  const overrides = useSeoVisualOverridesMap();
+
+  const allTiles: Tile[] = FALLBACK_TILES.map((t, i) => {
+    const slotKey = `heroTile${i + 1}`;
+    const fallbackAlt = `AI product photography example: ${t.label}`;
+    return {
+      label: t.label,
+      slotKey,
+      src: resolveSlotImageUrl(overrides, PAGE_ROUTE, slotKey, PREVIEW(t.id)),
+      alt: resolveSlotAlt(overrides, PAGE_ROUTE, slotKey, fallbackAlt),
+    };
+  });
+
+  const mid = Math.ceil(allTiles.length / 2);
+  const row1 = allTiles.slice(0, mid);
+  const row2 = allTiles.slice(mid);
+
   return (
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
