@@ -74,8 +74,8 @@ export function HomeOnBrand() {
                   className="aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
                 >
                   <img
-                    src={getOptimizedUrl(item.src, { width: 600, height: 800, quality: 72, resize: 'cover' })}
-                    srcSet={getResizedSrcSet(item.src, { widths: [320, 480, 600], aspect: [3, 4], quality: 72 })}
+                    src={getOptimizedUrl(item.src, { width: 600, height: 800, quality: 85, resize: 'cover' })}
+                    srcSet={getResizedSrcSet(item.src, { widths: [480, 600, 900], aspect: [3, 4], quality: 85 })}
                     sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 280px"
                     alt={item.label}
                     loading="lazy"

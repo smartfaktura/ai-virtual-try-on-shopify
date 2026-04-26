@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
 import { TEAM_MEMBERS } from '@/data/teamData';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 
 /* Lightweight lazy video — same idea as StudioTeamSection but smaller */
 function LazyVideo({ src, poster, className }: { src: string; poster: string; className: string }) {
@@ -135,12 +135,14 @@ export function HomeStudioTeam() {
                 {member.videoUrl ? (
                   <LazyVideo
                     src={member.videoUrl}
-                    poster={getOptimizedUrl(member.avatar, { width: 480, height: 600, quality: 72, resize: 'cover' })}
+                    poster={getOptimizedUrl(member.avatar, { width: 480, height: 600, quality: 85, resize: 'cover' })}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <img
-                    src={getOptimizedUrl(member.avatar, { width: 480, height: 600, quality: 72, resize: 'cover' })}
+                    src={getOptimizedUrl(member.avatar, { width: 480, height: 600, quality: 85, resize: 'cover' })}
+                    srcSet={getResizedSrcSet(member.avatar, { widths: [320, 480, 600], aspect: [4, 5], quality: 85 })}
+                    sizes="(max-width: 640px) 180px, (max-width: 1024px) 200px, 220px"
                     alt={member.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"

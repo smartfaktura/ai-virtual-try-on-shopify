@@ -166,8 +166,8 @@ function GridCard({
         <ImageIcon size={22} strokeWidth={1.25} />
       </div>
       <img
-        src={getOptimizedUrl(card.src, { width: 480, height: 640, quality: 72, resize: 'cover' })}
-        srcSet={getResizedSrcSet(card.src, { widths: [320, 480, 640], aspect: [3, 4], quality: 72 })}
+        src={getOptimizedUrl(card.src, { width: 480, height: 640, quality: 85, resize: 'cover' })}
+        srcSet={getResizedSrcSet(card.src, { widths: [320, 480, 640, 840], aspect: [3, 4], quality: 85 })}
         sizes="(max-width: 640px) 180px, (max-width: 1024px) 220px, 280px"
         alt={card.label}
         loading={eager ? 'eager' : 'lazy'}
@@ -228,7 +228,7 @@ export function HomeTransformStrip() {
     const seen = new Set<string>();
     CATEGORIES.forEach((cat) => {
       cat.cards.forEach((card) => {
-        const url = getOptimizedUrl(card.src, { width: 480, height: 640, quality: 72, resize: 'cover' });
+        const url = getOptimizedUrl(card.src, { width: 480, height: 640, quality: 85, resize: 'cover' });
         if (!url || seen.has(url) || url.startsWith('data:')) return;
         seen.add(url);
         const link = document.createElement('link');

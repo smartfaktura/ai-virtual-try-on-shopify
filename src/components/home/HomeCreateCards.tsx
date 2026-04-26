@@ -60,8 +60,8 @@ function CardVisual({ card }: { card: CardData }) {
   return (
     <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
       <img
-        src={getOptimizedUrl(card.image, { width: 960, height: 1200, quality: 72, resize: 'cover' })}
-        srcSet={getResizedSrcSet(card.image, { widths: [480, 720, 960], aspect: [4, 5], quality: 72 })}
+        src={getOptimizedUrl(card.image, { width: 960, height: 1200, quality: 85, resize: 'cover' })}
+        srcSet={getResizedSrcSet(card.image, { widths: [640, 960, 1280], aspect: [4, 5], quality: 85 })}
         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 440px"
         alt={card.title}
         loading="lazy"
