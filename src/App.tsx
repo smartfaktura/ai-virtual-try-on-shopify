@@ -95,6 +95,7 @@ const AIModelsBackgroundsFeature = lazy(() => import('@/pages/features/AIModelsB
 const ShopifyImageGenerator = lazy(() => import('@/pages/features/ShopifyImageGenerator'));
 const UpscaleFeature = lazy(() => import('@/pages/features/UpscaleFeature'));
 const PerspectivesFeature = lazy(() => import('@/pages/features/PerspectivesFeature'));
+const FreestyleFeature = lazy(() => import('@/pages/features/FreestyleFeature'));
 const RealEstateStagingFeature = lazy(() => import('@/pages/features/RealEstateStagingFeature'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const TryFree = lazy(() => import('@/pages/TryFree'));
@@ -160,6 +161,7 @@ const App = () => {
             <Route path="/features/shopify-image-generator" element={<ShopifyImageGenerator />} />
             <Route path="/features/upscale" element={<UpscaleFeature />} />
             <Route path="/features/perspectives" element={<PerspectivesFeature />} />
+            <Route path="/features/freestyle" element={<FreestyleFeature />} />
             <Route path="/features/real-estate-staging" element={<RealEstateStagingFeature />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/try" element={<TryFree />} />
