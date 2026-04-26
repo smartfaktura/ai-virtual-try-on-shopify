@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowDown, Search, Upload, ImageIcon } from 'lucide-react';
+import { ArrowRight, Search, Upload, ImageIcon } from 'lucide-react';
 // ImagePlaceholder still used by StepGenerate
 
 import { useScrollReveal } from '@/hooks/useScrollReveal';

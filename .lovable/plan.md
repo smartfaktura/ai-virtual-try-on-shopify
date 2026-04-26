@@ -1,34 +1,25 @@
-## Two fixes
+## Goal
 
-### 1. `/contact` page — match the homepage / `/home` premium aesthetic
+Make the "How it works" section much more compact on mobile by switching the three stacked step cards into a horizontal swipeable carousel. Desktop layout stays exactly as it is today (3 columns side-by-side).
 
-The current page uses a primary-colored pill badge, generic shadcn cards, and a default tinted submit button — it does not match the editorial, off-white-cream, foreground-on-background style of the rest of the marketing site (Home, Product Visual Library, etc.).
+## Plan — edit `src/components/home/HomeHowItWorks.tsx`
 
-Edit `src/pages/Contact.tsx`:
+1. **Mobile carousel container.** On mobile (`< lg`), replace the current vertical stack + `ArrowDown` connectors with a horizontal scroll-snap row:
+   - Outer: `lg:hidden -mx-6 px-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar`.
+   - Inner: `flex gap-4 pb-2`.
+   - Each step: fixed-width slide `w-[78%] sm:w-[60%] shrink-0 snap-center`.
+   - Hide scrollbar with utility classes (`[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`).
+   - Drop the `ArrowDown` connector entirely on mobile (carousel implies progression).
+   - Show the title + visual stacked inside each slide (same `step.num` heading + `<step.Visual />`).
 
-- **Hero section:** swap the colored "Contact Us" pill for a small uppercase eyebrow (`text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground`) like Home / Library. Title stays "Get in touch" but use the same tighter editorial sizing (`text-4xl sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em]`). Centered, with generous top padding (`pt-24 sm:pt-28 lg:pt-32`).
-- **Section background:** wrap hero in `bg-[#FAFAF8]` (cream) like other landing sections; form section gets `bg-background`.
-- **Form card:** drop the shadcn `Card` chrome. Use a single editorial container `rounded-3xl border border-foreground/10 bg-background p-6 sm:p-10` with subtle shadow.
-- **Inputs:** keep the existing `Input/Textarea/Select` components but add a uniform `rounded-xl` and slightly larger height (`h-11`) for inputs/select trigger to feel more premium.
-- **Submit button:** match the `SceneDetailModal` / discover CTA — full-width on mobile, auto on desktop, `h-[3.25rem] rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold`.
-- **Side cards (Email Us / Response Time):** convert to plain editorial blocks (no Card chrome) with a small icon in a soft circle, label uppercase eyebrow, then the value. Same off-white surface treatment.
-- **Spacing:** match Home — section paddings `py-16 sm:py-20 lg:py-24` instead of the current `py-20 sm:py-28`.
+2. **Step indicator dots under the carousel.** A small row of three dots showing the active slide. Keep it simple (no JS needed for the dots themselves — they're decorative, the active dot tracks scroll via an `IntersectionObserver` on slide refs and `useState`). Container: `flex justify-center gap-1.5 mt-4 lg:hidden`. Dots: `h-1.5 w-1.5 rounded-full bg-foreground/20`, active: `w-5 bg-foreground/70 transition-all`.
 
-No logic / submit handler changes.
+3. **Desktop layout untouched.** Wrap the existing 3-column flex row in `hidden lg:flex` so it's only used on `lg+`. Mobile uses the new carousel.
 
-### 2. Models marquee — fix the "zoomed-in" model thumbnails
+4. **Tighter mobile section padding.** Reduce section vertical padding on mobile so the section takes less space overall: `py-12 lg:py-32` (was `py-16 lg:py-32`), and header bottom margin to `mb-8 lg:mb-16` (was `mb-12 lg:mb-16`).
 
-Cause: `src/components/landing/ModelShowcaseSection.tsx` calls `getOptimizedUrl(url, { width: 320, quality: 55, resize: 'cover' })`. Per the helper's own warning (`imageOptimization.ts` line 48-53), passing `width` without `height` makes Supabase's `/render/image/` endpoint crop the image — exactly the "zoomed in heads only" effect shown in the screenshot.
-
-Fix: pass both width and height in the card's natural 3:4 aspect ratio so Supabase resizes-to-cover at the correct frame instead of cropping.
-
-```tsx
-src={getOptimizedUrl(model.previewUrl, { width: 320, height: 426, quality: 55, resize: 'cover' })}
-```
-
-That's a one-line change inside `ModelCardItem`. The 320×426 box is ~2× the largest rendered card (`lg:w-36 lg:h-44` = 144×176) so it stays sharp on retina without downloading the full 300 KB original.
+No changes to the three step visual components themselves, no changes to copy or CTA, no changes to any other file.
 
 ## Files
 
-- `src/pages/Contact.tsx` — restyle the page only.
-- `src/components/landing/ModelShowcaseSection.tsx` — add `height: 426` to the optimized URL.
+- `src/components/home/HomeHowItWorks.tsx`
