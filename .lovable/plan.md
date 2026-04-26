@@ -1,33 +1,85 @@
-## Two issues on `/home`
+## Goal
 
-### Issue A — "From one photo to a full shoot" missing on desktop (regression)
-After the recent mobile-carousel change, the desktop layout is invisible.
+Make `/app/admin/seo-page-visuals` a true single source of control for **every image** rendered on every public SEO page — grouped by the same section names the user sees on the live page (Hero, Categories, Visual System, Scene examples, etc.). Today only the Hero marquee on `/ai-product-photography` is wired through; everything else still renders hardcoded image IDs.
 
-**Root cause** (`src/components/home/HomeHowItWorks.tsx`):
-The `useScrollReveal` `ref` was attached **only to the mobile wrapper** (`<div className="lg:hidden ..." ref={ref}>`). On desktop that node has `display:none`, so its `IntersectionObserver` never fires, `visible` stays `false`, and the desktop `<div className="hidden lg:flex ...">` is stuck at `opacity-0 translate-y-6`. Result: header + CTA visible, big empty whitespace where the 3 step cards should be.
+## Pages covered
 
-**Fix**: hoist the `ref` to a wrapper that exists in both breakpoints (the inner `max-w-[1400px]` container), and remove `ref={ref}` from the mobile-only wrapper. Both blocks then read the same `visible` flag.
+1. `/ai-product-photography` (hub)
+2. `/ai-product-photo-generator`
+3. `/shopify-product-photography-ai`
+4. `/etsy-product-photography-ai`
+5. `/ai-product-photography-vs-photoshoot`
+6. `/ai-product-photography-vs-studio`
+7. All `/ai-product-photography/{category}` pages (fashion, footwear, beauty-skincare, etc.)
 
-### Issue B — oversized images on `/home` (slow LCP / scroll-in)
-Every home component using `getOptimizedUrl(src, { quality: 60 })` is fetching the **full original resolution** because no `width` is provided. The Supabase render endpoint then sends e.g. 1500–2000px JPGs into 180–320px slots, blowing up payload and decode time.
+## What's missing today (gap analysis)
 
-Per the project's `image-optimization-no-crop` rule, we only add `width` where the image lives in a fixed-aspect box with `object-cover` (so server-side cropping is desired and matches the rendered frame). All home page images do — they're cards in `aspect-[3/4]`, `aspect-[4/5]`, or fixed pixel widths. Background/full-bleed images are not touched.
+For the hub `/ai-product-photography` the live page renders these image groups, but only **Hero (12 tiles)** is editable. Everything else is hardcoded:
 
-**Fixes** (mobile-DPR-aware widths × matching height for clean crop):
-
-| File | Card size | New params |
+| Section on live page | # images | Editable today? |
 |---|---|---|
-| `HomeHero.tsx` (marquee cards) | 180–210px wide, 3:4 | `{ width: 320, height: 426, quality: 55, resize: 'cover' }` |
-| `HomeTransformStrip.tsx` (category grid) | 6-col grid ≈ 200px wide, 3:4 | `{ width: 320, height: 426, quality: 60, resize: 'cover' }` |
-| `HomeOnBrand.tsx` (consistent set) | 2-col grid ≈ 240px wide, 3:4 | `{ width: 360, height: 480, quality: 60, resize: 'cover' }` |
-| `HomeCreateCards.tsx` (4-up) | ≈ 320px wide, 4:5 | `{ width: 480, height: 600, quality: 60, resize: 'cover' }` |
-| `HomeStudioTeam.tsx` (avatars, also `<video poster>`) | 180–220px, 4:5 | `{ width: 320, height: 400, quality: 55, resize: 'cover' }` |
+| Hero banner marquee | 12 | Yes |
+| Choose your product category (collage thumbs) | 10 categories × 3 thumbs = **30** | No |
+| One product photo. A full visual system. | 6 cards × 3 thumbs = **18** | No |
+| Every scene your store needs | 10 | No (registry exists but component reads hardcoded array) |
 
-Also: in `HomeHero.tsx` the in-view preload `<link>` warming inside `HomeTransformStrip.tsx` already mirrors the same URL — once the optimized URL changes, that preload will match (no separate change needed beyond passing the same opts).
+Same pattern on the 3 tool pages and 2 comparison pages (they re-use the same hub components).
 
-**Memory update**: bump `mem://style/image-optimization-no-crop` with a clarifying note that fixed-aspect card grids on `/home` are safe to size, and only true full-bleed/background imagery must remain `quality`-only.
+## Plan
 
-## Out of scope
-- No content/copy changes
-- No video changes (videos already use `preload="metadata"` + `LazyVideo`)
-- No layout/UX redesign of "How it works" — restoring the desktop render is the only structural fix
+### 1. Expand the slot registry (`src/data/seoPageVisualSlots.ts`)
+
+Add new slot factories so every image becomes a registered slot, grouped under the **exact section titles users see on the page**:
+
+- **HERO BANNER IMAGES** — already exists (12 tiles), just rename section label
+- **Choose your product category** — new factory `buildCategoryChooserSlots()` producing 30 slots keyed `categoryThumb_{slug}_{1|2|3}` with the category name in the label (e.g. "Fashion · thumb 1")
+- **One product photo. A full visual system.** — replace the current 6-slot factory with `buildVisualSystemSlots()` producing **18 slots** keyed `visualSystem_{cardSlug}_{1|2|3}` (3 per card)
+- **Every scene your store needs — already styled.** — keep existing `sceneExample{1..10}` slots
+
+Section labels in the registry will match the live page headings 1:1 so the admin UI mirrors what users see.
+
+For the 3 tool pages and 2 comparison pages: same expanded slot set (they share components).
+
+For category pages (`/ai-product-photography/{slug}`): keep existing per-page builder but verify section names match the live page.
+
+### 2. Wire the live components to consume overrides
+
+Update each component to call `useSeoVisualOverridesMap()` and `resolveSlotImageUrl()` per image, the same pattern `PhotographyHero.tsx` already uses:
+
+- `src/components/seo/photography/PhotographyCategoryChooser.tsx` — pass `pageRoute` prop, resolve each of the 3 thumbs per category through `categoryThumb_{slug}_{n}`
+- `src/components/seo/photography/PhotographyVisualSystem.tsx` — pass `pageRoute` prop, resolve all 18 thumbs through `visualSystem_{cardSlug}_{n}`
+- `src/components/seo/photography/PhotographySceneExamples.tsx` — pass `pageRoute` prop, resolve 10 tiles through `sceneExample{n}`
+
+Each component accepts an optional `pageRoute` prop (defaults to `/ai-product-photography`) so the same component can render with different overrides on tool pages and comparison pages.
+
+Update the page files (`AIProductPhotography.tsx`, `AIProductPhotoGenerator.tsx`, `ShopifyProductPhotography.tsx`, `EtsyProductPhotography.tsx`, `AIPhotographyVsPhotoshoot.tsx`, `AIPhotographyVsStudio.tsx`) to pass their own route into these shared components.
+
+For category pages, audit `category/CategorySceneExamples.tsx` and `CategoryHero.tsx` to confirm they already consume overrides; wire any that don't.
+
+### 3. Admin UI polish (`src/pages/admin/SeoPageVisuals.tsx`)
+
+The page already groups slots by `section` and renders them — no structural change needed. Just confirm:
+
+- Section headers display the **live page wording** ("Choose your product category", "One product photo. A full visual system.", "Every scene your store needs — already styled.", "HERO BANNER IMAGES").
+- Slot order matches the visual order on the live page (top to bottom, left to right).
+- Each card's `whereItAppears` text says exactly which tile/card/category it controls (e.g. "Fashion category card · thumbnail 2 of 3").
+
+No new DB schema, no new API surface — the existing `seo_page_visuals` table + `useSeoVisualOverridesMap` already handle arbitrary slot keys.
+
+## Files touched
+
+**Edited**
+- `src/data/seoPageVisualSlots.ts` — expand factories, rename sections to match live wording
+- `src/components/seo/photography/PhotographyCategoryChooser.tsx` — read overrides
+- `src/components/seo/photography/PhotographyVisualSystem.tsx` — read overrides
+- `src/components/seo/photography/PhotographySceneExamples.tsx` — read overrides, accept `pageRoute` prop
+- `src/components/seo/photography/PhotographyHero.tsx` — accept `pageRoute` prop (currently hardcodes hub route)
+- `src/pages/seo/AIProductPhotography.tsx` + 5 sibling pages — pass `pageRoute` to shared components
+- `src/components/seo/photography/category/CategorySceneExamples.tsx` (only if not already wired)
+
+**Unchanged**
+- DB schema, RLS, `useSeoVisualOverrides.ts`, `useAdminSeoVisuals.ts`, `ScenePickerModal.tsx`, `resolveSlotImage.ts`
+
+## Result
+
+After this change, opening `/app/admin/seo-page-visuals` and selecting any page shows every image from the live page, organized under the same headings the user sees, each replaceable from the Product Visuals library — with the live SEO page falling back to the existing hardcoded image whenever no override is set (so SEO never breaks).

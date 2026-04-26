@@ -1,24 +1,40 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
+
+const PAGE_ROUTE = '/ai-product-photography';
 
 const PREVIEW = (id: string) =>
   `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 const examples = [
-  { label: 'Studio Hero',           category: 'Studio',     src: PREVIEW('1776770347820-s3qwmr') },
-  { label: 'Architectural Stair',   category: 'Editorial',  src: PREVIEW('1776522769405-3v1gs0') },
-  { label: 'Sunbathing Editorial',  category: 'Lifestyle',  src: PREVIEW('1776524131703-gvh4bb') },
-  { label: 'Paris Curb Side',       category: 'Streetwear', src: PREVIEW('1776691907477-77vt46') },
-  { label: 'Hard Shadow Hero',      category: 'Studio',     src: PREVIEW('hard-shadow-shoes-sneakers-1776008136691') },
-  { label: 'Sunlit Tailored Chair', category: 'Editorial',  src: PREVIEW('1776691912818-yiu2uq') },
-  { label: 'Frozen Aura',           category: 'Seasonal',   src: PREVIEW('1776018038709-gmt0eg') },
-  { label: 'Coastal Camera',        category: 'Lifestyle',  src: PREVIEW('1776524128011-dcnlpo') },
-  { label: 'Lounge Selfie',         category: 'Editorial',  src: PREVIEW('1776102190563-dioke2') },
-  { label: 'Sunstone Wall',         category: 'Seasonal',   src: PREVIEW('1776574255634-kmhz9g') },
+  { label: 'Studio Hero',           category: 'Studio',     id: '1776770347820-s3qwmr' },
+  { label: 'Architectural Stair',   category: 'Editorial',  id: '1776522769405-3v1gs0' },
+  { label: 'Sunbathing Editorial',  category: 'Lifestyle',  id: '1776524131703-gvh4bb' },
+  { label: 'Paris Curb Side',       category: 'Streetwear', id: '1776691907477-77vt46' },
+  { label: 'Hard Shadow Hero',      category: 'Studio',     id: 'hard-shadow-shoes-sneakers-1776008136691' },
+  { label: 'Sunlit Tailored Chair', category: 'Editorial',  id: '1776691912818-yiu2uq' },
+  { label: 'Frozen Aura',           category: 'Seasonal',   id: '1776018038709-gmt0eg' },
+  { label: 'Coastal Camera',        category: 'Lifestyle',  id: '1776524128011-dcnlpo' },
+  { label: 'Lounge Selfie',         category: 'Editorial',  id: '1776102190563-dioke2' },
+  { label: 'Sunstone Wall',         category: 'Seasonal',   id: '1776574255634-kmhz9g' },
 ];
 
 export function PhotographySceneExamples() {
+  const overrides = useSeoVisualOverridesMap();
+
+  const tiles = examples.map((ex, idx) => {
+    const slotKey = `sceneExample${idx + 1}`;
+    const fallbackAlt = `AI ${ex.category.toLowerCase()} product photography example: ${ex.label}.`;
+    return {
+      ...ex,
+      src: resolveSlotImageUrl(overrides, PAGE_ROUTE, slotKey, PREVIEW(ex.id)),
+      alt: resolveSlotAlt(overrides, PAGE_ROUTE, slotKey, fallbackAlt),
+    };
+  });
+
   return (
     <section className="py-16 lg:py-32 bg-[#f5f5f3]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
@@ -36,14 +52,14 @@ export function PhotographySceneExamples() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
-          {examples.map((ex) => (
+          {tiles.map((ex) => (
             <div
               key={ex.label}
               className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
             >
               <img
                 src={getOptimizedUrl(ex.src, { quality: 60 })}
-                alt={`AI ${ex.category.toLowerCase()} product photography example: ${ex.label}.`}
+                alt={ex.alt}
                 loading="lazy"
                 decoding="async"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"

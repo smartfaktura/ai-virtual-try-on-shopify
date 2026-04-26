@@ -2,11 +2,17 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { aiProductPhotographyCategories } from '@/data/aiProductPhotographyCategories';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
+
+const PAGE_ROUTE = '/ai-product-photography';
 
 const PREVIEW = (id: string) =>
   `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
 export function PhotographyCategoryChooser() {
+  const overrides = useSeoVisualOverridesMap();
+
   return (
     <section id="categories" className="py-16 lg:py-32 bg-background scroll-mt-24">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
@@ -24,8 +30,10 @@ export function PhotographyCategoryChooser() {
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
           {aiProductPhotographyCategories.map((cat) => {
-            const thumbs = cat.previewImages.slice(0, 3);
-            // Descriptive, category-specific anchor for SEO + a11y.
+            const thumbs = cat.previewImages.slice(0, 3).map((id, idx) => {
+              const slotKey = `categoryThumb_${cat.slug}_${idx + 1}`;
+              return resolveSlotImageUrl(overrides, PAGE_ROUTE, slotKey, PREVIEW(id));
+            });
             const anchorText = `Explore AI ${cat.name.toLowerCase()} product photography`;
             return (
               <Link
@@ -38,13 +46,13 @@ export function PhotographyCategoryChooser() {
                 {/* Image collage — 2 thumbs on mobile, 3 from sm: up */}
                 <div className="relative aspect-[4/3] sm:aspect-[16/9] bg-muted/30 p-1 sm:p-1.5">
                   <div className="absolute inset-1 sm:inset-1.5 grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-1.5">
-                    {thumbs.map((id, idx) => (
+                    {thumbs.map((src, idx) => (
                       <div
-                        key={`${id}-${idx}`}
+                        key={`${cat.slug}-${idx}`}
                         className={`relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40 ${idx === 2 ? 'hidden sm:block' : ''}`}
                       >
                         <img
-                          src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
+                          src={getOptimizedUrl(src, { quality: 60 })}
                           alt={`${cat.name} AI product photography example`}
                           loading="lazy"
                           decoding="async"
