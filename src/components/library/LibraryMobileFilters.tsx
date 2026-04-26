@@ -23,9 +23,14 @@ export function LibraryMobileFilters({
   onSelect,
 }: LibraryMobileFiltersProps) {
   const handleAll = () => {
-    onSelect(null, null);
+    onSelect(families[0]?.slug ?? null, null);
     onOpenChange(false);
   };
+
+  // "All categories" is only visually active when the user has not picked any
+  // specific family yet. As soon as a family is active, the All row goes back
+  // to the inactive style so the active family below is the only highlight.
+  const isAllActive = !activeFamilySlug;
 
   const handleFamily = (family: FamilyGroup) => {
     const hasMultiple = family.collections.length > 1;
