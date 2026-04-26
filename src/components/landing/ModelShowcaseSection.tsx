@@ -48,7 +48,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
       <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-card">
         <ShimmerImage
-          src={getOptimizedUrl(model.previewUrl, { quality: 60 })}
+          src={getOptimizedUrl(model.previewUrl, { width: 320, quality: 55, resize: 'cover' })}
           alt={model.name}
           loading="lazy"
           decoding="async"
@@ -63,7 +63,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
 }
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelItem[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
-  const tripled = [...items, ...items, ...items];
+  const doubled = [...items, ...items];
 
   return (
     <div className="relative overflow-hidden">
@@ -78,7 +78,7 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
           animation: `marquee-${direction} ${durationSeconds}s linear infinite`,
         }}
       >
-        {tripled.map((item, i) =>
+        {doubled.map((item, i) =>
           item.kind === 'cta'
             ? <BrandModelCTA key={`cta-${i}`} />
             : <ModelCardItem key={`${item.name}-${i}`} model={item} />

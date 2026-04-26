@@ -1,44 +1,54 @@
-## Root cause
+## Why model tiles stay white for so long on mobile
 
-Hub/category pages (e.g. `/ai-product-photography/fashion`) load slightly scrolled down instead of at the very top.
+The "Pick a model. Start shooting." marquee on `/` renders its tiles via `ModelShowcaseSection.tsx`. Two compounding issues make the images take forever on mobile and explain the empty white squares in the screenshot:
 
-Two things combine:
+1. **Full-resolution images served to 144px-wide tiles.**
+   Each tile uses:
+   ```ts
+   getOptimizedUrl(model.previewUrl, { quality: 60 })
+   ```
+   No `width` is passed, so Supabase Storage's render endpoint returns the **original** model JPG (~1200–2000px, ~150–300 KB each) for a tile that is only `w-28 sm:w-32 lg:w-36` (112–144 CSS px) wide. On 4G/LTE this is 5–10× more bytes per tile than needed.
 
-1. All routes are loaded with `React.lazy(...)`. The page chunk is fetched async, so when `<ScrollToTop />` fires `window.scrollTo(0, 0)` on `pathname` change, the route is still showing the empty Suspense fallback. Scrolling a 0-height page does nothing.
-2. The browser's default `history.scrollRestoration` is `'auto'`. After the lazy chunk resolves and the tall page paints, the browser restores a small scroll offset from the previous route (or from its own heuristics for back/forward-cache), so the hero ends up clipped under the fixed `LandingNav`.
+2. **Marquee tiles are tripled, so ~3× too many `<img>` elements load.**
+   ```ts
+   const tripled = [...items, ...items, ...items];
+   ```
+   But the marquee keyframes translate `-50%` (`@keyframes marquee-left` in `index.css`), which only requires the content to be **duplicated once** to loop seamlessly. Tripling forces ~50% more network requests than necessary across two rows (~30 models × 3 × 2 rows ≈ 180 image elements).
+
+The screenshot confirms this: the first two tiles (Kai, Valeria) finished loading; Fatima/Akiko are still empty because their large originals are still being fetched by the browser's lazy loader as they scroll into view.
 
 ## Fix
 
-Update `src/components/ScrollToTop.tsx` to:
+### 1. Serve correctly-sized thumbnails
 
-1. Set `history.scrollRestoration = 'manual'` once on mount, so the browser stops restoring scroll automatically.
-2. On every `pathname` change (non-POP navigation), scroll to top **immediately** AND again on the next animation frame, so the second call lands after the lazy page has actually mounted and the layout has expanded.
+In `src/components/landing/ModelShowcaseSection.tsx` change the image source to:
 
-Approximate new body:
-
-```tsx
-useEffect(() => {
-  if ('scrollRestoration' in window.history) {
-    window.history.scrollRestoration = 'manual';
-  }
-}, []);
-
-useEffect(() => {
-  if (navType !== 'POP') {
-    window.scrollTo(0, 0);
-    // Re-assert after lazy chunk mounts and layout settles.
-    const raf = requestAnimationFrame(() => window.scrollTo(0, 0));
-    return () => cancelAnimationFrame(raf);
-  }
-  trackPageView();
-  gtagPageView();
-}, [pathname, navType]);
+```ts
+getOptimizedUrl(model.previewUrl, { width: 320, quality: 55, resize: 'cover' })
 ```
 
-(Keep the existing analytics calls — just move scroll logic into its own block so the rAF cleanup doesn't strand them.)
+- Why this is safe even with the project's "no width on full-bleed images" rule: these tiles are fixed-size thumbnails inside a fixed `aspect-ratio: 3/4` container with `object-cover object-top`. They are exactly the case the `getOptimizedSrcSet` JSDoc calls "fixed-size thumbnails (avatars, product chips)". `resize: 'cover'` plus the explicit width gives Supabase enough info to letterbox correctly without zoom-cropping the face.
+- 320 px covers up to ~2× DPR for the `lg:w-36` (144 px) tile — sharp on iPhone Retina without overkill.
+- Result: each tile drops from ~150–300 KB to ~10–25 KB.
+
+### 2. Stop tripling the marquee items
+
+In the same file, change:
+```ts
+const tripled = [...items, ...items, ...items];
+```
+to:
+```ts
+const doubled = [...items, ...items];
+```
+and use `doubled` in the `.map`. This matches the `-50%` translate animation and removes ~33% of the in-flight image requests with zero visual change.
+
+### 3. Decode hint already correct
+
+`ShimmerImage` already sets `loading="lazy"` and `decoding="async"`, so no further change there.
 
 ## Files
 
-- `src/components/ScrollToTop.tsx` — only file touched.
+- `src/components/landing/ModelShowcaseSection.tsx` — two small edits (image URL + array duplication).
 
-This is a single, surgical change that fixes every lazy-loaded route, including all `/ai-product-photography/:slug` hub pages.
+That's it. No backend, no schema, no new components.
