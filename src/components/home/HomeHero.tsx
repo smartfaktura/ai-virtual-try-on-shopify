@@ -171,7 +171,10 @@ export function HomeHero() {
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
         <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
           <span>AI Product Visuals.</span>
-          <br />
+          {/* Force the break only on tablet/desktop — on mobile let the
+              typewriter flow inline so the headline doesn't stack into 3 lines. */}
+          <br className="hidden sm:inline" />
+          <span className="sm:hidden"> </span>
           <HeroTypewriter />
         </h1>
 
