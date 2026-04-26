@@ -135,12 +135,12 @@ export function HomeStudioTeam() {
                 {member.videoUrl ? (
                   <LazyVideo
                     src={member.videoUrl}
-                    poster={getOptimizedUrl(member.avatar, { quality: 60 })}
+                    poster={getOptimizedUrl(member.avatar, { width: 320, height: 400, quality: 55, resize: 'cover' })}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <img
-                    src={getOptimizedUrl(member.avatar, { quality: 60 })}
+                    src={getOptimizedUrl(member.avatar, { width: 320, height: 400, quality: 55, resize: 'cover' })}
                     alt={member.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
