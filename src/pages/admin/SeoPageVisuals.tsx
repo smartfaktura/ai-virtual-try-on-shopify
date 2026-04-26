@@ -58,16 +58,7 @@ export default function SeoPageVisuals() {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [pendingRouteSwitch, setPendingRouteSwitch] = useState<string | null>(null);
 
-  if (adminLoading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
-      </div>
-    );
-  }
-  if (!isRealAdmin) return <Navigate to="/app" replace />;
-
-  const selectedPage = SEO_PAGES.find((p) => p.route === selectedRoute)!;
+  const selectedPage = SEO_PAGES.find((p) => p.route === selectedRoute) ?? SEO_PAGES[0];
   // (selectedSlotKey is still tracked for the picker selection state)
 
 
