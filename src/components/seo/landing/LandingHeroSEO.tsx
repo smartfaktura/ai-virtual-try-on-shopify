@@ -23,16 +23,22 @@ export interface LandingHeroSEOProps {
   tiles: HeroTile[];
   altPrefix: string;
   pageId?: string;
+  /** Route key used to look up overrides in seo_page_visuals (e.g. "/etsy-product-photography-ai"). */
+  pageRoute?: string;
 }
 
 function Tile({
   tile,
   altPrefix,
+  resolvedSrc,
+  resolvedAlt,
   eager = false,
   highPriority = false,
 }: {
   tile: HeroTile;
   altPrefix: string;
+  resolvedSrc: string;
+  resolvedAlt: string;
   eager?: boolean;
   highPriority?: boolean;
 }) {
