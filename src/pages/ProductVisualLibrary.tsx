@@ -131,15 +131,20 @@ export default function ProductVisualLibrary() {
                     <button
                       type="button"
                       onClick={() => setMobileFiltersOpen(true)}
-                      className="flex flex-1 items-center gap-2 rounded-full border border-foreground/10 bg-background px-4 py-2.5 text-sm font-medium text-foreground/80 shadow-sm transition-colors hover:bg-foreground/[0.04] active:bg-foreground/[0.06]"
+                      className="flex flex-1 items-center gap-2.5 rounded-full border border-foreground/10 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-foreground/[0.04] active:bg-foreground/[0.06]"
                     >
                       <SlidersHorizontal className="h-4 w-4 opacity-70 shrink-0" />
-                      <span className="truncate flex-1 text-left">{triggerLabel}</span>
+                      <span className="text-foreground">View by category</span>
                       {activeFamily && (
-                        <span className="tabular-nums text-xs text-foreground/45 shrink-0">
-                          {activeCollectionSlug
-                            ? activeFamily.collections.find((c) => c.slug === activeCollectionSlug)?.totalCount
-                            : activeFamily.totalCount}
+                        <span className="ml-auto flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-2.5 py-0.5 text-xs font-medium text-foreground/70 max-w-[55%]">
+                          <span className="truncate">
+                            {activeCollectionLabel ?? activeFamily.label}
+                          </span>
+                          <span className="tabular-nums text-[10px] text-foreground/45 shrink-0">
+                            {activeCollectionSlug
+                              ? activeFamily.collections.find((c) => c.slug === activeCollectionSlug)?.totalCount
+                              : activeFamily.totalCount}
+                          </span>
                         </span>
                       )}
                     </button>

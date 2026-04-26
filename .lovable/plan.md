@@ -1,28 +1,41 @@
-## Problem
+## Issues on `/product-visual-library` (mobile)
 
-On `/discover` mobile detail modal:
-1. Primary CTA "Try this for free" is a default rectangular button — not pill-rounded, height feels short.
-2. "Share" button is a tiny inline text link, not a proper button matching the CTA style.
-3. "Sign up to access prompts…" caption is too faded/small and visually weak.
+1. Filter trigger bar shows the current category (e.g. "Fashion & Apparel · 425") — confusing as a filter affordance. Should read as a clear action like "View by category".
+2. Mobile filter drawer highlights "All categories" at the top in solid dark even though Fashion & Apparel is the actual active category — double active state, confusing.
+3. Scene detail modal on mobile: hero image is wide (16:11) and the body sits below, but content still overflows on smaller phones, making the user scroll inside the modal. Needs a tighter vertical layout that fits a single mobile screen.
+4. The default close X is hard to see against the dark hero image — needs a clearly visible floating close button.
 
-## Fix
+## Fixes
 
-Edit `src/components/app/PublicDiscoverDetailModal.tsx` only:
+### A) `src/pages/ProductVisualLibrary.tsx` — filter trigger label
+- Change the mobile trigger label logic so it always says "View by category" (with the current category shown as a smaller secondary chip on the right). Concretely:
+  - Remove the `triggerLabel` variable usage in the trigger button.
+  - Replace the trigger button content with: icon + "View by category" + (if a family is active) a small pill on the right showing the family label and count, e.g. "Fashion & Apparel · 425".
+  - This makes the bar read as an action instead of a status.
 
-1. **Primary CTA — pill, taller, premium dark.**
-   Replace the Button className from
-   `w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300`
-   to
-   `w-full h-[3.25rem] rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300`
-   (matches the SceneDetailModal CTA on `/product-visual-library` for consistency).
+### B) `src/components/library/LibraryMobileFilters.tsx` — drawer active state
+- Stop highlighting "All categories" in solid dark when a real family is already active. The "All categories" row should only be shown as active when **no** family is selected (or the user explicitly chose "All"). Today the condition `activeFamilySlug === families[0]?.slug && !activeCollectionSlug` highlights the first family as if it were "All", which is wrong.
+- New rule: "All categories" highlighted only if `activeFamilySlug === null`.
+- Add a separate "All categories" handler that sets `activeFamilySlug = null`. (`ProductVisualLibrary` already auto-falls back to `families[0]` for rendering when slug is null, so behaviour is preserved — but the visual state becomes correct.)
+- Visual polish: when a family is expanded, render its sub-items in a slightly indented "tray" with a subtle left rule (1px `border-l border-foreground/10` + `ml-5 pl-3`) instead of pure indentation, so the hierarchy reads as a tree, not as two equal-level pills.
 
-2. **Share — proper outlined pill button.**
-   Pass `variant="action"` to `<SharePopover>` so it renders the existing `Button variant="outline" size="pill"` style instead of the tiny text link. Keep it centered: change wrapper to a single full-width pill by removing `flex-1` constraint via inline override — the existing `action` variant already uses `flex-1`, so wrap with `<div className="flex"><SharePopover variant="action" .../></div>` to let it stretch full width and align with the CTA above.
+### C) `src/components/library/SceneDetailModal.tsx` — vertical fit on mobile + visible close
 
-3. **Sign-up caption — larger, more legible.**
-   Replace
-   `text-xs text-center text-muted-foreground/60`
-   with
-   `text-[13px] text-center text-muted-foreground/75 leading-relaxed px-2`.
+- **Layout switch on mobile to a vertical scroll-free design.** Replace the current 16:11 hero with a compact vertical stack tuned for a single phone screen:
+  - Container: keep `max-h-[92dvh]`, but switch the inner layout to `flex flex-col` on mobile and the existing `md:grid-cols-[5fr_6fr]` on desktop.
+  - Hero on mobile: change aspect ratio from `aspect-[16/11]` to `aspect-[5/4]` *but cap with `max-h-[42dvh]`* so the image never eats more than ~42 % of viewport height. Use `object-cover`. Desktop unchanged (`md:aspect-[4/5] md:max-h-none`).
+  - Body padding on mobile reduced to `p-4` (was `p-5`), and gap reduced to `gap-3` (was `gap-4`) so badges, title, description and CTA all fit in the remaining ~50dvh.
+  - Description: clamp to 3 lines on mobile via `line-clamp-3 sm:line-clamp-none` so very long copy can't push the CTA off-screen.
+  - CTA stays the existing pill at `h-[3.25rem]`; helper line below the CTA stays as is.
 
-No other files touched. No logic changes.
+- **Add a clearly visible floating close button.**
+  - Hide the default theme X (`[&>button[aria-label='Close']]:hidden` on `DialogContent`) because it sits low-contrast on the hero.
+  - Add an explicit `<DialogClose>`-wrapped circular button absolutely positioned at `top-3 right-3` on top of the hero: `h-9 w-9 rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur border border-foreground/10 flex items-center justify-center` with an `X` icon (4px stroke). On desktop this floats over the same hero corner and stays consistent.
+
+## Files
+
+- `src/pages/ProductVisualLibrary.tsx` — trigger button content only.
+- `src/components/library/LibraryMobileFilters.tsx` — handler + active-state condition + tray styling.
+- `src/components/library/SceneDetailModal.tsx` — mobile layout tweaks + floating close button.
+
+No data, routing, or logic changes beyond the above.
