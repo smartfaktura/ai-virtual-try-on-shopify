@@ -399,10 +399,10 @@ export default function Auth() {
   );
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background overflow-x-clip">
       <SEOHead title="Sign In - VOVV.AI" description="Sign in or create your VOVV.AI account to start generating AI product photography." noindex />
       {/* Left side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 py-12">
+      <div className="flex-1 min-w-0 w-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 py-12">
         <div className="w-full max-w-md mx-auto">
           {/* Logo */}
           <div className="mb-10">
