@@ -491,6 +491,7 @@ export function LandingPricing() {
       </div>
     </section>
 
+    {/* ═══ BAND 3 · Replaces a studio + Platform features (off-white) ═══ */}
     <section className="bg-[#FAFAF8] py-20 lg:py-28">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
