@@ -73,7 +73,7 @@ const faqLd = {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-[#FAFAF8] overflow-x-clip">
       <SEOHead
         title="VOVV.AI | AI Product Visuals for E-commerce Brands"
         description="Turn one product photo into product page images, lifestyle visuals, ads, and campaign-ready creative with VOVV.AI — built for e-commerce brands."
