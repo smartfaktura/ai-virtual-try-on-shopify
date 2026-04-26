@@ -30,7 +30,7 @@ export function HomeOnBrand() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Brand consistency
           </p>
-          <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
             One scene. Every product.
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
@@ -46,14 +46,14 @@ export function HomeOnBrand() {
         >
           {/* Left — Brand settings panel */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#f0efed] p-6 sm:p-8">
-            <p className="text-[13px] font-medium text-[#475569] uppercase tracking-wide mb-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-5">
               Visual direction
             </p>
             <div className="space-y-3">
               {settings.map((s) => (
                 <div
                   key={s}
-                  className="flex items-center gap-3 py-2.5 px-4 rounded-xl bg-[#FAFAF8] text-sm text-[#1a1a2e]"
+                  className="flex items-center gap-3 py-2.5 px-4 rounded-xl bg-[#FAFAF8] text-sm text-foreground"
                 >
                   <div className="w-2 h-2 rounded-full bg-[#475569]" />
                   {s}
