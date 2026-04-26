@@ -8,9 +8,9 @@ export function HomeModels({ className }: HomeModelsProps) {
   return (
     <ModelsMarquee
       className={className}
-      eyebrow={(count) => `Models · ${count}+ ready-to-shoot`}
-      title="Pick a model. Start shooting."
-      subtitle="40+ professional AI models across body types, ethnicities, and ages. Or train your own brand model in minutes and reuse it on every product, forever."
+      eyebrow={(count) => `${count}+ AI BRAND MODELS`}
+      title="Choose a model or create your own."
+      subtitle="Use ready AI models or build a reusable brand model for consistent on-model visuals across your products."
     />
   );
 }
