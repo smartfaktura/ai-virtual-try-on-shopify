@@ -1,74 +1,87 @@
-# Footer (3 columns) + Mobile Horizontal Scroll Fix
+## Goal
+Shorten every CTA button label across the SEO hub pages so both buttons fit nicely (max 3 words), while staying meaningful and on-brand. No layout, routing, tracking, or component logic changes.
 
-Two changes: rebuild footer with full 3-column structure, and fix the mobile horizontal scroll on the home page.
+## Final CTA vocabulary
 
-## 1. Footer — `src/components/landing/LandingFooter.tsx`
+**Primary** = the action (go generate). **Secondary** = the lateral move (explore / compare / examples).
 
-Brand block on the left + 3 columns on the right. All links are real `<a href>` (react-router `<Link>` renders `<a href>`). Mobile collapses each column into a native `<details>` accordion (links remain in DOM, crawlable).
+### Main hub: `/ai-product-photography`
+- `PhotographyHero.tsx`
+  - Primary: `Create your first visuals free` → **`Try it free`**
+  - Secondary: `Explore categories` → **`See examples`**
+- `PhotographyHowItWorks.tsx`
+  - CTA: `Create your first visuals free` → **`Try it free`**
+- `PhotographyFinalCTA.tsx`
+  - Primary: `Create your first visuals free` → **`Try it free`**
+  - Secondary: `Explore categories` → **`See categories`**
 
-### Route mapping (verified against `src/App.tsx` and category data)
+### Category pages: `/ai-product-photography/[slug]`
+- `category/CategoryHero.tsx`
+  - Primary: `Create your first visuals free` → **`Try it free`**
+  - Secondary: `See examples` → **`See examples`** (kept)
+- `category/CategoryBuiltForEveryCategory.tsx`
+  - CTA: `Create your first visuals free` → **`Try it free`**
 
-**PRODUCT**
-- AI Product Photography → `/ai-product-photography`
-- AI Product Photo Generator → `/ai-product-photo-generator`
-- Visual Studio → `/features/workflows`
-- Freestyle Studio → `/freestyle` (PublicFreestyle)
-- Virtual Try-On → `/features/virtual-try-on`
-- Image Upscaling → `/features/upscale`
-- Product Perspectives → `/features/perspectives`
-- Pricing → `/pricing`
-- **Brand Models — omitted** (no public route; only the in-app `/app/models` exists, which requires auth)
+### Shopify hub: `/shopify-product-photography`
+- Hero
+  - Primary: `Create your first Shopify visuals free` → **`Try it free`**
+  - Secondary: `Explore AI product photography` → **`See examples`**
+- Final CTA
+  - Primary: `Create your first Shopify visuals free` → **`Try it free`**
+  - Secondary: `Try the AI product photo generator` → **`Open generator`**
 
-**SOLUTIONS**
-- Shopify Product Photos → `/shopify-product-photography-ai`
-- Etsy Product Photos → `/etsy-product-photography-ai`
-- Fashion Product Photography → `/ai-product-photography/fashion`
-- Footwear Product Photography → `/ai-product-photography/footwear`
-- Beauty & Skincare → `/ai-product-photography/beauty-skincare`
-- Fragrance Photography → `/ai-product-photography/fragrance`
-- Jewelry Product Photography → `/ai-product-photography/jewelry`
-- Food & Beverage → `/ai-product-photography/food-beverage`
-- AI vs Photoshoot → `/ai-product-photography-vs-photoshoot`
-- VOVV.AI vs Studio → `/ai-product-photography-vs-studio`
+### Etsy hub: `/etsy-product-photography`
+- Hero
+  - Primary: `Create Etsy product visuals free` → **`Try it free`**
+  - Secondary: `Explore AI product photography` → **`See examples`**
+- Final CTA
+  - Primary: `Create Etsy product visuals free` → **`Try it free`**
+  - Secondary: `Try the AI product photo generator` → **`Open generator`**
 
-**RESOURCES**
-- Help Center → `/help`
-- Blog → `/blog`
-- About → `/about`
-- Contact → `/contact`
-- Privacy Policy → `/privacy` (actual route; user wrote `/privacy-policy` but page is mounted at `/privacy`)
-- Terms of Service → `/terms`
-- Cookie Policy → `/cookies`
-- **Tutorials — omitted** (no public route exists; in-app `/app/learn` requires auth)
+### Generator hub: `/ai-product-photo-generator`
+- Hero
+  - Primary: `Generate product photos free` → **`Generate free`**
+  - Secondary: `Explore AI product photography` → **`See examples`**
+- Final CTA
+  - Primary: `Generate product photos free` → **`Generate free`**
+  - Secondary: `Compare AI vs photoshoot` → **`vs Photoshoot`**
 
-### Layout
-- Desktop: brand `md:col-span-4 lg:col-span-3` + 3-column link grid `md:col-span-8 lg:col-span-9`, `gap-10`.
-- Tablet (≥sm): 3 columns side-by-side.
-- Mobile (<sm): each column inside `<details>` with chevron, short and scannable.
-- Bottom bar: copyright left, "A product by 123Presets" right. Inline legal links removed (legal now lives inside Resources column as requested).
+### Comparison hub: `/ai-product-photography-vs-studio`
+- Hero
+  - Primary: `Create visuals with VOVV.AI` → **`Try VOVV.AI free`** (3 words)
+  - Secondary: `Compare AI vs photoshoot` → **`vs Photoshoot`**
+- Final CTA
+  - Primary: `Create visuals with VOVV.AI` → **`Try VOVV.AI free`**
+  - Secondary: `Try the AI product photo generator` → **`Open generator`**
 
-## 2. Mobile Horizontal Scroll Fix — `src/index.css`
+### Comparison hub: `/ai-product-photography-vs-photoshoot`
+- Hero
+  - Primary: `Try AI product photography free` → **`Try VOVV.AI free`**
+  - Secondary: `Explore AI product photography` → **`See examples`**
+- Final CTA
+  - Primary: `Try AI product photography free` → **`Try VOVV.AI free`**
+  - Secondary: `Compare VOVV.AI vs studio` → **`vs Studio`**
 
-The hero section uses several `overflow-x-auto` carousels. They are properly contained, but on iOS/Android the page can still pick up sub-pixel overflow from large background blurs and full-bleed elements. There is currently no `overflow-x` guard on the root.
+## Reasoning (why this set)
+- **`Try it free`** beats `Start free` — it specifies a low-commitment action and keeps "free" as the sales hook. Used on all hubs that aren't the comparison/generator pages.
+- **`Generate free`** stays only on the generator page — matches the page intent + search term.
+- **`Try VOVV.AI free`** on comparison pages — the brand needs to be visible against "Studio"/"Photoshoot" framing.
+- **`See examples`** beats `Explore categories` / `Explore hub` — concrete, scannable, no jargon.
+- **`See categories`** kept on the main hub final CTA only, because that page actually has a `#categories` anchor.
+- **`Open generator`** beats `Try the AI product photo generator` — short, clear it leads to a tool.
+- **`vs Studio`** / **`vs Photoshoot`** — uses each page's own SEO term, instantly recognizable, ultra-short.
 
-Add to the existing `@layer base`:
+## Files to edit
+- `src/components/seo/photography/PhotographyHero.tsx`
+- `src/components/seo/photography/PhotographyHowItWorks.tsx`
+- `src/components/seo/photography/PhotographyFinalCTA.tsx`
+- `src/components/seo/photography/category/CategoryHero.tsx`
+- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`
+- `src/pages/seo/ShopifyProductPhotography.tsx`
+- `src/pages/seo/EtsyProductPhotography.tsx`
+- `src/pages/seo/AIProductPhotoGenerator.tsx`
+- `src/pages/seo/AIPhotographyVsStudio.tsx`
+- `src/pages/seo/AIPhotographyVsPhotoshoot.tsx`
+- `public/version.json` (patch bump)
 
-```css
-html, body {
-  overflow-x: clip;
-}
-```
-
-Why `clip` over `hidden`:
-- `clip` prevents horizontal scroll without creating a new scroll container, so sticky headers and `position: sticky` elements keep working (which `overflow-x: hidden` would break on `html`).
-- Vertical scroll behavior is unaffected.
-
-This is a one-line, surgical fix that resolves accidental horizontal scroll across all pages without touching any section component.
-
-## Versioning
-- Bump `public/version.json` patch.
-- Run `tsc --noEmit` to confirm no type errors.
-
-## Out of Scope
-- Other footers (`HomeFooter.tsx`) unchanged.
-- No new pages or routes added.
+Out of scope: routes, `data-cta` tracking attributes, `LandingHeroSEO` / `LandingFinalCTASEO` component internals (only consumer labels change).
