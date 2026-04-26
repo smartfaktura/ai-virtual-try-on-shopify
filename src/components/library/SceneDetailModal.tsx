@@ -54,17 +54,17 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl border-none bg-background p-0 sm:rounded-3xl max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto [&>button]:hidden">
+      <DialogContent className="max-w-[26rem] sm:max-w-2xl md:max-w-3xl border-none bg-background p-0 rounded-3xl sm:rounded-3xl max-h-[88dvh] sm:max-h-[88vh] overflow-hidden [&>button]:hidden">
         <DialogTitle className="sr-only">{scene.title}</DialogTitle>
-        <div className="grid gap-0 md:grid-cols-[5fr_6fr]">
-          {/* Hero */}
-          <div className="relative aspect-[3/4] max-h-[55dvh] md:aspect-[4/5] md:max-h-none w-full overflow-hidden bg-muted/40">
+        <div className="grid gap-0 md:grid-cols-[5fr_6fr] max-h-[88dvh] sm:max-h-[88vh] overflow-y-auto">
+          {/* Hero — fills edge-to-edge, no white letterbox bands */}
+          <div className="relative aspect-[4/5] md:max-h-none w-full overflow-hidden bg-muted/40">
             {/* Skeleton shimmer */}
             {!imgLoaded && (
               <Skeleton className="absolute inset-0 z-[1] rounded-none" />
             )}
 
-            {/* Tiny low-quality placeholder fills letterbox bands behind contained hero */}
+            {/* Tiny low-quality placeholder for instant paint */}
             {placeholderUrl && (
               <img
                 src={placeholderUrl}
@@ -76,7 +76,7 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
               />
             )}
 
-            {/* Full quality hero — contain on mobile so nothing is cropped, cover on desktop split */}
+            {/* Full quality hero — cover everywhere so the modal frame stays clean */}
             {heroUrl && (
               <img
                 src={heroUrl}
@@ -85,7 +85,7 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
                 decoding="async"
                 onLoad={() => setImgLoaded(true)}
                 onError={() => setImgLoaded(true)}
-                className={`relative z-[3] h-full w-full object-contain md:object-cover transition-opacity duration-500 ${
+                className={`relative z-[3] h-full w-full object-cover transition-opacity duration-500 ${
                   imgLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
               />
