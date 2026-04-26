@@ -1,25 +1,38 @@
-## Goal
+## Problem
 
-Make the "How it works" section much more compact on mobile by switching the three stacked step cards into a horizontal swipeable carousel. Desktop layout stays exactly as it is today (3 columns side-by-side).
+On mobile, the landing footer accordion (Solutions / Product / Resources) feels cramped when opened:
+- Links sit very close to each other (`space-y-2` + `leading-snug`) so SOLUTIONS expanded looks like a wall of text
+- Subheadings (PLATFORMS, CATEGORIES, COMPARE) blend into the link list — no clear visual hierarchy
+- The summary row is short (`py-3`) so tap targets feel narrow
+- Brand block + accordion + bottom bar gaps are uneven on small screens
 
-## Plan — edit `src/components/home/HomeHowItWorks.tsx`
+## Fix (file: `src/components/landing/LandingFooter.tsx`)
 
-1. **Mobile carousel container.** On mobile (`< lg`), replace the current vertical stack + `ArrowDown` connectors with a horizontal scroll-snap row:
-   - Outer: `lg:hidden -mx-6 px-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar`.
-   - Inner: `flex gap-4 pb-2`.
-   - Each step: fixed-width slide `w-[78%] sm:w-[60%] shrink-0 snap-center`.
-   - Hide scrollbar with utility classes (`[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`).
-   - Drop the `ArrowDown` connector entirely on mobile (carousel implies progression).
-   - Show the title + visual stacked inside each slide (same `step.num` heading + `<step.Visual />`).
+Mobile-only changes (everything `sm:` and above stays as-is).
 
-2. **Step indicator dots under the carousel.** A small row of three dots showing the active slide. Keep it simple (no JS needed for the dots themselves — they're decorative, the active dot tracks scroll via an `IntersectionObserver` on slide refs and `useState`). Container: `flex justify-center gap-1.5 mt-4 lg:hidden`. Dots: `h-1.5 w-1.5 rounded-full bg-foreground/20`, active: `w-5 bg-foreground/70 transition-all`.
+**1. Roomier accordion rows**
+- Summary row: `py-3` → `py-4`, slightly larger summary text
+- Section dividers stay, but slightly stronger contrast between sections
 
-3. **Desktop layout untouched.** Wrap the existing 3-column flex row in `hidden lg:flex` so it's only used on `lg+`. Mobile uses the new carousel.
+**2. Clear hierarchy inside opened sections**
+- Add more top space when opened: `mt-3` → `mt-4`, bottom padding `pb-1` → `pb-2`
+- Group spacing inside Solutions/Resources: `space-y-4` → `space-y-6`
+- Subheading: bump from `text-[10px]` to `text-[11px]`, add `mb-2.5`, slightly stronger color so PLATFORMS / CATEGORIES / COMPARE clearly anchor each block
+- Add a subtle `pl-0.5` indent on grouped link lists so they read as children of the subheading
 
-4. **Tighter mobile section padding.** Reduce section vertical padding on mobile so the section takes less space overall: `py-12 lg:py-32` (was `py-16 lg:py-32`), and header bottom margin to `mb-8 lg:mb-16` (was `mb-12 lg:mb-16`).
+**3. Comfortable link spacing**
+- Link list: `space-y-2` → `space-y-3`
+- Link class on mobile: keep `text-sm` but switch from `leading-snug` to `leading-relaxed` and add `block py-0.5` so tap targets are ~32px tall
 
-No changes to the three step visual components themselves, no changes to copy or CTA, no changes to any other file.
+**4. Better outer rhythm on mobile**
+- Brand → accordion gap: `mt-8` → `mt-10`
+- Accordion → bottom bar: `mt-12` → `mt-10` on mobile, `sm:mt-12` preserved
+- Bottom bar on mobile: stack with `gap-4` instead of `gap-3`, give the legal nav `gap-y-2`
 
-## Files
+**5. Safe-area + container padding**
+- Add `pb-[env(safe-area-inset-bottom)]` to the footer wrapper so iOS home-indicator doesn't crowd the copyright row
 
-- `src/components/home/HomeHowItWorks.tsx`
+## Out of scope
+- No changes to desktop/tablet layout
+- No changes to footer content (links, headings, social icons)
+- No changes to `HomeFooter.tsx` (separate component, not the one in screenshot)
