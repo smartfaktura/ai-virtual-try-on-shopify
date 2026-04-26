@@ -84,6 +84,8 @@ const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const CookiePolicy = lazy(() => import('@/pages/CookiePolicy'));
 const Team = lazy(() => import('@/pages/Team'));
+const WhyVovv = lazy(() => import('@/pages/WhyVovv'));
+const Roadmap = lazy(() => import('@/pages/Roadmap'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const PublicDiscover = lazy(() => import('@/pages/PublicDiscover'));
 const PublicFreestyle = lazy(() => import('@/pages/PublicFreestyle'));
@@ -184,6 +186,8 @@ const App = () => {
             <Route path="/careers" element={<Careers />} />
             <Route path="/press" element={<Press />} />
             <Route path="/team" element={<Team />} />
+            <Route path="/why-vovv" element={<WhyVovv />} />
+            <Route path="/roadmap" element={<Roadmap />} />
 
             {/* Support pages */}
             <Route path="/help" element={<HelpCenter />} />

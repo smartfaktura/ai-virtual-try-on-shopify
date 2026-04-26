@@ -27,8 +27,10 @@ const footerLinks = {
     { label: 'VOVV.AI vs Studio', to: '/ai-product-photography-vs-studio' },
   ],
   Resources: [
+    { label: 'Why VOVV.AI', to: '/why-vovv' },
     { label: 'How It Works', to: '/how-it-works' },
     { label: 'FAQ', to: '/faq' },
+    { label: 'Roadmap', to: '/roadmap' },
     { label: 'Help Center', to: '/help' },
     { label: 'Blog', to: '/blog' },
     { label: 'About', to: '/about' },
