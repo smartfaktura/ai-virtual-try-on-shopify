@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 import { SmartImage } from './SmartImage';
 
 
@@ -9,10 +11,22 @@ import { SmartImage } from './SmartImage';
  * Editorial split hero for /ai-product-photography/{slug} pages.
  * Spacious 5/6 grid: copy left, free-floating staggered 2x2 tile collage right.
  * Falls back to a single full image when no collage data is provided.
+ *
+ * Reads admin overrides from /app/admin/seo-page-visuals for the slots
+ * `heroMain` (single-image variant) and `heroCollage1`…`heroCollage4` (collage).
  */
 export function CategoryHero({ page }: { page: CategoryPage }) {
+  const overrides = useSeoVisualOverridesMap();
   const collage = page.heroCollage;
   const hasCollage = collage && collage.length >= 4;
+
+  const heroMainSrc = resolveSlotImageUrl(
+    overrides,
+    page.url,
+    'heroMain',
+    PREVIEW(page.heroImageId),
+  );
+  const heroMainAlt = resolveSlotAlt(overrides, page.url, 'heroMain', page.heroAlt);
 
   return (
     <section className="relative bg-[#FAFAF8] overflow-hidden">
@@ -74,19 +88,19 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
           {hasCollage ? (
             <div className="grid grid-cols-2 gap-3 lg:gap-4">
               <div className="flex flex-col gap-3 lg:gap-4">
-                <HeroTile tile={collage![0]} priority />
-                <HeroTile tile={collage![2]} />
+                <HeroTile tile={collage![0]} index={0} pageRoute={page.url} overrides={overrides} priority />
+                <HeroTile tile={collage![2]} index={2} pageRoute={page.url} overrides={overrides} />
               </div>
               <div className="flex flex-col gap-3 lg:gap-4 lg:translate-y-8">
-                <HeroTile tile={collage![1]} />
-                <HeroTile tile={collage![3]} />
+                <HeroTile tile={collage![1]} index={1} pageRoute={page.url} overrides={overrides} />
+                <HeroTile tile={collage![3]} index={3} pageRoute={page.url} overrides={overrides} />
               </div>
             </div>
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-2xl overflow-hidden bg-muted/30">
               <SmartImage
-                src={getOptimizedUrl(PREVIEW(page.heroImageId), { quality: 60 })}
-                alt={page.heroAlt}
+                src={getOptimizedUrl(heroMainSrc, { quality: 60 })}
+                alt={heroMainAlt}
                 priority
               />
               <span className="absolute left-4 bottom-4 inline-flex items-center px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-md text-[11px] uppercase tracking-[0.16em] text-foreground/85 font-semibold shadow-sm">
@@ -102,17 +116,25 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
 
 function HeroTile({
   tile,
+  index,
+  pageRoute,
+  overrides,
   priority = false,
 }: {
   tile: { subCategory: string; imageId: string; alt: string };
+  index: number;
+  pageRoute: string;
+  overrides: ReturnType<typeof useSeoVisualOverridesMap>;
   priority?: boolean;
 }) {
-  const previewUrl = PREVIEW(tile.imageId);
+  const slotKey = `heroCollage${index + 1}`;
+  const src = resolveSlotImageUrl(overrides, pageRoute, slotKey, PREVIEW(tile.imageId));
+  const alt = resolveSlotAlt(overrides, pageRoute, slotKey, tile.alt);
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
       <SmartImage
-        src={getOptimizedUrl(previewUrl, { quality: 60 })}
-        alt={tile.alt}
+        src={getOptimizedUrl(src, { quality: 60 })}
+        alt={alt}
         priority={priority}
       />
       <span className="absolute left-3 bottom-3 inline-flex items-center px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-md text-[10px] uppercase tracking-[0.16em] text-foreground/80 font-semibold">
