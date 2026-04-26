@@ -63,7 +63,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
 }
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelItem[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
-  const tripled = [...items, ...items, ...items];
+  const doubled = [...items, ...items];
 
   return (
     <div className="relative overflow-hidden">
