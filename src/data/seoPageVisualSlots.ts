@@ -160,35 +160,36 @@ function buildCategoryChooserSlots(tags: string[]): SeoVisualSlot[] {
   return slots;
 }
 
-// LandingOneToManyShowcase rows: 6 fixed cards × 3 thumbnails each = 18 slots.
-// Card titles match the imageIds defined inline on the tool pages.
-const ONE_TO_MANY_ROWS: { title: string; thumbs: [string, string, string] }[] = [
-  { title: 'Product page',  thumbs: ['1776770347820-s3qwmr', '1776841027943-vetumj', '1776664933175-rjlbn6'] },
-  { title: 'Lifestyle',     thumbs: ['1776664924644-8pmju4', '1776524131703-gvh4bb', '1776524128011-dcnlpo'] },
-  { title: 'Social',        thumbs: ['1776691906436-3fe7l9', '1776102190563-dioke2', '1776691907477-77vt46'] },
-  { title: 'Paid ads',      thumbs: ['1776102204479-9rlc0n', '1776606017719-zzhgy7', '1776239826550-uaopmt'] },
-  { title: 'Detail',        thumbs: ['1776243905045-8aw72b', '1776244136599-8gw62e', '1776243682026-h1itvm'] },
-  { title: 'Campaigns',     thumbs: ['1776524132929-q8upyp', '1776574228066-oyklfz', '1776018020221-aehe8n'] },
+// LandingOneToManyShowcase: 6 cards × 3 thumbnails each = 18 slots.
+// Slot key uses card position (not title) because tool pages use slightly
+// different card titles for the same positions (e.g. "Social" vs "Social
+// content", "Detail" vs "Detail close-ups").
+const ONE_TO_MANY_DEFAULTS: { label: string; thumbs: [string, string, string] }[] = [
+  { label: 'Card 1 (Product page)', thumbs: ['1776770347820-s3qwmr', '1776841027943-vetumj', '1776664933175-rjlbn6'] },
+  { label: 'Card 2 (Lifestyle)',    thumbs: ['1776664924644-8pmju4', '1776524131703-gvh4bb', '1776524128011-dcnlpo'] },
+  { label: 'Card 3 (Social)',       thumbs: ['1776691906436-3fe7l9', '1776102190563-dioke2', '1776691907477-77vt46'] },
+  { label: 'Card 4 (Paid ads)',     thumbs: ['1776102204479-9rlc0n', '1776606017719-zzhgy7', '1776239826550-uaopmt'] },
+  { label: 'Card 5 (Detail)',       thumbs: ['1776243905045-8aw72b', '1776244136599-8gw62e', '1776243682026-h1itvm'] },
+  { label: 'Card 6 (Campaigns)',    thumbs: ['1776524132929-q8upyp', '1776574228066-oyklfz', '1776018020221-aehe8n'] },
 ];
 
 function buildOneToManyShowcaseSlots(tags: string[]): SeoVisualSlot[] {
   const slots: SeoVisualSlot[] = [];
-  for (const row of ONE_TO_MANY_ROWS) {
-    const cardSlug = row.title.toLowerCase().replace(/\s+/g, '_');
+  ONE_TO_MANY_DEFAULTS.forEach((row, cardIdx) => {
     row.thumbs.forEach((id, i) => {
       slots.push({
-        key: `oneToMany_${cardSlug}_${i + 1}`,
+        key: `oneToMany_card${cardIdx + 1}_${i + 1}`,
         section: 'One product photo. A full visual system.',
-        label: `${row.title} · thumb ${i + 1}`,
-        whereItAppears: `“${row.title}” card · thumbnail ${i + 1} of 3.`,
+        label: `${row.label} · thumb ${i + 1}`,
+        whereItAppears: `Card ${cardIdx + 1} of 6 · thumbnail ${i + 1} of 3.`,
         required: false,
         recommendedTags: tags,
         recommendedAspectRatio: '3:4',
         fallbackImageId: id,
-        fallbackAlt: `${row.title} — AI product photography example ${i + 1}`,
+        fallbackAlt: `${row.label} — AI product photography example ${i + 1}`,
       });
     });
-  }
+  });
   return slots;
 }
 
