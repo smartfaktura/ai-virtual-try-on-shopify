@@ -27,6 +27,11 @@ export function LibraryMobileFilters({
     onOpenChange(false);
   };
 
+  // "All categories" is only visually active when the user has not picked any
+  // specific family yet. As soon as a family is active, the All row goes back
+  // to the inactive style so the active family below is the only highlight.
+  const isAllActive = !activeFamilySlug;
+
   const handleFamily = (family: FamilyGroup) => {
     const hasMultiple = family.collections.length > 1;
     if (!hasMultiple) {
@@ -68,7 +73,7 @@ export function LibraryMobileFilters({
             onClick={handleAll}
             className={cn(
               'w-full flex items-center gap-2 px-3 py-3 rounded-xl text-sm transition-colors',
-              !activeFamilySlug || (activeFamilySlug === families[0]?.slug && !activeCollectionSlug)
+              isAllActive
                 ? 'bg-foreground text-background font-semibold'
                 : 'text-foreground/80 hover:bg-foreground/[0.05]',
             )}
@@ -114,12 +119,12 @@ export function LibraryMobileFilters({
                   </button>
 
                   {isActive && hasMultiple && (
-                    <div className="mt-0.5 mb-1 space-y-0.5">
+                    <div className="mt-1 mb-2 ml-5 pl-3 border-l border-foreground/10 space-y-0.5">
                       <button
                         type="button"
                         onClick={() => handleCollection(family.slug, '')}
                         className={cn(
-                          'w-full flex items-center gap-2 pl-10 pr-3 py-2.5 rounded-xl text-sm transition-colors text-left',
+                          'w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
                           activeCollectionSlug === null
                             ? 'bg-foreground text-background font-semibold'
                             : 'text-foreground/70 hover:bg-foreground/[0.05]',
@@ -138,7 +143,7 @@ export function LibraryMobileFilters({
                             type="button"
                             onClick={() => handleCollection(family.slug, c.slug)}
                             className={cn(
-                              'w-full flex items-center gap-2 pl-10 pr-3 py-2.5 rounded-xl text-sm transition-colors text-left',
+                              'w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
                               collActive
                                 ? 'bg-foreground text-background font-semibold'
                                 : 'text-foreground/70 hover:bg-foreground/[0.05]',
