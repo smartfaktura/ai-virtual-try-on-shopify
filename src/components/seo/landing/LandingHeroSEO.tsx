@@ -44,7 +44,7 @@ function Tile({
         height={280}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        {...(highPriority ? { fetchpriority: 'high' as 'high' } : {})}
+        {...(highPriority ? { fetchPriority: 'high' as const } : {})}
         className="w-full h-full object-cover"
       />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
