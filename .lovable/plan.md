@@ -1,75 +1,47 @@
-# Fix: old SEO image flashes for ~1s before new admin override appears
-
 ## What's actually happening
 
-When a visitor opens `/ai-product-photography` (or any page using slot overrides), the page renders **before** the override fetch finishes. The render order is:
+Your overrides **are** saving correctly and the code that reads them on the live SEO pages **is** correct. I traced it end-to-end:
 
-1. Component mounts → `useSeoVisualOverridesMap()` returns an empty `Map` (React Query is still loading, `data` is `undefined`).
-2. `resolveSlotImageUrl` falls through to the hardcoded fallback URL → browser starts loading the OLD image.
-3. ~200–800ms later the Supabase query resolves → component re-renders with the new override URL → browser swaps to the NEW image.
+1. Admin saves → row lands in `seo_page_visuals` table (verified: 20+ rows in DB, including your recent edits to `/ai-product-photography`).
+2. The public anonymous API can read those rows (RLS policy `Anyone can read seo visual overrides` is open).
+3. Components like `PhotographyHero`, `PhotographyVisualSystem`, `LandingHeroSEO`, etc. all import `useSeoVisualOverridesMap` and call `resolveSlotImageUrl(...)` with the correct `pageRoute`.
 
-That swap is the "flash of old image" the user is seeing. It happens on every fresh page load and after every navigation that remounts the page, because the override data lives only in React Query's in-memory cache and starts cold.
+So why don't you see the changes on `vovv.ai`?
 
-Two smaller compounding issues:
-- The `Map` in `useSeoVisualOverridesMap` is rebuilt on every render (no `useMemo`).
-- Existing overrides are never preloaded, so even repeat visitors pay the round-trip on the first paint of the session.
+## The real cause: stale production bundle
 
-## Fix strategy
+I fetched the JS bundle currently served at `https://vovv.ai/ai-product-photography` (`assets/index-CJJ91ZPN.js`) and searched it for override-related code:
 
-Eliminate the flash by ensuring the resolver **never returns the old fallback URL once an override exists**, and by making the override data available before first paint whenever possible.
+- `seo-page-visuals` → only appears once, as the admin **route registration**.
+- `seo_page_visuals` (the DB table name used in the public components) → **0 hits**.
+- `seo-visual-overrides` (the localStorage key / query key) → **0 hits**.
 
-### 1. Persist the override map across sessions (localStorage cache)
+Translation: the published build at `vovv.ai` was deployed **before** the SEO override system shipped. The admin UI is included (it's a separate route), but the public SEO pages on production are still running their old hardcoded fallback images. Editing in admin can never affect them — the code that reads the overrides isn't in that bundle.
 
-Add a tiny synchronous cache layer in `useSeoVisualOverrides.ts`:
+The preview build (`id-preview--…lovable.app`) has the new code, which is why it works there but breaks on the live domain.
 
-- On module load, hydrate React Query's cache from `localStorage` key `seo-visual-overrides:v1` (a JSON snapshot of the last fetched rows + a timestamp).
-- After every successful fetch, write the fresh snapshot back to `localStorage`.
-- The hook initializes `useQuery` with `initialData` built from this snapshot, so on repeat visits the map is populated **synchronously on first render** — no flash, no waiting.
+## What needs to happen
 
-This is safe: the snapshot is public data already shipped to every visitor, and a stale snapshot can't render anything worse than the fallback (which is what happens today anyway).
+There is **no code change needed**. The system is already correct. You just need to publish a new build so the production bundle includes the override-reading code.
 
-### 2. Gate the fallback while the very first fetch is in flight (cold cache only)
+### Steps
 
-For the first-ever visit (no localStorage snapshot yet), expose an `isLoading` flag from `useSeoVisualOverridesMap`:
+1. Click **Publish → Update** in the Lovable editor (top-right). This rebuilds and deploys the latest code to `vovv.ai`, `www.vovv.ai`, and `vovvai.lovable.app`.
+2. After publish completes, hard-refresh the live page once (⌘/Ctrl-Shift-R) to drop any cached JS chunks.
+3. From that point on, every admin save will appear on the live page on the next visit (and immediately for the admin themselves, thanks to the localStorage snapshot invalidation we shipped last round).
 
-```ts
-return { map, isReady };  // isReady = !isLoading || hasSnapshot
+### How to verify it worked
+
+After republishing, run this in any terminal — it should return a number greater than 0:
+
+```
+curl -s https://vovv.ai/$(curl -s https://vovv.ai/ai-product-photography \
+  | grep -oE 'assets/index-[A-Za-z0-9]+\.js' | head -1) \
+  | grep -c "seo_page_visuals"
 ```
 
-In each consumer (`LandingHeroSEO`, `LandingOneToManyShowcase`, `LandingCategoryGrid`, `PhotographyCategoryChooser`, `PhotographyVisualSystem`, `PhotographySceneExamples`, `CategoryBuiltForEveryCategory`, `CategoryRelatedCategories`, plus the per-category hero/scene resolvers), gate the `<img src>` so we render a transparent placeholder (or `loading="eager"` empty src) until `isReady === true`. That removes the wrong-image network request entirely on cold cache.
+If it prints `0`, the publish hasn't propagated yet. If it prints `1` or more, the override system is now live in production.
 
-The placeholder will be visible for at most one network round-trip (~200ms) instead of showing the wrong image for ~1s — and only on the very first visit per browser. Every subsequent visit hits the localStorage cache and renders correctly on the first paint.
+### Note on the preview environment
 
-### 3. Preload the override images so the swap (if any) is instant
-
-When the override map resolves, kick off `new Image().src = override.preview_image_url` for every visible slot on the current page. This makes the browser fetch & decode the override image in parallel, so even on a cold cache the placeholder → final-image transition is sub-100ms instead of waiting for a fresh network fetch.
-
-### 4. Memoize the map
-
-Wrap the `Map` construction in `useMemo(() => …, [data])` so consumers that depend on it don't rebuild on every render.
-
-### 5. Keep admin invalidation working
-
-`useAdminSeoVisuals` already calls `invalidateQueries(SEO_OVERRIDES_QUERY_KEY)` after upsert/delete. That stays. We additionally clear and rewrite the localStorage snapshot inside the same `onSuccess` so admins testing in the same browser see the change on next page load instantly.
-
-## Files to change
-
-- `src/hooks/useSeoVisualOverrides.ts` — add localStorage snapshot + `initialData` + memoized map + `isReady` flag + image preload effect.
-- `src/hooks/useAdminSeoVisuals.ts` — write fresh snapshot to localStorage in `onSuccess`.
-- `src/lib/resolveSlotImage.ts` — add a `resolveSlotImage(overrides, isReady, route, key, fallback)` variant that returns `null` when `!isReady && noSnapshot`, used by consumers to render the placeholder.
-- Consumer components (gate `<img>` with placeholder until `isReady`):
-  - `src/components/seo/landing/LandingHeroSEO.tsx`
-  - `src/components/seo/landing/LandingOneToManyShowcase.tsx`
-  - `src/components/seo/landing/LandingCategoryGrid.tsx`
-  - `src/components/seo/photography/PhotographyCategoryChooser.tsx`
-  - `src/components/seo/photography/PhotographyVisualSystem.tsx`
-  - `src/components/seo/photography/PhotographySceneExamples.tsx`
-  - `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`
-  - `src/components/seo/photography/category/CategoryRelatedCategories.tsx`
-  - `src/pages/seo/AIProductPhotographyCategory.tsx` (hero + collage + scene-example resolvers)
-
-## Result
-
-- **Repeat visitors / admins testing edits:** the new image appears on the very first paint. No flash, ever.
-- **First-time visitors (cold cache):** a neutral placeholder for ~200ms, then the correct image. Never the wrong image.
-- **SEO crawlers:** unchanged — they get the `<img alt>` and proper URLs once the data resolves; no layout shift because placeholder reserves the same aspect-ratio box.
+In the Lovable preview (`id-preview--…lovable.app`) the overrides already work — that's the build with the new code. So if you want to QA admin changes before publishing, do it in preview, then publish to push it to `vovv.ai`.
