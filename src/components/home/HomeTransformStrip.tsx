@@ -226,7 +226,7 @@ export function HomeTransformStrip() {
     const seen = new Set<string>();
     CATEGORIES.forEach((cat) => {
       cat.cards.forEach((card) => {
-        const url = getOptimizedUrl(card.src, { quality: 60 });
+        const url = getOptimizedUrl(card.src, { width: 320, height: 426, quality: 60, resize: 'cover' });
         if (!url || seen.has(url) || url.startsWith('data:')) return;
         seen.add(url);
         const link = document.createElement('link');
