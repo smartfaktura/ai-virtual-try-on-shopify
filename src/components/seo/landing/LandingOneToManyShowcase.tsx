@@ -1,5 +1,7 @@
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { LucideIcon } from 'lucide-react';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
 
 const PREVIEW = (id: string) =>
   `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
@@ -17,6 +19,8 @@ export interface LandingOneToManyShowcaseProps {
   intro?: string;
   items: OneToManyItem[];
   background?: 'background' | 'soft';
+  /** Route key used to look up overrides in seo_page_visuals. */
+  pageRoute?: string;
 }
 
 export function LandingOneToManyShowcase({
@@ -25,7 +29,9 @@ export function LandingOneToManyShowcase({
   intro,
   items,
   background = 'soft',
+  pageRoute,
 }: LandingOneToManyShowcaseProps) {
+  const overrides = useSeoVisualOverridesMap();
   const bg = background === 'soft' ? 'bg-[#f5f5f3]' : 'bg-background';
   return (
     <section className={`py-16 lg:py-32 ${bg}`}>
@@ -43,26 +49,37 @@ export function LandingOneToManyShowcase({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
-          {items.map(({ title, text, Icon, imageIds }) => (
+          {items.map(({ title, text, Icon, imageIds }, cardIdx) => (
             <div
               key={title}
               className="group bg-white rounded-3xl border border-[#f0efed] shadow-sm overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
             >
               <div className="relative aspect-[5/3] bg-muted/30 p-1.5">
                 <div className="absolute inset-1.5 grid grid-cols-3 gap-1.5">
-                  {imageIds.map((id, idx) => (
-                    <div key={`${id}-${idx}`} className="relative overflow-hidden rounded-xl bg-muted/40">
-                      <img
-                        src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
-                        alt={`${title} — example ${idx + 1}`}
-                        width={400}
-                        height={400}
-                        loading="lazy"
-                        decoding="async"
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                      />
-                    </div>
-                  ))}
+                  {imageIds.map((id, idx) => {
+                    const fallback = PREVIEW(id);
+                    const src = pageRoute
+                      ? resolveSlotImageUrl(
+                          overrides,
+                          pageRoute,
+                          `oneToMany_card${cardIdx + 1}_${idx + 1}`,
+                          fallback,
+                        )
+                      : fallback;
+                    return (
+                      <div key={`${id}-${idx}`} className="relative overflow-hidden rounded-xl bg-muted/40">
+                        <img
+                          src={getOptimizedUrl(src, { quality: 60 })}
+                          alt={`${title} — example ${idx + 1}`}
+                          width={400}
+                          height={400}
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <div className="p-5 lg:p-6 flex items-start gap-3">

@@ -66,6 +66,7 @@ export default function AIProductPhotoGenerator() {
       <LandingNav />
       <main>
         <LandingHeroSEO
+          pageRoute="/ai-product-photo-generator"
           eyebrow="AI Product Photo Generator"
           pageId="generator"
           headline={
@@ -111,6 +112,7 @@ export default function AIProductPhotoGenerator() {
         />
 
         <LandingOneToManyShowcase
+          pageRoute="/ai-product-photo-generator"
           eyebrow="Before · After"
           headline="From one product photo to many brand-ready visuals"
           intro="One upload becomes a full visual library — built around your product."
@@ -137,6 +139,7 @@ export default function AIProductPhotoGenerator() {
 
         />
         <LandingCategoryGrid
+          pageRoute="/ai-product-photo-generator"
           eyebrow="All 10 product verticals"
           headline="Generate product photos for every ecommerce category"
           intro="Category-specific visual systems for the products you actually sell."

@@ -160,6 +160,66 @@ function buildCategoryChooserSlots(tags: string[]): SeoVisualSlot[] {
   return slots;
 }
 
+// LandingOneToManyShowcase: 6 cards × 3 thumbnails each = 18 slots.
+// Slot key uses card position (not title) because tool pages use slightly
+// different card titles for the same positions (e.g. "Social" vs "Social
+// content", "Detail" vs "Detail close-ups").
+const ONE_TO_MANY_DEFAULTS: { label: string; thumbs: [string, string, string] }[] = [
+  { label: 'Card 1 (Product page)', thumbs: ['1776770347820-s3qwmr', '1776841027943-vetumj', '1776664933175-rjlbn6'] },
+  { label: 'Card 2 (Lifestyle)',    thumbs: ['1776664924644-8pmju4', '1776524131703-gvh4bb', '1776524128011-dcnlpo'] },
+  { label: 'Card 3 (Social)',       thumbs: ['1776691906436-3fe7l9', '1776102190563-dioke2', '1776691907477-77vt46'] },
+  { label: 'Card 4 (Paid ads)',     thumbs: ['1776102204479-9rlc0n', '1776606017719-zzhgy7', '1776239826550-uaopmt'] },
+  { label: 'Card 5 (Detail)',       thumbs: ['1776243905045-8aw72b', '1776244136599-8gw62e', '1776243682026-h1itvm'] },
+  { label: 'Card 6 (Campaigns)',    thumbs: ['1776524132929-q8upyp', '1776574228066-oyklfz', '1776018020221-aehe8n'] },
+];
+
+function buildOneToManyShowcaseSlots(tags: string[]): SeoVisualSlot[] {
+  const slots: SeoVisualSlot[] = [];
+  ONE_TO_MANY_DEFAULTS.forEach((row, cardIdx) => {
+    row.thumbs.forEach((id, i) => {
+      slots.push({
+        key: `oneToMany_card${cardIdx + 1}_${i + 1}`,
+        section: 'One product photo. A full visual system.',
+        label: `${row.label} · thumb ${i + 1}`,
+        whereItAppears: `Card ${cardIdx + 1} of 6 · thumbnail ${i + 1} of 3.`,
+        required: false,
+        recommendedTags: tags,
+        recommendedAspectRatio: '3:4',
+        fallbackImageId: id,
+        fallbackAlt: `${row.label} — AI product photography example ${i + 1}`,
+      });
+    });
+  });
+  return slots;
+}
+
+// LandingCategoryGrid: scoped per page. If `slugs` is provided we only emit
+// slots for those categories; otherwise all 10 categories × 3 thumbs = 30 slots.
+function buildCategoryGridSlots(tags: string[], slugs?: string[]): SeoVisualSlot[] {
+  const cats = slugs
+    ? slugs
+        .map((s) => aiProductPhotographyCategories.find((c) => c.slug === s))
+        .filter(Boolean)
+    : aiProductPhotographyCategories;
+  const slots: SeoVisualSlot[] = [];
+  for (const cat of cats as typeof aiProductPhotographyCategories) {
+    cat.previewImages.slice(0, 3).forEach((id, i) => {
+      slots.push({
+        key: `categoryGrid_${cat.slug}_${i + 1}`,
+        section: 'Built for every product category',
+        label: `${cat.name} · thumb ${i + 1}`,
+        whereItAppears: `“${cat.name}” category grid card · thumbnail ${i + 1} of 3.`,
+        required: false,
+        recommendedTags: [...tags, cat.slug, ...cat.subcategories.map((s) => s.toLowerCase())],
+        recommendedAspectRatio: '4:5',
+        fallbackImageId: id,
+        fallbackAlt: `${cat.name} AI product photography example`,
+      });
+    });
+  }
+  return slots;
+}
+
 // ── Per-category page slots, derived from the category page data ──
 
 function buildCategorySlots(page: CategoryPage): SeoVisualSlot[] {
@@ -236,15 +296,16 @@ export const SEO_PAGES: SeoPageEntry[] = [
   },
   // Category hubs
   ...categoryEntries,
-  // Tool / commercial intent pages — currently only the hero marquee is wired
-  // through to overrides on these pages. Other sections use bespoke components
-  // (LandingValueCards, LandingOneToManyShowcase, etc.) and aren't editable yet.
+  // Tool / commercial intent pages — full coverage of every image-bearing
+  // section (hero marquee, "One product photo" showcase, category grid).
   {
     route: '/ai-product-photo-generator',
     label: 'AI Product Photo Generator',
     group: 'tool',
     slots: [
       ...buildHeroSlots(TOOL_TAGS_GENERATOR),
+      ...buildOneToManyShowcaseSlots(TOOL_TAGS_GENERATOR),
+      ...buildCategoryGridSlots(TOOL_TAGS_GENERATOR),
     ],
   },
   {
@@ -253,6 +314,8 @@ export const SEO_PAGES: SeoPageEntry[] = [
     group: 'tool',
     slots: [
       ...buildHeroSlots(TOOL_TAGS_SHOPIFY),
+      ...buildOneToManyShowcaseSlots(TOOL_TAGS_SHOPIFY),
+      ...buildCategoryGridSlots(TOOL_TAGS_SHOPIFY),
     ],
   },
   {
@@ -261,15 +324,18 @@ export const SEO_PAGES: SeoPageEntry[] = [
     group: 'tool',
     slots: [
       ...buildHeroSlots(TOOL_TAGS_ETSY),
+      ...buildOneToManyShowcaseSlots(TOOL_TAGS_ETSY),
+      ...buildCategoryGridSlots(TOOL_TAGS_ETSY),
     ],
   },
-  // Comparison pages — hero marquee only (other sections are bespoke).
+  // Comparison pages — hero + category grid (no OneToMany on these pages).
   {
     route: '/ai-product-photography-vs-photoshoot',
     label: 'AI vs Photoshoot',
     group: 'comparison',
     slots: [
       ...buildHeroSlots(COMPARISON_TAGS),
+      ...buildCategoryGridSlots(COMPARISON_TAGS),
     ],
   },
   {
@@ -278,6 +344,7 @@ export const SEO_PAGES: SeoPageEntry[] = [
     group: 'comparison',
     slots: [
       ...buildHeroSlots(COMPARISON_TAGS),
+      ...buildCategoryGridSlots(COMPARISON_TAGS),
     ],
   },
 ];
