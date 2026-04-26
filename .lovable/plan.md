@@ -1,47 +1,35 @@
-## What's actually happening
+## What's wrong
 
-Your overrides **are** saving correctly and the code that reads them on the live SEO pages **is** correct. I traced it end-to-end:
+The category hero component at `src/components/seo/photography/category/CategoryHero.tsx` is the only image-rendering SEO component that **never reads from the override system**. It renders straight from the static config:
 
-1. Admin saves → row lands in `seo_page_visuals` table (verified: 20+ rows in DB, including your recent edits to `/ai-product-photography`).
-2. The public anonymous API can read those rows (RLS policy `Anyone can read seo visual overrides` is open).
-3. Components like `PhotographyHero`, `PhotographyVisualSystem`, `LandingHeroSEO`, etc. all import `useSeoVisualOverridesMap` and call `resolveSlotImageUrl(...)` with the correct `pageRoute`.
+```tsx
+// Big "Fallback" tile on the left
+<SmartImage src={getOptimizedUrl(PREVIEW(page.heroImageId), ...)} />
 
-So why don't you see the changes on `vovv.ai`?
-
-## The real cause: stale production bundle
-
-I fetched the JS bundle currently served at `https://vovv.ai/ai-product-photography` (`assets/index-CJJ91ZPN.js`) and searched it for override-related code:
-
-- `seo-page-visuals` → only appears once, as the admin **route registration**.
-- `seo_page_visuals` (the DB table name used in the public components) → **0 hits**.
-- `seo-visual-overrides` (the localStorage key / query key) → **0 hits**.
-
-Translation: the published build at `vovv.ai` was deployed **before** the SEO override system shipped. The admin UI is included (it's a separate route), but the public SEO pages on production are still running their old hardcoded fallback images. Editing in admin can never affect them — the code that reads the overrides isn't in that bundle.
-
-The preview build (`id-preview--…lovable.app`) has the new code, which is why it works there but breaks on the live domain.
-
-## What needs to happen
-
-There is **no code change needed**. The system is already correct. You just need to publish a new build so the production bundle includes the override-reading code.
-
-### Steps
-
-1. Click **Publish → Update** in the Lovable editor (top-right). This rebuilds and deploys the latest code to `vovv.ai`, `www.vovv.ai`, and `vovvai.lovable.app`.
-2. After publish completes, hard-refresh the live page once (⌘/Ctrl-Shift-R) to drop any cached JS chunks.
-3. From that point on, every admin save will appear on the live page on the next visit (and immediately for the admin themselves, thanks to the localStorage snapshot invalidation we shipped last round).
-
-### How to verify it worked
-
-After republishing, run this in any terminal — it should return a number greater than 0:
-
-```
-curl -s https://vovv.ai/$(curl -s https://vovv.ai/ai-product-photography \
-  | grep -oE 'assets/index-[A-Za-z0-9]+\.js' | head -1) \
-  | grep -c "seo_page_visuals"
+// 2x2 collage tiles on the right
+const previewUrl = PREVIEW(tile.imageId);
 ```
 
-If it prints `0`, the publish hasn't propagated yet. If it prints `1` or more, the override system is now live in production.
+That's why your `/ai-product-photography/fashion` admin edits to `heroMain` and `heroCollage1-4` are saved to the DB, picked up everywhere else (e.g. the "Related categories" section reads them fine), but the hero itself shows the original images.
 
-### Note on the preview environment
+The matching slot keys already exist in `seoPageVisualSlots.ts` — `heroMain`, `heroCollage1`, `heroCollage2`, `heroCollage3`, `heroCollage4` — so no DB or config changes are needed. Only the component needs to consume them.
 
-In the Lovable preview (`id-preview--…lovable.app`) the overrides already work — that's the build with the new code. So if you want to QA admin changes before publishing, do it in preview, then publish to push it to `vovv.ai`.
+## The fix
+
+In `src/components/seo/photography/category/CategoryHero.tsx`:
+
+1. Import `useSeoVisualOverridesMap` and `resolveSlotImageUrl` / `resolveSlotAlt`.
+2. Call the hook once at the top of `CategoryHero`.
+3. Resolve `heroMain` for the single-image fallback path (uses `page.heroImageId` + `page.heroAlt` as the fallback).
+4. For the collage path, resolve `heroCollage1`…`heroCollage4` per tile (use each tile's `imageId` + `alt` as the fallback).
+5. Pass resolved URL + alt into `<SmartImage>` (and `HeroTile`).
+6. Update the `HeroTile` helper to accept resolved `src` and `alt` instead of recomputing from `tile.imageId`.
+
+The `pageRoute` for resolution is `page.url` (same as everywhere else in the category components).
+
+That's it — purely a component change, no migrations, no admin changes.
+
+## After the fix
+
+- In the Lovable **preview**, the fashion hero will immediately show your admin edits.
+- For **vovv.ai** to reflect the fix (and the override system in general), you still need to click **Publish → Update** as discussed in the previous plan. Both the missing override-read code from before AND this category-hero fix will ship in the same publish.

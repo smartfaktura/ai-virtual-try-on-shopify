@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 import { SmartImage } from './SmartImage';
 
 
@@ -9,10 +11,22 @@ import { SmartImage } from './SmartImage';
  * Editorial split hero for /ai-product-photography/{slug} pages.
  * Spacious 5/6 grid: copy left, free-floating staggered 2x2 tile collage right.
  * Falls back to a single full image when no collage data is provided.
+ *
+ * Reads admin overrides from /app/admin/seo-page-visuals for the slots
+ * `heroMain` (single-image variant) and `heroCollage1`…`heroCollage4` (collage).
  */
 export function CategoryHero({ page }: { page: CategoryPage }) {
+  const overrides = useSeoVisualOverridesMap();
   const collage = page.heroCollage;
   const hasCollage = collage && collage.length >= 4;
+
+  const heroMainSrc = resolveSlotImageUrl(
+    overrides,
+    page.url,
+    'heroMain',
+    PREVIEW(page.heroImageId),
+  );
+  const heroMainAlt = resolveSlotAlt(overrides, page.url, 'heroMain', page.heroAlt);
 
   return (
     <section className="relative bg-[#FAFAF8] overflow-hidden">
