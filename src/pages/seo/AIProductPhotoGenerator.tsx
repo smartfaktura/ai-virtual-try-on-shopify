@@ -67,6 +67,7 @@ export default function AIProductPhotoGenerator() {
       <main>
         <LandingHeroSEO
           eyebrow="AI Product Photo Generator"
+          pageId="generator"
           headline={
             <>
               AI Product Photo Generator
@@ -211,6 +212,7 @@ export default function AIProductPhotoGenerator() {
           copy="Upload one product photo and create studio images, lifestyle visuals, ads, social content, and campaign-ready creative with VOVV.AI."
           primaryCta={{ label: 'Generate product photos free', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Compare AI vs photoshoot', to: '/ai-product-photography-vs-photoshoot' }}
+          pageId="generator"
         />
       </main>
       <LandingFooter />
