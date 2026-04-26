@@ -1,42 +1,39 @@
-## Fix Hero Marquee Empty Space on SEO Pages
+## SEO Polish: Tighten Titles & Meta Descriptions Across SEO Pages
 
-### Root Cause
-On `/etsy-product-photography-ai` (and other SEO pages using `LandingHeroSEO`), the second hero row starts with empty space on the right.
+### Audit Result
+All 14 SEO landing pages have a strong foundation: unique titles, canonicals, OG/Twitter tags, H1s, sitemap entries, and JSON-LD (Breadcrumb + FAQPage + SoftwareApplication/Article/CollectionPage). Robots.txt allows all major search and AI crawlers and blocks private routes.
 
-The marquee in `src/components/seo/landing/LandingHeroSEO.tsx` only **doubles** the tiles array (`[...tiles, ...tiles]`) and animates by `translateX(-50%)`.
+The only meaningful issue: **meta descriptions are 187–211 characters**, exceeding Google's ~160-char SERP display. They will be truncated mid-sentence, hurting click-through rate. A few **titles are 64–69 chars**, also borderline (Google truncates around 60 px-width).
 
-- Row 1 (left direction): starts at `translateX(0)` → first half always visible, no gap.
-- Row 2 (right direction): starts at `translateX(-50%)` → only the **second half** of the doubled track is visible at frame 0.
+### What I'll change
 
-Each tile is ~210px wide + 12px gap ≈ 222px. With ~10 tiles, doubled width ≈ 4,440px → half-width ≈ 2,220px. On a 1920px viewport that *just* covers it, but on any laptop where the hero is constrained (or 1366px screens with the row not centered exactly), the right side of row 2 shows a visible blank gap before the next loop iteration appears.
+**1. Trim meta descriptions to ≤155 characters** for these 14 pages:
+- `src/pages/seo/ShopifyProductPhotography.tsx`
+- `src/pages/seo/EtsyProductPhotography.tsx`
+- `src/pages/seo/AIPhotographyVsPhotoshoot.tsx`
+- `src/pages/seo/AIPhotographyVsStudio.tsx`
+- `src/data/aiProductPhotographyCategoryPages.ts` — all 10 categories (fashion, footwear, beauty-skincare, fragrance, jewelry, bags-accessories, home-furniture, food-beverage, supplements-wellness, electronics-gadgets)
 
-### Fix
-In `src/components/seo/landing/LandingHeroSEO.tsx`, replace the doubling with a **4× repeat** so each "half" of the animated track is always wider than any realistic viewport (≥4,000px per half). The existing `-50%` keyframe animation continues to work seamlessly because the loop point is still aligned to a full set boundary.
+Each rewritten description will:
+- Lead with the primary keyword (e.g., "AI fashion product photography")
+- Include the value prop ("from one product photo")
+- End with the use-case payoff ("for ecommerce listings, ads, and campaigns")
+- Stay under 155 chars
 
-```tsx
-// before
-const doubled = [...tiles, ...tiles];
+**2. Shorten titles ≥60 chars** to ~55–58:
+- Electronics: "AI Electronics Product Photography for Tech & Gadget Brands | VOVV.AI" (69) → "AI Electronics Product Photography for Tech Brands | VOVV.AI" (60)
+- Bags & Accessories: "AI Bag Product Photography for Bags & Accessories Brands | VOVV.AI" (66) → "AI Bag & Accessory Product Photography | VOVV.AI" (49)
+- Home & Furniture: "AI Home Decor Product Photography for Furniture Brands | VOVV.AI" (64) → "AI Home & Furniture Product Photography | VOVV.AI" (49)
+- Food & Beverage: "AI Food Product Photography for Food & Beverage Brands | VOVV.AI" (64) → "AI Food & Beverage Product Photography | VOVV.AI" (48)
+- Supplements: "AI Supplement Product Photography for Wellness Brands | VOVV.AI" (63) → "AI Supplement & Wellness Product Photography | VOVV.AI" (54)
+- Fragrance: "AI Perfume Product Photography for Fragrance Brands | VOVV.AI" (61) → "AI Perfume & Fragrance Product Photography | VOVV.AI" (52)
+- Fashion: "AI Fashion Product Photography for Clothing Brands | VOVV.AI" (60) → keep (within budget)
 
-// after
-const REPEATS = 4;
-const repeated = Array.from({ length: REPEATS }, () => tiles).flat();
-```
+**3. No structural changes.** Schemas, canonicals, sitemap, robots, H1s, internal links, and OG images already follow best practice and stay as-is.
 
-Update the `.map()` to iterate over `repeated`. No keyframe changes needed.
-
-### Why this works
-- 4× repeat with `-50%` translation means the marquee scrolls through 2 full sets before resetting — the visual content on screen is always at least 2 full sets wide, eliminating any empty right-edge.
-- Eager-load logic (`i < tiles.length`) is preserved — only the first set is eager.
-- Negligible perf cost: extra `<img>` tags reuse the same cached URLs (browser dedupes), and lazy-loading keeps off-screen tiles cheap.
-
-### Affected pages (auto-fixed by component change)
-- `/etsy-product-photography-ai`
-- `/shopify-product-photography-ai`
-- `/ai-product-photo-generator`
-- `/ai-photography-vs-studio`
-- `/ai-photography-vs-photoshoot`
-
-No page-level edits required.
-
-### Files to change
-- `src/components/seo/landing/LandingHeroSEO.tsx` (only the `MarqueeRow` component internals)
+### Out of scope (already good)
+- Sitemap (all 14 pages indexed with sensible priorities)
+- Internal linking (footer + cross-references between Shopify/Etsy/categories)
+- Structured data (3 schema types per page)
+- Hero images (LCP-preloaded on category pages)
+- Mobile responsiveness and Core Web Vitals

@@ -33,7 +33,7 @@ const PAGE_PATH = '/ai-product-photography-vs-studio';
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
 const TITLE = 'VOVV.AI vs Product Photography Studio | AI Product Visuals';
 const DESCRIPTION =
-  'Compare VOVV.AI with a traditional product photography studio. See how ecommerce brands can create product page images, ads, lifestyle visuals, and campaign content faster with AI.';
+  'VOVV.AI vs a product photography studio. How ecommerce brands create product page images, ads, lifestyle scenes, and campaign content faster with AI.';
 
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',

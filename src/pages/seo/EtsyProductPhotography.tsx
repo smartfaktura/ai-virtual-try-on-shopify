@@ -32,7 +32,7 @@ const PAGE_PATH = '/etsy-product-photography-ai';
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
 const TITLE = 'AI Product Photos for Etsy Sellers | VOVV.AI';
 const DESCRIPTION =
-  'Create AI product photos for Etsy listings. Upload one product image and generate listing visuals, lifestyle scenes, detail shots, banners, and social content for your shop.';
+  'AI product photos for Etsy sellers. Turn one product image into listing visuals, lifestyle shots, detail close-ups, and shop banners.';
 
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',

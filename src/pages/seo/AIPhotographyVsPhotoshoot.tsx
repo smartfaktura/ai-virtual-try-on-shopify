@@ -34,7 +34,7 @@ const PAGE_PATH = '/ai-product-photography-vs-photoshoot';
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
 const TITLE = 'AI Product Photography vs Traditional Photoshoot | VOVV.AI';
 const DESCRIPTION =
-  'Compare AI product photography and traditional photoshoots. See when to use AI product visuals, when to use a studio shoot, and how VOVV.AI helps ecommerce brands create faster.';
+  'AI product photography vs traditional photoshoots. When to use AI visuals, when to book a studio, and how VOVV.AI helps ecommerce brands ship faster.';
 
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',
