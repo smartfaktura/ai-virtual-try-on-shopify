@@ -16,20 +16,22 @@ const PREVIEW = (id: string) =>
 
 type HeroCard = { label: string; src: string; isOriginal?: boolean; isVideo?: boolean };
 
+type HeroCard = { label: string; src: string; alt?: string; isOriginal?: boolean; isVideo?: boolean };
+
 const heroImages: HeroCard[] = [
-  { label: 'Original',         src: ORIGINAL_DRESS,                       isOriginal: true },
-  { label: 'Video',            src: productVideoLoop,                     isVideo: true },
-  { label: 'Editorial',        src: PREVIEW('1776689318257-yahkye') }, // Flash Night Fashion Campaign
-  { label: 'Studio',           src: PREVIEW('1776688965090-edaogg') }, // On-Model Front
-  { label: 'Lifestyle',        src: PREVIEW('1776840733386-n4bc6x') }, // Greenhouse Elegance
-  { label: 'Lookbook',         src: PREVIEW('1776689316419-90khdg') }, // Desert Tailored Walk
-  { label: 'Campaign',         src: PREVIEW('1776688403670-i0t3r6') }, // Golden Coast Dress
-  { label: 'Outdoor Portrait', src: PREVIEW('1776689319922-8yiolc') }, // Old Money Outdoor Portrait
-  { label: 'Flash Glamour',    src: PREVIEW('1776689317300-luvmhd') }, // Flash Glamour Portrait
-  { label: 'Architectural',    src: PREVIEW('1776688413055-z73arv') }, // Quiet Luxury Museum Staircase
-  { label: 'Mirror Selfie',    src: PREVIEW('1776689320622-0lnst1') }, // Power Mirror Statement Selfie
-  { label: 'Studio Look',      src: PREVIEW('1776688404914-wwy92r') }, // Mini Dress Studio Look
-  { label: 'Side Lean Pose',   src: PREVIEW('1776689321496-nclkyc') }, // Side Lean Attitude Pose
+  { label: 'Original',         src: ORIGINAL_DRESS,                       isOriginal: true, alt: 'Brown midi dress original product photo before AI editing' },
+  { label: 'Video',            src: productVideoLoop,                     isVideo: true,    alt: 'AI-generated product video of a brown dress for e-commerce' },
+  { label: 'Editorial',        src: PREVIEW('1776689318257-yahkye'),                        alt: 'AI editorial campaign visual of a brown dress in flash-night fashion lighting' },
+  { label: 'Studio',           src: PREVIEW('1776688965090-edaogg'),                        alt: 'AI on-model studio shot of a brown dress for product page hero' },
+  { label: 'Lifestyle',        src: PREVIEW('1776840733386-n4bc6x'),                        alt: 'AI lifestyle visual of a brown dress in a greenhouse setting' },
+  { label: 'Lookbook',         src: PREVIEW('1776689316419-90khdg'),                        alt: 'AI lookbook visual of a brown tailored dress walking in the desert' },
+  { label: 'Campaign',         src: PREVIEW('1776688403670-i0t3r6'),                        alt: 'AI golden-coast campaign visual of a brown dress on a model' },
+  { label: 'Outdoor Portrait', src: PREVIEW('1776689319922-8yiolc'),                        alt: 'AI old-money outdoor portrait of a brown dress' },
+  { label: 'Flash Glamour',    src: PREVIEW('1776689317300-luvmhd'),                        alt: 'AI flash glamour portrait of a brown dress for social ads' },
+  { label: 'Architectural',    src: PREVIEW('1776688413055-z73arv'),                        alt: 'AI quiet-luxury museum staircase visual of a brown dress' },
+  { label: 'Mirror Selfie',    src: PREVIEW('1776689320622-0lnst1'),                        alt: 'AI mirror-selfie visual of a brown dress for Instagram and TikTok' },
+  { label: 'Studio Look',      src: PREVIEW('1776688404914-wwy92r'),                        alt: 'AI studio look visual of a brown mini dress for product listing' },
+  { label: 'Side Lean Pose',   src: PREVIEW('1776689321496-nclkyc'),                        alt: 'AI side-lean pose visual of a brown dress in editorial styling' },
 ];
 
 const row1 = heroImages.slice(0, 6);
@@ -40,7 +42,7 @@ const row2 = heroImages
   .filter((c) => !c.isVideo);
 
 /* ── Marquee card ── */
-function MarqueeCard({ label, src, isOriginal, isVideo }: HeroCard) {
+function MarqueeCard({ label, src, alt, isOriginal, isVideo }: HeroCard) {
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       {isVideo ? (
@@ -56,7 +58,7 @@ function MarqueeCard({ label, src, isOriginal, isVideo }: HeroCard) {
       ) : (
         <img
           src={isOriginal ? src : getOptimizedUrl(src, { quality: 60 })}
-          alt={label}
+          alt={alt ?? label}
           loading="lazy"
           className="w-full h-full object-cover"
         />
@@ -172,10 +174,10 @@ export function HomeHero() {
         </h1>
 
         <p className="hidden sm:block text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
-          Turn one product photo into product page images, lifestyle visuals, ads, and campaign-ready creative — built for e-commerce brands.
+          VOVV.AI helps e-commerce brands turn one product photo into product page images, lifestyle visuals, ads, social content, and campaign-ready creative.
         </p>
         <p className="sm:hidden text-[15px] text-muted-foreground max-w-xs mx-auto mb-8 leading-relaxed">
-          One product photo. Ads, product pages, lifestyle, campaigns — built for e-commerce brands.
+          VOVV.AI turns one product photo into ads, product pages, lifestyle and social — for e-commerce brands.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

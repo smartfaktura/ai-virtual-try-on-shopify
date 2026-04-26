@@ -24,6 +24,12 @@ const navLinks: NavLink[] = [
     prefetch: () => import('@/pages/PublicDiscover'),
   },
   {
+    label: 'AI Product Photography',
+    href: '/ai-product-photography',
+    isRoute: true,
+    prefetch: () => import('@/pages/AIProductPhotography'),
+  },
+  {
     label: 'Scene Library',
     href: '/product-visual-library',
     isRoute: true,
