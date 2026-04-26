@@ -213,7 +213,7 @@ export function PublicDiscoverDetailModal({
                   navigate('/auth');
                 }
               }}
-              className="w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+              className="w-full h-[3.25rem] rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               {onRecreate ? 'Recreate This' : (
                 <>
@@ -224,14 +224,15 @@ export function PublicDiscoverDetailModal({
               {isRecreating ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
 
-            <div className="flex items-center justify-center">
+            <div className="flex">
               <SharePopover
                 url={`${SITE_URL}/discover/${getItemSlug(item)}`}
                 title={title}
+                variant="action"
               />
             </div>
 
-            <p className="text-xs text-center text-muted-foreground/60">
+            <p className="text-[13px] text-center text-muted-foreground/75 leading-relaxed px-2">
               Sign up to access prompts, scenes and generate AI fashion photography
             </p>
 

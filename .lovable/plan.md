@@ -1,34 +1,28 @@
 ## Problem
 
-On mobile, the scene detail modal at `/product-visual-library` doesn't fit the screen — the hero image takes most of the viewport, pushing the title, description and CTA off-screen, and the user has to scroll inside the modal to find the "Create this visual" button.
-
-Cause: in `src/components/library/SceneDetailModal.tsx` the hero uses `aspect-[4/5]` at all breakpoints. On a 360 px-wide phone that single image is ~450 px tall, which alone consumes ~60 % of the viewport before any text or CTA renders. Combined with `p-6 sm:p-8` body padding and the modal's `max-h-[90vh]` cap, the layout doesn't fit.
+On `/discover` mobile detail modal:
+1. Primary CTA "Try this for free" is a default rectangular button — not pill-rounded, height feels short.
+2. "Share" button is a tiny inline text link, not a proper button matching the CTA style.
+3. "Sign up to access prompts…" caption is too faded/small and visually weak.
 
 ## Fix
 
-Edit only `src/components/library/SceneDetailModal.tsx`:
+Edit `src/components/app/PublicDiscoverDetailModal.tsx` only:
 
-1. **Shorter hero on mobile, original ratio on desktop.**
-   Change the hero wrapper from
-   ```
-   relative aspect-[4/5] w-full overflow-hidden bg-muted/40
-   ```
+1. **Primary CTA — pill, taller, premium dark.**
+   Replace the Button className from
+   `w-full font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300`
    to
-   ```
-   relative aspect-[16/11] md:aspect-[4/5] w-full overflow-hidden bg-muted/40
-   ```
-   This keeps the editorial 4:5 split layout on tablet/desktop (where the hero sits beside the body) but uses a wide ~16:11 banner on mobile so the title, badges, description and CTA fit in the visible viewport.
+   `w-full h-[3.25rem] rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300`
+   (matches the SceneDetailModal CTA on `/product-visual-library` for consistency).
 
-2. **Tighter body padding on mobile.**
-   Change `p-6 sm:p-8` on the body column to `p-5 sm:p-8`, and reduce the body column gap from `gap-5` to `gap-4 sm:gap-5` so the CTA sits closer to the fold.
+2. **Share — proper outlined pill button.**
+   Pass `variant="action"` to `<SharePopover>` so it renders the existing `Button variant="outline" size="pill"` style instead of the tiny text link. Keep it centered: change wrapper to a single full-width pill by removing `flex-1` constraint via inline override — the existing `action` variant already uses `flex-1`, so wrap with `<div className="flex"><SharePopover variant="action" .../></div>` to let it stretch full width and align with the CTA above.
 
-3. **Allow the modal to use full available height cleanly.**
-   On `<DialogContent>`, change `max-h-[90vh]` to `max-h-[92dvh]` (dynamic viewport height — accounts for iOS Safari's collapsing address bar) and add `sm:max-h-[90vh]` to preserve the desktop look.
+3. **Sign-up caption — larger, more legible.**
+   Replace
+   `text-xs text-center text-muted-foreground/60`
+   with
+   `text-[13px] text-center text-muted-foreground/75 leading-relaxed px-2`.
 
-Result: on mobile, the user sees the hero, title, badges, description and the "Create this visual" CTA without scrolling. On desktop, the modal looks identical to today.
-
-## Files
-
-- `src/components/library/SceneDetailModal.tsx` — three small className tweaks.
-
-No new components, no logic changes, no data changes.
+No other files touched. No logic changes.
