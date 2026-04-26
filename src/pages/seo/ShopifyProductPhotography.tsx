@@ -212,6 +212,24 @@ export default function ShopifyProductPhotography() {
           background="soft"
         />
 
+        <section className="pt-12 lg:pt-20 pb-2 bg-background">
+          <div className="max-w-3xl mx-auto px-6">
+            <div className="bg-white rounded-3xl border border-[#f0efed] shadow-sm p-6 lg:p-7 flex items-start gap-4">
+              <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#1a1a2e] text-white flex items-center justify-center shadow-sm">
+                <ShieldCheck size={18} strokeWidth={1.75} />
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-1.5">
+                  Accuracy note
+                </p>
+                <p className="text-foreground/75 text-[15px] leading-relaxed">
+                  VOVV.AI helps create on-brand visual concepts from your product photo. Always review final images before publishing to make sure product details, materials, sizing, and any platform claims match what shoppers will receive.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <LandingFAQConfig
           headline="Shopify product photography FAQ"
           faqs={[
