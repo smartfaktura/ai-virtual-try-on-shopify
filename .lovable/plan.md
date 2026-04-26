@@ -1,29 +1,29 @@
-## Hide Hero `<br>` on Mobile
+## Two Fixes for Homepage
 
-On mobile the homepage hero headline currently renders as 3 lines:
+### 1. Remove redundant "VOVV.AI" repetition in final CTA section
+The bottom "Get started" block (`src/components/home/HomeFinalCTA.tsx`) currently says:
+- H2: "Start creating with **VOVV.AI**"
+- Body: "Upload one product photo. See what **VOVV.AI** creates for your brand."
 
-```
-AI Product Visuals.
-No Photoshoot
-Needed.
-```
+Plus the brand is already all over the page. **Fix:** rewrite to drop the repetition.
+- H2: "Start creating today"
+- Body: "Upload one product photo. See what we create for your brand."
 
-The forced `<br>` after "AI Product Visuals." plus the typewriter line wrapping creates an awkward 3-line stack.
+### 2. Mobile hero: stop the second-line jumping
+The user wants a clean, fixed two-line layout:
+- Line 1: "AI Product Visuals." (always 1 line)
+- Line 2: typewriter phrase (always 1 line, never wraps, no height jumping)
 
-### Fix
-In `src/components/home/HomeHero.tsx` (line 172–176), make the line break responsive so the headline flows as natural prose on mobile and only forces a break on `sm+` screens.
+**Root cause:** On mobile (~360–390px wide), the longest typewriter phrase ("Every Scene. Every Angle.") wraps to 2 lines at the current 2rem font, so the headline jumps from 2 → 3 lines mid-animation.
 
-```tsx
-<h1 className="...">
-  <span>AI Product Visuals.</span>
-  {/* Force the break only on tablet/desktop — on mobile let
-      the typewriter flow inline so the headline can wrap naturally. */}
-  <br className="hidden sm:inline" />
-  <span className="sm:hidden"> </span>
-  <HeroTypewriter />
-</h1>
-```
+**Fix in `src/components/home/HomeHero.tsx`:**
+1. Revert the responsive `<br>` — always keep the `<br>` so the structure is always 2 lines.
+2. Make the typewriter line slightly smaller on mobile so the longest phrase fits on one line, and force `whitespace-nowrap` always:
+   - Wrap the `<HeroTypewriter />` in a span with mobile-only smaller sizing: `text-[1.5rem] sm:text-inherit`
+   - In `HeroTypewriter`'s span, change `inline-block sm:whitespace-nowrap min-h-[2.3em] sm:min-h-[1.15em]` → `inline-block whitespace-nowrap min-h-[1.15em]` (one-line height locked on all viewports).
 
-Result on mobile: text flows as one paragraph and wraps based on container width — typically rendering as 2 balanced lines instead of 3 awkward ones.
+Result: hero is always exactly 2 lines on mobile with consistent height — no jumping, even spacing.
 
-No other changes — desktop layout is preserved.
+### Files
+- `src/components/home/HomeFinalCTA.tsx`
+- `src/components/home/HomeHero.tsx`
