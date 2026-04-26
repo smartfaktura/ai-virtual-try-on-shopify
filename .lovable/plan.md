@@ -1,63 +1,42 @@
-## Pre-select category in `/product-visual-library` from hub-page CTAs
+## Problem
 
-Today, every "Browse the visual library" / "Browse the full scene library" CTA across hub pages points to a bare `/product-visual-library` URL — so users always land on the first family (Fashion & Apparel) regardless of which category they came from. We'll make the library accept query params and update each category page's CTAs to deep-link to the matching family (and where useful, sub-collection).
+On mobile, the homepage models marquee runs the full-width animation off-screen. Tiles spend most of their cycle outside the viewport, which:
 
-### 1. Make `/product-visual-library` accept deep-link params
+- Makes the section feel empty/broken (only 2-3 visible at a time, then long gaps)
+- Causes lazy-loaded images in the second row to never trigger loading
+- Wastes the marquee's purpose — users barely see the variety of models
 
-`src/pages/ProductVisualLibrary.tsx`
-- Read query params on mount: `?family=<slug>` and optional `&collection=<slug>`.
-- Wait for `families` to load, then if `family` matches one, set it as `activeFamilySlug`. If `collection` matches one inside that family, set `activeCollectionSlug`.
-- After applying, scroll to `#catalog-grid` so the user lands directly on the right grid.
-- Keep current default behaviour (first family) when no params present.
+## Root cause
 
-### 2. Add a shared mapper from category-page slug → library family/collection
+In `src/components/landing/ModelShowcaseSection.tsx`:
 
-New file `src/lib/visualLibraryDeepLink.ts`:
+- Each row contains the full model list **doubled** (`[...items, ...items]`) at fixed tile widths (`w-28` ≈ 112px on mobile).
+- The animation translates the row at the same speed regardless of viewport width.
+- On a 440px-wide mobile screen, the row is ~3000px+ wide, so most of it sits off-screen at any moment.
+- `loading="lazy"` images that never enter the viewport never resolve their `onLoad`, so `ShimmerImage` shows a permanent skeleton (visible on row 2 e.g. "Rafael" tile).
 
-```ts
-// Maps /ai-product-photography/{slug} → /product-visual-library?family=&collection=
-export function getVisualLibraryHrefForCategory(
-  slug?: string,
-): string {
-  if (!slug) return '/product-visual-library';
-  const map: Record<string, { family: string; collection?: string }> = {
-    'fashion':              { family: 'fashion' },
-    'footwear':             { family: 'footwear' },
-    'beauty-skincare':      { family: 'beauty-and-fragrance', collection: 'beauty-skincare' },
-    'fragrance':            { family: 'beauty-and-fragrance', collection: 'fragrance' },
-    'jewelry':              { family: 'jewelry' },
-    'bags-accessories':     { family: 'bags-and-accessories' },
-    'home-furniture':       { family: 'home' },
-    'food-beverage':        { family: 'food-and-drink' },
-    'supplements-wellness': { family: 'wellness' },
-    'electronics-gadgets':  { family: 'tech' },
-  };
-  const m = map[slug];
-  if (!m) return '/product-visual-library';
-  const params = new URLSearchParams({ family: m.family });
-  if (m.collection) params.set('collection', m.collection);
-  return `/product-visual-library?${params.toString()}#catalog-grid`;
-}
-```
+## Fix
 
-Family slugs match `familyToSlug()` in `usePublicSceneLibrary.ts` (`&` → `and`, lowercase, hyphens). Beauty & Skincare and Fragrance share one family but pre-select different collections so the user immediately sees the right sub-set.
+Two combined changes in `src/components/landing/ModelShowcaseSection.tsx`:
 
-### 3. Update CTA links inside the category template
+### 1. Make the marquee actually visible on mobile
 
-In `src/components/seo/photography/category/`:
-- `CategoryBuiltForEveryCategory.tsx` (line 190) — change `to="/product-visual-library"` to `to={getVisualLibraryHrefForCategory(page.slug)}`.
-- `CategorySceneExamples.tsx` (line 54) — same change.
+- **Faster animation on mobile** so more models cycle through the visible window per second. Use shorter `durationSeconds` below the `sm` breakpoint (e.g. 60s mobile vs. 120s desktop).
+- **Smaller, tighter tiles on mobile** so 3-4 models fit on screen at once instead of 2-3. Reduce mobile size from `w-28 h-36` to `w-24 h-32` and tighten gap from `gap-4` to `gap-3`.
+- **Lighter edge fade** on mobile (`w-10` instead of `w-16`) so tiles aren't half-hidden behind the gradient at the edges of a narrow viewport.
 
-Both components already receive `page: CategoryPage` so `page.slug` is available.
+### 2. Guarantee images load even when off-screen
 
-### 4. Leave non-category CTAs unchanged
+- Replace `ShimmerImage` in `ModelCardItem` with a plain `<img>` using `loading="eager"`, `decoding="async"`, `fetchpriority="low"`.
+- Use a static `bg-muted/40` placeholder behind the image (no animated shimmer that can stick).
+- Keep the existing `errored` → `User` icon fallback.
 
-CTAs on `/ai-product-photography` (parent), `/`, `/how-it-works`, nav, etc. don't have a single category context — they should keep linking to bare `/product-visual-library` and show all families (Fashion first, current behaviour).
+This ensures all ~30 small avatar tiles fetch immediately on mount (cheap, low-priority so hero LCP is unaffected) and never rely on the unreliable lazy-load + transform interaction on mobile.
 
-### Result
+## Files touched
 
-- Click "Browse the visual library" from `/ai-product-photography/footwear` → lands on Footwear family.
-- From `/ai-product-photography/beauty-skincare` → lands on Beauty & Fragrance family with the Beauty & Skincare pill pre-selected.
-- From `/ai-product-photography/fragrance` → lands on Beauty & Fragrance with Fragrance pill pre-selected.
-- All other category hubs deep-link to their matching family.
-- Bare `/product-visual-library` link from home/nav/how-it-works behaves exactly as today.
+- `src/components/landing/ModelShowcaseSection.tsx`
+  - `ModelCardItem`: swap `ShimmerImage` for eager low-priority `<img>` + static placeholder; reduce mobile tile size.
+  - `BrandModelCTA`: match the new mobile tile size.
+  - `MarqueeRow`: shrink mobile edge-fade width; accept and apply a mobile-specific duration via a media-query-aware approach (use Tailwind's `sm:` to swap CSS animation duration via inline style is not possible — instead add a CSS class with a `@media` rule, or pass two durations and pick via a `useIsMobile` hook).
+  - Reduce `gap-4` → `gap-3` on mobile.
