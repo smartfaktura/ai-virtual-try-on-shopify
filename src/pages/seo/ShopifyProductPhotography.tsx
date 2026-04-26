@@ -12,6 +12,7 @@ import {
   Instagram,
   ImagePlus,
   Wand2,
+  ShieldCheck,
 } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
