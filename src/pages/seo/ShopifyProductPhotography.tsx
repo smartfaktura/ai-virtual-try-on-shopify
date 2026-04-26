@@ -64,6 +64,7 @@ export default function ShopifyProductPhotography() {
       <main>
         <LandingHeroSEO
           eyebrow="Shopify Product Photography AI"
+          pageId="shopify"
           headline={
             <>
               AI Product Photos for
@@ -153,6 +154,7 @@ export default function ShopifyProductPhotography() {
 
         <LandingHowItWorksSteps
           headline="Create Shopify product photos in minutes"
+          pageId="shopify"
           steps={[
             { title: 'Upload your product photo', text: 'Start with one clean product image.', Icon: ImagePlus },
             { title: 'Choose your visual direction', text: 'Pick PDP shots, lifestyle scenes, ads, banners, or category-specific styles.', Icon: Wand2 },
@@ -189,7 +191,7 @@ export default function ShopifyProductPhotography() {
           eyebrow="Shopify shoot vs VOVV.AI"
           headline="Traditional Shopify product shoots vs VOVV.AI"
           leftTitle="Traditional Shopify shoot"
-          leftSubtitle="Slow, expensive, hard to repeat"
+          leftSubtitle="Higher cost and longer turnaround"
           leftItems={[
             'Plan shoot, brief, and concept',
             'Ship products to studio or location',
@@ -198,7 +200,7 @@ export default function ShopifyProductPhotography() {
             'Repeat for every campaign',
           ]}
           rightTitle="VOVV.AI"
-          rightSubtitle="Fast, flexible, always-on"
+          rightSubtitle="Fast, flexible, repeatable"
           rightItems={[
             'Upload product photo',
             'Choose Shopify visual direction',
@@ -216,7 +218,7 @@ export default function ShopifyProductPhotography() {
             { q: 'What types of Shopify images can I create?', a: 'Product page hero shots, alternates, lifestyle scenes, detail close-ups, collection imagery, homepage banners, Meta and Google ad creatives, email banners, and social posts.' },
             { q: 'Do I need professional product photos to start?', a: 'No. A clean product photo is enough to begin. Better input images usually create better AI results.' },
             { q: 'Can I create Shopify product page and ad visuals from the same product image?', a: 'Yes. The same product photo can power product page, lifestyle, detail, ad, banner, and social outputs from a single upload.' },
-            { q: 'Can AI product photos replace a Shopify photoshoot?', a: 'For most Shopify visuals — product pages, ads, social, and seasonal campaigns — AI is a strong replacement. For exact fit or legal product claims, brands should still review final visuals.' },
+            { q: 'Can AI product photos replace a Shopify photoshoot?', a: 'AI can cover most Shopify visuals — product pages, ads, social, and seasonal campaigns. For exact fit, sizing, or product claims, brands should review final visuals before publishing.' },
             { q: 'What product categories work best for Shopify AI product photography?', a: 'Fashion, beauty and skincare, jewelry, footwear, food and beverage, home and furniture, and most other DTC categories.' },
           ]}
         />
@@ -242,6 +244,7 @@ export default function ShopifyProductPhotography() {
           copy="Generate product page images, lifestyle visuals, ads, banners, and campaign-ready content for your Shopify store with VOVV.AI."
           primaryCta={{ label: 'Create your first Shopify visuals free', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' }}
+          pageId="shopify"
         />
       </main>
       <LandingFooter />
