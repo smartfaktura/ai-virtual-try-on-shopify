@@ -1,56 +1,41 @@
 ## Goal
 
-Bring `/faq` up to the same editorial vibe as `/` and `/how-it-works`: matching hero with two-tone H1, refined section structure with eyebrow + accent-colored heading per group, and a dark final CTA matching the homepage's `HomeFinalCTA`.
+Bring `/product-visual-library` up to the same editorial vibe as `/`, `/how-it-works`, and the refreshed `/faq`: two-tone H1 with `#4a5578` accent, a proper mid-page editorial section instead of the flat 2-column SEO copy, and a dark closing CTA matching `HomeFinalCTA`.
 
-## Pattern reference
+## Changes (single file: `src/pages/ProductVisualLibrary.tsx`)
 
-From `HomeHero` / `HowItWorksHero`:
-- Eyebrow: `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground`
-- H1: large, semibold, `tracking-[-0.03em]`, with second line wrapped in `<span className="text-[#4a5578]">` for the soft purple-grey accent
-- Hero spacing: `pt-28 pb-16 lg:pt-36 lg:pb-24`
+### 1. Hero — two-tone H1
+Currently a single line "AI Product Visual Library". Replace with the home/how-it-works pattern:
+- Eyebrow stays: `Scene library`
+- H1 becomes two lines:
+  - Line 1: `Every visual direction`
+  - Line 2: `<span className="text-[#4a5578]">your product can take.</span>`
+- Bump spacing to `pt-28 pb-16 lg:pt-36 lg:pb-24` (matches HowItWorksHero)
+- Subcopy unchanged (still uses live `totalScenes` count)
 
-From `HomeFinalCTA`:
-- Dark `#1a1a2e` background, blurred radial highlights, white H2, two pill CTAs
+### 2. Replace the 2-column SEO block with an editorial centered section
+Currently a small `py-16` 2-column block with two H3s. Promote it to a real section:
+- Eyebrow: `Why this library`
+- H2 two-tone:
+  - `One product photo.`
+  - `<span className="text-[#4a5578]">A full visual system.</span>`
+- Single centered subcopy that merges both existing paragraphs (no SEO content lost — keeps "skip studio sessions / ship in hours" + "tuned to category")
+- Spacing `py-20 sm:py-28` for proper rhythm
 
-## Changes
+### 3. Add a dark final CTA section (new, was missing)
+Mirror the structure of `HomeFinalCTA` so the page closes like every other landing page:
+- `bg-[#1a1a2e]` with subtle blurred orbs
+- Eyebrow: `Get started`
+- H2 white: `Pick a direction. Run with it.`
+- Subcopy: `Upload one product photo. Get every scene in this library — on your product, in minutes.`
+- CTAs: white pill `Start free` → `/auth`, outlined white pill `See how it works` → `/how-it-works`
 
-### 1. `src/components/faq/FAQHero.tsx`
-- Switch hero spacing to the editorial `pt-28 pb-16 lg:pt-36 lg:pb-24`
-- Two-line H1 with accent span:
-  - Line 1: "Everything you wanted"
-  - Line 2: `<span className="text-[#4a5578]">to ask, answered.</span>`
-- Use semantic `text-foreground` / `text-muted-foreground` instead of hardcoded hex
-
-### 2. `src/components/faq/FAQAccordion.tsx`
-For each group, replace the lone uppercase label with the homepage section header pattern:
-- Eyebrow: `Section` label (e.g. "Getting started" stays as eyebrow text, or use a fixed eyebrow like "FAQ")
-- H2 directly under it, in accent color, e.g. `<span className="text-[#4a5578]">Getting started.</span>`
-- Slightly more vertical rhythm between groups (`space-y-16 lg:space-y-24`)
-- Cards: keep current rounded-2xl white cards but add `transition-shadow hover:shadow-sm`
-- Swap hardcoded `#1a1a2e` / `#6b7280` for `text-foreground` / `text-muted-foreground`
-
-To keep the eyebrow meaningful, use the group's domain as the eyebrow word and reuse the title as the H2 — e.g. eyebrow `"01 · Getting started"` (or simply repeat for clarity since it's a small accent label). Final design: eyebrow shows the group name in muted small caps, H2 below in accent purple-grey for visual hierarchy that matches the home pages.
-
-### 3. Replace `FAQContactStrip` with a dark final-section CTA
-Rewrite `src/components/faq/FAQContactStrip.tsx` to mirror `HomeFinalCTA` styling:
-- `bg-[#1a1a2e]` full-width section with subtle blurred orbs
-- Eyebrow `Still here?`
-- H2 white: "Still have questions?"
-- Subcopy: "Try VOVV with 20 free credits, or get in touch — we usually reply within a day."
-- CTAs: white pill `Start free` → `/auth`, outlined white pill `Contact us` → `/contact`
-
-This becomes the final section of the page, matching how `HomeFinalCTA` closes both `/` and `/how-it-works`.
-
-## Files to edit
-
-- `src/components/faq/FAQHero.tsx` — two-tone H1, refined spacing/tokens
-- `src/components/faq/FAQAccordion.tsx` — eyebrow + accent H2 per group, refined cards
-- `src/components/faq/FAQContactStrip.tsx` — replace card layout with dark final CTA section
-
-No changes to `src/pages/FAQ.tsx` (component composition stays identical).
+### 4. Imports
+Add `Link` from `react-router-dom` and `ArrowRight` from `lucide-react` (only `ChevronLeft, ChevronRight, SlidersHorizontal, X` are imported today).
 
 ## Out of scope
 
-- FAQ content/copy unchanged
-- Accordion behavior unchanged
-- No new routes or navigation changes
+- Catalog grid, sidebar, mobile filter drawer, scene cards — untouched
+- Family/collection logic and `FamilySection` — untouched
+- SEO meta and JSON-LD — untouched
+- No changes to other pages

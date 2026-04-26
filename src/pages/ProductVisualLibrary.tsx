@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -95,14 +96,16 @@ export default function ProductVisualLibrary() {
         }}
       />
 
-      {/* HERO — centered, premium spacing to match homepage aesthetic */}
+      {/* HERO — two-tone editorial title to match / and /how-it-works */}
       <section id="top" className="bg-[#FAFAF8]">
-        <div className="mx-auto max-w-3xl px-6 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 text-center">
+        <div className="mx-auto max-w-3xl px-6 pt-28 pb-16 lg:pt-36 lg:pb-24 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Scene library
           </p>
           <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
-            AI Product Visual Library
+            Every visual direction
+            <br />
+            <span className="text-[#4a5578]">your product can take.</span>
           </h1>
           <p className="mx-auto max-w-xl text-muted-foreground text-lg leading-relaxed">
             Browse {totalScenes > 0 ? `${totalScenes}+` : '1,600+'} visual directions across every ecommerce category. Pick one and create it with your product photo.
@@ -199,28 +202,55 @@ export default function ProductVisualLibrary() {
         </div>
       </section>
 
-      {/* SEO COPY */}
-      <section className="bg-[#FAFAF8] py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6">
-          <div className="grid gap-10 sm:grid-cols-2">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">
-                AI product visuals for ecommerce brands
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                Turn one product photo into a full library of brand-ready visuals. Skip studio
-                sessions and ship campaigns in hours, not weeks.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">
-                Tuned to your product category
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                Each visual direction is built for its category — apparel knows how to drape,
-                fragrance knows how to catch glass, footwear knows how to anchor a hero shot.
-              </p>
-            </div>
+      {/* WHY — editorial eyebrow + accent H2, matches home rhythm */}
+      <section className="bg-[#FAFAF8] py-20 sm:py-28">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Why this library
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-[2.75rem] leading-[1.12] font-semibold tracking-[-0.025em] mb-5">
+            One product photo.
+            <br />
+            <span className="text-[#4a5578]">A full visual system.</span>
+          </h2>
+          <p className="mx-auto max-w-xl text-muted-foreground text-base sm:text-lg leading-relaxed">
+            Skip studio sessions and ship campaigns in hours, not weeks. Every visual direction is tuned to its category — apparel knows how to drape, fragrance knows how to catch glass, footwear knows how to anchor a hero shot.
+          </p>
+        </div>
+      </section>
+
+      {/* FINAL CTA — dark closing section, matches / and /how-it-works */}
+      <section className="py-16 lg:py-32 bg-[#1a1a2e] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#475569] blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#64748b] blur-3xl" />
+        </div>
+
+        <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
+            Get started
+          </p>
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
+            Pick a direction. Run with it.
+          </h2>
+          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-10">
+            Upload one product photo. Get every scene in this library — on your product, in minutes.
+          </p>
+
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+            <Link
+              to="/auth"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto"
+            >
+              Start free
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/how-it-works"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"
+            >
+              See how it works
+            </Link>
           </div>
         </div>
       </section>
