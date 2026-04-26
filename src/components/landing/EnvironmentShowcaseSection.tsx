@@ -10,30 +10,32 @@ interface EnvironmentCard {
 
 const e = (name: string, file: string): EnvironmentCard => ({ name, image: getOptimizedUrl(getLandingAssetUrl(`poses/${file}`), { quality: 60 }) });
 const d = (name: string, url: string): EnvironmentCard => ({ name, image: getOptimizedUrl(url, { quality: 60 }) });
+const p = (name: string, file: string): EnvironmentCard => ({ name, image: getOptimizedUrl(`${PB}/${file}`, { quality: 75 }) });
 
 const SB = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc';
+const PB = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews';
 
 const ROW_1: EnvironmentCard[] = [
-  d('Earthy Woodland Product', `${SB}/ccfaf5c8-f294-4f0b-a18e-8a9ff48cf1bb.png`),
+  p('Earthy Woodland Product', '1776842392261-39paz7.jpg'),
   d('Poolside Chic', `${SB}/a804af9e-f6a1-4ff7-81aa-74a299f5307b.png`),
   d('Natural Light Loft', `${SB}/eee672dd-628e-4e22-a0b6-2e49a9411353.png`),
   d('Salt Flat Serenity', `${SB}/04bdae15-0326-4e58-98f8-ffecb6574008.png`),
-  d('Brutalist Urban Steps', `${SB}/0682905a-1a17-46cd-a0d8-33fc40ee422e.png`),
-  d('Amber Glow Studio', `${SB}/91418be3-6c16-4573-b97b-8c757b37a792.png`),
+  p('Brutalist Urban Steps', '1776664678316-msnkm0.jpg'),
+  p('Amber Glow Studio', '1776848678453-vw1uf9.jpg'),
   d('Urban Dusk Portrait', `${SB}/171d852b-2a0b-4989-8143-bbd2c6ce90f1.png`),
   d('Coastal Horizon', `${SB}/f8d2cb64-cf02-4766-9517-79aa3b62d35f.png`),
   d('Velvet Draped Elegance', `${SB}/517a024e-ecff-4c67-a63e-88baeb958f7a.png`),
-  e('Studio Movement', 'pose-studio-movement.jpg'),
+  p('Studio Movement', '1776840731708-d8q4ox.jpg'),
 ];
 
 const ROW_2: EnvironmentCard[] = [
   d('Greenhouse Elegance', `${SB}/8accd42f-72de-482c-a0e2-5ac2f0162f74.jpg`),
   d('Sunlit Botanical Surface', `${SB}/d576a95a-5d0a-4768-b8b6-62c8f9a5d240.png`),
-  d('Frozen Aura', `${SB}/2f6bb14f-fe0b-4d06-9aa9-a318a8fd39fd.png`),
+  p('Frozen Aura', '1776018027926-ua03bd.jpg'),
   d('Marble Console Vignette', `${SB}/84f7f8e7-6535-4a4c-8008-854f3906b5b5.png`),
-  d('Dynamic Water Splash', `${SB}/baebb27e-f66f-4968-95d1-0ce7e21a84e4.png`),
+  p('Dynamic Water Splash', '1776018020221-aehe8n.jpg'),
   d('Frozen Product', `${SB}/6c8fd139-0a5b-4b27-a861-c5c7cb1adc78.png`),
-  d('Amber Glow Studio', `${SB}/91418be3-6c16-4573-b97b-8c757b37a792.png`),
+  p('Amber Glow Studio', '1776848678453-vw1uf9.jpg'),
   d('Prism Glow Showcase', `${SB}/5f8adc87-03b4-4238-827a-fd0ec79c4695.png`),
   d('Urban Motion', `${SB}/4c1ee736-0e5e-475c-a5a2-06492f472c33.jpg`),
   d('Stadium Seating Fashion', `${SB}/f5122391-5b70-4b6b-9d61-be96e27d376f.jpg`),
