@@ -6,6 +6,17 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { BUILT_FOR_GRIDS, type BuiltForGroup } from '@/data/aiProductPhotographyBuiltForGrids';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
+
+/** Mirrors slugify() in src/data/seoPageVisualSlots.ts — keep in sync. */
+function slotSlugify(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[·•]/g, ' ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
 
 /**
  * Per-category "One photo · Every shot" section, rebuilt to mirror the
