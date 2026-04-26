@@ -17,16 +17,9 @@ import {
   type CategoryPage,
 } from './aiProductPhotographyCategoryPages';
 import { aiProductPhotographyCategories } from './aiProductPhotographyCategories';
-import { BUILT_FOR_GRIDS } from './aiProductPhotographyBuiltForGrids';
+import { getBuiltForGroupsForPage, slotSlugify } from './builtForGridGroups';
 
-/** Stable slug for arbitrary labels used as parts of slot keys. */
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[·•]/g, ' ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
+const slugify = slotSlugify;
 
 export type SeoPageGroup = 'main' | 'category' | 'tool' | 'comparison';
 
