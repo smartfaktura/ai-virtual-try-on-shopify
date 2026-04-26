@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, ChevronDown, ArrowRight } from 'lucide-react';
+import { Instagram, Facebook, ChevronDown } from 'lucide-react';
 
 const footerLinks = {
   Product: [
@@ -7,40 +7,29 @@ const footerLinks = {
     { label: 'AI Product Photo Generator', to: '/ai-product-photo-generator' },
     { label: 'Visual Studio', to: '/features/workflows' },
     { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
-    { label: 'Brand Profiles', to: '/features/brand-profiles' },
-    { label: 'Image Upscaling', to: '/features/upscale' },
-    { label: 'Perspectives', to: '/features/perspectives' },
     { label: 'Pricing', to: '/pricing' },
   ],
   Solutions: [
     { label: 'Shopify Product Photos', to: '/shopify-product-photography-ai' },
     { label: 'Etsy Product Photos', to: '/etsy-product-photography-ai' },
-    { label: 'Fashion Photography', to: '/ai-product-photography/fashion' },
+    { label: 'Fashion Product Photography', to: '/ai-product-photography/fashion' },
     { label: 'Beauty & Skincare', to: '/ai-product-photography/beauty-skincare' },
-    { label: 'Jewelry', to: '/ai-product-photography/jewelry' },
-    { label: 'Food & Beverage', to: '/ai-product-photography/food-beverage' },
+    { label: 'Jewelry Product Photography', to: '/ai-product-photography/jewelry' },
     { label: 'AI vs Photoshoot', to: '/ai-product-photography-vs-photoshoot' },
   ],
-  Company: [
-    { label: 'About', to: '/about' },
-    { label: 'Blog', to: '/blog' },
-    { label: 'Careers', to: '/careers' },
-    { label: 'Press', to: '/press' },
-    { label: 'Team', to: '/team' },
-  ],
-  Support: [
+  Resources: [
     { label: 'Help Center', to: '/help' },
+    { label: 'FAQ', to: '/faq' },
+    { label: 'Blog', to: '/blog' },
     { label: 'Contact', to: '/contact' },
-    { label: 'Status', to: '/status' },
-    { label: 'Changelog', to: '/changelog' },
-  ],
-  Legal: [
-    { label: 'Privacy Policy', to: '/privacy' },
-    { label: 'Terms of Service', to: '/terms' },
-    { label: 'Cookie Policy', to: '/cookies' },
-    { label: 'Bug Bounty', to: '/bug-bounty' },
   ],
 };
+
+const legalLinks = [
+  { label: 'Privacy Policy', to: '/privacy' },
+  { label: 'Terms of Service', to: '/terms' },
+  { label: 'Cookie Policy', to: '/cookies' },
+];
 
 const socialLinks = [
   {
@@ -74,7 +63,6 @@ const socialLinks = [
 ];
 
 function LinkList({ heading, links }: { heading: string; links: { label: string; to: string }[] }) {
-  const isSolutions = heading === 'Solutions';
   return (
     <div>
       <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 mb-3.5">
@@ -92,17 +80,6 @@ function LinkList({ heading, links }: { heading: string; links: { label: string;
           </li>
         ))}
       </ul>
-      {isSolutions && (
-        <div className="mt-3 pt-3 border-t border-border/60">
-          <Link
-            to="/ai-product-photography"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-foreground hover:text-primary transition-colors"
-          >
-            All AI Photography Categories
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
@@ -111,16 +88,17 @@ export function LandingFooter() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
-        {/* Brand row (always visible) */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-8 items-start">
-          <div className="md:col-span-4">
+        {/* Brand + columns row */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 items-start">
+          {/* Brand */}
+          <div className="md:col-span-5 lg:col-span-4">
             <Link to="/" className="inline-flex items-center group">
               <span className="font-bold text-3xl tracking-tight text-foreground">
                 VOVV.AI
               </span>
             </Link>
-            <p className="mt-5 text-sm text-muted-foreground leading-relaxed max-w-xs">
-              AI product visuals for e-commerce brands.
+            <p className="mt-5 text-sm text-muted-foreground leading-relaxed max-w-sm">
+              AI product visuals for e-commerce brands, from one product photo.
             </p>
             <div className="flex items-center gap-2 mt-6">
               {socialLinks.map((s) => (
@@ -138,8 +116,8 @@ export function LandingFooter() {
             </div>
           </div>
 
-          {/* Desktop / tablet columns */}
-          <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-8 md:col-span-8">
+          {/* Desktop / tablet columns: 3 columns */}
+          <div className="hidden sm:grid sm:grid-cols-3 gap-10 md:col-span-7 lg:col-span-8">
             {Object.entries(footerLinks).map(([heading, links]) => (
               <LinkList key={heading} heading={heading} links={links} />
             ))}
@@ -168,26 +146,33 @@ export function LandingFooter() {
                     </Link>
                   </li>
                 ))}
-                {heading === 'Solutions' && (
-                  <li className="pt-2">
-                    <Link
-                      to="/ai-product-photography"
-                      className="inline-flex items-center gap-1 text-sm font-semibold text-foreground hover:text-primary transition-colors"
-                    >
-                      All AI Photography Categories
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </li>
-                )}
               </ul>
             </details>
           ))}
         </div>
 
-        <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} VOVV.AI. All rights reserved.
-          </p>
+        {/* Bottom bar: copyright + legal inline */}
+        <div className="mt-12 pt-6 border-t border-border flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-2">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} VOVV.AI. All rights reserved.
+            </p>
+            <nav aria-label="Legal" className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {legalLinks.map((link, i) => (
+                <span key={link.label} className="flex items-center gap-x-4">
+                  <Link
+                    to={link.to}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                  {i < legalLinks.length - 1 && (
+                    <span aria-hidden className="text-muted-foreground/40">·</span>
+                  )}
+                </span>
+              ))}
+            </nav>
+          </div>
           <p className="text-sm text-muted-foreground">
             A product by{' '}
             <a
