@@ -68,6 +68,7 @@ const AdminPlanPopups = lazy(() => import('@/pages/AdminPlanPopups'));
 const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
 const LoadingLab = lazy(() => import('@/pages/admin/LoadingLab'));
 const SceneUsage = lazy(() => import('@/pages/admin/SceneUsage'));
+const SeoPageVisuals = lazy(() => import('@/pages/admin/SeoPageVisuals'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
@@ -263,6 +264,7 @@ const App = () => {
                         <Route path="/admin/ui-audit" element={<AdminUIAudit />} />
                         <Route path="/admin/loading-lab" element={<LoadingLab />} />
                         <Route path="/admin/scene-performance" element={<SceneUsage />} />
+                        <Route path="/admin/seo-page-visuals" element={<SeoPageVisuals />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
