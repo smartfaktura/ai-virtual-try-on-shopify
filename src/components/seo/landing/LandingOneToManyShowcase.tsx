@@ -55,6 +55,8 @@ export function LandingOneToManyShowcase({
                       <img
                         src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
                         alt={`${title} — example ${idx + 1}`}
+                        width={400}
+                        height={400}
                         loading="lazy"
                         decoding="async"
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"

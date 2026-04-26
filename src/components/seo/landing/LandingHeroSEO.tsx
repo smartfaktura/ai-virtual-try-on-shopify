@@ -99,6 +99,7 @@ export function LandingHeroSEO({
   secondaryCta,
   tiles,
   altPrefix,
+  pageId,
 }: LandingHeroSEOProps) {
   const mid = Math.ceil(tiles.length / 2);
   const row1 = tiles.slice(0, mid);
@@ -121,6 +122,8 @@ export function LandingHeroSEO({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to={primaryCta.to}
+            data-cta="hero-primary"
+            data-page={pageId}
             className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
           >
             {primaryCta.label}
@@ -129,6 +132,8 @@ export function LandingHeroSEO({
           {secondaryCta && (
             <Link
               to={secondaryCta.to}
+              data-cta="hero-secondary"
+              data-page={pageId}
               className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
             >
               {secondaryCta.label}
@@ -142,7 +147,7 @@ export function LandingHeroSEO({
       </div>
 
       <div className="flex flex-col gap-3">
-        <MarqueeRow tiles={row1} direction="left" duration="50s" altPrefix={altPrefix} />
+        <MarqueeRow tiles={row1} direction="left" duration="50s" altPrefix={altPrefix} eager />
         <MarqueeRow tiles={row2} direction="right" duration="55s" altPrefix={altPrefix} />
       </div>
     </section>
