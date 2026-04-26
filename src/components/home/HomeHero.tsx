@@ -40,7 +40,7 @@ const row2 = heroImages
   .filter((c) => !c.isVideo);
 
 /* ── Marquee card ── */
-function MarqueeCard({ label, src, alt, isOriginal, isVideo }: HeroCard) {
+function MarqueeCard({ label, src, alt, isOriginal, isVideo, eager }: HeroCard & { eager?: boolean }) {
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       {isVideo ? (
@@ -57,7 +57,10 @@ function MarqueeCard({ label, src, alt, isOriginal, isVideo }: HeroCard) {
         <img
           src={isOriginal ? src : getOptimizedUrl(src, { quality: 60 })}
           alt={alt ?? label}
-          loading="lazy"
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+          // @ts-expect-error fetchpriority is valid HTML
+          fetchpriority={eager ? 'high' : 'auto'}
           className="w-full h-full object-cover"
         />
       )}
@@ -76,10 +79,11 @@ function MarqueeCard({ label, src, alt, isOriginal, isVideo }: HeroCard) {
 }
 
 /* ── Marquee row ── */
-function MarqueeRow({ cards, direction, duration }: {
+function MarqueeRow({ cards, direction, duration, eagerFirst }: {
   cards: HeroCard[];
   direction: 'left' | 'right';
   duration: string;
+  eagerFirst?: boolean;
 }) {
   const doubled = [...cards, ...cards];
   return (
@@ -89,7 +93,7 @@ function MarqueeRow({ cards, direction, duration }: {
         style={{ animationDuration: duration }}
       >
         {doubled.map((card, i) => (
-          <MarqueeCard key={`${card.label}-${i}`} {...card} />
+          <MarqueeCard key={`${card.label}-${i}`} {...card} eager={eagerFirst && i === 0} />
         ))}
       </div>
     </div>
