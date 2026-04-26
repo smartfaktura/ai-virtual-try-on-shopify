@@ -269,9 +269,9 @@ export default function SeoPageVisuals() {
         <></>
       </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 mt-4">
         {/* LEFT — page selector */}
-        <aside className="lg:sticky lg:top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto">
+        <aside className="lg:sticky lg:top-4 self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto -mx-1 px-1">
           <div className="space-y-5">
             {groupedPages.map((g) => (
               <div key={g.id}>
@@ -297,7 +297,7 @@ export default function SeoPageVisuals() {
                         <div className="text-[11px] text-muted-foreground truncate">{p.route}</div>
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <span className="text-[10px] text-muted-foreground">
-                            {stats.configured}/{stats.total} configured
+                            {stats.configured}/{stats.total}
                           </span>
                           {stats.unsaved > 0 && (
                             <Badge variant="secondary" className="text-[9px] py-0 h-4">
@@ -314,49 +314,49 @@ export default function SeoPageVisuals() {
           </div>
         </aside>
 
-        {/* CENTER — slots */}
+        {/* MAIN — slots */}
         <main className="min-w-0">
-          <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
-            <div>
-              <h2 className="text-xl font-semibold">{selectedPage.label}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">{selectedPage.route}</p>
+          {/* Page summary card */}
+          <div className="border rounded-xl bg-card p-4 mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold leading-tight truncate">{selectedPage.label}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">{selectedPage.route}</p>
+              {(() => {
+                const s = pageStats(selectedPage);
+                return (
+                  <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+                    <span><span className="font-medium text-foreground">{s.configured}</span>/{s.total} configured</span>
+                    <span><span className="font-medium text-foreground">{s.total - s.configured}</span> using fallback</span>
+                    {s.unsaved > 0 && <span className="text-amber-600 font-medium">{s.unsaved} unsaved</span>}
+                  </div>
+                );
+              })()}
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={`${SITE_URL}${selectedPage.route}`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <a
-                  href={`${SITE_URL}${selectedPage.route}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Open live page
-                </a>
-              </Button>
-            </div>
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Open live page
+              </a>
+            </Button>
           </div>
 
           {sections.map((sec) => (
             <section key={sec.name} className="mb-8">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.18em] mb-3">
                 {sec.name}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {sec.slots.map((slot) => {
                   const eff = getEffective(slot);
-                  const isSelected = selectedSlotKey === slot.key;
                   return (
                     <div
                       key={slot.key}
-                      className={cn(
-                        'border rounded-xl bg-card p-3 transition-colors cursor-pointer',
-                        isSelected ? 'border-foreground/30 shadow-sm' : 'border-border hover:border-foreground/20',
-                      )}
-                      onClick={() => setSelectedSlotKey(slot.key)}
+                      className="border border-border rounded-xl bg-card overflow-hidden flex flex-col hover:border-foreground/20 transition-colors"
                     >
-                      <div className="aspect-[4/5] w-full rounded-lg overflow-hidden bg-muted relative">
+                      <div className="aspect-[4/5] w-full bg-muted relative">
                         {eff.url ? (
                           <img
                             src={getOptimizedUrl(eff.url, { quality: 55 })}
@@ -371,70 +371,62 @@ export default function SeoPageVisuals() {
                         )}
                         <div className="absolute top-1.5 left-1.5 flex gap-1">
                           {eff.isDraft && (
-                            <Badge className="text-[9px] py-0 h-4 bg-amber-500 text-white">
+                            <Badge className="text-[9px] py-0 h-4 bg-amber-500 text-white border-0">
                               Unsaved
                             </Badge>
                           )}
                           {!eff.isDraft && eff.isOverride && (
-                            <Badge className="text-[9px] py-0 h-4">Configured</Badge>
+                            <Badge className="text-[9px] py-0 h-4">Set</Badge>
                           )}
                           {!eff.isOverride && !eff.isDraft && (
                             <Badge variant="secondary" className="text-[9px] py-0 h-4">
                               Fallback
                             </Badge>
                           )}
-                          {slot.required && (
-                            <Badge variant="outline" className="text-[9px] py-0 h-4">
-                              Required
-                            </Badge>
-                          )}
                         </div>
                       </div>
-                      <div className="mt-2.5">
-                        <div className="text-sm font-medium leading-tight">{slot.label}</div>
-                        <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                      <div className="p-2.5 flex flex-col flex-1">
+                        <div className="text-[12px] font-medium leading-tight line-clamp-2">
+                          {slot.label}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1 leading-snug line-clamp-2">
                           {slot.whereItAppears}
                         </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSlotKey(slot.key);
-                            setPickerSlotKey(slot.key);
-                          }}
-                        >
-                          <Pencil className="h-3 w-3 mr-1" /> Change image
-                        </Button>
-                        {eff.isDraft && (
+                        <div className="flex items-center gap-1 mt-auto pt-2 border-t border-border/50">
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleResetSlot(slot);
+                            className="h-7 px-2 text-[11px] flex-1 justify-start"
+                            onClick={() => {
+                              setSelectedSlotKey(slot.key);
+                              setPickerSlotKey(slot.key);
                             }}
                           >
-                            <Undo2 className="h-3 w-3 mr-1" /> Reset
+                            <Pencil className="h-3 w-3 mr-1" /> Change
                           </Button>
-                        )}
-                        {!eff.isDraft && eff.isOverride && !slot.required && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs text-muted-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleClearSlot(slot);
-                            }}
-                          >
-                            <RotateCcw className="h-3 w-3 mr-1" /> Use fallback
-                          </Button>
-                        )}
+                          {eff.isDraft && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              title="Reset draft"
+                              onClick={() => handleResetSlot(slot)}
+                            >
+                              <Undo2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                          {!eff.isDraft && eff.isOverride && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground"
+                              title="Use fallback"
+                              onClick={() => handleClearSlot(slot)}
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -443,81 +435,6 @@ export default function SeoPageVisuals() {
             </section>
           ))}
         </main>
-
-        {/* RIGHT — details */}
-        <aside className="lg:sticky lg:top-4 self-start">
-          <div className="border rounded-xl bg-card p-4">
-            {selectedSlot ? (
-              <>
-                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-1">
-                  {selectedSlot.section}
-                </div>
-                <h4 className="text-base font-semibold leading-tight">{selectedSlot.label}</h4>
-                <div className="aspect-[4/5] w-full rounded-lg overflow-hidden bg-muted my-3">
-                  <img
-                    src={getOptimizedUrl(getEffective(selectedSlot).url, { quality: 60 })}
-                    alt={getEffective(selectedSlot).alt}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {selectedSlot.whereItAppears}
-                </p>
-                <div className="mt-3 space-y-2 text-[11px]">
-                  <div>
-                    <span className="text-muted-foreground">Recommended ratio: </span>
-                    <span className="font-medium">{selectedSlot.recommendedAspectRatio}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Required: </span>
-                    <span className="font-medium">{selectedSlot.required ? 'Yes' : 'Optional'}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Alt text: </span>
-                    <div className="font-medium text-foreground/80 mt-1">{getEffective(selectedSlot).alt}</div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <h4 className="text-base font-semibold mb-2">{selectedPage.label}</h4>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Select a slot to view details and where it appears on the live page.
-                </p>
-                {(() => {
-                  const s = pageStats(selectedPage);
-                  return (
-                    <ul className="text-xs space-y-1">
-                      <li>
-                        <span className="text-muted-foreground">Configured: </span>
-                        <span className="font-medium">{s.configured}/{s.total}</span>
-                      </li>
-                      <li>
-                        <span className="text-muted-foreground">Using fallback: </span>
-                        <span className="font-medium">{s.total - s.configured}</span>
-                      </li>
-                      {s.unsaved > 0 && (
-                        <li className="text-amber-600">
-                          <span>Unsaved changes: </span>
-                          <span className="font-medium">{s.unsaved}</span>
-                        </li>
-                      )}
-                    </ul>
-                  );
-                })()}
-                <Button asChild variant="outline" size="sm" className="mt-4 w-full">
-                  <a
-                    href={`${SITE_URL}${selectedPage.route}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Open live page
-                  </a>
-                </Button>
-              </>
-            )}
-          </div>
-        </aside>
       </div>
 
       {/* Sticky save bar */}

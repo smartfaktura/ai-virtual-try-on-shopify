@@ -1,31 +1,62 @@
-## Why it's not working
+## Two issues to fix
 
-The page `/app/admin/seo-page-visuals` shows **404** because the route was never registered in `src/App.tsx`. The page component exists (`src/pages/admin/SeoPageVisuals.tsx`), but React Router doesn't know about it, so it falls through to the NotFound page.
+### 1. Layout doesn't fit
+The admin page uses a 3-column grid (`260px | 1fr | 320px`) inside the AppShell content area. The right "details" rail crowds the center column, slot cards squish to one column and big buttons overflow. The whole page feels cramped.
+
+### 2. Saved override not appearing on the live page
+The DB has the override saved correctly:
+```
+/ai-product-photography · heroTile10 · scene amber-glow-studio-3
+```
+But `src/components/seo/photography/PhotographyHero.tsx` still renders a hardcoded list and never calls `useSeoVisualOverridesMap` / `resolveSlotImageUrl`. The wiring step from the original plan was never completed for this component, so overrides are saved but not consumed.
+
+---
 
 ## Fix
 
-### 1. `src/App.tsx` — register the route
+### A. Redesign admin layout (`src/pages/admin/SeoPageVisuals.tsx`)
 
-Add a lazy import alongside the other admin imports (around line 70):
+Drop the right details rail. Move its info into a compact summary card at the top of the center column. Switch to a clean 2-column layout that breathes:
 
-```ts
-const SeoPageVisuals = lazy(() => import('@/pages/admin/SeoPageVisuals'));
+```
+[ 240px sidebar ] [ flexible main with 2/3/4/5-col card grid ]
 ```
 
-Add the route inside the `/app` admin route block (around line 265, next to other `/admin/*` routes):
+- Left aside: page list (unchanged content, slightly tighter).
+- Main column:
+  - Top: summary card with page label, route, "X/Y configured", "Open live page" button.
+  - Below: sections with thumbnail grid `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3`.
+- Cards: smaller, image-first, label + 1-line "where it appears", icon-only Reset / Use-fallback buttons + "Change" text button. Status badge ("Set" / "Fallback" / "Unsaved") sits on the thumbnail.
+- Sticky save bar, picker modal, and confirm dialogs remain unchanged.
 
-```tsx
-<Route path="/admin/seo-page-visuals" element={<SeoPageVisuals />} />
-```
+Result: cards stop squishing, the page looks like a real CMS grid, and the right rail no longer competes for space.
 
-### 2. (Optional) `src/components/app/AppShell.tsx` — add sidebar link
+### B. Wire `PhotographyHero` to consume overrides
 
-Add a navigation entry in the Admin section so admins can reach the page without typing the URL. Label: **"SEO Page Visuals"**, path: `/app/admin/seo-page-visuals`, gated by `useIsAdmin()` like the other admin links.
+In `src/components/seo/photography/PhotographyHero.tsx`:
 
-### 3. Wrap with `AdminGuard`
+1. Import `useSeoVisualOverridesMap` and `resolveSlotImageUrl`.
+2. Inside the component, call `const overrides = useSeoVisualOverridesMap();`.
+3. Map each tile to its slot key (`heroTile1` … `heroTile12`) using its index, and resolve the URL:
+   ```ts
+   const src = resolveSlotImageUrl(
+     overrides,
+     '/ai-product-photography',
+     `heroTile${index + 1}`,
+     PREVIEW(tile.id),
+   );
+   ```
+4. Use the resolved URL inside `<Tile>` instead of the hardcoded `tile.src`.
 
-If other `/admin/*` routes use a guard, wrap this one the same way to keep access restricted.
+If the override map is empty (no admin changes, or fetch fails), the original PREVIEW URL is used → SEO output is unchanged. If an override exists, the new image renders.
 
-## Result
+### C. (Follow-up, not in this fix)
 
-After approval, navigating to `/app/admin/seo-page-visuals` will load the SEO Page Visuals admin UI instead of 404.
+Other SEO components (`CategoryHero`, scene examples, comparison pages, etc.) still need the same one-line wiring. Once this hero works end-to-end we can repeat the pattern for the remaining slots in a separate pass.
+
+---
+
+## Files changed
+
+- `src/pages/admin/SeoPageVisuals.tsx` — layout redesign (2-col, denser card grid, summary card replaces right rail).
+- `src/components/seo/photography/PhotographyHero.tsx` — read overrides and resolve each hero tile URL.
