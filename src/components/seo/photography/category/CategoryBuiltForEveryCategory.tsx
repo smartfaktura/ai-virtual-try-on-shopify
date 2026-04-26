@@ -5,18 +5,9 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
-import { BUILT_FOR_GRIDS, type BuiltForGroup } from '@/data/aiProductPhotographyBuiltForGrids';
+import { getBuiltForGroupsForPage, slotSlugify } from '@/data/builtForGridGroups';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
-
-/** Mirrors slugify() in src/data/seoPageVisualSlots.ts — keep in sync. */
-function slotSlugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[·•]/g, ' ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
 
 /**
  * Per-category "One photo · Every shot" section, rebuilt to mirror the
@@ -26,44 +17,14 @@ function slotSlugify(s: string): string {
  * Title and eyebrow adapt to the page's category and noun.
  */
 export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) {
-  const rawGroups: BuiltForGroup[] = BUILT_FOR_GRIDS[page.slug] ?? [];
-
-  // Split "Bags · On-Body Editorial" → ["Bags", "On-Body Editorial"]
+  // Shared with the SEO slot registry so admin overrides match this layout.
+  const groups = getBuiltForGroupsForPage(page.slug);
   const splitLabel = (s: string): { subject: string; style?: string } => {
     const parts = s.split('·').map((p) => p.trim());
     return { subject: parts[0], style: parts.slice(1).join(' · ') || undefined };
   };
 
-  // If every raw group shares the same subject (e.g. fragrance: all "Fragrance · X"),
-  // group by **style** so chips stay distinct. Otherwise group by subject.
-  const subjects = rawGroups.map((g) => splitLabel(g.subCategory).subject);
-  const singleSubject = subjects.length > 0 && subjects.every((s) => s === subjects[0]);
-  const groupKey = (s: string) => {
-    const { subject, style } = splitLabel(s);
-    return singleSubject && style ? style : subject;
-  };
-
-  // Merge groups with the same key so chips stay short and unique.
-  const groups = (() => {
-    const order: string[] = [];
-    const map = new Map<string, BuiltForGroup>();
-    for (const g of rawGroups) {
-      const key = groupKey(g.subCategory);
-      const existing = map.get(key);
-      if (existing) {
-        const seen = new Set(existing.cards.map((c) => c.imageId));
-        for (const c of g.cards) if (!seen.has(c.imageId)) { existing.cards.push(c); seen.add(c.imageId); }
-      } else {
-        order.push(key);
-        map.set(key, { subCategory: key, cards: [...g.cards] });
-      }
-    }
-    return order.map((s) => {
-      const g = map.get(s)!;
-      return { ...g, cards: g.cards.slice(0, 8) };
-    });
-  })();
-
+  const overrides = useSeoVisualOverridesMap();
   const [activeIdx, setActiveIdx] = useState(0);
 
   if (groups.length === 0) return null;
