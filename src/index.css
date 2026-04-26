@@ -108,6 +108,10 @@
     @apply border-border;
   }
 
+  html, body {
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
