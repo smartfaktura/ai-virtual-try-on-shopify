@@ -45,8 +45,8 @@ function Tile({
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(resolvedSrc, { width: 480, height: 640, quality: 78, resize: 'cover' })}
-        srcSet={getResizedSrcSet(resolvedSrc, { widths: [320, 480, 630], aspect: [3, 4], quality: 78 })}
+        src={getOptimizedUrl(resolvedSrc, { width: 640, height: 854, quality: 85, resize: 'cover' })}
+        srcSet={getResizedSrcSet(resolvedSrc, { widths: [360, 540, 720, 900], aspect: [3, 4], quality: 85 })}
         sizes="(max-width: 640px) 180px, 210px"
         alt={resolvedAlt}
         width={210}
