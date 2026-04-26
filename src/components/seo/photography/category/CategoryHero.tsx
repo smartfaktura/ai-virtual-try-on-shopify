@@ -99,8 +99,8 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-2xl overflow-hidden bg-muted/30">
               <SmartImage
-                src={getOptimizedUrl(heroMainSrc, { width: 1120, height: 1400, quality: 80, resize: 'cover' })}
-                srcSet={getResizedSrcSet(heroMainSrc, { widths: [560, 840, 1120], aspect: [4, 5], quality: 80 })}
+                src={getOptimizedUrl(heroMainSrc, { width: 1120, height: 1400, quality: 85, resize: 'cover' })}
+                srcSet={getResizedSrcSet(heroMainSrc, { widths: [640, 900, 1120, 1400], aspect: [4, 5], quality: 85 })}
                 sizes="(max-width: 1024px) 92vw, 560px"
                 alt={heroMainAlt}
                 priority
@@ -135,8 +135,8 @@ function HeroTile({
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
       <SmartImage
-        src={getOptimizedUrl(src, { width: 560, height: 700, quality: 78, resize: 'cover' })}
-        srcSet={getResizedSrcSet(src, { widths: [320, 480, 640], aspect: [4, 5], quality: 78 })}
+        src={getOptimizedUrl(src, { width: 640, height: 800, quality: 85, resize: 'cover' })}
+        srcSet={getResizedSrcSet(src, { widths: [360, 540, 720, 900], aspect: [4, 5], quality: 85 })}
         sizes="(max-width: 1024px) 45vw, 280px"
         alt={alt}
         priority={priority}
