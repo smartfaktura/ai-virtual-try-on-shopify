@@ -15,10 +15,10 @@ function BrandModelCTA() {
   return (
     <Link
       to="/app/models"
-      className="group flex flex-col items-center gap-2 flex-shrink-0"
+      className="group flex flex-col items-center gap-2 flex-shrink-0 w-full"
       aria-label="Create your own brand models"
     >
-      <div className="w-24 h-32 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden bg-background border border-foreground/10 flex flex-col items-center justify-center gap-3 transition-all duration-500 group-hover:border-foreground/25">
+      <div className="aspect-[3/4] w-full sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden bg-background border border-foreground/10 flex flex-col items-center justify-center gap-3 transition-all duration-500 group-hover:border-foreground/25">
         <div className="w-9 h-9 rounded-full border border-foreground/20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
           <Plus className="w-4 h-4 text-foreground/80" strokeWidth={1.5} />
         </div>
@@ -43,15 +43,15 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
   const [errored, setErrored] = useState(false);
 
   return (
-    <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-24 h-32 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/40 flex items-center justify-center">
+    <div className="flex flex-col items-center gap-2 flex-shrink-0 w-full">
+      <div className="aspect-[3/4] w-full sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/40 flex items-center justify-center">
         {errored ? (
           <User className="w-8 h-8 text-muted-foreground/40" strokeWidth={1.25} />
         ) : (
           <img
             src={getOptimizedUrl(model.previewUrl, { width: 360, height: 480, quality: 72, resize: 'cover' })}
             srcSet={getResizedSrcSet(model.previewUrl, { widths: [240, 360, 480], aspect: [3, 4], quality: 72 })}
-            sizes="(max-width: 640px) 96px, (max-width: 1024px) 128px, 144px"
+            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 128px, 144px"
             alt={model.name}
             loading="eager"
             decoding="async"
@@ -62,7 +62,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
           />
         )}
       </div>
-      <span className="text-[11px] tracking-wide text-muted-foreground">{model.name}</span>
+      <span className="text-[11px] tracking-wide text-muted-foreground truncate max-w-full">{model.name}</span>
     </div>
   );
 }
