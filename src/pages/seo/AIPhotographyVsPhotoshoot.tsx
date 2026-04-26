@@ -75,6 +75,7 @@ export default function AIPhotographyVsPhotoshoot() {
       <LandingNav />
       <main>
         <LandingHeroSEO
+          pageRoute="/ai-product-photography-vs-photoshoot"
           eyebrow="AI vs Traditional Photoshoot"
           pageId="vs-photoshoot"
           headline={
@@ -176,6 +177,7 @@ export default function AIPhotographyVsPhotoshoot() {
         />
 
         <LandingCategoryGrid
+          pageRoute="/ai-product-photography-vs-photoshoot"
           eyebrow="Categories"
           headline="AI product photography works across product categories"
           intro="Category-specific visual systems for every kind of ecommerce brand."

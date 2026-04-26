@@ -74,6 +74,7 @@ export default function AIPhotographyVsStudio() {
       <LandingNav />
       <main>
         <LandingHeroSEO
+          pageRoute="/ai-product-photography-vs-studio"
           eyebrow="VOVV.AI vs Product Photography Studio"
           pageId="vs-studio"
           headline={
@@ -178,6 +179,7 @@ export default function AIPhotographyVsStudio() {
         />
 
         <LandingCategoryGrid
+          pageRoute="/ai-product-photography-vs-studio"
           eyebrow="Best-fit categories"
           headline="Built for ecommerce product categories"
           intro="Category-specific visual systems across all 10 verticals."

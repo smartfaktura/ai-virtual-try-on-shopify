@@ -64,6 +64,7 @@ export default function ShopifyProductPhotography() {
       <LandingNav />
       <main>
         <LandingHeroSEO
+          pageRoute="/shopify-product-photography-ai"
           eyebrow="Shopify Product Photography AI"
           pageId="shopify"
           headline={
@@ -110,6 +111,7 @@ export default function ShopifyProductPhotography() {
         />
 
         <LandingOneToManyShowcase
+          pageRoute="/shopify-product-photography-ai"
           eyebrow="One photo · Full Shopify set"
           headline="Turn one product photo into a full Shopify creative set"
           intro="Upload once. Generate every visual your storefront, ads, and marketing channels need."
@@ -165,6 +167,7 @@ export default function ShopifyProductPhotography() {
         />
 
         <LandingCategoryGrid
+          pageRoute="/shopify-product-photography-ai"
           eyebrow="Best categories for Shopify"
           headline="Built for the products Shopify brands sell every day"
           intro="Category-specific visual systems that match how your customers actually shop."

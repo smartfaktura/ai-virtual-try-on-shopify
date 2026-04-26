@@ -64,6 +64,7 @@ export default function EtsyProductPhotography() {
       <LandingNav />
       <main>
         <LandingHeroSEO
+          pageRoute="/etsy-product-photography-ai"
           eyebrow="Etsy Product Photography AI"
           pageId="etsy"
           headline={
@@ -109,6 +110,7 @@ export default function EtsyProductPhotography() {
         />
 
         <LandingOneToManyShowcase
+          pageRoute="/etsy-product-photography-ai"
           eyebrow="One photo · Full Etsy set"
           headline="Turn one product image into a complete Etsy listing set"
           intro="Upload once. Generate every visual your listings, banners, and social channels need."
@@ -124,6 +126,7 @@ export default function EtsyProductPhotography() {
         />
 
         <LandingCategoryGrid
+          pageRoute="/etsy-product-photography-ai"
           eyebrow="Best categories for Etsy"
           headline="Built for handmade, creative, and lifestyle products"
           intro="Category-specific visual systems for the products Etsy sellers love to make."
