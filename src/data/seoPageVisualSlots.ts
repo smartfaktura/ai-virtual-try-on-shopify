@@ -15,6 +15,7 @@ import {
   PREVIEW,
   type CategoryPage,
 } from './aiProductPhotographyCategoryPages';
+import { aiProductPhotographyCategories } from './aiProductPhotographyCategories';
 
 export type SeoPageGroup = 'main' | 'category' | 'tool' | 'comparison';
 
