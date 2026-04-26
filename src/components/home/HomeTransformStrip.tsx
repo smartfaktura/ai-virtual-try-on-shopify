@@ -117,12 +117,12 @@ const WATCHES_CARDS: GridCardData[] = [
 ];
 
 const CATEGORIES = [
-  { id: 'watches',   label: 'Watches',   cards: WATCHES_CARDS },
-  { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS },
-  { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS },
-  { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS },
-  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS },
-  { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS },
+  { id: 'watches',   label: 'Watches',   cards: WATCHES_CARDS,   hub: '/ai-product-photography/jewelry' },
+  { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS,  hub: '/ai-product-photography/fashion' },
+  { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS,  hub: '/ai-product-photography/footwear' },
+  { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS,   hub: '/ai-product-photography/fashion' },
+  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS,   hub: '/ai-product-photography/bags-accessories' },
+  { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS, hub: '/ai-product-photography/fragrance' },
 ] as const;
 
 const ALL_CATEGORY_NAMES = [

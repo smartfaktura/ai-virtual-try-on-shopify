@@ -5,7 +5,11 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 
-const faqs = [
+export const homeFaqs = [
+  {
+    q: 'What is VOVV.AI?',
+    a: 'VOVV.AI is an AI product visual platform for e-commerce brands. Upload one product photo and create product page images, lifestyle visuals, ads, social content, and campaign-ready creative — without booking a photoshoot.',
+  },
   {
     q: 'How fast can I get my first visual?',
     a: 'Under a minute. Drop a product photo, pick a shot, hit generate — your first brand-ready image lands before your coffee cools.',
@@ -17,6 +21,10 @@ const faqs = [
   {
     q: 'What can I create from a single product photo?',
     a: 'Product page hero shots, lifestyle scenes, social creatives, ad campaigns, on-model try-ons and short product videos — all from one upload.',
+  },
+  {
+    q: 'Which product categories does VOVV.AI support?',
+    a: 'Fashion, footwear, beauty and skincare, fragrance, jewelry, bags and accessories, home and furniture, food and beverage, supplements and wellness, electronics, and more — 35+ categories with 1000+ ready-made shots.',
   },
   {
     q: 'Can I use the visuals on Shopify, ads and marketplaces?',
@@ -47,7 +55,7 @@ export function HomeFAQ() {
         </p>
 
         <Accordion type="single" collapsible className="space-y-3">
-          {faqs.map((faq, i) => (
+          {homeFaqs.map((faq, i) => (
             <AccordionItem
               key={i}
               value={`faq-${i}`}
