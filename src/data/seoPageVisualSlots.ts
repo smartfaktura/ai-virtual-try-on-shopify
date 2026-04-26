@@ -83,8 +83,8 @@ const HUB_SCENE_EXAMPLES: { id: string; label: string; category: string }[] = [
 function buildHeroSlots(tags: string[]): SeoVisualSlot[] {
   return HUB_HERO_TILES.map((t, i) => ({
     key: `heroTile${i + 1}`,
-    section: 'Hero',
-    label: `Hero collage tile ${i + 1} — ${t.label}`,
+    section: 'HERO BANNER IMAGES',
+    label: `Hero banner tile ${i + 1} — ${t.label}`,
     whereItAppears: `Animated marquee at the top of the page (tile ${i + 1} of 12).`,
     required: false,
     recommendedTags: tags,
@@ -97,8 +97,8 @@ function buildHeroSlots(tags: string[]): SeoVisualSlot[] {
 function buildSceneExampleSlots(tags: string[]): SeoVisualSlot[] {
   return HUB_SCENE_EXAMPLES.map((t, i) => ({
     key: `sceneExample${i + 1}`,
-    section: 'Scene examples',
-    label: `Scene example ${i + 1} — ${t.label}`,
+    section: 'Every scene your store needs — already styled.',
+    label: `Scene tile ${i + 1} — ${t.label}`,
     whereItAppears: `“Every scene your store needs” grid (tile ${i + 1} of 10).`,
     required: false,
     recommendedTags: tags,
@@ -108,29 +108,56 @@ function buildSceneExampleSlots(tags: string[]): SeoVisualSlot[] {
   }));
 }
 
-// Visual System rows are 6 cards × 3 thumbnails. We only expose the LEAD
-// thumbnail per row in V1 to keep the picker manageable.
-const HUB_VISUAL_SYSTEM_ROWS: { title: string; lead: string }[] = [
-  { title: 'Product page', lead: '1776770347820-s3qwmr' },
-  { title: 'Lifestyle', lead: '1776664924644-8pmju4' },
-  { title: 'Social content', lead: '1776691906436-3fe7l9' },
-  { title: 'Paid ads', lead: '1776102204479-9rlc0n' },
-  { title: 'Detail shots', lead: '1776243905045-8aw72b' },
-  { title: 'Campaigns', lead: '1776524132929-q8upyp' },
+// Visual System rows: 6 cards × 3 thumbnails each = 18 editable slots.
+const HUB_VISUAL_SYSTEM_ROWS: { title: string; thumbs: [string, string, string] }[] = [
+  { title: 'Product page',  thumbs: ['1776770347820-s3qwmr', '1776841027943-vetumj', '1776664933175-rjlbn6'] },
+  { title: 'Lifestyle',     thumbs: ['1776664924644-8pmju4', '1776524131703-gvh4bb', '1776524128011-dcnlpo'] },
+  { title: 'Social content', thumbs: ['1776691906436-3fe7l9', '1776102190563-dioke2', '1776691907477-77vt46'] },
+  { title: 'Paid ads',      thumbs: ['1776102204479-9rlc0n', '1776606017719-zzhgy7', '1776239826550-uaopmt'] },
+  { title: 'Detail shots',  thumbs: ['1776243905045-8aw72b', '1776244136599-8gw62e', '1776243682026-h1itvm'] },
+  { title: 'Campaigns',     thumbs: ['1776524132929-q8upyp', '1776574228066-oyklfz', '1776018020221-aehe8n'] },
 ];
 
 function buildVisualSystemSlots(tags: string[]): SeoVisualSlot[] {
-  return HUB_VISUAL_SYSTEM_ROWS.map((r) => ({
-    key: `visualSystem_${r.title.toLowerCase().replace(/\s+/g, '_')}`,
-    section: 'Visual system',
-    label: `Visual system — ${r.title}`,
-    whereItAppears: `Lead thumbnail for the “${r.title}” card in the visual system grid.`,
-    required: false,
-    recommendedTags: tags,
-    recommendedAspectRatio: '3:4',
-    fallbackImageId: r.lead,
-    fallbackAlt: `${r.title} — AI product photography example`,
-  }));
+  const slots: SeoVisualSlot[] = [];
+  for (const row of HUB_VISUAL_SYSTEM_ROWS) {
+    const cardSlug = row.title.toLowerCase().replace(/\s+/g, '_');
+    row.thumbs.forEach((id, i) => {
+      slots.push({
+        key: `visualSystem_${cardSlug}_${i + 1}`,
+        section: 'One product photo. A full visual system.',
+        label: `${row.title} · thumb ${i + 1}`,
+        whereItAppears: `“${row.title}” card · thumbnail ${i + 1} of 3.`,
+        required: false,
+        recommendedTags: tags,
+        recommendedAspectRatio: '3:4',
+        fallbackImageId: id,
+        fallbackAlt: `${row.title} — AI product photography example ${i + 1}`,
+      });
+    });
+  }
+  return slots;
+}
+
+// Category Chooser: 10 categories × 3 thumbnails each = 30 editable slots.
+function buildCategoryChooserSlots(tags: string[]): SeoVisualSlot[] {
+  const slots: SeoVisualSlot[] = [];
+  for (const cat of aiProductPhotographyCategories) {
+    cat.previewImages.slice(0, 3).forEach((id, i) => {
+      slots.push({
+        key: `categoryThumb_${cat.slug}_${i + 1}`,
+        section: 'Choose your product category',
+        label: `${cat.name} · thumb ${i + 1}`,
+        whereItAppears: `“${cat.name}” category card · thumbnail ${i + 1} of 3.`,
+        required: false,
+        recommendedTags: [...tags, cat.slug, ...cat.subcategories.map((s) => s.toLowerCase())],
+        recommendedAspectRatio: '4:5',
+        fallbackImageId: id,
+        fallbackAlt: `${cat.name} AI product photography example`,
+      });
+    });
+  }
+  return slots;
 }
 
 // ── Per-category page slots, derived from the category page data ──
