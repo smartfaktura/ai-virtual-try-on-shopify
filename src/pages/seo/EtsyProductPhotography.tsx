@@ -191,6 +191,22 @@ export default function EtsyProductPhotography() {
           ]}
         />
 
+        <section className="pt-2 pb-12 lg:pb-20 bg-background">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+              Curious how AI compares to a real photoshoot? Read{' '}
+              <a href="/ai-product-photography-vs-photoshoot" className="text-foreground font-medium underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground/70 transition-colors">
+                AI product photography vs traditional photoshoot
+              </a>
+              {' '}or explore the{' '}
+              <a href="/ai-product-photography" className="text-foreground font-medium underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground/70 transition-colors">
+                full AI product photography hub
+              </a>
+              .
+            </p>
+          </div>
+        </section>
+
         <LandingFinalCTASEO
           headline="Create polished Etsy visuals from one product photo"
           copy="Generate listing images, lifestyle scenes, detail shots, banners, and social content for your Etsy shop."

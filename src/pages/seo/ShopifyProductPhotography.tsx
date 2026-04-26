@@ -221,6 +221,22 @@ export default function ShopifyProductPhotography() {
           ]}
         />
 
+        <section className="pt-2 pb-12 lg:pb-20 bg-background">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+              Weighing your options? Compare{' '}
+              <a href="/ai-product-photography-vs-photoshoot" className="text-foreground font-medium underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground/70 transition-colors">
+                AI product photography vs a traditional photoshoot
+              </a>{' '}
+              or read about the{' '}
+              <a href="/ai-product-photography-vs-studio" className="text-foreground font-medium underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground/70 transition-colors">
+                VOVV.AI vs studio workflow
+              </a>
+              .
+            </p>
+          </div>
+        </section>
+
         <LandingFinalCTASEO
           headline="Create Shopify product visuals from one photo"
           copy="Generate product page images, lifestyle visuals, ads, banners, and campaign-ready content for your Shopify store with VOVV.AI."
