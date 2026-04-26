@@ -1,62 +1,53 @@
-## Two issues to fix
+## Problem
 
-### 1. Layout doesn't fit
-The admin page uses a 3-column grid (`260px | 1fr | 320px`) inside the AppShell content area. The right "details" rail crowds the center column, slot cards squish to one column and big buttons overflow. The whole page feels cramped.
+On mobile, the Home page (`/`) and the Auth page (`/auth`) feel like they have a "never ending scroll" near the footer / on the auth screen. This is not a literal infinite list — it is **horizontal overflow** leaking out of a section, which on iOS/Android Safari makes the entire page feel taller and lets the user scroll/pan past the real content edge in both axes.
 
-### 2. Saved override not appearing on the live page
-The DB has the override saved correctly:
-```
-/ai-product-photography · heroTile10 · scene amber-glow-studio-3
-```
-But `src/components/seo/photography/PhotographyHero.tsx` still renders a hardcoded list and never calls `useSeoVisualOverridesMap` / `resolveSlotImageUrl`. The wiring step from the original plan was never completed for this component, so overrides are saved but not consumed.
+Two main culprits:
 
----
+1. **Home page (`/`)** — Several sections render content wider than the viewport on mobile:
+   - `HomeHero` marquee rows use `w-max` inside `overflow-hidden w-full`, but the `<section>` itself has no `overflow-x-clip`, so flex children (cards) can still spill at the edges on small screens.
+   - `HomeTransformStrip` mobile category rail uses `-mx-6` (full-bleed) with internal `overflow-x-auto`. Combined with absolute edge fades, on narrow viewports the parent can still expose a few pixels of overflow.
+   - The root `<div className="min-h-screen bg-[#FAFAF8]">` in `Home.tsx` has no `overflow-x-hidden`, so any leak from any child section bubbles up to the `<html>`/`<body>` scroll container and produces the "extra scroll" feeling — including past the footer.
+
+2. **Auth page (`/auth`)** — The root container is `min-h-screen flex` with no `overflow-x-hidden`. The `AuthHeroGallery` is `hidden lg:block lg:w-1/2 xl:w-[55%]` so it's not visible on mobile, but the form column uses `xl:px-24` and is wrapped in a `flex-1` flex item. On mid-width phones the flex sizing can produce a >100vw layout when combined with absolute toast/portals or long words in error text. Result: the page can be panned horizontally and feels like it scrolls indefinitely.
 
 ## Fix
 
-### A. Redesign admin layout (`src/pages/admin/SeoPageVisuals.tsx`)
+### 1. Lock horizontal overflow at page roots (primary fix)
 
-Drop the right details rail. Move its info into a compact summary card at the top of the center column. Switch to a clean 2-column layout that breathes:
+Add `overflow-x-clip` to the root wrapper of both pages so any internal overflow can never escape to the page-level scroll container.
 
-```
-[ 240px sidebar ] [ flexible main with 2/3/4/5-col card grid ]
-```
+- `src/pages/Home.tsx`
+  - Change root `<div className="min-h-screen bg-[#FAFAF8]">` → add `overflow-x-clip`.
+- `src/pages/Auth.tsx`
+  - Change root `<div className="min-h-screen flex bg-background">` → add `overflow-x-clip`.
+  - Also clamp the form column with `min-w-0` so flex math can't push it wider than the viewport.
 
-- Left aside: page list (unchanged content, slightly tighter).
-- Main column:
-  - Top: summary card with page label, route, "X/Y configured", "Open live page" button.
-  - Below: sections with thumbnail grid `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3`.
-- Cards: smaller, image-first, label + 1-line "where it appears", icon-only Reset / Use-fallback buttons + "Change" text button. Status badge ("Set" / "Fallback" / "Unsaved") sits on the thumbnail.
-- Sticky save bar, picker modal, and confirm dialogs remain unchanged.
+### 2. Reinforce overflow on the actual offending sections
 
-Result: cards stop squishing, the page looks like a real CMS grid, and the right rail no longer competes for space.
+Defensive `overflow-x-clip` on the parent of marquee / horizontal rails so animation transforms cannot bleed:
 
-### B. Wire `PhotographyHero` to consume overrides
+- `src/components/home/HomeHero.tsx` — wrap the `flex flex-col gap-3` marquee container in (or add to its `<section>`) `overflow-x-clip`.
+- `src/components/home/HomeTransformStrip.tsx` — add `overflow-x-clip` to the `<section>` root (the negative-margin `-mx-6` rail then can't leak).
+- `src/components/home/HomeEnvironments.tsx` and `src/components/home/HomeModels.tsx` — same treatment around the marquee wrappers (they reuse `EnvironmentsMarquee` / `ModelsMarquee`, which animate `w-max` strips).
 
-In `src/components/seo/photography/PhotographyHero.tsx`:
+### 3. Auth page form column min-width
 
-1. Import `useSeoVisualOverridesMap` and `resolveSlotImageUrl`.
-2. Inside the component, call `const overrides = useSeoVisualOverridesMap();`.
-3. Map each tile to its slot key (`heroTile1` … `heroTile12`) using its index, and resolve the URL:
-   ```ts
-   const src = resolveSlotImageUrl(
-     overrides,
-     '/ai-product-photography',
-     `heroTile${index + 1}`,
-     PREVIEW(tile.id),
-   );
-   ```
-4. Use the resolved URL inside `<Tile>` instead of the hardcoded `tile.src`.
+In `src/pages/Auth.tsx`:
+- Add `min-w-0 w-full` to the `flex-1` form column so the inner `max-w-md` content can't force a horizontal scroll on narrow phones.
+- Ensure error/info text uses `break-words` where it renders raw email or error messages.
 
-If the override map is empty (no admin changes, or fetch fails), the original PREVIEW URL is used → SEO output is unchanged. If an override exists, the new image renders.
+## Why this works
 
-### C. (Follow-up, not in this fix)
+`overflow-x-clip` (preferred over `overflow-x-hidden` because it doesn't create a new scroll container or break sticky positioning) prevents any descendant — including animated `transform` marquee strips and absolutely-positioned helpers — from extending the page width. Once the page width is exactly the viewport, mobile browsers stop allowing pan-past-edge behavior, and the perceived "infinite scroll" past the footer / on auth disappears.
 
-Other SEO components (`CategoryHero`, scene examples, comparison pages, etc.) still need the same one-line wiring. Once this hero works end-to-end we can repeat the pattern for the remaining slots in a separate pass.
+## Files to change
 
----
+- `src/pages/Home.tsx` (root wrapper class)
+- `src/pages/Auth.tsx` (root wrapper class + form column class)
+- `src/components/home/HomeHero.tsx` (section overflow guard)
+- `src/components/home/HomeTransformStrip.tsx` (section overflow guard)
+- `src/components/home/HomeEnvironments.tsx` (section overflow guard)
+- `src/components/home/HomeModels.tsx` (section overflow guard)
 
-## Files changed
-
-- `src/pages/admin/SeoPageVisuals.tsx` — layout redesign (2-col, denser card grid, summary card replaces right rail).
-- `src/components/seo/photography/PhotographyHero.tsx` — read overrides and resolve each hero tile URL.
+No logic, no copy, no design changes — only overflow / sizing utilities. Low risk.

@@ -4,7 +4,7 @@ import { EnvironmentsMarquee } from '@/components/landing/EnvironmentShowcaseSec
 
 export function HomeEnvironments() {
   return (
-    <div className="bg-background">
+    <div className="bg-background overflow-x-clip">
       <EnvironmentsMarquee
         eyebrow="1600+ scenes"
         title="Place your product anywhere."
