@@ -80,7 +80,6 @@ export default function AIProductPhotoGenerator() {
           primaryCta={{ label: 'Generate product photos free', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Explore AI product photography', to: '/ai-product-photography' }}
           altPrefix="AI product photo generator example"
-          pageId="generator"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'Studio Hero' },
             { id: '1776664924644-8pmju4', label: 'Lifestyle' },
