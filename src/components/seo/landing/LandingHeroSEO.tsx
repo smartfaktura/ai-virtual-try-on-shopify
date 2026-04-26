@@ -121,10 +121,28 @@ export function LandingHeroSEO({
   tiles,
   altPrefix,
   pageId,
+  pageRoute,
 }: LandingHeroSEOProps) {
-  const mid = Math.ceil(tiles.length / 2);
-  const row1 = tiles.slice(0, mid);
-  const row2 = tiles.slice(mid);
+  const overrides = useSeoVisualOverridesMap();
+
+  const resolved: ResolvedTile[] = tiles.map((tile, i) => {
+    const fallbackSrc = tile.id.startsWith('http') ? tile.id : PREVIEW(tile.id);
+    const fallbackAlt = `${altPrefix}: ${tile.label}`;
+    if (!pageRoute) {
+      return { tile, src: fallbackSrc, alt: fallbackAlt, baseIndex: i };
+    }
+    const slotKey = `heroTile${i + 1}`;
+    return {
+      tile,
+      src: resolveSlotImageUrl(overrides, pageRoute, slotKey, fallbackSrc),
+      alt: resolveSlotAlt(overrides, pageRoute, slotKey, fallbackAlt),
+      baseIndex: i,
+    };
+  });
+
+  const mid = Math.ceil(resolved.length / 2);
+  const row1 = resolved.slice(0, mid);
+  const row2 = resolved.slice(mid);
 
   return (
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
