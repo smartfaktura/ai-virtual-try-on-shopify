@@ -11,7 +11,7 @@ export function CategorySubcategoryChips({ page }: { page: CategoryPage }) {
           {page.subcategories.map((sub) => (
             <a
               key={sub}
-              href="#outputs"
+              href="#scene-library"
               className="inline-flex items-center px-4 h-9 rounded-full bg-white border border-[#f0efed] text-[#1a1a2e] text-[13px] font-medium hover:border-foreground/20 hover:-translate-y-px transition-all shadow-sm"
             >
               {sub}
