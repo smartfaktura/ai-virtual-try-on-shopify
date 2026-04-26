@@ -253,7 +253,7 @@ export function HomeTransformStrip() {
             One photo · Every shot
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
-            Built for every category.
+            Explore AI product photography by category.
           </h2>
         </div>
 
@@ -263,19 +263,23 @@ export function HomeTransformStrip() {
           <div className="lg:hidden relative -mx-6">
             <div className="flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {CATEGORIES.map((cat) => (
-                <button
+                <a
                   key={cat.id}
-                  type="button"
-                  onClick={() => selectCategory(cat.id)}
+                  href={cat.hub}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                    e.preventDefault();
+                    selectCategory(cat.id);
+                  }}
                   className={cn(
-                    'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
+                    'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border no-underline',
                     active === cat.id
                       ? 'bg-foreground text-background border-foreground shadow-sm'
                       : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
                   )}
                 >
                   {cat.label}
-                </button>
+                </a>
               ))}
               <Popover>
                 <PopoverTrigger asChild>
@@ -305,19 +309,23 @@ export function HomeTransformStrip() {
           <div className="hidden lg:flex justify-center">
             <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60">
               {CATEGORIES.map((cat) => (
-                <button
+                <a
                   key={cat.id}
-                  type="button"
-                  onClick={() => selectCategory(cat.id)}
+                  href={cat.hub}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                    e.preventDefault();
+                    selectCategory(cat.id);
+                  }}
                   className={cn(
-                    'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap',
+                    'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap no-underline',
                     active === cat.id
                       ? 'bg-foreground text-background shadow-sm'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
                   {cat.label}
-                </button>
+                </a>
               ))}
               <Popover>
                 <PopoverTrigger asChild>
