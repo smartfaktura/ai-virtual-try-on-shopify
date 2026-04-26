@@ -32,6 +32,7 @@ function getRelatedThumbs(rel: CategoryPage): { id: string; alt: string }[] {
 
 export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
   const related = getRelatedPages(page.relatedCategories);
+  const overrides = useSeoVisualOverridesMap();
 
   return (
     <section className="py-16 lg:py-32 bg-background">
