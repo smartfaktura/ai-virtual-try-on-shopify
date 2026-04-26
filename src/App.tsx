@@ -68,6 +68,7 @@ const AdminPlanPopups = lazy(() => import('@/pages/AdminPlanPopups'));
 const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
 const LoadingLab = lazy(() => import('@/pages/admin/LoadingLab'));
 const SceneUsage = lazy(() => import('@/pages/admin/SceneUsage'));
+const SeoPageVisuals = lazy(() => import('@/pages/admin/SeoPageVisuals'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
