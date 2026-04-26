@@ -108,9 +108,9 @@ const socialLinks = [
 const columnHeadingClass =
   'text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 mb-3.5';
 const subheadingClass =
-  'text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/70 mb-2';
+  'text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/70 mb-2.5';
 const linkClass =
-  'text-sm leading-snug text-muted-foreground hover:text-foreground transition-colors';
+  'block py-0.5 text-sm leading-relaxed text-muted-foreground hover:text-foreground transition-colors';
 
 function FlatColumn({ heading, links }: { heading: string; links: FooterLink[] }) {
   return (
