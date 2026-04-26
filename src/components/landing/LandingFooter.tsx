@@ -6,30 +6,34 @@ const footerLinks = {
     { label: 'AI Product Photography', to: '/ai-product-photography' },
     { label: 'AI Product Photo Generator', to: '/ai-product-photo-generator' },
     { label: 'Visual Studio', to: '/features/workflows' },
+    { label: 'Freestyle Studio', to: '/freestyle' },
     { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
+    { label: 'Image Upscaling', to: '/features/upscale' },
+    { label: 'Product Perspectives', to: '/features/perspectives' },
     { label: 'Pricing', to: '/pricing' },
   ],
   Solutions: [
     { label: 'Shopify Product Photos', to: '/shopify-product-photography-ai' },
     { label: 'Etsy Product Photos', to: '/etsy-product-photography-ai' },
     { label: 'Fashion Product Photography', to: '/ai-product-photography/fashion' },
+    { label: 'Footwear Product Photography', to: '/ai-product-photography/footwear' },
     { label: 'Beauty & Skincare', to: '/ai-product-photography/beauty-skincare' },
+    { label: 'Fragrance Photography', to: '/ai-product-photography/fragrance' },
     { label: 'Jewelry Product Photography', to: '/ai-product-photography/jewelry' },
+    { label: 'Food & Beverage', to: '/ai-product-photography/food-beverage' },
     { label: 'AI vs Photoshoot', to: '/ai-product-photography-vs-photoshoot' },
+    { label: 'VOVV.AI vs Studio', to: '/ai-product-photography-vs-studio' },
   ],
   Resources: [
     { label: 'Help Center', to: '/help' },
-    { label: 'FAQ', to: '/faq' },
     { label: 'Blog', to: '/blog' },
+    { label: 'About', to: '/about' },
     { label: 'Contact', to: '/contact' },
+    { label: 'Privacy Policy', to: '/privacy' },
+    { label: 'Terms of Service', to: '/terms' },
+    { label: 'Cookie Policy', to: '/cookies' },
   ],
 };
-
-const legalLinks = [
-  { label: 'Privacy Policy', to: '/privacy' },
-  { label: 'Terms of Service', to: '/terms' },
-  { label: 'Cookie Policy', to: '/cookies' },
-];
 
 const socialLinks = [
   {
@@ -91,7 +95,7 @@ export function LandingFooter() {
         {/* Brand + columns row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 items-start">
           {/* Brand */}
-          <div className="md:col-span-5 lg:col-span-4">
+          <div className="md:col-span-4 lg:col-span-3">
             <Link to="/" className="inline-flex items-center group">
               <span className="font-bold text-3xl tracking-tight text-foreground">
                 VOVV.AI
@@ -117,7 +121,7 @@ export function LandingFooter() {
           </div>
 
           {/* Desktop / tablet columns: 3 columns */}
-          <div className="hidden sm:grid sm:grid-cols-3 gap-10 md:col-span-7 lg:col-span-8">
+          <div className="hidden sm:grid sm:grid-cols-3 gap-10 md:col-span-8 lg:col-span-9">
             {Object.entries(footerLinks).map(([heading, links]) => (
               <LinkList key={heading} heading={heading} links={links} />
             ))}
@@ -151,28 +155,11 @@ export function LandingFooter() {
           ))}
         </div>
 
-        {/* Bottom bar: copyright + legal inline */}
-        <div className="mt-12 pt-6 border-t border-border flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-2">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} VOVV.AI. All rights reserved.
-            </p>
-            <nav aria-label="Legal" className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              {legalLinks.map((link, i) => (
-                <span key={link.label} className="flex items-center gap-x-4">
-                  <Link
-                    to={link.to}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                  {i < legalLinks.length - 1 && (
-                    <span aria-hidden className="text-muted-foreground/40">·</span>
-                  )}
-                </span>
-              ))}
-            </nav>
-          </div>
+        {/* Bottom bar */}
+        <div className="mt-12 pt-6 border-t border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} VOVV.AI. All rights reserved.
+          </p>
           <p className="text-sm text-muted-foreground">
             A product by{' '}
             <a

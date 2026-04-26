@@ -1,54 +1,74 @@
-# Simplify Public Website Footer
+# Footer (3 columns) + Mobile Horizontal Scroll Fix
 
-Single-file edit: `src/components/landing/LandingFooter.tsx`. Bump `public/version.json`.
+Two changes: rebuild footer with full 3-column structure, and fix the mobile horizontal scroll on the home page.
 
-## Structure
+## 1. Footer — `src/components/landing/LandingFooter.tsx`
 
-**Left brand block (1 column on desktop):**
-- VOVV.AI wordmark
-- Tagline: "AI product visuals for e-commerce brands, from one product photo."
-- 4 social icons (Instagram, Facebook, TikTok, Discord) — kept as small chip-style buttons
+Brand block on the left + 3 columns on the right. All links are real `<a href>` (react-router `<Link>` renders `<a href>`). Mobile collapses each column into a native `<details>` accordion (links remain in DOM, crawlable).
 
-**Right side (3 columns on desktop):**
+### Route mapping (verified against `src/App.tsx` and category data)
 
-PRODUCT
+**PRODUCT**
 - AI Product Photography → `/ai-product-photography`
 - AI Product Photo Generator → `/ai-product-photo-generator`
 - Visual Studio → `/features/workflows`
+- Freestyle Studio → `/freestyle` (PublicFreestyle)
 - Virtual Try-On → `/features/virtual-try-on`
+- Image Upscaling → `/features/upscale`
+- Product Perspectives → `/features/perspectives`
 - Pricing → `/pricing`
+- **Brand Models — omitted** (no public route; only the in-app `/app/models` exists, which requires auth)
 
-SOLUTIONS
+**SOLUTIONS**
 - Shopify Product Photos → `/shopify-product-photography-ai`
 - Etsy Product Photos → `/etsy-product-photography-ai`
 - Fashion Product Photography → `/ai-product-photography/fashion`
+- Footwear Product Photography → `/ai-product-photography/footwear`
 - Beauty & Skincare → `/ai-product-photography/beauty-skincare`
+- Fragrance Photography → `/ai-product-photography/fragrance`
 - Jewelry Product Photography → `/ai-product-photography/jewelry`
+- Food & Beverage → `/ai-product-photography/food-beverage`
 - AI vs Photoshoot → `/ai-product-photography-vs-photoshoot`
+- VOVV.AI vs Studio → `/ai-product-photography-vs-studio`
 
-RESOURCES
+**RESOURCES**
 - Help Center → `/help`
-- FAQ → `/faq` (used in place of "Tutorials" since no public tutorials route exists)
 - Blog → `/blog`
+- About → `/about`
 - Contact → `/contact`
+- Privacy Policy → `/privacy` (actual route; user wrote `/privacy-policy` but page is mounted at `/privacy`)
+- Terms of Service → `/terms`
+- Cookie Policy → `/cookies`
+- **Tutorials — omitted** (no public route exists; in-app `/app/learn` requires auth)
 
-**Removed entirely:** Careers, Press, Team, Status, Changelog, Bug Bounty, Image Upscaling, Brand Profiles, Perspectives, Food & Beverage, "All AI Photography Categories" directory link.
+### Layout
+- Desktop: brand `md:col-span-4 lg:col-span-3` + 3-column link grid `md:col-span-8 lg:col-span-9`, `gap-10`.
+- Tablet (≥sm): 3 columns side-by-side.
+- Mobile (<sm): each column inside `<details>` with chevron, short and scannable.
+- Bottom bar: copyright left, "A product by 123Presets" right. Inline legal links removed (legal now lives inside Resources column as requested).
 
-**Bottom bar (single inline row, no full Legal column):**
-- Left: `© 2026 VOVV.AI. All rights reserved.` · Privacy Policy · Terms of Service · Cookie Policy
-- Right: `A product by 123Presets`
+## 2. Mobile Horizontal Scroll Fix — `src/index.css`
 
-## Layout & Behavior
+The hero section uses several `overflow-x-auto` carousels. They are properly contained, but on iOS/Android the page can still pick up sub-pixel overflow from large background blurs and full-bleed elements. There is currently no `overflow-x` guard on the root.
 
-- Desktop grid: brand `md:col-span-5 lg:col-span-4` + 3-column link grid `md:col-span-7 lg:col-span-8` with `gap-10`.
-- Tablet (≥sm): 3 even columns side-by-side.
-- Mobile (<sm): each column collapsed into a native `<details>` accordion with chevron, so the footer is short and scannable. Links remain in the DOM (crawlable).
-- Bottom bar stacks on mobile, inline on desktop.
-- All links use react-router `<Link>` which renders real `<a href>` (crawlable). External links use `<a href target="_blank" rel="noopener noreferrer">`.
-- Spacing: `pt-16 pb-8`, list `space-y-2`, headings `mb-3.5` — matches recent refinement.
-- Aesthetic unchanged: `border-t border-border bg-card`, semantic tokens only.
+Add to the existing `@layer base`:
 
-## Notes
-- "Tutorials" requested but no public route exists — substituted with FAQ. Confirm if you'd prefer to omit the slot entirely instead.
-- "Visual Studio" points to `/features/workflows` (the public marketing page); the in-app route `/app/workflows` requires auth and isn't appropriate for a public footer.
-- Type-check (`tsc --noEmit`) passes locally for the prepared diff.
+```css
+html, body {
+  overflow-x: clip;
+}
+```
+
+Why `clip` over `hidden`:
+- `clip` prevents horizontal scroll without creating a new scroll container, so sticky headers and `position: sticky` elements keep working (which `overflow-x: hidden` would break on `html`).
+- Vertical scroll behavior is unaffected.
+
+This is a one-line, surgical fix that resolves accidental horizontal scroll across all pages without touching any section component.
+
+## Versioning
+- Bump `public/version.json` patch.
+- Run `tsc --noEmit` to confirm no type errors.
+
+## Out of Scope
+- Other footers (`HomeFooter.tsx`) unchanged.
+- No new pages or routes added.
