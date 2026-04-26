@@ -20,7 +20,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'VOVV',
-  url: `${SITE_URL}/home`,
+  url: SITE_URL,
   description:
     'Turn one product photo into ready-to-use product images, ads, and videos for e-commerce brands.',
   applicationCategory: 'DesignApplication',
@@ -37,7 +37,7 @@ export default function Home() {
       <SEOHead
         title="VOVV — AI Product Visuals & Videos for Ecommerce"
         description="Turn one product photo into ready-to-use product visuals, ads, and videos. Create e-commerce visuals in minutes without booking another shoot."
-        canonical={`${SITE_URL}/home`}
+        canonical={SITE_URL}
         ogImage={DEFAULT_OG_IMAGE}
       />
       <JsonLd data={jsonLd} />

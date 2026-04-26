@@ -139,9 +139,9 @@ const App = () => {
           <Suspense fallback={<BrandLoaderProgressGlyph fullScreen />}>
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Landing />} />
             <Route path="/landing" element={<Landing />} />
-            <Route path="/home" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/reset-password" element={<ResetPassword />} />

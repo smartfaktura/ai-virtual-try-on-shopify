@@ -47,7 +47,7 @@ export default function Landing() {
       <SEOHead
         title="VOVV.AI — AI Product Photography & Visual Studio for E-commerce"
         description="Upload one product photo, get 20 brand-ready visuals for ads, website, and campaigns automatically. Your automated visual studio."
-        canonical={SITE_URL}
+        canonical={`${SITE_URL}/home`}
       />
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />
