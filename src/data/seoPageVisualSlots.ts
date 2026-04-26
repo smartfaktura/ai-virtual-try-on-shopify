@@ -271,7 +271,7 @@ function buildCategorySlots(page: CategoryPage): SeoVisualSlot[] {
 // "Built for every {category} shot" — chip rail × 8-tile grid.
 // Source of truth: BUILT_FOR_GRIDS[page.slug]
 function buildBuiltForGridSlots(page: CategoryPage): SeoVisualSlot[] {
-  const groups = BUILT_FOR_GRIDS[page.slug] ?? [];
+  const groups = getBuiltForGroupsForPage(page.slug);
   const baseTags = [page.slug, ...(page.subcategories ?? []).map((s) => s.toLowerCase())];
   const slots: SeoVisualSlot[] = [];
   for (const g of groups) {
