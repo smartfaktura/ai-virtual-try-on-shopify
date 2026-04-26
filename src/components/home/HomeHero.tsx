@@ -151,7 +151,7 @@ function HeroTypewriter() {
 
   return (
     <span
-      className="text-[#4a5578] inline-block whitespace-nowrap min-h-[1.15em] align-baseline px-2"
+      className="text-[#4a5578] inline-block sm:whitespace-nowrap min-h-[2.3em] sm:min-h-[1.15em] align-baseline px-2"
       aria-live="polite"
     >
       {text}
@@ -171,13 +171,11 @@ export function HomeHero() {
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
         <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
           <span>AI Product Visuals.</span>
-          <br />
-          {/* Slightly smaller on mobile so the longest typed phrase
-              ("Every Scene. Every Angle.") always fits on one line —
-              prevents the headline from jumping between 2 and 3 lines. */}
-          <span className="text-[1.5rem] sm:text-inherit">
-            <HeroTypewriter />
-          </span>
+          {/* Force the break only on tablet/desktop — on mobile let the
+              typewriter flow inline so the headline doesn't stack into 3 lines. */}
+          <br className="hidden sm:inline" />
+          <span className="sm:hidden"> </span>
+          <HeroTypewriter />
         </h1>
 
         <p className="hidden sm:block text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
