@@ -1,5 +1,5 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 
 const SUPABASE_PUBLIC =
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public';
@@ -74,7 +74,9 @@ export function HomeOnBrand() {
                   className="aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
                 >
                   <img
-                    src={getOptimizedUrl(item.src, { width: 360, height: 480, quality: 60, resize: 'cover' })}
+                    src={getOptimizedUrl(item.src, { width: 600, height: 800, quality: 72, resize: 'cover' })}
+                    srcSet={getResizedSrcSet(item.src, { widths: [320, 480, 600], aspect: [3, 4], quality: 72 })}
+                    sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 280px"
                     alt={item.label}
                     loading="lazy"
                     decoding="async"

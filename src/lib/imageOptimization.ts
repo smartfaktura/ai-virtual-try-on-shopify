@@ -63,3 +63,31 @@ export function getOptimizedSrcSet(
     .join(', ');
 }
 
+/**
+ * Build a responsive `srcSet` string at the given widths, with matching
+ * height calculated from a fixed aspect ratio + `resize=cover`. This is
+ * SAFE to use for any aspect-ratio card/tile because passing both width and
+ * height (with resize=cover) makes Supabase RESIZE rather than crop-zoom.
+ *
+ * Use this for retina-grade card grids (home page tiles, hub pages, etc.).
+ */
+export function getResizedSrcSet(
+  url: string | null | undefined,
+  opts: {
+    widths: number[];
+    /** Aspect ratio as [w, h], e.g. [3, 4] for portrait product tiles. */
+    aspect: [number, number];
+    quality?: number;
+  },
+): string {
+  if (!url) return '';
+  const { widths, aspect, quality = 72 } = opts;
+  const [aw, ah] = aspect;
+  return widths
+    .map((w) => {
+      const h = Math.round((w * ah) / aw);
+      return `${getOptimizedUrl(url, { width: w, height: h, quality, resize: 'cover' })} ${w}w`;
+    })
+    .join(', ');
+}
+
