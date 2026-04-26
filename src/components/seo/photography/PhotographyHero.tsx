@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 
@@ -28,14 +28,20 @@ const FALLBACK_TILES = [
   { label: 'Soft Volume Lean',   id: '1776691911049-gsxycu' },
 ];
 
-function Tile({ tile }: { tile: Tile }) {
+function Tile({ tile, eager = false }: { tile: Tile; eager?: boolean }) {
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(tile.src, { quality: 60 })}
+        src={getOptimizedUrl(tile.src, { width: 480, height: 640, quality: 78, resize: 'cover' })}
+        srcSet={getResizedSrcSet(tile.src, { widths: [320, 480, 630], aspect: [3, 4], quality: 78 })}
+        sizes="(max-width: 640px) 180px, 210px"
         alt={tile.alt}
-        loading="lazy"
+        width={210}
+        height={280}
+        loading={eager ? 'eager' : 'lazy'}
         decoding="async"
+        // @ts-expect-error fetchpriority is a valid HTML attribute not in React types
+        fetchpriority={eager ? 'high' : 'auto'}
         className="w-full h-full object-cover"
       />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
@@ -47,7 +53,7 @@ function Tile({ tile }: { tile: Tile }) {
   );
 }
 
-function MarqueeRow({ tiles, direction, duration }: { tiles: Tile[]; direction: 'left' | 'right'; duration: string }) {
+function MarqueeRow({ tiles, direction, duration, eagerFirst = false }: { tiles: Tile[]; direction: 'left' | 'right'; duration: string; eagerFirst?: boolean }) {
   const doubled = [...tiles, ...tiles];
   return (
     <div className="overflow-hidden w-full group/marquee">
@@ -56,7 +62,7 @@ function MarqueeRow({ tiles, direction, duration }: { tiles: Tile[]; direction: 
         style={{ animationDuration: duration }}
       >
         {doubled.map((t, i) => (
-          <Tile key={`${t.label}-${i}`} tile={t} />
+          <Tile key={`${t.label}-${i}`} tile={t} eager={eagerFirst && i < 6} />
         ))}
       </div>
     </div>
@@ -119,7 +125,7 @@ export function PhotographyHero() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <MarqueeRow tiles={row1} direction="left" duration="50s" />
+        <MarqueeRow tiles={row1} direction="left" duration="50s" eagerFirst />
         <MarqueeRow tiles={row2} direction="right" duration="55s" />
       </div>
     </section>

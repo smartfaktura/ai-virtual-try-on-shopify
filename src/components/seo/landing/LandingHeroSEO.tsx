@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 
@@ -45,7 +45,9 @@ function Tile({
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(resolvedSrc, { quality: 60 })}
+        src={getOptimizedUrl(resolvedSrc, { width: 480, height: 640, quality: 78, resize: 'cover' })}
+        srcSet={getResizedSrcSet(resolvedSrc, { widths: [320, 480, 630], aspect: [3, 4], quality: 78 })}
+        sizes="(max-width: 640px) 180px, 210px"
         alt={resolvedAlt}
         width={210}
         height={280}
