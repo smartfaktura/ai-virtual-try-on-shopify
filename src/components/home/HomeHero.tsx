@@ -165,14 +165,18 @@ export function HomeHero() {
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {/* ── Centered copy ── */}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
-        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
-          One product photo.
+        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-5">
+          AI product visuals
           <br />
-          <HeroTypewriter />
+          for e&#8209;commerce brands.
         </h1>
 
-        <p className="max-w-xl mx-auto text-muted-foreground text-lg leading-relaxed mb-10">
-          Turn a single product image into product page visuals, social content, and campaign-ready creative in minutes.
+        <p className="text-foreground/70 text-base sm:text-lg leading-relaxed mb-3 max-w-xl mx-auto">
+          One product photo. <HeroTypewriter />
+        </p>
+
+        <p className="max-w-xl mx-auto text-muted-foreground text-base sm:text-lg leading-relaxed mb-8">
+          Turn a single product image into product page visuals, lifestyle scenes, ads, social content, and campaign-ready creative — built for DTC and e-commerce teams.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -192,7 +196,7 @@ export function HomeHero() {
         </div>
 
         <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8">
-          20 free credits · No credit card required
+          No photoshoot needed · Built for e-commerce brands · Start from one product photo
         </p>
       </div>
 

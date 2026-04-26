@@ -21,6 +21,12 @@ export function HomeEnvironments() {
         <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
           1600+ scenes · 35+ categories
         </p>
+        <p className="text-sm text-muted-foreground">
+          Or{' '}
+          <Link to="/ai-product-photography" className="text-foreground underline-offset-4 hover:underline font-medium">
+            explore AI product photography by category
+          </Link>
+        </p>
       </div>
     </div>
   );

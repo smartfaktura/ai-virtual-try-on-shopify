@@ -14,18 +14,24 @@ type CardData =
   | { title: string; text: string; type: 'image'; image: string }
   | { title: string; text: string; type: 'video'; video: string };
 
-const cards: CardData[] = [
+type CardWithLink = CardData & { linkLabel?: string; linkTo?: string };
+
+const cards: CardWithLink[] = [
   {
     title: 'Product page images',
     text: 'Clean, high-converting visuals for Shopify, Amazon, and product pages.',
     image: PREVIEW('1776688965090-edaogg'),
     type: 'image',
+    linkLabel: 'Explore AI product photography',
+    linkTo: '/ai-product-photography',
   },
   {
     title: 'Social & ad creatives',
     text: 'Campaign-ready visuals for Instagram, Meta ads, launches, and promotions.',
     image: PREVIEW('1776689318257-yahkye'),
     type: 'image',
+    linkLabel: 'Create Shopify product photos',
+    linkTo: '/shopify-product-photography-ai',
   },
   {
     title: 'Product videos',
@@ -95,6 +101,15 @@ export function HomeCreateCards() {
               <div className="p-6 lg:p-8">
                 <h3 className="text-[#1a1a2e] text-xl font-semibold mb-2">{card.title}</h3>
                 <p className="text-[#6b7280] text-sm leading-relaxed">{card.text}</p>
+                {card.linkTo && card.linkLabel && (
+                  <Link
+                    to={card.linkTo}
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                  >
+                    {card.linkLabel}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                )}
               </div>
             </div>
           ))}

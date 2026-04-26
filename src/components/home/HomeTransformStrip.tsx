@@ -117,12 +117,12 @@ const WATCHES_CARDS: GridCardData[] = [
 ];
 
 const CATEGORIES = [
-  { id: 'watches',   label: 'Watches',   cards: WATCHES_CARDS },
-  { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS },
-  { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS },
-  { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS },
-  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS },
-  { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS },
+  { id: 'watches',   label: 'Watches',   cards: WATCHES_CARDS,   hub: '/ai-product-photography/jewelry' },
+  { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS,  hub: '/ai-product-photography/fashion' },
+  { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS,  hub: '/ai-product-photography/footwear' },
+  { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS,   hub: '/ai-product-photography/fashion' },
+  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS,   hub: '/ai-product-photography/bags-accessories' },
+  { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS, hub: '/ai-product-photography/fragrance' },
 ] as const;
 
 const ALL_CATEGORY_NAMES = [
@@ -253,7 +253,7 @@ export function HomeTransformStrip() {
             One photo · Every shot
           </p>
           <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
-            Built for every category.
+            Explore AI product photography by category.
           </h2>
         </div>
 
@@ -263,19 +263,23 @@ export function HomeTransformStrip() {
           <div className="lg:hidden relative -mx-6">
             <div className="flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {CATEGORIES.map((cat) => (
-                <button
+                <a
                   key={cat.id}
-                  type="button"
-                  onClick={() => selectCategory(cat.id)}
+                  href={cat.hub}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                    e.preventDefault();
+                    selectCategory(cat.id);
+                  }}
                   className={cn(
-                    'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
+                    'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border no-underline',
                     active === cat.id
                       ? 'bg-foreground text-background border-foreground shadow-sm'
                       : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
                   )}
                 >
                   {cat.label}
-                </button>
+                </a>
               ))}
               <Popover>
                 <PopoverTrigger asChild>
@@ -305,19 +309,23 @@ export function HomeTransformStrip() {
           <div className="hidden lg:flex justify-center">
             <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/60">
               {CATEGORIES.map((cat) => (
-                <button
+                <a
                   key={cat.id}
-                  type="button"
-                  onClick={() => selectCategory(cat.id)}
+                  href={cat.hub}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                    e.preventDefault();
+                    selectCategory(cat.id);
+                  }}
                   className={cn(
-                    'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap',
+                    'px-5 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap no-underline',
                     active === cat.id
                       ? 'bg-foreground text-background shadow-sm'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
                   {cat.label}
-                </button>
+                </a>
               ))}
               <Popover>
                 <PopoverTrigger asChild>
@@ -391,6 +399,16 @@ export function HomeTransformStrip() {
               Browse the visual library
             </Link>
           </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Or{' '}
+            <Link to="/ai-product-photography" className="text-foreground underline-offset-4 hover:underline font-medium">
+              explore AI product photography
+            </Link>
+            {' · '}
+            <Link to="/ai-product-photo-generator" className="text-foreground underline-offset-4 hover:underline font-medium">
+              try the AI product photo generator
+            </Link>
+          </p>
         </div>
       </div>
     </section>
