@@ -3,6 +3,8 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, getRelatedPages, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
 
 /**
  * Pick 3 unique imageIds that best preview the variety inside a related category.
