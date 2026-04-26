@@ -32,7 +32,7 @@ const PAGE_PATH = '/shopify-product-photography-ai';
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
 const TITLE = 'AI Product Photos for Shopify Stores | VOVV.AI';
 const DESCRIPTION =
-  'Create AI product photos for Shopify. Upload one product image and generate product page visuals, lifestyle scenes, ad creatives, banners, and campaign-ready content for your store.';
+  'AI product photos for Shopify. Turn one product image into product page visuals, lifestyle scenes, ads, and banners for your store.';
 
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',
