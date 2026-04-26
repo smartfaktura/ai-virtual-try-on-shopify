@@ -78,7 +78,7 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
           animation: `marquee-${direction} ${durationSeconds}s linear infinite`,
         }}
       >
-        {tripled.map((item, i) =>
+        {doubled.map((item, i) =>
           item.kind === 'cta'
             ? <BrandModelCTA key={`cta-${i}`} />
             : <ModelCardItem key={`${item.name}-${i}`} model={item} />
