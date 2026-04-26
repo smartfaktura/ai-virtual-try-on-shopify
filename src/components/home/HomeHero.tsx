@@ -101,7 +101,7 @@ function MarqueeRow({ cards, direction, duration, eagerFirst }: {
 }
 
 /* ── Typewriter for the hero subline ── */
-const TYPED_PHRASES = [
+const TYPED_PHRASES_DESKTOP = [
   'For E-commerce.',
   'From One Photo.',
   'Product Page Ready.',
@@ -110,16 +110,37 @@ const TYPED_PHRASES = [
   'No Photoshoot Needed.',
 ];
 
+const TYPED_PHRASES_MOBILE = [
+  'For E-commerce.',
+  'From One Photo.',
+  'Page Ready.',
+  'Ads That Convert.',
+  'Every Angle.',
+  'No Photoshoot.',
+];
+
 function HeroTypewriter() {
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [text, setText] = useState('');
   const [phase, setPhase] = useState<'typing' | 'holding' | 'deleting'>('typing');
+  const [isMobile, setIsMobile] = useState(false);
   const reduceMotion =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
-    const full = TYPED_PHRASES[phraseIdx];
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+
+  const phrases = isMobile ? TYPED_PHRASES_MOBILE : TYPED_PHRASES_DESKTOP;
+
+  useEffect(() => {
+    const full = phrases[phraseIdx];
 
     if (reduceMotion) {
       setText(full);
