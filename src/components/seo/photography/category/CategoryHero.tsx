@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
@@ -92,14 +92,16 @@ export function CategoryHero({ page }: { page: CategoryPage }) {
                 <HeroTile tile={collage![2]} index={2} pageRoute={page.url} overrides={overrides} />
               </div>
               <div className="flex flex-col gap-3 lg:gap-4 lg:translate-y-8">
-                <HeroTile tile={collage![1]} index={1} pageRoute={page.url} overrides={overrides} />
+                <HeroTile tile={collage![1]} index={1} pageRoute={page.url} overrides={overrides} priority />
                 <HeroTile tile={collage![3]} index={3} pageRoute={page.url} overrides={overrides} />
               </div>
             </div>
           ) : (
             <div className="relative aspect-[4/5] lg:aspect-[5/6] rounded-2xl overflow-hidden bg-muted/30">
               <SmartImage
-                src={getOptimizedUrl(heroMainSrc, { quality: 60 })}
+                src={getOptimizedUrl(heroMainSrc, { width: 1120, height: 1400, quality: 80, resize: 'cover' })}
+                srcSet={getResizedSrcSet(heroMainSrc, { widths: [560, 840, 1120], aspect: [4, 5], quality: 80 })}
+                sizes="(max-width: 1024px) 92vw, 560px"
                 alt={heroMainAlt}
                 priority
               />
@@ -133,7 +135,9 @@ function HeroTile({
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
       <SmartImage
-        src={getOptimizedUrl(src, { quality: 60 })}
+        src={getOptimizedUrl(src, { width: 560, height: 700, quality: 78, resize: 'cover' })}
+        srcSet={getResizedSrcSet(src, { widths: [320, 480, 640], aspect: [4, 5], quality: 78 })}
+        sizes="(max-width: 1024px) 45vw, 280px"
         alt={alt}
         priority={priority}
       />
