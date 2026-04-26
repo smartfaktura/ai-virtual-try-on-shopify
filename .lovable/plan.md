@@ -1,35 +1,38 @@
-## What's wrong
+## What's broken
 
-The category hero component at `src/components/seo/photography/category/CategoryHero.tsx` is the only image-rendering SEO component that **never reads from the override system**. It renders straight from the static config:
+On category pages like `/ai-product-photography/fashion`, the **"Fashion scenes built for e-commerce"** grid (and the same section on every other category page — boots, eyewear, etc.) ignores admin overrides from `/app/admin/seo-page-visuals`.
 
-```tsx
-// Big "Fallback" tile on the left
-<SmartImage src={getOptimizedUrl(PREVIEW(page.heroImageId), ...)} />
+The admin UI happily saves values for the `sceneExample1`…`sceneExampleN` slots and writes them to the `seo_page_visuals` table, but the live component still renders only the static `page.sceneExamples[*].imageId` values. That's why your edits don't appear in the preview, even immediately.
 
-// 2x2 collage tiles on the right
-const previewUrl = PREVIEW(tile.imageId);
-```
+## Why only this one
 
-That's why your `/ai-product-photography/fashion` admin edits to `heroMain` and `heroCollage1-4` are saved to the DB, picked up everywhere else (e.g. the "Related categories" section reads them fine), but the hero itself shows the original images.
+I audited every image-bearing section across the SEO system. Everything else is already wired correctly:
 
-The matching slot keys already exist in `seoPageVisualSlots.ts` — `heroMain`, `heroCollage1`, `heroCollage2`, `heroCollage3`, `heroCollage4` — so no DB or config changes are needed. Only the component needs to consume them.
+| Component | Status |
+|---|---|
+| `CategoryHero` (hero + collage) | wired (last fix) |
+| `CategoryBuiltForEveryCategory` | wired |
+| `CategoryRelatedCategories` | wired |
+| `PhotographyHero` / `VisualSystem` / `SceneExamples` / `CategoryChooser` (hub + tool pages) | wired |
+| `LandingHeroSEO` / `LandingOneToManyShowcase` / `LandingCategoryGrid` | wired |
+| **`CategorySceneExamples`** | **NOT wired — bug** |
 
-## The fix
+`CategoryVisualOutputs` has no images (icons only), so it's not in scope.
 
-In `src/components/seo/photography/category/CategoryHero.tsx`:
+## Fix
+
+Update `src/components/seo/photography/category/CategorySceneExamples.tsx` to:
 
 1. Import `useSeoVisualOverridesMap` and `resolveSlotImageUrl` / `resolveSlotAlt`.
-2. Call the hook once at the top of `CategoryHero`.
-3. Resolve `heroMain` for the single-image fallback path (uses `page.heroImageId` + `page.heroAlt` as the fallback).
-4. For the collage path, resolve `heroCollage1`…`heroCollage4` per tile (use each tile's `imageId` + `alt` as the fallback).
-5. Pass resolved URL + alt into `<SmartImage>` (and `HeroTile`).
-6. Update the `HeroTile` helper to accept resolved `src` and `alt` instead of recomputing from `tile.imageId`.
+2. Read overrides for the current `page.url` route.
+3. For each scene tile at index `i`, compute `slotKey = `sceneExample${i + 1}`` and resolve `src` and `alt` against overrides, falling back to `PREVIEW(ex.imageId)` and `ex.alt`.
+4. Pass the resolved URL through `getOptimizedUrl(..., { quality: 55 })` exactly like today, so optimization behavior is unchanged.
 
-The `pageRoute` for resolution is `page.url` (same as everywhere else in the category components).
-
-That's it — purely a component change, no migrations, no admin changes.
+This mirrors the exact pattern already used in `CategoryBuiltForEveryCategory.tsx` and `CategoryRelatedCategories.tsx` — no new utilities, no schema changes, no migration.
 
 ## After the fix
 
-- In the Lovable **preview**, the fashion hero will immediately show your admin edits.
-- For **vovv.ai** to reflect the fix (and the override system in general), you still need to click **Publish → Update** as discussed in the previous plan. Both the missing override-read code from before AND this category-hero fix will ship in the same publish.
+- Preview at `/ai-product-photography/fashion` will reflect admin edits to the scene grid immediately (cache TTL ~30s in the overrides hook).
+- Live site (`vovv.ai`) still requires **Publish → Update** to ship the new component code.
+
+No DB changes. No new files. One component edited.

@@ -3,8 +3,12 @@ import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
+import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 
 export function CategorySceneExamples({ page }: { page: CategoryPage }) {
+  const overrides = useSeoVisualOverridesMap();
+
   return (
     <section id="scene-library" className="py-16 lg:py-32 bg-[#f5f5f3] scroll-mt-24">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
@@ -21,26 +25,31 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4">
-          {page.sceneExamples.map((ex) => (
-            <div
-              key={ex.label}
-              className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
-            >
-              <SmartImage
-                src={getOptimizedUrl(PREVIEW(ex.imageId), { quality: 55 })}
-                alt={ex.alt}
-                imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
-              />
-              <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/65 via-black/20 to-transparent">
-                <span className="block text-[11px] uppercase tracking-wider text-white/70 font-semibold">
-                  {ex.category}
-                </span>
-                <span className="block text-sm text-white font-medium leading-tight mt-0.5">
-                  {ex.label}
-                </span>
+          {page.sceneExamples.map((ex, i) => {
+            const slotKey = `sceneExample${i + 1}`;
+            const resolvedSrc = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(ex.imageId));
+            const resolvedAlt = resolveSlotAlt(overrides, page.url, slotKey, ex.alt);
+            return (
+              <div
+                key={ex.label}
+                className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
+              >
+                <SmartImage
+                  src={getOptimizedUrl(resolvedSrc, { quality: 55 })}
+                  alt={resolvedAlt}
+                  imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/65 via-black/20 to-transparent">
+                  <span className="block text-[11px] uppercase tracking-wider text-white/70 font-semibold">
+                    {ex.category}
+                  </span>
+                  <span className="block text-sm text-white font-medium leading-tight mt-0.5">
+                    {ex.label}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="flex justify-center mt-12">
