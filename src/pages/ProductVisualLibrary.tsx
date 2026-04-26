@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
@@ -18,19 +18,50 @@ import { SceneDetailModal } from '@/components/library/SceneDetailModal';
 
 export default function ProductVisualLibrary() {
   const { families, totalScenes, isLoading } = usePublicSceneLibrary();
+  const [searchParams] = useSearchParams();
 
   const [activeFamilySlug, setActiveFamilySlug] = useState<string | null>(null);
   const [activeCollectionSlug, setActiveCollectionSlug] = useState<string | null>(null);
   const [selectedScene, setSelectedScene] = useState<PublicScene | null>(null);
   const [selectedFamilyLabel, setSelectedFamilyLabel] = useState<string | undefined>();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const deepLinkAppliedRef = useRef(false);
 
-  // Set first family as active when data loads.
+  // Apply ?family=&collection= deep-link once families load.
   useEffect(() => {
-    if (!activeFamilySlug && families.length > 0) {
+    if (deepLinkAppliedRef.current) return;
+    if (families.length === 0) return;
+
+    const familyParam = searchParams.get('family');
+    const collectionParam = searchParams.get('collection');
+
+    if (familyParam) {
+      const matched = families.find((f) => f.slug === familyParam);
+      if (matched) {
+        deepLinkAppliedRef.current = true;
+        setActiveFamilySlug(matched.slug);
+        if (collectionParam) {
+          const matchedCollection = matched.collections.find((c) => c.slug === collectionParam);
+          if (matchedCollection) setActiveCollectionSlug(matchedCollection.slug);
+        }
+        // Scroll to the catalog grid after a tick so layout is ready.
+        window.setTimeout(() => {
+          const el = document.getElementById('catalog-grid');
+          if (el) {
+            const top = el.getBoundingClientRect().top + window.scrollY - 96;
+            window.scrollTo({ top, behavior: 'smooth' });
+          }
+        }, 50);
+        return;
+      }
+    }
+
+    // Default: first family.
+    if (!activeFamilySlug) {
+      deepLinkAppliedRef.current = true;
       setActiveFamilySlug(families[0].slug);
     }
-  }, [families, activeFamilySlug]);
+  }, [families, searchParams, activeFamilySlug]);
 
   const activeFamily = useMemo<FamilyGroup | null>(() => {
     if (!activeFamilySlug) return families[0] ?? null;

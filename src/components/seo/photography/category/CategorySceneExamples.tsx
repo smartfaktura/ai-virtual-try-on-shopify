@@ -5,6 +5,7 @@ import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
+import { getVisualLibraryHrefForCategory } from '@/lib/visualLibraryDeepLink';
 
 export function CategorySceneExamples({ page }: { page: CategoryPage }) {
   const overrides = useSeoVisualOverridesMap();
@@ -51,7 +52,7 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
 
         <div className="flex justify-center mt-12">
           <Link
-            to="/product-visual-library"
+            to={getVisualLibraryHrefForCategory(page.slug)}
             className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-[#1a1a2e]/15 bg-white text-[#1a1a2e] text-base font-semibold hover:bg-[#1a1a2e] hover:text-white transition-colors"
           >
             Browse the full scene library
