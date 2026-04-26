@@ -222,9 +222,6 @@ export function HomeHero() {
         <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8">
           20 free credits · No credit card required · Start in seconds
         </p>
-        <p className="text-xs text-muted-foreground/70 italic mt-3">
-          Trusted by DTC brands across fashion, beauty, jewelry, and home.
-        </p>
       </div>
 
       {/* ── Marquee rows ── */}
