@@ -73,7 +73,7 @@ export function LibraryMobileFilters({
             onClick={handleAll}
             className={cn(
               'w-full flex items-center gap-2 px-3 py-3 rounded-xl text-sm transition-colors',
-              !activeFamilySlug || (activeFamilySlug === families[0]?.slug && !activeCollectionSlug)
+              isAllActive
                 ? 'bg-foreground text-background font-semibold'
                 : 'text-foreground/80 hover:bg-foreground/[0.05]',
             )}
