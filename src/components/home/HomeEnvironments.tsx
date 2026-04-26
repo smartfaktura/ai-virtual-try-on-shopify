@@ -18,7 +18,7 @@ export function HomeEnvironments() {
           Browse the full scene library
           <ArrowRight size={16} />
         </Link>
-        <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
+        <p className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground/60 font-medium">
           1600+ scenes · 35+ categories
         </p>
         <p className="text-sm text-muted-foreground">

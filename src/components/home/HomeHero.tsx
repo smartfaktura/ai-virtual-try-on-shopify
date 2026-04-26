@@ -219,7 +219,7 @@ export function HomeHero() {
           </a>
         </div>
 
-        <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8">
+        <p className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground/60 font-medium mt-8">
           20 free credits · No credit card required · Start in seconds
         </p>
       </div>

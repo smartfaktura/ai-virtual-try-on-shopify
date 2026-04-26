@@ -248,7 +248,7 @@ export function HomeTransformStrip() {
     <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-10 lg:mb-12">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             One photo · Every shot
           </p>

@@ -117,7 +117,7 @@ export function HomeHowItWorks() {
         }
       `}</style>
 
-      <div className="max-w-[1200px] mx-auto px-6 lg:px-10">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
