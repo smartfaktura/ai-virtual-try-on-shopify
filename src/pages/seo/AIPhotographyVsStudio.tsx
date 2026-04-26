@@ -75,6 +75,7 @@ export default function AIPhotographyVsStudio() {
       <main>
         <LandingHeroSEO
           eyebrow="VOVV.AI vs Product Photography Studio"
+          pageId="vs-studio"
           headline={
             <>
               VOVV.AI vs
@@ -162,7 +163,7 @@ export default function AIPhotographyVsStudio() {
         />
 
         <LandingValueCards
-          eyebrow="What VOVV.AI helps create"
+          eyebrow="Output coverage"
           headline="What VOVV.AI helps create"
           cards={[
             { title: 'Product page images', text: 'PDP-ready hero & alternates.', Icon: ShoppingBag },
