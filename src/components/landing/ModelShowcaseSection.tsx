@@ -104,6 +104,7 @@ interface ModelsMarqueeProps {
 
 export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMarqueeProps = {}) {
   const { sortModels, applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -115,7 +116,7 @@ export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMar
     return () => { link.parentNode?.removeChild(link); };
   }, []);
 
-  const { row1, row2, modelCount } = useMemo(() => {
+  const { row1, row2, mobileItems, modelCount } = useMemo(() => {
     const processed = sortModels(filterHidden(applyNameOverrides(applyOverrides([...mockModels]))));
     const mid = Math.ceil(processed.length / 2);
     const wrap = (m: { name: string; previewUrl: string }): ModelItem => ({ kind: 'model', name: m.name, previewUrl: m.previewUrl });
@@ -137,7 +138,13 @@ export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMar
     const r1 = interleaveCta(processed.slice(0, mid).map(wrap), 0);
     const r2 = interleaveCta(processed.slice(mid).map(wrap), 3);
 
-    return { row1: r1, row2: r2, modelCount: processed.length };
+    // Mobile: a curated, fixed grid (no animation, no off-screen cards).
+    // Show a balanced selection of 11 models + 1 CTA = 12 tiles (3 cols x 4 rows).
+    const mobileModels = processed.slice(0, 11).map(wrap);
+    const mItems: ModelItem[] = [...mobileModels];
+    mItems.splice(2, 0, { kind: 'cta' });
+
+    return { row1: r1, row2: r2, mobileItems: mItems, modelCount: processed.length };
   }, [sortModels, applyOverrides, applyNameOverrides, filterHidden]);
 
   const eyebrowText = eyebrow ? eyebrow(modelCount) : `${modelCount}+ AI Models`;
@@ -146,7 +153,7 @@ export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMar
 
   return (
     <section className={`py-16 lg:py-32 overflow-hidden ${className ?? 'bg-[#FAFAF8]'}`}>
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-12 lg:mb-16">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mb-10 lg:mb-16">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             {eyebrowText}
@@ -160,10 +167,22 @@ export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMar
         </div>
       </div>
 
-      <div className="flex flex-col gap-8">
-        <MarqueeRow items={row1} direction="left" durationSeconds={120} mobileDurationSeconds={55} />
-        <MarqueeRow items={row2} direction="right" durationSeconds={130} mobileDurationSeconds={60} />
-      </div>
+      {isMobile ? (
+        <div className="px-4 sm:px-6">
+          <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
+            {mobileItems.map((item, i) =>
+              item.kind === 'cta'
+                ? <BrandModelCTA key={`m-cta-${i}`} />
+                : <ModelCardItem key={`m-${item.name}-${i}`} model={item} />
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-8">
+          <MarqueeRow items={row1} direction="left" durationSeconds={120} />
+          <MarqueeRow items={row2} direction="right" durationSeconds={130} />
+        </div>
+      )}
     </section>
   );
 }
