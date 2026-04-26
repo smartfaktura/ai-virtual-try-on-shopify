@@ -44,11 +44,32 @@ const breadcrumbJsonLd = {
   ],
 };
 
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'VOVV.AI vs Product Photography Studio',
+  description: DESCRIPTION,
+  url: PAGE_URL,
+  mainEntityOfPage: PAGE_URL,
+  image: DEFAULT_OG_IMAGE,
+  author: { '@type': 'Organization', name: 'VOVV.AI', url: SITE_URL },
+  publisher: {
+    '@type': 'Organization',
+    name: 'VOVV.AI',
+    logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.svg` },
+  },
+  about: [
+    { '@type': 'Thing', name: 'AI product photography' },
+    { '@type': 'Thing', name: 'Product photography studio' },
+  ],
+};
+
 export default function AIPhotographyVsStudio() {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <SEOHead title={TITLE} description={DESCRIPTION} canonical={PAGE_URL} ogImage={DEFAULT_OG_IMAGE} />
       <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={articleJsonLd} />
 
       <LandingNav />
       <main>
