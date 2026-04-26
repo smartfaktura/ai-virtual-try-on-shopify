@@ -81,7 +81,7 @@ export function getResizedSrcSet(
   },
 ): string {
   if (!url) return '';
-  const { widths, aspect, quality = 72 } = opts;
+  const { widths, aspect, quality = 85 } = opts;
   const [aw, ah] = aspect;
   return widths
     .map((w) => {
