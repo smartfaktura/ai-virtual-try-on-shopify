@@ -399,6 +399,16 @@ export function HomeTransformStrip() {
               Browse the visual library
             </Link>
           </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Or{' '}
+            <Link to="/ai-product-photography" className="text-foreground underline-offset-4 hover:underline font-medium">
+              explore AI product photography
+            </Link>
+            {' · '}
+            <Link to="/ai-product-photo-generator" className="text-foreground underline-offset-4 hover:underline font-medium">
+              try the AI product photo generator
+            </Link>
+          </p>
         </div>
       </div>
     </section>
