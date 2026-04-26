@@ -65,6 +65,7 @@ export default function EtsyProductPhotography() {
       <main>
         <LandingHeroSEO
           eyebrow="Etsy Product Photography AI"
+          pageId="etsy"
           headline={
             <>
               AI Product Photos for
@@ -132,6 +133,7 @@ export default function EtsyProductPhotography() {
 
         <LandingHowItWorksSteps
           headline="Create Etsy product photos in minutes"
+          pageId="etsy"
           steps={[
             { title: 'Upload your product photo', text: 'Start with one clean product image.', Icon: ImagePlus },
             { title: 'Choose a visual style or category', text: 'Pick listing, lifestyle, detail, or styled scenes.', Icon: Wand2 },
@@ -212,6 +214,7 @@ export default function EtsyProductPhotography() {
           copy="Generate listing images, lifestyle scenes, detail shots, banners, and social content for your Etsy shop."
           primaryCta={{ label: 'Create Etsy product visuals free', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' }}
+          pageId="etsy"
         />
       </main>
       <LandingFooter />
