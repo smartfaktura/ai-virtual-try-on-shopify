@@ -60,7 +60,7 @@ function CardVisual({ card }: { card: CardData }) {
   return (
     <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
       <img
-        src={getOptimizedUrl(card.image, { quality: 60 })}
+        src={getOptimizedUrl(card.image, { width: 480, height: 600, quality: 60, resize: 'cover' })}
         alt={card.title}
         loading="lazy"
         decoding="async"
