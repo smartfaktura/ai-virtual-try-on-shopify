@@ -27,7 +27,7 @@ const navLinks: NavLink[] = [
     label: 'AI Product Photography',
     href: '/ai-product-photography',
     isRoute: true,
-    prefetch: () => import('@/pages/AIProductPhotography'),
+    prefetch: () => import('@/pages/seo/AIProductPhotography'),
   },
   {
     label: 'Scene Library',

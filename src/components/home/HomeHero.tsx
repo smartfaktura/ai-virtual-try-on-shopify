@@ -14,8 +14,6 @@ const ORIGINAL_DRESS = originalDress;
 const PREVIEW = (id: string) =>
   `${SUPABASE_PUBLIC}/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/${id}.jpg`;
 
-type HeroCard = { label: string; src: string; isOriginal?: boolean; isVideo?: boolean };
-
 type HeroCard = { label: string; src: string; alt?: string; isOriginal?: boolean; isVideo?: boolean };
 
 const heroImages: HeroCard[] = [
