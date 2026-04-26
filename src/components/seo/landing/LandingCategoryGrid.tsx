@@ -68,20 +68,31 @@ export function LandingCategoryGrid({
               >
                 <div className="relative aspect-[4/3] sm:aspect-[16/9] bg-muted/30 p-1 sm:p-1.5">
                   <div className="absolute inset-1 sm:inset-1.5 grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-1.5">
-                    {thumbs.map((id, idx) => (
-                      <div
-                        key={`${id}-${idx}`}
-                        className={`relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40 ${idx === 2 ? 'hidden sm:block' : ''}`}
-                      >
-                        <img
-                          src={getOptimizedUrl(PREVIEW(id), { quality: 60 })}
-                          alt={`${cat.name} AI product photography example`}
-                          loading="lazy"
-                          decoding="async"
-                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
-                        />
-                      </div>
-                    ))}
+                    {thumbs.map((id, idx) => {
+                      const fallback = PREVIEW(id);
+                      const src = pageRoute
+                        ? resolveSlotImageUrl(
+                            overrides,
+                            pageRoute,
+                            `categoryGrid_${cat.slug}_${idx + 1}`,
+                            fallback,
+                          )
+                        : fallback;
+                      return (
+                        <div
+                          key={`${id}-${idx}`}
+                          className={`relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40 ${idx === 2 ? 'hidden sm:block' : ''}`}
+                        >
+                          <img
+                            src={getOptimizedUrl(src, { quality: 60 })}
+                            alt={`${cat.name} AI product photography example`}
+                            loading="lazy"
+                            decoding="async"
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
