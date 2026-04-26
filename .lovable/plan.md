@@ -1,61 +1,75 @@
-## Why category hubs only show 9–13 slots
+# Fix: old SEO image flashes for ~1s before new admin override appears
 
-Each category page (Fashion, Footwear, Beauty…) currently registers only:
-- 1 hero main + collage tiles (1–4)
-- Scene examples (~8)
+## What's actually happening
 
-That's why Fashion = 13, Beauty = 9, etc.
+When a visitor opens `/ai-product-photography` (or any page using slot overrides), the page renders **before** the override fetch finishes. The render order is:
 
-But the live category page actually renders images in **4 sections**, not 2:
+1. Component mounts → `useSeoVisualOverridesMap()` returns an empty `Map` (React Query is still loading, `data` is `undefined`).
+2. `resolveSlotImageUrl` falls through to the hardcoded fallback URL → browser starts loading the OLD image.
+3. ~200–800ms later the Supabase query resolves → component re-renders with the new override URL → browser swaps to the NEW image.
 
-| Section (component) | Images | Currently registered? |
-|---|---|---|
-| `CategoryHero` (hero + collage) | 1 + N | ✅ Yes |
-| `CategoryBuiltForEveryCategory` (chip rail + 8-tile grid per subcategory) | up to 8 × #subcategories (~40+) | ❌ **No** |
-| `CategorySceneExamples` | ~8 | ✅ Yes |
-| `CategoryRelatedCategories` (3 thumbs × 3 related) | 9 | ❌ **No** |
+That swap is the "flash of old image" the user is seeing. It happens on every fresh page load and after every navigation that remounts the page, because the override data lives only in React Query's in-memory cache and starts cold.
 
-So 30–50 image slots per category page are not editable today.
+Two smaller compounding issues:
+- The `Map` in `useSeoVisualOverridesMap` is rebuilt on every render (no `useMemo`).
+- Existing overrides are never preloaded, so even repeat visitors pay the round-trip on the first paint of the session.
 
-## Fix
+## Fix strategy
 
-Extend `buildCategorySlots()` in `src/data/seoPageVisualSlots.ts` so the registry matches what's actually on screen:
+Eliminate the flash by ensuring the resolver **never returns the old fallback URL once an override exists**, and by making the override data available before first paint whenever possible.
 
-1. **`buildBuiltForGridSlots(page)`** — read `BUILT_FOR_GRIDS[page.slug]`, emit one slot per card:
-   - key: `builtFor_{subCategorySlug}_{i+1}` (1–8 per subcategory)
-   - section: `"Built for every {category} shot"`
-   - label: `"{subCategory} · tile {i+1} — {card.label}"`
-   - tags: page tags + subcategory + card label tokens
-2. **`buildRelatedCategorySlots(page)`** — for each of `page.relatedCategories`, emit 3 thumb slots:
-   - key: `related_{relatedSlug}_{i+1}` (1–3)
-   - section: `"Related product photography categories"`
-   - fallback id resolved with the same `getRelatedThumbs()` logic the component uses (hero collage → scene examples → hero), so the admin sees the exact tile that's currently rendering.
+### 1. Persist the override map across sessions (localStorage cache)
 
-Update `buildCategorySlots(page)` to concatenate: `[heroMain, ...collage, ...scenes, ...builtFor, ...related]`.
+Add a tiny synchronous cache layer in `useSeoVisualOverrides.ts`:
 
-## Wire components to read overrides
+- On module load, hydrate React Query's cache from `localStorage` key `seo-visual-overrides:v1` (a JSON snapshot of the last fetched rows + a timestamp).
+- After every successful fetch, write the fresh snapshot back to `localStorage`.
+- The hook initializes `useQuery` with `initialData` built from this snapshot, so on repeat visits the map is populated **synchronously on first render** — no flash, no waiting.
 
-Both newly-registered sections currently render only fallback IDs. Add the same `useSeoVisualOverridesMap(pageRoute) + resolveSlotImageUrl(...)` pattern already used by other components:
+This is safe: the snapshot is public data already shipped to every visitor, and a stale snapshot can't render anything worse than the fallback (which is what happens today anyway).
 
-- **`CategoryBuiltForEveryCategory.tsx`** — resolve each `card.imageId` against `builtFor_{subSlug}_{i+1}`
-- **`CategoryRelatedCategories.tsx`** — resolve each thumb against `related_{relSlug}_{i+1}` (passing the **current** page route, not the related page's route, so admins manage thumbs from the page they're viewing)
+### 2. Gate the fallback while the very first fetch is in flight (cold cache only)
 
-Both components already receive `page`, so the route is `page.url`. No prop drilling needed.
+For the first-ever visit (no localStorage snapshot yet), expose an `isLoading` flag from `useSeoVisualOverridesMap`:
 
-## Expected result in `/app/admin/seo-page-visuals`
+```ts
+return { map, isReady };  // isReady = !isLoading || hasSnapshot
+```
 
-After this change, each Category Hub jumps from 9–13 slots to roughly:
-- Fashion: ~70+ (was 13)
-- Footwear: ~60+ (was 13)
-- Beauty & Skincare: ~50+ (was 9)
-- …same for the remaining 7 hubs
+In each consumer (`LandingHeroSEO`, `LandingOneToManyShowcase`, `LandingCategoryGrid`, `PhotographyCategoryChooser`, `PhotographyVisualSystem`, `PhotographySceneExamples`, `CategoryBuiltForEveryCategory`, `CategoryRelatedCategories`, plus the per-category hero/scene resolvers), gate the `<img src>` so we render a transparent placeholder (or `loading="eager"` empty src) until `isReady === true`. That removes the wrong-image network request entirely on cold cache.
 
-Every image visible on a category page becomes overridable, with no change to fallback rendering when no override exists.
+The placeholder will be visible for at most one network round-trip (~200ms) instead of showing the wrong image for ~1s — and only on the very first visit per browser. Every subsequent visit hits the localStorage cache and renders correctly on the first paint.
 
-## Files to edit
+### 3. Preload the override images so the swap (if any) is instant
 
-- `src/data/seoPageVisualSlots.ts` — add 2 builder functions, extend `buildCategorySlots`
-- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — read overrides
-- `src/components/seo/photography/category/CategoryRelatedCategories.tsx` — read overrides
+When the override map resolves, kick off `new Image().src = override.preview_image_url` for every visible slot on the current page. This makes the browser fetch & decode the override image in parallel, so even on a cold cache the placeholder → final-image transition is sub-100ms instead of waiting for a fresh network fetch.
 
-No DB migration needed — slots are stored in code; the `seo_page_visuals` table already accepts arbitrary `(route, slot_key)` pairs.
+### 4. Memoize the map
+
+Wrap the `Map` construction in `useMemo(() => …, [data])` so consumers that depend on it don't rebuild on every render.
+
+### 5. Keep admin invalidation working
+
+`useAdminSeoVisuals` already calls `invalidateQueries(SEO_OVERRIDES_QUERY_KEY)` after upsert/delete. That stays. We additionally clear and rewrite the localStorage snapshot inside the same `onSuccess` so admins testing in the same browser see the change on next page load instantly.
+
+## Files to change
+
+- `src/hooks/useSeoVisualOverrides.ts` — add localStorage snapshot + `initialData` + memoized map + `isReady` flag + image preload effect.
+- `src/hooks/useAdminSeoVisuals.ts` — write fresh snapshot to localStorage in `onSuccess`.
+- `src/lib/resolveSlotImage.ts` — add a `resolveSlotImage(overrides, isReady, route, key, fallback)` variant that returns `null` when `!isReady && noSnapshot`, used by consumers to render the placeholder.
+- Consumer components (gate `<img>` with placeholder until `isReady`):
+  - `src/components/seo/landing/LandingHeroSEO.tsx`
+  - `src/components/seo/landing/LandingOneToManyShowcase.tsx`
+  - `src/components/seo/landing/LandingCategoryGrid.tsx`
+  - `src/components/seo/photography/PhotographyCategoryChooser.tsx`
+  - `src/components/seo/photography/PhotographyVisualSystem.tsx`
+  - `src/components/seo/photography/PhotographySceneExamples.tsx`
+  - `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`
+  - `src/components/seo/photography/category/CategoryRelatedCategories.tsx`
+  - `src/pages/seo/AIProductPhotographyCategory.tsx` (hero + collage + scene-example resolvers)
+
+## Result
+
+- **Repeat visitors / admins testing edits:** the new image appears on the very first paint. No flash, ever.
+- **First-time visitors (cold cache):** a neutral placeholder for ~200ms, then the correct image. Never the wrong image.
+- **SEO crawlers:** unchanged — they get the `<img alt>` and proper URLs once the data resolves; no layout shift because placeholder reserves the same aspect-ratio box.

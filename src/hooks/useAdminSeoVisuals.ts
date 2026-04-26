@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { SEO_OVERRIDES_QUERY_KEY } from './useSeoVisualOverrides';
+import { SEO_OVERRIDES_QUERY_KEY, clearSnapshot } from './useSeoVisualOverrides';
 
 export interface SeoVisualUpsertInput {
   page_route: string;
@@ -14,8 +14,12 @@ export interface SeoVisualUpsertInput {
 export function useAdminSeoVisuals() {
   const qc = useQueryClient();
 
-  const invalidate = () =>
-    qc.invalidateQueries({ queryKey: SEO_OVERRIDES_QUERY_KEY });
+  const invalidate = () => {
+    // Drop the localStorage snapshot so the next page load fetches fresh data
+    // immediately instead of momentarily showing the previous override.
+    clearSnapshot();
+    return qc.invalidateQueries({ queryKey: SEO_OVERRIDES_QUERY_KEY });
+  };
 
   const upsertMany = useMutation({
     mutationFn: async (rows: SeoVisualUpsertInput[]) => {
