@@ -24,12 +24,6 @@ const navLinks: NavLink[] = [
     prefetch: () => import('@/pages/PublicDiscover'),
   },
   {
-    label: 'AI Product Photography',
-    href: '/ai-product-photography',
-    isRoute: true,
-    prefetch: () => import('@/pages/seo/AIProductPhotography'),
-  },
-  {
     label: 'Scene Library',
     href: '/product-visual-library',
     isRoute: true,
@@ -135,9 +129,9 @@ export function LandingNav() {
                 onMouseEnter={() => link.prefetch?.()}
                 onFocus={() => link.prefetch?.()}
                 className={cn(
-                  'relative text-sm font-medium transition-colors whitespace-nowrap py-1',
+                  'text-sm font-medium transition-colors whitespace-nowrap py-1',
                   isActive(link.href)
-                    ? 'text-sidebar-foreground after:absolute after:left-1/2 after:-translate-x-1/2 after:-bottom-0.5 after:h-px after:w-5 after:bg-sidebar-foreground/70 after:rounded-full'
+                    ? 'text-sidebar-foreground'
                     : 'text-sidebar-foreground/70 hover:text-sidebar-foreground',
                 )}
               >
@@ -158,7 +152,7 @@ export function LandingNav() {
         {/* Desktop CTA (right) */}
         <div className="hidden lg:flex lg:flex-1 items-center justify-end">
           <Button
-            className="rounded-full h-11 px-7 text-[15px] font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
+            className="rounded-full h-9 px-5 text-sm font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
             onClick={() => navigate(user ? '/app' : '/auth')}
           >
             {user ? 'My Dashboard' : hasAccount ? 'Sign In' : 'Start Free'}
