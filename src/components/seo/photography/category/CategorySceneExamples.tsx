@@ -39,12 +39,9 @@ export function CategorySceneExamples({ page }: { page: CategoryPage }) {
                   alt={resolvedAlt}
                   imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
                 />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/65 via-black/20 to-transparent">
-                  <span className="block text-[11px] uppercase tracking-wider text-white/70 font-semibold">
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/55 via-black/10 to-transparent">
+                  <span className="block text-[11px] uppercase tracking-wider text-white/85 font-semibold">
                     {ex.category}
-                  </span>
-                  <span className="block text-sm text-white font-medium leading-tight mt-0.5">
-                    {ex.label}
                   </span>
                 </div>
               </div>
