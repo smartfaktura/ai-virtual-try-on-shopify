@@ -69,14 +69,18 @@ function MarqueeRow({
   altPrefix: string;
   eager?: boolean;
 }) {
-  const doubled = [...tiles, ...tiles];
+  // Repeat tiles enough times so each half of the marquee track is always
+  // wider than any realistic viewport. Prevents the right-direction row from
+  // showing empty space on the right edge at frame 0 (translateX(-50%)).
+  const REPEATS = 4;
+  const repeated = Array.from({ length: REPEATS }, () => tiles).flat();
   return (
     <div className="overflow-hidden w-full group/marquee">
       <div
         className={`flex gap-3 w-max ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'} group-hover/marquee:[animation-play-state:paused]`}
         style={{ animationDuration: duration }}
       >
-        {doubled.map((t, i) => (
+        {repeated.map((t, i) => (
           <Tile
             key={`${t.label}-${i}`}
             tile={t}
