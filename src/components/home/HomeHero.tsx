@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import originalDress from '@/assets/home-hero-original-dress.jpg';
 import productVideoLoop from '@/assets/home-create-product-videos.mp4';
 
@@ -55,7 +55,9 @@ function MarqueeCard({ label, src, alt, isOriginal, isVideo, eager }: HeroCard &
         />
       ) : (
         <img
-          src={isOriginal ? src : getOptimizedUrl(src, { width: 320, height: 426, quality: 55, resize: 'cover' })}
+          src={isOriginal ? src : getOptimizedUrl(src, { width: 480, height: 640, quality: 72, resize: 'cover' })}
+          srcSet={isOriginal ? undefined : getResizedSrcSet(src, { widths: [320, 480, 640], aspect: [3, 4], quality: 72 })}
+          sizes="(max-width: 640px) 180px, 210px"
           alt={alt ?? label}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"

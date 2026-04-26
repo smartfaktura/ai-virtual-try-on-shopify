@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { Button } from '@/components/ui/button';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import productVideoLoop from '@/assets/home-create-product-videos.mp4';
 
 const SUPABASE_PUBLIC =
@@ -60,7 +60,9 @@ function CardVisual({ card }: { card: CardData }) {
   return (
     <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
       <img
-        src={getOptimizedUrl(card.image, { width: 480, height: 600, quality: 60, resize: 'cover' })}
+        src={getOptimizedUrl(card.image, { width: 960, height: 1200, quality: 72, resize: 'cover' })}
+        srcSet={getResizedSrcSet(card.image, { widths: [480, 720, 960], aspect: [4, 5], quality: 72 })}
+        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 440px"
         alt={card.title}
         loading="lazy"
         decoding="async"

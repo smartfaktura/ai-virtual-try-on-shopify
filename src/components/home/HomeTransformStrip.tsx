@@ -4,7 +4,7 @@ import { ArrowRight, ChevronDown, ImageIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -166,7 +166,9 @@ function GridCard({
         <ImageIcon size={22} strokeWidth={1.25} />
       </div>
       <img
-        src={getOptimizedUrl(card.src, { width: 320, height: 426, quality: 60, resize: 'cover' })}
+        src={getOptimizedUrl(card.src, { width: 480, height: 640, quality: 72, resize: 'cover' })}
+        srcSet={getResizedSrcSet(card.src, { widths: [320, 480, 640], aspect: [3, 4], quality: 72 })}
+        sizes="(max-width: 640px) 180px, (max-width: 1024px) 220px, 280px"
         alt={card.label}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
@@ -226,7 +228,7 @@ export function HomeTransformStrip() {
     const seen = new Set<string>();
     CATEGORIES.forEach((cat) => {
       cat.cards.forEach((card) => {
-        const url = getOptimizedUrl(card.src, { width: 320, height: 426, quality: 60, resize: 'cover' });
+        const url = getOptimizedUrl(card.src, { width: 480, height: 640, quality: 72, resize: 'cover' });
         if (!url || seen.has(url) || url.startsWith('data:')) return;
         seen.add(url);
         const link = document.createElement('link');
