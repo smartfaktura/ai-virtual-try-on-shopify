@@ -1,47 +1,78 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, ChevronDown } from 'lucide-react';
 
-const footerLinks = {
-  Product: [
-    { label: 'AI Product Photography', to: '/ai-product-photography' },
-    { label: 'AI Product Photo Generator', to: '/ai-product-photo-generator' },
-    { label: 'Visual Studio', to: '/features/workflows' },
-    { label: 'Freestyle Studio', to: '/features/freestyle' },
-    { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
-    { label: 'Image Upscaling', to: '/features/upscale' },
-    { label: 'Product Perspectives', to: '/features/perspectives' },
-    { label: 'Pricing', to: '/pricing' },
-  ],
-  Solutions: [
-    { label: 'Shopify Product Photos', to: '/shopify-product-photography-ai' },
-    { label: 'Etsy Product Photos', to: '/etsy-product-photography-ai' },
-    { label: 'Fashion Product Photography', to: '/ai-product-photography/fashion' },
-    { label: 'Footwear Product Photography', to: '/ai-product-photography/footwear' },
-    { label: 'Beauty & Skincare', to: '/ai-product-photography/beauty-skincare' },
-    { label: 'Fragrance Photography', to: '/ai-product-photography/fragrance' },
-    { label: 'Jewelry Product Photography', to: '/ai-product-photography/jewelry' },
-    { label: 'Food & Beverage', to: '/ai-product-photography/food-beverage' },
-    { label: 'Home & Furniture', to: '/ai-product-photography/home-furniture' },
-    { label: 'Electronics & Gadgets', to: '/ai-product-photography/electronics-gadgets' },
-    { label: 'AI vs Photoshoot', to: '/ai-product-photography-vs-photoshoot' },
-    { label: 'VOVV.AI vs Studio', to: '/ai-product-photography-vs-studio' },
-  ],
-  Resources: [
-    { label: 'Why VOVV.AI', to: '/why-vovv' },
-    { label: 'How It Works', to: '/how-it-works' },
-    { label: 'FAQ', to: '/faq' },
-    { label: 'Roadmap', to: '/roadmap' },
-    { label: 'Help Center', to: '/help' },
-    { label: 'Blog', to: '/blog' },
-    { label: 'About', to: '/about' },
-    { label: 'Careers', to: '/careers' },
-    { label: 'Press', to: '/press' },
-    { label: 'Contact', to: '/contact' },
-    { label: 'Privacy Policy', to: '/privacy' },
-    { label: 'Terms of Service', to: '/terms' },
-    { label: 'Cookie Policy', to: '/cookies' },
-  ],
-};
+type FooterLink = { label: string; to: string };
+type FooterGroup = { subheading?: string; links: FooterLink[] };
+
+const productLinks: FooterLink[] = [
+  { label: 'AI Product Photography', to: '/ai-product-photography' },
+  { label: 'AI Product Photo Generator', to: '/ai-product-photo-generator' },
+  { label: 'Visual Studio', to: '/features/workflows' },
+  { label: 'Freestyle Studio', to: '/features/freestyle' },
+  { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
+  { label: 'Product Perspectives', to: '/features/perspectives' },
+  { label: 'Image Upscaling', to: '/features/upscale' },
+  { label: 'Pricing', to: '/pricing' },
+];
+
+const solutionsGroups: FooterGroup[] = [
+  {
+    subheading: 'Platforms',
+    links: [
+      { label: 'Shopify Product Photos', to: '/shopify-product-photography-ai' },
+      { label: 'Etsy Product Photos', to: '/etsy-product-photography-ai' },
+    ],
+  },
+  {
+    subheading: 'Categories',
+    links: [
+      { label: 'Fashion Product Photography', to: '/ai-product-photography/fashion' },
+      { label: 'Footwear Product Photography', to: '/ai-product-photography/footwear' },
+      { label: 'Beauty & Skincare', to: '/ai-product-photography/beauty-skincare' },
+      { label: 'Fragrance Photography', to: '/ai-product-photography/fragrance' },
+      { label: 'Jewelry Product Photography', to: '/ai-product-photography/jewelry' },
+      { label: 'Food & Beverage', to: '/ai-product-photography/food-beverage' },
+      { label: 'Home & Furniture', to: '/ai-product-photography/home-furniture' },
+      { label: 'Electronics & Gadgets', to: '/ai-product-photography/electronics-gadgets' },
+    ],
+  },
+  {
+    subheading: 'Compare',
+    links: [
+      { label: 'AI vs Photoshoot', to: '/ai-product-photography-vs-photoshoot' },
+      { label: 'VOVV.AI vs Studio', to: '/ai-product-photography-vs-studio' },
+    ],
+  },
+];
+
+const resourcesGroups: FooterGroup[] = [
+  {
+    subheading: 'Learn',
+    links: [
+      { label: 'Why VOVV.AI', to: '/why-vovv' },
+      { label: 'How It Works', to: '/how-it-works' },
+      { label: 'FAQ', to: '/faq' },
+      { label: 'Roadmap', to: '/roadmap' },
+      { label: 'Help Center', to: '/help' },
+      { label: 'Blog', to: '/blog' },
+    ],
+  },
+  {
+    subheading: 'Company',
+    links: [
+      { label: 'About', to: '/about' },
+      { label: 'Careers', to: '/careers' },
+      { label: 'Press', to: '/press' },
+      { label: 'Contact', to: '/contact' },
+    ],
+  },
+];
+
+const legalLinks: FooterLink[] = [
+  { label: 'Privacy Policy', to: '/privacy' },
+  { label: 'Terms of Service', to: '/terms' },
+  { label: 'Cookie Policy', to: '/cookies' },
+];
 
 const socialLinks = [
   {
@@ -74,19 +105,21 @@ const socialLinks = [
   },
 ];
 
-function LinkList({ heading, links }: { heading: string; links: { label: string; to: string }[] }) {
+const columnHeadingClass =
+  'text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 mb-3.5';
+const subheadingClass =
+  'text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/70 mb-2';
+const linkClass =
+  'text-sm leading-snug text-muted-foreground hover:text-foreground transition-colors';
+
+function FlatColumn({ heading, links }: { heading: string; links: FooterLink[] }) {
   return (
     <div>
-      <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 mb-3.5">
-        {heading}
-      </h4>
-      <ul className="space-y-2">
+      <h4 className={columnHeadingClass}>{heading}</h4>
+      <ul className="space-y-1.5">
         {links.map((link) => (
           <li key={link.label}>
-            <Link
-              to={link.to}
-              className="text-sm leading-snug text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link to={link.to} className={linkClass}>
               {link.label}
             </Link>
           </li>
@@ -96,10 +129,34 @@ function LinkList({ heading, links }: { heading: string; links: { label: string;
   );
 }
 
+function GroupedColumn({ heading, groups }: { heading: string; groups: FooterGroup[] }) {
+  return (
+    <div>
+      <h4 className={columnHeadingClass}>{heading}</h4>
+      <div className="space-y-5">
+        {groups.map((group) => (
+          <div key={group.subheading ?? heading}>
+            {group.subheading && <p className={subheadingClass}>{group.subheading}</p>}
+            <ul className="space-y-1.5">
+              {group.links.map((link) => (
+                <li key={link.label}>
+                  <Link to={link.to} className={linkClass}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function LandingFooter() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
         {/* Brand + columns row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 items-start">
           {/* Brand */}
@@ -130,45 +187,106 @@ export function LandingFooter() {
 
           {/* Desktop / tablet columns: 3 columns */}
           <div className="hidden sm:grid sm:grid-cols-3 gap-10 md:col-span-8 lg:col-span-9">
-            {Object.entries(footerLinks).map(([heading, links]) => (
-              <LinkList key={heading} heading={heading} links={links} />
-            ))}
+            <FlatColumn heading="Product" links={productLinks} />
+            <GroupedColumn heading="Solutions" groups={solutionsGroups} />
+            <GroupedColumn heading="Resources" groups={resourcesGroups} />
           </div>
         </div>
 
         {/* Mobile collapsible columns */}
         <div className="sm:hidden mt-8 border-t border-border/60">
-          {Object.entries(footerLinks).map(([heading, links]) => (
-            <details
-              key={heading}
-              className="group border-b border-border/60 py-3"
-            >
-              <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                <span>{heading}</span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
-              </summary>
-              <ul className="mt-3 space-y-2 pb-1">
-                {links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      to={link.to}
-                      className="text-sm leading-snug text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ))}
+          {/* Product accordion */}
+          <details className="group border-b border-border/60 py-3">
+            <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <span>Product</span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <ul className="mt-3 space-y-2 pb-1">
+              {productLinks.map((link) => (
+                <li key={link.label}>
+                  <Link to={link.to} className={linkClass}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </details>
+
+          {/* Solutions accordion (grouped) */}
+          <details className="group border-b border-border/60 py-3">
+            <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <span>Solutions</span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-3 space-y-4 pb-1">
+              {solutionsGroups.map((group) => (
+                <div key={group.subheading}>
+                  {group.subheading && <p className={subheadingClass}>{group.subheading}</p>}
+                  <ul className="space-y-2">
+                    {group.links.map((link) => (
+                      <li key={link.label}>
+                        <Link to={link.to} className={linkClass}>
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
+
+          {/* Resources accordion (grouped) */}
+          <details className="group border-b border-border/60 py-3">
+            <summary className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-foreground/90 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <span>Resources</span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-3 space-y-4 pb-1">
+              {resourcesGroups.map((group) => (
+                <div key={group.subheading}>
+                  {group.subheading && <p className={subheadingClass}>{group.subheading}</p>}
+                  <ul className="space-y-2">
+                    {group.links.map((link) => (
+                      <li key={link.label}>
+                        <Link to={link.to} className={linkClass}>
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-12 pt-6 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} VOVV.AI. All rights reserved.
           </p>
-          <p className="text-sm text-muted-foreground">
+
+          <nav
+            aria-label="Legal"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
+          >
+            {legalLinks.map((link, i) => (
+              <span key={link.label} className="flex items-center gap-x-3">
+                <Link
+                  to={link.to}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+                {i < legalLinks.length - 1 && (
+                  <span aria-hidden className="text-muted-foreground/40">·</span>
+                )}
+              </span>
+            ))}
+          </nav>
+
+          <p className="text-xs text-muted-foreground">
             A product by{' '}
             <a
               href="https://123presets.com"
