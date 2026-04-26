@@ -1506,117 +1506,6 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "food-beverage": [
     {
-      "subCategory": "Food · Essential Shots",
-      "cards": [
-        {
-          "label": "Front View",
-          "imageId": "1776246646068-vtqnyc"
-        },
-        {
-          "label": "Angle View",
-          "imageId": "1776246628354-crep30"
-        },
-        {
-          "label": "Side View",
-          "imageId": "1776246665024-xob1te"
-        },
-        {
-          "label": "Top View",
-          "imageId": "1776246669515-mvye8v"
-        },
-        {
-          "label": "In-Hand Studio",
-          "imageId": "1776246650202-r8yhfa"
-        },
-        {
-          "label": "Serving Suggestion",
-          "imageId": "1776246662705-g5a6yk"
-        },
-        {
-          "label": "Pour / Action Shot",
-          "imageId": "1776246660567-zoqgji"
-        },
-        {
-          "label": "Close-Up Detail",
-          "imageId": "1776246632536-0qdbol"
-        }
-      ]
-    },
-    {
-      "subCategory": "Food · Creative Shots",
-      "cards": [
-        {
-          "label": "Volcanic Sunset",
-          "imageId": "1776846408545-egl144"
-        },
-        {
-          "label": "Earthy Glow Stage",
-          "imageId": "1776846400039-uz132h"
-        },
-        {
-          "label": "Shadow Play Studio",
-          "imageId": "1776846407012-ia0jky"
-        },
-        {
-          "label": "Natural Woodscape",
-          "imageId": "1776846403853-beau7b"
-        },
-        {
-          "label": "Beach Basket Essentials",
-          "imageId": "1776846397200-avidj4"
-        },
-        {
-          "label": "Poolside Glow",
-          "imageId": "1776846405276-oeojzh"
-        },
-        {
-          "label": "Sky Product Portrait",
-          "imageId": "1776846407644-9in5zf"
-        },
-        {
-          "label": "Dark Elegance",
-          "imageId": "1776846398283-8730p0"
-        }
-      ]
-    },
-    {
-      "subCategory": "Snacks · Editorial",
-      "cards": [
-        {
-          "label": "Color Surface Snack Still",
-          "imageId": "1776246637687-58l7js"
-        },
-        {
-          "label": "Color Handheld Snack Story",
-          "imageId": "1776246633612-6n4mth"
-        },
-        {
-          "label": "Color Tabletop Story",
-          "imageId": "1776246638556-16hom5"
-        },
-        {
-          "label": "Color Sculptural Snack Set",
-          "imageId": "1776246635747-18rd7z"
-        },
-        {
-          "label": "Color Sharing Story",
-          "imageId": "1776246636844-kncti9"
-        },
-        {
-          "label": "Color Hero Snack Campaign",
-          "imageId": "1776246634501-2nrqdq"
-        },
-        {
-          "label": "Front Hero Snack Portrait",
-          "imageId": "1776246644962-e8u3sy"
-        },
-        {
-          "label": "Open Pack Detail",
-          "imageId": "1776246656352-qodj2g"
-        }
-      ]
-    },
-    {
       "subCategory": "Beverages · Editorial Drink",
       "cards": [
         {
@@ -1753,6 +1642,117 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         {
           "label": "Shopping Basket Story",
           "imageId": "1776240342433-1hcd01"
+        }
+      ]
+    },
+    {
+      "subCategory": "Food · Essential Shots",
+      "cards": [
+        {
+          "label": "Front View",
+          "imageId": "1776246646068-vtqnyc"
+        },
+        {
+          "label": "Angle View",
+          "imageId": "1776246628354-crep30"
+        },
+        {
+          "label": "Side View",
+          "imageId": "1776246665024-xob1te"
+        },
+        {
+          "label": "Top View",
+          "imageId": "1776246669515-mvye8v"
+        },
+        {
+          "label": "In-Hand Studio",
+          "imageId": "1776246650202-r8yhfa"
+        },
+        {
+          "label": "Serving Suggestion",
+          "imageId": "1776246662705-g5a6yk"
+        },
+        {
+          "label": "Pour / Action Shot",
+          "imageId": "1776246660567-zoqgji"
+        },
+        {
+          "label": "Close-Up Detail",
+          "imageId": "1776246632536-0qdbol"
+        }
+      ]
+    },
+    {
+      "subCategory": "Food · Creative Shots",
+      "cards": [
+        {
+          "label": "Volcanic Sunset",
+          "imageId": "1776846408545-egl144"
+        },
+        {
+          "label": "Earthy Glow Stage",
+          "imageId": "1776846400039-uz132h"
+        },
+        {
+          "label": "Shadow Play Studio",
+          "imageId": "1776846407012-ia0jky"
+        },
+        {
+          "label": "Natural Woodscape",
+          "imageId": "1776846403853-beau7b"
+        },
+        {
+          "label": "Beach Basket Essentials",
+          "imageId": "1776846397200-avidj4"
+        },
+        {
+          "label": "Poolside Glow",
+          "imageId": "1776846405276-oeojzh"
+        },
+        {
+          "label": "Sky Product Portrait",
+          "imageId": "1776846407644-9in5zf"
+        },
+        {
+          "label": "Dark Elegance",
+          "imageId": "1776846398283-8730p0"
+        }
+      ]
+    },
+    {
+      "subCategory": "Snacks · Editorial",
+      "cards": [
+        {
+          "label": "Color Surface Snack Still",
+          "imageId": "1776246637687-58l7js"
+        },
+        {
+          "label": "Color Handheld Snack Story",
+          "imageId": "1776246633612-6n4mth"
+        },
+        {
+          "label": "Color Tabletop Story",
+          "imageId": "1776246638556-16hom5"
+        },
+        {
+          "label": "Color Sculptural Snack Set",
+          "imageId": "1776246635747-18rd7z"
+        },
+        {
+          "label": "Color Sharing Story",
+          "imageId": "1776246636844-kncti9"
+        },
+        {
+          "label": "Color Hero Snack Campaign",
+          "imageId": "1776246634501-2nrqdq"
+        },
+        {
+          "label": "Front Hero Snack Portrait",
+          "imageId": "1776246644962-e8u3sy"
+        },
+        {
+          "label": "Open Pack Detail",
+          "imageId": "1776246656352-qodj2g"
         }
       ]
     }
