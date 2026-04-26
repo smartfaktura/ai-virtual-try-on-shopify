@@ -48,7 +48,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
       <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-card">
         <ShimmerImage
-          src={getOptimizedUrl(model.previewUrl, { width: 320, quality: 55, resize: 'cover' })}
+          src={getOptimizedUrl(model.previewUrl, { width: 320, height: 426, quality: 55, resize: 'cover' })}
           alt={model.name}
           loading="lazy"
           decoding="async"
