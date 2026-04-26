@@ -54,11 +54,11 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl border-none bg-background p-0 sm:rounded-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl border-none bg-background p-0 sm:rounded-3xl max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto">
         <DialogTitle className="sr-only">{scene.title}</DialogTitle>
         <div className="grid gap-0 md:grid-cols-[5fr_6fr]">
           {/* Hero */}
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/40">
+          <div className="relative aspect-[16/11] md:aspect-[4/5] w-full overflow-hidden bg-muted/40">
             {/* Skeleton shimmer */}
             {!imgLoaded && (
               <Skeleton className="absolute inset-0 z-[1] rounded-none" />
@@ -93,7 +93,7 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
           </div>
 
           {/* Body */}
-          <div className="flex flex-col gap-5 p-6 sm:p-8">
+          <div className="flex flex-col gap-4 sm:gap-5 p-5 sm:p-8">
             <div className="flex flex-wrap items-center gap-2">
               {familyLabel && (
                 <Badge variant="secondary" className="rounded-full bg-foreground/[0.06] text-foreground/70 border-none font-medium">
