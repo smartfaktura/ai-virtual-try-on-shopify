@@ -101,7 +101,7 @@ function MarqueeRow({ cards, direction, duration, eagerFirst }: {
 }
 
 /* ── Typewriter for the hero subline ── */
-const TYPED_PHRASES = [
+const TYPED_PHRASES_DESKTOP = [
   'For E-commerce.',
   'From One Photo.',
   'Product Page Ready.',
@@ -110,20 +110,41 @@ const TYPED_PHRASES = [
   'No Photoshoot Needed.',
 ];
 
+const TYPED_PHRASES_MOBILE = [
+  'For E-commerce.',
+  'From One Photo.',
+  'Page Ready.',
+  'Ads That Convert.',
+  'Every Angle.',
+  'No Photoshoot.',
+];
+
 function HeroTypewriter() {
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [text, setText] = useState('');
   const [phase, setPhase] = useState<'typing' | 'holding' | 'deleting'>('typing');
+  const [isMobile, setIsMobile] = useState(false);
   const reduceMotion =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
-    const full = TYPED_PHRASES[phraseIdx];
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+
+  const phrases = isMobile ? TYPED_PHRASES_MOBILE : TYPED_PHRASES_DESKTOP;
+
+  useEffect(() => {
+    const full = phrases[phraseIdx];
 
     if (reduceMotion) {
       setText(full);
-      const t = setTimeout(() => setPhraseIdx((i) => (i + 1) % TYPED_PHRASES.length), 2400);
+      const t = setTimeout(() => setPhraseIdx((i) => (i + 1) % phrases.length), 2400);
       return () => clearTimeout(t);
     }
 
@@ -144,14 +165,14 @@ function HeroTypewriter() {
         const t = setTimeout(() => setText(full.slice(0, text.length - 1)), 28);
         return () => clearTimeout(t);
       }
-      setPhraseIdx((i) => (i + 1) % TYPED_PHRASES.length);
+      setPhraseIdx((i) => (i + 1) % phrases.length);
       setPhase('typing');
     }
-  }, [text, phase, phraseIdx, reduceMotion]);
+  }, [text, phase, phraseIdx, reduceMotion, phrases]);
 
   return (
     <span
-      className="text-[#4a5578] inline-block sm:whitespace-nowrap min-h-[2.3em] sm:min-h-[1.15em] align-baseline px-2"
+      className="text-[#4a5578] inline-block whitespace-nowrap min-h-[1.15em] align-baseline"
       aria-live="polite"
     >
       {text}
@@ -171,10 +192,7 @@ export function HomeHero() {
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
         <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
           <span>AI Product Visuals.</span>
-          {/* Force the break only on tablet/desktop — on mobile let the
-              typewriter flow inline so the headline doesn't stack into 3 lines. */}
-          <br className="hidden sm:inline" />
-          <span className="sm:hidden"> </span>
+          <br />
           <HeroTypewriter />
         </h1>
 
@@ -203,9 +221,6 @@ export function HomeHero() {
 
         <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium mt-8">
           20 free credits · No credit card required · Start in seconds
-        </p>
-        <p className="text-xs text-muted-foreground/70 italic mt-3">
-          Trusted by DTC brands across fashion, beauty, jewelry, and home.
         </p>
       </div>
 
