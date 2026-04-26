@@ -1,27 +1,63 @@
-## Improve hero tile image quality
+## Pre-select category in `/product-visual-library` from hub-page CTAs
 
-The current hero tiles render at width 480 / quality 78, which on retina screens (especially the 210px-wide tiles at 2x = 420px, 3x = 630px) is just barely covering native resolution and can look slightly soft/pixelated. I'll raise both the base resolution and the srcSet ceiling so the tiles look crisp on all displays, while keeping eager-loading + priority hints intact so the hero still renders first.
+Today, every "Browse the visual library" / "Browse the full scene library" CTA across hub pages points to a bare `/product-visual-library` URL — so users always land on the first family (Fashion & Apparel) regardless of which category they came from. We'll make the library accept query params and update each category page's CTAs to deep-link to the matching family (and where useful, sub-collection).
 
-### Changes
+### 1. Make `/product-visual-library` accept deep-link params
 
-**1. `src/components/seo/photography/PhotographyHero.tsx` — `Tile` component**
-- Base `src`: bump from `width: 480, height: 640, quality: 78` → `width: 640, height: 854, quality: 85`
-- `srcSet` widths: from `[320, 480, 630]` → `[360, 540, 720, 900]` (covers 1x → 4x for 210px tiles)
-- `quality` in srcSet: from `78` → `85`
-- Keep aspect `[3, 4]`, eager loading + `fetchpriority="high"` for the first 6 tiles unchanged.
+`src/pages/ProductVisualLibrary.tsx`
+- Read query params on mount: `?family=<slug>` and optional `&collection=<slug>`.
+- Wait for `families` to load, then if `family` matches one, set it as `activeFamilySlug`. If `collection` matches one inside that family, set `activeCollectionSlug`.
+- After applying, scroll to `#catalog-grid` so the user lands directly on the right grid.
+- Keep current default behaviour (first family) when no params present.
 
-**2. `src/components/seo/landing/LandingHeroSEO.tsx`**
-- Apply the same width/quality bump to the hero tiles there for consistency (`widths: [360, 540, 720, 900]`, `quality: 85`, base width ~640).
+### 2. Add a shared mapper from category-page slug → library family/collection
 
-**3. `src/components/seo/photography/category/CategoryHero.tsx`**
-- Main hero image: keep `1120x1400` but raise quality `78 → 85`; widen srcSet ceiling to `[640, 900, 1120, 1400]` at quality 85.
-- Collage tiles: bump base from `560x700 q78` → `640x800 q85`; srcSet widths to `[360, 540, 720, 900]` at quality 85.
+New file `src/lib/visualLibraryDeepLink.ts`:
 
-### Why this fixes the pixelated look
-- Retina displays render the 210px CSS tiles at up to 630 physical pixels; serving a 480-wide source forces the browser to upscale slightly. Going to 720–900w in the srcSet means the browser always has a source ≥ device pixel count.
-- Quality 85 is the sweet spot for product/editorial photos (above 85 file size grows fast with little visual gain; below 80 starts showing JPEG ringing on edges and skin).
+```ts
+// Maps /ai-product-photography/{slug} → /product-visual-library?family=&collection=
+export function getVisualLibraryHrefForCategory(
+  slug?: string,
+): string {
+  if (!slug) return '/product-visual-library';
+  const map: Record<string, { family: string; collection?: string }> = {
+    'fashion':              { family: 'fashion' },
+    'footwear':             { family: 'footwear' },
+    'beauty-skincare':      { family: 'beauty-and-fragrance', collection: 'beauty-skincare' },
+    'fragrance':            { family: 'beauty-and-fragrance', collection: 'fragrance' },
+    'jewelry':              { family: 'jewelry' },
+    'bags-accessories':     { family: 'bags-and-accessories' },
+    'home-furniture':       { family: 'home' },
+    'food-beverage':        { family: 'food-and-drink' },
+    'supplements-wellness': { family: 'wellness' },
+    'electronics-gadgets':  { family: 'tech' },
+  };
+  const m = map[slug];
+  if (!m) return '/product-visual-library';
+  const params = new URLSearchParams({ family: m.family });
+  if (m.collection) params.set('collection', m.collection);
+  return `/product-visual-library?${params.toString()}#catalog-grid`;
+}
+```
 
-### Performance impact
-Per tile JPEG goes from ~25–35 KB → ~45–60 KB. With 6 eager tiles that's ~150 KB extra over LCP — negligible on broadband, and the eager + `fetchpriority="high"` ordering still ensures the hero paints before below-the-fold content.
+Family slugs match `familyToSlug()` in `usePublicSceneLibrary.ts` (`&` → `and`, lowercase, hyphens). Beauty & Skincare and Fragrance share one family but pre-select different collections so the user immediately sees the right sub-set.
 
-No new dependencies, no layout changes, no markup changes beyond the optimization parameters.
+### 3. Update CTA links inside the category template
+
+In `src/components/seo/photography/category/`:
+- `CategoryBuiltForEveryCategory.tsx` (line 190) — change `to="/product-visual-library"` to `to={getVisualLibraryHrefForCategory(page.slug)}`.
+- `CategorySceneExamples.tsx` (line 54) — same change.
+
+Both components already receive `page: CategoryPage` so `page.slug` is available.
+
+### 4. Leave non-category CTAs unchanged
+
+CTAs on `/ai-product-photography` (parent), `/`, `/how-it-works`, nav, etc. don't have a single category context — they should keep linking to bare `/product-visual-library` and show all families (Fashion first, current behaviour).
+
+### Result
+
+- Click "Browse the visual library" from `/ai-product-photography/footwear` → lands on Footwear family.
+- From `/ai-product-photography/beauty-skincare` → lands on Beauty & Fragrance family with the Beauty & Skincare pill pre-selected.
+- From `/ai-product-photography/fragrance` → lands on Beauty & Fragrance with Fragrance pill pre-selected.
+- All other category hubs deep-link to their matching family.
+- Bare `/product-visual-library` link from home/nav/how-it-works behaves exactly as today.

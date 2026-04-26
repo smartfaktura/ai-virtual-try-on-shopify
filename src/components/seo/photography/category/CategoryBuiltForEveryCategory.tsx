@@ -8,6 +8,7 @@ import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryP
 import { getBuiltForGroupsForPage, slotSlugify } from '@/data/builtForGridGroups';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
+import { getVisualLibraryHrefForCategory } from '@/lib/visualLibraryDeepLink';
 
 /**
  * Per-category "One photo · Every shot" section, rebuilt to mirror the
@@ -187,7 +188,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               <ArrowRight size={16} />
             </Link>
             <Link
-              to="/product-visual-library"
+              to={getVisualLibraryHrefForCategory(page.slug)}
               className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-base font-semibold hover:bg-secondary transition-colors"
             >
               Browse the visual library
