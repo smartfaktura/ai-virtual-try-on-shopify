@@ -74,7 +74,7 @@ export function HomeOnBrand() {
                   className="aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-white/60 bg-muted/30 relative"
                 >
                   <img
-                    src={getOptimizedUrl(item.src, { quality: 60 })}
+                    src={getOptimizedUrl(item.src, { width: 360, height: 480, quality: 60, resize: 'cover' })}
                     alt={item.label}
                     loading="lazy"
                     decoding="async"
