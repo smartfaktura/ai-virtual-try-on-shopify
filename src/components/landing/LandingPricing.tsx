@@ -137,20 +137,22 @@ export function LandingPricing() {
   const enterprisePlan = pricingPlans.find((p) => p.isEnterprise);
 
   return (
-    <section id="pricing" className="bg-[#FAFAF8]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 lg:pb-32">
+    <>
+    {/* ═══ BAND 1 · Hero + Pricing cards (off-white) ═══ */}
+    <section id="pricing" className="bg-[#FAFAF8] pt-24 sm:pt-28 lg:pt-32 pb-20 lg:pb-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="text-center mb-14 lg:mb-16">
+        <div className="text-center mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Pricing
           </p>
-          <h1 className="text-[#1a1a2e] text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+          <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.75rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
             Simple pricing.
             <br />
             Real production output.
           </h1>
-          <p className="mx-auto max-w-xl text-[#6b7280] text-lg leading-relaxed mb-10">
+          <p className="mx-auto max-w-xl text-muted-foreground text-lg leading-relaxed mb-10">
             Start free. Scale when you're ready. Every plan unlocks the full visual library.
           </p>
 
