@@ -4,7 +4,7 @@ import { trackPageView } from '@/lib/fbPixel';
 import { gtagPageView } from '@/lib/gtag';
 
 export function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   const navType = useNavigationType();
 
   // Disable browser auto scroll restoration once — we manage scroll ourselves.
@@ -15,23 +15,45 @@ export function ScrollToTop() {
   }, []);
 
   useEffect(() => {
-    if (navType !== 'POP') {
-      // Immediate scroll for fast pages.
-      window.scrollTo(0, 0);
-      // Re-assert after the lazy route chunk mounts and layout settles,
-      // otherwise the page can paint already scrolled a few px down.
-      const raf = requestAnimationFrame(() => window.scrollTo(0, 0));
-      const t = setTimeout(() => window.scrollTo(0, 0), 80);
-      trackPageView();
-      gtagPageView();
-      return () => {
-        cancelAnimationFrame(raf);
-        clearTimeout(t);
-      };
-    }
+    // Always track the page view.
     trackPageView();
     gtagPageView();
-  }, [pathname, navType]);
+
+    // Back/forward — let the browser/restored position win.
+    if (navType === 'POP') return;
+    // Hash anchor navigation — let the browser jump to the anchor.
+    if (hash) return;
+
+    const toTop = () => window.scrollTo(0, 0);
+
+    // Fast path: immediate, next frame, and a short timeout.
+    toTop();
+    const raf = requestAnimationFrame(toTop);
+    const t1 = setTimeout(toTop, 80);
+    const t2 = setTimeout(toTop, 250);
+
+    // Robust path for lazy-loaded routes: re-assert as soon as the new
+    // page actually mounts under <main>. We watch for any DOM mutation
+    // for a short window and force scrollTop=0 on each one, then stop.
+    let mutationCount = 0;
+    const observer = new MutationObserver(() => {
+      toTop();
+      mutationCount++;
+      // Cap work — after enough mutations the page has rendered.
+      if (mutationCount > 20) observer.disconnect();
+    });
+    const root = document.body;
+    if (root) observer.observe(root, { childList: true, subtree: true });
+    const stopObserving = setTimeout(() => observer.disconnect(), 600);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(stopObserving);
+      observer.disconnect();
+    };
+  }, [pathname, hash, navType]);
 
   return null;
 }
