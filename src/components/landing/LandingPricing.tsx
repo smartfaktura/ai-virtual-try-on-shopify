@@ -150,7 +150,7 @@ export function LandingPricing() {
           <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.75rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
             Simple pricing.
             <br />
-            Real production output.
+            <span className="text-[#4a5578]">Real production output.</span>
           </h1>
           <p className="mx-auto max-w-xl text-muted-foreground text-lg leading-relaxed mb-10">
             Start free. Scale when you're ready. Every plan unlocks the full visual library.
