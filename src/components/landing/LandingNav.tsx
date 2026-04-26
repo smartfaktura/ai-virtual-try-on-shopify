@@ -158,8 +158,7 @@ export function LandingNav() {
         {/* Desktop CTA (right) */}
         <div className="hidden lg:flex lg:flex-1 items-center justify-end">
           <Button
-            size="sm"
-            className="rounded-full px-6 font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
+            className="rounded-full h-11 px-7 text-[15px] font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
             onClick={() => navigate(user ? '/app' : '/auth')}
           >
             {user ? 'My Dashboard' : hasAccount ? 'Sign In' : 'Start Free'}
