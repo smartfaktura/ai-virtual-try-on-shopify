@@ -75,8 +75,8 @@ export default function ShopifyProductPhotography() {
           }
           subheadline="Upload one product photo and create Shopify-ready product page images, lifestyle visuals, ads, banners, and campaign content in minutes."
           trustLine="Built for ecommerce brands · No photoshoot needed · Create from one product photo"
-          primaryCta={{ label: 'Create your first Shopify visuals free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Explore AI product photography', to: '/ai-product-photography' }}
+          primaryCta={{ label: 'Try it free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
           altPrefix="AI Shopify product photography example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'PDP Hero' },
@@ -261,8 +261,8 @@ export default function ShopifyProductPhotography() {
         <LandingFinalCTASEO
           headline="Create Shopify product visuals from one photo"
           copy="Generate product page images, lifestyle visuals, ads, banners, and campaign-ready content for your Shopify store with VOVV.AI."
-          primaryCta={{ label: 'Create your first Shopify visuals free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' }}
+          primaryCta={{ label: 'Try it free', to: '/app/generate/product-images' }}
+          secondaryCta={{ label: 'Open generator', to: '/ai-product-photo-generator' }}
           pageId="shopify"
         />
       </main>
