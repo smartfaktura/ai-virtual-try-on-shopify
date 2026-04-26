@@ -45,20 +45,17 @@ export function HomeFinalCTA() {
         </div>
       </section>
 
-      <section className="bg-[#FAFAF8] border-t border-[#e8e7e4] py-8">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9ca3af] shrink-0">
-            Explore
-          </p>
+      <section className="bg-[#FAFAF8] py-10">
+        <div className="max-w-3xl mx-auto px-6 text-center">
           <nav
             aria-label="Explore VOVV.AI"
-            className="flex flex-wrap items-center gap-x-6 gap-y-2"
+            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
           >
             {seoLinks.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
-                className="text-[#6b7280] text-[13px] hover:text-[#1a1a2e] underline-offset-4 hover:underline transition-colors"
+                className="text-muted-foreground text-[13px] hover:text-foreground underline-offset-4 hover:underline transition-colors"
               >
                 {l.label}
               </Link>
