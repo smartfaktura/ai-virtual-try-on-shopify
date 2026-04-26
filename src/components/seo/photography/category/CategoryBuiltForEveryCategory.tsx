@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,40 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
   const overrides = useSeoVisualOverridesMap();
   const [activeIdx, setActiveIdx] = useState(0);
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [hintNudge, setHintNudge] = useState(false);
+
+  // First-mount peek nudge so users see the rail is scrollable.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.matchMedia?.('(min-width: 1024px)').matches) return;
+    const el = railRef.current;
+    if (!el) return;
+    let didNudge = false;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && !didNudge) {
+            didNudge = true;
+            setHintNudge(true);
+            window.setTimeout(() => setHintNudge(false), 600);
+            obs.disconnect();
+          }
+        }
+      },
+      { threshold: 0.4 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Keep the active chip visible when it changes.
+  useEffect(() => {
+    const chip = chipRefs.current[activeIdx];
+    if (!chip) return;
+    chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [activeIdx]);
 
   if (groups.length === 0) return null;
   const active = groups[Math.min(activeIdx, groups.length - 1)];
@@ -53,18 +87,25 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
         {/* Chip rail — short subject-only labels */}
         <div className="mb-8 lg:mb-10">
-          {/* Mobile: full-bleed scrollable rail with edge fades */}
+          {/* Mobile: full-bleed scrollable rail with snap, edge fades, and a first-mount peek nudge */}
           <div className="lg:hidden relative -mx-6">
-            <div className="flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              ref={railRef}
+              className={cn(
+                'flex gap-2 overflow-x-auto snap-x snap-mandatory px-6 pb-2 transition-transform duration-300 ease-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+                hintNudge && '-translate-x-3',
+              )}
+            >
               {groups.map((g, idx) => {
                 const { subject } = splitLabel(g.subCategory);
                 return (
                   <button
                     key={g.subCategory}
+                    ref={(el) => { chipRefs.current[idx] = el; }}
                     type="button"
                     onClick={() => setActiveIdx(idx)}
                     className={cn(
-                      'shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
+                      'snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
                       activeIdx === idx
                         ? 'bg-foreground text-background border-foreground shadow-sm'
                         : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
@@ -75,8 +116,8 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
                 );
               })}
             </div>
-            <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
-            <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background via-background/80 to-transparent" />
           </div>
 
           {/* Desktop: centered chip group — short labels keep it tidy on one or two rows */}
