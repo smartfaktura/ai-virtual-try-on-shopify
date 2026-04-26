@@ -295,15 +295,16 @@ export const SEO_PAGES: SeoPageEntry[] = [
   },
   // Category hubs
   ...categoryEntries,
-  // Tool / commercial intent pages — currently only the hero marquee is wired
-  // through to overrides on these pages. Other sections use bespoke components
-  // (LandingValueCards, LandingOneToManyShowcase, etc.) and aren't editable yet.
+  // Tool / commercial intent pages — full coverage of every image-bearing
+  // section (hero marquee, "One product photo" showcase, category grid).
   {
     route: '/ai-product-photo-generator',
     label: 'AI Product Photo Generator',
     group: 'tool',
     slots: [
       ...buildHeroSlots(TOOL_TAGS_GENERATOR),
+      ...buildOneToManyShowcaseSlots(TOOL_TAGS_GENERATOR),
+      ...buildCategoryGridSlots(TOOL_TAGS_GENERATOR),
     ],
   },
   {
@@ -312,6 +313,8 @@ export const SEO_PAGES: SeoPageEntry[] = [
     group: 'tool',
     slots: [
       ...buildHeroSlots(TOOL_TAGS_SHOPIFY),
+      ...buildOneToManyShowcaseSlots(TOOL_TAGS_SHOPIFY),
+      ...buildCategoryGridSlots(TOOL_TAGS_SHOPIFY),
     ],
   },
   {
@@ -320,15 +323,18 @@ export const SEO_PAGES: SeoPageEntry[] = [
     group: 'tool',
     slots: [
       ...buildHeroSlots(TOOL_TAGS_ETSY),
+      ...buildOneToManyShowcaseSlots(TOOL_TAGS_ETSY),
+      ...buildCategoryGridSlots(TOOL_TAGS_ETSY),
     ],
   },
-  // Comparison pages — hero marquee only (other sections are bespoke).
+  // Comparison pages — hero + category grid (no OneToMany on these pages).
   {
     route: '/ai-product-photography-vs-photoshoot',
     label: 'AI vs Photoshoot',
     group: 'comparison',
     slots: [
       ...buildHeroSlots(COMPARISON_TAGS),
+      ...buildCategoryGridSlots(COMPARISON_TAGS),
     ],
   },
   {
@@ -337,6 +343,7 @@ export const SEO_PAGES: SeoPageEntry[] = [
     group: 'comparison',
     slots: [
       ...buildHeroSlots(COMPARISON_TAGS),
+      ...buildCategoryGridSlots(COMPARISON_TAGS),
     ],
   },
 ];
