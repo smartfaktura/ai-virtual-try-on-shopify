@@ -220,6 +220,7 @@ export default function AIPhotographyVsStudio() {
           copy="Use VOVV.AI to turn one product photo into product page images, lifestyle visuals, ads, social content, and campaign-ready creative."
           primaryCta={{ label: 'Create visuals with VOVV.AI', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' }}
+          pageId="vs-studio"
         />
       </main>
       <LandingFooter />
