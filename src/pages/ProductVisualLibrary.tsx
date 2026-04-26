@@ -352,7 +352,9 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
         <div className="relative mb-8 hidden lg:block">
           <div
             ref={pillsScrollRef}
-            className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className={`flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-[padding] duration-200 ${
+              canScrollLeft ? 'pl-12' : 'pl-0'
+            } ${canScrollRight ? 'pr-12' : 'pr-0'}`}
           >
             <button
               onClick={() => onChangeCollection(null)}
@@ -384,16 +386,16 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
             })}
           </div>
 
-          {/* Desktop scroll arrows + edge fades */}
+          {/* Edge fades — sit behind the arrows */}
           <div
             aria-hidden
-            className={`pointer-events-none absolute inset-y-0 left-0 hidden w-12 bg-gradient-to-r from-background to-transparent transition-opacity lg:block ${
+            className={`pointer-events-none absolute inset-y-0 left-0 hidden w-14 bg-gradient-to-r from-background via-background/80 to-transparent transition-opacity lg:block ${
               canScrollLeft ? 'opacity-100' : 'opacity-0'
             }`}
           />
           <div
             aria-hidden
-            className={`pointer-events-none absolute inset-y-0 right-0 hidden w-12 bg-gradient-to-l from-background to-transparent transition-opacity lg:block ${
+            className={`pointer-events-none absolute inset-y-0 right-0 hidden w-14 bg-gradient-to-l from-background via-background/80 to-transparent transition-opacity lg:block ${
               canScrollRight ? 'opacity-100' : 'opacity-0'
             }`}
           />
@@ -402,7 +404,7 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
               type="button"
               onClick={() => scrollPills('left')}
               aria-label="Scroll categories left"
-              className="absolute left-0 top-1/2 hidden h-8 w-8 -translate-y-1/2 -translate-x-1 items-center justify-center rounded-full border border-foreground/10 bg-background text-foreground/70 shadow-sm transition-colors hover:bg-foreground hover:text-background lg:flex"
+              className="absolute left-0 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-foreground/10 bg-background text-foreground/70 shadow-sm transition-colors hover:bg-foreground hover:text-background lg:flex"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -412,7 +414,7 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
               type="button"
               onClick={() => scrollPills('right')}
               aria-label="Scroll categories right"
-              className="absolute right-0 top-1/2 hidden h-8 w-8 -translate-y-1/2 translate-x-1 items-center justify-center rounded-full border border-foreground/10 bg-background text-foreground/70 shadow-sm transition-colors hover:bg-foreground hover:text-background lg:flex"
+              className="absolute right-0 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-foreground/10 bg-background text-foreground/70 shadow-sm transition-colors hover:bg-foreground hover:text-background lg:flex"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
