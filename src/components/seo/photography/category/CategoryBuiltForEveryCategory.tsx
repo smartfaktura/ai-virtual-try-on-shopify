@@ -55,8 +55,15 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
     return () => obs.disconnect();
   }, []);
 
-  // Keep the active chip visible when it changes.
+  // Keep the active chip visible when the user changes it.
+  // Skip on first mount so we don't pull the page down to this section
+  // immediately after navigation.
+  const didMountRef = useRef(false);
   useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
     const chip = chipRefs.current[activeIdx];
     if (!chip) return;
     chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
