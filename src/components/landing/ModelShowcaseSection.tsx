@@ -2,9 +2,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, User } from 'lucide-react';
 
-import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { mockModels } from '@/data/mockData';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 
 type ModelItem =
@@ -18,7 +18,7 @@ function BrandModelCTA() {
       className="group flex flex-col items-center gap-2 flex-shrink-0"
       aria-label="Create your own brand models"
     >
-      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden bg-background border border-foreground/10 flex flex-col items-center justify-center gap-3 transition-all duration-500 group-hover:border-foreground/25">
+      <div className="w-24 h-32 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden bg-background border border-foreground/10 flex flex-col items-center justify-center gap-3 transition-all duration-500 group-hover:border-foreground/25">
         <div className="w-9 h-9 rounded-full border border-foreground/20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
           <Plus className="w-4 h-4 text-foreground/80" strokeWidth={1.5} />
         </div>
@@ -44,19 +44,20 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
 
   return (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/40 flex items-center justify-center">
+      <div className="w-24 h-32 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/40 flex items-center justify-center">
         {errored ? (
           <User className="w-8 h-8 text-muted-foreground/40" strokeWidth={1.25} />
         ) : (
-          <ShimmerImage
+          <img
             src={getOptimizedUrl(model.previewUrl, { width: 360, height: 480, quality: 72, resize: 'cover' })}
             srcSet={getResizedSrcSet(model.previewUrl, { widths: [240, 360, 480], aspect: [3, 4], quality: 72 })}
-            sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"
+            sizes="(max-width: 640px) 96px, (max-width: 1024px) 128px, 144px"
             alt={model.name}
-            loading="lazy"
+            loading="eager"
             decoding="async"
+            // @ts-expect-error fetchpriority is a valid HTML attribute
+            fetchpriority="low"
             className="w-full h-full object-cover object-top"
-            aspectRatio="3/4"
             onError={() => setErrored(true)}
           />
         )}
@@ -66,20 +67,22 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
   );
 }
 
-function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelItem[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
+function MarqueeRow({ items, direction = 'left', durationSeconds = 120, mobileDurationSeconds }: { items: ModelItem[]; direction?: 'left' | 'right'; durationSeconds?: number; mobileDurationSeconds?: number }) {
   const doubled = [...items, ...items];
+  const isMobile = useIsMobile();
+  const effectiveDuration = isMobile && mobileDurationSeconds ? mobileDurationSeconds : durationSeconds;
 
   return (
     <div className="relative overflow-hidden">
-      <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, hsl(var(--muted) / 0.3), transparent)' }} />
-      <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, hsl(var(--muted) / 0.3), transparent)' }} />
+      <div className="absolute left-0 top-0 bottom-0 w-10 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, hsl(var(--muted) / 0.3), transparent)' }} />
+      <div className="absolute right-0 top-0 bottom-0 w-10 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, hsl(var(--muted) / 0.3), transparent)' }} />
       <div
-        className="flex gap-4"
+        className="flex gap-3 sm:gap-4"
         style={{
           width: 'max-content',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
-          animation: `marquee-${direction} ${durationSeconds}s linear infinite`,
+          animation: `marquee-${direction} ${effectiveDuration}s linear infinite`,
         }}
       >
         {doubled.map((item, i) =>
@@ -158,8 +161,8 @@ export function ModelsMarquee({ eyebrow, title, subtitle, className }: ModelsMar
       </div>
 
       <div className="flex flex-col gap-8">
-        <MarqueeRow items={row1} direction="left" durationSeconds={120} />
-        <MarqueeRow items={row2} direction="right" durationSeconds={130} />
+        <MarqueeRow items={row1} direction="left" durationSeconds={120} mobileDurationSeconds={55} />
+        <MarqueeRow items={row2} direction="right" durationSeconds={130} mobileDurationSeconds={60} />
       </div>
     </section>
   );
