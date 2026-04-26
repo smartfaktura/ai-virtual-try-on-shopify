@@ -75,6 +75,7 @@ export default function AIPhotographyVsStudio() {
       <main>
         <LandingHeroSEO
           eyebrow="VOVV.AI vs Product Photography Studio"
+          pageId="vs-studio"
           headline={
             <>
               VOVV.AI vs
@@ -162,7 +163,7 @@ export default function AIPhotographyVsStudio() {
         />
 
         <LandingValueCards
-          eyebrow="What VOVV.AI helps create"
+          eyebrow="Output coverage"
           headline="What VOVV.AI helps create"
           cards={[
             { title: 'Product page images', text: 'PDP-ready hero & alternates.', Icon: ShoppingBag },
@@ -219,6 +220,7 @@ export default function AIPhotographyVsStudio() {
           copy="Use VOVV.AI to turn one product photo into product page images, lifestyle visuals, ads, social content, and campaign-ready creative."
           primaryCta={{ label: 'Create visuals with VOVV.AI', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Try the AI product photo generator', to: '/ai-product-photo-generator' }}
+          pageId="vs-studio"
         />
       </main>
       <LandingFooter />

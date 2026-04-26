@@ -16,6 +16,7 @@ export interface LandingHowItWorksStepsProps {
   ctaLabel: string;
   ctaTo?: string;
   trailingNote?: string;
+  pageId?: string;
 }
 
 export function LandingHowItWorksSteps({
@@ -26,6 +27,7 @@ export function LandingHowItWorksSteps({
   ctaLabel,
   ctaTo = '/app/generate/product-images',
   trailingNote = 'Free credits · No card required',
+  pageId,
 }: LandingHowItWorksStepsProps) {
   return (
     <section className="py-16 lg:py-32 bg-background">
@@ -65,7 +67,7 @@ export function LandingHowItWorksSteps({
 
         <div className="flex flex-col items-center gap-3 mt-12 lg:mt-16">
           <Button asChild size="lg" className="rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
-            <Link to={ctaTo}>
+            <Link to={ctaTo} data-cta="howitworks-primary" data-page={pageId}>
               {ctaLabel}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

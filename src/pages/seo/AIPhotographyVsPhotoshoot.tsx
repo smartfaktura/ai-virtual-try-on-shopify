@@ -76,6 +76,7 @@ export default function AIPhotographyVsPhotoshoot() {
       <main>
         <LandingHeroSEO
           eyebrow="AI vs Traditional Photoshoot"
+          pageId="vs-photoshoot"
           headline={
             <>
               AI Product Photography
@@ -163,17 +164,14 @@ export default function AIPhotographyVsPhotoshoot() {
         />
 
         <LandingValueCards
-          eyebrow="What you can create"
-          headline="What ecommerce brands can create with AI product photography"
+          eyebrow="What changes when you switch"
+          headline="What changes when you switch to AI"
+          columns={4}
           cards={[
-            { title: 'Product page images', text: 'PDP-ready hero & alternates.', Icon: ShoppingBag },
-            { title: 'Lifestyle scenes', text: 'In-context editorial visuals.', Icon: Sparkles },
-            { title: 'Paid ad creatives', text: 'Meta & Google variations.', Icon: Megaphone },
-            { title: 'Social posts', text: 'IG, TikTok & Pinterest.', Icon: Instagram },
-            { title: 'Email banners', text: 'On-brand hero imagery.', Icon: Mail },
-            { title: 'Campaign visuals', text: 'Always-on brand storytelling.', Icon: Camera },
-            { title: 'Seasonal drops', text: 'Refresh visuals for each season.', Icon: Calendar },
-            { title: 'Detail shots', text: 'Macro texture & material.', Icon: ZoomIn },
+            { title: 'Speed', text: 'New visuals in hours, not weeks.', Icon: Gauge },
+            { title: 'Variations', text: 'Many directions per session.', Icon: Layers },
+            { title: 'Cost flexibility', text: 'Lower cost as volume grows.', Icon: Target },
+            { title: 'Channel coverage', text: 'PDP, ads, social, email, campaigns.', Icon: ShoppingBag },
           ]}
         />
 
@@ -211,7 +209,7 @@ export default function AIPhotographyVsPhotoshoot() {
             { q: 'Can AI product photography replace a traditional photoshoot?', a: 'For many ecommerce visuals — product pages, ads, social, seasonal campaigns — yes. For exact fit, regulated claims, or highly controlled physical capture, brands often still use a traditional shoot.' },
             { q: 'Is AI product photography good for ecommerce brands?', a: 'Yes. AI product photography is built for the speed and scale ecommerce brands need across PDPs, ads, social, and campaigns.' },
             { q: 'When should I still use a traditional product photoshoot?', a: 'When you need exact physical documentation, model fit validation, or visuals tied to compliance requirements.' },
-            { q: 'Is AI product photography cheaper than a photoshoot?', a: 'For most ecommerce visuals, yes. The cost difference grows the more variations and channels you need to support.' },
+            { q: 'Is AI product photography cheaper than a photoshoot?', a: 'Often yes — especially when you need many variations across channels. Final cost depends on volume, complexity, and how often visuals refresh.' },
             { q: 'Can I use AI product photography for ads and product pages?', a: 'Yes. The output is designed for Meta and Google ads, PDPs, social, email, and campaign creative.' },
             { q: 'Does VOVV.AI preserve product details?', a: 'VOVV.AI is built to keep the product as the hero, but users should always review final visuals before publishing.' },
           ]}
@@ -222,6 +220,7 @@ export default function AIPhotographyVsPhotoshoot() {
           copy="Upload one product photo and generate product page images, lifestyle visuals, ads, social content, and campaign-ready creative with VOVV.AI."
           primaryCta={{ label: 'Try AI product photography free', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Compare VOVV.AI vs studio', to: '/ai-product-photography-vs-studio' }}
+          pageId="vs-photoshoot"
         />
       </main>
       <LandingFooter />

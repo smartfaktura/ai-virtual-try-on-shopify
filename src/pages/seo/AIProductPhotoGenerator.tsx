@@ -67,6 +67,7 @@ export default function AIProductPhotoGenerator() {
       <main>
         <LandingHeroSEO
           eyebrow="AI Product Photo Generator"
+          pageId="generator"
           headline={
             <>
               AI Product Photo Generator
@@ -77,7 +78,7 @@ export default function AIProductPhotoGenerator() {
           subheadline="Upload one product image and generate product photos for your store, ads, social media, email campaigns, and product launches."
           trustLine="One product photo · Multiple visual styles · Built for ecommerce"
           primaryCta={{ label: 'Generate product photos free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'See how it works', to: '/how-it-works' }}
+          secondaryCta={{ label: 'Explore AI product photography', to: '/ai-product-photography' }}
           altPrefix="AI product photo generator example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'Studio Hero' },
@@ -132,8 +133,9 @@ export default function AIProductPhotoGenerator() {
             { title: 'Generate product photos', text: 'Use them across your store, ads, social, and campaigns.', Icon: Sparkles },
           ]}
           ctaLabel="Generate product photos free"
-        />
+          pageId="generator"
 
+        />
         <LandingCategoryGrid
           eyebrow="All 10 product verticals"
           headline="Generate product photos for every ecommerce category"
@@ -209,6 +211,7 @@ export default function AIProductPhotoGenerator() {
           copy="Upload one product photo and create studio images, lifestyle visuals, ads, social content, and campaign-ready creative with VOVV.AI."
           primaryCta={{ label: 'Generate product photos free', to: '/app/generate/product-images' }}
           secondaryCta={{ label: 'Compare AI vs photoshoot', to: '/ai-product-photography-vs-photoshoot' }}
+          pageId="generator"
         />
       </main>
       <LandingFooter />

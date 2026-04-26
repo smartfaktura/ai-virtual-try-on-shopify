@@ -7,6 +7,7 @@ export interface LandingFinalCTASEOProps {
   copy: string;
   primaryCta: { label: string; to: string };
   secondaryCta?: { label: string; to: string };
+  pageId?: string;
 }
 
 export function LandingFinalCTASEO({
@@ -15,6 +16,7 @@ export function LandingFinalCTASEO({
   copy,
   primaryCta,
   secondaryCta,
+  pageId,
 }: LandingFinalCTASEOProps) {
   return (
     <section className="py-16 lg:py-32 bg-[#1a1a2e] relative overflow-hidden">
@@ -35,6 +37,8 @@ export function LandingFinalCTASEO({
         <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
           <Link
             to={primaryCta.to}
+            data-cta="final-primary"
+            data-page={pageId}
             className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto"
           >
             {primaryCta.label}
@@ -43,6 +47,8 @@ export function LandingFinalCTASEO({
           {secondaryCta && (
             <Link
               to={secondaryCta.to}
+              data-cta="final-secondary"
+              data-page={pageId}
               className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"
             >
               {secondaryCta.label}
