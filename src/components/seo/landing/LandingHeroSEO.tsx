@@ -20,17 +20,31 @@ export interface LandingHeroSEOProps {
   secondaryCta?: { label: string; to: string };
   tiles: HeroTile[];
   altPrefix: string;
+  pageId?: string;
 }
 
-function Tile({ tile, altPrefix }: { tile: HeroTile; altPrefix: string }) {
+function Tile({
+  tile,
+  altPrefix,
+  eager = false,
+  highPriority = false,
+}: {
+  tile: HeroTile;
+  altPrefix: string;
+  eager?: boolean;
+  highPriority?: boolean;
+}) {
   const src = tile.id.startsWith('http') ? tile.id : PREVIEW(tile.id);
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
         src={getOptimizedUrl(src, { quality: 60 })}
         alt={`${altPrefix}: ${tile.label}`}
-        loading="lazy"
+        width={210}
+        height={280}
+        loading={eager ? 'eager' : 'lazy'}
         decoding="async"
+        {...(highPriority ? { fetchpriority: 'high' as 'high' } : {})}
         className="w-full h-full object-cover"
       />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
@@ -47,11 +61,13 @@ function MarqueeRow({
   direction,
   duration,
   altPrefix,
+  eager = false,
 }: {
   tiles: HeroTile[];
   direction: 'left' | 'right';
   duration: string;
   altPrefix: string;
+  eager?: boolean;
 }) {
   const doubled = [...tiles, ...tiles];
   return (
@@ -61,7 +77,13 @@ function MarqueeRow({
         style={{ animationDuration: duration }}
       >
         {doubled.map((t, i) => (
-          <Tile key={`${t.label}-${i}`} tile={t} altPrefix={altPrefix} />
+          <Tile
+            key={`${t.label}-${i}`}
+            tile={t}
+            altPrefix={altPrefix}
+            eager={eager && i < tiles.length}
+            highPriority={eager && i < 2}
+          />
         ))}
       </div>
     </div>
