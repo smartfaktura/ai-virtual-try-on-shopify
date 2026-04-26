@@ -106,26 +106,30 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
         {/* Grid — 8 images per subcategory (mobile shows 6) */}
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 lg:gap-4 animate-in fade-in duration-500" key={active.subCategory}>
-          {active.cards.map((card, i) => (
-            <div
-              key={`${active.subCategory}-${card.imageId}-${i}`}
-              className={cn(
-                'group relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted/40 shadow-sm shadow-foreground/[0.04]',
-                i >= 6 && 'hidden sm:block',
-              )}
-            >
-              <SmartImage
-                src={getOptimizedUrl(PREVIEW(card.imageId), { quality: 55 })}
-                alt={`${card.label} — ${page.groupName} AI product photography example`}
-                imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] font-medium text-white/90 leading-tight line-clamp-2">
-                  {card.label}
-                </span>
+          {active.cards.map((card, i) => {
+            const slotKey = `builtFor_${slotSlugify(active.subCategory)}_${i + 1}`;
+            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId));
+            return (
+              <div
+                key={`${active.subCategory}-${card.imageId}-${i}`}
+                className={cn(
+                  'group relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted/40 shadow-sm shadow-foreground/[0.04]',
+                  i >= 6 && 'hidden sm:block',
+                )}
+              >
+                <SmartImage
+                  src={getOptimizedUrl(resolved, { quality: 55 })}
+                  alt={`${card.label} — ${page.groupName} AI product photography example`}
+                  imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[11px] font-medium text-white/90 leading-tight line-clamp-2">
+                    {card.label}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTA */}
