@@ -58,25 +58,25 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
         <DialogTitle className="sr-only">{scene.title}</DialogTitle>
         <div className="grid gap-0 md:grid-cols-[5fr_6fr]">
           {/* Hero */}
-          <div className="relative aspect-[5/4] max-h-[42dvh] md:aspect-[4/5] md:max-h-none w-full overflow-hidden bg-muted/40">
+          <div className="relative aspect-[3/4] max-h-[55dvh] md:aspect-[4/5] md:max-h-none w-full overflow-hidden bg-muted/40">
             {/* Skeleton shimmer */}
             {!imgLoaded && (
               <Skeleton className="absolute inset-0 z-[1] rounded-none" />
             )}
 
-            {/* Tiny low-quality placeholder for instant paint */}
+            {/* Tiny low-quality placeholder fills letterbox bands behind contained hero */}
             {placeholderUrl && (
               <img
                 src={placeholderUrl}
                 alt=""
                 aria-hidden
-                className={`absolute inset-0 z-[2] h-full w-full object-cover blur-md scale-110 transition-opacity duration-300 ${
+                className={`absolute inset-0 z-[2] h-full w-full object-cover blur-xl scale-110 transition-opacity duration-300 ${
                   imgLoaded ? 'opacity-0' : 'opacity-80'
                 }`}
               />
             )}
 
-            {/* Full quality hero */}
+            {/* Full quality hero — contain on mobile so nothing is cropped, cover on desktop split */}
             {heroUrl && (
               <img
                 src={heroUrl}
@@ -85,7 +85,7 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
                 decoding="async"
                 onLoad={() => setImgLoaded(true)}
                 onError={() => setImgLoaded(true)}
-                className={`relative z-[3] h-full w-full object-cover transition-opacity duration-500 ${
+                className={`relative z-[3] h-full w-full object-contain md:object-cover transition-opacity duration-500 ${
                   imgLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
               />
