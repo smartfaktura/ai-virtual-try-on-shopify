@@ -135,6 +135,7 @@ export default function AIProductPhotoGenerator() {
           ctaLabel="Generate product photos free"
           pageId="generator"
 
+        />
         <LandingCategoryGrid
           eyebrow="All 10 product verticals"
           headline="Generate product photos for every ecommerce category"
