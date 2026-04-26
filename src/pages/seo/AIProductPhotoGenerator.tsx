@@ -184,6 +184,26 @@ export default function AIProductPhotoGenerator() {
           ]}
         />
 
+        <section className="pt-2 pb-12 lg:pb-20 bg-background">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+              Selling on a specific platform? See dedicated pages for{' '}
+              <a href="/shopify-product-photography-ai" className="text-foreground font-medium underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground/70 transition-colors">
+                Shopify product photography
+              </a>{' '}
+              and{' '}
+              <a href="/etsy-product-photography-ai" className="text-foreground font-medium underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground/70 transition-colors">
+                Etsy product photography
+              </a>
+              , or compare AI vs a{' '}
+              <a href="/ai-product-photography-vs-studio" className="text-foreground font-medium underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground/70 transition-colors">
+                product photography studio
+              </a>
+              .
+            </p>
+          </div>
+        </section>
+
         <LandingFinalCTASEO
           headline="Generate your first product visuals today"
           copy="Upload one product photo and create studio images, lifestyle visuals, ads, social content, and campaign-ready creative with VOVV.AI."
