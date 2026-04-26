@@ -246,6 +246,16 @@ export default function SeoPageVisuals() {
     return Array.from(map.entries()).map(([name, slots]) => ({ name, slots }));
   }, [selectedPage]);
 
+  // Guard renders AFTER all hooks have been called (hook order must be stable)
+  if (adminLoading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
+  if (!isRealAdmin) return <Navigate to="/app" replace />;
+
   const pickerSlot = pickerSlotKey
     ? selectedPage.slots.find((s) => s.key === pickerSlotKey) ?? null
     : null;
