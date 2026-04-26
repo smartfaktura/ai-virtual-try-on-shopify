@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, User } from 'lucide-react';
 
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { mockModels } from '@/data/mockData';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 
 type ModelItem =
   | { kind: 'model'; name: string; previewUrl: string }
@@ -40,22 +40,26 @@ function BrandModelCTA() {
 }
 
 function ModelCardItem({ model }: { model: { name: string; previewUrl: string } }) {
-  const [hidden, setHidden] = useState(false);
-
-  if (hidden) return null;
+  const [errored, setErrored] = useState(false);
 
   return (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-card">
-        <ShimmerImage
-          src={getOptimizedUrl(model.previewUrl, { width: 320, height: 426, quality: 55, resize: 'cover' })}
-          alt={model.name}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover object-top"
-          aspectRatio="3/4"
-          onError={() => setHidden(true)}
-        />
+      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/40 flex items-center justify-center">
+        {errored ? (
+          <User className="w-8 h-8 text-muted-foreground/40" strokeWidth={1.25} />
+        ) : (
+          <ShimmerImage
+            src={getOptimizedUrl(model.previewUrl, { width: 360, height: 480, quality: 72, resize: 'cover' })}
+            srcSet={getResizedSrcSet(model.previewUrl, { widths: [240, 360, 480], aspect: [3, 4], quality: 72 })}
+            sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"
+            alt={model.name}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover object-top"
+            aspectRatio="3/4"
+            onError={() => setErrored(true)}
+          />
+        )}
       </div>
       <span className="text-[11px] tracking-wide text-muted-foreground">{model.name}</span>
     </div>
