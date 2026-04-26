@@ -23,7 +23,7 @@ export function LibraryMobileFilters({
   onSelect,
 }: LibraryMobileFiltersProps) {
   const handleAll = () => {
-    onSelect(families[0]?.slug ?? null, null);
+    onSelect(null, null);
     onOpenChange(false);
   };
 
