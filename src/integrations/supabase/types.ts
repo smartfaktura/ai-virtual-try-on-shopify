@@ -641,6 +641,45 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_requests: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string
+          email: string
+          id: string
+          name: string | null
+          status: string
+          title: string
+          user_id: string | null
+          votes: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description: string
+          email: string
+          id?: string
+          name?: string | null
+          status?: string
+          title: string
+          user_id?: string | null
+          votes?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string
+          email?: string
+          id?: string
+          name?: string | null
+          status?: string
+          title?: string
+          user_id?: string | null
+          votes?: number
+        }
+        Relationships: []
+      }
       featured_items: {
         Row: {
           created_at: string
