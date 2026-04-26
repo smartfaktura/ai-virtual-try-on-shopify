@@ -222,13 +222,14 @@ const TOOL_TAGS_ETSY = ['etsy', 'handmade', 'jewelry', 'home decor', 'gift', 'li
 const COMPARISON_TAGS = ['before-after', 'workflow', 'comparison'];
 
 export const SEO_PAGES: SeoPageEntry[] = [
-  // Main hub
+  // Main hub — section order matches top-to-bottom on the live page.
   {
     route: '/ai-product-photography',
     label: 'AI Product Photography Hub',
     group: 'main',
     slots: [
       ...buildHeroSlots(HUB_TAGS),
+      ...buildCategoryChooserSlots(HUB_TAGS),
       ...buildVisualSystemSlots(HUB_TAGS),
       ...buildSceneExampleSlots(HUB_TAGS),
     ],
