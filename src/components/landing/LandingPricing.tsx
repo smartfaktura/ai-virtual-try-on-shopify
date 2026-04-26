@@ -137,20 +137,22 @@ export function LandingPricing() {
   const enterprisePlan = pricingPlans.find((p) => p.isEnterprise);
 
   return (
-    <section id="pricing" className="bg-[#FAFAF8]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 lg:pb-32">
+    <>
+    {/* ═══ BAND 1 · Hero + Pricing cards (off-white) ═══ */}
+    <section id="pricing" className="bg-[#FAFAF8] pt-24 sm:pt-28 lg:pt-32 pb-20 lg:pb-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="text-center mb-14 lg:mb-16">
+        <div className="text-center mb-12 lg:mb-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Pricing
           </p>
-          <h1 className="text-[#1a1a2e] text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+          <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.75rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
             Simple pricing.
             <br />
             Real production output.
           </h1>
-          <p className="mx-auto max-w-xl text-[#6b7280] text-lg leading-relaxed mb-10">
+          <p className="mx-auto max-w-xl text-muted-foreground text-lg leading-relaxed mb-10">
             Start free. Scale when you're ready. Every plan unlocks the full visual library.
           </p>
 
@@ -305,217 +307,226 @@ export function LandingPricing() {
         </div>
 
         {/* ── Trust microcopy ────────────────────────────────────── */}
-        <p className="mt-6 text-center text-xs text-[#9ca3af]">
+        <p className="mt-8 text-center text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
           Cancel anytime · No commitment · Secure checkout
         </p>
 
-        {/* ── Compare every feature ──────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
-          <div className="text-center mb-10 lg:mb-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              Compare plans
-            </p>
-            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
-              Compare every feature
-            </h2>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-              Every plan, side-by-side. Pick the one that matches your output.
-            </p>
-          </div>
+      </div>
+    </section>
 
-          {/* Desktop table */}
-          <div className="hidden md:block rounded-2xl border border-border/50 overflow-hidden bg-card">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-sm">
-                <thead>
-                  <tr className="bg-muted/30 border-b border-border/50">
-                    <th className="text-left px-5 py-5 align-bottom w-[28%]">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Plans
-                      </span>
-                    </th>
-                    {mainPlans.map((p) => {
-                      const isRec = p.planId === 'growth';
-                      const isFree = p.planId === 'free';
-                      const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
-                      const annualSavings = annual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
-                      const credits = typeof p.credits === 'number' ? p.credits : 0;
-                      return (
-                        <th
-                          key={p.planId}
-                          className={`px-3 py-5 align-bottom min-w-[150px] relative ${isRec ? 'bg-primary/[0.04]' : ''}`}
-                        >
-                          {isRec && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />}
-                          <div className="flex flex-col items-center gap-2 text-center">
-                            {isRec ? (
-                              <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
-                                Recommended
-                              </span>
-                            ) : (
-                              <span className="h-[18px]" aria-hidden />
-                            )}
-                            <span className={`text-sm font-semibold ${isRec ? 'text-primary' : 'text-foreground'}`}>
-                              {p.name}
+    {/* ═══ BAND 2 · Compare every feature (white) ═══ */}
+    <section className="bg-white py-20 lg:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Compare plans
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+            Compare every feature
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+            Every plan, side-by-side. Pick the one that matches your output.
+          </p>
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block rounded-2xl border border-[#f0efed] overflow-hidden bg-card">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className="bg-[#FAFAF8] border-b border-[#f0efed]">
+                  <th className="text-left px-5 py-5 align-bottom w-[28%]">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Plans
+                    </span>
+                  </th>
+                  {mainPlans.map((p) => {
+                    const isRec = p.planId === 'growth';
+                    const isFree = p.planId === 'free';
+                    const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                    const annualSavings = annual && p.monthlyPrice > 0 ? (p.monthlyPrice * 12) - p.annualPrice : 0;
+                    const credits = typeof p.credits === 'number' ? p.credits : 0;
+                    return (
+                      <th
+                        key={p.planId}
+                        className={`px-3 py-5 align-bottom min-w-[150px] relative ${isRec ? 'bg-foreground/[0.03]' : ''}`}
+                      >
+                        {isRec && <div className="absolute top-0 left-0 right-0 h-0.5 bg-foreground" aria-hidden />}
+                        <div className="flex flex-col items-center gap-2 text-center">
+                          {isRec ? (
+                            <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#1a1a2e] text-white font-semibold whitespace-nowrap">
+                              Recommended
                             </span>
-                            <div className="flex flex-col items-center">
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-2xl font-semibold tracking-tight text-foreground">
-                                  ${isFree ? 0 : displayPrice}
-                                </span>
-                                <span className="text-[11px] text-muted-foreground">/mo</span>
-                              </div>
-                              <span className="text-[10px] text-muted-foreground/70 mt-0.5">
-                                {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
-                              </span>
-                              {annual && annualSavings > 0 && (
-                                <span className="text-[10px] text-primary font-semibold mt-0.5">Save ${annualSavings}/yr</span>
-                              )}
-                            </div>
-                            <Button
-                              size="sm"
-                              variant={isRec ? 'default' : 'outline'}
-                              onClick={() => navigate(user ? '/app/settings' : '/auth')}
-                              className="w-full text-[11px] font-medium h-8 px-2"
-                            >
-                              {isFree ? 'Start Free' : `Get ${p.name}`}
-                            </Button>
-                          </div>
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {FEATURE_MATRIX.map((group) => (
-                    <Fragment key={group.title}>
-                      <tr className="bg-muted/20 border-t border-border/40">
-                        <td colSpan={mainPlans.length + 1} className="px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          {group.title}
-                        </td>
-                      </tr>
-                      {group.rows.map((row) => (
-                        <tr key={row.label} className="border-t border-border/30 hover:bg-muted/10 transition-colors">
-                          <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
-                          {mainPlans.map((p) => {
-                            const isRec = p.planId === 'growth';
-                            return (
-                              <td key={p.planId} className={`px-3 py-3 text-center ${isRec ? 'bg-primary/[0.04]' : ''}`}>
-                                {renderCell(row.values[p.planId] ?? false)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Mobile collapsible feature lists per plan */}
-          <div className="md:hidden space-y-3">
-            {mainPlans.map((p) => {
-              const isRec = p.planId === 'growth';
-              const isFree = p.planId === 'free';
-              const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
-              const credits = typeof p.credits === 'number' ? p.credits : 0;
-              return (
-                <div
-                  key={p.planId}
-                  className={`rounded-2xl border bg-card p-4 ${isRec ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/50'}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-semibold">{p.name}</span>
-                        {isRec && (
-                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
-                            Recommended
+                          ) : (
+                            <span className="h-[18px]" aria-hidden />
+                          )}
+                          <span className={`text-sm font-semibold ${isRec ? 'text-foreground' : 'text-foreground'}`}>
+                            {p.name}
                           </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {credits > 0 ? `${credits.toLocaleString()} credits / month` : 'Trial credits'}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-baseline gap-1 justify-end">
-                        <span className="text-xl font-semibold">${isFree ? 0 : displayPrice}</span>
-                        <span className="text-[11px] text-muted-foreground">/mo</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Collapsible>
-                    <CollapsibleTrigger className="w-full flex items-center justify-between mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground hover:text-foreground transition-colors group">
-                      <span>See all features</span>
-                      <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-3 space-y-3">
-                      {FEATURE_MATRIX.map((group) => (
-                        <div key={group.title} className="space-y-1.5">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{group.title}</p>
-                          <ul className="space-y-1.5">
-                            {group.rows.map((row) => {
-                              const v = row.values[p.planId] ?? false;
-                              return (
-                                <li key={row.label} className="flex items-start gap-2 text-[13px]">
-                                  {v === false ? (
-                                    <Minus className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 flex-shrink-0" />
-                                  ) : (
-                                    <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" strokeWidth={2.5} />
-                                  )}
-                                  <span className={v === false ? 'text-muted-foreground/60' : 'text-foreground/90'}>
-                                    {row.label}
-                                    {typeof v === 'string' && <span className="text-muted-foreground"> · {v}</span>}
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          </ul>
+                          <div className="flex flex-col items-center">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-2xl font-semibold tracking-tight text-foreground">
+                                ${isFree ? 0 : displayPrice}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">/mo</span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground/70 mt-0.5">
+                              {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
+                            </span>
+                            {annual && annualSavings > 0 && (
+                              <span className="text-[10px] text-foreground font-semibold mt-0.5">Save ${annualSavings}/yr</span>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={isRec ? 'default' : 'outline'}
+                            onClick={() => navigate(user ? '/app/settings' : '/auth')}
+                            className="w-full text-[11px] font-medium h-8 px-2"
+                          >
+                            {isFree ? 'Start Free' : `Get ${p.name}`}
+                          </Button>
                         </div>
-                      ))}
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              );
-            })}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_MATRIX.map((group) => (
+                  <Fragment key={group.title}>
+                    <tr className="bg-[#FAFAF8] border-t border-[#f0efed]">
+                      <td colSpan={mainPlans.length + 1} className="px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        {group.title}
+                      </td>
+                    </tr>
+                    {group.rows.map((row) => (
+                      <tr key={row.label} className="border-t border-[#f0efed] hover:bg-[#FAFAF8]/60 transition-colors">
+                        <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
+                        {mainPlans.map((p) => {
+                          const isRec = p.planId === 'growth';
+                          return (
+                            <td key={p.planId} className={`px-3 py-3 text-center ${isRec ? 'bg-foreground/[0.03]' : ''}`}>
+                              {renderCell(row.values[p.planId] ?? false)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* ── Team Comparison ────────────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
-          <div className="text-center mb-10 lg:mb-12">
+        {/* Mobile collapsible feature lists per plan */}
+        <div className="md:hidden space-y-3">
+          {mainPlans.map((p) => {
+            const isRec = p.planId === 'growth';
+            const isFree = p.planId === 'free';
+            const displayPrice = annual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+            const credits = typeof p.credits === 'number' ? p.credits : 0;
+            return (
+              <div
+                key={p.planId}
+                className={`rounded-2xl border bg-card p-4 ${isRec ? 'border-foreground/30 ring-1 ring-foreground/10' : 'border-[#f0efed]'}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-foreground">{p.name}</span>
+                      {isRec && (
+                        <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#1a1a2e] text-white font-semibold">
+                          Recommended
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {credits > 0 ? `${credits.toLocaleString()} credits / month` : 'Trial credits'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-baseline gap-1 justify-end">
+                      <span className="text-xl font-semibold text-foreground">${isFree ? 0 : displayPrice}</span>
+                      <span className="text-[11px] text-muted-foreground">/mo</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Collapsible>
+                  <CollapsibleTrigger className="w-full flex items-center justify-between mt-3 pt-3 border-t border-[#f0efed] text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                    <span>See all features</span>
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-3 space-y-3">
+                    {FEATURE_MATRIX.map((group) => (
+                      <div key={group.title} className="space-y-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{group.title}</p>
+                        <ul className="space-y-1.5">
+                          {group.rows.map((row) => {
+                            const v = row.values[p.planId] ?? false;
+                            return (
+                              <li key={row.label} className="flex items-start gap-2 text-[13px]">
+                                {v === false ? (
+                                  <Minus className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 flex-shrink-0" />
+                                ) : (
+                                  <Check className="w-3.5 h-3.5 text-foreground mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+                                )}
+                                <span className={v === false ? 'text-muted-foreground/60' : 'text-foreground/90'}>
+                                  {row.label}
+                                  {typeof v === 'string' && <span className="text-muted-foreground"> · {v}</span>}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ BAND 3 · Replaces a studio + Platform features (off-white) ═══ */}
+    <section className="bg-[#FAFAF8] py-20 lg:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* ── Replaces a studio ──────────────────────────────────── */}
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12 lg:mb-16">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
               Replaces a studio
             </p>
-            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+            <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               One platform replaces your entire creative team
             </h2>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               Stop hiring photographers, renting studios, and booking models. VOVV.AI handles it all.
             </p>
           </div>
 
           <div className="rounded-2xl border border-[#f0efed] overflow-hidden bg-white">
             {/* Header */}
-            <div className="grid grid-cols-3 bg-[#FAFAF8] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b7280]">
+            <div className="grid grid-cols-3 bg-[#FAFAF8] text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               <div className="px-5 py-3.5">Role</div>
               <div className="px-5 py-3.5 text-center">Traditional</div>
-              <div className="px-5 py-3.5 text-center text-[#1a1a2e]">VOVV.AI</div>
+              <div className="px-5 py-3.5 text-center text-foreground">VOVV.AI</div>
             </div>
             {TEAM_COMPARISON.map((row, i) => (
               <div
                 key={row.role}
                 className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF8]/60'} border-t border-[#f0efed]`}
               >
-                <div className="px-5 py-3.5 font-medium text-[#1a1a2e]">{row.role}</div>
-                <div className="px-5 py-3.5 text-center text-[#6b7280] flex items-center justify-center gap-1.5">
-                  <X className="w-3.5 h-3.5 text-[#9ca3af] shrink-0" />
+                <div className="px-5 py-3.5 font-medium text-foreground">{row.role}</div>
+                <div className="px-5 py-3.5 text-center text-muted-foreground flex items-center justify-center gap-1.5">
+                  <X className="w-3.5 h-3.5 text-muted-foreground/70 shrink-0" />
                   {row.traditional}
                 </div>
-                <div className="px-5 py-3.5 text-center font-medium text-[#1a1a2e] flex items-center justify-center gap-1.5">
+                <div className="px-5 py-3.5 text-center font-medium text-foreground flex items-center justify-center gap-1.5">
                   <Check className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
                   {row.vovv}
                 </div>
@@ -523,23 +534,23 @@ export function LandingPricing() {
             ))}
             {/* Total */}
             <div className="grid grid-cols-3 border-t border-[#f0efed] bg-[#FAFAF8] font-semibold text-sm">
-              <div className="px-5 py-4 text-[#1a1a2e]">Total per shoot</div>
-              <div className="px-5 py-4 text-center text-[#6b7280]">$4,500–22,000+</div>
-              <div className="px-5 py-4 text-center text-[#1a1a2e] text-base font-semibold">From $0/mo</div>
+              <div className="px-5 py-4 text-foreground">Total per shoot</div>
+              <div className="px-5 py-4 text-center text-muted-foreground">$4,500–22,000+</div>
+              <div className="px-5 py-4 text-center text-foreground text-base font-semibold">From $0/mo</div>
             </div>
           </div>
         </div>
 
         {/* ── Platform Features Grid ─────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-6xl mx-auto">
-          <div className="text-center mb-10 lg:mb-12">
+        <div className="mt-20 lg:mt-28">
+          <div className="text-center mb-12 lg:mb-16">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
               The platform
             </p>
-            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+            <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               Everything you get with VOVV.AI
             </h2>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               A complete visual production studio — photography, video, editing, and brand management in one place.
             </p>
           </div>
@@ -550,95 +561,145 @@ export function LandingPricing() {
                 key={feat.title}
                 className="rounded-2xl border border-[#f0efed] bg-white p-6 transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(26,26,46,0.10)]"
               >
-                <div className="w-9 h-9 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center mb-4">
-                  <feat.icon className="w-4 h-4 text-[#1a1a2e]" />
+                <div className="w-9 h-9 rounded-xl bg-foreground/[0.06] flex items-center justify-center mb-4">
+                  <feat.icon className="w-4 h-4 text-foreground" />
                 </div>
-                <h3 className="text-sm font-semibold text-[#1a1a2e] mb-1.5">{feat.title}</h3>
-                <p className="text-[12.5px] leading-relaxed text-[#6b7280]">{feat.desc}</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1.5">{feat.title}</h3>
+                <p className="text-[12.5px] leading-relaxed text-muted-foreground">{feat.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
+      </div>
+    </section>
+
+    {/* ═══ BAND 4 · Cost comparison + How credits work (white) ═══ */}
+    <section className="bg-white py-20 lg:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* ── Cost Comparison ────────────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <CompetitorComparison />
         </div>
 
         {/* ── How Credits Work ───────────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-4xl mx-auto">
-          <div className="text-center mb-10 lg:mb-12">
+        <div className="mt-20 lg:mt-28">
+          <div className="text-center mb-12 lg:mb-16">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
               Credits
             </p>
-            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+            <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
               How credits work
             </h2>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-lg mx-auto">
+            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
               One simple currency for every creative tool on the platform.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {CREDIT_CARDS.map((card) => (
               <div
                 key={card.title}
-                className="rounded-2xl border border-[#f0efed] bg-white p-6 text-center"
+                className="rounded-2xl border border-[#f0efed] bg-[#FAFAF8] p-6 text-center"
               >
-                <div className="w-11 h-11 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center mx-auto mb-4">
-                  <card.icon className="w-5 h-5 text-[#1a1a2e]" />
+                <div className="w-11 h-11 rounded-xl bg-foreground/[0.06] flex items-center justify-center mx-auto mb-4">
+                  <card.icon className="w-5 h-5 text-foreground" />
                 </div>
-                <h3 className="text-sm font-semibold text-[#1a1a2e] mb-1.5">{card.title}</h3>
-                <p className="text-xs text-[#6b7280] leading-relaxed">{card.detail}</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1.5">{card.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{card.detail}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ── FAQ ────────────────────────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-3xl mx-auto">
-          <div className="text-center mb-10 lg:mb-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              FAQ
-            </p>
-            <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
-              Pricing questions, answered
-            </h2>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-              The most common questions about plans, credits, and billing.
-            </p>
-          </div>
+      </div>
+    </section>
 
-          <Accordion type="single" collapsible className="flex flex-col gap-3">
-            {FAQS.map((faq, idx) => (
-              <AccordionItem
-                key={idx}
-                value={`faq-${idx}`}
-                className="border border-[#f0efed] bg-white rounded-2xl px-5 sm:px-6"
-              >
-                <AccordionTrigger className="text-left text-[#1a1a2e] text-base font-semibold py-5 hover:no-underline">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-[#6b7280] text-sm sm:text-base leading-relaxed pb-5">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-
-          <div className="mt-8 text-center">
-            <Link
-              to="/faq"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1a1a2e] hover:text-[#2a2a3e] transition-colors"
-            >
-              See all FAQs
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+    {/* ═══ BAND 5 · FAQ (off-white) ═══ */}
+    <section className="bg-[#FAFAF8] py-20 lg:py-28">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            FAQ
+          </p>
+          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] mb-4">
+            Pricing questions, answered
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+            The most common questions about plans, credits, and billing.
+          </p>
         </div>
 
-        {/* ── Start Free CTA ─────────────────────────────────────── */}
-        <div className="mt-24 lg:mt-32 max-w-3xl mx-auto rounded-2xl bg-[#1a1a2e] p-10 sm:p-14 text-center">
+        <Accordion type="single" collapsible className="flex flex-col gap-3">
+          {FAQS.map((faq, idx) => (
+            <AccordionItem
+              key={idx}
+              value={`faq-${idx}`}
+              className="border border-[#f0efed] bg-white rounded-2xl px-5 sm:px-6"
+            >
+              <AccordionTrigger className="text-left text-foreground text-base font-semibold py-5 hover:no-underline">
+                {faq.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground text-sm sm:text-base leading-relaxed pb-5">
+                {faq.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+
+        <div className="mt-8 text-center">
+          <Link
+            to="/faq"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
+          >
+            See all FAQs
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ BAND 6 · Enterprise + Start Free CTA crescendo (off-white) ═══ */}
+    <section className="bg-[#FAFAF8] py-20 lg:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+
+        {/* ── Enterprise Banner ───────────────────────────────────── */}
+        {enterprisePlan && (
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-7 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-foreground/[0.06] flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-foreground text-lg font-semibold">{enterprisePlan.name}</h3>
+                  <p className="text-sm text-muted-foreground">Custom pricing for large teams</p>
+                </div>
+              </div>
+
+              <ul className="flex-1 flex flex-wrap gap-x-6 gap-y-2">
+                {enterprisePlan.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-sm text-foreground/80">
+                    <Check className="w-4 h-4 text-foreground shrink-0" strokeWidth={2.5} />
+                    {typeof feature === 'string' ? feature : feature.text}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-[#d4d4d4] text-foreground text-sm font-semibold hover:bg-[#f5f5f3] transition-colors shrink-0"
+              >
+                Contact sales
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ── Start Free CTA (page-ending crescendo) ─────────────── */}
+        <div className="max-w-3xl mx-auto rounded-2xl bg-[#1a1a2e] p-10 sm:p-14 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
             Get started
           </p>
@@ -657,41 +718,8 @@ export function LandingPricing() {
           </Link>
         </div>
 
-        {/* ── Enterprise Banner ───────────────────────────────────── */}
-        {enterprisePlan && (
-          <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-[#f0efed] bg-white p-7 sm:p-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="w-11 h-11 rounded-xl bg-[#1a1a2e]/[0.06] flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-[#1a1a2e]" />
-                </div>
-                <div>
-                  <h3 className="text-[#1a1a2e] text-lg font-semibold">{enterprisePlan.name}</h3>
-                  <p className="text-sm text-[#6b7280]">Custom pricing for large teams</p>
-                </div>
-              </div>
-
-              <ul className="flex-1 flex flex-wrap gap-x-6 gap-y-2">
-                {enterprisePlan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-[#4b5563]">
-                    <Check className="w-4 h-4 text-[#1a1a2e] shrink-0" strokeWidth={2.5} />
-                    {typeof feature === 'string' ? feature : feature.text}
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                to="/contact"
-                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full border border-[#d4d4d4] text-[#1a1a2e] text-sm font-semibold hover:bg-[#f5f5f3] transition-colors shrink-0"
-              >
-                Contact sales
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        )}
-
       </div>
     </section>
+    </>
   );
 }
