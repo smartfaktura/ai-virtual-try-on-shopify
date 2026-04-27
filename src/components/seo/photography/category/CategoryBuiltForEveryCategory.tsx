@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { getBuiltForGroupsForPage, slotSlugify } from '@/data/builtForGridGroups';
@@ -167,7 +167,9 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
                 )}
               >
                 <SmartImage
-                  src={getOptimizedUrl(resolved, { quality: 55 })}
+                  src={getOptimizedUrl(resolved, { width: 480, height: 640, quality: 80, resize: 'cover' })}
+                  srcSet={getResizedSrcSet(resolved, { widths: [320, 480, 640], aspect: [3, 4], quality: 80 })}
+                  sizes="(max-width: 1024px) 40vw, 240px"
                   alt={`${card.label} — ${page.groupName} AI product photography example`}
                   imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
                 />
