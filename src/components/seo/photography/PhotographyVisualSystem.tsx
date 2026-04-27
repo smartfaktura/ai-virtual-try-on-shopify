@@ -1,5 +1,5 @@
 import { ShoppingBag, Sparkles, Instagram, Megaphone, ZoomIn, Camera } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
 
@@ -93,8 +93,12 @@ export function PhotographyVisualSystem() {
                         className="relative overflow-hidden rounded-xl bg-muted/40"
                       >
                         <img
-                          src={getOptimizedUrl(src, { quality: 60 })}
+                          src={getOptimizedUrl(src, { width: 320, height: 400, quality: 70, resize: 'cover' })}
+                          srcSet={getResizedSrcSet(src, { widths: [220, 320, 440], aspect: [4, 5], quality: 70 })}
+                          sizes="(max-width: 640px) 32vw, (max-width: 1024px) 24vw, 140px"
                           alt={`${title} — AI product photography example ${idx + 1}`}
+                          width={320}
+                          height={400}
                           loading="lazy"
                           decoding="async"
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
