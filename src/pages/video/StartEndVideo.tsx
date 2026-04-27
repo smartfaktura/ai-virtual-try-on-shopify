@@ -244,11 +244,11 @@ export default function StartEndVideo() {
         </PageHeader>
         <VideoResultsPanel
           videoUrl={project.videoUrl}
-          sourceImageUrl={start.preview ?? undefined}
+          sourceImageUrl={start.preview ?? project.recentResult?.sourceImageUrl ?? undefined}
           aspectRatio={derivedAspectRatio}
           creditCost={creditCost}
           creditsRemaining={creditsBalance}
-          onNewProject={() => { project.reset(); setStart(EMPTY_SLOT); setEnd(EMPTY_SLOT); setStartProbe(null); setEndProbe(null); }}
+          onNewProject={() => { project.reset(); project.dismissRecentResult(); setStart(EMPTY_SLOT); setEnd(EMPTY_SLOT); setStartProbe(null); setEndProbe(null); }}
         />
       </div>
     );
