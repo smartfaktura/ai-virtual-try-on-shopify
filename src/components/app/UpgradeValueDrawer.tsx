@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,8 @@ import { Check } from 'lucide-react';
 import { type ConversionCategory, getLayer2Copy, getLayer1Avatar } from '@/lib/conversionCopy';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { gtmPricingModalView } from '@/lib/gtm';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -23,6 +25,8 @@ interface UpgradeValueDrawerProps {
   onClose: () => void;
   category: ConversionCategory;
   generationContext?: GenerationContext;
+  /** Optional GTM source attribution (e.g. layer2 reason). */
+  source?: string;
 }
 
 const DRAWER_PLAN_FEATURES: Record<string, { text: string; badge?: string }[]> = {
@@ -63,12 +67,27 @@ const PLAN_CARDS = [
   },
 ];
 
-export function UpgradeValueDrawer({ open, onClose, category, generationContext }: UpgradeValueDrawerProps) {
-  const { startCheckout } = useCredits();
+export function UpgradeValueDrawer({ open, onClose, category, generationContext, source }: UpgradeValueDrawerProps) {
+  const { startCheckout, plan } = useCredits();
+  const { user } = useAuth();
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const copy = getLayer2Copy(category);
   const avatar = getLayer1Avatar(category);
   const isAnnual = billing === 'annual';
+
+  // GTM: fire pricing_modal_view on false → true open transition only
+  const prevOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      gtmPricingModalView({
+        userId: user?.id,
+        modalName: 'upgrade_value_drawer',
+        source,
+        currentPlan: plan,
+      });
+    }
+    prevOpenRef.current = open;
+  }, [open, user?.id, source, plan]);
 
   const handleCheckout = (plan: typeof pricingPlans[number]) => {
     const priceId = isAnnual ? plan.stripePriceIdAnnual : plan.stripePriceIdMonthly;

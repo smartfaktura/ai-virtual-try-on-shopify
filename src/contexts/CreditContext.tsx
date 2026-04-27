@@ -44,7 +44,8 @@ interface CreditContextValue {
   startCheckout: (priceId: string, mode: 'subscription' | 'payment', planName?: string) => Promise<void>;
   
   buyModalOpen: boolean;
-  openBuyModal: () => void;
+  buyModalSource: string | null;
+  openBuyModal: (source?: string) => void;
   closeBuyModal: () => void;
   
   calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => number;
@@ -69,6 +70,7 @@ const defaultValue: CreditContextValue = {
   openCustomerPortal: async () => {},
   startCheckout: async () => {},
   buyModalOpen: false,
+  buyModalSource: null,
   openBuyModal: () => {},
   closeBuyModal: () => {},
   calculateCost: () => 0,
@@ -89,6 +91,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
+  const [buyModalSource, setBuyModalSource] = useState<string | null>(null);
   const checkingRef = useRef(false);
   const latestSubscriptionMetaRef = useRef<{
     subscriptionStatus: SubscriptionStatus;
@@ -322,8 +325,14 @@ export function CreditProvider({ children }: CreditProviderProps) {
     setBalance(newBalance);
   }, []);
   
-  const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
-  const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
+  const openBuyModal = useCallback((source?: string) => {
+    setBuyModalSource(source ?? null);
+    setBuyModalOpen(true);
+  }, []);
+  const closeBuyModal = useCallback(() => {
+    setBuyModalOpen(false);
+    setBuyModalSource(null);
+  }, []);
   
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => {
     const { count, quality, mode, hasModel, hasScene, modelName, duration } = settings;
@@ -359,6 +368,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         openCustomerPortal,
         startCheckout,
         buyModalOpen,
+        buyModalSource,
         openBuyModal,
         closeBuyModal,
         calculateCost,

@@ -174,7 +174,7 @@ export default function AdminPlanPopups() {
           subtitle="Full upgrade + top-up modal"
           meta="Reads current user plan from useCredits()"
         >
-          <Button onClick={openBuyModal}>Open</Button>
+          <Button onClick={() => openBuyModal()}>Open</Button>
         </ComponentCard>
 
         <ComponentCard

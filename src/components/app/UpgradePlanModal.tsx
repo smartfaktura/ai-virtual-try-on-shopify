@@ -1,9 +1,11 @@
-import { useMemo, useState, useEffect, forwardRef } from 'react';
+import { useMemo, useState, useEffect, useRef, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight, ExternalLink, Lock, Loader2, Check, Zap } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { gtmPricingModalView } from '@/lib/gtm';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -16,6 +18,8 @@ interface UpgradePlanModalProps {
   previewPlan?: string;
   /** Force a specific variant. 'auto' picks based on plan (Pro → topup, others → upgrade) */
   variant?: UpgradeModalVariant;
+  /** Optional GTM source attribution (e.g. "header_cta", "no_credits"). */
+  source?: string;
 }
 
 const CREDITS_PER_IMAGE = 5;
@@ -102,9 +106,10 @@ function getCopy(args: {
   };
 }
 
-export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps>(function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto' }, _ref) {
+export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps>(function UpgradePlanModal({ open, onClose, previewPlan, variant = 'auto', source }, _ref) {
   const navigate = useNavigate();
   const { plan, balance, billingInterval, startCheckout } = useCredits();
+  const { user } = useAuth();
   const effectivePlan = previewPlan ?? plan;
   const [isAnnual, setIsAnnual] = useState(billingInterval === 'annual');
   useEffect(() => {
@@ -112,6 +117,21 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
   }, [billingInterval]);
   const [loading, setLoading] = useState(false);
   const [topUpLoading, setTopUpLoading] = useState(false);
+
+  // GTM: fire pricing_modal_view on false → true open transition only
+  const prevOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      gtmPricingModalView({
+        userId: user?.id,
+        modalName: variant === 'no-credits' ? 'low_credits' : 'upgrade_plan',
+        source,
+        currentPlan: plan,
+      });
+    }
+    prevOpenRef.current = open;
+  }, [open, user?.id, source, plan, variant]);
+
   const defaultPackId = creditPacks.find((p) => p.popular)?.packId ?? creditPacks[0]?.packId ?? '';
   const [selectedPackId, setSelectedPackId] = useState<string>(defaultPackId);
 

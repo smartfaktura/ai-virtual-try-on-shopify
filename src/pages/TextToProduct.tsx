@@ -973,7 +973,7 @@ export default function TextToProduct() {
               category={conversionCategory}
               onSeeMore={() => {
                 conversionState.dismissLayer1();
-                openBuyModal();
+                openBuyModal('post_gen_card');
               }}
               onDismiss={conversionState.dismissLayer1}
             />
@@ -997,6 +997,7 @@ export default function TextToProduct() {
         open={conversionState.layer2Open}
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
+        source={conversionState.layer2Reason || undefined}
       />
       <NoCreditsModal
         open={noCreditsModalOpen}

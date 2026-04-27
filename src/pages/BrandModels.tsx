@@ -62,7 +62,7 @@ function UpgradeHero() {
         ))}
       </div>
 
-      <Button size="pill" className="gap-2" onClick={openBuyModal}>
+      <Button size="pill" className="gap-2" onClick={() => openBuyModal()}>
         <Crown className="h-4 w-4" /> Upgrade to Growth
       </Button>
     </div>

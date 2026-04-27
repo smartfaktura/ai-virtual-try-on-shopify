@@ -247,7 +247,7 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
                       Create reusable, on-brand model identities for consistent campaigns.
                     </p>
                   </div>
-                  <Button size="sm" onClick={openBuyModal} className="shrink-0">
+                  <Button size="sm" onClick={() => openBuyModal()} className="shrink-0">
                     <Crown className="w-3.5 h-3.5 mr-1" /> Upgrade
                   </Button>
                 </div>

@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, ArrowUpRight, ArrowRight, X, Loader2, Building2 } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { gtmPricingModalView } from '@/lib/gtm';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/lib/brandedToast';
@@ -15,7 +17,8 @@ const isPro = (p: string) => p === 'pro';
 const isFreeUser = (p: string) => p === 'free';
 
 export function BuyCreditsModal() {
-  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, billingInterval, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+  const { balance, plan, planConfig, buyModalOpen, buyModalSource, closeBuyModal, subscriptionStatus, billingInterval, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const effectiveInterval = billingInterval || (plan !== 'free' ? 'monthly' : null);
@@ -38,6 +41,20 @@ export function BuyCreditsModal() {
       setActiveTab(isFreeUser(plan) ? 'upgrade' : 'topup');
     }
   }, [buyModalOpen, plan]);
+
+  // GTM: fire pricing_modal_view on false → true open transition only
+  const prevBuyOpenRef = useRef(false);
+  useEffect(() => {
+    if (buyModalOpen && !prevBuyOpenRef.current) {
+      gtmPricingModalView({
+        userId: user?.id,
+        modalName: 'buy_credits',
+        source: buyModalSource,
+        currentPlan: plan,
+      });
+    }
+    prevBuyOpenRef.current = buyModalOpen;
+  }, [buyModalOpen, user?.id, buyModalSource, plan]);
 
   const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';

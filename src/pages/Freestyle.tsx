@@ -946,7 +946,7 @@ export default function Freestyle() {
                   </p>
                 </div>
               </div>
-              <Button onClick={openBuyModal} size="sm" className="font-semibold shrink-0">
+              <Button onClick={() => openBuyModal()} size="sm" className="font-semibold shrink-0">
                 Get Credits
               </Button>
             </div>
@@ -1052,7 +1052,7 @@ export default function Freestyle() {
                   category={conversionCategory}
                   onSeeMore={() => {
                     conversionState.dismissLayer1();
-                    openBuyModal();
+                    openBuyModal('post_gen_card');
                   }}
                   onDismiss={conversionState.dismissLayer1}
                 />
@@ -1220,6 +1220,7 @@ export default function Freestyle() {
         open={conversionState.layer2Open}
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
+        source={conversionState.layer2Reason || undefined}
       />
       <NoCreditsModal
         open={noCreditsModalOpen}
