@@ -393,6 +393,18 @@ export function useCatalogGenerate() {
       return null;
     }
 
+    if (user?.id && result?.jobId) {
+      if (import.meta.env.DEV) {
+        console.debug('[GTM:firstgen-started] catalog', { jobId: result.jobId, productId, shotId });
+      }
+      gtmFirstGenerationStarted({
+        userId: user.id,
+        productId: productId ?? null,
+        generationId: result.jobId,
+        visualType: 'catalog',
+      });
+    }
+
     return {
       jobId: result.jobId,
       status: 'queued',
