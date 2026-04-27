@@ -1052,7 +1052,7 @@ export default function Freestyle() {
                   category={conversionCategory}
                   onSeeMore={() => {
                     conversionState.dismissLayer1();
-                    conversionState.openUpgradeDrawer('layer1_cta');
+                    openBuyModal();
                   }}
                   onDismiss={conversionState.dismissLayer1}
                 />
