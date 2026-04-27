@@ -34,6 +34,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       if (session?.user) {
         localStorage.setItem('has_account', 'true');
+
+        // Fire sign_up only for first-time Google OAuth users.
+        // Persistent dedup in gtmSignUp (gtm:signup:{user_id}) guarantees one fire ever.
+        if (_event === 'SIGNED_IN') {
+          const u = session.user;
+          const provider = u.app_metadata?.provider;
+          const providers: string[] = u.app_metadata?.providers || [];
+          const isGoogle = provider === 'google' || providers.includes('google');
+          if (isGoogle && u.created_at) {
+            const createdAt = new Date(u.created_at).getTime();
+            const lastSignIn = u.last_sign_in_at
+              ? new Date(u.last_sign_in_at).getTime()
+              : createdAt;
+            const ageMs = Date.now() - createdAt;
+            const isFirstSignIn = Math.abs(lastSignIn - createdAt) < 60_000;
+            const isFresh = ageMs < 2 * 60_000;
+            if (import.meta.env.DEV) {
+              // eslint-disable-next-line no-console
+              console.debug('[GTM] google sign_up check', {
+                provider,
+                providers,
+                created_at: u.created_at,
+                last_sign_in_at: u.last_sign_in_at,
+                ageMs,
+                isFirstSignIn,
+                isFresh,
+              });
+            }
+            if (isFirstSignIn && isFresh) {
+              gtmSignUp(u.id, 'google');
+            }
+          }
+        }
       }
     });
 
