@@ -1,51 +1,92 @@
-# Fix: Models section crashed (single tile instead of two scrolling rows)
+# Polish: `/app/video/start-end` — match the VOVV.AI app aesthetic
 
-## What's wrong
+## What's wrong today
 
-On the homepage `Choose a model or create your own.` section, only the single "Brand Models" CTA tile is visible. The two opposite-direction scrolling marquee rows of model cards have collapsed to zero width.
+Looking at the current page vs. polished pages like `/app/video/animate`:
 
-## Root cause
+- Upload tiles are forced **square** (`aspect-square`) with a thin dashed border, generic gray icon, and a tiny "Drop, paste, or browse" line. They feel empty and crowded at the same time.
+- The two slots use a 1:1 grid with a tight 16 px gap, so on wide screens the placeholders look like enormous empty rectangles with a tiny ChevronRight chip overlapping the center.
+- Cards (Goal, Refinement, Preservation, Audio, Summary) all use the same `rounded-xl border bg-card p-4` recipe with `text-sm font-medium` headers — no breathing room, no hierarchy, no soft shadows like the rest of the app uses (`rounded-2xl shadow-sm p-5–p-6`).
+- The Library picker modal is a plain dialog with a small title, no header padding, generic grid, no hover preview polish, no empty state polish.
+- The sticky generate bar sits at `bottom-4` with `rounded-xl` — visually disconnected from the content above.
 
-Commit `1fda5a002` (Apr 26) refactored `src/components/landing/ModelShowcaseSection.tsx` to make tiles work inside the **mobile grid** by adding `w-full` to the card wrapper and changing the inner thumbnail to `aspect-[3/4] w-full`.
+## Goals
 
-That works for the mobile `<div className="grid grid-cols-3">` (where each grid cell defines an explicit width). But the **desktop marquee row** is:
+Bring this page in line with `AnimateVideo` / `ProductImages` polish: softer rounding (2xl/3xl), generous padding, a real "frame slot" placeholder (large icon-in-circle, primary tint, two clear buttons), a centered direction chip that doesn't overlap the artwork, and a richer Library modal.
 
-```
-<div className="flex gap-3" style={{ width: 'max-content' }}>
-  <Link className="... flex-shrink-0 w-full"> ... </Link>   ← w-full = 0
-</div>
-```
+## Changes
 
-`width: max-content` sizes the parent to its children, while `w-full` on a child resolves to `100%` of the parent's content width. That's a circular dependency: the browser falls back to a 0-width child. The `aspect-[3/4]` then computes height from width=0, so every tile collapses to nothing. Only the CTA shows a sliver because of intrinsic content padding.
+### 1. `StartEndUploadPair.tsx` — restyle frame slots
 
-## Fix
+- Drop `aspect-square`. Use `aspect-[4/5]` (matches the editorial/portrait expectation) on each slot, capped with `min-h-[280px] sm:min-h-[340px]`.
+- Container: `rounded-3xl border-2 border-dashed border-primary/15 bg-gradient-to-b from-primary/[0.02] to-muted/10 hover:border-primary/30 hover:from-primary/[0.04]` — same recipe AnimateVideo uses for its hero uploader.
+- Drag-over state uses `border-primary/60 bg-primary/[0.06]`.
+- Empty placeholder content (centered, generous spacing):
+  - Big circle icon: `h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center` with `Upload` (start slot) or `Flag` (end slot, lucide) — distinguishes the two.
+  - Bold label: "Start frame" / "End frame" (`text-sm font-semibold`).
+  - Sub: `text-xs text-muted-foreground` — "Drop, paste, or click to browse".
+  - Two side-by-side buttons (`Button variant="outline" size="sm" className="h-8 text-xs"`): `Upload` and `Library` (Folder icon). Stack on `<sm`.
+  - Tiny hint line under buttons: `JPG · PNG · WebP — up to 20 MB`.
+- When an image is loaded:
+  - Image fills the slot (`object-cover`).
+  - Top-left chip restyled to `rounded-full px-2.5 py-1 bg-background/90 backdrop-blur shadow-sm text-[11px] font-medium`.
+  - Top-right close: `rounded-full p-1.5 bg-background/90 backdrop-blur shadow-sm hover:bg-background`.
+  - Aspect ratio mini-badge bottom-left (e.g. "9:16") for clarity.
+- Pair layout:
+  - Wrap both slots in a `grid grid-cols-1 sm:grid-cols-2 gap-5 lg:gap-6`.
+  - Direction chip (between slots): a 44 px pill with `rounded-full border border-border bg-background shadow-md flex items-center gap-1 px-3` showing `Start → End` text, sitting **on top** at the centerline (`absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 z-10`). On mobile, becomes a horizontal label between the stacked slots: `← stack ArrowDown chip`.
 
-Decouple desktop marquee sizing from mobile grid sizing. Restore intrinsic card widths on desktop while keeping the mobile grid working.
+### 2. `LibraryPickerModal.tsx` — premium polish
 
-### Change 1 — `src/components/landing/ModelShowcaseSection.tsx`
+- DialogContent: `max-w-3xl rounded-2xl p-0 overflow-hidden` (currently `max-w-2xl` with default padding).
+- Header bar with its own padding `px-6 pt-5 pb-4 border-b border-border`:
+  - Title `text-lg font-semibold` + small subtitle `text-xs text-muted-foreground` ("Pick an image from your saved library").
+  - Search input moves into the header bar, full-width, `h-10 rounded-xl pl-10 bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary/30`.
+- Grid area:
+  - Background `bg-muted/20`, padding `p-5`, scroll area `max-h-[60vh]`.
+  - `grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3`.
+  - Each tile: `rounded-xl overflow-hidden ring-1 ring-border hover:ring-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group` with subtle `group-hover:scale-[1.02]` on the image.
+  - Selected state: `ring-2 ring-primary` + checkmark badge already exists but shrinks to `h-6 w-6`.
+  - Add a soft hover overlay revealing the label.
+- Empty state: bigger illustration, friendlier copy — "Your library is empty. Generate or upload images first."
+- Footer (only when single-select): a slim `px-6 py-3 border-t border-border bg-background flex items-center justify-between` with text "Pick a frame to insert" + a Cancel ghost button.
 
-In `BrandModelCTA` and `ModelCardItem`:
+### 3. Section cards (Goal, Refinement, Preservation, Audio+Note, Summary)
 
-- Remove `w-full` from the outer wrapper `<Link>` / `<div>`.
-- Remove `aspect-[3/4] w-full` from the inner thumbnail and restore an explicit mobile width.
-- Inner card: `w-24 h-32 sm:w-32 sm:h-40 lg:w-36 lg:h-44` (the pre-regression sizing).
-- Keep `truncate max-w-full` on the name span and keep the `sizes` attribute as is — those are fine.
+Apply a unified premium card recipe across all of them:
 
-This restores intrinsic 96/128/144 px tile widths everywhere. The mobile `grid-cols-3` cell is wider than 96 px on phones, so tiles still center and look correct in the mobile grid; if needed we can add `mx-auto` on the wrapper for perfect centering inside grid cells.
+- `rounded-2xl border border-border bg-card shadow-sm p-5 sm:p-6 space-y-4`.
+- Header row: `flex items-center justify-between` with `text-base font-semibold tracking-tight` title and a small muted description below it (or right side).
+- Goal grid: button tiles become `rounded-xl border p-3.5 min-h-[96px] hover:shadow-sm hover:-translate-y-px transition-all`. Selected: `border-primary bg-primary/[0.04] ring-1 ring-primary/20`. Title `text-sm font-semibold`, description `text-[11.5px] text-muted-foreground mt-1 leading-relaxed`.
+- Refinement segmented buttons: `h-8 rounded-full px-3 text-[11.5px]` — rounded pills feel more premium than current rounded-md squares.
+- Summary card: change container background to `bg-gradient-to-b from-muted/40 to-muted/10`, title `text-base font-semibold`, rows use `py-2 text-[12.5px]` with `divide-y divide-border/40`.
 
-### Change 2 — verify mobile grid still looks right
+### 4. Page header & sticky generate bar
 
-Mobile grid cell width at 375 px viewport ≈ (375 − 32 padding − 24 gaps) / 3 ≈ 106 px, and the card is 96 px → tiles sit slightly left-aligned. Add `items-center` (already present) + `w-24` is fine. If we want the tile to fill the grid cell on mobile only, use `w-full sm:w-32 lg:w-36` on the **inner** card and keep the wrapper intrinsic — but only when rendered inside the grid. Cleaner option: keep fixed `w-24 sm:w-32 lg:w-36` everywhere; the mobile grid still looks balanced.
+- Wrap the page body in `container max-w-5xl py-8 space-y-6` (currently `max-w-4xl py-6`) — a touch more breathing room matches the rest of the app.
+- Page title size already comes from `PageHeader`; add a small "BETA" pill next to the title (matches Catalog Studio convention).
+- Sticky bar: change to `rounded-2xl border border-border bg-background/90 backdrop-blur-md shadow-lg shadow-foreground/[0.04] p-4 bottom-6`. Generate button becomes `size="lg" className="min-w-[240px] rounded-xl"` with a subtle gradient `bg-gradient-to-r from-primary to-primary` on hover.
 
-## Technical notes
+### 5. CompatibilityCard
 
-- Files touched: `src/components/landing/ModelShowcaseSection.tsx` only.
-- No data, RLS, or backend changes — `mockModels`, `useModelSortOrder`, and the `model_sort_order` query are all healthy.
-- No CSS keyframe changes — `marquee-left` / `marquee-right` keyframes in `src/index.css` are intact.
-- Affects every place that renders `ModelsMarquee` (home, SEO landing pages) — they will all return to two opposite-scrolling rows of model thumbnails with the CTA card interleaved.
+- Card: `rounded-2xl shadow-sm p-5`.
+- Tier pill larger: `px-3 py-1 text-[11.5px]`.
+- Reason text `text-sm` and recommendation `text-[12.5px] text-muted-foreground`.
+- Shared elements as `rounded-full px-2.5 py-1 bg-muted` chips.
 
-## Verification after build
+## Files touched
 
-- Desktop (≥1024 px): two rows of ~144×176 tiles scrolling in opposite directions, CTA interleaved every 6 cards.
-- Tablet (640–1023 px): 128×160 tiles.
-- Mobile (<640 px): 3-column grid with 96×128 tiles, CTA in position 3.
+- `src/components/app/video/start-end/StartEndUploadPair.tsx` (major)
+- `src/components/app/video/LibraryPickerModal.tsx` (major)
+- `src/components/app/video/start-end/TransitionGoalSelector.tsx` (medium)
+- `src/components/app/video/start-end/TransitionRefinementPanel.tsx` (small)
+- `src/components/app/video/start-end/CompatibilityCard.tsx` (small)
+- `src/components/app/video/start-end/TransitionSummaryCard.tsx` (small)
+- `src/pages/video/StartEndVideo.tsx` (container width, sticky bar, audio+note card recipe, BETA pill)
+
+No backend, hook, or routing changes — purely presentational. All semantic design tokens (`primary`, `border`, `muted`, `card`, `background`) — no hardcoded colors.
+
+## What stays the same
+
+- Pipeline behavior, preflight, compatibility analysis, prompt builder, generation flow.
+- LibraryPickerModal API (`open`, `onOpenChange`, `onSelect`, `multiSelect`, `onMultiSelect`, `maxSelect`) is unchanged so every other caller (Animate, Short Film, etc.) keeps working.

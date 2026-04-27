@@ -235,7 +235,7 @@ export default function StartEndVideo() {
   // If we have a result, show the results panel
   if (project.isComplete && project.videoUrl) {
     return (
-      <div className="container max-w-4xl py-6 space-y-6">
+      <div className="container max-w-5xl py-8 space-y-6">
         <PageHeader
           title="Start & End Video"
           subtitle="Cinematic transition between two frames"
@@ -255,19 +255,24 @@ export default function StartEndVideo() {
   }
 
   return (
-    <div className="container max-w-4xl py-6 space-y-6">
+    <div className="container max-w-5xl py-8 space-y-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/app/video')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/app/video')} className="rounded-lg">
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
       </div>
-      <PageHeader
-        title="Start & End Video"
-        subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them."
-      >
-        <></>
-      </PageHeader>
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader
+          title="Start & End Video"
+          subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them."
+        >
+          <></>
+        </PageHeader>
+        <span className="mt-2 inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">
+          Beta
+        </span>
+      </div>
 
       {/* Upload pair */}
       <StartEndUploadPair
@@ -285,7 +290,7 @@ export default function StartEndVideo() {
       {bothPresent && preflight.ok && (
         <>
           {project.isAnalyzing && (
-            <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-border bg-card shadow-sm p-5 flex items-center gap-2.5 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               Analyzing both frames for compatibility…
             </div>
@@ -324,17 +329,23 @@ export default function StartEndVideo() {
       />
 
       {/* Audio + Note */}
-      <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+      <div className="rounded-2xl border border-border bg-card shadow-sm p-5 sm:p-6 space-y-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="text-base font-semibold tracking-tight text-foreground">Audio &amp; Note</h3>
+          <p className="text-[11.5px] text-muted-foreground hidden sm:block">
+            Optional finishing touches
+          </p>
+        </div>
         <AudioModeSelector value={audioMode} onChange={(v) => setAudioMode(v as 'silent' | 'ambient')} />
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">Transition Note (optional)</label>
+          <label className="text-xs font-medium text-muted-foreground">Transition Note (optional)</label>
           <Textarea
             value={userNote}
             onChange={(e) => setUserNote(e.target.value)}
             placeholder="One sentence to refine the transition (e.g. 'reveal the bottle as the light shifts warmer')"
             rows={2}
             maxLength={240}
-            className="resize-none"
+            className="resize-none rounded-xl"
           />
           <div className="text-[11px] text-muted-foreground text-right">{userNote.length}/240</div>
         </div>
@@ -344,11 +355,11 @@ export default function StartEndVideo() {
       <TransitionSummaryCard rows={summaryRows} />
 
       {/* Generate row */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sticky bottom-4 bg-background/95 backdrop-blur rounded-xl border border-border p-3 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sticky bottom-6 bg-background/90 backdrop-blur-md rounded-2xl border border-border p-4 shadow-lg shadow-foreground/[0.04]">
         <CreditEstimateBox params={creditParams} />
         <Button
           size="lg"
-          className="min-w-[220px]"
+          className="min-w-[240px] rounded-xl"
           disabled={!canGenerate}
           onClick={handleGenerate}
         >
