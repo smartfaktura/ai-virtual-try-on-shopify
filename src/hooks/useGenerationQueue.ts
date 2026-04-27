@@ -459,6 +459,23 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
       const result = res as unknown as EnqueueResult;
 
+      if (user?.id && result?.jobId) {
+        const productId = (params.payload as Record<string, unknown>).product_id as string | undefined;
+        const visualType =
+          ((params.payload as Record<string, unknown>).workflow_name as string) ||
+          ((params.payload as Record<string, unknown>).workflow_slug as string) ||
+          params.jobType;
+        if (import.meta.env.DEV) {
+          console.debug('[GTM:firstgen-started] queue', { jobId: result.jobId, productId: productId ?? null, visualType });
+        }
+        gtmFirstGenerationStarted({
+          userId: user.id,
+          productId: productId ?? null,
+          generationId: result.jobId,
+          visualType,
+        });
+      }
+
       setActiveJob({
         id: result.jobId,
         status: 'queued',
