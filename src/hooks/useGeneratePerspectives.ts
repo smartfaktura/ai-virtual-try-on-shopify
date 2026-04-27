@@ -479,6 +479,19 @@ export function useGeneratePerspectives() {
               enqueuedCount++;
               enqueued = true;
               setProgress(Math.round((enqueuedCount / totalJobs) * 100));
+
+              if (!firstgenFired && user?.id && result?.jobId) {
+                if (import.meta.env.DEV) {
+                  console.debug('[GTM:firstgen-started] perspectives', { jobId: result.jobId, productId: product.id });
+                }
+                gtmFirstGenerationStarted({
+                  userId: user.id,
+                  productId: product.id ?? null,
+                  generationId: result.jobId,
+                  visualType: 'perspectives',
+                });
+                firstgenFired = true;
+              }
               break;
             } catch (err) {
               console.error('Enqueue error:', err);
