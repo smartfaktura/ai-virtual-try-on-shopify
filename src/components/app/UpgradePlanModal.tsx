@@ -172,7 +172,7 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
     if (!priceId) return;
     setLoading(true);
     try {
-      await startCheckout(priceId, 'subscription');
+      await startCheckout(priceId, 'subscription', selectedPlan.name);
     } finally {
       setLoading(false);
     }

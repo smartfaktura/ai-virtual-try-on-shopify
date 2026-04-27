@@ -96,7 +96,7 @@ export function BuyCreditsModal() {
         } else {
           const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
           if (priceId) {
-            await startCheckout(priceId, 'subscription');
+            await startCheckout(priceId, 'subscription', selectedPlan.name);
           }
         }
       }
