@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
 import { gtagPurchase } from '@/lib/gtag';
-import { gtmBeginCheckout, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
+import { gtmBeginCheckout, gtmCheckoutSessionCreated, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
+import { pricingPlans, creditPacks } from '@/data/mockData';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
@@ -193,30 +194,63 @@ export function CreditProvider({ children }: CreditProviderProps) {
     // TODO: Meta Pixel InitiateCheckout currently fires before Stripe session
     // is created. Move it after data.url returns in a follow-up PR.
     trackInitiateCheckout();
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error('Please log in to continue.');
       return;
     }
-    // Use the confirmed session user id as primary, with React context user as fallback.
     const sessionUserId = session.user?.id || user?.id || null;
+
+    // Resolve plan name + value from local catalog so the GTM event has full
+    // commerce context BEFORE we hit the backend.
+    const plan = pricingPlans.find(
+      (p) => p.stripePriceIdMonthly === priceId || p.stripePriceIdAnnual === priceId
+    );
+    const pack = creditPacks.find((c) => c.stripePriceId === priceId);
+    const resolvedPlanName =
+      planName ||
+      plan?.name ||
+      (pack ? `${pack.credits} Credits` : mode === 'payment' ? 'Buy Credits' : 'Subscription');
+    const resolvedValue =
+      plan
+        ? (plan.stripePriceIdAnnual === priceId ? Math.round(plan.annualPrice / 12) : plan.monthlyPrice)
+        : pack
+          ? pack.price
+          : 0;
+
+    const debug = (() => {
+      try {
+        return typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1';
+      } catch { return false; }
+    })();
+
+    // Fire begin_checkout IMMEDIATELY on user intent — before the backend call
+    // and before any redirect can tear down the page.
+    const beginResult = gtmBeginCheckout({
+      userId: sessionUserId,
+      planName: resolvedPlanName,
+      checkoutMode: mode,
+      value: resolvedValue,
+      currency: 'USD',
+      pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
+    });
+    if (debug) {
+      // eslint-disable-next-line no-console
+      console.log('[GTM DEBUG begin_checkout fired]', {
+        beginResult,
+        sessionUserId,
+        planName: resolvedPlanName,
+        mode,
+        value: resolvedValue,
+      });
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId, mode },
       });
       if (error) throw error;
-
-      // Resolve plan name without leaking the user's CURRENT plan into the
-      // begin_checkout payload — that field belongs to pricing_modal_view only.
-      const resolvedPlanName =
-        planName ||
-        (mode === 'payment' ? 'Buy Credits' : 'Unknown Subscription');
-
-      const debug = (() => {
-        try {
-          return typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1';
-        } catch { return false; }
-      })();
 
       if (debug) {
         // eslint-disable-next-line no-console
@@ -230,36 +264,19 @@ export function CreditProvider({ children }: CreditProviderProps) {
         });
       }
 
+      if (data?.sessionId) {
+        // Debug-only signal — never bind a marketing tag to this event.
+        gtmCheckoutSessionCreated({
+          userId: sessionUserId,
+          checkoutId: data.sessionId,
+          planName: resolvedPlanName,
+        });
+      }
+
       if (data?.url) {
-        const willFire = !!sessionUserId && !!data?.sessionId;
-
-        if (willFire) {
-          const result = gtmBeginCheckout({
-            userId: sessionUserId!,
-            checkoutId: data.sessionId,
-            planName: resolvedPlanName,
-            value: typeof data.amount === 'number' ? data.amount : 0,
-            currency: data.currency || 'usd',
-            pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
-          });
-
-          if (debug) {
-            // eslint-disable-next-line no-console
-            console.log('[GTM DEBUG begin_checkout push result]', result);
-          }
-
-          // Deterministic 1500ms hold so the dataLayer push is visible in
-          // GTM Preview / Tag Assistant before the page tears down for the
-          // Stripe redirect. Do NOT use eventCallback — it can fire instantly
-          // when no GTM tag matches and defeats this guarantee.
-          if (result.fired) {
-            await new Promise((r) => setTimeout(r, 1500));
-            if (debug) {
-              // eslint-disable-next-line no-console
-              console.log('[GTM DEBUG begin_checkout redirect]', { reason: 'hold-elapsed' });
-            }
-          }
-        }
+        // Brief 250ms hold so any sync GTM listeners can flush before the
+        // Stripe redirect tears down the page. Independent of begin_checkout.
+        await new Promise((r) => setTimeout(r, 250));
         window.location.href = data.url;
       }
     } catch (err) {
