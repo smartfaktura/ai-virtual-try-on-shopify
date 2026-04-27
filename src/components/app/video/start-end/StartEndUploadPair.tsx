@@ -96,27 +96,27 @@ function Slot({ label, variant, state, onFile, onLibrary, onClear, disabled }: S
               {state.uploading ? `Uploading… ${state.progress}%` : 'Drop, paste, or click to browse'}
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-[240px]">
+          <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-[280px]">
             <Button
               type="button"
               size="sm"
               variant="outline"
-              className="flex-1 h-8 text-xs rounded-lg hover:border-primary/40"
+              className="flex-1 h-9 text-xs rounded-full px-4 gap-1.5 border-border bg-background hover:border-primary/40 hover:bg-primary/[0.04] hover:text-foreground transition-colors"
               disabled={disabled || state.uploading}
               onClick={() => inputRef.current?.click()}
             >
-              <ImageIcon className="h-3.5 w-3.5 mr-1.5" />
+              <ImageIcon className="h-3.5 w-3.5" />
               Upload
             </Button>
             <Button
               type="button"
               size="sm"
               variant="outline"
-              className="flex-1 h-8 text-xs rounded-lg hover:border-primary/40"
+              className="flex-1 h-9 text-xs rounded-full px-4 gap-1.5 border-border bg-background hover:border-primary/40 hover:bg-primary/[0.04] hover:text-foreground transition-colors"
               disabled={disabled || state.uploading}
               onClick={() => setLibraryOpen(true)}
             >
-              <FolderOpen className="h-3.5 w-3.5 mr-1.5" />
+              <FolderOpen className="h-3.5 w-3.5" />
               Library
             </Button>
           </div>

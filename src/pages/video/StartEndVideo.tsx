@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Play, X } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -244,11 +244,11 @@ export default function StartEndVideo() {
         </PageHeader>
         <VideoResultsPanel
           videoUrl={project.videoUrl}
-          sourceImageUrl={start.preview ?? undefined}
+          sourceImageUrl={start.preview ?? project.recentResult?.sourceImageUrl ?? undefined}
           aspectRatio={derivedAspectRatio}
           creditCost={creditCost}
           creditsRemaining={creditsBalance}
-          onNewProject={() => { project.reset(); setStart(EMPTY_SLOT); setEnd(EMPTY_SLOT); setStartProbe(null); setEndProbe(null); }}
+          onNewProject={() => { project.reset(); project.dismissRecentResult(); setStart(EMPTY_SLOT); setEnd(EMPTY_SLOT); setStartProbe(null); setEndProbe(null); }}
         />
       </div>
     );
@@ -273,6 +273,37 @@ export default function StartEndVideo() {
           Beta
         </span>
       </div>
+
+      {/* Recent completed transition — recovers a previous result the user navigated away from */}
+      {project.recentResult && !project.isGenerating && !project.isComplete && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] shadow-sm p-4 sm:px-5 sm:py-4 flex items-center gap-3 sm:gap-4">
+          <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Play className="h-4 w-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">Your last transition is ready</p>
+            <p className="text-[11.5px] text-muted-foreground">
+              Generated {new Date(project.recentResult.createdAt).toLocaleString()} · open it without re-running.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            className="rounded-full px-4 h-9 text-xs"
+            onClick={project.hydrateFromRecent}
+          >
+            View video
+          </Button>
+          <button
+            type="button"
+            aria-label="Dismiss recent result"
+            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 inline-flex items-center justify-center transition-colors"
+            onClick={project.dismissRecentResult}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Upload pair */}
       <StartEndUploadPair
@@ -354,6 +385,10 @@ export default function StartEndVideo() {
       {/* Summary */}
       <TransitionSummaryCard rows={summaryRows} />
 
+      {project.pipelineError && (
+        <ValidationWarnings warnings={[{ type: 'error', message: project.pipelineError }]} />
+      )}
+
       {/* Generate row */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sticky bottom-6 bg-background/90 backdrop-blur-md rounded-2xl border border-border p-4 shadow-lg shadow-foreground/[0.04]">
         <CreditEstimateBox params={creditParams} />
@@ -376,10 +411,6 @@ export default function StartEndVideo() {
           )}
         </Button>
       </div>
-
-      {project.pipelineError && (
-        <ValidationWarnings warnings={[{ type: 'error', message: project.pipelineError }]} />
-      )}
 
       <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} />
     </div>

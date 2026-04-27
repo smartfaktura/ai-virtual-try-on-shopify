@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
+import { toSignedUrl } from '@/lib/signedUrl';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
 import {
   buildTransitionPrompt,
@@ -11,6 +12,13 @@ import {
   type TransitionCompatibility,
 } from '@/lib/transitionCompatibilityResolver';
 import type { VideoAnalysis } from '@/lib/videoStrategyResolver';
+
+export interface RecentStartEndResult {
+  id: string;
+  videoUrl: string;
+  sourceImageUrl: string | null;
+  createdAt: string;
+}
 
 export type StartEndStage =
   | 'idle'
@@ -44,6 +52,10 @@ interface UseStartEndVideoProjectResult {
   isComplete: boolean;
   elapsedSeconds: number;
   activeJob: ReturnType<typeof useGenerateVideo>['activeJob'];
+  /** A recently completed Start & End video the user can re-open. */
+  recentResult: RecentStartEndResult | null;
+  dismissRecentResult: () => void;
+  hydrateFromRecent: () => void;
   /** Analyze both frames upfront so the user can preview compatibility. */
   analyzePair: (startUrl: string, endUrl: string) => Promise<TransitionCompatibility | null>;
   runPipeline: (params: RunStartEndPipelineParams) => Promise<void>;
@@ -70,6 +82,9 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
   const [analysisStart, setAnalysisStart] = useState<VideoAnalysis | null>(null);
   const [analysisEnd, setAnalysisEnd] = useState<VideoAnalysis | null>(null);
   const [compatibility, setCompatibility] = useState<TransitionCompatibility | null>(null);
+  const [recentResult, setRecentResult] = useState<RecentStartEndResult | null>(null);
+  const [hydratedVideoUrl, setHydratedVideoUrl] = useState<string | null>(null);
+  const lastProjectIdRef = useRef<string | null>(null);
 
   const generateVideo = useGenerateVideo();
 
@@ -79,8 +94,58 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
     setAnalysisStart(null);
     setAnalysisEnd(null);
     setCompatibility(null);
+    setHydratedVideoUrl(null);
     generateVideo.reset();
   }, [generateVideo]);
+
+  const dismissRecentResult = useCallback(() => setRecentResult(null), []);
+
+  const hydrateFromRecent = useCallback(() => {
+    if (!recentResult) return;
+    setHydratedVideoUrl(recentResult.videoUrl);
+    setPipelineStage('complete');
+  }, [recentResult]);
+
+  // Look up the most recent completed Start & End video for this user (last 24h).
+  // Used to surface a "your last transition is ready" banner on page load.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: userResp } = await supabase.auth.getUser();
+        const uid = userResp.user?.id;
+        if (!uid) return;
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
+          .from('generated_videos')
+          .select('id, video_url, source_image_url, completed_at, created_at, video_projects!inner(workflow_type)')
+          .eq('user_id', uid)
+          .eq('status', 'complete')
+          .eq('video_projects.workflow_type', 'start_end')
+          .gte('created_at', since)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (cancelled || error || !data?.length) return;
+        const row = data[0] as { id: string; video_url: string; source_image_url: string; completed_at: string | null; created_at: string };
+        if (!row.video_url) return;
+        const [signedVideo, signedSrc] = await Promise.all([
+          toSignedUrl(row.video_url),
+          row.source_image_url ? toSignedUrl(row.source_image_url) : Promise.resolve(null),
+        ]);
+        if (cancelled) return;
+        setRecentResult({
+          id: row.id,
+          videoUrl: signedVideo,
+          sourceImageUrl: signedSrc,
+          createdAt: row.completed_at || row.created_at,
+        });
+      } catch (err) {
+        console.warn('[useStartEndVideoProject] recent-result lookup failed', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
 
   const analyzePair = useCallback(
     async (startUrl: string, endUrl: string): Promise<TransitionCompatibility | null> => {
@@ -194,6 +259,7 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
         }
 
         // 5. Trigger generation via existing hook
+        lastProjectIdRef.current = project.id;
         setPipelineStage('queued');
         generateVideo.startGeneration({
           imageUrl: params.startImageUrl,
@@ -207,7 +273,8 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
           withAudio: params.audioMode === 'ambient',
           projectId: project.id,
           workflowType: 'start_end',
-        });
+          transitionStyle: params.style,
+        } as Parameters<typeof generateVideo.startGeneration>[0]);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to start transition';
         setPipelineError(msg);
@@ -225,6 +292,49 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
   else if (genStatus === 'processing') stage = 'processing';
   else if (genStatus === 'complete') stage = 'complete';
   else if (genStatus === 'error') stage = 'error';
+  if (hydratedVideoUrl) stage = 'complete';
+
+  // Safety net: if we've been "queued/processing" for > 6 minutes with no
+  // active job in the queue, reconcile against generated_videos for the
+  // tracked project_id and either flip to complete (with the URL) or to error.
+  const lastReconcileRef = useRef(0);
+  useEffect(() => {
+    const inFlight = stage === 'queued' || stage === 'processing';
+    if (!inFlight) return;
+    if (generateVideo.activeJob) return; // still tracked, no recovery needed
+    const projectId = lastProjectIdRef.current;
+    if (!projectId) return;
+    if (Date.now() - lastReconcileRef.current < 30_000) return;
+
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      lastReconcileRef.current = Date.now();
+      try {
+        const { data, error } = await supabase
+          .from('generated_videos')
+          .select('id, status, video_url, error_message')
+          .eq('project_id', projectId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (cancelled || error || !data?.length) return;
+        const row = data[0] as { id: string; status: string; video_url: string | null; error_message: string | null };
+        if (row.status === 'complete' && row.video_url) {
+          const signed = await toSignedUrl(row.video_url);
+          if (cancelled) return;
+          setHydratedVideoUrl(signed);
+          setPipelineStage('complete');
+          clearInterval(interval);
+        } else if (row.status === 'failed') {
+          setPipelineError(row.error_message || 'Generation failed');
+          setPipelineStage('error');
+          clearInterval(interval);
+        }
+      } catch (err) {
+        console.warn('[useStartEndVideoProject] reconcile failed', err);
+      }
+    }, 8000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [stage, generateVideo.activeJob]);
 
   return {
     pipelineStage: stage,
@@ -232,13 +342,16 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
     analysisStart,
     analysisEnd,
     compatibility,
-    videoUrl: generateVideo.videoUrl,
+    videoUrl: hydratedVideoUrl ?? generateVideo.videoUrl,
     videoError: generateVideo.error,
     isAnalyzing: pipelineStage === 'analyzing',
-    isGenerating: genStatus === 'queued' || genStatus === 'processing' || genStatus === 'creating',
-    isComplete: genStatus === 'complete',
+    isGenerating: !hydratedVideoUrl && (genStatus === 'queued' || genStatus === 'processing' || genStatus === 'creating'),
+    isComplete: stage === 'complete' || !!hydratedVideoUrl,
     elapsedSeconds: generateVideo.elapsedSeconds,
     activeJob: generateVideo.activeJob,
+    recentResult,
+    dismissRecentResult,
+    hydrateFromRecent,
     analyzePair,
     runPipeline,
     reset,
