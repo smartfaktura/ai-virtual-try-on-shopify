@@ -335,10 +335,12 @@ export function gtmBeginCheckout(args: {
   const payload: Record<string, unknown> = {
     event: 'begin_checkout',
     ...(userId ? { user_id: userId } : {}),
+    ...(checkoutId ? { checkout_id: checkoutId } : {}),
     plan_name: planName,
     checkout_mode: checkoutMode,
     page_location: resolvedPageLocation,
     ecommerce: {
+      ...(checkoutId ? { checkout_id: checkoutId } : {}),
       currency: upperCurrency,
       value,
       items: [
@@ -377,7 +379,7 @@ export function gtmBeginCheckout(args: {
       dataLayerExists: typeof window !== 'undefined' && Array.isArray(window.dataLayer),
       dlBefore,
       dlAfter,
-      dedupKey,
+      checkoutId: checkoutId ?? null,
     });
   }
 
