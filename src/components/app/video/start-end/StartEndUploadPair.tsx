@@ -96,7 +96,7 @@ function Slot({ label, variant, state, onFile, onLibrary, onClear, disabled }: S
               {state.uploading ? `Uploading… ${state.progress}%` : 'Drop, paste, or click to browse'}
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-[240px]">
+          <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-[280px]">
             <Button
               type="button"
               size="sm"
