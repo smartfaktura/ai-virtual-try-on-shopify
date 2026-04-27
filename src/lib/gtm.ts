@@ -459,15 +459,28 @@ export function gtmPurchase(args: {
 
   if (!willFire) return false;
 
+  const upperCurrency = upper(currency);
   const payload: Record<string, unknown> = {
     event: 'purchase',
     user_id: userId,
     transaction_id: transactionId,
     purchase_type: purchaseType,
     plan_name: planName,
-    value,
-    currency: upper(currency),
     page_location: resolvedPageLocation,
+    ecommerce: {
+      transaction_id: transactionId,
+      currency: upperCurrency,
+      value,
+      items: [
+        {
+          item_id: planName,
+          item_name: planName,
+          item_category: purchaseType,
+          price: value,
+          quantity: 1,
+        },
+      ],
+    },
   };
 
   if (isGtmDebugEnabled() || DEBUG) {
@@ -476,6 +489,11 @@ export function gtmPurchase(args: {
   }
 
   localSet(storeKey);
+  // Reset stale ecommerce object so GA4 ecommerce vars don't bleed across events.
+  if (typeof window !== 'undefined') {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ ecommerce: null });
+  }
   rawPush(payload);
   return true;
 }
