@@ -258,8 +258,20 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
         image_url: p.image_url,
       }));
 
-      const { error: insertError } = await supabase.from('user_products').insert(rows);
+      const { data: insertedShopifyRows, error: insertError } = await supabase
+        .from('user_products')
+        .insert(rows)
+        .select('id, product_type');
       if (insertError) throw new Error(insertError.message);
+      for (const row of insertedShopifyRows || []) {
+        if ((row as any)?.id) {
+          gtmProductUploaded({
+            userId: user.id,
+            productId: (row as any).id,
+            productCategory: (row as any).product_type || null,
+          });
+        }
+      }
 
       toast.success(`${toImport.length} product${toImport.length !== 1 ? 's' : ''} imported!`);
       onProductAdded();
