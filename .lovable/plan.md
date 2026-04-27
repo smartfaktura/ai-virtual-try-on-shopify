@@ -1,20 +1,14 @@
-I’ll update the GTM container ID from `GTM-P29VYFW3` to the correct `GTM-P29VVFW3` everywhere it is referenced.
+# Fix GTM `sign_up` for Google OAuth (with safety adjustments)
 
-Changes planned:
-1. `index.html`
-   - Update the GTM script container ID.
-   - Update the GTM `<noscript>` iframe container ID.
+Detect first-time Google OAuth sign-up inside `onAuthStateChange` in `src/contexts/AuthContext.tsx` and fire `gtmSignUp(user.id, "google")` exactly once.
 
-2. `src/lib/gtm.ts`
-   - Update the comment/reference so the source documentation matches the installed container.
+**Heuristic** (per user adjustments):
+- `provider = app_metadata.provider`; `providers = app_metadata.providers || []`
+- `isGoogle = provider === "google" || providers.includes("google")`
+- `isFirstSignIn = |last_sign_in_at − created_at| < 60_000` (60s window)
+- `isFresh = (now − created_at) < 2 * 60_000` (2 min)
+- Only fire on `event === 'SIGNED_IN'` + `isGoogle` + `isFirstSignIn` + `isFresh`
+- Persistent dedup `gtm:signup:{user_id}` (already in `gtm.ts`) guarantees one fire ever
+- Dev-only `console.debug` of {provider, providers, created_at, last_sign_in_at, ageMs, isFirstSignIn, isFresh} gated by `import.meta.env.DEV`
 
-What will stay unchanged:
-- Existing `gtag.js` stays untouched.
-- Existing Meta Pixel stays untouched.
-- No duplicate `page_view` tracking will be added.
-- No GTM event payload logic or deduplication behavior will be changed.
-
-Verification after implementation:
-- Search the codebase to confirm `GTM-P29VYFW3` no longer exists.
-- Confirm `GTM-P29VVFW3` appears in the GTM script, noscript iframe, and GTM helper comment.
-- You can then reconnect Tag Assistant Preview using container `GTM-P29VVFW3`.
+**Untouched**: email signup path, Auth.tsx OAuth flow, DB trigger, no migrations, no edge functions.
