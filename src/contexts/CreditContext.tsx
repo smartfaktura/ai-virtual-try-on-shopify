@@ -273,6 +273,19 @@ export function CreditProvider({ children }: CreditProviderProps) {
       }
 
       if (data?.sessionId) {
+        // Enrichment push: same begin_checkout event, now with the real
+        // Stripe checkout_id. Persistent dedup on the session id ensures it
+        // can never push twice across refreshes.
+        gtmBeginCheckout({
+          userId: sessionUserId,
+          planName: resolvedPlanName,
+          checkoutMode: mode,
+          value: typeof data?.amount === 'number' ? data.amount : resolvedValue,
+          currency: typeof data?.currency === 'string' ? data.currency : 'USD',
+          pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
+          checkoutId: data.sessionId,
+        });
+
         // Debug-only signal — never bind a marketing tag to this event.
         gtmCheckoutSessionCreated({
           userId: sessionUserId,
