@@ -95,6 +95,7 @@ function getEffectiveLayers(settings: ShortFilmSettings): AudioLayers {
 export function useShortFilmProject() {
   const { user } = useAuth();
   const { balance, refreshBalance } = useCredits();
+  const firstgenFiredRef = useRef(false);
 
   const [step, setStep] = useState<ShortFilmStep>('film_type');
   const [filmType, setFilmTypeRaw] = useState<FilmType | null>(null);
