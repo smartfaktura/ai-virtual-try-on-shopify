@@ -1052,7 +1052,7 @@ export default function Freestyle() {
                   category={conversionCategory}
                   onSeeMore={() => {
                     conversionState.dismissLayer1();
-                    openBuyModal();
+                    openBuyModal('post_gen_card');
                   }}
                   onDismiss={conversionState.dismissLayer1}
                 />
