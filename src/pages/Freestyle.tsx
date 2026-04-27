@@ -1220,6 +1220,7 @@ export default function Freestyle() {
         open={conversionState.layer2Open}
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
+        source={conversionState.layer2Reason || undefined}
       />
       <NoCreditsModal
         open={noCreditsModalOpen}
