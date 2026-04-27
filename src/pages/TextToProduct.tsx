@@ -310,7 +310,7 @@ export default function TextToProduct() {
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
-  const { refreshBalance, plan, balance } = useCredits();
+  const { refreshBalance, plan, balance, openBuyModal } = useCredits();
   const { user } = useAuth();
   const isFreeUser = plan === 'free';
   const conversionState = useConversionState();
