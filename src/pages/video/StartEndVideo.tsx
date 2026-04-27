@@ -239,7 +239,9 @@ export default function StartEndVideo() {
         <PageHeader
           title="Start & End Video"
           subtitle="Cinematic transition between two frames"
-        />
+        >
+          <></>
+        </PageHeader>
         <VideoResultsPanel
           videoUrl={project.videoUrl}
           sourceImageUrl={start.preview ?? undefined}
@@ -263,7 +265,9 @@ export default function StartEndVideo() {
       <PageHeader
         title="Start & End Video"
         subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them."
-      />
+      >
+        <></>
+      </PageHeader>
 
       {/* Upload pair */}
       <StartEndUploadPair
