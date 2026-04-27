@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast, toastSophia } from '@/lib/brandedToast';
+import { gtmProductUploaded } from '@/lib/gtm';
 
 interface UserProduct {
   id: string;
@@ -533,10 +534,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         if (error) throw new Error(error.message);
         toastSophia('Product updated!');
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('user_products')
-          .insert({ ...productData, user_id: user.id } as any);
+          .insert({ ...productData, user_id: user.id } as any)
+          .select('id')
+          .single();
         if (error) throw new Error(error.message);
+        if (inserted?.id) {
+          gtmProductUploaded({ userId: user.id, productId: inserted.id, productCategory: productType || null });
+        }
         toastSophia('Product added — ready for your first shoot!');
       }
       onProductAdded();
@@ -567,15 +573,18 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         setUploadProgress({ current: i, total: batchItems.length });
         const imageUrl = await uploadFile(item.file);
 
-        const { error } = await supabase.from('user_products').insert({
+        const { data: insertedBatch, error } = await supabase.from('user_products').insert({
           user_id: user.id,
           title: item.title.trim().substring(0, 200),
           product_type: item.productType || '',
           description: item.description.trim().substring(0, 500),
           image_url: imageUrl,
           dimensions: item.dimensions.trim() || null,
-        } as any);
+        } as any).select('id').single();
         if (error) throw new Error(error.message);
+        if (insertedBatch?.id) {
+          gtmProductUploaded({ userId: user.id, productId: insertedBatch.id, productCategory: item.productType || null });
+        }
         setUploadProgress({ current: i + 1, total: batchItems.length });
       }
       toastSophia(`${batchItems.length} products added!`);
