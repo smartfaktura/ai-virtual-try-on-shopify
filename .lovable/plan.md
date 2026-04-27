@@ -1,35 +1,24 @@
-# Replace old "V" pulse loader on /auth and protected routes
+# Show "Apply to all categories" on mobile consistently
 
-The `/auth` page (and the protected `/app/*` route guard) still show an old hand-rolled "V" pulsing square loader, while the rest of the app uses the canonical `BrandLoaderProgressGlyph` (set as the global Suspense fallback in `App.tsx`). This causes a visible style mismatch when signing in.
+## Problem
 
-## Why it happens
+The button already exists and is mobile-styled (`w-full sm:w-auto`). But its visibility is tied to `activeIds.size > 0` — the **currently active** category must have shots. On mobile, the moment you tap an empty category tab to fill it, the button vanishes — exactly when you'd want to copy from a sibling category.
 
-Two files have inline copies of the legacy loader:
+## Fix (one line of logic, zero new UI)
 
-- `src/pages/Auth.tsx` (lines 120–131) — shown briefly while `useAuth().isLoading` is true.
-- `src/components/app/ProtectedRoute.tsx` (lines 55–65) — shown after login while auth + onboarding check resolve.
+In `src/components/app/product-images/ProductImagesStep2Scenes.tsx`:
 
-Both render a small primary square with a pulsing "V" + "Loading…" caption. Neither matches the brand glyph used everywhere else.
+1. Change visibility condition from `activeIds.size > 0` to **"any category has shots"**.
+2. Update `handleApplyToAll` to use the active category's selection if it has any, otherwise fall back to the most recently non-empty category's selection (track via a `useRef` updated in `handleChange`).
 
-## Fix
+That's it. Same button, same placement, same styles, same copy. Just available whenever it would actually be useful.
 
-Replace both inline loaders with the canonical fullscreen brand loader:
+## Files
 
-```tsx
-import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
-
-// ...
-return <BrandLoaderProgressGlyph fullScreen />;
-```
-
-This is the same component already used as the Suspense fallback for lazy routes in `App.tsx`, so users get a single consistent loading experience from page navigation through login through entering the app.
-
-## Files changed
-
-1. `src/pages/Auth.tsx` — swap the `isLoading` block + add import
-2. `src/components/app/ProtectedRoute.tsx` — swap the `isLoading || !onboardingChecked` block + add import
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — visibility condition + source-selection fallback in `handleApplyToAll`
 
 ## Out of scope
 
-- No changes to inline button spinners (Sign in / Sign up / Send OTP) — those are correctly contextual, not full-screen loaders.
-- No changes to `AppShellLoading` (used inside `/app` shell, different purpose).
+- Sticky bar untouched
+- No new buttons, chips, hints, or layout changes
+- Helper text under tabs unchanged

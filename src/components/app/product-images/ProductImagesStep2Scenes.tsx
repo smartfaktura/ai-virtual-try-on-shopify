@@ -930,19 +930,38 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
   const activeIds = perCategoryScenes.get(activeCategory) || new Set<string>();
   const activeCategoryProducts = (categoryGroups.get(activeCategory) || []).map(pid => selectedProducts.find(p => p.id === pid)).filter(Boolean) as UserProduct[];
 
+  const lastEditedCatRef = useRef<string | null>(null);
+
   const handleChange = (ids: Set<string>) => {
     const next = new Map(perCategoryScenes);
     next.set(activeCategory, ids);
+    if (ids.size > 0) lastEditedCatRef.current = activeCategory;
     onPerCategoryScenesChange(next);
     const union = new Set<string>();
     for (const s of next.values()) s.forEach(id => union.add(id));
     onSelectionChange(union);
   };
 
+  // Source for "Apply to all": prefer active category's selection,
+  // otherwise fall back to the most recently non-empty category.
+  const applySourceIds = (() => {
+    if (activeIds.size > 0) return activeIds;
+    const lastId = lastEditedCatRef.current;
+    if (lastId && (perCategoryScenes.get(lastId)?.size || 0) > 0) {
+      return perCategoryScenes.get(lastId)!;
+    }
+    for (const catId of categoryIds) {
+      const s = perCategoryScenes.get(catId);
+      if (s && s.size > 0) return s;
+    }
+    return null;
+  })();
+
   const handleApplyToAll = () => {
+    if (!applySourceIds) return;
     const next = new Map(perCategoryScenes);
     for (const catId of categoryIds) {
-      next.set(catId, new Set(activeIds));
+      next.set(catId, new Set(applySourceIds));
     }
     onPerCategoryScenesChange(next);
     const union = new Set<string>();
@@ -999,7 +1018,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
             </button>
           );
         })}
-        {activeIds.size > 0 && (
+        {applySourceIds && (
           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 w-full sm:w-auto" onClick={handleApplyToAll}>
             <Copy className="w-3.5 h-3.5" />Apply to all categories
           </Button>
