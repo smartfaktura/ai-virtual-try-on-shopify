@@ -964,10 +964,48 @@ export default function ProductImages() {
 
       for (const settled of results) {
         if (settled.status !== 'fulfilled') continue;
-        const { key, result, productTitle, batchId: bid } = settled.value;
+        const { key, result, productTitle, productId, payload: jobPayload, batchId: bid } = settled.value;
         if (!isEnqueueError(result)) {
+          const wasFirst = newJobMap.size === 0;
           newJobMap.set(key, result.jobId);
           lastBalance = result.newBalance;
+
+          // GTM: fire first_generation_started exactly once on the first
+          // successful enqueue. Helper itself dedupes per user_id across sessions.
+          if (wasFirst && user?.id && result.jobId) {
+            const resolvedProductId =
+              (jobPayload?.product_id as string | undefined) ??
+              productId ??
+              selectedProducts[0]?.id ??
+              null;
+            const visualType =
+              (jobPayload?.workflow_slug as string | undefined) ||
+              (jobPayload?.workflow_name as string | undefined) ||
+              'product-images';
+
+            if (isGtmDebugEnabled()) {
+              // eslint-disable-next-line no-console
+              console.log('[GTM DEBUG first_generation_started]', {
+                flow: 'product-images',
+                hasUser: !!user,
+                userId: user.id,
+                jobId: result.jobId,
+                isError: false,
+                productId: resolvedProductId,
+                visualType,
+                dedupKey: `gtm:firstgen-started:${user.id}`,
+                dedupExists: safeLocalGet(`gtm:firstgen-started:${user.id}`),
+                willFire: true,
+              });
+            }
+            gtmFirstGenerationStarted({
+              userId: user.id,
+              productId: resolvedProductId,
+              generationId: result.jobId,
+              visualType,
+            });
+          }
+
           injectActiveJob(queryClient, {
             jobId: result.jobId,
             workflow_name: 'Product Images',
