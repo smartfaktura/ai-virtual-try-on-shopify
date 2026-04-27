@@ -34,7 +34,7 @@ export function CreditIndicator() {
     // canUpgrade → UpgradePlanModal (plan picker)
     // !canUpgrade (Pro/Enterprise) → openBuyModal which now opens the same modal in topup variant
     if (canUpgrade) setUpgradeOpen(true);
-    else openBuyModal();
+    else openBuyModal('header_cta');
   };
 
   const balanceDigits = Math.max(1, Math.floor(Math.abs(balance))).toString().length;
@@ -70,7 +70,7 @@ export function CreditIndicator() {
           style={{ width: `${usagePercent}%` }}
         />
       </div>
-      <UpgradePlanModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
+      <UpgradePlanModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} source="header_cta" />
     </div>
   );
 }
