@@ -1,47 +1,35 @@
-# Optimize scene grid + chip rail images on hub pages — premium quality
+# Replace old "V" pulse loader on /auth and protected routes
 
-Add responsive `srcSet` to the two image sections that currently download a single image regardless of tile size, while bumping quality and target widths so tiles stay crisp on retina screens for a premium feel. Zero visual/layout change — just sharper, lighter images.
+The `/auth` page (and the protected `/app/*` route guard) still show an old hand-rolled "V" pulsing square loader, while the rest of the app uses the canonical `BrandLoaderProgressGlyph` (set as the global Suspense fallback in `App.tsx`). This causes a visible style mismatch when signing in.
 
-## Files to change
+## Why it happens
 
-1. **`src/components/seo/photography/category/CategorySceneExamples.tsx`** — 4-column scene grid
-2. **`src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`** — chip rail tiles
-3. **`src/components/seo/photography/PhotographySceneExamples.tsx`** — parent hub 5-column grid
+Two files have inline copies of the legacy loader:
 
-## What changes
+- `src/pages/Auth.tsx` (lines 120–131) — shown briefly while `useAuth().isLoading` is true.
+- `src/components/app/ProtectedRoute.tsx` (lines 55–65) — shown after login while auth + onboarding check resolve.
 
-For each tile, swap the single `getOptimizedUrl(..., { quality: 55–60 })` for a paired `src` + `srcSet` + `sizes` using the existing `getResizedSrcSet` helper (resizes safely, no crop-zoom).
+Both render a small primary square with a pulsing "V" + "Loading…" caption. Neither matches the brand glyph used everywhere else.
 
-### CategorySceneExamples (4-col on lg, ~320px tile @ 1310px viewport)
-- `widths: [480, 720, 960, 1200]` (covers retina 2x for 600px tiles)
-- `sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 340px"`
-- aspect `[3, 4]`, **quality `82`**
+## Fix
 
-### PhotographySceneExamples (5-col on lg, ~260px tile)
-- `widths: [400, 600, 800, 1000]`
-- `sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 280px"`
-- aspect `[3, 4]`, **quality `82`**
+Replace both inline loaders with the canonical fullscreen brand loader:
 
-### CategoryBuiltForEveryCategory (chip rail tiles)
-- `widths: [320, 480, 640]`
-- `sizes="(max-width: 1024px) 40vw, 240px"`
-- aspect `[3, 4]`, **quality `80`**
+```tsx
+import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
 
-## Why these numbers (premium vibe)
+// ...
+return <BrandLoaderProgressGlyph fullScreen />;
+```
 
-- **Quality 80–82** matches the hero (which uses 85) — visibly sharp, no JPEG mush, still ~30–40% smaller than full-resolution source.
-- **Widths go up to 1200/1000/640** so retina laptops/phones get a true 2x image — no soft edges on Mac displays.
-- Mobile still gets small files (480/400/320), so phones save bandwidth.
-- Net result vs today: similar or slightly larger payload on retina desktop (where it now looks sharper), meaningful savings on mobile, and a consistent premium look across the page.
+This is the same component already used as the Suspense fallback for lazy routes in `App.tsx`, so users get a single consistent loading experience from page navigation through login through entering the app.
 
-## Technical notes
+## Files changed
 
-- `SmartImage` already accepts `srcSet` + `sizes` — no component changes.
-- `PhotographySceneExamples` uses raw `<img>` — add `srcSet` + `sizes` attributes directly.
-- Hero, related categories, and other sections already retina-grade — untouched.
+1. `src/pages/Auth.tsx` — swap the `isLoading` block + add import
+2. `src/components/app/ProtectedRoute.tsx` — swap the `isLoading || !onboardingChecked` block + add import
 
 ## Out of scope
 
-- No layout, design, or copy changes
-- No backend changes
-- Hero imagery untouched
+- No changes to inline button spinners (Sign in / Sign up / Send OTP) — those are correctly contextual, not full-screen loaders.
+- No changes to `AppShellLoading` (used inside `/app` shell, different purpose).

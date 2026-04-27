@@ -17,6 +17,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { AuthHeroGallery } from '@/components/app/AuthHeroGallery';
+import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -118,16 +119,7 @@ export default function Auth() {
   }, [signupComplete, magicLinkSent]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center animate-pulse">
-            <span className="text-primary-foreground font-bold text-sm">V</span>
-          </div>
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        </div>
-      </div>
-    );
+    return <BrandLoaderProgressGlyph fullScreen />;
   }
 
   if (user) return null;

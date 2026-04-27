@@ -2,6 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -53,16 +54,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   if (isLoading || !onboardingChecked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center animate-pulse">
-            <span className="text-primary-foreground font-bold text-sm">V</span>
-          </div>
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        </div>
-      </div>
-    );
+    return <BrandLoaderProgressGlyph fullScreen />;
   }
 
   if (!user) {
