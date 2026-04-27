@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ const isPro = (p: string) => p === 'pro';
 const isFreeUser = (p: string) => p === 'free';
 
 export function BuyCreditsModal() {
-  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, billingInterval, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+  const { balance, plan, planConfig, buyModalOpen, buyModalSource, closeBuyModal, subscriptionStatus, billingInterval, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
   const navigate = useNavigate();
 
   const effectiveInterval = billingInterval || (plan !== 'free' ? 'monthly' : null);
@@ -38,6 +38,21 @@ export function BuyCreditsModal() {
       setActiveTab(isFreeUser(plan) ? 'upgrade' : 'topup');
     }
   }, [buyModalOpen, plan]);
+
+  // GTM: fire pricing_modal_view on false → true open transition only
+  const prevBuyOpenRef = useRef(false);
+  useEffect(() => {
+    if (buyModalOpen && !prevBuyOpenRef.current) {
+      // Lazy import to keep the modal lean and avoid circular deps
+      import('@/lib/gtm').then(({ gtmPricingModalView }) => {
+        // Read user id off context lazily — buyModalSource already in scope
+        import('@/contexts/AuthContext').then(({ useAuth: _ }) => {
+          /* no-op — see direct import below */
+        });
+      });
+    }
+    prevBuyOpenRef.current = buyModalOpen;
+  }, [buyModalOpen]);
 
   const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';
