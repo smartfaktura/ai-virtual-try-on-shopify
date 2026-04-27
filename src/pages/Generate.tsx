@@ -1751,6 +1751,12 @@ export default function Generate() {
       return null;
     }
 
+    fireFirstgenStartedOnce({
+      jobId: result.jobId,
+      productId: userProducts.some(up => up.id === product.id) ? product.id : null,
+      visualType: activeWorkflow?.slug || activeWorkflow?.name || 'tryon',
+    });
+
     return { jobId: result.jobId, newBalance: result.newBalance };
   };
 
