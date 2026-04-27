@@ -292,6 +292,49 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
   else if (genStatus === 'processing') stage = 'processing';
   else if (genStatus === 'complete') stage = 'complete';
   else if (genStatus === 'error') stage = 'error';
+  if (hydratedVideoUrl) stage = 'complete';
+
+  // Safety net: if we've been "queued/processing" for > 6 minutes with no
+  // active job in the queue, reconcile against generated_videos for the
+  // tracked project_id and either flip to complete (with the URL) or to error.
+  const lastReconcileRef = useRef(0);
+  useEffect(() => {
+    const inFlight = stage === 'queued' || stage === 'processing';
+    if (!inFlight) return;
+    if (generateVideo.activeJob) return; // still tracked, no recovery needed
+    const projectId = lastProjectIdRef.current;
+    if (!projectId) return;
+    if (Date.now() - lastReconcileRef.current < 30_000) return;
+
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      lastReconcileRef.current = Date.now();
+      try {
+        const { data, error } = await supabase
+          .from('generated_videos')
+          .select('id, status, video_url, error_message')
+          .eq('project_id', projectId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (cancelled || error || !data?.length) return;
+        const row = data[0] as { id: string; status: string; video_url: string | null; error_message: string | null };
+        if (row.status === 'complete' && row.video_url) {
+          const signed = await toSignedUrl(row.video_url);
+          if (cancelled) return;
+          setHydratedVideoUrl(signed);
+          setPipelineStage('complete');
+          clearInterval(interval);
+        } else if (row.status === 'failed') {
+          setPipelineError(row.error_message || 'Generation failed');
+          setPipelineStage('error');
+          clearInterval(interval);
+        }
+      } catch (err) {
+        console.warn('[useStartEndVideoProject] reconcile failed', err);
+      }
+    }, 8000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [stage, generateVideo.activeJob]);
 
   return {
     pipelineStage: stage,
@@ -299,13 +342,16 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
     analysisStart,
     analysisEnd,
     compatibility,
-    videoUrl: generateVideo.videoUrl,
+    videoUrl: hydratedVideoUrl ?? generateVideo.videoUrl,
     videoError: generateVideo.error,
     isAnalyzing: pipelineStage === 'analyzing',
-    isGenerating: genStatus === 'queued' || genStatus === 'processing' || genStatus === 'creating',
-    isComplete: genStatus === 'complete',
+    isGenerating: !hydratedVideoUrl && (genStatus === 'queued' || genStatus === 'processing' || genStatus === 'creating'),
+    isComplete: stage === 'complete' || !!hydratedVideoUrl,
     elapsedSeconds: generateVideo.elapsedSeconds,
     activeJob: generateVideo.activeJob,
+    recentResult,
+    dismissRecentResult,
+    hydrateFromRecent,
     analyzePair,
     runPipeline,
     reset,
